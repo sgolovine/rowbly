@@ -104,14 +104,52 @@ describe('story detail Tasks tab', () => {
     await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
 
     await app.press(KEYS.enter);
-    await waitForFrame(
-      app,
-      (f) => f.includes('alice (from the Story)') && f.includes('No Comments yet. Press c to add one.'),
-    );
+    await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
+    // Comments are on their own tab, so `e` and `d` on Details act on the Task.
+    await app.press(KEYS.tab);
+    await waitForFrame(app, (f) => f.includes('No Comments yet. Press c to add one.'));
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('Added Comment'));
     expect((await story(t)).tasks[0]?.comments).toMatchObject([{ author: 'alice', body: 'from the editor' }]);
     expect((await story(t)).comments).toEqual([]);
+    app.unmount();
+  });
+});
+
+describe('task detail', () => {
+  it('edits, moves and deletes the Task with e, m and d, like the Tasks tab', async () => {
+    const t = await setup();
+    const { app, services } = await open(t, 'story', { key: 'WEB-1' });
+    await services.tasks.create('WEB-1', { name: 'Old' });
+    await app.press(KEYS.tab);
+    await waitForFrame(app, (f) => f.includes('WEB-1.1 Old'));
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
+    expect(app.lastFrame()).toContain('e edit · m move Stage · d delete');
+
+    await app.press('e');
+    await waitForFrame(app, (f) => f.includes('Edit WEB-1.1') && f.includes('Name*'));
+    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
+    expect((await story(t)).tasks[0]?.name).toBe('New');
+
+    await app.press('m');
+    await waitForFrame(app, (f) => f.includes('Move WEB-1.1 to'));
+    await app.press(KEYS.down, KEYS.down, KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('Moved WEB-1.1 to in-progress') && f.includes('● In Progress'));
+    expect((await story(t)).tasks[0]?.stage).toBe('in-progress');
+
+    await app.press('d');
+    await waitForFrame(app, (f) => f.includes('Delete WEB-1.1 "New" with its Comments?'));
+    await app.press('n');
+    await waitForFrame(app, (f) => !f.includes('Delete WEB-1.1'));
+    expect((await story(t)).tasks).toHaveLength(1);
+    await app.press('d');
+    await waitForFrame(app, (f) => f.includes('Delete WEB-1.1'));
+    await app.press('y');
+    // Back on the Story's Tasks tab.
+    await waitForFrame(app, (f) => f.includes('Deleted WEB-1.1') && f.includes('No Tasks yet'));
+    expect((await story(t)).tasks).toEqual([]);
     app.unmount();
   });
 });
