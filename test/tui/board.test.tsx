@@ -228,14 +228,17 @@ describe('board view', () => {
       }),
     });
     await app.press('L');
-    // Shown at once, before the service answers.
-    expect(app.lastFrame()).toContain('● Backlog (2)');
-    expect(app.lastFrame()).toContain('● Todo (2)');
+    // Shown before the service answers: the move is held until `release()`.
+    await waitFor(app, (f) => f.includes('● Backlog (2)') && f.includes('● Todo (2)'));
     release();
-    await waitFor(app, (f) => f.includes('error: the Story changed on disk'));
-    expect(app.lastFrame()).toContain('● Backlog (3)');
-    expect(app.lastFrame()).toContain('● Todo (1)');
-    expect(app.lastFrame()).toContain('▌ WEB-1');
+    await waitFor(
+      app,
+      (f) =>
+        f.includes('error: the Story changed on disk') &&
+        f.includes('● Backlog (3)') &&
+        f.includes('● Todo (1)') &&
+        f.includes('▌ WEB-1'),
+    );
     expect((await story(t, 'WEB-1')).stage).toBe('backlog');
     app.unmount();
   });
@@ -243,6 +246,7 @@ describe('board view', () => {
   it('scrolls horizontally at 80 columns with 6 Stages without wrapping cards', async () => {
     const t = await seed(SIX_STAGES);
     const app = await open(t, { columns: 80 });
+    await waitFor(app, (f) => f.includes('Stages 1–3 of 6'));
     let frame = app.lastFrame() ?? '';
     expect(frame).toContain('Stages 1–3 of 6');
     expect(frame).toContain('3›');
@@ -251,6 +255,7 @@ describe('board view', () => {
     // The long name stays on one line, cut with an ellipsis.
     expect(frame.split('\n').filter((l) => l.includes('Login page'))).toHaveLength(1);
     await app.press('l', 'l', 'l', 'l');
+    await waitFor(app, (f) => f.includes('Stages 3–5 of 6') && f.includes('● QA (0)'));
     frame = app.lastFrame() ?? '';
     expect(frame).toContain('Stages 3–5 of 6');
     expect(frame).toContain('‹2');
@@ -272,8 +277,7 @@ describe('board view', () => {
     expect(app.lastFrame()).toContain('↓ 1 more');
     expect(app.lastFrame()).not.toContain('WEB-7');
     await app.press('j', 'j', 'j');
-    expect(app.lastFrame()).toContain('↑ 1 more');
-    expect(app.lastFrame()).toContain('▌ WEB-7');
+    await waitFor(app, (f) => f.includes('↑ 1 more') && f.includes('▌ WEB-7'));
     expect(app.lastFrame()).not.toContain('WEB-1 ');
     app.unmount();
   });
