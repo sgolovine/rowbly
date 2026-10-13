@@ -3,7 +3,7 @@ import { Box, Text } from 'ink';
 import { useState } from 'react';
 import type { DataRoot } from '../../../schemas';
 import { createContext, createServices } from '../../../services';
-import { initTarget, newContext } from '../../../services/setup';
+import { assertInitTarget, initTarget, newContext } from '../../../services/setup';
 import { Form, type FormValues, SelectList } from '../../components';
 import { useActivate, useKeyHints, useToast } from '../../hooks';
 import { useRouter } from '../../router';
@@ -16,6 +16,7 @@ import type { ScreenProps } from '../types';
 export function SetupScreen({ params }: ScreenProps) {
   const cwd = typeof params.cwd === 'string' ? params.cwd : process.cwd();
   const home = typeof params.home === 'string' ? params.home : homedir();
+  const toast = useToast();
   const [root, setRoot] = useState<DataRoot | null>(null);
   useKeyHints([{ key: 'enter', description: root ? 'create' : 'choose' }]);
 
@@ -31,7 +32,16 @@ export function SetupScreen({ params }: ScreenProps) {
             { value: 'local', label: 'Here', description: local.path },
             { value: 'global', label: 'Globally', description: global.path },
           ]}
-          onSelect={(item) => setRoot(item.value === 'global' ? global : local)}
+          onSelect={async (item) => {
+            const target = item.value === 'global' ? global : local;
+            try {
+              // Refuse an existing Data Root before showing the form.
+              await assertInitTarget(target);
+              setRoot(target);
+            } catch (err) {
+              toast.error(err);
+            }
+          }}
         />
       </Box>
     );

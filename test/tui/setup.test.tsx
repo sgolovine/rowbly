@@ -83,7 +83,7 @@ describe('setup screen (first run)', () => {
     app.unmount();
   });
 
-  it('shows a toast when the target already exists', async () => {
+  it('refuses an existing target before showing the form', async () => {
     const t = await tempRoot();
     const app = renderTui(
       <App ctx={null} services={null} initial={{ screen: 'setup', params: { cwd: t.dir, home: t.dir } }} />,
@@ -91,9 +91,9 @@ describe('setup screen (first run)', () => {
     await settle(app);
     await app.press(KEYS.enter);
     await settle(app);
-    await app.press(KEYS.enter);
-    await settle(app);
     expect(app.lastFrame()).toContain('Data Root already exists');
+    expect(app.lastFrame()).not.toContain('Workspace id');
+    expect(app.lastFrame()).toContain('No Data Root found');
     app.unmount();
   });
 });

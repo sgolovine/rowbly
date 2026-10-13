@@ -5,7 +5,7 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, printResult, printWarnings, renderTable } from '../output';
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { createServices, type InitOptions, type InitResult, type RowblyContext, type Services } from '../services';
-import { claimMe, initTarget, type MeSource, meSource, newContext } from '../services/setup';
+import { assertInitTarget, claimMe, initTarget, type MeSource, meSource, newContext } from '../services/setup';
 import {
   boardFlag,
   type ContextFlags,
@@ -121,6 +121,8 @@ async function runInit(opts: InitFlags, cmd: Command): Promise<void> {
       global: opts.global ?? false,
     });
     const ctx = newContext(root, (message) => warnings.push(message));
+    // Fail before any prompt rather than after the last one.
+    await assertInitTarget(root);
     const firstOnes = await firstWorkspaceAndBoard(opts, globals);
     const result = await createServices(ctx).setup.init({ root, ...firstOnes });
     printResult(result, { json: globals.json, human: renderInit });

@@ -67,6 +67,11 @@ describe('rowbly init', () => {
     const again = await runCli(['init', '--no-prompt'], { cwd: dir });
     expect(again.exitCode).toBe(4);
     expect(again.stderr).toContain('Data Root already exists');
+    // The check runs before any first-Workspace input is asked for: a missing --workspace-name
+    // would otherwise exit 2 (or prompt in a terminal).
+    const beforePrompt = await runCli(['init', '--workspace', 'acme'], { cwd: dir });
+    expect(beforePrompt.exitCode).toBe(4);
+    expect(beforePrompt.stderr).not.toContain('--workspace-name');
   });
 
   it('--global creates ~/.rowbly; --root creates the given path', async () => {

@@ -31,6 +31,11 @@ export function initTarget(opts: { cwd: string; home: string; explicit?: string;
   return { path, kind: path === globalPath ? 'global' : 'local' };
 }
 
+/** `init` refuses a target that already exists; callers check it before asking for anything else. */
+export async function assertInitTarget(root: DataRoot): Promise<void> {
+  if (await pathExists(root.path)) throw new ConflictError(`Data Root already exists: ${root.path}`);
+}
+
 /** A `RowblyContext` over a Data Root that may not exist yet, with the real clock and id generator. */
 export function newContext(root: DataRoot, warn: (message: string) => void): RowblyContext {
   return { root, local: { version: 1 }, me: null, now: () => new Date(), newId: () => nanoid(8), warn };
@@ -98,9 +103,7 @@ export function createSetupService(ctx: RowblyContext, _repos: Repositories): Se
           updatedAt: now,
         });
       }
-      if (await pathExists(root.path)) {
-        throw new ConflictError(`Data Root already exists: ${root.path}`);
-      }
+      await assertInitTarget(root);
 
       const repos = createRepositories(root);
       await repos.rootConfig.put({ version: 1, stages: DEFAULT_STAGES.map((stage) => ({ ...stage })) });
