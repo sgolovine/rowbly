@@ -81,6 +81,15 @@ export class DataIntegrityError extends RowblyError {
   readonly exitCode = ExitCode.dataIntegrity;
 }
 
+/**
+ * A Plugin's guard, transform or replacement threw, so the operation failed and nothing was saved
+ * (ADR-0012). `details.plugin` names the Plugin.
+ */
+export class PluginError extends RowblyError {
+  readonly code = 'INTERNAL';
+  readonly exitCode = ExitCode.internal;
+}
+
 export function isRowblyError(err: unknown): err is RowblyError {
   return err instanceof RowblyError;
 }

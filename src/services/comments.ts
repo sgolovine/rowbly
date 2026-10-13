@@ -1,17 +1,19 @@
 import { isTaskId, NotFoundError, toTimestamp, ValidationError } from '../core';
 import type { Comment, Slug, Story } from '../schemas';
 import type { Repositories } from '../storage';
+import type { CoreChangeSet } from './plugins/changeSet';
+import type { OperationRunner } from './plugins/runtime';
 import { findTask } from './tasks';
 import type { CommentsService, RowblyContext } from './types';
 
-/** The Comments of a Story or one of its Tasks, and how to write a changed list back. */
+/** The Comments of a Story or one of its Tasks, and how to put a changed list into a Change Set. */
 interface Thread {
   story: Story;
   comments: Comment[];
-  save(comments: Comment[]): Promise<void>;
+  save(changes: CoreChangeSet, comments: Comment[]): Promise<unknown>;
 }
 
-export function createCommentsService(ctx: RowblyContext, repos: Repositories): CommentsService {
+export function createCommentsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): CommentsService {
   /** A Task id targets the Task's Comments; anything else is parsed as a Story Key. */
   async function thread(target: string): Promise<Thread> {
     if (isTaskId(target)) {
@@ -19,10 +21,10 @@ export function createCommentsService(ctx: RowblyContext, repos: Repositories): 
       return {
         story,
         comments: task.comments,
-        async save(comments) {
+        save(changes, comments) {
           const now = toTimestamp(ctx.now());
           const tasks = story.tasks.map((t) => (t.id === task.id ? { ...t, comments, updatedAt: now } : t));
-          await repos.stories.put({ ...story, tasks, updatedAt: now });
+          return changes.putStory({ ...story, tasks, updatedAt: now });
         },
       };
     }
@@ -30,7 +32,7 @@ export function createCommentsService(ctx: RowblyContext, repos: Repositories): 
     return {
       story,
       comments: story.comments,
-      save: (comments) => repos.stories.put({ ...story, comments, updatedAt: toTimestamp(ctx.now()) }),
+      save: (changes, comments) => changes.putStory({ ...story, comments, updatedAt: toTimestamp(ctx.now()) }),
     };
   }
 
@@ -53,34 +55,43 @@ export function createCommentsService(ctx: RowblyContext, repos: Repositories): 
   return {
     list: async (target) => sortOldestFirst((await thread(target)).comments),
 
-    async add(target, body) {
-      checkBody(body);
-      const { comments, save } = await thread(target);
-      const now = toTimestamp(ctx.now());
-      const comment: Comment = {
-        id: ctx.newId(),
-        author: await author(),
-        body,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await save([...comments, comment]);
-      return comment;
-    },
+    add: (target, body, opts = {}) =>
+      ops.run('comments.add', { target, body, ...opts }, async (changes) => {
+        checkBody(body);
+        const { comments, save } = await thread(target);
+        const now = toTimestamp(ctx.now());
+        const comment: Comment = {
+          id: ctx.newId(),
+          author: await author(),
+          body,
+          createdAt: now,
+          updatedAt: now,
+        };
+        await save(changes, [...comments, comment]);
+        return comment;
+      }),
 
-    async update(target, id, body) {
-      checkBody(body);
-      const { comments, save } = await thread(target);
-      const next = { ...find(comments, id, target), body, updatedAt: toTimestamp(ctx.now()) };
-      await save(comments.map((c) => (c.id === id ? next : c)));
-      return next;
-    },
+    update: (target, id, body, opts = {}) =>
+      ops.run('comments.update', { target, id, body, ...opts }, async (changes) => {
+        checkBody(body);
+        const { comments, save } = await thread(target);
+        const next = { ...find(comments, id, target), body, updatedAt: toTimestamp(ctx.now()) };
+        await save(
+          changes,
+          comments.map((c) => (c.id === id ? next : c)),
+        );
+        return next;
+      }),
 
-    async remove(target, id) {
-      const { comments, save } = await thread(target);
-      find(comments, id, target);
-      await save(comments.filter((c) => c.id !== id));
-    },
+    remove: (target, id, opts = {}) =>
+      ops.run('comments.remove', { target, id, ...opts }, async (changes) => {
+        const { comments, save } = await thread(target);
+        find(comments, id, target);
+        await save(
+          changes,
+          comments.filter((c) => c.id !== id),
+        );
+      }),
   };
 }
 

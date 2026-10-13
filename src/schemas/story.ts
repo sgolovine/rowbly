@@ -3,6 +3,7 @@ import { CustomFieldValueSchema } from './customField';
 import {
   IsoDateSchema,
   LabelSchema,
+  PluginBagsSchema,
   SlugSchema,
   StoryKeySchema,
   TaskIdSchema,
@@ -19,6 +20,7 @@ export const CommentSchema = z.object({
   body: z.string().min(1),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
+  plugins: PluginBagsSchema.optional(),
 });
 export type Comment = z.infer<typeof CommentSchema>;
 
@@ -30,6 +32,7 @@ export const TaskSchema = z.object({
   comments: z.array(CommentSchema),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
+  plugins: PluginBagsSchema.optional(),
 });
 export type Task = z.infer<typeof TaskSchema>;
 
@@ -53,5 +56,6 @@ export const StorySchema = z.object({
   nextTaskNumber: z.int().min(1),
   tasks: z.array(TaskSchema),
   comments: z.array(CommentSchema),
+  plugins: PluginBagsSchema.optional(),
 });
 export type Story = z.infer<typeof StorySchema>;

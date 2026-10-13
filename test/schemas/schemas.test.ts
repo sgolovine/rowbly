@@ -259,11 +259,28 @@ describe('schema defaults', () => {
 
 describe('serialization', () => {
   it('writes keys in schema order, whatever order the input had', () => {
-    const shuffled = Object.fromEntries(Object.entries(story).reverse());
+    const bagged = { ...story, plugins: { epics: { epic: 'auth' } } };
+    const shuffled = Object.fromEntries(Object.entries(bagged).reverse());
     const parsed = StorySchema.parse(shuffled);
     expect(Object.keys(parsed)).toEqual(Object.keys(StorySchema.shape));
-    expect(JSON.stringify(parsed)).toBe(JSON.stringify(StorySchema.parse(story)));
-    expect(Object.keys(parsed.tasks[0] ?? {})).toEqual(Object.keys(TaskSchema.shape));
+    expect(JSON.stringify(parsed)).toBe(JSON.stringify(StorySchema.parse(bagged)));
+    // Optional keys that are absent stay absent.
+    expect(Object.keys(parsed.tasks[0] ?? {})).toEqual(Object.keys(TaskSchema.shape).filter((k) => k !== 'plugins'));
+  });
+
+  it('keeps every Plugin bag as stored, whatever the Plugin (ADR-0011)', () => {
+    const bags = { epics: { epic: 'auth', nested: { list: [1, 2] } }, 'from-the-future': { x: null } };
+    const parsed = StorySchema.parse({
+      ...story,
+      plugins: bags,
+      tasks: story.tasks.map((t) => ({ ...t, plugins: bags })),
+      comments: [
+        { id: 'c1', author: null, body: 'Hi', createdAt: story.createdAt, updatedAt: story.createdAt, plugins: bags },
+      ],
+    });
+    expect(parsed.plugins).toEqual(bags);
+    expect(parsed.tasks[0]?.plugins).toEqual(bags);
+    expect(parsed.comments[0]?.plugins).toEqual(bags);
   });
 
   it('drops unknown keys', () => {

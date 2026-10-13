@@ -5,6 +5,7 @@ import { BoardConfigSchema, type DataRoot, DEFAULT_STAGES, type LocalState, type
 import { createRepositories, pathExists, type Repositories, writeTextFile } from '../storage';
 import { validInput } from './_validate';
 import { createServices } from './index';
+import { createOperationRunner } from './plugins/runtime';
 import type { RowblyContext, SetupService } from './types';
 
 const DATA_ROOT_DIR = '.rowbly';
@@ -42,34 +43,40 @@ export function meSource(ctx: RowblyContext): MeSource | null {
 }
 
 /**
- * Claims `handle` as Me. Unlike `context.setMe`, a handle missing from the roster only warns, so Me can be set before the roster exists.
+ * Claims `handle` as Me, as operation `context.setMe`. Unlike `context.setMe`, a handle missing from the roster only warns, so Me can be set before the roster exists.
  * Lives beside the service because the frozen `ContextService` contract has no such method.
  */
 export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalState> {
   if (!isSlug(handle))
     throw new ValidationError(`invalid Assignee handle "${handle}": must be a lower-kebab-case slug`);
   const repos = createRepositories(ctx.root);
-  const { me: _me, ...rest } = ctx.local;
-  const next: LocalState = { ...rest, me: handle };
   const { assignees } = await repos.rootConfig.get();
   if (!assignees.some((a) => a.handle === handle)) ctx.warn(`"${handle}" is not in the roster`);
-  await repos.localState.put(next);
+  const ops = createOperationRunner(ctx, repos, () => createServices(ctx));
+  const next = await ops.run('context.setMe', { handle }, (changes) =>
+    changes.updateLocalState((state): LocalState => ({ ...state, me: handle })),
+  );
   ctx.local = next;
   ctx.me = handle;
   return next;
 }
 
+/**
+ * `init` is not an operation: no Plugin can be on before the Data Root exists, and `init` turns
+ * none on (ADR-0010).
+ */
 export function createSetupService(ctx: RowblyContext, _repos: Repositories): SetupService {
   return {
     async init({ root, board }) {
       // Check everything before writing anything, so a bad id never leaves a half-made Data Root.
       const now = toTimestamp(ctx.now());
       if (board) {
+        const { plugins: _plugins, ...fields } = board;
         validInput(BoardConfigSchema, 'Board', {
           version: 1,
-          ...board,
-          keyPrefix: board.keyPrefix.toUpperCase(),
-          description: board.description ?? '',
+          ...fields,
+          keyPrefix: fields.keyPrefix.toUpperCase(),
+          description: fields.description ?? '',
           createdAt: now,
           updatedAt: now,
         });

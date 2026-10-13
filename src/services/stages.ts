@@ -2,9 +2,11 @@ import { ConflictError, NotFoundError, rankAfter, toTimestamp, UsageError, Valid
 import { type Stage, StageSchema, type Story } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import { insertIndex, openLevel } from './_configTarget';
+import type { CoreChangeSet } from './plugins/changeSet';
+import type { OperationRunner } from './plugins/runtime';
 import type { ConfigTarget, RowblyContext, StagesService } from './types';
 
-export function createStagesService(ctx: RowblyContext, repos: Repositories): StagesService {
+export function createStagesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StagesService {
   const open = (target: ConfigTarget) => openLevel(ctx, repos, target, 'stages');
 
   return {
@@ -13,74 +15,83 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories): St
       return { stages, source: stagesSource };
     },
 
-    async add(target, input, position = 'last') {
-      const stage = parseStage(input);
-      const level = await open(target);
-      if (level.items.some((s) => s.key === stage.key)) {
-        throw new ConflictError(`Stage "${stage.key}" already exists`);
-      }
-      const next = [...level.items];
-      next.splice(insertIndex(keysOf(next), position, stageNotFound), 0, stage);
-      await level.save(next);
-      return next;
-    },
-
-    async update(target, key, patch) {
-      const level = await open(target);
-      const current = findStage(level.items, key);
-      const updated = parseStage({ ...current, ...definedOnly(patch) });
-      const next = level.items.map((s) => (s.key === key ? updated : s));
-      await level.save(next);
-      return next;
-    },
-
-    async move(target, key, position) {
-      const level = await open(target);
-      const stage = findStage(level.items, key);
-      if (typeof position === 'object' && ('before' in position ? position.before : position.after) === key) {
-        throw new UsageError(`cannot move Stage "${key}" relative to itself`);
-      }
-      const rest = level.items.filter((s) => s.key !== key);
-      rest.splice(insertIndex(keysOf(rest), position, stageNotFound), 0, stage);
-      await level.save(rest);
-      return rest;
-    },
-
-    async remove(target, key, { moveTo }) {
-      const level = await open(target);
-      findStage(level.items, key);
-      if (level.items.length === 1) throw new ConflictError(`cannot remove "${key}": it is the last Stage`);
-      if (moveTo !== undefined) {
-        if (moveTo === key) throw new UsageError('--move-to must name a different Stage');
-        findStage(level.items, moveTo);
-      }
-
-      const boards = await Promise.all(level.affected.map((boardId) => repos.stories.allInBoard(boardId)));
-      const all = boards.flat();
-      const storiesUsing = all.filter((story) => story.stage === key).length;
-      const tasksUsing = all.flatMap((story) => story.tasks).filter((task) => task.stage === key).length;
-
-      if (moveTo === undefined) {
-        if (storiesUsing + tasksUsing > 0) {
-          throw new ConflictError(
-            `Stage "${key}" is used by ${plural(storiesUsing, 'Story', 'Stories')} and ${plural(tasksUsing, 'Task', 'Tasks')}`,
-            {
-              details: { stage: key, stories: storiesUsing, tasks: tasksUsing },
-              hint: 'pass --move-to <stage> to move them first',
-            },
-          );
+    add: (target, input, position = 'last', opts = {}) =>
+      ops.run('stages.add', { target, stage: input, position, ...opts }, async (changes) => {
+        const stage = parseStage(input);
+        const level = await open(target);
+        if (level.items.some((s) => s.key === stage.key)) {
+          throw new ConflictError(`Stage "${stage.key}" already exists`);
         }
-      } else {
-        // Move first, so a failure leaves the Stage in place rather than Stories pointing at nothing.
-        for (const stories of boards) await moveStage(stories, key, moveTo);
-      }
-      await level.save(level.items.filter((s) => s.key !== key));
-      return { storiesMoved: storiesUsing, tasksMoved: tasksUsing };
-    },
+        const next = [...level.items];
+        next.splice(insertIndex(keysOf(next), position, stageNotFound), 0, stage);
+        await level.save(changes, next);
+        return next;
+      }),
+
+    update: (target, key, patch) =>
+      ops.run('stages.update', { target, key, ...patch }, async (changes) => {
+        const { plugins: _plugins, ...fields } = patch;
+        const level = await open(target);
+        const current = findStage(level.items, key);
+        const updated = parseStage({ ...current, ...definedOnly(fields) });
+        const next = level.items.map((s) => (s.key === key ? updated : s));
+        await level.save(changes, next);
+        return next;
+      }),
+
+    move: (target, key, position, opts = {}) =>
+      ops.run('stages.move', { target, key, position, ...opts }, async (changes) => {
+        const level = await open(target);
+        const stage = findStage(level.items, key);
+        if (typeof position === 'object' && ('before' in position ? position.before : position.after) === key) {
+          throw new UsageError(`cannot move Stage "${key}" relative to itself`);
+        }
+        const rest = level.items.filter((s) => s.key !== key);
+        rest.splice(insertIndex(keysOf(rest), position, stageNotFound), 0, stage);
+        await level.save(changes, rest);
+        return rest;
+      }),
+
+    remove: (target, key, opts) =>
+      ops.run('stages.remove', { target, key, ...opts }, async (changes) => {
+        const { moveTo } = opts;
+        const level = await open(target);
+        findStage(level.items, key);
+        if (level.items.length === 1) throw new ConflictError(`cannot remove "${key}": it is the last Stage`);
+        if (moveTo !== undefined) {
+          if (moveTo === key) throw new UsageError('--move-to must name a different Stage');
+          findStage(level.items, moveTo);
+        }
+
+        const boards = await Promise.all(level.affected.map((boardId) => repos.stories.allInBoard(boardId)));
+        const all = boards.flat();
+        const storiesUsing = all.filter((story) => story.stage === key).length;
+        const tasksUsing = all.flatMap((story) => story.tasks).filter((task) => task.stage === key).length;
+
+        if (moveTo === undefined) {
+          if (storiesUsing + tasksUsing > 0) {
+            throw new ConflictError(
+              `Stage "${key}" is used by ${plural(storiesUsing, 'Story', 'Stories')} and ${plural(tasksUsing, 'Task', 'Tasks')}`,
+              {
+                details: { stage: key, stories: storiesUsing, tasks: tasksUsing },
+                hint: 'pass --move-to <stage> to move them first',
+              },
+            );
+          }
+        } else {
+          // Move first, so a failure leaves the Stage in place rather than Stories pointing at nothing.
+          for (const stories of boards) await moveStage(changes, stories, key, moveTo);
+        }
+        await level.save(
+          changes,
+          level.items.filter((s) => s.key !== key),
+        );
+        return { storiesMoved: storiesUsing, tasksMoved: tasksUsing };
+      }),
   };
 
   /** Moves a Board's Stories and Tasks from `from` to `to`; moved Stories go to the bottom of `to`. */
-  async function moveStage(stories: Story[], from: string, to: string): Promise<void> {
+  async function moveStage(changes: CoreChangeSet, stories: Story[], from: string, to: string): Promise<void> {
     const now = toTimestamp(ctx.now());
     let last = stories
       .filter((s) => s.stage === to)
@@ -98,7 +109,7 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories): St
       const tasks = base.tasks.map((task) => (task.stage === from ? { ...task, stage: to, updatedAt: now } : task));
       changed.set(story.key, { ...base, tasks });
     }
-    for (const story of changed.values()) await repos.stories.put(story);
+    for (const story of changed.values()) await changes.putStory(story);
   }
 }
 

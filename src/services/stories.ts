@@ -22,9 +22,11 @@ import {
 } from '../schemas';
 import { createRepositories, type Repositories, resolveCascade } from '../storage';
 import { validateFieldValues } from './_customFieldValues';
+import type { CoreChangeSet } from './plugins/changeSet';
+import type { OperationRunner } from './plugins/runtime';
 import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
-export function createStoriesService(ctx: RowblyContext, repos: Repositories): StoriesService {
+export function createStoriesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StoriesService {
   /** The Story's Board and its effective Stages and Custom Fields. */
   const effective = (story: Pick<Story, 'boardId'>) => resolveCascade(ctx.root, story.boardId);
 
@@ -64,14 +66,11 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     return roster.some((a) => a.handle === ctx.me) ? ctx.me : null;
   }
 
-  /** Writes a new Story under the next free key; if that key turns out to exist, re-scans once. */
-  async function writeNew(boardId: Slug, prefix: string, build: (key: string) => Story): Promise<Story> {
+  /** The next free Story Key on the Board; if that key turns out to exist, re-scans once. */
+  async function nextKey(boardId: Slug, prefix: string): Promise<string> {
     for (let attempt = 0; attempt < 2; attempt++) {
       const key = formatStoryKey(prefix, (await repos.stories.maxNumber(boardId)) + 1);
-      if (await storyExists(key)) continue;
-      const story = build(key);
-      await repos.stories.put(story);
-      return story;
+      if (!(await storyExists(key))) return key;
     }
     throw new ConflictError(`could not allocate a Story Key on Board "${boardId}"`, {
       hint: 'run `rowbly doctor`',
@@ -100,7 +99,7 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 
   return {
     async list(boardId, filter) {
-      const stories = await storiesInScope(boardId);
+      const stories = (await storiesInScope(boardId)).filter(pluginMatcher(filter));
       const configs = new Map<string, EffectiveBoardConfig>();
       for (const story of stories) {
         if (!configs.has(story.boardId)) configs.set(story.boardId, await effective(story));
@@ -119,111 +118,115 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 
     get: (key) => repos.stories.findByKey(key),
 
-    async create(boardId, input) {
-      const config = await resolveCascade(ctx.root, boardId);
-      const stage = input.stage ?? config.stages[0]?.key;
-      if (stage === undefined) throw new ValidationError('the Board has no Stages');
-      checkStage(config.stages, stage);
-      const assignees = await checkAssignees(input.assignees ?? []);
-      const customFields = validateFieldValues(config.customFields, input.customFields ?? {}, {
-        requireRequired: true,
-      });
-      const existing = await repos.stories.allInBoard(boardId);
-      const rank = rankAfter(bottomRank(existing, stage));
-      const now = toTimestamp(ctx.now());
-      const author = await createdBy();
-      return writeNew(boardId, config.board.keyPrefix, (key) =>
-        parseStory({
-          version: 1,
-          key,
-          boardId,
-          name: input.name,
-          description: input.description ?? '',
-          stage,
-          rank,
-          assignees,
-          priority: input.priority ?? null,
-          labels: unique(input.labels ?? []),
-          dueDate: input.dueDate ?? null,
-          customFields,
-          createdBy: author,
-          createdAt: now,
-          updatedAt: now,
-          nextTaskNumber: 1,
-          tasks: [],
-          comments: [],
-        }),
-      );
-    },
+    create: (boardId, input) =>
+      ops.run('stories.create', { boardId, ...input }, async (changes) => {
+        const config = await resolveCascade(ctx.root, boardId);
+        const stage = input.stage ?? config.stages[0]?.key;
+        if (stage === undefined) throw new ValidationError('the Board has no Stages');
+        checkStage(config.stages, stage);
+        const assignees = await checkAssignees(input.assignees ?? []);
+        const customFields = validateFieldValues(config.customFields, input.customFields ?? {}, {
+          requireRequired: true,
+        });
+        const existing = await repos.stories.allInBoard(boardId);
+        const rank = rankAfter(bottomRank(existing, stage));
+        const now = toTimestamp(ctx.now());
+        const author = await createdBy();
+        const key = await nextKey(boardId, config.board.keyPrefix);
+        return changes.putStory(
+          parseStory({
+            version: 1,
+            key,
+            boardId,
+            name: input.name,
+            description: input.description ?? '',
+            stage,
+            rank,
+            assignees,
+            priority: input.priority ?? null,
+            labels: unique(input.labels ?? []),
+            dueDate: input.dueDate ?? null,
+            customFields,
+            createdBy: author,
+            createdAt: now,
+            updatedAt: now,
+            nextTaskNumber: 1,
+            tasks: [],
+            comments: [],
+          }),
+        );
+      }),
 
-    async update(key, patch) {
-      const story = await repos.stories.findByKey(key);
-      checkListPatch('assignees', patch.assignees, patch.addAssignees, patch.removeAssignees);
-      checkListPatch('labels', patch.labels, patch.addLabels, patch.removeLabels);
-      const next: Story = { ...story };
-      if (patch.name !== undefined) next.name = patch.name;
-      if (patch.description !== undefined) next.description = patch.description;
-      if (patch.assignees !== undefined) {
-        next.assignees = await checkAssignees(patch.assignees);
-      } else if (patch.addAssignees || patch.removeAssignees) {
-        const added = await checkAssignees(patch.addAssignees ?? []);
-        const removed = (patch.removeAssignees ?? []).map(resolveMe);
-        next.assignees = unique([...story.assignees, ...added]).filter((h) => !removed.includes(h));
-      }
-      if (patch.priority !== undefined) next.priority = patch.priority;
-      if (patch.labels !== undefined) next.labels = unique(patch.labels);
-      else if (patch.addLabels || patch.removeLabels) {
-        const removed = patch.removeLabels ?? [];
-        next.labels = unique([...story.labels, ...(patch.addLabels ?? [])]).filter((l) => !removed.includes(l));
-      }
-      if (patch.dueDate !== undefined) next.dueDate = patch.dueDate;
-      if (patch.customFields !== undefined || patch.unsetFields !== undefined) {
-        next.customFields = await updateFields(story, patch);
-      }
-      next.updatedAt = toTimestamp(ctx.now());
-      const parsed = parseStory(next);
-      await repos.stories.put(parsed);
-      return parsed;
-    },
-
-    async move(key, stage, opts = {}) {
-      const story = await repos.stories.findByKey(key);
-      checkStage((await effective(story)).stages, stage);
-      const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
-      const rank = opts.top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
-      return save({ ...story, stage, rank });
-    },
-
-    async rank(key, position) {
-      const story = await repos.stories.findByKey(key);
-      const column = (await repos.stories.allInBoard(story.boardId))
-        .filter((s) => s.stage === story.stage && s.key !== story.key)
-        .sort((a, b) => compareRanks(a.rank, b.rank));
-      let rank: string;
-      if (position === 'top') rank = rankBefore(column[0]?.rank ?? null);
-      else if (position === 'bottom') rank = rankAfter(column.at(-1)?.rank ?? null);
-      else {
-        const before = 'before' in position;
-        const targetKey = parseStoryKey(before ? position.before : position.after).key;
-        if (targetKey === story.key) throw new UsageError(`cannot rank ${story.key} relative to itself`);
-        const index = column.findIndex((s) => s.key === targetKey);
-        if (index === -1) {
-          await repos.stories.findByKey(targetKey);
-          throw new UsageError(`${targetKey} is not in ${story.key}'s Stage "${story.stage}" on the same Board`, {
-            hint: 'Rank is scoped to a Stage; use `rowbly stories move` to change Stage',
-          });
+    update: (key, patch) =>
+      ops.run('stories.update', { key, ...patch }, async (changes) => {
+        const story = await repos.stories.findByKey(key);
+        checkListPatch('assignees', patch.assignees, patch.addAssignees, patch.removeAssignees);
+        checkListPatch('labels', patch.labels, patch.addLabels, patch.removeLabels);
+        const next: Story = { ...story };
+        if (patch.name !== undefined) next.name = patch.name;
+        if (patch.description !== undefined) next.description = patch.description;
+        if (patch.assignees !== undefined) {
+          next.assignees = await checkAssignees(patch.assignees);
+        } else if (patch.addAssignees || patch.removeAssignees) {
+          const added = await checkAssignees(patch.addAssignees ?? []);
+          const removed = (patch.removeAssignees ?? []).map(resolveMe);
+          next.assignees = unique([...story.assignees, ...added]).filter((h) => !removed.includes(h));
         }
-        const lower = before ? column[index - 1] : column[index];
-        const upper = before ? column[index] : column[index + 1];
-        rank = between(lower?.rank ?? null, upper?.rank ?? null);
-      }
-      return save({ ...story, rank });
-    },
+        if (patch.priority !== undefined) next.priority = patch.priority;
+        if (patch.labels !== undefined) next.labels = unique(patch.labels);
+        else if (patch.addLabels || patch.removeLabels) {
+          const removed = patch.removeLabels ?? [];
+          next.labels = unique([...story.labels, ...(patch.addLabels ?? [])]).filter((l) => !removed.includes(l));
+        }
+        if (patch.dueDate !== undefined) next.dueDate = patch.dueDate;
+        if (patch.customFields !== undefined || patch.unsetFields !== undefined) {
+          next.customFields = await updateFields(story, patch);
+        }
+        next.updatedAt = toTimestamp(ctx.now());
+        return changes.putStory(parseStory(next));
+      }),
 
-    async remove(key) {
-      const story = await repos.stories.findByKey(key);
-      await repos.stories.delete(story.boardId, story.key);
-    },
+    move: (key, stage, opts = {}) =>
+      ops.run('stories.move', { key, stage, ...opts, top: opts.top ?? false }, async (changes) => {
+        const story = await repos.stories.findByKey(key);
+        checkStage((await effective(story)).stages, stage);
+        const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
+        const rank = opts.top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
+        return save(changes, { ...story, stage, rank });
+      }),
+
+    rank: (key, position, opts = {}) =>
+      ops.run('stories.rank', { key, position, ...opts }, async (changes) => {
+        const story = await repos.stories.findByKey(key);
+        const column = (await repos.stories.allInBoard(story.boardId))
+          .filter((s) => s.stage === story.stage && s.key !== story.key)
+          .sort((a, b) => compareRanks(a.rank, b.rank));
+        let rank: string;
+        if (position === 'top') rank = rankBefore(column[0]?.rank ?? null);
+        else if (position === 'bottom') rank = rankAfter(column.at(-1)?.rank ?? null);
+        else {
+          const before = 'before' in position;
+          const targetKey = parseStoryKey(before ? position.before : position.after).key;
+          if (targetKey === story.key) throw new UsageError(`cannot rank ${story.key} relative to itself`);
+          const index = column.findIndex((s) => s.key === targetKey);
+          if (index === -1) {
+            await repos.stories.findByKey(targetKey);
+            throw new UsageError(`${targetKey} is not in ${story.key}'s Stage "${story.stage}" on the same Board`, {
+              hint: 'Rank is scoped to a Stage; use `rowbly stories move` to change Stage',
+            });
+          }
+          const lower = before ? column[index - 1] : column[index];
+          const upper = before ? column[index] : column[index + 1];
+          rank = between(lower?.rank ?? null, upper?.rank ?? null);
+        }
+        return save(changes, { ...story, rank });
+      }),
+
+    remove: (key, opts = {}) =>
+      ops.run('stories.remove', { key, ...opts }, async (changes) => {
+        // Its folder goes with it, Plugin files included (ADR-0013).
+        await changes.deleteStory((await repos.stories.findByKey(key)).key);
+      }),
 
     async labelsInUse(boardId) {
       const labels = (await repos.stories.allInBoard(boardId)).flatMap((s) => s.labels);
@@ -231,10 +234,24 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     },
   };
 
-  async function save(story: Story): Promise<Story> {
-    const next = { ...story, updatedAt: toTimestamp(ctx.now()) };
-    await repos.stories.put(next);
-    return next;
+  function save(changes: CoreChangeSet, story: Story): Promise<Story> {
+    return changes.putStory({ ...story, updatedAt: toTimestamp(ctx.now()) });
+  }
+
+  /** Each Plugin filter in `filter.plugins` must match, through its Plugin's `filterStories`. */
+  function pluginMatcher(filter: StoryFilter): (story: Story) => boolean {
+    const checks = Object.entries(filter.plugins ?? {})
+      .filter(([, value]) => value !== undefined)
+      .map(([id, value]) => {
+        const plugin = ctx.plugins?.active().find((p) => p.definition.id === id);
+        if (!plugin?.definition.filterStories) {
+          throw new UsageError(`Plugin "${id}" cannot filter Stories`, { hint: 'is it on? see `rowbly plugins list`' });
+        }
+        const match = plugin.definition.filterStories;
+        const context = ops.context(id);
+        return (story: Story) => match(story, value, context);
+      });
+    return (story) => checks.every((check) => check(story));
   }
 
   /** Sets the given values, removes `unsetFields`; required fields must still have a value. */
@@ -257,7 +274,7 @@ export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<S
   const [config, root, labels] = await Promise.all([
     resolveCascade(ctx.root, boardId),
     repos.rootConfig.get(),
-    createStoriesService(ctx, repos).labelsInUse(boardId),
+    repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
   ]);
   return { ...config, assignees: root.assignees, labels };
 }

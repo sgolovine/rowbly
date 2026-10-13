@@ -3,6 +3,7 @@
 import { toTimestamp } from '../core';
 import { type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Slug, type Stage } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
+import type { ChangeSet } from './plugins/types';
 import type { ConfigTarget, RowblyContext } from './types';
 
 export type ConfigListKey = 'stages' | 'customFields';
@@ -15,8 +16,8 @@ export interface LevelList<T> {
   source: ConfigLevel;
   /** The Boards whose effective list is the target level's list. */
   affected: Slug[];
-  /** Writes `next` at the target level. */
-  save(next: T[]): Promise<void>;
+  /** Puts `next` at the target level into the Change Set. */
+  save(changes: ChangeSet, next: T[]): Promise<void>;
 }
 
 /** Opens the `key` list at `target`, following the cascade upwards when the level has none of its own. */
@@ -37,7 +38,14 @@ export async function openLevel<K extends ConfigListKey>(
   if (target.level === 'global') {
     const [items, source] = fallback();
     const affected = (await repos.boards.list()).filter((board) => !board[key]).map((board) => board.id);
-    return { items, source, affected, save: (next) => repos.rootConfig.put({ ...root, [key]: next }) };
+    return {
+      items,
+      source,
+      affected,
+      save: async (changes, next) => {
+        await changes.updateRootConfig((config) => ({ ...config, [key]: next }));
+      },
+    };
   }
 
   const board = await repos.boards.get(target.boardId);
@@ -46,7 +54,9 @@ export async function openLevel<K extends ConfigListKey>(
     items,
     source,
     affected: [board.id],
-    save: (next) => repos.boards.put({ ...board, [key]: next, updatedAt: now }),
+    save: async (changes, next) => {
+      await changes.updateBoard(board.id, (current) => ({ ...current, [key]: next, updatedAt: now }));
+    },
   };
 }
 

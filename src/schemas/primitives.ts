@@ -33,6 +33,13 @@ export type Timestamp = z.infer<typeof TimestampSchema>;
 export const IsoDateSchema = z.string().refine(isIsoDate, 'must be a date in YYYY-MM-DD format');
 export type IsoDate = z.infer<typeof IsoDateSchema>;
 
+/**
+ * Plugin Data (ADR-0011): `"plugins": { "<id>": { … } }` on a record. Each Plugin validates its own
+ * bag; core keeps every bag as stored, including those of Plugins that are off or unknown.
+ */
+export const PluginBagsSchema = z.record(z.string(), z.record(z.string(), z.unknown()));
+export type PluginBags = z.infer<typeof PluginBagsSchema>;
+
 /** Every persisted root object carries `version: 1`. */
 export const VersionSchema = z.literal(1);
 

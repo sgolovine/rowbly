@@ -3,11 +3,13 @@ import { type CustomFieldDef, CustomFieldDefSchema, type Slug, type Story } from
 import { type Repositories, resolveCascade } from '../storage';
 import { openLevel } from './_configTarget';
 import { fieldValueError } from './_customFieldValues';
+import type { CoreChangeSet } from './plugins/changeSet';
+import type { OperationRunner } from './plugins/runtime';
 import type { ConfigTarget, CustomFieldPatch, FieldsService, RowblyContext } from './types';
 
 const NUMBER_ONLY = ['min', 'max', 'integer'] as const;
 
-export function createFieldsService(ctx: RowblyContext, repos: Repositories): FieldsService {
+export function createFieldsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): FieldsService {
   const open = (target: ConfigTarget) => openLevel(ctx, repos, target, 'customFields');
 
   return {
@@ -16,35 +18,47 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories): Fi
       return { fields: customFields, source: customFieldsSource };
     },
 
-    async add(target, input) {
-      const def = parseField(input);
-      const level = await open(target);
-      if (level.items.some((f) => f.key === def.key))
-        throw new ConflictError(`Custom Field "${def.key}" already exists`);
-      const next = [...level.items, def];
-      await level.save(next);
-      return next;
-    },
+    add: (target, input, opts = {}) =>
+      ops.run('fields.add', { target, field: input, ...opts }, async (changes) => {
+        const def = parseField(input);
+        const level = await open(target);
+        if (level.items.some((f) => f.key === def.key))
+          throw new ConflictError(`Custom Field "${def.key}" already exists`);
+        const next = [...level.items, def];
+        await level.save(changes, next);
+        return next;
+      }),
 
     async update(target, key, patch) {
-      const level = await open(target);
-      const updated = parseField(applyPatch(findField(level.items, key), patch));
-      const next = level.items.map((f) => (f.key === key ? updated : f));
-      await level.save(next);
-      const stripped = await stripValues(level.affected, key, (value) => fitValue(updated, value));
+      const { plugins: _plugins, ...fields } = patch;
+      const { next, stripped } = await ops.run('fields.update', { target, key, ...patch }, async (changes) => {
+        const level = await open(target);
+        const updated = parseField(applyPatch(findField(level.items, key), fields));
+        const next = level.items.map((f) => (f.key === key ? updated : f));
+        await level.save(changes, next);
+        const stripped = await stripValues(changes, level.affected, key, (value) => fitValue(updated, value));
+        return { next, stripped };
+      });
       if (stripped > 0) {
         ctx.warn(`stripped ${plural(stripped)} of "${key}" that no longer fit the Custom Field`);
       }
       return next;
     },
 
-    async remove(target, key) {
-      const level = await open(target);
-      findField(level.items, key);
-      const valuesStripped = await stripValues(level.affected, key, () => undefined);
-      await level.save(level.items.filter((f) => f.key !== key));
-      if (valuesStripped > 0) ctx.warn(`stripped ${plural(valuesStripped)} of removed Custom Field "${key}"`);
-      return { valuesStripped };
+    async remove(target, key, opts = {}) {
+      const result = await ops.run('fields.remove', { target, key, ...opts }, async (changes) => {
+        const level = await open(target);
+        findField(level.items, key);
+        const valuesStripped = await stripValues(changes, level.affected, key, () => undefined);
+        await level.save(
+          changes,
+          level.items.filter((f) => f.key !== key),
+        );
+        return { valuesStripped };
+      });
+      const n = result.valuesStripped;
+      if (n > 0) ctx.warn(`stripped ${plural(n)} of removed Custom Field "${key}"`);
+      return result;
     },
   };
 
@@ -53,6 +67,7 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories): Fi
    * Returns how many Stories changed.
    */
   async function stripValues(
+    changes: CoreChangeSet,
     boards: readonly Slug[],
     key: string,
     keep: (value: Story['customFields'][string]) => Story['customFields'][string] | undefined,
@@ -66,7 +81,7 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories): Fi
         const next = keep(value);
         if (JSON.stringify(next) === JSON.stringify(value)) continue;
         const { [key]: _removed, ...rest } = story.customFields;
-        await repos.stories.put({
+        await changes.putStory({
           ...story,
           customFields: next === undefined ? rest : { ...rest, [key]: next },
           updatedAt: now,
