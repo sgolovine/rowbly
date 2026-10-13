@@ -39,9 +39,9 @@ describe('rowbly CLI', () => {
   });
 
   it('reaches the stub for an unimplemented verb and exits 1', async () => {
-    const { stderr, exitCode } = await runCli(['tasks', 'list', 'WEB-1']);
+    const { stderr, exitCode } = await runCli(['doctor']);
     expect(exitCode).toBe(1);
-    expect(stderr).toBe('error: not implemented: WP06\n');
+    expect(stderr).toBe('error: not implemented: WP10\n');
   });
 
   it('reports errors as JSON with --json', async () => {
