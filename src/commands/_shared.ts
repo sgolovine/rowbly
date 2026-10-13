@@ -26,6 +26,29 @@ export function isInteractive(globals: GlobalOptions): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY) && !globals.json && globals.prompt;
 }
 
+/** `--workspace` / `--board` as parsed by commander. */
+export interface ContextFlags {
+  workspace?: string;
+  board?: string;
+}
+
+/** The `flag` argument for `services.context.resolveWorkspace`: `--workspace` → `ROWBLY_WORKSPACE` (contracts §4). */
+export function workspaceFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  return opts.workspace || env.ROWBLY_WORKSPACE || undefined;
+}
+
+/**
+ * The `flag` argument for `services.context.resolveBoard`: `--board` → `ROWBLY_BOARD` (contracts §4).
+ * A bare board id is qualified with the Workspace from `workspaceFlag`, so `--workspace a --board b`
+ * resolves `a/b`.
+ */
+export function boardFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const board = opts.board || env.ROWBLY_BOARD || undefined;
+  const workspace = workspaceFlag(opts, env);
+  if (board && workspace && !board.includes('/')) return `${workspace}/${board}`;
+  return board;
+}
+
 export interface CommandEnv {
   ctx: RowblyContext;
   services: Services;
@@ -45,7 +68,7 @@ export async function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Prom
       env: process.env,
       home: homedir(),
       root: globals.root,
-      workspace: cmd.optsWithGlobals<{ workspace?: string }>().workspace,
+      workspace: workspaceFlag(cmd.optsWithGlobals<ContextFlags>()),
       warn: (message) => warnings.push(message),
     });
     return await fn({ ctx, services: createServices(ctx), globals });
