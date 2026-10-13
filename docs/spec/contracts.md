@@ -142,7 +142,7 @@ Stage keys and field keys are immutable. Stage `name`/`category`/position and fi
 | --- | --- |
 | Data Root | `--root` → `ROWBLY_ROOT` → nearest `.rowbly/` walking up from cwd → `~/.rowbly` if it exists → `DataRootNotFoundError` (exit 5, hint: `rowbly init`) |
 | Workspace | `--workspace` → `ROWBLY_WORKSPACE` → `local.json.workspace` → the only Workspace → `UsageError` "workspace required" |
-| Board | `--board` (accepts `ws/board`) → `ROWBLY_BOARD` → `local.json.board` (only if Workspace matches) → the only Board in the Workspace → `UsageError` |
+| Board | `--board` (accepts `ws/board`) → `ROWBLY_BOARD` → `local.json.board` (only if Workspace matches) → the only Board in the Workspace → `UsageError`. "The Workspace" is resolved as in the row above, so `--workspace` / `ROWBLY_WORKSPACE` scope the board fallbacks (`resolveBoard(flag, workspaceFlag)`). |
 | Story / Task | The Story Key prefix resolves its Workspace and Board through a prefix index built from all `board.config.json` files. No flags are needed. |
 | Me | `local.json.me` → a roster entry whose `email` equals `git config user.email` → none |
 
@@ -247,7 +247,7 @@ type ConfigLevel = 'board' | 'workspace' | 'global' | 'default';
 interface EpicView extends Epic { stories: Story[]; progress: { done: number; total: number } }
 
 interface Services {
-  context:    { resolveWorkspace(flag?: string): Promise<Slug>; resolveBoard(flag?: string): Promise<BoardRef>;
+  context:    { resolveWorkspace(flag?: string): Promise<Slug>; resolveBoard(flag?: string, workspaceFlag?: string): Promise<BoardRef>;
                 use(ws?: Slug, board?: Slug): Promise<LocalState>; clearUse(): Promise<void>;
                 setMe(handle: Slug | null): Promise<LocalState> };
   setup:      { init(opts: InitOptions): Promise<InitResult> };

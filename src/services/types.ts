@@ -281,7 +281,8 @@ export interface DoctorReport {
 
 export interface ContextService {
   resolveWorkspace(flag?: string): Promise<Slug>;
-  resolveBoard(flag?: string): Promise<BoardRef>;
+  /** `workspaceFlag` (`--workspace` → `ROWBLY_WORKSPACE`) scopes the fallbacks when `flag` is not `ws/board`. */
+  resolveBoard(flag?: string, workspaceFlag?: string): Promise<BoardRef>;
   use(ws?: Slug, board?: Slug): Promise<LocalState>;
   clearUse(): Promise<void>;
   setMe(handle: Slug | null): Promise<LocalState>;
