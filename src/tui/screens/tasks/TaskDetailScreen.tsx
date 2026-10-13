@@ -25,7 +25,7 @@ export function TaskDetailScreen({ params }: ScreenProps) {
   const [mode, setMode] = useState<Mode>('view');
   const data = useAsync(async () => {
     const { story, task } = await services.tasks.get(id);
-    const config = await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId });
+    const config = await services.config.effective(story.boardId);
     return { story, task, stages: config.stages };
   }, [services, id]);
   useReloadOnReturn(data.reload);

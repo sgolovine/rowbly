@@ -1,5 +1,5 @@
 import { ConflictError, NotFoundError, toTimestamp, ValidationError } from '../core';
-import { type BoardRef, type CustomFieldDef, CustomFieldDefSchema, type Story } from '../schemas';
+import { type CustomFieldDef, CustomFieldDefSchema, type Slug, type Story } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import { openLevel } from './_configTarget';
 import { fieldValueError } from './_customFieldValues';
@@ -11,8 +11,8 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories): Fi
   const open = (target: ConfigTarget) => openLevel(ctx, repos, target, 'customFields');
 
   return {
-    async list(ref) {
-      const { customFields, customFieldsSource } = await resolveCascade(ctx.root, ref);
+    async list(boardId) {
+      const { customFields, customFieldsSource } = await resolveCascade(ctx.root, boardId);
       return { fields: customFields, source: customFieldsSource };
     },
 
@@ -53,14 +53,14 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories): Fi
    * Returns how many Stories changed.
    */
   async function stripValues(
-    boards: readonly BoardRef[],
+    boards: readonly Slug[],
     key: string,
     keep: (value: Story['customFields'][string]) => Story['customFields'][string] | undefined,
   ): Promise<number> {
     const now = toTimestamp(ctx.now());
     let changed = 0;
-    for (const ref of boards) {
-      for (const story of await repos.stories.allInBoard(ref)) {
+    for (const boardId of boards) {
+      for (const story of await repos.stories.allInBoard(boardId)) {
         const value = story.customFields[key];
         if (value === undefined) continue;
         const next = keep(value);

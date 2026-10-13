@@ -92,9 +92,7 @@ describe('prompting gates', () => {
   });
 
   it('requires --yes for destructive actions when not interactive', async () => {
-    await expect(confirmDestructive('delete workspace acme', nonInteractive)).rejects.toThrow(UsageError);
-    await expect(
-      confirmDestructive('delete workspace acme', { ...nonInteractive, yes: true }),
-    ).resolves.toBeUndefined();
+    await expect(confirmDestructive('delete board web', nonInteractive)).rejects.toThrow(UsageError);
+    await expect(confirmDestructive('delete board web', { ...nonInteractive, yes: true })).resolves.toBeUndefined();
   });
 });

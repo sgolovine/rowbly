@@ -8,15 +8,15 @@ import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
 import { relativeTime } from '../../src/tui/screens/comments/CommentsPanel';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme', assignees: [{ handle: 'alice', name: 'Alice' }] });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
+  await makeRootConfig(t.path, { assignees: [{ handle: 'alice', name: 'Alice' }] });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Login', assignees: ['alice'] });
   return t;
 }

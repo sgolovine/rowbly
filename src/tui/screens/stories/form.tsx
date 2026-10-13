@@ -12,9 +12,9 @@ import { Form, type FormField, type FormValue, type FormValues, Loading } from '
 import { useAsync, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
-import { boardRefFor, NONE } from './shared';
+import { boardIdFor, NONE } from './shared';
 
-/** Creates a Story (`params.ref`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
+/** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
 export function StoryFormScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
@@ -23,19 +23,17 @@ export function StoryFormScreen({ params }: ScreenProps) {
   const key = params.key as string | undefined;
   const data = useAsync(async () => {
     const story = key ? await services.stories.get(key) : null;
-    const ref = story
-      ? { workspaceId: story.workspaceId, boardId: story.boardId }
-      : await boardRefFor(services, params);
+    const boardId = story ? story.boardId : await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
-    return { story, ref, choices: await storyChoices(ctx, ref) };
-  }, [services, ctx, key, params.ref]);
+    return { story, boardId, choices: await storyChoices(ctx, boardId) };
+  }, [services, ctx, key, params.boardId]);
   useKeyHints([
     { key: 'enter', description: 'save' },
     { key: 'e', description: 'edit description' },
   ]);
 
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
-  const { story, ref, choices } = data.data;
+  const { story, boardId, choices } = data.data;
 
   const submit = async (values: FormValues) => {
     const fields = customFieldValues(choices.customFields, values);
@@ -50,7 +48,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
     };
     const stage = String(values.stage);
     if (!story) {
-      const created = await services.stories.create(ref, { ...common, stage, customFields: fields });
+      const created = await services.stories.create(boardId, { ...common, stage, customFields: fields });
       toast.push('info', `Created ${created.key}`);
       router.replace('story', { key: created.key, title: created.key });
       return;
@@ -64,7 +62,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
 
   return (
     <Box flexDirection="column" gap={1}>
-      <Text bold>{story ? `Edit ${story.key}` : `New Story on ${ref.workspaceId}/${ref.boardId}`}</Text>
+      <Text bold>{story ? `Edit ${story.key}` : `New Story on ${boardId}`}</Text>
       <Form
         fields={formFields(choices, story)}
         initialValues={initialValues(choices, story, params.stage as string | undefined)}

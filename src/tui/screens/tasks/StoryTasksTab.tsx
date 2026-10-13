@@ -21,7 +21,7 @@ export function StoryTasksTab({ storyKey }: StoryTasksTabProps) {
   const [mode, setMode] = useState<Mode>('view');
   const data = useAsync(async () => {
     const story = await services.stories.get(storyKey);
-    const config = await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId });
+    const config = await services.config.effective(story.boardId);
     return { tasks: story.tasks, stages: config.stages };
   }, [services, storyKey]);
   useReloadOnReturn(data.reload);

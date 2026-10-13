@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-1",
+  "boardId": "rowbly",
+  "name": "Remove workspaces",
+  "description": "Remove workspaces from rowbly. Flatten it so that it's only boards at the top level\n",
+  "stage": "in-progress",
+  "rank": "a0",
+  "assignees": [],
+  "epicId": null,
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-13T02:57:33.173Z",
+  "updatedAt": "2026-10-13T03:00:20.814Z",
+  "nextTaskNumber": 1,
+  "tasks": [],
+  "comments": []
+}

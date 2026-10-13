@@ -3,16 +3,9 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, renderTable } from '../output';
 import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { storyCountsByStage } from '../services/boards';
-import {
-  boardFlag,
-  type ContextFlags,
-  confirmDestructive,
-  promptIfMissing,
-  withContext,
-  workspaceFlag,
-} from './_shared';
+import { boardFlag, confirmDestructive, promptIfMissing, withContext } from './_shared';
 
-interface BoardOptions extends ContextFlags {
+interface BoardOptions {
   name?: string;
   prefix?: string;
   description?: string;
@@ -20,17 +13,14 @@ interface BoardOptions extends ContextFlags {
 }
 
 export function registerBoards(program: Command): void {
-  const boards = program.command('boards').description('Manage Boards in a Workspace');
-  const wsOption = ['--workspace <id>', 'the Workspace (default: current context)'] as const;
+  const boards = program.command('boards').description('Manage Boards');
 
   boards
     .command('list')
-    .description('List the Boards in a Workspace')
-    .option(...wsOption)
-    .action(async (opts: BoardOptions, cmd: Command) =>
+    .description('List the Boards')
+    .action(async (_opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-        printResult(await services.boards.list(ws), { json: globals.json, human: renderBoards });
+        printResult(await services.boards.list(), { json: globals.json, human: renderBoards });
       }),
     );
 
@@ -40,19 +30,17 @@ export function registerBoards(program: Command): void {
     .option('--name <name>', 'display name')
     .option('--prefix <PREFIX>', 'Story Key prefix, e.g. WEB for WEB-1')
     .option('--description <text>', 'description')
-    .option(...wsOption)
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
         const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Board name' });
         const keyPrefix = await promptIfMissing(opts.prefix, globals, {
           flag: '--prefix',
           message: 'Story Key prefix (e.g. WEB)',
         });
-        const board = await services.boards.create(ws, { id, name, keyPrefix, description: opts.description });
+        const board = await services.boards.create({ id, name, keyPrefix, description: opts.description });
         printResult(board, {
           json: globals.json,
-          human: (b) => `Created Board ${b.workspaceId}/${b.id} (${b.keyPrefix})`,
+          human: (b) => `Created Board ${b.id} (${b.keyPrefix})`,
         });
       }),
     );
@@ -60,12 +48,11 @@ export function registerBoards(program: Command): void {
   boards
     .command('show [id]')
     .description('Show a Board with its effective Stages and Custom Fields (default: current Board)')
-    .option(...wsOption)
-    .action(async (id: string | undefined, opts: BoardOptions, cmd: Command) =>
+    .action(async (id: string | undefined, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ ctx, services, globals }) => {
-        const ref = await services.context.resolveBoard(id ?? boardFlag({}), workspaceFlag(opts));
-        const effective = await services.config.effective(ref);
-        const storyCounts = await storyCountsByStage(ctx, ref);
+        const boardId = await services.context.resolveBoard(id ?? boardFlag({}));
+        const effective = await services.config.effective(boardId);
+        const storyCounts = await storyCountsByStage(ctx, boardId);
         printResult({ ...effective, storyCounts }, { json: globals.json, human: renderBoardShow });
       }),
     );
@@ -75,15 +62,13 @@ export function registerBoards(program: Command): void {
     .description("Edit a Board's name or description")
     .option('--name <name>', 'new display name')
     .option('--description <text>', 'new description')
-    .option(...wsOption)
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         if (opts.name === undefined && opts.description === undefined) {
           throw new UsageError('nothing to change', { hint: 'pass --name and/or --description' });
         }
-        const ref = await services.context.resolveBoard(id, workspaceFlag(opts));
-        const board = await services.boards.update(ref, { name: opts.name, description: opts.description });
-        printResult(board, { json: globals.json, human: (b) => `Updated Board ${b.workspaceId}/${b.id}` });
+        const board = await services.boards.update(id, { name: opts.name, description: opts.description });
+        printResult(board, { json: globals.json, human: (b) => `Updated Board ${b.id}` });
       }),
     );
 
@@ -91,17 +76,15 @@ export function registerBoards(program: Command): void {
     .command('delete <id>')
     .description('Delete a Board (refused when it has Stories, unless --force)')
     .option('--force', 'also delete all of its Stories')
-    .option(...wsOption)
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const ref = await services.context.resolveBoard(id, workspaceFlag(opts));
-        const label = `${ref.workspaceId}/${ref.boardId}`;
+        const boardId = (await services.boards.get(id)).id;
         await confirmDestructive(
-          opts.force ? `Delete Board ${label} and all of its Stories?` : `Delete Board ${label}?`,
+          opts.force ? `Delete Board ${boardId} and all of its Stories?` : `Delete Board ${boardId}?`,
           globals,
         );
-        await services.boards.remove(ref, { force: opts.force ?? false });
-        printResult({ deleted: ref }, { json: globals.json, human: () => `Deleted Board ${label}` });
+        await services.boards.remove(boardId, { force: opts.force ?? false });
+        printResult({ deleted: boardId }, { json: globals.json, human: () => `Deleted Board ${boardId}` });
       }),
     );
 }
@@ -116,10 +99,7 @@ function renderBoards(boards: BoardConfig[]): string {
 
 function renderBoardShow(data: EffectiveBoardConfig & { storyCounts: Record<string, number> }): string {
   const { board, storyCounts } = data;
-  const lines = [
-    `${colors.bold(board.name)} ${colors.dim(`${board.workspaceId}/${board.id}`)}`,
-    `Key prefix: ${board.keyPrefix}`,
-  ];
+  const lines = [`${colors.bold(board.name)} ${colors.dim(board.id)}`, `Key prefix: ${board.keyPrefix}`];
   if (board.description) lines.push(board.description);
   lines.push(
     '',

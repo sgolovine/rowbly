@@ -2,7 +2,6 @@
 import type {
   Assignee,
   BoardConfig,
-  BoardRef,
   Comment,
   ConfigLevel,
   CustomFieldDef,
@@ -23,10 +22,9 @@ import type {
   StoryKey,
   Task,
   TaskId,
-  WorkspaceConfig,
 } from '../schemas';
 
-export type { BoardRef, ConfigLevel, DataRoot, EffectiveBoardConfig };
+export type { ConfigLevel, DataRoot, EffectiveBoardConfig };
 
 export interface RowblyContext {
   /** Resolved path + kind ('local' | 'global'). */
@@ -46,10 +44,7 @@ export interface EpicView extends Epic {
   progress: { done: number; total: number };
 }
 
-export type ConfigTarget =
-  | { level: 'global' }
-  | { level: 'workspace'; workspaceId: Slug }
-  | { level: 'board'; ref: BoardRef };
+export type ConfigTarget = { level: 'global' } | { level: 'board'; boardId: Slug };
 export type Position = { before: Slug } | { after: Slug } | 'first' | 'last';
 export type RankPosition = { before: StoryKey } | { after: StoryKey } | 'top' | 'bottom';
 
@@ -58,30 +53,16 @@ export type RankPosition = { before: StoryKey } | { after: StoryKey } | 'top' | 
 export interface InitOptions {
   /** Where to create the Data Root: `<cwd>/.rowbly` (local) or `~/.rowbly` (`--global`). */
   root: DataRoot;
-  /** Optional first Workspace (`--workspace`, `--workspace-name`). */
-  workspace?: WorkspaceCreateInput;
-  /** Optional first Board in that Workspace (`--board`, `--board-name`, `--prefix`). Requires `workspace`. */
+  /** Optional first Board (`--board`, `--board-name`, `--prefix`). */
   board?: BoardCreateInput;
 }
 
 export interface InitResult {
   root: DataRoot;
-  workspace: WorkspaceConfig | null;
   board: BoardConfig | null;
 }
 
-// ── Workspaces & Assignees ──────────────────────────────────────────────────
-
-export interface WorkspaceCreateInput {
-  id: Slug;
-  name: string;
-  description?: string;
-}
-
-export interface WorkspacePatch {
-  name?: string;
-  description?: string;
-}
+// ── Assignees ───────────────────────────────────────────────────────────────
 
 export interface AssigneeInput {
   handle: Slug;
@@ -280,10 +261,8 @@ export interface DoctorReport {
 // ── Services ────────────────────────────────────────────────────────────────
 
 export interface ContextService {
-  resolveWorkspace(flag?: string): Promise<Slug>;
-  /** `workspaceFlag` (`--workspace` → `ROWBLY_WORKSPACE`) scopes the fallbacks when `flag` is not `ws/board`. */
-  resolveBoard(flag?: string, workspaceFlag?: string): Promise<BoardRef>;
-  use(ws?: Slug, board?: Slug): Promise<LocalState>;
+  resolveBoard(flag?: string): Promise<Slug>;
+  use(board: Slug): Promise<LocalState>;
   clearUse(): Promise<void>;
   setMe(handle: Slug | null): Promise<LocalState>;
 }
@@ -293,34 +272,26 @@ export interface SetupService {
 }
 
 export interface ConfigService {
-  effective(ref: BoardRef): Promise<EffectiveBoardConfig>;
-}
-
-export interface WorkspacesService {
-  list(): Promise<WorkspaceConfig[]>;
-  get(id: Slug): Promise<WorkspaceConfig>;
-  create(input: WorkspaceCreateInput): Promise<WorkspaceConfig>;
-  update(id: Slug, patch: WorkspacePatch): Promise<WorkspaceConfig>;
-  remove(id: Slug, opts: { force: boolean }): Promise<void>;
+  effective(boardId: Slug): Promise<EffectiveBoardConfig>;
 }
 
 export interface AssigneesService {
-  list(ws: Slug): Promise<Assignee[]>;
-  add(ws: Slug, input: AssigneeInput): Promise<Assignee>;
-  update(ws: Slug, handle: Slug, patch: AssigneePatch): Promise<Assignee>;
-  remove(ws: Slug, handle: Slug): Promise<{ storiesUpdated: number }>;
+  list(): Promise<Assignee[]>;
+  add(input: AssigneeInput): Promise<Assignee>;
+  update(handle: Slug, patch: AssigneePatch): Promise<Assignee>;
+  remove(handle: Slug): Promise<{ storiesUpdated: number }>;
 }
 
 export interface BoardsService {
-  list(ws: Slug): Promise<BoardConfig[]>;
-  get(ref: BoardRef): Promise<BoardConfig>;
-  create(ws: Slug, input: BoardCreateInput): Promise<BoardConfig>;
-  update(ref: BoardRef, patch: BoardPatch): Promise<BoardConfig>;
-  remove(ref: BoardRef, opts: { force: boolean }): Promise<void>;
+  list(): Promise<BoardConfig[]>;
+  get(id: Slug): Promise<BoardConfig>;
+  create(input: BoardCreateInput): Promise<BoardConfig>;
+  update(id: Slug, patch: BoardPatch): Promise<BoardConfig>;
+  remove(id: Slug, opts: { force: boolean }): Promise<void>;
 }
 
 export interface StagesService {
-  list(ref: BoardRef): Promise<{ stages: Stage[]; source: ConfigLevel }>;
+  list(boardId: Slug): Promise<{ stages: Stage[]; source: ConfigLevel }>;
   add(target: ConfigTarget, input: StageInput, position?: Position): Promise<Stage[]>;
   update(target: ConfigTarget, key: Slug, patch: StagePatch): Promise<Stage[]>;
   move(target: ConfigTarget, key: Slug, position: Position): Promise<Stage[]>;
@@ -332,22 +303,23 @@ export interface StagesService {
 }
 
 export interface FieldsService {
-  list(ref: BoardRef): Promise<{ fields: CustomFieldDef[]; source: ConfigLevel }>;
+  list(boardId: Slug): Promise<{ fields: CustomFieldDef[]; source: ConfigLevel }>;
   add(target: ConfigTarget, def: CustomFieldInput): Promise<CustomFieldDef[]>;
   update(target: ConfigTarget, key: Slug, patch: CustomFieldPatch): Promise<CustomFieldDef[]>;
   remove(target: ConfigTarget, key: Slug): Promise<{ valuesStripped: number }>;
 }
 
 export interface StoriesService {
-  list(scope: BoardRef | { workspaceId: Slug }, filter: StoryFilter): Promise<Story[]>;
+  /** `boardId: null` lists Stories across every Board. */
+  list(boardId: Slug | null, filter: StoryFilter): Promise<Story[]>;
   /** Case-insensitive Story Key. */
   get(key: string): Promise<Story>;
-  create(ref: BoardRef, input: StoryCreateInput): Promise<Story>;
+  create(boardId: Slug, input: StoryCreateInput): Promise<Story>;
   update(key: string, patch: StoryPatch): Promise<Story>;
   move(key: string, stage: Slug, opts?: { top?: boolean }): Promise<Story>;
   rank(key: string, position: RankPosition): Promise<Story>;
   remove(key: string): Promise<void>;
-  labelsInUse(ref: BoardRef): Promise<string[]>;
+  labelsInUse(boardId: Slug): Promise<string[]>;
 }
 
 export interface TasksService {
@@ -369,12 +341,12 @@ export interface CommentsService {
 
 export interface EpicsService {
   /** Default: open Epics only; `closed: true` only closed; `'all'` both. */
-  list(ws: Slug, opts?: { closed?: boolean | 'all' }): Promise<EpicView[]>;
-  get(ws: Slug, id: Slug): Promise<EpicView>;
-  create(ws: Slug, input: EpicCreateInput): Promise<Epic>;
-  update(ws: Slug, id: Slug, patch: EpicPatch): Promise<Epic>;
-  setClosed(ws: Slug, id: Slug, closed: boolean): Promise<Epic>;
-  remove(ws: Slug, id: Slug): Promise<{ storiesUnlinked: number }>;
+  list(opts?: { closed?: boolean | 'all' }): Promise<EpicView[]>;
+  get(id: Slug): Promise<EpicView>;
+  create(input: EpicCreateInput): Promise<Epic>;
+  update(id: Slug, patch: EpicPatch): Promise<Epic>;
+  setClosed(id: Slug, closed: boolean): Promise<Epic>;
+  remove(id: Slug): Promise<{ storiesUnlinked: number }>;
 }
 
 export interface DoctorService {
@@ -386,7 +358,6 @@ export interface Services {
   context: ContextService;
   setup: SetupService;
   config: ConfigService;
-  workspaces: WorkspacesService;
   assignees: AssigneesService;
   boards: BoardsService;
   stages: StagesService;

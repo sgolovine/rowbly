@@ -1,7 +1,7 @@
 // Reading and writing the Stage and Custom Field lists at one Configuration Cascade level
 // (contracts §3), shared by the stages and fields services.
 import { toTimestamp } from '../core';
-import { type BoardRef, type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Stage } from '../schemas';
+import { type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Slug, type Stage } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
 import type { ConfigTarget, RowblyContext } from './types';
 
@@ -14,7 +14,7 @@ export interface LevelList<T> {
   /** Where `items` comes from. */
   source: ConfigLevel;
   /** The Boards whose effective list is the target level's list. */
-  affected: BoardRef[];
+  affected: Slug[];
   /** Writes `next` at the target level. */
   save(next: T[]): Promise<void>;
 }
@@ -36,35 +36,16 @@ export async function openLevel<K extends ConfigListKey>(
 
   if (target.level === 'global') {
     const [items, source] = fallback();
-    const affected: BoardRef[] = [];
-    for (const ws of await repos.workspaces.list()) {
-      if (ws[key]) continue;
-      for (const board of await repos.boards.list(ws.id)) {
-        if (!board[key]) affected.push({ workspaceId: ws.id, boardId: board.id });
-      }
-    }
+    const affected = (await repos.boards.list()).filter((board) => !board[key]).map((board) => board.id);
     return { items, source, affected, save: (next) => repos.rootConfig.put({ ...root, [key]: next }) };
   }
 
-  if (target.level === 'workspace') {
-    const ws = await repos.workspaces.get(target.workspaceId);
-    const [items, source] = ws[key] ? [ws[key] as T[], 'workspace' as const] : fallback();
-    const affected = (await repos.boards.list(ws.id))
-      .filter((board) => !board[key])
-      .map((board) => ({ workspaceId: ws.id, boardId: board.id }));
-    return { items, source, affected, save: (next) => repos.workspaces.put({ ...ws, [key]: next, updatedAt: now }) };
-  }
-
-  const [ws, board] = await Promise.all([repos.workspaces.get(target.ref.workspaceId), repos.boards.get(target.ref)]);
-  const [items, source]: [T[], ConfigLevel] = board[key]
-    ? [board[key] as T[], 'board']
-    : ws[key]
-      ? [ws[key] as T[], 'workspace']
-      : fallback();
+  const board = await repos.boards.get(target.boardId);
+  const [items, source]: [T[], ConfigLevel] = board[key] ? [board[key] as T[], 'board'] : fallback();
   return {
     items,
     source,
-    affected: [{ workspaceId: board.workspaceId, boardId: board.id }],
+    affected: [board.id],
     save: (next) => repos.boards.put({ ...board, [key]: next, updatedAt: now }),
   };
 }
@@ -80,11 +61,7 @@ export async function readLevel<K extends ConfigListKey>(
 }
 
 /** The Boards a change to the `key` list at `target` applies to (contracts §3). */
-export async function affectedBoards(
-  ctx: RowblyContext,
-  target: ConfigTarget,
-  key: ConfigListKey,
-): Promise<BoardRef[]> {
+export async function affectedBoards(ctx: RowblyContext, target: ConfigTarget, key: ConfigListKey): Promise<Slug[]> {
   return (await openLevel(ctx, createRepositories(ctx.root), target, key)).affected;
 }
 

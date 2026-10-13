@@ -9,12 +9,10 @@ import { registerSetup } from './setup';
 import { registerStages } from './stages';
 import { registerStories } from './stories';
 import { registerTasks } from './tasks';
-import { registerWorkspaces } from './workspaces';
 
 /** Registers every command area. Each area owns its own file; this registry does not change. */
 export function registerCommands(program: Command): void {
   registerSetup(program);
-  registerWorkspaces(program);
   registerAssignees(program);
   registerBoards(program);
   registerStages(program);

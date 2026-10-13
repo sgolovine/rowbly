@@ -5,13 +5,12 @@ import { createServices, type RowblyContext } from '../../src/services';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { screens } from '../../src/tui/screens';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 async function setup(initial = 'doctor') {
   const tmp = await tempRoot();
-  await makeWorkspace(tmp.path, { id: 'acme' });
-  await makeBoard(tmp.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
+  await makeBoard(tmp.path, { id: 'web', keyPrefix: 'WEB' });
   const ctx: RowblyContext = {
     root: tmp.root,
     local: { version: 1 },
@@ -43,8 +42,8 @@ describe('doctor screen', () => {
 
   it('lists findings and fixes them with f', async () => {
     const { tmp, render } = await setup();
-    await makeStory(tmp.path, { key: 'WEB-1', workspaceId: 'acme', boardId: 'web', assignees: ['bob'] });
-    await makeStory(tmp.path, { key: 'WEB-2', workspaceId: 'acme', boardId: 'web', rank: 'a1', stage: 'gone' });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', assignees: ['bob'] });
+    await makeStory(tmp.path, { key: 'WEB-2', boardId: 'web', rank: 'a1', stage: 'gone' });
     const app = render();
     await waitForFrame(app, '1 error, 1 warning, 0 info · 1 fixable, press f');
     const frame = await waitForFrame(app, 'f fix');
@@ -70,10 +69,10 @@ describe('doctor screen', () => {
     await app.press('/', 'd', 'o', 'c', KEYS.enter, KEYS.enter);
     await waitForFrame(app, 'No problems found');
 
-    await makeStory(tmp.path, { key: 'WEB-1', workspaceId: 'acme', boardId: 'web', stage: 'gone' });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone' });
     await app.press('r');
     await waitForFrame(app, 'UNKNOWN_STAGE');
-    expect(await readdir(join(tmp.path, 'workspaces/acme/boards/web/stories'))).toEqual(['WEB-1.json']);
+    expect(await readdir(join(tmp.path, 'boards/web/stories'))).toEqual(['WEB-1.json']);
     app.unmount();
   });
 });

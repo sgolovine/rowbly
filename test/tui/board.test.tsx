@@ -17,10 +17,10 @@ import {
   taskSummary,
   truncate,
 } from '../../src/tui/screens/board/layout';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, type Rendered, renderTui, waitForFrame } from './helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 const FOUR_STAGES: Stage[] = [
   { key: 'backlog', name: 'Backlog', category: 'todo' },
@@ -39,15 +39,14 @@ const SIX_STAGES: Stage[] = [
 /** A Board with the given Stages and 6 Stories. */
 async function seed(stages: Stage[] = FOUR_STAGES) {
   const t = await tempRoot();
-  await makeWorkspace(t.path, {
-    id: 'acme',
+  await makeRootConfig(t.path, {
     assignees: [
       { handle: 'alice', name: 'Alice' },
       { handle: 'bob', name: 'Bob' },
     ],
   });
-  await makeBoard(t.path, { ...web, id: 'web', name: 'Website', keyPrefix: 'WEB', stages });
-  await makeBoard(t.path, { workspaceId: 'acme', id: 'api', name: 'API', keyPrefix: 'API' });
+  await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB', stages });
+  await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
   const task = (n: number, stage: string) => ({
     id: `WEB-1.${n}`,
     name: `Task ${n}`,
@@ -108,7 +107,7 @@ async function open(
     local?: RowblyContext['local'];
   } = {},
 ) {
-  const local = opts.local ?? { version: 1, workspace: 'acme', board: 'web' };
+  const local = opts.local ?? { version: 1, board: 'web' };
   const { ctx, toasts } = contextFor(t, createToastStore(), local);
   const services = (opts.patch ?? ((s) => s))(createServices(ctx));
   const app = renderTui(
@@ -129,7 +128,7 @@ const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.f
 
 /** Every Story file's contents, by file name. */
 async function storyFiles(t: TempRoot): Promise<Record<string, string>> {
-  const dir = join(t.path, 'workspaces', 'acme', 'boards', 'web', 'stories');
+  const dir = join(t.path, 'boards', 'web', 'stories');
   const files: Record<string, string> = {};
   for (const name of await readdir(dir)) files[name] = await readFile(join(dir, name), 'utf8');
   return files;
@@ -143,7 +142,7 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     const frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Website acme/web');
+    expect(frame).toContain('Website web');
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
     // key + Priority, truncated name, Assignees + Task summary
     expect(frame).toContain('▌ WEB-1 P1');
@@ -322,7 +321,7 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press('l', 'l', 'n');
-    await waitForFrame(app, (f) => f.includes('New Story on acme/web') && f.includes('‹ doing ›'));
+    await waitForFrame(app, (f) => f.includes('New Story on web') && f.includes('‹ doing ›'));
     await app.press(...'From board', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('Created WEB-7'));
     expect((await story(t, 'WEB-7')).stage).toBe('doing');
@@ -352,9 +351,9 @@ describe('board view', () => {
     await app.press('b');
     await waitForFrame(app, (f) => f.includes('Website web (current)'));
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('API acme/api') && f.includes('● Backlog (0)'));
+    await waitForFrame(app, (f) => f.includes('API api') && f.includes('● Backlog (0)'));
     expect(app.lastFrame()).not.toContain('WEB-');
-    expect(await createRepositories(t.root).localState.get()).toMatchObject({ workspace: 'acme', board: 'api' });
+    expect(await createRepositories(t.root).localState.get()).toMatchObject({ board: 'api' });
     app.unmount();
   });
 });
@@ -363,7 +362,7 @@ describe('home', () => {
   it('opens straight to the board view when a Board is in context', async () => {
     const t = await seed();
     const app = await open(t, { screen: 'home' });
-    expect(app.lastFrame()).toContain('Website acme/web');
+    expect(app.lastFrame()).toContain('Website web');
     app.unmount();
   });
 

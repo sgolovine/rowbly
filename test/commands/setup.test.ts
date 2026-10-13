@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { makeBoard, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeRootConfig, runCli, tempRoot } from '../helpers';
 
 const git = (cwd: string, ...args: string[]) => promisify(execFile)('git', args, { cwd });
 
@@ -22,34 +22,22 @@ async function filesUnder(dir: string): Promise<string[]> {
     .sort();
 }
 
-const INIT_FLAGS = [
-  '--no-prompt',
-  '--workspace',
-  'acme',
-  '--workspace-name',
-  'Acme',
-  '--board',
-  'web',
-  '--board-name',
-  'Web',
-  '--prefix',
-  'WEB',
-];
+const INIT_FLAGS = ['--no-prompt', '--board', 'web', '--board-name', 'Web', '--prefix', 'WEB'];
 
 describe('rowbly init', () => {
   it('creates the contracts §1 layout and the context; later commands need no flags', async () => {
     const dir = await emptyDir();
     const init = await runCli(['init', ...INIT_FLAGS], { cwd: dir });
     expect(init).toMatchObject({ exitCode: 0, stderr: '' });
-    expect(init.stdout).toContain('Now using acme/web');
+    expect(init.stdout).toContain('Created Board web (WEB)');
+    expect(init.stdout).toContain('Now using web');
 
     const root = join(dir, '.rowbly');
     expect(await filesUnder(root)).toEqual([
       '.gitignore',
+      'boards/web/board.config.json',
       'local.json',
       'rowbly.config.json',
-      'workspaces/acme/boards/web/board.config.json',
-      'workspaces/acme/workspace.config.json',
     ]);
     expect(await readFile(join(root, '.gitignore'), 'utf8')).toBe('local.json\n');
     expect(JSON.parse(await readFile(join(root, 'rowbly.config.json'), 'utf8')).stages).toHaveLength(4);
@@ -67,11 +55,11 @@ describe('rowbly init', () => {
     const again = await runCli(['init', '--no-prompt'], { cwd: dir });
     expect(again.exitCode).toBe(4);
     expect(again.stderr).toContain('Data Root already exists');
-    // The check runs before any first-Workspace input is asked for: a missing --workspace-name
+    // The check runs before any first-Board input is asked for: a missing --board-name
     // would otherwise exit 2 (or prompt in a terminal).
-    const beforePrompt = await runCli(['init', '--workspace', 'acme'], { cwd: dir });
+    const beforePrompt = await runCli(['init', '--board', 'web'], { cwd: dir });
     expect(beforePrompt.exitCode).toBe(4);
-    expect(beforePrompt.stderr).not.toContain('--workspace-name');
+    expect(beforePrompt.stderr).not.toContain('--board-name');
   });
 
   it('--global creates ~/.rowbly; --root creates the given path', async () => {
@@ -86,14 +74,14 @@ describe('rowbly init', () => {
     expect(await filesUnder(join(dir, 'data'))).toEqual(['.gitignore', 'rowbly.config.json']);
   });
 
-  it('non-interactive init exits 2 when a first Workspace or Board flag is missing', async () => {
+  it('non-interactive init exits 2 when a first Board flag is missing', async () => {
     const dir = await emptyDir();
-    const missing = await runCli(['init', '--workspace', 'acme'], { cwd: dir });
-    expect(missing.exitCode).toBe(2);
-    expect(missing.stderr).toContain('missing required --workspace-name');
-    const boardOnly = await runCli(['init', '--board', 'web'], { cwd: dir });
-    expect(boardOnly.exitCode).toBe(2);
-    expect(boardOnly.stderr).toContain('--board needs --workspace');
+    const missingName = await runCli(['init', '--board', 'web'], { cwd: dir });
+    expect(missingName.exitCode).toBe(2);
+    expect(missingName.stderr).toContain('missing required --board-name');
+    const missingPrefix = await runCli(['init', '--board', 'web', '--board-name', 'Web'], { cwd: dir });
+    expect(missingPrefix.exitCode).toBe(2);
+    expect(missingPrefix.stderr).toContain('missing required --prefix');
   });
 });
 
@@ -103,44 +91,32 @@ describe('rowbly use', () => {
     await git(dir, 'init', '-q');
     await runCli(['init', '--no-prompt'], { cwd: dir });
     const root = join(dir, '.rowbly');
-    await makeWorkspace(root, { id: 'acme' });
-    await makeWorkspace(root, { id: 'labs' });
-    await makeBoard(root, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
+    await makeBoard(root, { id: 'web', keyPrefix: 'WEB' });
 
-    const use = await runCli(['use', 'acme/web'], { cwd: dir });
-    expect(use).toMatchObject({ exitCode: 0, stdout: 'Now using acme/web\n' });
-    expect(JSON.parse(await readFile(join(root, 'local.json'), 'utf8'))).toEqual({
-      version: 1,
-      workspace: 'acme',
-      board: 'web',
-    });
+    const use = await runCli(['use', 'web'], { cwd: dir });
+    expect(use).toMatchObject({ exitCode: 0, stdout: 'Now using web\n' });
+    expect(JSON.parse(await readFile(join(root, 'local.json'), 'utf8'))).toEqual({ version: 1, board: 'web' });
     await expect(git(dir, 'check-ignore', '.rowbly/local.json')).resolves.toMatchObject({
       stdout: '.rowbly/local.json\n',
     });
   });
 
-  it('shows the current context and where each part came from', async () => {
+  it('shows the current Board and where it came from', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme' });
-    await makeBoard(t.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
-    await makeBoard(t.path, { id: 'api', workspaceId: 'acme', keyPrefix: 'API' });
+    await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
     const cli = (args: string[], env = {}) => runCli(args, { root: t.path, env });
 
-    const none = await cli(['use']);
-    expect(none.stdout).toMatch(/Workspace\s+acme\s+\(the only one\)/);
-    expect(none.stdout).toMatch(/Board\s+\(none\)/);
+    expect((await cli(['use'])).stdout).toMatch(/Board\s+web\s+\(the only one\)/);
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
+    expect((await cli(['use'])).stdout).toMatch(/Board\s+\(none\)/);
+    expect(JSON.parse((await cli(['use', '--json'])).stdout)).toEqual({ board: null });
 
-    await cli(['use', 'acme/api']);
-    expect(JSON.parse((await cli(['use', '--json'])).stdout)).toEqual({
-      workspace: { id: 'acme', source: 'local' },
-      board: { id: 'api', source: 'local' },
+    await cli(['use', 'api']);
+    expect(JSON.parse((await cli(['use', '--json'])).stdout)).toEqual({ board: { id: 'api', source: 'local' } });
+    expect(JSON.parse((await cli(['use', '--json'], { ROWBLY_BOARD: 'web' })).stdout)).toEqual({
+      board: { id: 'web', source: 'env' },
     });
-    expect(JSON.parse((await cli(['use', '--json'], { ROWBLY_BOARD: 'web' })).stdout).board).toEqual({
-      id: 'web',
-      source: 'env',
-    });
-    expect(JSON.parse((await cli(['use', '--json', '--board', 'web', '--workspace', 'acme'])).stdout)).toEqual({
-      workspace: { id: 'acme', source: 'flag' },
+    expect(JSON.parse((await cli(['use', '--json', '--board', 'web'])).stdout)).toEqual({
       board: { id: 'web', source: 'flag' },
     });
 
@@ -149,12 +125,11 @@ describe('rowbly use', () => {
     expect(JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8'))).toEqual({ version: 1 });
   });
 
-  it('exits 3 for an unknown Workspace or Board', async () => {
+  it('exits 3 for an unknown Board and 2 for a Board with --clear', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme' });
+    await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
     expect((await runCli(['use', 'nope'], { root: t.path })).exitCode).toBe(3);
-    expect((await runCli(['use', 'acme/nope'], { root: t.path })).exitCode).toBe(3);
-    expect((await runCli(['use', 'acme/'], { root: t.path })).exitCode).toBe(2);
+    expect((await runCli(['use', 'web', '--clear'], { root: t.path })).exitCode).toBe(2);
   });
 });
 
@@ -163,10 +138,7 @@ describe('rowbly whoami', () => {
     const t = await tempRoot();
     await git(t.dir, 'init', '-q');
     await git(t.dir, 'config', 'user.email', 'Sam@Example.com');
-    await makeWorkspace(t.path, {
-      id: 'acme',
-      assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }],
-    });
+    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }] });
     const whoami = await runCli(['whoami'], { cwd: t.dir });
     expect(whoami).toMatchObject({ exitCode: 0, stdout: 'sam  (matched by git email)\n' });
     expect(JSON.parse((await runCli(['whoami', '--json'], { cwd: t.dir })).stdout)).toEqual({
@@ -177,7 +149,7 @@ describe('rowbly whoami', () => {
 
   it('sets Me, warns for a handle outside the roster, and clears it', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme', assignees: [{ handle: 'sam', name: 'Sam' }] });
+    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
     const cli = (...args: string[]) => runCli(args, { root: t.path });
 
     expect(await cli('whoami')).toMatchObject({ stdout: expect.stringContaining('Me is not set') });
@@ -186,7 +158,7 @@ describe('rowbly whoami', () => {
 
     const outside = await cli('whoami', 'bob');
     expect(outside).toMatchObject({ exitCode: 0, stdout: 'You are bob\n' });
-    expect(outside.stderr).toContain('warning: "bob" is not in the roster of Workspace "acme"');
+    expect(outside.stderr).toContain('warning: "bob" is not in the roster');
 
     expect((await cli('whoami', '--clear')).exitCode).toBe(0);
     expect(JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8'))).toEqual({ version: 1 });
@@ -196,13 +168,11 @@ describe('rowbly whoami', () => {
 describe('rowbly config show', () => {
   it('prints the effective Stages and Custom Fields with their source levels', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, {
-      id: 'acme',
+    await makeRootConfig(t.path, {
       customFields: [{ key: 'size', name: 'Size', type: 'select', options: ['s', 'm'], required: true }],
     });
     await makeBoard(t.path, {
       id: 'web',
-      workspaceId: 'acme',
       keyPrefix: 'WEB',
       stages: [{ key: 'open', name: 'Open', category: 'todo' }],
     });
@@ -210,12 +180,10 @@ describe('rowbly config show', () => {
     expect(human.exitCode).toBe(0);
     expect(human.stdout).toContain('Stages (from board)');
     expect(human.stdout).toMatch(/open\s+Open\s+todo/);
-    expect(human.stdout).toContain('Custom Fields (from workspace)');
+    expect(human.stdout).toContain('Custom Fields (from global)');
     expect(human.stdout).toMatch(/size\s+Size\s+select\s+yes\s+s, m/);
 
-    const json = JSON.parse(
-      (await runCli(['config', 'show', '--json', '--board', 'acme/web'], { root: t.path })).stdout,
-    );
-    expect(json).toMatchObject({ stagesSource: 'board', customFieldsSource: 'workspace', board: { id: 'web' } });
+    const json = JSON.parse((await runCli(['config', 'show', '--json', '--board', 'web'], { root: t.path })).stdout);
+    expect(json).toMatchObject({ stagesSource: 'board', customFieldsSource: 'global', board: { id: 'web' } });
   });
 });

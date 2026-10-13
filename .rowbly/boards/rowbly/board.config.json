@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "rowbly",
+  "name": "Rowbly",
+  "description": "Rowbly main board",
+  "keyPrefix": "ROW",
+  "stages": [
+    {
+      "key": "backlog",
+      "name": "Backlog",
+      "category": "todo"
+    },
+    {
+      "key": "in-progress",
+      "name": "In Progress",
+      "category": "in_progress"
+    },
+    {
+      "key": "done",
+      "name": "Done",
+      "category": "done"
+    }
+  ],
+  "createdAt": "2026-10-13T02:54:33.820Z",
+  "updatedAt": "2026-10-13T02:54:41.933Z"
+}

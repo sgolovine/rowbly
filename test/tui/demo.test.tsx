@@ -38,17 +38,7 @@ describe('home screen', () => {
   it('lists the go-to destinations and opens one', async () => {
     const app = renderApp(screens, 'home');
     await app.press();
-    for (const label of [
-      'Board',
-      'Stories',
-      'Epics',
-      'Workspaces',
-      'Boards',
-      'Assignees',
-      'Stages',
-      'Fields',
-      'Context',
-    ]) {
+    for (const label of ['Board', 'Stories', 'Epics', 'Boards', 'Assignees', 'Stages', 'Fields', 'Context']) {
       expect(app.lastFrame()).toContain(label);
     }
     await app.press('j', 'j', KEYS.enter);

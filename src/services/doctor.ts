@@ -11,8 +11,6 @@ import {
   RowblyConfigSchema,
   type Story,
   StorySchema,
-  type WorkspaceConfig,
-  WorkspaceConfigSchema,
 } from '../schemas';
 import {
   CONFLICT_MARKER_RE,
@@ -67,16 +65,7 @@ interface StoryEntry {
   dirty: boolean;
 }
 
-interface WorkspaceEntry {
-  id: string;
-  /** `null` when missing, invalid or mismatched. */
-  config: WorkspaceConfig | null;
-  /** Epic ids that have a file, valid or not. */
-  epicFiles: Set<string>;
-}
-
 interface BoardEntry {
-  workspaceId: string;
   boardId: string;
   dir: string;
   config: BoardConfig | null;
@@ -126,20 +115,15 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
     // A Data Root that is itself a git repository (e.g. `~/.rowbly`) keeps `.git/` out of the report.
     const files = (await listDataRootFiles(ctx.root)).filter((file) => file !== '.git' && !file.startsWith('.git/'));
     const fileSet = new Set(files);
-    const workspaces = new Map<string, WorkspaceEntry>();
     const boards = new Map<string, BoardEntry>();
-    const epicFiles: { ws: string; id: string; file: string }[] = [];
-    const workspaceOf = (id: string) => {
-      const entry = workspaces.get(id) ?? { id, config: null, epicFiles: new Set<string>() };
-      workspaces.set(id, entry);
-      return entry;
-    };
-    const boardOf = (workspaceId: string, boardId: string) => {
-      const dir = `workspaces/${workspaceId}/boards/${boardId}`;
-      workspaceOf(workspaceId);
+    /** Epic ids that have a file, valid or not. */
+    const epicIds = new Set<string>();
+    const epicFiles: { id: string; file: string }[] = [];
+    const boardOf = (boardId: string) => {
+      const dir = `boards/${boardId}`;
       let entry = boards.get(dir);
       if (!entry) {
-        entry = { workspaceId, boardId, dir, config: null, storyFiles: [], stories: [], used: new Set() };
+        entry = { boardId, dir, config: null, storyFiles: [], stories: [], used: new Set() };
         boards.set(dir, entry);
       }
       return entry;
@@ -148,27 +132,21 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
     // 1. Sort every file into the layout (contracts §1); anything else is unknown.
     for (const file of files) {
       const parts = file.split('/');
-      const [top, ws = '', kind, id = '', sub, name = ''] = parts;
+      const [top, id = '', sub, name = ''] = parts;
       if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore'].includes(file)) continue;
-      if (top === 'workspaces' && isSlug(ws)) {
-        if (parts.length === 3 && kind === 'workspace.config.json') {
-          workspaceOf(ws);
+      if (parts.length === 2 && top === 'epics' && id.endsWith('.json') && isSlug(id.slice(0, -5))) {
+        epicIds.add(id.slice(0, -5));
+        epicFiles.push({ id: id.slice(0, -5), file });
+        continue;
+      }
+      if (top === 'boards' && isSlug(id)) {
+        if (parts.length === 3 && sub === 'board.config.json') {
+          boardOf(id);
           continue;
         }
-        if (parts.length === 4 && kind === 'epics' && id.endsWith('.json') && isSlug(id.slice(0, -5))) {
-          workspaceOf(ws).epicFiles.add(id.slice(0, -5));
-          epicFiles.push({ ws, id: id.slice(0, -5), file });
+        if (parts.length === 4 && sub === 'stories' && /\.json$/.test(name) && STORY_KEY_RE.test(fileKey(name))) {
+          boardOf(id).storyFiles.push(file);
           continue;
-        }
-        if (kind === 'boards' && isSlug(id)) {
-          if (parts.length === 5 && sub === 'board.config.json') {
-            boardOf(ws, id);
-            continue;
-          }
-          if (parts.length === 6 && sub === 'stories' && /\.json$/.test(name) && STORY_KEY_RE.test(fileKey(name))) {
-            boardOf(ws, id).storyFiles.push(file);
-            continue;
-          }
         }
       }
       add('UNKNOWN_FILE', file, 'file is not part of the Data Root layout; Rowbly ignores it');
@@ -182,17 +160,6 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
       add('SCHEMA_INVALID', 'rowbly.config.json', 'required file is missing');
     }
 
-    for (const entry of workspaces.values()) {
-      const file = `workspaces/${entry.id}/workspace.config.json`;
-      if (!fileSet.has(file)) {
-        add('SCHEMA_INVALID', file, 'required file is missing; Rowbly ignores this Workspace folder');
-        continue;
-      }
-      const config = parse(file, await readDataRootFile(ctx.root, file), WorkspaceConfigSchema);
-      if (config && mismatch(file, [['id', config.id, entry.id]])) continue;
-      entry.config = config;
-    }
-
     for (const entry of boards.values()) {
       const file = `${entry.dir}/board.config.json`;
       if (!fileSet.has(file)) {
@@ -200,26 +167,13 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
         continue;
       }
       const config = parse(file, await readDataRootFile(ctx.root, file), BoardConfigSchema);
-      if (
-        config &&
-        mismatch(file, [
-          ['id', config.id, entry.boardId],
-          ['workspaceId', config.workspaceId, entry.workspaceId],
-        ])
-      ) {
-        continue;
-      }
+      if (config && mismatch(file, [['id', config.id, entry.boardId]])) continue;
       entry.config = config;
     }
 
-    for (const { ws, id, file } of epicFiles) {
+    for (const { id, file } of epicFiles) {
       const epic: Epic | null = parse(file, await readDataRootFile(ctx.root, file), EpicSchema);
-      if (epic) {
-        mismatch(file, [
-          ['id', epic.id, id],
-          ['workspaceId', epic.workspaceId, ws],
-        ]);
-      }
+      if (epic) mismatch(file, [['id', epic.id, id]]);
     }
 
     /** Reports an id/path mismatch for the first differing field; returns whether there was one. */
@@ -235,12 +189,12 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
 
     // 3. Duplicate key prefixes.
     const byPrefix = groupBy(
-      [...boards.values()].filter((b) => b.config && workspaces.get(b.workspaceId)?.config),
+      [...boards.values()].filter((b) => b.config),
       (b) => b.config?.keyPrefix ?? '',
     );
     for (const [prefix, group] of byPrefix) {
       if (group.length < 2) continue;
-      const names = group.map((b) => `${b.workspaceId}/${b.boardId}`);
+      const names = group.map((b) => b.boardId);
       for (const board of group.slice(1)) {
         add(
           'DUPLICATE_PREFIX',
@@ -252,7 +206,7 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
 
     // 4. Story files, Story Keys and conflicts, Board by Board.
     for (const board of boards.values()) {
-      const config = workspaces.get(board.workspaceId)?.config ? board.config : null;
+      const config = board.config;
       for (const file of board.storyFiles) board.used.add(numberOf(fileKey(file)));
       for (const file of board.storyFiles) {
         const text = await readDataRootFile(ctx.root, file);
@@ -273,14 +227,7 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
         }
         const story = parse(file, text, StorySchema);
         if (!story) continue;
-        if (
-          mismatch(file, [
-            ['workspaceId', story.workspaceId, board.workspaceId],
-            ['boardId', story.boardId, board.boardId],
-          ])
-        ) {
-          continue;
-        }
+        if (mismatch(file, [['boardId', story.boardId, board.boardId]])) continue;
         if (config && !story.key.startsWith(`${config.keyPrefix}-`)) {
           add('ID_PATH_MISMATCH', file, `key "${story.key}" does not use its Board's key prefix ${config.keyPrefix}`, {
             details: { field: 'key', actual: story.key, expected: config.keyPrefix },
@@ -331,11 +278,10 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
 
     // 5. References, Custom Fields and task counters, Story by Story.
     for (const board of boards.values()) {
-      const workspace = workspaces.get(board.workspaceId);
-      if (!global || !workspace?.config || !board.config) continue;
-      const effective = cascade(global, workspace.config, board.config);
+      if (!global || !board.config) continue;
+      const effective = cascade(global, board.config);
       const stageKeys = new Set(effective.stages.map((s) => s.key));
-      const roster = new Set(workspace.config.assignees.map((a) => a.handle));
+      const roster = new Set(global.assignees.map((a) => a.handle));
       for (const entry of board.stories) {
         const { story } = entry;
         const file = entry.file;
@@ -362,7 +308,7 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
           });
         }
 
-        if (story.epicId !== null && !workspace.epicFiles.has(story.epicId)) {
+        if (story.epicId !== null && !epicIds.has(story.epicId)) {
           const epicId = story.epicId;
           add('MISSING_EPIC', file, `${story.key} links to missing Epic "${epicId}"`, {
             apply: () => {
@@ -445,9 +391,7 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
       const state = parse('local.json', await readDataRootFile(ctx.root, 'local.json'), LocalStateSchema);
       if (state) {
         local.state = state;
-        const workspaceOk =
-          state.workspace !== undefined && fileSet.has(`workspaces/${state.workspace}/workspace.config.json`);
-        const clear = (field: 'workspace' | 'board' | 'me', message: string) =>
+        const clear = (field: 'board' | 'me', message: string) =>
           add('STALE_LOCAL_STATE', 'local.json', message, {
             apply: () => {
               const { [field]: removed, ...rest } = local.state;
@@ -456,22 +400,11 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
               return `cleared ${field} "${removed}" from Local State`;
             },
           });
-        if (state.workspace !== undefined && !workspaceOk) {
-          clear('workspace', `current Workspace "${state.workspace}" does not exist`);
+        if (state.board !== undefined && !fileSet.has(`boards/${state.board}/board.config.json`)) {
+          clear('board', `current Board "${state.board}" does not exist`);
         }
-        if (
-          state.board !== undefined &&
-          !(workspaceOk && fileSet.has(`workspaces/${state.workspace}/boards/${state.board}/board.config.json`))
-        ) {
-          clear('board', `current Board "${state.board}" does not exist in Workspace "${state.workspace ?? '(none)'}"`);
-        }
-        const rosters = [...workspaces.values()].map((w) => w.config);
-        if (
-          state.me !== undefined &&
-          rosters.every((config) => config !== null) &&
-          !rosters.some((config) => config?.assignees.some((a) => a.handle === state.me))
-        ) {
-          clear('me', `Me "${state.me}" is not in any Workspace roster`);
+        if (state.me !== undefined && global && !global.assignees.some((a) => a.handle === state.me)) {
+          clear('me', `Me "${state.me}" is not in the roster`);
         }
       }
     }
@@ -486,7 +419,7 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
       const [ours, theirs] = stories;
       if (!ours?.ok || !theirs?.ok) return null;
       const key = fileKey(file);
-      const fits = (s: Story) => s.key === key && s.workspaceId === board.workspaceId && s.boardId === board.boardId;
+      const fits = (s: Story) => s.key === key && s.boardId === board.boardId;
       // Equal `createdAt` means one Story edited on both branches, which needs a manual merge.
       if (!fits(ours.value) || !fits(theirs.value) || ours.value.createdAt === theirs.value.createdAt) return null;
       return compare(ours.value.createdAt, theirs.value.createdAt) <= 0
@@ -596,7 +529,7 @@ export function conflictSides(text: string): [string, string] | null {
 }
 
 function storyPath(story: Story): string {
-  return `workspaces/${story.workspaceId}/boards/${story.boardId}/stories/${story.key}.json`;
+  return `boards/${story.boardId}/stories/${story.key}.json`;
 }
 
 /** `…/stories/WEB-4.json` → `WEB-4`. */

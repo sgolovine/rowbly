@@ -4,8 +4,7 @@ import { type Repositories, resolveCascade } from '../storage';
 import type { RowblyContext, TasksService } from './types';
 
 export function createTasksService(ctx: RowblyContext, repos: Repositories): TasksService {
-  const stagesOf = async (story: Story) =>
-    (await resolveCascade(ctx.root, { workspaceId: story.workspaceId, boardId: story.boardId })).stages;
+  const stagesOf = async (story: Story) => (await resolveCascade(ctx.root, story.boardId)).stages;
 
   /** Replaces the Task in its Story, stamping both `updatedAt`s, and writes the Story. */
   async function save(story: Story, task: Task): Promise<Task> {

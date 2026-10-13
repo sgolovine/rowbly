@@ -65,20 +65,16 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
   return (
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
-      <Text dimColor>Leave the Workspace id empty to skip the first Workspace and Board.</Text>
+      <Text dimColor>Leave the Board id empty to skip the first Board.</Text>
       <Form
         fields={[
-          { name: 'workspaceId', label: 'Workspace id', kind: 'text' },
-          { name: 'workspaceName', label: 'Workspace name', kind: 'text' },
           { name: 'boardId', label: 'Board id', kind: 'text' },
           { name: 'boardName', label: 'Board name', kind: 'text' },
           { name: 'prefix', label: 'Key prefix', kind: 'text' },
         ]}
         onSubmit={async (values) => {
-          const wsId = text(values.workspaceId);
           const boardId = text(values.boardId);
-          // Names default to the ids, and the prefix to the Board id upper-cased.
-          const workspace = wsId ? { id: wsId, name: text(values.workspaceName) || wsId } : undefined;
+          // The name defaults to the id, and the prefix to the Board id upper-cased.
           const board = boardId
             ? {
                 id: boardId,
@@ -86,7 +82,7 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
                 keyPrefix: text(values.prefix) || boardId.toUpperCase(),
               }
             : undefined;
-          await createServices(newContext(root, warn)).setup.init({ root, workspace, board });
+          await createServices(newContext(root, warn)).setup.init({ root, board });
           toast.push('info', `Created ${root.path}`);
           if (stay) {
             router.pop();

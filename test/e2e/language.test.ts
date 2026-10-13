@@ -9,7 +9,7 @@ import { userText } from './sourceText';
  * in another sense (`order`, `position`, `category`, `note`) are left out.
  */
 const AVOID =
-  /\b(issues?|tickets?|sub-?tasks?|columns?|cards?|lanes?|status(es)?|states?|story (id|slug)s?|checklist items?|tags?|projects?|users?|owners?|members?|propert(y|ies)|attributes?|metadata|sessions?|profiles?|databases?|initiatives?|importance|inheritance|overrides?)\b/i;
+  /\b(issues?|tickets?|sub-?tasks?|columns?|cards?|lanes?|status(es)?|states?|story (id|slug)s?|checklist items?|tags?|projects?|workspaces?|users?|owners?|members?|propert(y|ies)|attributes?|metadata|sessions?|profiles?|databases?|initiatives?|importance|inheritance|overrides?)\b/i;
 
 /** Legitimate uses, removed from the text before matching. */
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [

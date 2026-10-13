@@ -9,7 +9,7 @@
 
 - Storage should be configured to adhere to the core concepts.
 
-- Workspaces hold Boards, Stages, Stories, Tasks, Epics and Assignees.
+- The Data Root holds Boards, Stages, Stories, Tasks, Epics and Assignees. There are no Workspaces (ADR-0007).
 
 - A Board contains Stories
 
@@ -24,13 +24,11 @@
 
 - The Custom Fields that a story can have are configured per board.
 
-- Boards should contain a `workspaceId` field.
-
 - Stories, Stages, and Tasks should contain a `boardId` field.
 
 - Tasks should contain a `storyId` field.
 
-- Epics should contain a `workspaceId` field. They are linked to `storyId` for stories.
+- Epics live in the Data Root and can span any Boards. A Story links to its Epic with `epicId` (ADR-0004).
 
 - We should have a storage layer that reads and writes data and uses `zod` to make sure everything is correct.
 
@@ -38,16 +36,13 @@
 ```
 rowbly/
   rowbly.config.json
-  workspaces/
-    <workspace_slug>/
-      workspace.config.json
-      boards/
-        <board_slug>/
-          board.config.json
-          stories/
-            <story_slug>.json
-      epics/
-        <epic_slug>.json
+  boards/
+    <board_slug>/
+      board.config.json
+      stories/
+        <story_slug>.json
+  epics/
+    <epic_slug>.json
 
 ```
 
@@ -55,9 +50,8 @@ rowbly/
 
 Rowbly will be highly configurable. It includes these configuration files
 
-- `rowbly.config.json` (required) - top level configuration file.
-- `workspace.config.json` (optional) - overrides any config in `rowbly.config.json` for the workspace.
-- `board.config.json` (optional) - overrides any top level or workspace config for the specific board.
+- `rowbly.config.json` (required) - top level configuration file. Also holds the Assignee roster.
+- `board.config.json` (optional) - overrides any top level config for the specific board.
 
 Configuration should include the following:
 - The stages for stories within a board.
@@ -87,7 +81,7 @@ Running the CLI without any commands will result in it running interactively. Ru
 ```
 rowbly # interactive TUI
 
-rowbly issues list --workspace <workspace_id> # command based
+rowbly issues list --board <board_id> # command based
 
 ```
 
@@ -95,7 +89,6 @@ rowbly issues list --workspace <workspace_id> # command based
 
 Here is a non-exhaustive list of CLI features we need to cover. Assume that more will be added later. Must be covered in both the Interactive CLI + Command Driven CLI
 
-- CRUD Workspace actions
 - CRUD Board Actions
 - CRUD Story actions
 - CRUD for Board custom fields

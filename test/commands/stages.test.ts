@@ -3,16 +3,15 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_STAGES } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeStory, runCli, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
-/** Global stages are the defaults; Workspace acme has one Board, web, which inherits them. */
+/** Global stages are the defaults; the one Board, web, inherits them. */
 async function setup() {
   const t = await tempRoot();
-  await createRepositories(t.root).rootConfig.put({ version: 1, stages: [...DEFAULT_STAGES] });
-  await makeWorkspace(t.path, { id: 'acme' });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
+  await createRepositories(t.root).rootConfig.put({ version: 1, assignees: [], stages: [...DEFAULT_STAGES] });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   const cli = (...args: string[]) => runCli(args, { root: t.path, cwd: t.dir });
   const read = async (path: string) => JSON.parse(await readFile(join(t.path, path), 'utf8'));
   return { t, cli, read };
@@ -35,8 +34,8 @@ describe('rowbly stages', () => {
     );
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Added Stage qa');
-    expect(result.stdout).toContain('board level (acme/web); affects acme/web');
-    const board = await read('workspaces/acme/boards/web/board.config.json');
+    expect(result.stdout).toContain('board level (web); affects web');
+    const board = await read('boards/web/board.config.json');
     expect(board.stages.map((s: { key: string }) => s.key)).toEqual(['backlog', 'todo', 'in-progress', 'qa', 'done']);
     expect(await readFile(join(t.path, 'rowbly.config.json'), 'utf8')).toBe(globalBefore);
   });
@@ -56,21 +55,21 @@ describe('rowbly stages', () => {
     expect(moved.exitCode).toBe(0);
     expect(JSON.parse(moved.stdout)).toMatchObject({ storiesMoved: 2, tasksMoved: 0, level: 'board' });
 
-    const stories = await createRepositories(t.root).stories.allInBoard(web);
+    const stories = await createRepositories(t.root).stories.allInBoard('web');
     expect(stories.every((s) => s.stage === 'backlog')).toBe(true);
     const byRank = [...stories].sort((a, b) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0)).map((s) => s.key);
     expect(byRank).toEqual(['WEB-1', 'WEB-2', 'WEB-4', 'WEB-3']);
   });
 
-  it('defaults to the Workspace level when no Board is in context, and --level selects one', async () => {
+  it('defaults to the global level when no Board is in context, and --level selects one', async () => {
     const { t, cli, read } = await setup();
-    await makeBoard(t.path, { id: 'api', workspaceId: 'acme', keyPrefix: 'API' });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     const added = await cli('stages', 'add', 'qa', '--name', 'QA', '--category', 'in_progress', '--json');
-    expect(JSON.parse(added.stdout)).toMatchObject({ level: 'workspace', affectedBoards: [{ boardId: 'api' }, web] });
-    expect((await read('workspaces/acme/workspace.config.json')).stages).toHaveLength(5);
+    expect(JSON.parse(added.stdout)).toMatchObject({ level: 'global', affectedBoards: ['api', 'web'] });
+    expect((await read('rowbly.config.json')).stages).toHaveLength(5);
 
-    const global = await cli('stages', 'list', '--level', 'global', '--json');
-    expect(JSON.parse(global.stdout)).toMatchObject({ level: 'global', source: 'global' });
+    const board = await cli('stages', 'list', '--level', 'board', '--board', 'web', '--json');
+    expect(JSON.parse(board.stdout)).toMatchObject({ level: 'board', source: 'global' });
     expect((await cli('stages', 'list', '--level', 'nope')).exitCode).toBe(2);
   });
 
@@ -85,7 +84,7 @@ describe('rowbly stages', () => {
       'in-progress',
     ]);
     const list = await cli('stages', 'list');
-    expect(list.stdout).toContain('board level (acme/web); from board');
+    expect(list.stdout).toContain('board level (web); from board');
     expect(list.stdout).toMatch(/3\s+todo\s+Next\s+in_progress/);
     expect((await cli('stages', 'move', 'done')).exitCode).toBe(2);
     expect((await cli('stages', 'edit', 'nope', '--name', 'x')).exitCode).toBe(3);

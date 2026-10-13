@@ -13,7 +13,6 @@ import { createStagesService } from './stages';
 import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
-import { createWorkspacesService } from './workspaces';
 
 export type * from './types';
 
@@ -24,7 +23,6 @@ export function createServices(ctx: RowblyContext): Services {
     context: createContextService(ctx, repos),
     setup: createSetupService(ctx, repos),
     config: createConfigService(ctx, repos),
-    workspaces: createWorkspacesService(ctx, repos),
     assignees: createAssigneesService(ctx, repos),
     boards: createBoardsService(ctx, repos),
     stages: createStagesService(ctx, repos),
@@ -43,8 +41,6 @@ export interface CreateContextOptions {
   home: string;
   /** `--root`. */
   root?: string;
-  /** `--workspace`, used to pick the roster when Me comes from the git email. */
-  workspace?: string;
   warn(message: string): void;
 }
 
@@ -72,11 +68,10 @@ async function meFromGitEmail(ctx: RowblyContext, opts: CreateContextOptions): P
   const email = await gitUserEmail(opts.cwd);
   if (!email) return null;
   try {
-    const workspaceId = await createServices(ctx).context.resolveWorkspace(opts.workspace);
-    const workspace = await createRepositories(ctx.root).workspaces.get(workspaceId);
-    return workspace.assignees.find((a) => a.email?.toLowerCase() === email.toLowerCase())?.handle ?? null;
+    const { assignees } = await createRepositories(ctx.root).rootConfig.get();
+    return assignees.find((a) => a.email?.toLowerCase() === email.toLowerCase())?.handle ?? null;
   } catch {
-    // No resolvable Workspace means no roster to match against.
+    // An unreadable root config means no roster to match against.
     return null;
   }
 }

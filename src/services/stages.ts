@@ -8,8 +8,8 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories): St
   const open = (target: ConfigTarget) => openLevel(ctx, repos, target, 'stages');
 
   return {
-    async list(ref) {
-      const { stages, stagesSource } = await resolveCascade(ctx.root, ref);
+    async list(boardId) {
+      const { stages, stagesSource } = await resolveCascade(ctx.root, boardId);
       return { stages, source: stagesSource };
     },
 
@@ -55,7 +55,7 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories): St
         findStage(level.items, moveTo);
       }
 
-      const boards = await Promise.all(level.affected.map((ref) => repos.stories.allInBoard(ref)));
+      const boards = await Promise.all(level.affected.map((boardId) => repos.stories.allInBoard(boardId)));
       const all = boards.flat();
       const storiesUsing = all.filter((story) => story.stage === key).length;
       const tasksUsing = all.flatMap((story) => story.tasks).filter((task) => task.stage === key).length;

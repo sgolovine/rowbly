@@ -7,26 +7,24 @@ import {
   fixedIds,
   makeBoard,
   makeEpic,
+  makeRootConfig,
   makeStory,
-  makeWorkspace,
   type TempRoot,
   tempRoot,
 } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
-const api = { workspaceId: 'acme', boardId: 'api' };
+const web = 'web';
+const api = 'api';
 
 async function setup(opts: { me?: string | null } = {}) {
   const t = await tempRoot();
-  await makeWorkspace(t.path, {
-    id: 'acme',
+  await makeRootConfig(t.path, {
     assignees: [
       { handle: 'alice', name: 'Alice' },
       { handle: 'bob', name: 'Bob' },
     ],
   });
   await makeBoard(t.path, {
-    ...web,
     id: 'web',
     keyPrefix: 'WEB',
     customFields: [
@@ -62,7 +60,7 @@ describe('stories.create', () => {
 
   it('allocates max+1 and reuses a deleted highest key', async () => {
     const { t, services } = await setup();
-    for (const key of ['WEB-1', 'WEB-2', 'WEB-3']) await makeStory(t.path, { ...web, key });
+    for (const key of ['WEB-1', 'WEB-2', 'WEB-3']) await makeStory(t.path, { boardId: web, key });
     expect((await services.stories.create(web, { name: 'Four' })).key).toBe('WEB-4');
     await services.stories.remove('WEB-4');
     expect((await services.stories.create(web, { name: 'Again' })).key).toBe('WEB-4');
@@ -98,7 +96,7 @@ describe('stories.create', () => {
 
   it('validates the Stage, Epic, labels, due date and Custom Fields', async () => {
     const { t, services } = await setup();
-    await makeEpic(t.path, { id: 'launch', workspaceId: 'acme' });
+    await makeEpic(t.path, { id: 'launch' });
     await expect(services.stories.create(web, { name: 'X', stage: 'nope' })).rejects.toThrow(ValidationError);
     await expect(services.stories.create(web, { name: 'X', epicId: 'ghost' })).rejects.toThrow(ValidationError);
     await expect(services.stories.create(web, { name: 'X', labels: ['Bad Label'] })).rejects.toThrow(ValidationError);
@@ -128,7 +126,6 @@ describe('stories.create', () => {
   it('requires required Custom Fields', async () => {
     const { t, services } = await setup();
     await makeBoard(t.path, {
-      ...api,
       id: 'api',
       keyPrefix: 'API',
       customFields: [{ key: 'team', name: 'Team', type: 'text', required: true }],
@@ -141,7 +138,7 @@ describe('stories.create', () => {
 describe('stories.update', () => {
   it('replaces, adds and removes Assignees and Labels and refreshes updatedAt', async () => {
     const { t, services, clock } = await setup();
-    await makeStory(t.path, { ...web, key: 'WEB-1', assignees: ['alice'], labels: ['ui'] });
+    await makeStory(t.path, { boardId: web, key: 'WEB-1', assignees: ['alice'], labels: ['ui'] });
     clock.advance(1000);
     let story = await services.stories.update('web-1', { addAssignees: ['bob'], addLabels: ['api'] });
     expect(story).toMatchObject({ assignees: ['alice', 'bob'], labels: ['ui', 'api'] });
@@ -158,9 +155,9 @@ describe('stories.update', () => {
 
   it('clears with null and sets/unsets Custom Fields', async () => {
     const { t, services } = await setup();
-    await makeEpic(t.path, { id: 'launch', workspaceId: 'acme' });
+    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, {
-      ...web,
+      boardId: web,
       key: 'WEB-1',
       epicId: 'launch',
       priority: 'P2',
@@ -198,10 +195,10 @@ describe('stories.update', () => {
 describe('stories.move and stories.rank', () => {
   async function three() {
     const env = await setup();
-    await makeStory(env.t.path, { ...web, key: 'WEB-1', rank: 'a0' });
-    await makeStory(env.t.path, { ...web, key: 'WEB-2', rank: 'a1' });
-    await makeStory(env.t.path, { ...web, key: 'WEB-3', rank: 'a2' });
-    await makeStory(env.t.path, { ...web, key: 'WEB-4', stage: 'done', rank: 'a0' });
+    await makeStory(env.t.path, { boardId: web, key: 'WEB-1', rank: 'a0' });
+    await makeStory(env.t.path, { boardId: web, key: 'WEB-2', rank: 'a1' });
+    await makeStory(env.t.path, { boardId: web, key: 'WEB-3', rank: 'a2' });
+    await makeStory(env.t.path, { boardId: web, key: 'WEB-4', stage: 'done', rank: 'a0' });
     return env;
   }
   const keys = async (services: ReturnType<typeof createServices>, stage = 'backlog') =>
@@ -240,9 +237,9 @@ describe('stories.list', () => {
   async function seeded() {
     const env = await setup({ me: 'alice' });
     const { t } = env;
-    await makeBoard(t.path, { ...api, id: 'api', keyPrefix: 'API' });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     await makeStory(t.path, {
-      ...web,
+      boardId: web,
       key: 'WEB-1',
       name: 'Login page',
       stage: 'todo',
@@ -253,7 +250,7 @@ describe('stories.list', () => {
       epicId: 'launch',
     });
     await makeStory(t.path, {
-      ...web,
+      boardId: web,
       key: 'WEB-2',
       name: 'Logout',
       description: 'Clear the SESSION cookie',
@@ -261,8 +258,8 @@ describe('stories.list', () => {
       priority: 'P0',
       updatedAt: '2026-10-13T00:00:00.000Z',
     });
-    await makeStory(t.path, { ...web, key: 'WEB-3', name: 'Ship', stage: 'done', assignees: ['alice', 'bob'] });
-    await makeStory(t.path, { ...api, key: 'API-1', name: 'Endpoint', labels: ['api'], dueDate: '2026-10-20' });
+    await makeStory(t.path, { boardId: web, key: 'WEB-3', name: 'Ship', stage: 'done', assignees: ['alice', 'bob'] });
+    await makeStory(t.path, { boardId: api, key: 'API-1', name: 'Endpoint', labels: ['api'], dueDate: '2026-10-20' });
     return env;
   }
   const keys = (stories: { key: string }[]) => stories.map((s) => s.key);
@@ -285,24 +282,14 @@ describe('stories.list', () => {
   it('sorts by priority, due, created and updated', async () => {
     const { services } = await seeded();
     expect(keys(await services.stories.list(web, { sort: 'priority' }))).toEqual(['WEB-2', 'WEB-1', 'WEB-3']);
-    expect(keys(await services.stories.list({ workspaceId: 'acme' }, { sort: 'due' }))).toEqual([
-      'API-1',
-      'WEB-1',
-      'WEB-2',
-      'WEB-3',
-    ]);
+    expect(keys(await services.stories.list(null, { sort: 'due' }))).toEqual(['API-1', 'WEB-1', 'WEB-2', 'WEB-3']);
     expect(keys(await services.stories.list(web, { sort: 'updated' }))[0]).toBe('WEB-2');
     expect(keys(await services.stories.list(web, { sort: 'created' }))).toEqual(['WEB-2', 'WEB-1', 'WEB-3']);
   });
 
-  it('lists every Board in the Workspace', async () => {
+  it('lists every Board with a null Board', async () => {
     const { services } = await seeded();
-    expect(keys(await services.stories.list({ workspaceId: 'acme' }, {}))).toEqual([
-      'API-1',
-      'WEB-2',
-      'WEB-1',
-      'WEB-3',
-    ]);
+    expect(keys(await services.stories.list(null, {}))).toEqual(['API-1', 'WEB-2', 'WEB-1', 'WEB-3']);
   });
 
   it('refuses "me" when Me is unset', async () => {
@@ -313,7 +300,7 @@ describe('stories.list', () => {
 
   it('labelsInUse returns the distinct sorted labels of the Board', async () => {
     const { t, services } = await seeded();
-    await makeStory(t.path, { ...web, key: 'WEB-4', labels: ['backend', 'ui'] });
+    await makeStory(t.path, { boardId: web, key: 'WEB-4', labels: ['backend', 'ui'] });
     expect(await services.stories.labelsInUse(web)).toEqual(['backend', 'ui']);
   });
 });

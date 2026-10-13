@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeRootConfig, makeStory, runCli, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme', assignees: [{ handle: 'alice', name: 'Alice' }] });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
+  await makeRootConfig(t.path, { assignees: [{ handle: 'alice', name: 'Alice' }] });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Login', assignees: ['alice'] });
   const cli = (...args: string[]) => runCli(args, { root: t.path, cwd: t.dir });
   return { t, cli };

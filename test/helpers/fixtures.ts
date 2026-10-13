@@ -8,10 +8,10 @@ import {
   BoardConfigSchema,
   type Epic,
   EpicSchema,
+  type RowblyConfig,
+  RowblyConfigSchema,
   type Story,
   StorySchema,
-  type WorkspaceConfig,
-  WorkspaceConfigSchema,
 } from '../../src/schemas';
 import { FIXED_NOW } from './clock';
 
@@ -23,29 +23,15 @@ export async function writeFixture<T>(path: string, schema: ZodType<T>, value: T
   return parsed;
 }
 
-export async function makeWorkspace(
-  root: string,
-  overrides: Partial<WorkspaceConfig> & { id: string },
-): Promise<WorkspaceConfig> {
-  const workspace: WorkspaceConfig = {
-    version: 1,
-    name: overrides.id,
-    description: '',
-    assignees: [],
-    createdAt: FIXED_NOW,
-    updatedAt: FIXED_NOW,
-    ...overrides,
-  };
-  return writeFixture(
-    join(root, 'workspaces', workspace.id, 'workspace.config.json'),
-    WorkspaceConfigSchema,
-    workspace,
-  );
+/** Replaces `rowbly.config.json`, e.g. to set the Assignee roster or global Stages. */
+export async function makeRootConfig(root: string, overrides: Partial<RowblyConfig> = {}): Promise<RowblyConfig> {
+  const config: RowblyConfig = { version: 1, assignees: [], ...overrides };
+  return writeFixture(join(root, 'rowbly.config.json'), RowblyConfigSchema, config);
 }
 
 export async function makeBoard(
   root: string,
-  overrides: Partial<BoardConfig> & { id: string; workspaceId: string; keyPrefix: string },
+  overrides: Partial<BoardConfig> & { id: string; keyPrefix: string },
 ): Promise<BoardConfig> {
   const board: BoardConfig = {
     version: 1,
@@ -55,16 +41,12 @@ export async function makeBoard(
     updatedAt: FIXED_NOW,
     ...overrides,
   };
-  return writeFixture(
-    join(root, 'workspaces', board.workspaceId, 'boards', board.id, 'board.config.json'),
-    BoardConfigSchema,
-    board,
-  );
+  return writeFixture(join(root, 'boards', board.id, 'board.config.json'), BoardConfigSchema, board);
 }
 
 export async function makeStory(
   root: string,
-  overrides: Partial<Story> & { key: string; workspaceId: string; boardId: string },
+  overrides: Partial<Story> & { key: string; boardId: string },
 ): Promise<Story> {
   const story: Story = {
     version: 1,
@@ -86,17 +68,10 @@ export async function makeStory(
     comments: [],
     ...overrides,
   };
-  return writeFixture(
-    join(root, 'workspaces', story.workspaceId, 'boards', story.boardId, 'stories', `${story.key}.json`),
-    StorySchema,
-    story,
-  );
+  return writeFixture(join(root, 'boards', story.boardId, 'stories', `${story.key}.json`), StorySchema, story);
 }
 
-export async function makeEpic(
-  root: string,
-  overrides: Partial<Epic> & { id: string; workspaceId: string },
-): Promise<Epic> {
+export async function makeEpic(root: string, overrides: Partial<Epic> & { id: string }): Promise<Epic> {
   const epic: Epic = {
     version: 1,
     name: overrides.id,
@@ -106,5 +81,5 @@ export async function makeEpic(
     updatedAt: FIXED_NOW,
     ...overrides,
   };
-  return writeFixture(join(root, 'workspaces', epic.workspaceId, 'epics', `${epic.id}.json`), EpicSchema, epic);
+  return writeFixture(join(root, 'epics', `${epic.id}.json`), EpicSchema, epic);
 }

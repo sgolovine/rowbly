@@ -5,7 +5,6 @@ import { SlugSchema, TimestampSchema, VersionSchema } from './primitives';
 export const EpicSchema = z.object({
   version: VersionSchema,
   id: SlugSchema,
-  workspaceId: SlugSchema,
   name: z.string().min(1),
   description: z.string(),
   closed: z.boolean(),

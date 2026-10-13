@@ -4,7 +4,6 @@
 
 import type { BoardConfig } from './config';
 import type { CustomFieldDef } from './customField';
-import type { Slug } from './primitives';
 import type { Stage } from './stage';
 
 export type DataRootKind = 'local' | 'global';
@@ -15,12 +14,7 @@ export interface DataRoot {
   kind: DataRootKind;
 }
 
-export interface BoardRef {
-  workspaceId: Slug;
-  boardId: Slug;
-}
-
-export type ConfigLevel = 'board' | 'workspace' | 'global' | 'default';
+export type ConfigLevel = 'board' | 'global' | 'default';
 
 export interface EffectiveBoardConfig {
   board: BoardConfig;

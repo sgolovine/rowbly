@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerAssignees } from '../../src/commands/assignees';
-import { registerWorkspaces } from '../../src/commands/workspaces';
+import { registerBoards } from '../../src/commands/boards';
 import { createRepositories } from '../../src/storage';
-import { makeWorkspace, tempRoot } from '../helpers';
+import { makeBoard, tempRoot } from '../helpers';
 
 vi.mock('@clack/prompts', () => ({
   text: vi.fn(async () => 'Prompted Name'),
@@ -20,7 +20,7 @@ function program(): Command {
     .option('--yes')
     .option('--no-prompt')
     .exitOverride();
-  registerWorkspaces(cli);
+  registerBoards(cli);
   registerAssignees(cli);
   return cli;
 }
@@ -41,28 +41,28 @@ describe('prompting with a TTY', () => {
 
   it('asks for a missing --name through Clack', async () => {
     const t = await tempRoot();
-    await program().parseAsync(['workspaces', 'create', 'acme', '--root', t.path], { from: 'user' });
+    await program().parseAsync(['boards', 'create', 'web', '--prefix', 'WEB', '--root', t.path], { from: 'user' });
     await program().parseAsync(['assignees', 'add', 'sam', '--root', t.path], { from: 'user' });
     const { text } = await import('@clack/prompts');
-    expect(text).toHaveBeenCalledWith(expect.objectContaining({ message: 'Workspace name' }));
+    expect(text).toHaveBeenCalledWith(expect.objectContaining({ message: 'Board name' }));
     expect(text).toHaveBeenCalledWith(expect.objectContaining({ message: 'Assignee name' }));
-    const workspace = await createRepositories(t.root).workspaces.get('acme');
-    expect(workspace.name).toBe('Prompted Name');
-    expect(workspace.assignees).toEqual([{ handle: 'sam', name: 'Prompted Name' }]);
+    const repos = createRepositories(t.root);
+    expect((await repos.boards.get('web')).name).toBe('Prompted Name');
+    expect((await repos.rootConfig.get()).assignees).toEqual([{ handle: 'sam', name: 'Prompted Name' }]);
   });
 
   it('confirms a delete through Clack', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme' });
-    await program().parseAsync(['workspaces', 'delete', 'acme', '--root', t.path], { from: 'user' });
+    await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
+    await program().parseAsync(['boards', 'delete', 'web', '--root', t.path], { from: 'user' });
     const { confirm } = await import('@clack/prompts');
-    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: 'Delete Workspace "acme"?' }));
-    expect(await createRepositories(t.root).workspaces.list()).toEqual([]);
+    expect(confirm).toHaveBeenCalledWith(expect.objectContaining({ message: 'Delete Board web?' }));
+    expect(await createRepositories(t.root).boards.list()).toEqual([]);
   });
 
   it('never prompts with --no-prompt', async () => {
     const t = await tempRoot();
-    const run = program().parseAsync(['workspaces', 'create', 'acme', '--no-prompt', '--root', t.path], {
+    const run = program().parseAsync(['boards', 'create', 'web', '--prefix', 'WEB', '--no-prompt', '--root', t.path], {
       from: 'user',
     });
     await expect(run).rejects.toMatchObject({ code: 'USAGE', exitCode: 2 });

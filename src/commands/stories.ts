@@ -22,7 +22,6 @@ import {
   promptIfMissing,
   readLongText,
   withContext,
-  workspaceFlag,
 } from './_shared';
 
 const SORTS: readonly StorySort[] = ['rank', 'priority', 'created', 'updated', 'due'];
@@ -58,8 +57,7 @@ interface StoryOptions extends ContextFlags {
   after?: string;
 }
 
-const boardOption = ['--board <id>', 'the Board, or <workspace>/<board> (default: current context)'] as const;
-const wsOption = ['--workspace <id>', 'the Workspace (default: current context)'] as const;
+const boardOption = ['--board <id>', 'the Board (default: current context)'] as const;
 
 export function registerStories(program: Command): void {
   const stories = program.command('stories').description('Manage Stories on a Board');
@@ -77,16 +75,13 @@ export function registerStories(program: Command): void {
     .option('--priority <P>', 'only these Priorities, P0–P4 (repeatable)', collect)
     .option('--search <text>', 'case-insensitive match on name and description')
     .option('--sort <order>', `${SORTS.join('|')} (priority: most urgent first; updated: newest first)`)
-    .option('--all-boards', 'every Board in the Workspace')
+    .option('--all-boards', 'every Board')
     .option(...boardOption)
-    .option(...wsOption)
     .action(async (opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const filter = listFilter(opts);
-        const scope = opts.allBoards
-          ? { workspaceId: await services.context.resolveWorkspace(workspaceFlag(opts)) }
-          : await services.context.resolveBoard(boardFlag(opts), workspaceFlag(opts));
-        const list = await services.stories.list(scope, filter);
+        const boardId = opts.allBoards ? null : await services.context.resolveBoard(boardFlag(opts));
+        const list = await services.stories.list(boardId, filter);
         if (globals.json) return printResult(list, { json: true, human: () => '' });
         const stages = await stagesByBoard(services, list);
         printResult(list, { json: false, human: (l) => renderStories(l, stages) });
@@ -100,19 +95,18 @@ export function registerStories(program: Command): void {
       .option('--name <name>', 'Story name')
       .option('--stage <key>', 'Stage (default: the first effective Stage)')
       .option('--assignee <handle>', 'Assignee handle; "me" is Me (repeatable, comma-separated)', collect)
-      .option('--epic <id>', 'Epic in the same Workspace')
+      .option('--epic <id>', 'Epic id')
       .option('--priority <P>', 'Priority P0–P4')
       .option('--label <label>', 'Label (repeatable, comma-separated)', collect)
       .option('--due <date>', 'due date, YYYY-MM-DD')
       .option('--field <key=value>', 'Custom Field value (repeatable)', collect)
-      .option(...boardOption)
-      .option(...wsOption),
+      .option(...boardOption),
   ).action(async (opts: StoryOptions, cmd: Command) =>
     withContext(cmd, async ({ services, globals }) => {
-      const ref = await services.context.resolveBoard(boardFlag(opts), workspaceFlag(opts));
+      const boardId = await services.context.resolveBoard(boardFlag(opts));
       const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Story name' });
       const description = await readDescription(opts);
-      const story = await services.stories.create(ref, {
+      const story = await services.stories.create(boardId, {
         name,
         description,
         stage: typeof opts.stage === 'string' ? opts.stage : undefined,
@@ -134,7 +128,7 @@ export function registerStories(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         const story = await services.stories.get(key);
         if (globals.json) return printResult(story, { json: true, human: () => '' });
-        const config = await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId });
+        const config = await services.config.effective(story.boardId);
         printResult(story, { json: false, human: (s) => renderStory(s, config.stages, config.customFields) });
       }),
     );
@@ -289,10 +283,8 @@ function toPriority(value: string): Priority {
 async function stagesByBoard(services: Services, stories: readonly Story[]): Promise<Map<string, Stage[]>> {
   const stages = new Map<string, Stage[]>();
   for (const story of stories) {
-    const id = `${story.workspaceId}/${story.boardId}`;
-    if (stages.has(id)) continue;
-    const config = await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId });
-    stages.set(id, config.stages);
+    if (stages.has(story.boardId)) continue;
+    stages.set(story.boardId, (await services.config.effective(story.boardId)).stages);
   }
   return stages;
 }
@@ -310,7 +302,7 @@ function renderStories(stories: readonly Story[], stages: Map<string, Stage[]>):
     stories.map((s) => [
       s.key,
       s.name,
-      stageBadge(stages.get(`${s.workspaceId}/${s.boardId}`) ?? [], s.stage),
+      stageBadge(stages.get(s.boardId) ?? [], s.stage),
       s.priority ?? '',
       s.assignees.join(', '),
       s.labels.join(', '),

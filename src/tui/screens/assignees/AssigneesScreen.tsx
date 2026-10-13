@@ -7,36 +7,30 @@ import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 
 /**
- * The Assignee roster of `params.workspaceId` (default: the current Workspace). Views picked by
- * `params.view`: the list (default), `detail` for one Assignee, and the `create` / `edit` forms.
+ * The Assignee roster. Views picked by `params.view`: the list (default), `detail` for one
+ * Assignee, and the `create` / `edit` forms.
  */
 export function AssigneesScreen({ params }: ScreenProps) {
-  const services = useServices();
-  const given = typeof params.workspaceId === 'string' ? params.workspaceId : undefined;
-  const workspace = useAsync(async () => given ?? services.context.resolveWorkspace(), [given]);
-  if (!workspace.data) return workspace.loading ? <Loading label="Loading workspace…" /> : null;
-
-  const ws = workspace.data;
   const handle = typeof params.handle === 'string' ? params.handle : '';
-  if (params.view === 'detail') return <AssigneeDetail ws={ws} handle={handle} />;
-  if (params.view === 'create') return <AssigneeForm ws={ws} />;
-  if (params.view === 'edit') return <AssigneeForm ws={ws} handle={handle} />;
-  return <AssigneeList ws={ws} />;
+  if (params.view === 'detail') return <AssigneeDetail handle={handle} />;
+  if (params.view === 'create') return <AssigneeForm />;
+  if (params.view === 'edit') return <AssigneeForm handle={handle} />;
+  return <AssigneeList />;
 }
 
 /** Loads the roster again whenever the screen comes back to the top, e.g. after a form closes. */
-function useRoster(ws: string) {
+function useRoster() {
   const services = useServices();
   const active = useIsActive();
-  return useAsync(() => services.assignees.list(ws), [ws, active]);
+  return useAsync(() => services.assignees.list(), [active]);
 }
 
-function AssigneeList({ ws }: { ws: string }) {
+function AssigneeList() {
   const ctx = useRowblyContext();
   const router = useRouter();
   const shell = useContext(ShellContext);
   const active = useIsActive();
-  const roster = useRoster(ws);
+  const roster = useRoster();
   useKeyHints([
     { key: 'enter', description: 'open' },
     { key: 'n', description: 'add assignee' },
@@ -44,7 +38,7 @@ function AssigneeList({ ws }: { ws: string }) {
   useInput(
     (input) => {
       if (input === 'n' && !shell.captured().text) {
-        router.push('assignees', { view: 'create', workspaceId: ws, title: 'New Assignee' });
+        router.push('assignees', { view: 'create', title: 'New Assignee' });
       }
     },
     { isActive: active },
@@ -53,7 +47,7 @@ function AssigneeList({ ws }: { ws: string }) {
   if (!roster.data) return roster.loading ? <Loading label="Loading assignees…" /> : null;
   return (
     <Box flexDirection="column">
-      <Text bold>Assignees in {ws}</Text>
+      <Text bold>Assignees</Text>
       <SelectList
         items={roster.data.map((a) => ({
           value: a.handle,
@@ -61,19 +55,17 @@ function AssigneeList({ ws }: { ws: string }) {
           description: a.email ? `${a.name} <${a.email}>` : a.name,
         }))}
         emptyText="No Assignees yet. Press n to add one."
-        onSelect={(item) =>
-          router.push('assignees', { view: 'detail', workspaceId: ws, handle: item.value, title: item.value })
-        }
+        onSelect={(item) => router.push('assignees', { view: 'detail', handle: item.value, title: item.value })}
       />
     </Box>
   );
 }
 
-function AssigneeDetail({ ws, handle }: { ws: string; handle: string }) {
+function AssigneeDetail({ handle }: { handle: string }) {
   const services = useServices();
   const router = useRouter();
   const toast = useToast();
-  const roster = useRoster(ws);
+  const roster = useRoster();
   const [confirming, setConfirming] = useState(false);
   useKeyHints([{ key: 'enter', description: 'run action' }]);
 
@@ -84,7 +76,7 @@ function AssigneeDetail({ ws, handle }: { ws: string; handle: string }) {
   const remove = async () => {
     try {
       // The service warns with the number of Stories it updated; the shell shows that as a toast.
-      await services.assignees.remove(ws, handle);
+      await services.assignees.remove(handle);
       toast.push('info', `Removed Assignee ${handle}`);
       router.pop();
     } catch (err) {
@@ -104,7 +96,7 @@ function AssigneeDetail({ ws, handle }: { ws: string; handle: string }) {
       />
       {confirming ? (
         <ConfirmDialog
-          message={`Remove Assignee "${handle}"? They are also removed from every Story in ${ws}.`}
+          message={`Remove Assignee "${handle}"? They are also removed from every Story.`}
           confirmLabel="Remove"
           cancelLabel="Cancel"
           destructive
@@ -119,7 +111,7 @@ function AssigneeDetail({ ws, handle }: { ws: string; handle: string }) {
           ]}
           onSelect={(item) => {
             if (item.value === 'edit') {
-              router.push('assignees', { view: 'edit', workspaceId: ws, handle, title: `Edit ${handle}` });
+              router.push('assignees', { view: 'edit', handle, title: `Edit ${handle}` });
             } else setConfirming(true);
           }}
         />
@@ -128,18 +120,18 @@ function AssigneeDetail({ ws, handle }: { ws: string; handle: string }) {
   );
 }
 
-function AssigneeForm({ ws, handle }: { ws: string; handle?: string }) {
+function AssigneeForm({ handle }: { handle?: string }) {
   const services = useServices();
   const router = useRouter();
   const toast = useToast();
-  const roster = useAsync(() => services.assignees.list(ws), [ws]);
+  const roster = useAsync(() => services.assignees.list(), []);
   if (!roster.data) return roster.loading ? <Loading label="Loading assignee…" /> : null;
   const current: Assignee | undefined = handle ? roster.data.find((a) => a.handle === handle) : undefined;
   if (handle && !current) return <Text dimColor>Assignee "{handle}" is no longer in the roster.</Text>;
 
   return (
     <Box flexDirection="column">
-      <Text bold>{current ? `Edit Assignee ${current.handle}` : `New Assignee in ${ws}`}</Text>
+      <Text bold>{current ? `Edit Assignee ${current.handle}` : 'New Assignee'}</Text>
       <Form
         fields={[
           ...(current ? [] : [{ name: 'handle', label: 'Handle', kind: 'text' as const, required: true }]),
@@ -151,10 +143,10 @@ function AssigneeForm({ ws, handle }: { ws: string; handle?: string }) {
           const name = String(values.name);
           const email = String(values.email ?? '');
           if (current) {
-            await services.assignees.update(ws, current.handle, { name, email: email || null });
+            await services.assignees.update(current.handle, { name, email: email || null });
             toast.push('info', `Updated Assignee ${current.handle}`);
           } else {
-            const added = await services.assignees.add(ws, { handle: String(values.handle), name, email });
+            const added = await services.assignees.add({ handle: String(values.handle), name, email });
             toast.push('info', `Added Assignee ${added.handle}`);
           }
           router.pop();

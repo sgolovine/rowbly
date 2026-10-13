@@ -1,53 +1,23 @@
 import { NotFoundError, UsageError } from '../core';
-import type { BoardRef, LocalState } from '../schemas';
+import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
 import type { ContextService, RowblyContext } from './types';
 
 export function createContextService(ctx: RowblyContext, repos: Repositories): ContextService {
-  /** `flag` (callers pass `--workspace ?? ROWBLY_WORKSPACE`) → Local State → the only Workspace. */
-  async function resolveWorkspace(flag?: string) {
-    if (flag) return (await repos.workspaces.get(flag)).id;
-    const stored = ctx.local.workspace;
-    // A stale Local State Workspace (deleted since) is skipped; `doctor` reports it.
-    if (stored && (await exists(repos.workspaces.get(stored)))) return stored;
-    const all = await repos.workspaces.list();
+  /** `flag` (callers pass `--board ?? ROWBLY_BOARD`) → Local State → the only Board. */
+  async function resolveBoard(flag?: string): Promise<Slug> {
+    if (flag) return (await repos.boards.get(flag)).id;
+    const stored = ctx.local.board;
+    // A stale Local State Board (deleted since) is skipped; `doctor` reports it.
+    if (stored && (await exists(repos.boards.get(stored)))) return stored;
+    const all = await repos.boards.list();
     if (all.length === 1 && all[0]) return all[0].id;
     if (all.length === 0) {
-      throw new UsageError('workspace required: no Workspaces exist', {
-        hint: 'run `rowbly workspaces create <id> --name <name>`',
-      });
-    }
-    throw new UsageError('workspace required', { hint: 'pass --workspace <id> or run `rowbly use <workspace>`' });
-  }
-
-  /**
-   * `flag` (`--board ?? ROWBLY_BOARD`, may be `ws/board`) → Local State (same Workspace only) → the only
-   * Board. Unless `flag` names one, the Workspace is resolved from `workspaceFlag` as in `resolveWorkspace`.
-   */
-  async function resolveBoard(flag?: string, workspaceFlag?: string): Promise<BoardRef> {
-    const slash = flag?.indexOf('/') ?? -1;
-    if (flag && slash !== -1) {
-      const board = await repos.boards.get({ workspaceId: flag.slice(0, slash), boardId: flag.slice(slash + 1) });
-      return { workspaceId: board.workspaceId, boardId: board.id };
-    }
-    const workspaceId = await resolveWorkspace(workspaceFlag);
-    if (flag) {
-      const board = await repos.boards.get({ workspaceId, boardId: flag });
-      return { workspaceId: board.workspaceId, boardId: board.id };
-    }
-    const stored = ctx.local.board;
-    if (stored && ctx.local.workspace === workspaceId) {
-      const ref = { workspaceId, boardId: stored };
-      if (await exists(repos.boards.get(ref))) return ref;
-    }
-    const all = await repos.boards.list(workspaceId);
-    if (all.length === 1 && all[0]) return { workspaceId, boardId: all[0].id };
-    if (all.length === 0) {
-      throw new UsageError(`board required: Workspace "${workspaceId}" has no Boards`, {
+      throw new UsageError('board required: no Boards exist', {
         hint: 'run `rowbly boards create <id> --name <name> --prefix <PREFIX>`',
       });
     }
-    throw new UsageError('board required', { hint: 'pass --board <id> or run `rowbly use <workspace>/<board>`' });
+    throw new UsageError('board required', { hint: 'pass --board <id> or run `rowbly use <board>`' });
   }
 
   async function save(next: LocalState): Promise<LocalState> {
@@ -57,18 +27,15 @@ export function createContextService(ctx: RowblyContext, repos: Repositories): C
   }
 
   return {
-    resolveWorkspace,
     resolveBoard,
 
-    async use(ws, board) {
-      const workspaceId = ws ? (await repos.workspaces.get(ws)).id : await resolveWorkspace();
-      if (board) await repos.boards.get({ workspaceId, boardId: board });
-      const { workspace: _w, board: _b, ...rest } = ctx.local;
-      return save({ ...rest, workspace: workspaceId, ...(board ? { board } : {}) });
+    async use(board) {
+      const boardId = (await repos.boards.get(board)).id;
+      return save({ ...ctx.local, board: boardId });
     },
 
     async clearUse() {
-      const { workspace: _w, board: _b, ...rest } = ctx.local;
+      const { board: _b, ...rest } = ctx.local;
       await save(rest);
     },
 
@@ -78,9 +45,9 @@ export function createContextService(ctx: RowblyContext, repos: Repositories): C
         ctx.me = null;
         return save(rest);
       }
-      const workspace = await repos.workspaces.get(await resolveWorkspace());
-      if (!workspace.assignees.some((a) => a.handle === handle)) {
-        throw new NotFoundError(`Assignee "${handle}" not found in Workspace "${workspace.id}"`, {
+      const { assignees } = await repos.rootConfig.get();
+      if (!assignees.some((a) => a.handle === handle)) {
+        throw new NotFoundError(`Assignee "${handle}" not found`, {
           hint: 'run `rowbly assignees add <handle> --name <name>`',
         });
       }

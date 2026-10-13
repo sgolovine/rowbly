@@ -148,7 +148,7 @@ function Shell({ screens }: { screens: ScreenRegistry }) {
 function Header() {
   const router = useRouter();
   const { ctx } = useContext(ServicesContext);
-  const crumbs = [ctx?.local.workspace, ctx?.local.board, ...router.stack.map(routeTitle)].filter(Boolean);
+  const crumbs = [ctx?.local.board, ...router.stack.map(routeTitle)].filter(Boolean);
   return (
     <Box
       justifyContent="space-between"

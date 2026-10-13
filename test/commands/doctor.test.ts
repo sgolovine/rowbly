@@ -6,9 +6,9 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { StorySchema } from '../../src/schemas';
 import type { DoctorReport } from '../../src/services';
-import { makeBoard, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeStory, runCli, tempRoot } from '../helpers';
 
-const STORIES = 'workspaces/acme/boards/web/stories';
+const STORIES = 'boards/web/stories';
 
 /** Mirrors `DoctorReport`; strict, so unexpected keys fail too. */
 const DoctorReportSchema = z.strictObject({
@@ -32,8 +32,7 @@ function parseReport(stdout: string): DoctorReport {
 
 async function setup() {
   const tmp = await tempRoot();
-  await makeWorkspace(tmp.path, { id: 'acme' });
-  await makeBoard(tmp.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
+  await makeBoard(tmp.path, { id: 'web', keyPrefix: 'WEB' });
   const cli = (...args: string[]) => runCli(args, { root: tmp.path });
   return { tmp, cli };
 }
@@ -49,7 +48,7 @@ function git(cwd: string, ...args: string[]) {
 describe('rowbly doctor', () => {
   it('prints "No problems found" and exits 0 for a healthy Data Root', async () => {
     const { tmp, cli } = await setup();
-    await makeStory(tmp.path, { key: 'WEB-1', workspaceId: 'acme', boardId: 'web' });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web' });
     expect(await cli('doctor')).toEqual({ stdout: 'No problems found\n', stderr: '', exitCode: 0 });
     const json = await cli('doctor', '--json');
     expect(json.exitCode).toBe(0);
@@ -106,7 +105,7 @@ describe('rowbly doctor', () => {
 
   it('groups findings by severity and exits 6 while errors remain after --fix', async () => {
     const { tmp, cli } = await setup();
-    await makeStory(tmp.path, { key: 'WEB-1', workspaceId: 'acme', boardId: 'web', stage: 'gone', epicId: 'nope' });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone', epicId: 'nope' });
     await writeFile(join(tmp.path, 'notes.txt'), 'hi');
     const { stdout, exitCode } = await cli('doctor');
     expect(exitCode).toBe(6);
@@ -144,7 +143,7 @@ describe('rowbly doctor', () => {
     const { tmp, cli } = await setup();
     expect((await cli('stories', 'create', '--name', 'Ship it', '--stage', 'in-progress')).exitCode).toBe(0);
     // A hand edit or merge drops the Stage from the Board without moving its Stories.
-    const boardFile = join(tmp.path, 'workspaces/acme/boards/web/board.config.json');
+    const boardFile = join(tmp.path, 'boards/web/board.config.json');
     const board = JSON.parse(await readFile(boardFile, 'utf8'));
     board.stages = [
       { key: 'todo', name: 'Todo', category: 'todo' },

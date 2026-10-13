@@ -168,13 +168,13 @@ describe('Form', () => {
       a: () => (
         <Form
           fields={[{ name: 'id', label: 'Id', kind: 'text' }]}
-          onSubmit={() => Promise.reject(new ConflictError('workspace "acme" already exists'))}
+          onSubmit={() => Promise.reject(new ConflictError('board "web" already exists'))}
         />
       ),
     };
     const app = renderApp(screens);
     await app.press(KEYS.enter);
-    expect(app.lastFrame()).toContain('error: workspace "acme" already exists');
+    expect(app.lastFrame()).toContain('error: board "web" already exists');
     app.unmount();
   });
 

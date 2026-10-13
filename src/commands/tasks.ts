@@ -115,7 +115,7 @@ function readDescription(opts: TaskOptions, initial?: string): Promise<string | 
 }
 
 async function stagesOf(services: Services, story: Story): Promise<Stage[]> {
-  return (await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId })).stages;
+  return (await services.config.effective(story.boardId)).stages;
 }
 
 /** A Stage name coloured by its Stage Category; an unknown Stage (drift) shows its key in red. */

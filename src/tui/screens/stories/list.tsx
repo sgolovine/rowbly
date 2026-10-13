@@ -8,11 +8,11 @@ import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenProps } from '../types';
 import { describeFilters, filterFields, filterInitialValues, toFilter } from './filter';
-import { boardRefFor, StoryStage, useReloadOnReturn } from './shared';
+import { boardIdFor, StoryStage, useReloadOnReturn } from './shared';
 
 /**
- * The Stories of a Board (`params.ref`, default: the Board in context), with filters. `A` toggles
- * every Board of its Workspace, like `stories list --all-boards`.
+ * The Stories of a Board (`params.boardId`, default: the Board in context), with filters. `A` toggles
+ * every Board, like `stories list --all-boards`.
  */
 export function StoryListScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -23,27 +23,27 @@ export function StoryListScreen({ params }: ScreenProps) {
   const [filtering, setFiltering] = useState(false);
   const [allBoards, setAllBoards] = useState(false);
   const scope = useAsync(async () => {
-    const ref = await boardRefFor(services, params);
+    const boardId = await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
-    return { ref, choices: await storyChoices(ctx, ref) };
-  }, [services, ctx, params.ref]);
+    return { boardId, choices: await storyChoices(ctx, boardId) };
+  }, [services, ctx, params.boardId]);
   // Every Board's Stages and Labels, only while showing all Boards.
-  const workspace = useAsync(async () => {
+  const everyBoard = useAsync(async () => {
     if (!allBoards || !scope.data) return null;
-    const { workspaceId } = scope.data.ref;
-    const boards = await services.boards.list(workspaceId);
+    const boards = await services.boards.list();
     return Promise.all(
       boards.map(async (b) => {
-        const ref = { workspaceId, boardId: b.id };
-        const [config, labels] = await Promise.all([services.config.effective(ref), services.stories.labelsInUse(ref)]);
+        const [config, labels] = await Promise.all([
+          services.config.effective(b.id),
+          services.stories.labelsInUse(b.id),
+        ]);
         return { boardId: b.id, stages: config.stages, labels };
       }),
     );
   }, [services, scope.data, allBoards]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
-    const { ref } = scope.data;
-    return services.stories.list(allBoards ? { workspaceId: ref.workspaceId } : ref, toFilter(filters));
+    return services.stories.list(allBoards ? null : scope.data.boardId, toFilter(filters));
   }, [services, scope.data, filters, allBoards]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
@@ -67,7 +67,7 @@ export function StoryListScreen({ params }: ScreenProps) {
   useInput(
     (input, key) => {
       if (!scope.data) return;
-      if (input === 'n') router.push('story-form', { ref: scope.data.ref, title: 'New Story' });
+      if (input === 'n') router.push('story-form', { boardId: scope.data.boardId, title: 'New Story' });
       else if (input === '/') setFiltering(true);
       else if (input === 'c') setFilters({});
       else if (input === 'A') setAllBoards((all) => !all);
@@ -80,10 +80,10 @@ export function StoryListScreen({ params }: ScreenProps) {
   );
 
   if (!scope.data) return scope.loading ? <Loading label="Loading Stories…" /> : <Text color="red">No Board.</Text>;
-  const { ref, choices } = scope.data;
-  const boards = allBoards ? workspace.data : null;
+  const { boardId, choices } = scope.data;
+  const boards = allBoards ? everyBoard.data : null;
   const stagesOf = new Map<string, readonly Stage[]>(
-    boards ? boards.map((b) => [b.boardId, b.stages]) : [[ref.boardId, choices.stages]],
+    boards ? boards.map((b) => [b.boardId, b.stages]) : [[boardId, choices.stages]],
   );
   const unique = (values: string[]) => [...new Set(values)];
   const summary = describeFilters(filters);
@@ -92,7 +92,7 @@ export function StoryListScreen({ params }: ScreenProps) {
   return (
     <Box flexDirection="column" gap={1}>
       <Text dimColor>
-        {allBoards ? `All Boards in ${ref.workspaceId}` : `Board ${ref.workspaceId}/${ref.boardId}`}
+        {allBoards ? 'All Boards' : `Board ${boardId}`}
         {summary ? ` · filters: ${summary}` : ''}
       </Text>
       {!list.data || (allBoards && !boards) ? (

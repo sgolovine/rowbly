@@ -48,7 +48,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   const toast = useToast();
   const active = useIsActive();
   const levels = levelsFor(scope);
-  const [level, setLevel] = useState<LevelName>(levels[0] ?? 'workspace');
+  const [level, setLevel] = useState<LevelName>(levels[0] ?? 'global');
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const target = targetFor(scope, level);
   const list = useAsync(async () => (ctx ? readLevel(ctx, target, 'stages') : null), [ctx, level, scope]);

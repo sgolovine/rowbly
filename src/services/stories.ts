@@ -12,7 +12,6 @@ import {
 } from '../core';
 import {
   type Assignee,
-  type BoardRef,
   type CustomFieldValue,
   type EffectiveBoardConfig,
   type Epic,
@@ -28,18 +27,17 @@ import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort 
 
 export function createStoriesService(ctx: RowblyContext, repos: Repositories): StoriesService {
   /** The Story's Board and its effective Stages and Custom Fields. */
-  const effective = (story: Pick<Story, 'workspaceId' | 'boardId'>) =>
-    resolveCascade(ctx.root, { workspaceId: story.workspaceId, boardId: story.boardId });
+  const effective = (story: Pick<Story, 'boardId'>) => resolveCascade(ctx.root, story.boardId);
 
-  /** Resolves `'me'`, drops duplicates and checks every handle against the Workspace roster. */
-  async function checkAssignees(workspaceId: Slug, handles: readonly string[]): Promise<Slug[]> {
+  /** Resolves `'me'`, drops duplicates and checks every handle against the roster. */
+  async function checkAssignees(handles: readonly string[]): Promise<Slug[]> {
     const resolved = [...new Set(handles.map(resolveMe))];
     if (resolved.length === 0) return resolved;
-    const roster = (await repos.workspaces.get(workspaceId)).assignees.map((a) => a.handle);
+    const roster = (await repos.rootConfig.get()).assignees.map((a) => a.handle);
     const unknown = resolved.filter((handle) => !roster.includes(handle));
     if (unknown.length > 0) {
       throw new ValidationError(
-        `unknown Assignee${unknown.length > 1 ? 's' : ''} ${unknown.map((h) => `"${h}"`).join(', ')} in Workspace "${workspaceId}"`,
+        `unknown Assignee${unknown.length > 1 ? 's' : ''} ${unknown.map((h) => `"${h}"`).join(', ')}`,
         {
           details: {
             issues: unknown.map((handle) => ({ path: ['assignees'], message: `unknown Assignee "${handle}"` })),
@@ -61,34 +59,34 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     return ctx.me;
   }
 
-  async function checkEpic(workspaceId: Slug, epicId: Slug): Promise<void> {
+  async function checkEpic(epicId: Slug): Promise<void> {
     try {
-      await repos.epics.get(workspaceId, epicId);
+      await repos.epics.get(epicId);
     } catch (err) {
       if (!(err instanceof NotFoundError)) throw err;
-      const valid = (await repos.epics.list(workspaceId)).map((e) => e.id);
-      throw new ValidationError(`unknown Epic "${epicId}" in Workspace "${workspaceId}"`, {
+      const valid = (await repos.epics.list()).map((e) => e.id);
+      throw new ValidationError(`unknown Epic "${epicId}"`, {
         details: { issues: [{ path: ['epicId'], message: `unknown Epic "${epicId}"` }], validEpics: valid },
       });
     }
   }
 
-  async function createdBy(workspaceId: Slug): Promise<Slug | null> {
+  async function createdBy(): Promise<Slug | null> {
     if (!ctx.me) return null;
-    const roster = (await repos.workspaces.get(workspaceId)).assignees;
+    const roster = (await repos.rootConfig.get()).assignees;
     return roster.some((a) => a.handle === ctx.me) ? ctx.me : null;
   }
 
   /** Writes a new Story under the next free key; if that key turns out to exist, re-scans once. */
-  async function writeNew(ref: BoardRef, prefix: string, build: (key: string) => Story): Promise<Story> {
+  async function writeNew(boardId: Slug, prefix: string, build: (key: string) => Story): Promise<Story> {
     for (let attempt = 0; attempt < 2; attempt++) {
-      const key = formatStoryKey(prefix, (await repos.stories.maxNumber(ref)) + 1);
+      const key = formatStoryKey(prefix, (await repos.stories.maxNumber(boardId)) + 1);
       if (await storyExists(key)) continue;
       const story = build(key);
       await repos.stories.put(story);
       return story;
     }
-    throw new ConflictError(`could not allocate a Story Key on Board "${ref.workspaceId}/${ref.boardId}"`, {
+    throw new ConflictError(`could not allocate a Story Key on Board "${boardId}"`, {
       hint: 'run `rowbly doctor`',
     });
   }
@@ -103,22 +101,19 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     }
   }
 
-  async function storiesInScope(scope: BoardRef | { workspaceId: Slug }): Promise<Story[]> {
-    if ('boardId' in scope) {
-      await repos.boards.get(scope);
-      return repos.stories.allInBoard(scope);
+  async function storiesInScope(boardId: Slug | null): Promise<Story[]> {
+    if (boardId !== null) {
+      await repos.boards.get(boardId);
+      return repos.stories.allInBoard(boardId);
     }
-    await repos.workspaces.get(scope.workspaceId);
-    const boards = await repos.boards.list(scope.workspaceId);
-    const all = await Promise.all(
-      boards.map((b) => repos.stories.allInBoard({ workspaceId: scope.workspaceId, boardId: b.id })),
-    );
+    const boards = await repos.boards.list();
+    const all = await Promise.all(boards.map((b) => repos.stories.allInBoard(b.id)));
     return all.flat();
   }
 
   return {
-    async list(scope, filter) {
-      const stories = await storiesInScope(scope);
+    async list(boardId, filter) {
+      const stories = await storiesInScope(boardId);
       const configs = new Map<string, EffectiveBoardConfig>();
       for (const story of stories) {
         if (!configs.has(story.boardId)) configs.set(story.boardId, await effective(story));
@@ -137,26 +132,25 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 
     get: (key) => repos.stories.findByKey(key),
 
-    async create(ref, input) {
-      const config = await resolveCascade(ctx.root, ref);
+    async create(boardId, input) {
+      const config = await resolveCascade(ctx.root, boardId);
       const stage = input.stage ?? config.stages[0]?.key;
       if (stage === undefined) throw new ValidationError('the Board has no Stages');
       checkStage(config.stages, stage);
-      const assignees = await checkAssignees(ref.workspaceId, input.assignees ?? []);
-      if (input.epicId) await checkEpic(ref.workspaceId, input.epicId);
+      const assignees = await checkAssignees(input.assignees ?? []);
+      if (input.epicId) await checkEpic(input.epicId);
       const customFields = validateFieldValues(config.customFields, input.customFields ?? {}, {
         requireRequired: true,
       });
-      const existing = await repos.stories.allInBoard(ref);
+      const existing = await repos.stories.allInBoard(boardId);
       const rank = rankAfter(bottomRank(existing, stage));
       const now = toTimestamp(ctx.now());
-      const author = await createdBy(ref.workspaceId);
-      return writeNew(ref, config.board.keyPrefix, (key) =>
+      const author = await createdBy();
+      return writeNew(boardId, config.board.keyPrefix, (key) =>
         parseStory({
           version: 1,
           key,
-          workspaceId: ref.workspaceId,
-          boardId: ref.boardId,
+          boardId,
           name: input.name,
           description: input.description ?? '',
           stage,
@@ -185,14 +179,14 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
       if (patch.name !== undefined) next.name = patch.name;
       if (patch.description !== undefined) next.description = patch.description;
       if (patch.assignees !== undefined) {
-        next.assignees = await checkAssignees(story.workspaceId, patch.assignees);
+        next.assignees = await checkAssignees(patch.assignees);
       } else if (patch.addAssignees || patch.removeAssignees) {
-        const added = await checkAssignees(story.workspaceId, patch.addAssignees ?? []);
+        const added = await checkAssignees(patch.addAssignees ?? []);
         const removed = (patch.removeAssignees ?? []).map(resolveMe);
         next.assignees = unique([...story.assignees, ...added]).filter((h) => !removed.includes(h));
       }
       if (patch.epicId !== undefined) {
-        if (patch.epicId !== null) await checkEpic(story.workspaceId, patch.epicId);
+        if (patch.epicId !== null) await checkEpic(patch.epicId);
         next.epicId = patch.epicId;
       }
       if (patch.priority !== undefined) next.priority = patch.priority;
@@ -214,14 +208,14 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     async move(key, stage, opts = {}) {
       const story = await repos.stories.findByKey(key);
       checkStage((await effective(story)).stages, stage);
-      const others = (await repos.stories.allInBoard(story)).filter((s) => s.key !== story.key);
+      const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
       const rank = opts.top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
       return save({ ...story, stage, rank });
     },
 
     async rank(key, position) {
       const story = await repos.stories.findByKey(key);
-      const column = (await repos.stories.allInBoard(story))
+      const column = (await repos.stories.allInBoard(story.boardId))
         .filter((s) => s.stage === story.stage && s.key !== story.key)
         .sort((a, b) => compareRanks(a.rank, b.rank));
       let rank: string;
@@ -247,11 +241,11 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 
     async remove(key) {
       const story = await repos.stories.findByKey(key);
-      await repos.stories.delete(story, story.key);
+      await repos.stories.delete(story.boardId, story.key);
     },
 
-    async labelsInUse(ref) {
-      const labels = (await repos.stories.allInBoard(ref)).flatMap((s) => s.labels);
+    async labelsInUse(boardId) {
+      const labels = (await repos.stories.allInBoard(boardId)).flatMap((s) => s.labels);
       return [...new Set(labels)].sort();
     },
   };
@@ -273,21 +267,21 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 /** What a Story on a Board can be set to, for the TUI's story form and filters. */
 export interface StoryChoices extends EffectiveBoardConfig {
   assignees: Assignee[];
-  /** Open Epics in the Workspace. */
+  /** Open Epics. */
   epics: Epic[];
   /** Labels already used on the Board. */
   labels: string[];
 }
 
-export async function storyChoices(ctx: RowblyContext, ref: BoardRef): Promise<StoryChoices> {
+export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<StoryChoices> {
   const repos = createRepositories(ctx.root);
-  const [config, workspace, epics, labels] = await Promise.all([
-    resolveCascade(ctx.root, ref),
-    repos.workspaces.get(ref.workspaceId),
-    repos.epics.list(ref.workspaceId),
-    createStoriesService(ctx, repos).labelsInUse(ref),
+  const [config, root, epics, labels] = await Promise.all([
+    resolveCascade(ctx.root, boardId),
+    repos.rootConfig.get(),
+    repos.epics.list(),
+    createStoriesService(ctx, repos).labelsInUse(boardId),
   ]);
-  return { ...config, assignees: workspace.assignees, epics: epics.filter((e) => !e.closed), labels };
+  return { ...config, assignees: root.assignees, epics: epics.filter((e) => !e.closed), labels };
 }
 
 /** Every given filter must match (contracts §5). */

@@ -44,9 +44,9 @@ export function createCommentsService(ctx: RowblyContext, repos: Repositories): 
     return comment;
   }
 
-  async function author(workspaceId: Slug): Promise<Slug | null> {
+  async function author(): Promise<Slug | null> {
     if (!ctx.me) return null;
-    const roster = (await repos.workspaces.get(workspaceId)).assignees;
+    const roster = (await repos.rootConfig.get()).assignees;
     return roster.some((a) => a.handle === ctx.me) ? ctx.me : null;
   }
 
@@ -55,11 +55,11 @@ export function createCommentsService(ctx: RowblyContext, repos: Repositories): 
 
     async add(target, body) {
       checkBody(body);
-      const { story, comments, save } = await thread(target);
+      const { comments, save } = await thread(target);
       const now = toTimestamp(ctx.now());
       const comment: Comment = {
         id: ctx.newId(),
-        author: await author(story.workspaceId),
+        author: await author(),
         body,
         createdAt: now,
         updatedAt: now,

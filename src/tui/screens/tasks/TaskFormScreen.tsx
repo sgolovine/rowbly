@@ -13,7 +13,7 @@ export function TaskFormScreen({ params }: ScreenProps) {
   const data = useAsync(async () => {
     const found = id ? await services.tasks.get(id) : null;
     const story = found?.story ?? (await services.stories.get(String(params.storyKey ?? '')));
-    const config = await services.config.effective({ workspaceId: story.workspaceId, boardId: story.boardId });
+    const config = await services.config.effective(story.boardId);
     return { story, task: found?.task ?? null, stages: config.stages.map((s) => s.key) };
   }, [services, id, params.storyKey]);
   useKeyHints([

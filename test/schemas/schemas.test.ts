@@ -23,7 +23,6 @@ import {
   TaskIdSchema,
   TaskSchema,
   TimestampSchema,
-  WorkspaceConfigSchema,
 } from '../../src/schemas';
 
 const T = '2026-10-12T17:21:07.000Z';
@@ -41,7 +40,6 @@ const task = {
 const story = {
   version: 1,
   key: 'WEB-42',
-  workspaceId: 'acme',
   boardId: 'web',
   name: 'Login page',
   description: '# Notes',
@@ -60,19 +58,9 @@ const story = {
   tasks: [task],
   comments: [],
 };
-const workspace = {
-  version: 1,
-  id: 'acme',
-  name: 'Acme',
-  description: '',
-  assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }],
-  createdAt: T,
-  updatedAt: T,
-};
 const board = {
   version: 1,
   id: 'web',
-  workspaceId: 'acme',
   name: 'Web',
   description: '',
   keyPrefix: 'WEB',
@@ -83,7 +71,6 @@ const board = {
 const epic = {
   version: 1,
   id: 'auth',
-  workspaceId: 'acme',
   name: 'Auth',
   description: '',
   closed: false,
@@ -162,8 +149,23 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   {
     name: 'RowblyConfig',
     schema: RowblyConfigSchema,
-    valid: [{ version: 1 }, { version: 1, stages: [...DEFAULT_STAGES], customFields: [] }],
-    invalid: [{}, { version: 2 }, { version: 1, stages: [] }],
+    valid: [
+      { version: 1 },
+      { version: 1, stages: [...DEFAULT_STAGES], customFields: [] },
+      { version: 1, assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }] },
+    ],
+    invalid: [
+      {},
+      { version: 2 },
+      { version: 1, stages: [] },
+      {
+        version: 1,
+        assignees: [
+          { handle: 'sam', name: 'Sam' },
+          { handle: 'sam', name: 'Sam 2' },
+        ],
+      },
+    ],
   },
   {
     name: 'Assignee',
@@ -178,23 +180,12 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
     ],
   },
   {
-    name: 'WorkspaceConfig',
-    schema: WorkspaceConfigSchema,
-    valid: [workspace, { ...workspace, stages: [...DEFAULT_STAGES], customFields: [] }],
-    invalid: [
-      { ...workspace, version: 2 },
-      { ...workspace, id: 'Acme' },
-      { ...workspace, assignees: [workspace.assignees[0], workspace.assignees[0]] },
-      { ...workspace, createdAt: 'yesterday' },
-    ],
-  },
-  {
     name: 'BoardConfig',
     schema: BoardConfigSchema,
     valid: [board, { ...board, stages: undefined }],
     invalid: [
       { ...board, keyPrefix: 'web' },
-      { ...board, workspaceId: undefined },
+      { ...board, id: 'Web' },
       { ...board, stages: [] },
     ],
   },
@@ -246,8 +237,8 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   {
     name: 'LocalState',
     schema: LocalStateSchema,
-    valid: [{ version: 1 }, { version: 1, workspace: 'acme', board: 'web', me: 'sam' }],
-    invalid: [{}, { version: 1, me: 'Sam' }],
+    valid: [{ version: 1 }, { version: 1, board: 'web', me: 'sam' }],
+    invalid: [{}, { version: 1, me: 'Sam' }, { version: 1, board: 'Web' }],
   },
 ];
 
@@ -269,10 +260,12 @@ describe('schema defaults', () => {
       required: false,
       type: 'text',
     });
-    const { description: _w, ...ws } = workspace;
-    expect(WorkspaceConfigSchema.parse(ws).description).toBe('');
     const { description: _s, ...st } = story;
     expect(StorySchema.parse(st).description).toBe('');
+  });
+
+  it('defaults the Assignee roster to empty', () => {
+    expect(RowblyConfigSchema.parse({ version: 1 })).toEqual({ version: 1, assignees: [] });
   });
 
   it('defines the built-in default stages', () => {

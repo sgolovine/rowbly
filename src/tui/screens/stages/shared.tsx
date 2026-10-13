@@ -2,43 +2,40 @@
 import { Box, Text, useInput } from 'ink';
 import { type ReactNode, useEffect, useState } from 'react';
 import { UsageError } from '../../../core';
-import type { BoardRef, ConfigLevel } from '../../../schemas';
+import type { ConfigLevel, Slug } from '../../../schemas';
 import type { ConfigTarget } from '../../../services';
 import { useAsync, useServices } from '../../hooks';
 import { moveDelta } from '../../keymap';
 
 export type LevelName = ConfigTarget['level'];
 
-/** The Board and Workspace in context, from route params or the current context. */
+/** The Board in context, from route params or the current context. */
 export interface ConfigScope {
-  ref: BoardRef | null;
-  workspaceId: string;
+  boardId: Slug | null;
 }
 
-/** Resolves the scope once: `params.ref` wins, else the context Board, else just the Workspace. */
+/** Resolves the scope once: `params.boardId` wins, else the context Board, else no Board (global only). */
 export function useConfigScope(params: Record<string, unknown>) {
   const services = useServices();
   return useAsync<ConfigScope>(async () => {
-    const given = params.ref as BoardRef | undefined;
-    if (given) return { ref: given, workspaceId: given.workspaceId };
+    const given = params.boardId as Slug | undefined;
+    if (given) return { boardId: given };
     try {
-      const ref = await services.context.resolveBoard();
-      return { ref, workspaceId: ref.workspaceId };
+      return { boardId: await services.context.resolveBoard() };
     } catch (err) {
       if (!(err instanceof UsageError)) throw err;
-      return { ref: null, workspaceId: await services.context.resolveWorkspace() };
+      return { boardId: null };
     }
-  }, [services, params.ref]);
+  }, [services, params.boardId]);
 }
 
 export function levelsFor(scope: ConfigScope): LevelName[] {
-  return scope.ref ? ['board', 'workspace', 'global'] : ['workspace', 'global'];
+  return scope.boardId ? ['board', 'global'] : ['global'];
 }
 
 export function targetFor(scope: ConfigScope, level: LevelName): ConfigTarget {
-  if (level === 'global') return { level: 'global' };
-  if (level === 'board' && scope.ref) return { level: 'board', ref: scope.ref };
-  return { level: 'workspace', workspaceId: scope.workspaceId };
+  if (level === 'board' && scope.boardId) return { level: 'board', boardId: scope.boardId };
+  return { level: 'global' };
 }
 
 /** Which level is being edited and where its list currently comes from. */

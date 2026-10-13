@@ -1,31 +1,29 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { makeBoard, makeEpic, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeEpic, makeStory, runCli, tempRoot } from '../helpers';
 
-/** Workspace `acme` with Boards `web` (custom stages) and `api` (default stages), and Epic `launch` on 3 Stories. */
+/** Boards `web` (custom stages) and `api` (default stages), and Epic `launch` on 3 Stories. */
 async function setup() {
   const tmp = await tempRoot();
-  await makeWorkspace(tmp.path, { id: 'acme' });
   await makeBoard(tmp.path, {
     id: 'web',
-    workspaceId: 'acme',
     keyPrefix: 'WEB',
     stages: [
       { key: 'open', name: 'Open', category: 'todo' },
       { key: 'shipped', name: 'Shipped', category: 'done' },
     ],
   });
-  await makeBoard(tmp.path, { id: 'api', workspaceId: 'acme', keyPrefix: 'API' });
-  await makeEpic(tmp.path, { id: 'launch', workspaceId: 'acme', name: 'Launch' });
+  await makeBoard(tmp.path, { id: 'api', keyPrefix: 'API' });
+  await makeEpic(tmp.path, { id: 'launch', name: 'Launch' });
   const story = (key: string, boardId: string, stage: string) =>
-    makeStory(tmp.path, { key, workspaceId: 'acme', boardId, stage, epicId: 'launch', name: `Do ${key}` });
+    makeStory(tmp.path, { key, boardId, stage, epicId: 'launch', name: `Do ${key}` });
   await story('WEB-1', 'web', 'shipped');
   await story('WEB-2', 'web', 'open');
   await story('API-1', 'api', 'done');
   const cli = (...args: string[]) => runCli(args, { root: tmp.path });
   const readStory = async (board: string, key: string) =>
-    JSON.parse(await readFile(join(tmp.path, 'workspaces/acme/boards', board, 'stories', `${key}.json`), 'utf8'));
+    JSON.parse(await readFile(join(tmp.path, 'boards', board, 'stories', `${key}.json`), 'utf8'));
   return { tmp, cli, readStory };
 }
 
@@ -116,7 +114,6 @@ describe('rowbly epics', () => {
     expect((await cli('epics', 'create', 'launch', '--name', 'Again')).exitCode).toBe(4);
     expect((await cli('epics', 'edit', 'launch')).exitCode).toBe(2);
     expect((await cli('epics', 'close', 'nope')).exitCode).toBe(3);
-    expect((await cli('epics', 'list', '--workspace', 'nope')).exitCode).toBe(3);
   });
 
   it('has --help for every verb', async () => {
@@ -124,7 +121,7 @@ describe('rowbly epics', () => {
     for (const verb of ['list', 'create', 'show', 'edit', 'close', 'reopen', 'delete']) {
       const { stdout, exitCode } = await cli('epics', verb, '--help');
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('--workspace <id>');
+      expect(stdout).toContain(`rowbly epics ${verb}`);
     }
   });
 });

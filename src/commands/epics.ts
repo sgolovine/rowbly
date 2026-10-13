@@ -4,11 +4,7 @@ import { colorByCategory, colors, printResult, renderTable } from '../output';
 import type { Stage } from '../schemas';
 import type { EpicPatch, EpicView } from '../services';
 import { stagesByBoard, storiesByBoard } from '../services/epics';
-import { confirmDestructive, promptIfMissing, readLongText, withContext, workspaceFlag } from './_shared';
-
-interface WorkspaceOpts {
-  workspace?: string;
-}
+import { confirmDestructive, promptIfMissing, readLongText, withContext } from './_shared';
 
 interface DescriptionOpts {
   description?: string;
@@ -17,16 +13,15 @@ interface DescriptionOpts {
 }
 
 export function registerEpics(program: Command): void {
-  const epics = program.command('epics').description('Manage Epics in a Workspace');
+  const epics = program.command('epics').description('Manage Epics');
 
   verb(epics, 'list', 'List Epics (open ones by default)')
     .option('--closed', 'show only closed Epics')
     .option('--all', 'show open and closed Epics')
-    .action(async (opts: WorkspaceOpts & { closed?: boolean; all?: boolean }, cmd: Command) => {
+    .action(async (opts: { closed?: boolean; all?: boolean }, cmd: Command) => {
       if (opts.closed && opts.all) throw new UsageError('use only one of --closed and --all');
       await withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-        const list = await services.epics.list(ws, { closed: opts.all ? 'all' : Boolean(opts.closed) });
+        const list = await services.epics.list({ closed: opts.all ? 'all' : Boolean(opts.closed) });
         const empty = opts.all ? 'No Epics.' : opts.closed ? 'No closed Epics.' : 'No open Epics.';
         printResult(list, { json: globals.json, human: (views) => (views.length ? epicTable(views) : empty) });
       });
@@ -34,21 +29,19 @@ export function registerEpics(program: Command): void {
 
   descriptionOptions(verb(epics, 'create <id>', 'Create an Epic'))
     .option('--name <name>', 'display name')
-    .action(async (id: string, opts: WorkspaceOpts & DescriptionOpts & { name?: string }, cmd: Command) => {
+    .action(async (id: string, opts: DescriptionOpts & { name?: string }, cmd: Command) => {
       await withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
         const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Epic name' });
         const description = await readDescription(opts);
-        const epic = await services.epics.create(ws, { id, name, description });
+        const epic = await services.epics.create({ id, name, description });
         printResult(epic, { json: globals.json, human: (e) => `Created Epic ${e.id}` });
       });
     });
 
   verb(epics, 'show <id>', 'Show an Epic and its Stories, grouped by Board').action(
-    async (id: string, opts: WorkspaceOpts, cmd: Command) => {
+    async (id: string, _opts: unknown, cmd: Command) => {
       await withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-        const view = await services.epics.get(ws, id);
+        const view = await services.epics.get(id);
         const stages = await stagesByBoard(services.config, view);
         printResult(view, { json: globals.json, human: (v) => epicDetail(v, stages) });
       });
@@ -57,15 +50,14 @@ export function registerEpics(program: Command): void {
 
   descriptionOptions(verb(epics, 'edit <id>', 'Edit an Epic'))
     .option('--name <name>', 'new display name')
-    .action(async (id: string, opts: WorkspaceOpts & DescriptionOpts & { name?: string }, cmd: Command) => {
+    .action(async (id: string, opts: DescriptionOpts & { name?: string }, cmd: Command) => {
       await withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-        const initial = opts.edit ? (await services.epics.get(ws, id)).description : '';
+        const initial = opts.edit ? (await services.epics.get(id)).description : '';
         const patch: EpicPatch = { name: opts.name, description: await readDescription(opts, initial) };
         if (patch.name === undefined && patch.description === undefined) {
           throw new UsageError('nothing to edit', { hint: 'pass --name or a description flag' });
         }
-        const epic = await services.epics.update(ws, id, patch);
+        const epic = await services.epics.update(id, patch);
         printResult(epic, { json: globals.json, human: (e) => `Updated Epic ${e.id}` });
       });
     });
@@ -75,10 +67,9 @@ export function registerEpics(program: Command): void {
     ['reopen', false],
   ] as const) {
     verb(epics, `${name} <id>`, closed ? 'Close an Epic' : 'Reopen a closed Epic').action(
-      async (id: string, opts: WorkspaceOpts, cmd: Command) => {
+      async (id: string, _opts: unknown, cmd: Command) => {
         await withContext(cmd, async ({ services, globals }) => {
-          const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-          const epic = await services.epics.setClosed(ws, id, closed);
+          const epic = await services.epics.setClosed(id, closed);
           printResult(epic, { json: globals.json, human: (e) => `${closed ? 'Closed' : 'Reopened'} Epic ${e.id}` });
         });
       },
@@ -86,12 +77,11 @@ export function registerEpics(program: Command): void {
   }
 
   verb(epics, 'delete <id>', 'Delete an Epic and unlink its Stories').action(
-    async (id: string, opts: WorkspaceOpts, cmd: Command) => {
+    async (id: string, _opts: unknown, cmd: Command) => {
       await withContext(cmd, async ({ services, globals }) => {
-        const ws = await services.context.resolveWorkspace(workspaceFlag(opts));
-        await services.epics.get(ws, id);
+        await services.epics.get(id);
         await confirmDestructive(`Delete Epic "${id}"?`, globals);
-        const result = await services.epics.remove(ws, id);
+        const result = await services.epics.remove(id);
         printResult(result, { json: globals.json, human: () => `Deleted Epic ${id}` });
       });
     },
@@ -99,10 +89,7 @@ export function registerEpics(program: Command): void {
 }
 
 function verb(parent: Command, nameAndArgs: string, description: string): Command {
-  return parent
-    .command(nameAndArgs)
-    .description(description)
-    .option('--workspace <id>', 'Workspace (default: current context)');
+  return parent.command(nameAndArgs).description(description);
 }
 
 function descriptionOptions(cmd: Command): Command {

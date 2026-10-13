@@ -1,6 +1,6 @@
 import { Box, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
-import type { BoardRef, Stage, Story } from '../../../schemas';
+import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, SelectList } from '../../components';
 import {
@@ -42,7 +42,7 @@ interface Cursor {
 }
 
 /**
- * The Kanban board for the Board in context (`b` switches it), or for `params.ref` without changing
+ * The Kanban board for the Board in context (`b` switches it), or for `params.boardId` without changing
  * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them.
  */
@@ -61,33 +61,30 @@ export function BoardScreen({ params }: ScreenProps) {
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
   // A Board opened for viewing only; `b` switches the context and drops it.
-  const [viewing, setViewing] = useState(params.ref as BoardRef | undefined);
+  const [viewing, setViewing] = useState(params.boardId as Slug | undefined);
 
   const scope = useAsync(async () => {
-    const ref = viewing ?? (await services.context.resolveBoard());
+    const boardId = viewing ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
-    return { ref, choices: await storyChoices(ctx, ref) };
+    return { boardId, choices: await storyChoices(ctx, boardId) };
   }, [services, ctx, viewing]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
-    const { ref, choices } = scope.data;
-    return { ref, stages: choices.stages, stories: await services.stories.list(ref, toFilter(filters)) };
+    const { boardId, choices } = scope.data;
+    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, toFilter(filters)) };
   }, [services, scope.data, filters]);
-  const boards = useAsync(
-    async () => (mode === 'switch' && scope.data ? services.boards.list(scope.data.ref.workspaceId) : null),
-    [services, mode, scope.data],
-  );
+  const boards = useAsync(async () => (mode === 'switch' ? services.boards.list() : null), [services, mode]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   // What is on screen: the columns and the Board and Stages they were grouped by.
-  const [shown, setShown] = useState<{ ref: BoardRef; stages: Stage[] } | null>(null);
+  const [shown, setShown] = useState<{ boardId: Slug; stages: Stage[] } | null>(null);
   const stages = shown?.stages ?? [];
 
   useEffect(() => {
     // A load that was already running when a write started may predate it; the write reloads after.
     if (!list.data || writing.current) return;
     setColumns(groupColumns(list.data.stages, list.data.stories));
-    setShown({ ref: list.data.ref, stages: list.data.stages });
+    setShown({ boardId: list.data.boardId, stages: list.data.stages });
   }, [list.data]);
 
   const col = Math.max(0, Math.min(cursor.col, stages.length - 1));
@@ -149,9 +146,9 @@ export function BoardScreen({ params }: ScreenProps) {
     });
   };
 
-  const switchTo = async (ref: BoardRef) => {
+  const switchTo = async (boardId: Slug) => {
     try {
-      await services.context.use(ref.workspaceId, ref.boardId);
+      await services.context.use(boardId);
       setViewing(undefined);
       scope.reload();
       setFilters({});
@@ -188,7 +185,7 @@ export function BoardScreen({ params }: ScreenProps) {
   useInput(
     (input, key) => {
       if (!scope.data || writing.current) return;
-      const { ref } = scope.data;
+      const { boardId } = scope.data;
       const delta = moveDelta(input, key);
       if (input === 'H') moveTo(col - 1);
       else if (input === 'L') moveTo(col + 1);
@@ -202,7 +199,7 @@ export function BoardScreen({ params }: ScreenProps) {
       else if (key.return && card) router.push('story', { key: card.key, title: card.key });
       else if (input === 'e' && card) router.push('story-form', { key: card.key, title: `Edit ${card.key}` });
       else if (input === 'd' && card) setMode('confirm-delete');
-      else if (input === 'n') router.push('story-form', { ref, stage: stages[col]?.key, title: 'New Story' });
+      else if (input === 'n') router.push('story-form', { boardId, stage: stages[col]?.key, title: 'New Story' });
       else if (input === '/') setMode('filter');
       else if (input === 'c') setFilters({});
       else if (input === 'b') setMode('switch');
@@ -212,7 +209,7 @@ export function BoardScreen({ params }: ScreenProps) {
   );
 
   if (!scope.data) return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
-  const { ref, choices } = scope.data;
+  const { boardId, choices } = scope.data;
 
   // The shell pads the screen by one column on each side.
   const layout = columnLayout(stages.length, termWidth - 2);
@@ -223,20 +220,20 @@ export function BoardScreen({ params }: ScreenProps) {
   const scrolled = hiddenLeft + hiddenRight > 0;
   const size = cardsPerColumn(termRows);
   const summary = describeFilters(filters);
-  const inContext = ctx?.local.workspace === ref.workspaceId && ctx?.local.board === ref.boardId;
+  const inContext = ctx?.local.board === boardId;
 
   return (
     <Box flexDirection="column">
       <Text wrap="truncate-end">
         <Text bold>{choices.board.name}</Text>
         <Text dimColor>
-          {` ${ref.workspaceId}/${ref.boardId}`}
+          {` ${boardId}`}
           {scrolled ? ` · Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : ''}
           {viewing && !inContext ? ' · viewing only (context unchanged)' : ''}
           {summary ? ` · filter: ${summary}` : ''}
         </Text>
       </Text>
-      {shown?.ref.workspaceId !== ref.workspaceId || shown.ref.boardId !== ref.boardId ? (
+      {shown?.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
       ) : (
         <Box marginTop={1}>
@@ -291,9 +288,9 @@ export function BoardScreen({ params }: ScreenProps) {
               items={boards.data.map((b) => ({
                 value: b.id,
                 label: b.name,
-                description: b.id === ref.boardId ? `${b.id} (current)` : b.id,
+                description: b.id === boardId ? `${b.id} (current)` : b.id,
               }))}
-              onSelect={(item) => void switchTo({ workspaceId: ref.workspaceId, boardId: item.value })}
+              onSelect={(item) => void switchTo(item.value)}
             />
           ) : (
             <Loading label="Loading Boards…" />

@@ -3,21 +3,19 @@ import { readdir } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { StorySchema } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeEpic, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeEpic, makeRootConfig, makeStory, runCli, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, {
-    id: 'acme',
+  await makeRootConfig(t.path, {
     assignees: [
       { handle: 'alice', name: 'Alice' },
       { handle: 'bob', name: 'Bob' },
     ],
   });
   await makeBoard(t.path, {
-    ...web,
     id: 'web',
     keyPrefix: 'WEB',
     customFields: [{ key: 'estimate', name: 'Estimate', type: 'number', required: false }],
@@ -72,7 +70,7 @@ describe('rowbly stories', () => {
       customFields: { estimate: 3 },
       description: 'Some *markdown*',
     });
-    expect(await readdir(`${t.path}/workspaces/acme/boards/web/stories`)).toEqual(['WEB-1.json']);
+    expect(await readdir(`${t.path}/boards/web/stories`)).toEqual(['WEB-1.json']);
   });
 
   it('exits 2 for an unknown Assignee and lists the valid handles in details', async () => {
@@ -90,7 +88,6 @@ describe('rowbly stories', () => {
     const { t, cli } = await setup();
     expect((await cli('stories', 'create', '--name', 'X', '--field', 'estimate=abc')).exitCode).toBe(2);
     await makeBoard(t.path, {
-      workspaceId: 'acme',
       id: 'api',
       keyPrefix: 'API',
       customFields: [{ key: 'team', name: 'Team', type: 'text', required: true }],
@@ -116,7 +113,7 @@ describe('rowbly stories', () => {
     expect((await cli('stories', 'rank', 'WEB-3', '--before', 'WEB-1')).exitCode).toBe(0);
     const list = await cli('stories', 'list', '--json');
     expect(JSON.parse(list.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-3', 'WEB-1', 'WEB-2']);
-    expect(git('diff', '--name-only').trim()).toBe('.rowbly/workspaces/acme/boards/web/stories/WEB-3.json');
+    expect(git('diff', '--name-only').trim()).toBe('.rowbly/boards/web/stories/WEB-3.json');
     expect((await cli('stories', 'rank', 'WEB-3')).exitCode).toBe(2);
     expect((await cli('stories', 'rank', 'WEB-3', '--top', '--bottom')).exitCode).toBe(2);
   });
@@ -149,7 +146,7 @@ describe('rowbly stories', () => {
 
   it('list renders the human table and validates enum flags', async () => {
     const { t, cli } = await setup();
-    await makeEpic(t.path, { id: 'launch', workspaceId: 'acme' });
+    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, {
       ...web,
       key: 'WEB-1',
@@ -175,11 +172,11 @@ describe('rowbly stories', () => {
     expect((await cli('stories', 'list', '--search', 'nothing-matches')).stdout).toBe('No Stories match.\n');
   });
 
-  it('list --all-boards covers the whole Workspace', async () => {
+  it('list --all-boards covers every Board', async () => {
     const { t, cli } = await setup();
-    await makeBoard(t.path, { workspaceId: 'acme', id: 'api', keyPrefix: 'API' });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     await makeStory(t.path, { ...web, key: 'WEB-1' });
-    await makeStory(t.path, { workspaceId: 'acme', boardId: 'api', key: 'API-1' });
+    await makeStory(t.path, { boardId: 'api', key: 'API-1' });
     expect((await cli('stories', 'list')).exitCode).toBe(2);
     const all = await cli('stories', 'list', '--all-boards', '--json');
     expect(JSON.parse(all.stdout).map((s: { key: string }) => s.key)).toEqual(['API-1', 'WEB-1']);

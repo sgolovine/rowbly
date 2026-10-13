@@ -9,28 +9,26 @@ import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 
 /**
- * The context switcher: pick a Workspace, then one of its Boards (`params.workspaceId`). The
- * `whoami` view (`params.view`) picks Me from the current Workspace's roster. While `~/.rowbly` does
- * not exist, it also offers to create it, like `init --global`. `params.home` overrides the home
- * directory (for tests).
+ * The context switcher: pick the Board in context. The `whoami` view (`params.view`) picks Me from
+ * the roster. While `~/.rowbly` does not exist, it also offers to create it, like `init --global`.
+ * `params.home` overrides the home directory (for tests).
  */
 export function ContextScreen({ params }: ScreenProps) {
   if (params.view === 'whoami') return <WhoamiPicker />;
-  if (typeof params.workspaceId === 'string') return <BoardPicker workspaceId={params.workspaceId} />;
-  return <WorkspacePicker home={typeof params.home === 'string' ? params.home : homedir()} />;
+  return <BoardPicker home={typeof params.home === 'string' ? params.home : homedir()} />;
 }
 
 /** The picker entry that opens the global `init` form. */
 const CREATE_GLOBAL = '\u0000global';
 
-function WorkspacePicker({ home }: { home: string }) {
+function BoardPicker({ home }: { home: string }) {
   const services = useServices();
   const ctx = useRowblyContext();
   const router = useRouter();
   const toast = useToast();
   const shell = useContext(ShellContext);
   const active = useIsActive();
-  const workspaces = useAsync(() => services.workspaces.list(), []);
+  const boards = useAsync(() => services.boards.list(), []);
   const globalRoot = initTarget({ cwd: process.cwd(), home, global: true });
   // Rechecked when the screen is back on top, e.g. after the global Data Root was created.
   const canCreateGlobal = useAsync(async () => {
@@ -43,7 +41,7 @@ function WorkspacePicker({ home }: { home: string }) {
     }
   }, [globalRoot.path, active]);
   useKeyHints([
-    { key: 'enter', description: 'choose workspace' },
+    { key: 'enter', description: 'use board' },
     { key: 'm', description: 'who am I' },
     { key: 'c', description: 'clear context' },
   ]);
@@ -53,7 +51,7 @@ function WorkspacePicker({ home }: { home: string }) {
       if (input === 'm') router.push('context', { view: 'whoami', title: 'Who am I' });
       else if (input === 'c') {
         services.context.clearUse().then(() => {
-          toast.push('info', 'Cleared the current Workspace and Board');
+          toast.push('info', 'Cleared the current Board');
           router.pop();
         }, toast.error);
       }
@@ -61,69 +59,30 @@ function WorkspacePicker({ home }: { home: string }) {
     { isActive: active },
   );
 
-  if (!workspaces.data) return workspaces.loading ? <Loading label="Loading workspaces…" /> : null;
+  if (!boards.data) return boards.loading ? <Loading label="Loading boards…" /> : null;
   return (
     <Box flexDirection="column">
-      <Text bold>Switch Workspace</Text>
+      <Text bold>Switch Board</Text>
       <SelectList
         items={[
-          ...workspaces.data.map((ws) => ({
-            value: ws.id,
-            label: ws.id === ctx?.local.workspace ? `${ws.id} *` : ws.id,
-            description: ws.name,
+          ...boards.data.map((b) => ({
+            value: b.id,
+            label: b.id === ctx?.local.board ? `${b.id} *` : b.id,
+            description: `${b.name} (${b.keyPrefix})`,
           })),
           ...(canCreateGlobal.data
             ? [{ value: CREATE_GLOBAL, label: 'Create global Data Root', description: globalRoot.path }]
             : []),
         ]}
-        emptyText="No Workspaces yet. Create one from Workspaces."
+        emptyText="No Boards yet. Create one from Boards."
         onSelect={async (item) => {
           if (item.value === CREATE_GLOBAL) {
             router.push('setup', { global: true, home, title: 'Global Data Root' });
             return;
           }
           try {
-            if ((await services.boards.list(item.value)).length > 0) {
-              router.push('context', { workspaceId: item.value, title: item.value });
-              return;
-            }
             await services.context.use(item.value);
             toast.push('info', `Now using ${item.value}`);
-            router.pop();
-          } catch (err) {
-            toast.error(err);
-          }
-        }}
-      />
-    </Box>
-  );
-}
-
-function BoardPicker({ workspaceId }: { workspaceId: string }) {
-  const services = useServices();
-  const ctx = useRowblyContext();
-  const router = useRouter();
-  const toast = useToast();
-  const boards = useAsync(() => services.boards.list(workspaceId), [workspaceId]);
-  useKeyHints([{ key: 'enter', description: 'use board' }]);
-
-  if (!boards.data) return boards.loading ? <Loading label="Loading boards…" /> : null;
-  const current = (id: string) => ctx?.local.workspace === workspaceId && ctx.local.board === id;
-  return (
-    <Box flexDirection="column">
-      <Text bold>Switch Board in {workspaceId}</Text>
-      <SelectList
-        items={boards.data.map((b) => ({
-          value: b.id,
-          label: current(b.id) ? `${b.id} *` : b.id,
-          description: `${b.name} (${b.keyPrefix})`,
-        }))}
-        onSelect={async (item) => {
-          try {
-            await services.context.use(workspaceId, item.value);
-            toast.push('info', `Now using ${workspaceId}/${item.value}`);
-            // Back past the Workspace picker too.
-            router.pop();
             router.pop();
           } catch (err) {
             toast.error(err);
@@ -141,10 +100,7 @@ function WhoamiPicker() {
   const ctx = useRowblyContext();
   const router = useRouter();
   const toast = useToast();
-  const roster = useAsync(async () => {
-    const workspaceId = await services.context.resolveWorkspace();
-    return { workspaceId, assignees: await services.assignees.list(workspaceId) };
-  }, []);
+  const roster = useAsync(() => services.assignees.list(), []);
   useKeyHints([{ key: 'enter', description: 'claim handle' }]);
 
   const source = ctx ? meSource(ctx) : null;
@@ -157,17 +113,17 @@ function WhoamiPicker() {
       </Text>
       {roster.data ? (
         <Box flexDirection="column">
-          <Text bold>Roster of {roster.data.workspaceId}</Text>
+          <Text bold>Roster</Text>
           <SelectList
             items={[
-              ...roster.data.assignees.map((a) => ({
+              ...roster.data.map((a) => ({
                 value: a.handle,
                 label: a.handle === me ? `${a.handle} *` : a.handle,
                 description: a.name,
               })),
               ...(me ? [{ value: CLEAR, label: 'Clear Me' }] : []),
             ]}
-            emptyText="The roster is empty. Add Assignees from Workspaces."
+            emptyText="The roster is empty. Add Assignees from the Assignees screen."
             onSelect={async (item) => {
               try {
                 const handle = item.value === CLEAR ? null : item.value;

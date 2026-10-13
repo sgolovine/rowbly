@@ -12,7 +12,6 @@ import { stagesScreens } from './stages';
 import { storiesScreens } from './stories';
 import { tasksScreens } from './tasks';
 import type { ScreenRegistry } from './types';
-import { workspacesScreens } from './workspaces';
 
 export type { ScreenComponent, ScreenProps, ScreenRegistry } from './types';
 
@@ -20,7 +19,6 @@ export type { ScreenComponent, ScreenProps, ScreenRegistry } from './types';
 export const screens: ScreenRegistry = {
   ...homeScreens,
   ...setupScreens,
-  ...workspacesScreens,
   ...assigneesScreens,
   ...boardsScreens,
   ...stagesScreens,

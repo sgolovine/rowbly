@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
 import pkg from '../package.json' with { type: 'json' };
-import { CLI_PATH, makeBoard, makeWorkspace, runCli, tempRoot } from './helpers';
+import { CLI_PATH, makeBoard, runCli, tempRoot } from './helpers';
 
 /** util-linux `script` gives the CLI a pseudo-terminal, so stdin and stdout are TTYs. */
 const hasScript = process.platform === 'linux' && spawnSync('script', ['--version']).status === 0;
@@ -40,7 +40,6 @@ const COMMAND_GROUPS = [
   'use',
   'whoami',
   'config',
-  'workspaces',
   'assignees',
   'boards',
   'stages',
@@ -117,8 +116,7 @@ describe('rowbly CLI', () => {
 describe.skipIf(!hasScript)('rowbly in a terminal', () => {
   it('opens the TUI on the --root Data Root when only global flags are given', async () => {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme' });
-    await makeBoard(t.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB', name: 'Web' });
+    await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB', name: 'Web' });
     // The cwd has no Data Root of its own, so the board can only come from --root.
     const cwd = await mkdtemp(join(tmpdir(), 'rowbly-tty-'));
     onTestFinished(() => rm(cwd, { recursive: true, force: true }));

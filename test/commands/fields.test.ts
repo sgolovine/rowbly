@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeStory, makeWorkspace, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeStory, runCli, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme' });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   const cli = (...args: string[]) => runCli(args, { root: t.path, cwd: t.dir });
   return { t, cli };
 }
@@ -32,7 +31,7 @@ describe('rowbly fields', () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       level: 'board',
       items: [{ key: 'estimate', type: 'number', integer: true, min: 0, required: false }],
-      affectedBoards: [web],
+      affectedBoards: ['web'],
     });
     expect((await cli('fields', 'add', 'x', '--name', 'X', '--type', 'number', '--min', 'abc')).exitCode).toBe(2);
     expect((await cli('fields', 'add', 'x', '--name', 'X', '--type', 'weird')).exitCode).toBe(2);
@@ -50,7 +49,7 @@ describe('rowbly fields', () => {
     const edited = await cli('fields', 'edit', 'size', '--options', 's,m');
     expect(edited.exitCode).toBe(0);
     expect(edited.stderr).toContain('warning: stripped 1 value of "size" that no longer fit the Custom Field');
-    const stories = await createRepositories(t.root).stories.allInBoard(web);
+    const stories = await createRepositories(t.root).stories.allInBoard('web');
     expect(stories.map((s) => s.customFields)).toEqual([{}, { size: 's' }]);
   });
 

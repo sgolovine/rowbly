@@ -7,15 +7,11 @@ A developer-focused, file-backed Kanban tracker that runs as a CLI and an intera
 ### Containers
 
 **Data Root**:
-The `.rowbly/` directory that holds all Rowbly data and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`.
-_Avoid_: database, store, repo
-
-**Workspace**:
-A named collection of Boards, Epics and an Assignee roster, identified by a slug.
-_Avoid_: project, org, team
+The `.rowbly/` directory that holds all Rowbly data (Boards, Epics and the Assignee roster) and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`; it is the only container above a Board.
+_Avoid_: database, store, repo, workspace, project
 
 **Board**:
-A Kanban board inside one Workspace that holds Stories and defines their Stages and Custom Fields, identified by a slug.
+A Kanban board inside the Data Root that holds Stories and defines their Stages and Custom Fields, identified by a slug.
 _Avoid_: project, list
 
 ### Work items
@@ -33,7 +29,7 @@ A smaller unit of work inside exactly one Story, with its own title, description
 _Avoid_: sub-task, subtask, checklist item
 
 **Epic**:
-A grouping of Stories that can span multiple Boards within one Workspace, identified by a slug; a Story belongs to at most one Epic.
+A grouping of Stories that can span any Boards in the Data Root, identified by a slug; a Story belongs to at most one Epic.
 _Avoid_: initiative, theme
 
 **Epic Progress**:
@@ -63,7 +59,7 @@ The fixed meaning of a Stage across all Boards: `todo`, `in_progress` or `done`.
 _Avoid_: status type, stage group
 
 **Configuration Cascade**:
-The chain of global, Workspace and Board configuration, where the most specific level that defines Stages or Custom Fields replaces the levels above it.
+The chain of global (`rowbly.config.json`) and Board (`board.config.json`) configuration, where the most specific level that defines Stages or Custom Fields replaces the levels above it.
 _Avoid_: inheritance, overrides
 
 **Rank**:
@@ -77,7 +73,7 @@ _Avoid_: property, attribute, metadata
 ### People
 
 **Assignee**:
-A person in a Workspace's roster who can be assigned to Stories; a Story has zero or more Assignees.
+A person in the Data Root's roster (in `rowbly.config.json`) who can be assigned to Stories; a Story has zero or more Assignees.
 _Avoid_: user, owner, member
 
 **Me**:
@@ -85,5 +81,5 @@ The Assignee handle the local developer has claimed with `rowbly whoami`, used a
 _Avoid_: current user, login
 
 **Local State**:
-Per-developer, never-committed settings in the Data Root (current Workspace/Board and Me).
+Per-developer, never-committed settings in the Data Root (current Board and Me).
 _Avoid_: session, profile

@@ -4,15 +4,14 @@ import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme' });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB', name: 'Web' });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB', name: 'Web' });
   return t;
 }
 
@@ -35,19 +34,19 @@ async function open(t: TempRoot, screen: string, local: LocalState = { version: 
 }
 
 const stageKeys = async (t: TempRoot) =>
-  ((await createRepositories(t.root).boards.get(web)).stages ?? []).map((s) => s.key);
+  ((await createRepositories(t.root).boards.get('web')).stages ?? []).map((s) => s.key);
 
 describe('stages screen', () => {
   it('shows the order, category badges and the level with its inherited source', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
     const frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Level:  board   workspace   global');
+    expect(frame).toContain('Level:  board   global');
     expect(frame).toContain('inherited from default (copied to board on first edit)');
     expect(frame).toContain('› 1. ● Backlog backlog · todo');
     expect(frame).toContain('3. ● In Progress in-progress · in_progress');
     await app.press('l');
-    await waitForFrame(app, (f) => f.includes(' workspace ') && f.includes('copied to workspace'));
+    await waitForFrame(app, (f) => f.includes('copied to global'));
     app.unmount();
   });
 
@@ -157,7 +156,7 @@ describe('boards screen', () => {
   it('creates, edits and deletes Boards, asking again when a Board has Stories', async () => {
     const t = await setup();
     await makeStory(t.path, { ...web, key: 'WEB-1' });
-    const app = await open(t, 'boards', { version: 1, workspace: 'acme', board: 'web' });
+    const app = await open(t, 'boards', { version: 1, board: 'web' });
     expect(app.lastFrame()).toContain('Web web · WEB (current)');
 
     await app.press('n', ...'api', KEYS.down, ...'Api', KEYS.down, ...'API', KEYS.enter);
@@ -170,7 +169,7 @@ describe('boards screen', () => {
     await waitForFrame(app, (f) => f.includes('Web has 1 Stories. Delete the Board and all of them?'));
     await app.press('y');
     await waitForFrame(app, (f) => f.includes('Deleted Web'));
-    expect((await createRepositories(t.root).boards.list('acme')).map((b) => b.id)).toEqual(['api']);
+    expect((await createRepositories(t.root).boards.list()).map((b) => b.id)).toEqual(['api']);
     app.unmount();
   });
 

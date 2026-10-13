@@ -1,61 +1,55 @@
 import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colorByCategory, colors, printResult, renderTable } from '../output';
-import { type BoardRef, type ConfigLevel, type Stage, type StageCategory, StageCategorySchema } from '../schemas';
+import { type ConfigLevel, type Slug, type Stage, type StageCategory, StageCategorySchema } from '../schemas';
 import type { ConfigTarget, Position, RowblyContext, Services } from '../services';
 import { affectedBoards, type ConfigListKey, readLevel } from '../services/_configTarget';
-import { boardFlag, type ContextFlags, promptIfMissing, withContext, workspaceFlag } from './_shared';
+import { boardFlag, type ContextFlags, promptIfMissing, withContext } from './_shared';
 
-const LEVELS = ['board', 'workspace', 'global'] as const;
+const LEVELS = ['board', 'global'] as const;
 
-/** `--board`, `--workspace` and `--level`, shared by `stages` and `fields`. */
+/** `--board` and `--level`, shared by `stages` and `fields`. */
 export interface LevelFlags extends ContextFlags {
   level?: string;
 }
 
-/** Adds `--board`, `--workspace` and `--level` to a `stages`/`fields` verb. */
+/** Adds `--board` and `--level` to a `stages`/`fields` verb. */
 export function withLevelOptions(cmd: Command): Command {
   return cmd
-    .option('--board <id>', 'the Board (`ws/board` accepted; default: current context)')
-    .option('--workspace <id>', 'the Workspace (default: current context)')
-    .option('--level <level>', 'Configuration Cascade level to edit: board, workspace or global');
+    .option('--board <id>', 'the Board (default: current context)')
+    .option('--level <level>', 'Configuration Cascade level to edit: board or global');
 }
 
 /**
  * The Configuration Cascade level to read or edit. `--level` wins; otherwise `board` when a Board is
- * in context, else `workspace` (contracts §3).
+ * in context, else `global` (contracts §3).
  */
 export async function resolveConfigTarget(services: Services, opts: LevelFlags): Promise<ConfigTarget> {
   const level = opts.level;
   if (level !== undefined && !LEVELS.includes(level as (typeof LEVELS)[number])) {
-    throw new UsageError(`invalid --level "${level}"`, { hint: 'expected board, workspace or global' });
+    throw new UsageError(`invalid --level "${level}"`, { hint: 'expected board or global' });
   }
   if (level === 'global') return { level: 'global' };
-  if (level === 'workspace') {
-    return { level: 'workspace', workspaceId: await services.context.resolveWorkspace(workspaceFlag(opts)) };
-  }
-  if (level === 'board')
-    return { level: 'board', ref: await services.context.resolveBoard(boardFlag(opts), workspaceFlag(opts)) };
+  if (level === 'board') return { level: 'board', boardId: await services.context.resolveBoard(boardFlag(opts)) };
   try {
-    return { level: 'board', ref: await services.context.resolveBoard(boardFlag(opts), workspaceFlag(opts)) };
+    return { level: 'board', boardId: await services.context.resolveBoard(boardFlag(opts)) };
   } catch (err) {
-    // No Board in context: fall back to the Workspace level.
+    // No Board in context: fall back to the global level.
     if (!(err instanceof UsageError)) throw err;
-    return { level: 'workspace', workspaceId: await services.context.resolveWorkspace(workspaceFlag(opts)) };
+    return { level: 'global' };
   }
 }
 
 export function describeTarget(target: ConfigTarget): string {
   if (target.level === 'global') return 'global level';
-  if (target.level === 'workspace') return `workspace level (${target.workspaceId})`;
-  return `board level (${target.ref.workspaceId}/${target.ref.boardId})`;
+  return `board level (${target.boardId})`;
 }
 
 /** The JSON/human result of every `stages`/`fields` mutation: the new list, the level and the Boards it applies to. */
 export interface MutationResult<T> {
   level: ConfigTarget['level'];
   items: T[];
-  affectedBoards: BoardRef[];
+  affectedBoards: Slug[];
 }
 
 export async function mutationResult<T>(
@@ -67,9 +61,8 @@ export async function mutationResult<T>(
   return { level: target.level, items, affectedBoards: await affectedBoards(ctx, target, key) };
 }
 
-export function affectsLine(target: ConfigTarget, boards: readonly BoardRef[]): string {
-  const names = boards.map((b) => `${b.workspaceId}/${b.boardId}`);
-  return colors.dim(`${describeTarget(target)}; affects ${names.length === 0 ? 'no Boards' : names.join(', ')}`);
+export function affectsLine(target: ConfigTarget, boards: readonly Slug[]): string {
+  return colors.dim(`${describeTarget(target)}; affects ${boards.length === 0 ? 'no Boards' : boards.join(', ')}`);
 }
 
 interface StageOptions extends LevelFlags {

@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { NotFoundError, ValidationError } from '../../src/core';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = 'web';
 
 async function setup(me: string | null = 'alice') {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme', assignees: [{ handle: 'alice', name: 'Alice' }] });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
-  await makeStory(t.path, { ...web, key: 'WEB-1' });
+  await makeRootConfig(t.path, { assignees: [{ handle: 'alice', name: 'Alice' }] });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
+  await makeStory(t.path, { boardId: web, key: 'WEB-1' });
   const clock = fixedClock();
   const ctx: RowblyContext = {
     root: t.root,

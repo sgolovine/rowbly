@@ -7,7 +7,7 @@ import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
-import { fixedClock, fixedIds, makeBoard, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 async function emptyDir(): Promise<string> {
@@ -17,7 +17,12 @@ async function emptyDir(): Promise<string> {
 }
 
 /** The real App over a temp Data Root, opened on `screen` with the given Local State. */
-function renderApp(t: TempRoot, screen: string, local: LocalState = { version: 1 }) {
+function renderApp(
+  t: TempRoot,
+  screen: string,
+  local: LocalState = { version: 1 },
+  params: Record<string, unknown> = {},
+) {
   const toasts = createToastStore();
   const ctx: RowblyContext = {
     root: t.root,
@@ -27,9 +32,7 @@ function renderApp(t: TempRoot, screen: string, local: LocalState = { version: 1
     newId: fixedIds(),
     warn: (message) => toasts.push('warning', message),
   };
-  const app = renderTui(
-    <App ctx={ctx} services={createServices(ctx)} initial={{ screen, params: {} }} toasts={toasts} />,
-  );
+  const app = renderTui(<App ctx={ctx} services={createServices(ctx)} initial={{ screen, params }} toasts={toasts} />);
   return { app, ctx };
 }
 
@@ -43,33 +46,33 @@ describe('setup screen (first run)', () => {
     expect(app.lastFrame()).toContain(join(home, '.rowbly'));
 
     await app.press(KEYS.enter);
-    await waitForFrame(app, 'Workspace id');
+    await waitForFrame(app, 'Board id');
     expect(app.lastFrame()).toContain(`Create ${join(cwd, '.rowbly')}`);
-    // Workspace id, name; Board id; Board name and prefix take their defaults.
-    await app.press(...'acme', KEYS.down, ...'Acme', KEYS.down, ...'web', KEYS.enter);
+    expect(app.lastFrame()).toContain('Leave the Board id empty to skip the first Board.');
+    expect(app.lastFrame()).not.toContain('Workspace');
+    // Board id; Board name and prefix take their defaults.
+    await app.press(...'web', KEYS.enter);
     // The board view (WP09: home opens it when a Board is in context), with the new context in the header.
-    await waitForFrame(app, 'acme › web › Board');
+    await waitForFrame(app, 'web › Board');
 
     const repos = createRepositories({ path: join(cwd, '.rowbly'), kind: 'local' });
-    expect(await repos.boards.get({ workspaceId: 'acme', boardId: 'web' })).toMatchObject({
-      name: 'web',
-      keyPrefix: 'WEB',
-    });
-    expect(await repos.localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
+    expect(await repos.boards.get('web')).toMatchObject({ name: 'web', keyPrefix: 'WEB' });
+    expect(await repos.localState.get()).toEqual({ version: 1, board: 'web' });
     expect(await readFile(join(cwd, '.rowbly', '.gitignore'), 'utf8')).toBe('local.json\n');
     app.unmount();
   });
 
-  it('can initialize globally without a first Workspace', async () => {
+  it('can initialize globally without a first Board', async () => {
     const cwd = await emptyDir();
     const home = await emptyDir();
     const app = renderTui(<App ctx={null} services={null} initial={{ screen: 'setup', params: { cwd, home } }} />);
     await waitForFrame(app, 'No Data Root found');
     await app.press('j', KEYS.enter);
-    await waitForFrame(app, 'Workspace id');
+    await waitForFrame(app, 'Board id');
     await app.press(KEYS.enter);
     await waitForFrame(app, 'Go to');
     await access(join(home, '.rowbly', 'rowbly.config.json'));
+    await expect(access(join(home, '.rowbly', 'boards'))).rejects.toThrow();
     await expect(access(join(cwd, '.rowbly'))).rejects.toThrow();
     app.unmount();
   });
@@ -82,83 +85,78 @@ describe('setup screen (first run)', () => {
     await waitForFrame(app, 'No Data Root found');
     await app.press(KEYS.enter);
     await waitForFrame(app, 'Data Root already exists');
-    expect(app.lastFrame()).not.toContain('Workspace id');
+    expect(app.lastFrame()).not.toContain('Board id');
     expect(app.lastFrame()).toContain('No Data Root found');
     app.unmount();
   });
 });
 
 describe('context switcher', () => {
-  async function twoWorkspaces() {
+  async function twoBoards() {
     const t = await tempRoot();
-    await makeWorkspace(t.path, { id: 'acme', name: 'Acme', assignees: [{ handle: 'sam', name: 'Sam' }] });
-    await makeWorkspace(t.path, { id: 'labs', name: 'Labs' });
-    await makeBoard(t.path, { id: 'api', workspaceId: 'acme', keyPrefix: 'API' });
-    await makeBoard(t.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
+    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
+    await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
     return t;
   }
 
   it('switches Boards from the g palette', async () => {
-    const t = await twoWorkspaces();
-    const { app, ctx } = renderApp(t, 'home', { version: 1, workspace: 'acme', board: 'api' });
-    await waitForFrame(app, 'acme › api › Board');
+    const t = await twoBoards();
+    const { app, ctx } = renderApp(t, 'home', { version: 1, board: 'api' });
+    await waitForFrame(app, 'api › Board');
     await app.press('g');
     // Context is the second-to-last palette entry.
-    await app.press(...Array(9).fill('j'), KEYS.enter);
-    await waitForFrame(app, 'acme *');
-    expect(app.lastFrame()).toContain('Switch Workspace');
-
-    await app.press(KEYS.enter);
+    await app.press(...Array(8).fill('j'), KEYS.enter);
     await waitForFrame(app, 'api *');
-    expect(app.lastFrame()).toContain('Switch Board in acme');
-    await app.press('j', KEYS.enter);
-    await waitForFrame(app, 'web acme/web');
+    expect(app.lastFrame()).toContain('Switch Board');
+    expect(app.lastFrame()).toContain('web web (WEB)');
 
-    expect(ctx.local).toEqual({ version: 1, workspace: 'acme', board: 'web' });
-    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
-    expect(app.lastFrame()).toContain('Now using acme/web');
+    await app.press('j', KEYS.enter);
+    await waitForFrame(app, 'Now using web');
+
+    expect(ctx.local).toEqual({ version: 1, board: 'web' });
+    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, board: 'web' });
     // The board view at the root follows the new context (WP09).
-    expect(app.lastFrame()).toContain('acme › web › Board');
-    expect(app.lastFrame()).toContain('web acme/web');
+    await waitForFrame(app, 'web web');
+    expect(app.lastFrame()).toContain('web › Board');
     app.unmount();
   });
 
-  it('c clears the current Workspace and Board', async () => {
-    const t = await twoWorkspaces();
-    const { app, ctx } = renderApp(t, 'context', { version: 1, workspace: 'acme', board: 'api', me: 'sam' });
-    await waitForFrame(app, 'acme *');
+  it('c clears the current Board', async () => {
+    const t = await twoBoards();
+    const { app, ctx } = renderApp(t, 'context', { version: 1, board: 'api', me: 'sam' });
+    await waitForFrame(app, 'api *');
     await app.press('c');
-    await waitForFrame(app, 'Cleared the current Workspace and Board');
+    await waitForFrame(app, 'Cleared the current Board');
     expect(ctx.local).toEqual({ version: 1, me: 'sam' });
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' });
     app.unmount();
   });
 
-  it('a Workspace without Boards is used directly', async () => {
-    const t = await twoWorkspaces();
-    const { app, ctx } = renderApp(t, 'context');
-    await waitForFrame(app, 'labs');
-    await app.press('j', KEYS.enter);
-    await waitForFrame(app, 'Now using labs');
-    expect(ctx.local).toEqual({ version: 1, workspace: 'labs' });
-    expect(app.lastFrame()).toContain('Now using labs');
+  it('says how to start when there are no Boards', async () => {
+    const t = await tempRoot();
+    // A home that already has `.rowbly`, so the picker does not offer to create the global Data Root.
+    const { app } = renderApp(t, 'context', { version: 1 }, { home: t.dir });
+    await waitForFrame(app, 'No Boards yet. Create one from Boards.');
+    expect(app.lastFrame()).toContain('Switch Board');
+    expect(app.lastFrame()).not.toContain('Create global Data Root');
     app.unmount();
   });
 
   it('the whoami picker lists the roster and claims a handle', async () => {
-    const t = await twoWorkspaces();
-    const { app, ctx } = renderApp(t, 'home', { version: 1, workspace: 'acme' });
+    const t = await twoBoards();
+    const { app, ctx } = renderApp(t, 'home');
     await waitForFrame(app, 'Go to');
-    await app.press('g', ...Array(9).fill('j'), KEYS.enter);
-    await waitForFrame(app, 'acme *');
+    await app.press('g', ...Array(8).fill('j'), KEYS.enter);
+    await waitForFrame(app, 'Switch Board');
     await app.press('m');
     await waitForFrame(app, 'sam Sam');
     expect(app.lastFrame()).toContain('Me: not set');
-    expect(app.lastFrame()).toContain('Roster of acme');
+    expect(app.lastFrame()).toContain('Roster');
     await app.press(KEYS.enter);
     await waitForFrame(app, 'me: sam');
     expect(ctx.me).toBe('sam');
-    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, workspace: 'acme', me: 'sam' });
+    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' });
     expect(app.lastFrame()).toContain('me: sam');
     app.unmount();
   });

@@ -9,19 +9,18 @@ import {
   fixedIds,
   makeBoard,
   makeEpic,
+  makeRootConfig,
   makeStory,
-  makeWorkspace,
   type TempRoot,
   tempRoot,
 } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
+const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, {
-    id: 'acme',
+  await makeRootConfig(t.path, {
     assignees: [
       { handle: 'alice', name: 'Alice' },
       { handle: 'bob', name: 'Bob' },
@@ -60,7 +59,7 @@ describe('story form', () => {
     const app = await open(t, 'stories');
     expect(app.lastFrame()).toContain('No Stories yet. Press n to create one.');
     await app.press('n');
-    await waitForFrame(app, (f) => f.includes('New Story on acme/web'));
+    await waitForFrame(app, (f) => f.includes('New Story on web'));
     expect(app.lastFrame()).toContain('‹ backlog ›');
     // name, description, stage, assignees, epic, priority, labels, due, size
     await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down, KEYS.down);
@@ -83,11 +82,11 @@ describe('story form', () => {
 
   it('shows validation errors from the service inline', async () => {
     const t = await setup();
-    const app = await open(t, 'story-form', { ref: web });
+    const app = await open(t, 'story-form', web);
     await waitForFrame(app, (f) => f.includes('Name*'));
     await app.press(...'X', ...Array(6).fill(KEYS.down), ...'Bad Label', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('must be lower-kebab-case'));
-    expect(await createRepositories(t.root).stories.allInBoard(web)).toEqual([]);
+    expect(await createRepositories(t.root).stories.allInBoard('web')).toEqual([]);
     app.unmount();
   });
 
@@ -146,7 +145,7 @@ describe('story detail', () => {
 describe('story list', () => {
   it('filters by me, label and search, and clears filters', async () => {
     const t = await setup();
-    await makeEpic(t.path, { id: 'launch', workspaceId: 'acme' });
+    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Mine', assignees: ['alice'], labels: ['ui'] });
     await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Theirs', assignees: ['bob'], epicId: 'launch' });
     const app = await open(t, 'stories', {}, 'alice');

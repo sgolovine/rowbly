@@ -14,7 +14,7 @@ import {
 } from '../../hooks';
 import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
-import type { ScreenProps, ScreenRegistry } from '../types';
+import type { ScreenRegistry } from '../types';
 import { BoardDetailScreen } from './BoardDetail';
 
 type Mode =
@@ -25,21 +25,18 @@ type Mode =
   | { kind: 'confirm-force'; board: BoardConfig; stories: number };
 
 /**
- * The Boards of the current Workspace (or `params.workspaceId`): create, edit, delete, open a Board's
- * detail, Stages or Fields, and view its board without changing the context.
+ * Every Board: create, edit, delete, open a Board's detail, Stages or Fields, and view its board
+ * without changing the context.
  */
-function BoardsScreen({ params }: ScreenProps) {
+function BoardsScreen() {
   const services = useServices();
   const ctx = useRowblyContext();
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
-  const list = useAsync(async () => {
-    const workspaceId = (params.workspaceId as string | undefined) ?? (await services.context.resolveWorkspace());
-    return { workspaceId, boards: await services.boards.list(workspaceId) };
-  }, [services, params.workspaceId]);
-  const boards = list.data?.boards ?? [];
+  const list = useAsync(() => services.boards.list(), [services]);
+  const boards = list.data ?? [];
   const listing = mode.kind === 'list';
   const [cursor] = useCursor(boards.length, active && listing);
   const current = boards[cursor];
@@ -52,7 +49,7 @@ function BoardsScreen({ params }: ScreenProps) {
 
   const remove = async (board: BoardConfig, force: boolean) => {
     try {
-      await services.boards.remove({ workspaceId: board.workspaceId, boardId: board.id }, { force });
+      await services.boards.remove(board.id, { force });
       done(`Deleted ${board.name}`);
     } catch (err) {
       if (err instanceof ConflictError && typeof err.details.stories === 'number') {
@@ -84,23 +81,22 @@ function BoardsScreen({ params }: ScreenProps) {
     (input, key) => {
       if (input === 'n') return setMode({ kind: 'create' });
       if (!current) return;
-      const ref = { workspaceId: current.workspaceId, boardId: current.id };
+      const boardId = current.id;
       if (input === 'e') setMode({ kind: 'edit', board: current });
       else if (input === 'd') setMode({ kind: 'confirm-delete', board: current });
-      else if (key.return) router.push('board-detail', { ref, title: current.name });
-      else if (input === 'v') router.push('board', { ref });
-      else if (input === 's') router.push('stages', { ref, title: `${current.name} Stages` });
-      else if (input === 'f') router.push('fields', { ref, title: `${current.name} Fields` });
+      else if (key.return) router.push('board-detail', { boardId, title: current.name });
+      else if (input === 'v') router.push('board', { boardId });
+      else if (input === 's') router.push('stages', { boardId, title: `${current.name} Stages` });
+      else if (input === 'f') router.push('fields', { boardId, title: `${current.name} Fields` });
     },
     { isActive: active && listing && !list.loading },
   );
 
   if (list.loading && !list.data) return <Loading label="Loading Boards…" />;
-  const currentBoard = ctx?.local.workspace === list.data?.workspaceId ? ctx?.local.board : undefined;
+  const currentBoard = ctx?.local.board;
 
   return (
     <Box flexDirection="column" gap={1}>
-      <Text dimColor>Workspace {list.data?.workspaceId}</Text>
       {boards.length === 0 ? (
         <Text dimColor>No Boards yet. Press n to create one.</Text>
       ) : (
@@ -115,7 +111,7 @@ function BoardsScreen({ params }: ScreenProps) {
           ))}
         />
       )}
-      {mode.kind === 'create' && list.data && (
+      {mode.kind === 'create' && (
         <Box flexDirection="column">
           <Text bold>New Board</Text>
           <Form
@@ -126,7 +122,7 @@ function BoardsScreen({ params }: ScreenProps) {
               { name: 'description', label: 'Description', kind: 'text' },
             ]}
             onSubmit={async (values) => {
-              const board = await services.boards.create(list.data?.workspaceId ?? '', {
+              const board = await services.boards.create({
                 id: String(values.id),
                 name: String(values.name),
                 keyPrefix: String(values.keyPrefix),
@@ -147,10 +143,10 @@ function BoardsScreen({ params }: ScreenProps) {
             ]}
             initialValues={{ name: mode.board.name, description: mode.board.description }}
             onSubmit={async (values) => {
-              await services.boards.update(
-                { workspaceId: mode.board.workspaceId, boardId: mode.board.id },
-                { name: String(values.name), description: String(values.description ?? '') },
-              );
+              await services.boards.update(mode.board.id, {
+                name: String(values.name),
+                description: String(values.description ?? ''),
+              });
               done(`Updated ${mode.board.id}`);
             }}
           />

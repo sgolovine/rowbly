@@ -26,21 +26,12 @@ export function isInteractive(globals: GlobalOptions): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY) && !globals.json && globals.prompt;
 }
 
-/** `--workspace` / `--board` as parsed by commander. */
+/** `--board` as parsed by commander. */
 export interface ContextFlags {
-  workspace?: string;
   board?: string;
 }
 
-/** The `flag` argument for `services.context.resolveWorkspace`: `--workspace` → `ROWBLY_WORKSPACE` (contracts §4). */
-export function workspaceFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.env): string | undefined {
-  return opts.workspace || env.ROWBLY_WORKSPACE || undefined;
-}
-
-/**
- * The `flag` argument for `services.context.resolveBoard`: `--board` → `ROWBLY_BOARD` (contracts §4).
- * Pass `workspaceFlag(opts)` as its second argument: `resolveBoard(boardFlag(opts), workspaceFlag(opts))`.
- */
+/** The `flag` argument for `services.context.resolveBoard`: `--board` → `ROWBLY_BOARD` (contracts §4). */
 export function boardFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.env): string | undefined {
   return opts.board || env.ROWBLY_BOARD || undefined;
 }
@@ -64,7 +55,6 @@ export async function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Prom
       env: process.env,
       home: homedir(),
       root: globals.root,
-      workspace: workspaceFlag(cmd.optsWithGlobals<ContextFlags>()),
       warn: (message) => warnings.push(message),
     });
     return await fn({ ctx, services: createServices(ctx), globals });

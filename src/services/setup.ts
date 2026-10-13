@@ -1,19 +1,11 @@
 import { join, resolve } from 'node:path';
 import { nanoid } from 'nanoid';
-import { ConflictError, isSlug, NotFoundError, toTimestamp, UsageError, ValidationError } from '../core';
-import {
-  BoardConfigSchema,
-  type DataRoot,
-  DEFAULT_STAGES,
-  type LocalState,
-  type Slug,
-  WorkspaceConfigSchema,
-} from '../schemas';
+import { ConflictError, isSlug, toTimestamp, ValidationError } from '../core';
+import { BoardConfigSchema, type DataRoot, DEFAULT_STAGES, type LocalState, type Slug } from '../schemas';
 import { createRepositories, pathExists, type Repositories, writeTextFile } from '../storage';
-import { createContextService } from './context';
+import { validInput } from './_validate';
 import { createServices } from './index';
 import type { RowblyContext, SetupService } from './types';
-import { validInput } from './workspaces';
 
 const DATA_ROOT_DIR = '.rowbly';
 
@@ -50,8 +42,7 @@ export function meSource(ctx: RowblyContext): MeSource | null {
 }
 
 /**
- * Claims `handle` as Me. Unlike `context.setMe`, a handle missing from the current Workspace's
- * roster (or no resolvable Workspace) only warns, so Me can be set before the roster exists.
+ * Claims `handle` as Me. Unlike `context.setMe`, a handle missing from the roster only warns, so Me can be set before the roster exists.
  * Lives beside the service because the frozen `ContextService` contract has no such method.
  */
 export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalState> {
@@ -60,16 +51,8 @@ export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalSt
   const repos = createRepositories(ctx.root);
   const { me: _me, ...rest } = ctx.local;
   const next: LocalState = { ...rest, me: handle };
-  try {
-    const workspaceId = await createContextService(ctx, repos).resolveWorkspace();
-    const workspace = await repos.workspaces.get(workspaceId);
-    if (!workspace.assignees.some((a) => a.handle === handle)) {
-      ctx.warn(`"${handle}" is not in the roster of Workspace "${workspaceId}"`);
-    }
-  } catch (err) {
-    if (!(err instanceof UsageError || err instanceof NotFoundError)) throw err;
-    ctx.warn(`no current Workspace to check "${handle}" against`);
-  }
+  const { assignees } = await repos.rootConfig.get();
+  if (!assignees.some((a) => a.handle === handle)) ctx.warn(`"${handle}" is not in the roster`);
   await repos.localState.put(next);
   ctx.local = next;
   ctx.me = handle;
@@ -78,25 +61,13 @@ export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalSt
 
 export function createSetupService(ctx: RowblyContext, _repos: Repositories): SetupService {
   return {
-    async init({ root, workspace, board }) {
-      if (board && !workspace) throw new UsageError('a first Board needs a first Workspace');
+    async init({ root, board }) {
       // Check everything before writing anything, so a bad id never leaves a half-made Data Root.
       const now = toTimestamp(ctx.now());
-      if (workspace) {
-        validInput(WorkspaceConfigSchema, 'Workspace', {
-          version: 1,
-          ...workspace,
-          description: workspace.description ?? '',
-          assignees: [],
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-      if (workspace && board) {
+      if (board) {
         validInput(BoardConfigSchema, 'Board', {
           version: 1,
           ...board,
-          workspaceId: workspace.id,
           keyPrefix: board.keyPrefix.toUpperCase(),
           description: board.description ?? '',
           createdAt: now,
@@ -106,17 +77,20 @@ export function createSetupService(ctx: RowblyContext, _repos: Repositories): Se
       await assertInitTarget(root);
 
       const repos = createRepositories(root);
-      await repos.rootConfig.put({ version: 1, stages: DEFAULT_STAGES.map((stage) => ({ ...stage })) });
+      await repos.rootConfig.put({
+        version: 1,
+        assignees: [],
+        stages: DEFAULT_STAGES.map((stage) => ({ ...stage })),
+      });
       await writeTextFile(join(root.path, '.gitignore'), 'local.json\n');
-      if (!workspace) return { root, workspace: null, board: null };
+      if (!board) return { root, board: null };
 
       // Everything below runs against the new Data Root.
       const target: RowblyContext = { ...ctx, root, local: { version: 1 }, me: null };
       const services = createServices(target);
-      const createdWorkspace = await services.workspaces.create(workspace);
-      const createdBoard = board ? await services.boards.create(createdWorkspace.id, board) : null;
-      await services.context.use(createdWorkspace.id, createdBoard?.id);
-      return { root, workspace: createdWorkspace, board: createdBoard };
+      const createdBoard = await services.boards.create(board);
+      await services.context.use(createdBoard.id);
+      return { root, board: createdBoard };
     },
   };
 }

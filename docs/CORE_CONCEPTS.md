@@ -2,9 +2,7 @@
 
 Rowbly is setup as a Kanban. Here are the core concepts:
 
-**Workspace(s)**: A collection of boards.
-
-**Board(s)**: The place where you keep issue
+**Board(s)**: The place where you keep issue. All Boards live directly in the Data Root (`.rowbly/`).
 
 **Stage(s)**: The status of an issue on the board. Part of the boards configuration.
 
@@ -16,6 +14,6 @@ Rowbly is setup as a Kanban. Here are the core concepts:
 
 **Task(s)**: Optional sub-items that slot below Stories.
 
-**Epic(s)**: A grouping of stories that can span multiple **Boards** within a **Workspace**
+**Epic(s)**: A grouping of stories that can span multiple **Boards** in the Data Root
 
-**Assignees**: Individuals assigned to a particular story.
+**Assignees**: Individuals assigned to a particular story. One roster per Data Root.

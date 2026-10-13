@@ -1,10 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`board view > renders one column per Stage with counts and cards in Rank order 1`] = `
-" Rowbly  acme › web › Board                                                                                   me: alice
+" Rowbly  web › Board                                                                                          me: alice
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
- Website acme/web
+ Website web
 
  ● Backlog (3)                ● Todo (1)                   ● Doing (1)                  ● Done (1)
  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ──────────────────────────── ──────────────────────────── ────────────────────────────
@@ -26,10 +26,10 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 `;
 
 exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
-" Rowbly  acme › web › Board                                           me: alice
+" Rowbly  web › Board                                                  me: alice
 ────────────────────────────────────────────────────────────────────────────────
 
- Website acme/web · Stages 3–5 of 6
+ Website web · Stages 3–5 of 6
 
  ‹2 ● Doing (1)             ● Review (0)            ● QA (0)                1›
     ─────────────────────── ─────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━

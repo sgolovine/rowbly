@@ -37,7 +37,6 @@ export type Task = z.infer<typeof TaskSchema>;
 export const StorySchema = z.object({
   version: VersionSchema,
   key: StoryKeySchema,
-  workspaceId: SlugSchema,
   boardId: SlugSchema,
   name: z.string().min(1).max(200),
   description: z.string().default(''),

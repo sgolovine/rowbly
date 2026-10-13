@@ -23,7 +23,6 @@ describe('screen registry', () => {
         'story-form',
         'task',
         'task-form',
-        'workspaces',
       ].sort(),
     );
   });

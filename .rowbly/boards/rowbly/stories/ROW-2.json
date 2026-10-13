@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-2",
+  "boardId": "rowbly",
+  "name": "Plugin architecture",
+  "description": "There are many features that COULD be added to rowbly but that probably shouldn't be included in the main package. For this we want to develop a plugin architecture. For now only support \"first party\" plugins\n",
+  "stage": "backlog",
+  "rank": "a1",
+  "assignees": [],
+  "epicId": null,
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-13T02:59:05.624Z",
+  "updatedAt": "2026-10-13T02:59:05.624Z",
+  "nextTaskNumber": 1,
+  "tasks": [],
+  "comments": []
+}

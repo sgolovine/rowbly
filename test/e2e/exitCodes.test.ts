@@ -8,12 +8,11 @@ import { runCli } from '../helpers';
 describe('exit codes (contracts §6)', () => {
   let dir: string;
   const rowbly = (...args: string[]) => runCli(args, { cwd: dir });
-  const config = () => join(dir, '.rowbly/workspaces/acme/workspace.config.json');
+  const config = () => join(dir, '.rowbly/boards/web/board.config.json');
 
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), 'rowbly-exit-'));
-    const init = ['init', '--workspace', 'acme', '--workspace-name', 'Acme', '--board', 'web', '--board-name', 'Web'];
-    expect((await rowbly(...init, '--prefix', 'WEB')).exitCode).toBe(0);
+    expect((await rowbly('init', '--board', 'web', '--board-name', 'Web', '--prefix', 'WEB')).exitCode).toBe(0);
     expect((await rowbly('stories', 'create', '--name', 'One')).exitCode).toBe(0);
   });
   afterAll(() => rm(dir, { recursive: true, force: true }));
@@ -23,7 +22,12 @@ describe('exit codes (contracts §6)', () => {
     { code: 'USAGE', exit: 2, args: ['stories', 'create'], why: 'a required flag is missing and there is no TTY' },
     { code: 'USAGE', exit: 2, args: ['stories', 'list', '--bogus'], why: 'an unknown flag' },
     { code: 'USAGE', exit: 2, args: ['stories', 'delete', 'WEB-1'], why: 'destructive without --yes and no TTY' },
-    { code: 'VALIDATION', exit: 2, args: ['workspaces', 'create', 'Bad Id', '--name', 'X'], why: 'not a slug' },
+    {
+      code: 'VALIDATION',
+      exit: 2,
+      args: ['boards', 'create', 'Bad Id', '--name', 'X', '--prefix', 'BAD'],
+      why: 'not a slug',
+    },
     {
       code: 'VALIDATION',
       exit: 2,
@@ -32,7 +36,12 @@ describe('exit codes (contracts §6)', () => {
     },
     { code: 'NOT_FOUND', exit: 3, args: ['stories', 'show', 'WEB-99'], why: 'unknown Story Key' },
     { code: 'NOT_FOUND', exit: 3, args: ['epics', 'show', 'nope'], why: 'unknown Epic' },
-    { code: 'CONFLICT', exit: 4, args: ['workspaces', 'create', 'acme', '--name', 'Again'], why: 'the id exists' },
+    {
+      code: 'CONFLICT',
+      exit: 4,
+      args: ['boards', 'create', 'web', '--name', 'Again', '--prefix', 'AGN'],
+      why: 'the id exists',
+    },
     {
       code: 'CONFLICT',
       exit: 4,
@@ -48,7 +57,7 @@ describe('exit codes (contracts §6)', () => {
     {
       code: 'DATA_INTEGRITY',
       exit: 6,
-      args: ['workspaces', 'show', 'acme'],
+      args: ['boards', 'show', 'web'],
       setup: () => writeFile(config(), '{ not json'),
       why: 'a file that is not valid JSON',
     },
@@ -75,7 +84,7 @@ describe('exit codes (contracts §6)', () => {
       await writeFile(config(), '{}');
       await chmod(config(), 0o000);
       try {
-        const result = await rowbly('workspaces', 'show', 'acme', '--json');
+        const result = await rowbly('boards', 'show', 'web', '--json');
         expect(result.exitCode).toBe(1);
         expect(JSON.parse(result.stderr).error.code).toBe('INTERNAL');
       } finally {

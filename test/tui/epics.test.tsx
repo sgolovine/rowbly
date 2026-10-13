@@ -6,7 +6,7 @@ import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { ScreenProps } from '../../src/tui/screens';
 import { epicsScreens } from '../../src/tui/screens/epics';
-import { fixedClock, fixedIds, makeBoard, makeEpic, makeStory, makeWorkspace, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeEpic, makeStory, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 /** Stands in for the story detail screen (WP05). */
@@ -16,21 +16,19 @@ function FakeStory({ params }: ScreenProps) {
 
 async function setup() {
   const tmp = await tempRoot();
-  await makeWorkspace(tmp.path, { id: 'acme' });
   await makeBoard(tmp.path, {
     id: 'web',
-    workspaceId: 'acme',
     keyPrefix: 'WEB',
     stages: [
       { key: 'open', name: 'Open', category: 'todo' },
       { key: 'shipped', name: 'Shipped', category: 'done' },
     ],
   });
-  await makeBoard(tmp.path, { id: 'api', workspaceId: 'acme', keyPrefix: 'API' });
-  await makeEpic(tmp.path, { id: 'launch', workspaceId: 'acme', name: 'Launch' });
-  await makeEpic(tmp.path, { id: 'old', workspaceId: 'acme', name: 'Old work', closed: true });
+  await makeBoard(tmp.path, { id: 'api', keyPrefix: 'API' });
+  await makeEpic(tmp.path, { id: 'launch', name: 'Launch' });
+  await makeEpic(tmp.path, { id: 'old', name: 'Old work', closed: true });
   const story = (key: string, boardId: string, stage: string) =>
-    makeStory(tmp.path, { key, workspaceId: 'acme', boardId, stage, epicId: 'launch', name: `Do ${key}` });
+    makeStory(tmp.path, { key, boardId, stage, epicId: 'launch', name: `Do ${key}` });
   await story('WEB-1', 'web', 'shipped');
   await story('WEB-2', 'web', 'open');
   await story('API-1', 'api', 'done');
@@ -101,7 +99,7 @@ describe('epics screens', () => {
     await waitForFrame(app, 'Id*');
     await app.press(...'beta', KEYS.down, ...'Beta', KEYS.enter);
     await waitForFrame(app, 'Beta (beta)');
-    expect(await repos.epics.get('acme', 'beta')).toMatchObject({ name: 'Beta', description: '', closed: false });
+    expect(await repos.epics.get('beta')).toMatchObject({ name: 'Beta', description: '', closed: false });
     expect(app.lastFrame()).toContain('Created Epic beta');
     app.unmount();
   });
@@ -125,14 +123,14 @@ describe('epics screens', () => {
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace);
     await app.press(...'Go live', KEYS.enter);
     await waitForFrame(app, 'Go live (launch)');
-    expect((await repos.epics.get('acme', 'launch')).name).toBe('Go live');
+    expect((await repos.epics.get('launch')).name).toBe('Go live');
 
     await app.press('c');
     await waitForFrame(app, /Closed\s+yes/);
-    expect((await repos.epics.get('acme', 'launch')).closed).toBe(true);
+    expect((await repos.epics.get('launch')).closed).toBe(true);
     await app.press('c');
     await waitForFrame(app, /Closed\s+no/);
-    expect((await repos.epics.get('acme', 'launch')).closed).toBe(false);
+    expect((await repos.epics.get('launch')).closed).toBe(false);
     expect(app.lastFrame()).not.toMatch(/status/i);
     app.unmount();
   });

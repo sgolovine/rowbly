@@ -4,10 +4,9 @@ import type { CustomFieldDef } from '../../src/schemas';
 import { createServices, type RowblyContext } from '../../src/services';
 import { coerceFieldInput, validateFieldValues } from '../../src/services/_customFieldValues';
 import { createRepositories } from '../../src/storage';
-import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 
-const web = { workspaceId: 'acme', boardId: 'web' };
-const board = { level: 'board' as const, ref: web };
+const board = { level: 'board' as const, boardId: 'web' };
 
 function contextFor(t: TempRoot, warnings: string[] = []): RowblyContext {
   return {
@@ -22,8 +21,7 @@ function contextFor(t: TempRoot, warnings: string[] = []): RowblyContext {
 
 async function setup() {
   const t = await tempRoot();
-  await makeWorkspace(t.path, { id: 'acme' });
-  await makeBoard(t.path, { ...web, id: 'web', keyPrefix: 'WEB' });
+  await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   const warnings: string[] = [];
   return { t, warnings, services: createServices(contextFor(t, warnings)), repos: createRepositories(t.root) };
 }
@@ -78,18 +76,18 @@ describe('fields.update', () => {
     const { t, services, repos, warnings } = await setup();
     await services.fields.add(board, { key: 'size', name: 'Size', type: 'select', options: ['s', 'm', 'l'] });
     await services.fields.add(board, { key: 'tags', name: 'Tags', type: 'multiselect', options: ['a', 'b'] });
-    await makeStory(t.path, { ...web, key: 'WEB-1', customFields: { size: 'l', tags: ['a', 'b'] } });
-    await makeStory(t.path, { ...web, key: 'WEB-2', customFields: { size: 'l' } });
-    await makeStory(t.path, { ...web, key: 'WEB-3', customFields: { size: 's', tags: ['b'] } });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', customFields: { size: 'l', tags: ['a', 'b'] } });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-2', customFields: { size: 'l' } });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-3', customFields: { size: 's', tags: ['b'] } });
 
     await services.fields.update(board, 'size', { options: ['s', 'm'] });
     expect(warnings).toEqual(['stripped 2 values of "size" that no longer fit the Custom Field']);
-    const stories = await repos.stories.allInBoard(web);
+    const stories = await repos.stories.allInBoard('web');
     expect(stories.map((s) => s.customFields)).toEqual([{ tags: ['a', 'b'] }, {}, { size: 's', tags: ['b'] }]);
 
     // A multiselect keeps the options that remain.
     await services.fields.update(board, 'tags', { options: ['a'] });
-    expect((await repos.stories.allInBoard(web)).map((s) => s.customFields)).toEqual([
+    expect((await repos.stories.allInBoard('web')).map((s) => s.customFields)).toEqual([
       { tags: ['a'] },
       {},
       { size: 's' },
@@ -116,20 +114,19 @@ describe('fields.remove', () => {
     const { t, services, repos, warnings } = await setup();
     await makeBoard(t.path, {
       id: 'api',
-      workspaceId: 'acme',
       keyPrefix: 'API',
       customFields: [{ key: 'size', name: 'Size', type: 'text', required: false }],
     });
-    const ws = { level: 'workspace' as const, workspaceId: 'acme' };
-    await services.fields.add(ws, { key: 'size', name: 'Size', type: 'text' });
-    await makeStory(t.path, { ...web, key: 'WEB-1', customFields: { size: 'big' } });
-    await makeStory(t.path, { workspaceId: 'acme', boardId: 'api', key: 'API-1', customFields: { size: 'big' } });
+    const global = { level: 'global' as const };
+    await services.fields.add(global, { key: 'size', name: 'Size', type: 'text' });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', customFields: { size: 'big' } });
+    await makeStory(t.path, { boardId: 'api', key: 'API-1', customFields: { size: 'big' } });
 
-    expect(await services.fields.remove(ws, 'size')).toEqual({ valuesStripped: 1 });
+    expect(await services.fields.remove(global, 'size')).toEqual({ valuesStripped: 1 });
     expect(warnings).toEqual(['stripped 1 value of removed Custom Field "size"']);
     expect((await repos.stories.findByKey('WEB-1')).customFields).toEqual({});
     expect((await repos.stories.findByKey('API-1')).customFields).toEqual({ size: 'big' });
-    expect((await repos.workspaces.get('acme')).customFields).toEqual([]);
+    expect((await repos.rootConfig.get()).customFields).toEqual([]);
   });
 });
 

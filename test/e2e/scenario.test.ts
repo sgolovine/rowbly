@@ -13,8 +13,6 @@ import { type RunCliResult, runCli } from '../helpers';
 describe('end-to-end scenario', () => {
   let dir: string;
   const repos = () => createRepositories({ path: join(dir, '.rowbly'), kind: 'local' });
-  const web = { workspaceId: 'acme', boardId: 'web' };
-  const api = { workspaceId: 'acme', boardId: 'api' };
 
   /** Runs `rowbly …` in the project directory, so the Data Root is discovered from cwd. */
   async function rowbly(...args: string[]): Promise<RunCliResult> {
@@ -39,16 +37,13 @@ describe('end-to-end scenario', () => {
   });
   afterAll(() => rm(dir, { recursive: true, force: true }));
 
-  it('1. init with flags creates the Data Root, a Workspace and a Board, and uses them', async () => {
-    const out = await ok(
-      'init',
-      ...['--workspace', 'acme', '--workspace-name', 'Acme'],
-      ...['--board', 'web', '--board-name', 'Web', '--prefix', 'WEB'],
-    );
+  it('1. init with flags creates the Data Root and a Board, and uses it', async () => {
+    const out = await ok('init', '--board', 'web', '--board-name', 'Web', '--prefix', 'WEB');
     expect(out).toContain(`Created Data Root ${join(dir, '.rowbly')}`);
-    expect(out).toContain('Now using acme/web');
+    expect(out).toContain('Created Board web (WEB)');
+    expect(out).toContain('Now using web');
     await ok('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
-    expect(await repos().localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
+    expect(await repos().localState.get()).toEqual({ version: 1, board: 'web' });
   });
 
   it('2. adds two Assignees and claims Me with whoami', async () => {
@@ -79,13 +74,13 @@ describe('end-to-end scenario', () => {
       'done',
     ]);
     await ok('fields', 'add', 'size', '--name', 'Size', '--type', 'select', '--options', 's,m,l');
-    const board = await repos().boards.get(web);
+    const board = await repos().boards.get('web');
     expect(board.stages?.map((s) => s.key)).toContain('review');
     expect(board.customFields).toEqual([
       { key: 'size', name: 'Size', type: 'select', options: ['s', 'm', 'l'], required: false },
     ]);
     // The other Board still inherits the defaults.
-    expect((await repos().boards.get(api)).stages).toBeUndefined();
+    expect((await repos().boards.get('api')).stages).toBeUndefined();
   });
 
   it('4. creates 5 Stories with mixed fields, in two Epics across two Boards', async () => {
@@ -203,7 +198,7 @@ describe('end-to-end scenario', () => {
     const removed = await json('stages', 'remove', 'review', '--move-to', 'in-progress');
     expect(removed).toMatchObject({ storiesMoved: 1, tasksMoved: 0 });
     expect((await story('WEB-2')).stage).toBe('in-progress');
-    expect((await repos().boards.get(web)).stages?.map((s) => s.key)).not.toContain('review');
+    expect((await repos().boards.get('web')).stages?.map((s) => s.key)).not.toContain('review');
   });
 
   it('9. removes an Assignee and warns with the Story count', async () => {
@@ -223,28 +218,24 @@ describe('end-to-end scenario', () => {
 
   it('11. --json from every list command round-trips the files on disk', async () => {
     const r = repos();
-    const ws = await r.workspaces.get('acme');
-    const webConfig = await r.boards.get(web);
-    const webStories = await r.stories.allInBoard(web);
-    const apiStories = await r.stories.allInBoard(api);
-    const wsStories = [...webStories, ...apiStories];
+    const webConfig = await r.boards.get('web');
+    const webStories = await r.stories.allInBoard('web');
+    const apiStories = await r.stories.allInBoard('api');
+    const allStories = [...webStories, ...apiStories];
     const byKey = (a: { key: string }, b: { key: string }) => a.key.localeCompare(b.key);
     const sortByKey = <T extends { key: string }>(items: T[]) => [...items].sort(byKey);
     const signup = await r.stories.findByKey('WEB-2');
 
-    expect(await json('workspaces', 'list')).toEqual(await r.workspaces.list());
-    expect(await json('assignees', 'list')).toEqual(ws.assignees);
-    expect(await json('boards', 'list')).toEqual(await r.boards.list('acme'));
+    expect(await json('assignees', 'list')).toEqual((await r.rootConfig.get()).assignees);
+    expect(await json('boards', 'list')).toEqual(await r.boards.list());
     expect(await json('stages', 'list')).toEqual({ level: 'board', source: 'board', stages: webConfig.stages });
     expect(await json('fields', 'list')).toEqual({ level: 'board', source: 'board', fields: webConfig.customFields });
     expect(sortByKey(await json('stories', 'list'))).toEqual(sortByKey(webStories));
-    expect(sortByKey(await json('stories', 'list', '--all-boards'))).toEqual(sortByKey(wsStories));
+    expect(sortByKey(await json('stories', 'list', '--all-boards'))).toEqual(sortByKey(allStories));
     expect(await json('tasks', 'list', 'WEB-2')).toEqual(signup.tasks);
     expect(await json('comments', 'list', 'WEB-2')).toEqual(signup.comments);
     expect(await json('comments', 'list', 'WEB-2.1')).toEqual(signup.tasks[0]?.comments);
     const epics = await json('epics', 'list', '--all');
-    expect(epics.map(({ stories, progress, ...epic }: Record<string, unknown>) => epic)).toEqual(
-      await r.epics.list('acme'),
-    );
+    expect(epics.map(({ stories, progress, ...epic }: Record<string, unknown>) => epic)).toEqual(await r.epics.list());
   });
 });

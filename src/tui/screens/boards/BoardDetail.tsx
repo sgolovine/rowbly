@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { describeSource } from '../../../output';
-import type { BoardRef } from '../../../schemas';
+import type { Slug } from '../../../schemas';
 import { storyCountsByStage } from '../../../services/boards';
 import { DetailView, Loading, StageBadge } from '../../components';
 import { useAsync, useIsActive, useKeyHints, useRowblyContext, useServices } from '../../hooks';
@@ -10,7 +10,7 @@ import { useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 
 /**
- * One Board (`params.ref`, default: the Board in context), like `boards show` and `config show`:
+ * One Board (`params.boardId`, default: the Board in context), like `boards show` and `config show`:
  * its key prefix and description, Stories per Stage, and the effective Stages and Custom Fields
  * with the Configuration Cascade level each list comes from. Opening its board or Stories from here
  * does not change the context.
@@ -21,11 +21,11 @@ export function BoardDetailScreen({ params }: ScreenProps) {
   const router = useRouter();
   const active = useIsActive();
   const data = useAsync(async () => {
-    const ref = (params.ref as BoardRef | undefined) ?? (await services.context.resolveBoard());
+    const boardId = (params.boardId as Slug | undefined) ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
-    const [config, counts] = await Promise.all([services.config.effective(ref), storyCountsByStage(ctx, ref)]);
-    return { ref, config, counts };
-  }, [services, ctx, params.ref]);
+    const [config, counts] = await Promise.all([services.config.effective(boardId), storyCountsByStage(ctx, boardId)]);
+    return { config, counts };
+  }, [services, ctx, params.boardId]);
   useReloadOnReturn(data.reload);
 
   useKeyHints([
@@ -37,18 +37,17 @@ export function BoardDetailScreen({ params }: ScreenProps) {
   useInput(
     (input) => {
       if (!data.data) return;
-      const { ref, config } = data.data;
-      const name = config.board.name;
-      if (input === 'v') router.push('board', { ref });
-      else if (input === 'o') router.push('stories', { ref, title: `${name} Stories` });
-      else if (input === 's') router.push('stages', { ref, title: `${name} Stages` });
-      else if (input === 'f') router.push('fields', { ref, title: `${name} Fields` });
+      const { id: boardId, name } = data.data.config.board;
+      if (input === 'v') router.push('board', { boardId });
+      else if (input === 'o') router.push('stories', { boardId, title: `${name} Stories` });
+      else if (input === 's') router.push('stages', { boardId, title: `${name} Stages` });
+      else if (input === 'f') router.push('fields', { boardId, title: `${name} Fields` });
     },
     { isActive: active },
   );
 
   if (!data.data) return data.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
-  const { ref, config, counts } = data.data;
+  const { config, counts } = data.data;
   const { board } = config;
   const unknown = Object.keys(counts).filter((key) => !config.stages.some((s) => s.key === key));
 
@@ -56,7 +55,7 @@ export function BoardDetailScreen({ params }: ScreenProps) {
     <Box flexDirection="column" gap={1}>
       <DetailView
         rows={[
-          { label: 'Board', value: `${ref.workspaceId}/${board.id}` },
+          { label: 'Board', value: board.id },
           { label: 'Name', value: board.name },
           { label: 'Key prefix', value: board.keyPrefix },
         ]}

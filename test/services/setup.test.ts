@@ -2,12 +2,12 @@ import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
-import { ConflictError, UsageError, ValidationError } from '../../src/core';
+import { ConflictError, ValidationError } from '../../src/core';
 import { type DataRoot, DEFAULT_STAGES } from '../../src/schemas';
 import { createServices, type InitOptions, type RowblyContext } from '../../src/services';
 import { claimMe, initTarget, meSource } from '../../src/services/setup';
 import { createRepositories } from '../../src/storage';
-import { FIXED_NOW, fixedClock, fixedIds, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
+import { FIXED_NOW, fixedClock, fixedIds, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
 
 async function emptyDir(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'rowbly-init-'));
@@ -34,19 +34,19 @@ async function init(opts: Omit<InitOptions, 'root'>) {
 describe('setup.init', () => {
   it('writes the root config with the default stages and a .gitignore', async () => {
     const { root, result } = await init({});
-    expect(result).toEqual({ root, workspace: null, board: null });
-    expect(await createRepositories(root).rootConfig.get()).toEqual({ version: 1, stages: [...DEFAULT_STAGES] });
+    expect(result).toEqual({ root, board: null });
+    expect(await createRepositories(root).rootConfig.get()).toEqual({
+      version: 1,
+      assignees: [],
+      stages: [...DEFAULT_STAGES],
+    });
     expect(await readFile(join(root.path, '.gitignore'), 'utf8')).toBe('local.json\n');
   });
 
-  it('creates the first Workspace and Board and makes them the current context', async () => {
-    const { root, result } = await init({
-      workspace: { id: 'acme', name: 'Acme' },
-      board: { id: 'web', name: 'Web', keyPrefix: 'web' },
-    });
-    expect(result.workspace).toMatchObject({ id: 'acme', name: 'Acme', createdAt: FIXED_NOW });
-    expect(result.board).toMatchObject({ id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
-    expect(await createRepositories(root).localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
+  it('creates the first Board and makes it the current context', async () => {
+    const { root, result } = await init({ board: { id: 'web', name: 'Web', keyPrefix: 'web' } });
+    expect(result.board).toMatchObject({ id: 'web', name: 'Web', keyPrefix: 'WEB', createdAt: FIXED_NOW });
+    expect(await createRepositories(root).localState.get()).toEqual({ version: 1, board: 'web' });
   });
 
   it('refuses an existing target with a ConflictError', async () => {
@@ -54,22 +54,15 @@ describe('setup.init', () => {
     await expect(createServices(contextFor(t.root)).setup.init({ root: t.root })).rejects.toThrow(ConflictError);
   });
 
-  it('checks the first Workspace and Board before writing anything', async () => {
+  it('checks the first Board before writing anything', async () => {
     const dir = await emptyDir();
     const root: DataRoot = { path: join(dir, '.rowbly'), kind: 'local' };
     const services = createServices(contextFor(root));
-    await expect(services.setup.init({ root, workspace: { id: 'Bad Id', name: 'x' } })).rejects.toThrow(
+    await expect(services.setup.init({ root, board: { id: 'Bad Id', name: 'Web', keyPrefix: 'WEB' } })).rejects.toThrow(
       ValidationError,
     );
-    await expect(
-      services.setup.init({
-        root,
-        workspace: { id: 'acme', name: 'Acme' },
-        board: { id: 'web', name: 'Web', keyPrefix: '1' },
-      }),
-    ).rejects.toThrow(ValidationError);
-    await expect(services.setup.init({ root, board: { id: 'web', name: 'Web', keyPrefix: 'WEB' } })).rejects.toThrow(
-      UsageError,
+    await expect(services.setup.init({ root, board: { id: 'web', name: 'Web', keyPrefix: '1' } })).rejects.toThrow(
+      ValidationError,
     );
     await expect(access(root.path)).rejects.toThrow();
   });
@@ -94,7 +87,7 @@ describe('initTarget', () => {
 
 describe('claimMe', () => {
   async function withRoster(t: TempRoot) {
-    await makeWorkspace(t.path, { id: 'acme', assignees: [{ handle: 'sam', name: 'Sam' }] });
+    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
   }
 
   it('stores a roster handle without warnings', async () => {
@@ -108,16 +101,13 @@ describe('claimMe', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('warns rather than failing for a handle outside the roster, or with no Workspace', async () => {
+  it('warns rather than failing for a handle outside the roster, even an empty one', async () => {
     const t = await tempRoot();
     const warnings: string[] = [];
     await claimMe(contextFor(t.root, warnings), 'bob');
     await withRoster(t);
     await claimMe(contextFor(t.root, warnings), 'bob');
-    expect(warnings).toEqual([
-      'no current Workspace to check "bob" against',
-      '"bob" is not in the roster of Workspace "acme"',
-    ]);
+    expect(warnings).toEqual(['"bob" is not in the roster', '"bob" is not in the roster']);
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'bob' });
   });
 

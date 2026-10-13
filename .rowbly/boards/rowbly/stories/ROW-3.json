@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-3",
+  "boardId": "rowbly",
+  "name": "Agent Skills",
+  "description": "Create an agent skill so that agents know exactly how to use rowbly\n",
+  "stage": "backlog",
+  "rank": "a2",
+  "assignees": [],
+  "epicId": null,
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-13T03:00:12.848Z",
+  "updatedAt": "2026-10-13T03:00:12.848Z",
+  "nextTaskNumber": 1,
+  "tasks": [],
+  "comments": []
+}
