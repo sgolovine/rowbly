@@ -278,32 +278,40 @@ describe('board view', () => {
     app.unmount();
   });
 
-  it('opens, creates in the current column, edits and deletes Stories', async () => {
+  it('opens a Story with enter and returns to the board', async () => {
     const t = await seed();
     const app = await open(t);
     await app.press(KEYS.enter);
     await waitFor(app, (f) => f.includes('Details') && f.includes('Login page'));
     await app.press(KEYS.escape);
     await waitFor(app, (f) => f.includes('● Backlog (3)'));
+    app.unmount();
+  });
 
+  it('creates a Story in the current column with n', async () => {
+    const t = await seed();
+    const app = await open(t);
     await app.press('l', 'l', 'n');
-    await waitFor(app, (f) => f.includes('New Story on acme/web'));
-    expect(app.lastFrame()).toContain('‹ doing ›');
+    await waitFor(app, (f) => f.includes('New Story on acme/web') && f.includes('‹ doing ›'));
     await app.press(...'From board', KEYS.enter);
     await waitFor(app, (f) => f.includes('Created WEB-7'));
     expect((await story(t, 'WEB-7')).stage).toBe('doing');
     await app.press(KEYS.escape);
     await waitFor(app, (f) => f.includes('● Doing (2)'));
+    app.unmount();
+  });
 
-    await app.press('e');
+  it('edits with e and deletes with d after confirming', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press('l', 'l', 'e');
     await waitFor(app, (f) => f.includes('Edit WEB-5'));
     await app.press(KEYS.escape);
-    await waitFor(app, (f) => f.includes('● Doing (2)'));
-
+    await waitFor(app, (f) => f.includes('● Doing (1)') && !f.includes('Edit WEB-5'));
     await app.press('d');
-    expect(app.lastFrame()).toContain('Delete WEB-5');
+    await waitFor(app, (f) => f.includes('Delete WEB-5'));
     await app.press('y');
-    await waitFor(app, (f) => f.includes('Deleted WEB-5') && f.includes('● Doing (1)'));
+    await waitFor(app, (f) => f.includes('Deleted WEB-5') && f.includes('● Doing (0)'));
     await expect(story(t, 'WEB-5')).rejects.toThrow('not found');
     app.unmount();
   });
@@ -314,8 +322,8 @@ describe('board view', () => {
     await app.press('b');
     await waitFor(app, (f) => f.includes('Website web (current)'));
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('API acme/api'));
-    expect(app.lastFrame()).toContain('● Backlog (0)');
+    await waitFor(app, (f) => f.includes('API acme/api') && f.includes('● Backlog (0)'));
+    expect(app.lastFrame()).not.toContain('WEB-');
     expect(await createRepositories(t.root).localState.get()).toMatchObject({ workspace: 'acme', board: 'api' });
     app.unmount();
   });
