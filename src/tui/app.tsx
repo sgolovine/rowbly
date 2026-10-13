@@ -1,7 +1,7 @@
 import { Box, Text, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { Component, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { NotFoundError, RowblyError } from '../core';
-import type { RowblyContext, Services } from '../services';
+import { createServices, type RowblyContext, type Services } from '../services';
 import { ConfirmDialog, SelectList } from './components';
 import {
   ActiveContext,
@@ -34,7 +34,14 @@ export interface AppProps {
 export function App({ ctx, services, initial, toasts, screens = defaultScreens }: AppProps) {
   const toastStore = useMemo(() => toasts ?? createToastStore(), [toasts]);
   const shell = useMemo(createShellRegistry, []);
-  const servicesValue = useMemo(() => ({ ctx, services }), [ctx, services]);
+  const [current, setCurrent] = useState({ ctx, services });
+  const servicesValue = useMemo(
+    () => ({
+      ...current,
+      activate: (next: RowblyContext) => setCurrent({ ctx: next, services: createServices(next) }),
+    }),
+    [current],
+  );
   return (
     <ServicesContext.Provider value={servicesValue}>
       <ToastContext.Provider value={toastStore}>
