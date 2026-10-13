@@ -140,6 +140,33 @@ describe('rowbly doctor', () => {
     expect(fix.stdout).not.toContain('hint: run `rowbly doctor --fix`');
   });
 
+  it('reports a Story the board view hides because its Stage is no longer configured', async () => {
+    const { tmp, cli } = await setup();
+    expect((await cli('stories', 'create', '--name', 'Ship it', '--stage', 'in-progress')).exitCode).toBe(0);
+    // A hand edit or merge drops the Stage from the Board without moving its Stories.
+    const boardFile = join(tmp.path, 'workspaces/acme/boards/web/board.config.json');
+    const board = JSON.parse(await readFile(boardFile, 'utf8'));
+    board.stages = [
+      { key: 'todo', name: 'Todo', category: 'todo' },
+      { key: 'done', name: 'Done', category: 'done' },
+    ];
+    await writeFile(boardFile, JSON.stringify(board, null, 2));
+
+    const json = await cli('doctor', '--json');
+    expect(json.exitCode).toBe(6);
+    expect(parseReport(json.stdout).findings).toEqual([
+      expect.objectContaining({
+        code: 'UNKNOWN_STAGE',
+        severity: 'error',
+        path: `${STORIES}/WEB-1.json`,
+        message: 'WEB-1 is in unknown Stage "in-progress"',
+        fixable: false,
+      }),
+    ]);
+    expect((await cli('stories', 'move', 'WEB-1', 'done')).exitCode).toBe(0);
+    expect((await cli('doctor')).exitCode).toBe(0);
+  });
+
   it('has help text', async () => {
     const { stdout, exitCode } = await runCli(['doctor', '--help']);
     expect(exitCode).toBe(0);
