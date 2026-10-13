@@ -3,7 +3,6 @@ import { registerAssignees } from './assignees';
 import { registerBoards } from './boards';
 import { registerComments } from './comments';
 import { registerDoctor } from './doctor';
-import { registerEpics } from './epics';
 import { registerFields } from './fields';
 import { registerSetup } from './setup';
 import { registerStages } from './stages';
@@ -20,6 +19,5 @@ export function registerCommands(program: Command): void {
   registerStories(program);
   registerTasks(program);
   registerComments(program);
-  registerEpics(program);
   registerDoctor(program);
 }

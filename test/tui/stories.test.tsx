@@ -4,16 +4,7 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
-import {
-  fixedClock,
-  fixedIds,
-  makeBoard,
-  makeEpic,
-  makeRootConfig,
-  makeStory,
-  type TempRoot,
-  tempRoot,
-} from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
@@ -61,8 +52,8 @@ describe('story form', () => {
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('New Story on web'));
     expect(app.lastFrame()).toContain('‹ backlog ›');
-    // name, description, stage, assignees, epic, priority, labels, due, size
-    await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down, KEYS.down);
+    // name, description, stage, assignees, priority, labels, due, size
+    await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down);
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);
     expect(app.lastFrame()).toContain('‹ s ›');
     await app.press(KEYS.enter);
@@ -84,7 +75,7 @@ describe('story form', () => {
     const t = await setup();
     const app = await open(t, 'story-form', web);
     await waitForFrame(app, (f) => f.includes('Name*'));
-    await app.press(...'X', ...Array(6).fill(KEYS.down), ...'Bad Label', KEYS.enter);
+    await app.press(...'X', ...Array(5).fill(KEYS.down), ...'Bad Label', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('must be lower-kebab-case'));
     expect(await createRepositories(t.root).stories.allInBoard('web')).toEqual([]);
     app.unmount();
@@ -145,9 +136,8 @@ describe('story detail', () => {
 describe('story list', () => {
   it('filters by me, label and search, and clears filters', async () => {
     const t = await setup();
-    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Mine', assignees: ['alice'], labels: ['ui'] });
-    await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Theirs', assignees: ['bob'], epicId: 'launch' });
+    await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Theirs', assignees: ['bob'] });
     const app = await open(t, 'stories', {}, 'alice');
     expect(app.lastFrame()).toContain('WEB-1 Mine ● Backlog @alice #ui');
     expect(app.lastFrame()).toContain('WEB-2 Theirs');
@@ -158,15 +148,13 @@ describe('story list', () => {
     expect(app.lastFrame()).not.toContain('filter lists');
     await app.press('?');
 
-    // stage, assignee, me, label, priority, epic, search
+    // stage, assignee, me, label, priority, search
     await app.press('/', KEYS.down, KEYS.down, ' ', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-2'));
 
-    await app.press('/', ...Array(5).fill(KEYS.down), KEYS.right, KEYS.right, KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('filters: Epic launch') && !f.includes('WEB-1'));
-    await app.press('c', '/', ...Array(6).fill(KEYS.down), ...'nothing', KEYS.enter);
+    await app.press('/', ...Array(5).fill(KEYS.down), ...'nothing', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('No Stories match.'));
     app.unmount();
   });
@@ -178,8 +166,8 @@ describe('story list', () => {
     await makeStory(t.path, { ...web, key: 'WEB-3', name: 'Shipped', stage: 'done', rank: 'a0', priority: 'P1' });
     const app = await open(t, 'stories');
     expect(app.lastFrame()).toContain('WEB-3 Shipped');
-    // stages, assignees, me, labels, priorities, epic, search, category, open, sort
-    await app.press('/', ...Array(8).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.enter);
+    // stages, assignees, me, labels, priorities, search, category, open, sort
+    await app.press('/', ...Array(7).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filters: open · sorted by priority') && !f.includes('WEB-3'));
     const frame = app.lastFrame() ?? '';
     expect(frame.indexOf('WEB-2 High')).toBeLessThan(frame.indexOf('WEB-1 Low'));

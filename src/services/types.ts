@@ -9,7 +9,6 @@ import type {
   CustomFieldValue,
   DataRoot,
   EffectiveBoardConfig,
-  Epic,
   IsoDate,
   KeyPrefix,
   Label,
@@ -37,11 +36,6 @@ export interface RowblyContext {
   newId(): string;
   /** Collected by the caller for output. */
   warn(message: string): void;
-}
-
-export interface EpicView extends Epic {
-  stories: Story[];
-  progress: { done: number; total: number };
 }
 
 export type ConfigTarget = { level: 'global' } | { level: 'board'; boardId: Slug };
@@ -126,8 +120,6 @@ export interface StoryFilter {
   open?: boolean;
   /** `--assignee`: any of these handles; the literal `'me'` resolves to Me (`UsageError` if Me is unset). */
   assignees?: string[];
-  /** `--epic <id>` (a Slug) or `--no-epic` (`null`). */
-  epicId?: Slug | null;
   /** `--label`: any of these Labels. */
   labels?: Label[];
   /** `--priority`: any of these Priorities. */
@@ -151,14 +143,13 @@ export interface StoryCreateInput {
   stage?: Slug;
   /** Handles; the literal `'me'` resolves to Me. */
   assignees?: string[];
-  epicId?: Slug | null;
   priority?: Priority | null;
   labels?: Label[];
   dueDate?: IsoDate | null;
   customFields?: CustomFieldValuesInput;
 }
 
-/** Mirrors `stories edit` flags. `null` clears (`--no-epic`, `--no-priority`, `--no-due`). */
+/** Mirrors `stories edit` flags. `null` clears (`--no-priority`, `--no-due`). */
 export interface StoryPatch {
   name?: string;
   description?: string;
@@ -168,7 +159,6 @@ export interface StoryPatch {
   addAssignees?: string[];
   /** `--remove-assignee`. */
   removeAssignees?: string[];
-  epicId?: Slug | null;
   priority?: Priority | null;
   /** `--label`: replaces the whole list. */
   labels?: Label[];
@@ -197,19 +187,6 @@ export interface TaskPatch {
   description?: string;
 }
 
-// ── Epics ───────────────────────────────────────────────────────────────────
-
-export interface EpicCreateInput {
-  id: Slug;
-  name: string;
-  description?: string;
-}
-
-export interface EpicPatch {
-  name?: string;
-  description?: string;
-}
-
 // ── Doctor ──────────────────────────────────────────────────────────────────
 
 export type DoctorSeverity = 'error' | 'warning' | 'info';
@@ -223,7 +200,6 @@ export type DoctorCode =
   | 'DUPLICATE_PREFIX'
   | 'UNKNOWN_STAGE'
   | 'UNKNOWN_ASSIGNEE'
-  | 'MISSING_EPIC'
   | 'UNKNOWN_FIELD'
   | 'INVALID_FIELD_VALUE'
   | 'MISSING_REQUIRED_FIELD'
@@ -339,16 +315,6 @@ export interface CommentsService {
   remove(target: StoryKey | TaskId, id: string): Promise<void>;
 }
 
-export interface EpicsService {
-  /** Default: open Epics only; `closed: true` only closed; `'all'` both. */
-  list(opts?: { closed?: boolean | 'all' }): Promise<EpicView[]>;
-  get(id: Slug): Promise<EpicView>;
-  create(input: EpicCreateInput): Promise<Epic>;
-  update(id: Slug, patch: EpicPatch): Promise<Epic>;
-  setClosed(id: Slug, closed: boolean): Promise<Epic>;
-  remove(id: Slug): Promise<{ storiesUnlinked: number }>;
-}
-
 export interface DoctorService {
   check(): Promise<DoctorReport>;
   fix(): Promise<DoctorReport>;
@@ -365,6 +331,5 @@ export interface Services {
   stories: StoriesService;
   tasks: TasksService;
   comments: CommentsService;
-  epics: EpicsService;
   doctor: DoctorService;
 }

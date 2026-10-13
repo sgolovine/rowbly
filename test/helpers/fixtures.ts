@@ -6,8 +6,6 @@ import type { ZodType } from 'zod';
 import {
   type BoardConfig,
   BoardConfigSchema,
-  type Epic,
-  EpicSchema,
   type RowblyConfig,
   RowblyConfigSchema,
   type Story,
@@ -55,7 +53,6 @@ export async function makeStory(
     stage: 'backlog',
     rank: 'a0',
     assignees: [],
-    epicId: null,
     priority: null,
     labels: [],
     dueDate: null,
@@ -69,17 +66,4 @@ export async function makeStory(
     ...overrides,
   };
   return writeFixture(join(root, 'boards', story.boardId, 'stories', `${story.key}.json`), StorySchema, story);
-}
-
-export async function makeEpic(root: string, overrides: Partial<Epic> & { id: string }): Promise<Epic> {
-  const epic: Epic = {
-    version: 1,
-    name: overrides.id,
-    description: '',
-    closed: false,
-    createdAt: FIXED_NOW,
-    updatedAt: FIXED_NOW,
-    ...overrides,
-  };
-  return writeFixture(join(root, 'epics', `${epic.id}.json`), EpicSchema, epic);
 }

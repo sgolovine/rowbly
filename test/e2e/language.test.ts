@@ -61,7 +61,7 @@ describe('language audit', () => {
     expect(hits).toEqual(['ticket', 'sub-tasks', 'card']);
   });
 
-  // About 60 CLI runs; they run in parallel, but a loaded machine still needs more than the default.
+  // About 50 CLI runs; they run in parallel, but a loaded machine still needs more than the default.
   it('no _Avoid_ word appears in any --help text', { timeout: 60_000 }, async () => {
     const root = await runCli(['--help']);
     const groups = commandsIn(root.stdout);
@@ -73,7 +73,7 @@ describe('language audit', () => {
       ),
     );
     const pages = [root, ...groupPages, ...verbPages];
-    expect(pages.length).toBeGreaterThan(50);
+    expect(pages.length).toBeGreaterThan(40);
     const found = pages.flatMap((page) =>
       page.stdout.split('\n').filter((line) => AVOID.test(line.replace(/\bLocal State\b|\buser\.email\b/g, ' '))),
     );

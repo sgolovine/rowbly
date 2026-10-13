@@ -38,12 +38,12 @@ describe('home screen', () => {
   it('lists the go-to destinations and opens one', async () => {
     const app = renderApp(screens, 'home');
     await app.press();
-    for (const label of ['Board', 'Stories', 'Epics', 'Boards', 'Assignees', 'Stages', 'Fields', 'Context']) {
+    for (const label of ['Board', 'Stories', 'Boards', 'Assignees', 'Stages', 'Fields', 'Context']) {
       expect(app.lastFrame()).toContain(label);
     }
     await app.press('j', 'j', KEYS.enter);
-    expect(app.lastFrame()).toContain('Home › Epics');
-    // No Data Root in this test, so the Epics screen reports that instead of listing Epics.
+    expect(app.lastFrame()).toContain('Home › Boards');
+    // No Data Root in this test, so the Boards screen reports that instead of listing Boards.
     expect(app.lastFrame()).toContain('no Data Root found');
     app.unmount();
   });

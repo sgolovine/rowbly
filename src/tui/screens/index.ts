@@ -4,7 +4,6 @@ import { boardsScreens } from './boards';
 import { commentsScreens } from './comments';
 import { demoScreens } from './demo';
 import { doctorScreens } from './doctor';
-import { epicsScreens } from './epics';
 import { fieldsScreens } from './fields';
 import { homeScreens } from './home';
 import { setupScreens } from './setup';
@@ -26,7 +25,6 @@ export const screens: ScreenRegistry = {
   ...storiesScreens,
   ...tasksScreens,
   ...commentsScreens,
-  ...epicsScreens,
   ...boardScreens,
   ...doctorScreens,
   ...demoScreens,

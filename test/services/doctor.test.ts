@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createServices, type DoctorCode, type RowblyContext } from '../../src/services';
 import { conflictSides } from '../../src/services/doctor';
-import { fixedClock, fixedIds, makeBoard, makeEpic, makeRootConfig, makeStory, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, tempRoot } from '../helpers';
 
 const BOARD = 'boards/web';
 
@@ -62,12 +62,12 @@ describe('doctor service', () => {
     const { doctor, story, write } = await setup();
     await story('WEB-1');
     await write(`${BOARD}/stories/WEB-1.json`, '{ "version": 1, "key": "WEB-1" }\n');
-    await write('epics/broken.json', '{ nope');
+    await write(`${BOARD}/board.config.json`, '{ nope');
     const report = await doctor.check();
     const byPath = Object.fromEntries(report.findings.map((f) => [f.path, f]));
     expect(byPath[`${BOARD}/stories/WEB-1.json`]).toMatchObject({ code: 'SCHEMA_INVALID', severity: 'error' });
     expect(byPath[`${BOARD}/stories/WEB-1.json`]?.details?.issues).toBeInstanceOf(Array);
-    expect(byPath['epics/broken.json']).toMatchObject({
+    expect(byPath[`${BOARD}/board.config.json`]).toMatchObject({
       code: 'SCHEMA_INVALID',
       message: 'file is not valid JSON',
     });
@@ -87,13 +87,11 @@ describe('doctor service', () => {
 
   it('reports conflict markers in other files and duplicate prefixes', async () => {
     const { doctor, write, tmp } = await setup();
-    await write('epics/launch.json', '<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> other\n');
+    await write('local.json', '<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> other\n');
     await makeBoard(tmp.path, { id: 'one', keyPrefix: 'API' });
     await makeBoard(tmp.path, { id: 'two', keyPrefix: 'API' });
     const report = await doctor.check();
-    expect(report.findings).toContainEqual(
-      expect.objectContaining({ code: 'CONFLICT_MARKERS', path: 'epics/launch.json' }),
-    );
+    expect(report.findings).toContainEqual(expect.objectContaining({ code: 'CONFLICT_MARKERS', path: 'local.json' }));
     expect(report.findings).toContainEqual(
       expect.objectContaining({
         code: 'DUPLICATE_PREFIX',
@@ -199,19 +197,6 @@ describe('doctor service', () => {
     ]);
     await expectFixed(doctor, 'UNKNOWN_ASSIGNEE');
     expect((await read(`${BOARD}/stories/WEB-1.json`)).assignees).toEqual(['sam']);
-  });
-
-  it('unlinks missing Epics but keeps links to Epic files that are merely invalid', async () => {
-    const { doctor, story, read, write, tmp } = await setup();
-    await makeEpic(tmp.path, { id: 'launch' });
-    await story('WEB-1', { epicId: 'gone' });
-    await story('WEB-2', { epicId: 'launch' });
-    await story('WEB-3', { epicId: 'broken' });
-    await write('epics/broken.json', '{}');
-    expect(await codes(doctor)).toEqual(['SCHEMA_INVALID', 'MISSING_EPIC']);
-    await expectFixed(doctor, 'MISSING_EPIC');
-    expect((await read(`${BOARD}/stories/WEB-1.json`)).epicId).toBeNull();
-    expect((await read(`${BOARD}/stories/WEB-3.json`)).epicId).toBe('broken');
   });
 
   it('strips unknown Custom Fields and only reports invalid or missing values', async () => {

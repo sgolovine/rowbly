@@ -2,16 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NotFoundError, UsageError, ValidationError } from '../../src/core';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import {
-  fixedClock,
-  fixedIds,
-  makeBoard,
-  makeEpic,
-  makeRootConfig,
-  makeStory,
-  type TempRoot,
-  tempRoot,
-} from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
 
 const web = 'web';
 const api = 'api';
@@ -94,11 +85,9 @@ describe('stories.create', () => {
     expect((await withMe.stories.create(web, { name: 'X', assignees: ['me', 'bob'] })).assignees).toEqual(['bob']);
   });
 
-  it('validates the Stage, Epic, labels, due date and Custom Fields', async () => {
-    const { t, services } = await setup();
-    await makeEpic(t.path, { id: 'launch' });
+  it('validates the Stage, labels, due date and Custom Fields', async () => {
+    const { services } = await setup();
     await expect(services.stories.create(web, { name: 'X', stage: 'nope' })).rejects.toThrow(ValidationError);
-    await expect(services.stories.create(web, { name: 'X', epicId: 'ghost' })).rejects.toThrow(ValidationError);
     await expect(services.stories.create(web, { name: 'X', labels: ['Bad Label'] })).rejects.toThrow(ValidationError);
     await expect(services.stories.create(web, { name: 'X', dueDate: '2026-13-01' })).rejects.toThrow(ValidationError);
     await expect(services.stories.create(web, { name: 'X', customFields: { estimate: 'abc' } })).rejects.toThrow(
@@ -107,7 +96,6 @@ describe('stories.create', () => {
     const story = await services.stories.create(web, {
       name: 'X',
       stage: 'todo',
-      epicId: 'launch',
       priority: 'P1',
       labels: ['ui', 'ui', 'api'],
       dueDate: '2026-11-01',
@@ -115,7 +103,6 @@ describe('stories.create', () => {
     });
     expect(story).toMatchObject({
       stage: 'todo',
-      epicId: 'launch',
       priority: 'P1',
       labels: ['ui', 'api'],
       dueDate: '2026-11-01',
@@ -155,11 +142,9 @@ describe('stories.update', () => {
 
   it('clears with null and sets/unsets Custom Fields', async () => {
     const { t, services } = await setup();
-    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, {
       boardId: web,
       key: 'WEB-1',
-      epicId: 'launch',
       priority: 'P2',
       dueDate: '2026-11-01',
       customFields: { estimate: 2 },
@@ -167,7 +152,6 @@ describe('stories.update', () => {
     const story = await services.stories.update('WEB-1', {
       name: 'Renamed',
       description: 'Body',
-      epicId: null,
       priority: null,
       dueDate: null,
       customFields: { size: 'l' },
@@ -176,13 +160,11 @@ describe('stories.update', () => {
     expect(story).toMatchObject({
       name: 'Renamed',
       description: 'Body',
-      epicId: null,
       priority: null,
       dueDate: null,
       customFields: { size: 'l' },
     });
     await expect(services.stories.update('WEB-1', { customFields: { size: 'xl' } })).rejects.toThrow(ValidationError);
-    await expect(services.stories.update('WEB-1', { epicId: 'ghost' })).rejects.toThrow(ValidationError);
   });
 
   it('throws NotFoundError for an unknown Story', async () => {
@@ -247,7 +229,6 @@ describe('stories.list', () => {
       labels: ['ui'],
       priority: 'P2',
       dueDate: '2026-11-05',
-      epicId: 'launch',
     });
     await makeStory(t.path, {
       boardId: web,
@@ -271,8 +252,6 @@ describe('stories.list', () => {
     expect(keys(await services.stories.list(web, { category: 'done' }))).toEqual(['WEB-3']);
     expect(keys(await services.stories.list(web, { open: true, assignees: ['me'] }))).toEqual(['WEB-1']);
     expect(keys(await services.stories.list(web, { assignees: ['bob'] }))).toEqual(['WEB-3']);
-    expect(keys(await services.stories.list(web, { epicId: 'launch' }))).toEqual(['WEB-1']);
-    expect(keys(await services.stories.list(web, { epicId: null }))).toEqual(['WEB-2', 'WEB-3']);
     expect(keys(await services.stories.list(web, { labels: ['ui'] }))).toEqual(['WEB-1']);
     expect(keys(await services.stories.list(web, { priorities: ['P0', 'P2'] }))).toEqual(['WEB-2', 'WEB-1']);
     expect(keys(await services.stories.list(web, { search: 'session' }))).toEqual(['WEB-2']);

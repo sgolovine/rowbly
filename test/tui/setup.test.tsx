@@ -106,7 +106,7 @@ describe('context switcher', () => {
     await waitForFrame(app, 'api › Board');
     await app.press('g');
     // Context is the second-to-last palette entry.
-    await app.press(...Array(8).fill('j'), KEYS.enter);
+    await app.press(...Array(7).fill('j'), KEYS.enter);
     await waitForFrame(app, 'api *');
     expect(app.lastFrame()).toContain('Switch Board');
     expect(app.lastFrame()).toContain('web web (WEB)');
@@ -147,7 +147,7 @@ describe('context switcher', () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home');
     await waitForFrame(app, 'Go to');
-    await app.press('g', ...Array(8).fill('j'), KEYS.enter);
+    await app.press('g', ...Array(7).fill('j'), KEYS.enter);
     await waitForFrame(app, 'Switch Board');
     await app.press('m');
     await waitForFrame(app, 'sam Sam');

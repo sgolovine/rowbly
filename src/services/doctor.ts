@@ -3,8 +3,6 @@ import { formatStoryKey, formatTaskId, isSlug, parseTaskId, ranksBetween, STORY_
 import {
   type BoardConfig,
   BoardConfigSchema,
-  type Epic,
-  EpicSchema,
   type LocalState,
   LocalStateSchema,
   type RowblyConfig,
@@ -40,7 +38,6 @@ const SEVERITY: Record<DoctorCode, DoctorSeverity> = {
   DUPLICATE_PREFIX: 'error',
   UNKNOWN_STAGE: 'error',
   UNKNOWN_ASSIGNEE: 'warning',
-  MISSING_EPIC: 'warning',
   UNKNOWN_FIELD: 'warning',
   INVALID_FIELD_VALUE: 'warning',
   MISSING_REQUIRED_FIELD: 'warning',
@@ -116,9 +113,6 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
     const files = (await listDataRootFiles(ctx.root)).filter((file) => file !== '.git' && !file.startsWith('.git/'));
     const fileSet = new Set(files);
     const boards = new Map<string, BoardEntry>();
-    /** Epic ids that have a file, valid or not. */
-    const epicIds = new Set<string>();
-    const epicFiles: { id: string; file: string }[] = [];
     const boardOf = (boardId: string) => {
       const dir = `boards/${boardId}`;
       let entry = boards.get(dir);
@@ -134,11 +128,6 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
       const parts = file.split('/');
       const [top, id = '', sub, name = ''] = parts;
       if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore'].includes(file)) continue;
-      if (parts.length === 2 && top === 'epics' && id.endsWith('.json') && isSlug(id.slice(0, -5))) {
-        epicIds.add(id.slice(0, -5));
-        epicFiles.push({ id: id.slice(0, -5), file });
-        continue;
-      }
       if (top === 'boards' && isSlug(id)) {
         if (parts.length === 3 && sub === 'board.config.json') {
           boardOf(id);
@@ -169,11 +158,6 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
       const config = parse(file, await readDataRootFile(ctx.root, file), BoardConfigSchema);
       if (config && mismatch(file, [['id', config.id, entry.boardId]])) continue;
       entry.config = config;
-    }
-
-    for (const { id, file } of epicFiles) {
-      const epic: Epic | null = parse(file, await readDataRootFile(ctx.root, file), EpicSchema);
-      if (epic) mismatch(file, [['id', epic.id, id]]);
     }
 
     /** Reports an id/path mismatch for the first differing field; returns whether there was one. */
@@ -304,16 +288,6 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
             apply: () => {
               touch(entry, { assignees: entry.story.assignees.filter((handle) => roster.has(handle)) });
               return `removed ${unknown.join(', ')} from ${entry.story.key}`;
-            },
-          });
-        }
-
-        if (story.epicId !== null && !epicIds.has(story.epicId)) {
-          const epicId = story.epicId;
-          add('MISSING_EPIC', file, `${story.key} links to missing Epic "${epicId}"`, {
-            apply: () => {
-              touch(entry, { epicId: null });
-              return `unlinked ${entry.story.key} from missing Epic "${epicId}"`;
             },
           });
         }

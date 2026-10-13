@@ -105,7 +105,7 @@ describe('rowbly doctor', () => {
 
   it('groups findings by severity and exits 6 while errors remain after --fix', async () => {
     const { tmp, cli } = await setup();
-    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone', epicId: 'nope' });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone', assignees: ['ghost'] });
     await writeFile(join(tmp.path, 'notes.txt'), 'hi');
     const { stdout, exitCode } = await cli('doctor');
     expect(exitCode).toBe(6);
@@ -117,8 +117,8 @@ describe('rowbly doctor', () => {
         '    hint: run `rowbly stories move WEB-1 <stage>`',
         '',
         'Warnings (1)',
-        `  MISSING_EPIC  ${STORIES}/WEB-1.json (fixable)`,
-        '    WEB-1 links to missing Epic "nope"',
+        `  UNKNOWN_ASSIGNEE  ${STORIES}/WEB-1.json (fixable)`,
+        '    WEB-1 has Assignees not in the roster: ghost',
         '',
         'Info (1)',
         '  UNKNOWN_FILE  notes.txt',
@@ -132,9 +132,7 @@ describe('rowbly doctor', () => {
 
     const fix = await cli('doctor', '--fix');
     expect(fix.exitCode).toBe(6);
-    expect(fix.stdout).toMatch(
-      /^Fixed \(1\)\n {2}MISSING_EPIC {2}\S+WEB-1\.json\n {4}unlinked WEB-1 from missing Epic "nope"\n/,
-    );
+    expect(fix.stdout).toMatch(/^Fixed \(1\)\n {2}UNKNOWN_ASSIGNEE {2}\S+WEB-1\.json\n {4}removed ghost from WEB-1\n/);
     expect(fix.stdout).toContain('1 error, 0 warnings, 1 info');
     expect(fix.stdout).not.toContain('hint: run `rowbly doctor --fix`');
   });

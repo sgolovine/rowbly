@@ -268,7 +268,6 @@ export function BoardScreen({ params }: ScreenProps) {
               {
                 assignees: choices.assignees.map((a) => a.handle),
                 labels: choices.labels,
-                epics: choices.epics.map((e) => e.id),
               },
               { board: true },
             )}

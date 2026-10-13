@@ -3,7 +3,6 @@
 import { type Priority, PrioritySchema, type StageCategory, StageCategorySchema } from '../../../schemas';
 import type { StoryFilter, StorySort } from '../../../services';
 import type { FormField, FormValues } from '../../components';
-import { NONE } from './shared';
 
 /** The select choice meaning "do not filter on this". */
 export const ANY = '(any)';
@@ -15,7 +14,6 @@ export interface FilterChoices {
   stages?: readonly string[];
   assignees: readonly string[];
   labels: readonly string[];
-  epics: readonly string[];
 }
 
 /**
@@ -29,7 +27,6 @@ export function filterFields(choices: FilterChoices, { board = false } = {}): Fo
     { name: 'me', label: 'Assigned to me', kind: 'boolean' },
     { name: 'label', label: 'Labels', kind: 'multiselect', options: choices.labels },
     { name: 'priority', label: 'Priorities', kind: 'multiselect', options: PrioritySchema.options },
-    { name: 'epic', label: 'Epic', kind: 'select', options: [ANY, NONE, ...choices.epics] },
     { name: 'search', label: 'Search', kind: 'text' },
   ];
   if (board) return shared;
@@ -44,7 +41,7 @@ export function filterFields(choices: FilterChoices, { board = false } = {}): Fo
 
 /** The form's starting values: the current filters over "any" for every select. */
 export function filterInitialValues(filters: FormValues): FormValues {
-  return { epic: ANY, category: ANY, sort: 'rank', ...filters };
+  return { category: ANY, sort: 'rank', ...filters };
 }
 
 function chosen(value: unknown): string | undefined {
@@ -61,7 +58,6 @@ export function toFilter(filters: FormValues): StoryFilter {
   const assignees = [...many(filters.assignee), ...(filters.me === true ? ['me'] : [])];
   const labels = many(filters.label);
   const priorities = many(filters.priority) as Priority[];
-  const epic = chosen(filters.epic);
   const search = chosen(filters.search);
   const category = chosen(filters.category) as StageCategory | undefined;
   const sort = chosen(filters.sort) as StorySort | undefined;
@@ -70,7 +66,6 @@ export function toFilter(filters: FormValues): StoryFilter {
     ...(assignees.length > 0 ? { assignees } : {}),
     ...(labels.length > 0 ? { labels } : {}),
     ...(priorities.length > 0 ? { priorities } : {}),
-    ...(epic ? { epicId: epic === NONE ? null : epic } : {}),
     ...(search ? { search } : {}),
     ...(category ? { category } : {}),
     ...(filters.open === true ? { open: true } : {}),
@@ -89,7 +84,6 @@ export function describeFilters(filters: FormValues): string {
     filters.me === true && 'mine',
     list(filters.label, '#'),
     list(filters.priority),
-    chosen(filters.epic) && (filters.epic === NONE ? 'no Epic' : `Epic ${filters.epic}`),
     chosen(filters.search) && `"${filters.search}"`,
     chosen(filters.category) && `${filters.category} Stages`,
     filters.open === true && 'open',

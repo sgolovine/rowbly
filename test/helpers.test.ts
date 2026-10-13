@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { RowblyConfigSchema, StorySchema } from '../src/schemas';
-import { FIXED_NOW, fixedClock, fixedIds, makeBoard, makeEpic, makeRootConfig, makeStory, tempRoot } from './helpers';
+import { FIXED_NOW, fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, tempRoot } from './helpers';
 
 describe('test helpers', () => {
   it('fixedClock only moves when told to', () => {
@@ -23,16 +23,14 @@ describe('test helpers', () => {
 
     await makeRootConfig(path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
     await makeBoard(path, { id: 'web', keyPrefix: 'WEB' });
-    await makeEpic(path, { id: 'auth' });
-    await makeStory(path, { key: 'WEB-1', boardId: 'web', epicId: 'auth' });
+    await makeStory(path, { key: 'WEB-1', boardId: 'web', labels: ['auth'] });
 
     const storyFile = join(path, 'boards/web/stories/WEB-1.json');
     const text = await readFile(storyFile, 'utf8');
     expect(text.endsWith('}\n')).toBe(true);
     expect(text).toContain('\n  "version": 1,');
-    expect(StorySchema.parse(JSON.parse(text)).epicId).toBe('auth');
+    expect(StorySchema.parse(JSON.parse(text)).labels).toEqual(['auth']);
     await expect(readFile(join(path, 'rowbly.config.json'), 'utf8')).resolves.toContain('"sam"');
     await expect(readFile(join(path, 'boards/web/board.config.json'), 'utf8')).resolves.toContain('"WEB"');
-    await expect(readFile(join(path, 'epics/auth.json'), 'utf8')).resolves.toContain('"auth"');
   });
 });

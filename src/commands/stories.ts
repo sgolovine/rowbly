@@ -37,8 +37,6 @@ interface StoryOptions extends ContextFlags {
   assignee?: string[];
   addAssignee?: string[];
   removeAssignee?: string[];
-  /** `--epic <id>` or `false` with `--no-epic`. */
-  epic?: string | false;
   /** `--priority <P>` (repeatable on `list`) or `false` with `--no-priority`. */
   priority?: string[] | string | false;
   label?: string[];
@@ -69,8 +67,6 @@ export function registerStories(program: Command): void {
     .option('--category <category>', `only this Stage Category: ${StageCategorySchema.options.join(', ')}`)
     .option('--open', 'only Stories whose Stage Category is not done')
     .option('--assignee <handle>', 'only Stories with any of these Assignees; "me" is Me (repeatable)', collect)
-    .option('--epic <id>', 'only Stories in this Epic')
-    .option('--no-epic', 'only Stories without an Epic')
     .option('--label <label>', 'only Stories with any of these Labels (repeatable)', collect)
     .option('--priority <P>', 'only these Priorities, P0–P4 (repeatable)', collect)
     .option('--search <text>', 'case-insensitive match on name and description')
@@ -95,7 +91,6 @@ export function registerStories(program: Command): void {
       .option('--name <name>', 'Story name')
       .option('--stage <key>', 'Stage (default: the first effective Stage)')
       .option('--assignee <handle>', 'Assignee handle; "me" is Me (repeatable, comma-separated)', collect)
-      .option('--epic <id>', 'Epic id')
       .option('--priority <P>', 'Priority P0–P4')
       .option('--label <label>', 'Label (repeatable, comma-separated)', collect)
       .option('--due <date>', 'due date, YYYY-MM-DD')
@@ -111,7 +106,6 @@ export function registerStories(program: Command): void {
         description,
         stage: typeof opts.stage === 'string' ? opts.stage : undefined,
         assignees: parseRepeatable(opts.assignee),
-        epicId: opts.epic || undefined,
         priority: opts.priority ? toPriority(String(opts.priority)) : undefined,
         labels: parseRepeatable(opts.label),
         dueDate: opts.due || undefined,
@@ -141,8 +135,6 @@ export function registerStories(program: Command): void {
       .option('--assignee <handle>', 'replace the Assignees (repeatable, comma-separated)', collect)
       .option('--add-assignee <handle>', 'add Assignees (repeatable)', collect)
       .option('--remove-assignee <handle>', 'remove Assignees (repeatable)', collect)
-      .option('--epic <id>', 'set the Epic')
-      .option('--no-epic', 'remove the Epic')
       .option('--priority <P>', 'set the Priority, P0–P4')
       .option('--no-priority', 'remove the Priority')
       .option('--label <label>', 'replace the Labels (repeatable, comma-separated)', collect)
@@ -235,7 +227,6 @@ function listFilter(opts: StoryOptions): StoryFilter {
     ...(opts.category ? { category: opts.category as StageCategory } : {}),
     ...(opts.open ? { open: true } : {}),
     ...(assignees.length ? { assignees } : {}),
-    ...(opts.epic === false ? { epicId: null } : opts.epic ? { epicId: opts.epic } : {}),
     ...(labels.length ? { labels } : {}),
     ...(priorities.length ? { priorities } : {}),
     ...(opts.search ? { search: opts.search } : {}),
@@ -255,7 +246,6 @@ function editPatch(opts: StoryOptions, description: string | undefined): StoryPa
     assignees: list(opts.assignee),
     addAssignees: list(opts.addAssignee),
     removeAssignees: list(opts.removeAssignee),
-    epicId: clearable(opts.epic, (v) => v),
     priority: clearable(opts.priority as string | false | undefined, toPriority),
     labels: list(opts.label),
     addLabels: list(opts.addLabel),
@@ -317,7 +307,6 @@ function renderStory(story: Story, stages: readonly Stage[], fields: readonly Cu
     ['Stage', stageBadge(stages, story.stage)],
     ['Priority', story.priority ?? none],
     ['Assignees', story.assignees.join(', ') || none],
-    ['Epic', story.epicId ?? none],
     ['Labels', story.labels.join(', ') || none],
     ['Due', story.dueDate ?? none],
     ['Created', `${story.createdAt}${story.createdBy ? ` by ${story.createdBy}` : ''}`],

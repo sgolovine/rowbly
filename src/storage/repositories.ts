@@ -3,8 +3,6 @@ import {
   type BoardConfig,
   BoardConfigSchema,
   type DataRoot,
-  type Epic,
-  EpicSchema,
   type KeyPrefix,
   type LocalState,
   LocalStateSchema,
@@ -48,19 +46,11 @@ export interface StoryRepository {
   maxNumber(board: Slug): Promise<number>;
 }
 
-export interface EpicRepository {
-  list(): Promise<Epic[]>;
-  get(id: Slug): Promise<Epic>;
-  put(epic: Epic): Promise<void>;
-  delete(id: Slug): Promise<void>;
-}
-
 export interface Repositories {
   rootConfig: RootConfigRepository;
   localState: LocalStateRepository;
   boards: BoardRepository;
   stories: StoryRepository;
-  epics: EpicRepository;
 }
 
 /** Repositories over one Data Root. Caches (such as the prefix index) live as long as the returned object. */
@@ -159,31 +149,6 @@ export function createRepositories(root: DataRoot): Repositories {
     },
   };
 
-  const epics: EpicRepository = {
-    async list() {
-      const files = await listEntries(p.epicsDir, 'file');
-      const ids = files
-        .filter((name) => name.endsWith('.json'))
-        .map((name) => name.slice(0, -'.json'.length))
-        .filter(isSlug);
-      return Promise.all(ids.map((id) => epics.get(id)));
-    },
-    async get(id) {
-      if (!isSlug(id)) throw epicNotFound(id);
-      const path = p.epic(id);
-      const epic = await rethrowNotFound(readJson(path, EpicSchema), () => epicNotFound(id));
-      expectMatch(path, 'id', epic.id, id);
-      return epic;
-    },
-    async put(epic) {
-      await writeJson(p.epic(epic.id), EpicSchema, epic);
-    },
-    async delete(id) {
-      if (!isSlug(id)) throw epicNotFound(id);
-      await rethrowNotFound(remove(p.epic(id)), () => epicNotFound(id));
-    },
-  };
-
   return {
     rootConfig: {
       get: () => readJson(p.rootConfig, RowblyConfigSchema),
@@ -202,7 +167,6 @@ export function createRepositories(root: DataRoot): Repositories {
     },
     boards,
     stories,
-    epics,
   };
 }
 
@@ -245,8 +209,4 @@ function boardNotFound(id: string): NotFoundError {
 
 function storyNotFound(key: string, hint?: string): NotFoundError {
   return new NotFoundError(`Story "${key}" not found`, { hint });
-}
-
-function epicNotFound(id: string): NotFoundError {
-  return new NotFoundError(`Epic "${id}" not found`);
 }

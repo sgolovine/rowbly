@@ -14,7 +14,6 @@ import {
   type Assignee,
   type CustomFieldValue,
   type EffectiveBoardConfig,
-  type Epic,
   type Priority,
   type Slug,
   type Stage,
@@ -57,18 +56,6 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     if (handle !== 'me') return handle;
     if (!ctx.me) throw new UsageError('Me is not set', { hint: 'run `rowbly whoami <handle>`' });
     return ctx.me;
-  }
-
-  async function checkEpic(epicId: Slug): Promise<void> {
-    try {
-      await repos.epics.get(epicId);
-    } catch (err) {
-      if (!(err instanceof NotFoundError)) throw err;
-      const valid = (await repos.epics.list()).map((e) => e.id);
-      throw new ValidationError(`unknown Epic "${epicId}"`, {
-        details: { issues: [{ path: ['epicId'], message: `unknown Epic "${epicId}"` }], validEpics: valid },
-      });
-    }
   }
 
   async function createdBy(): Promise<Slug | null> {
@@ -138,7 +125,6 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
       if (stage === undefined) throw new ValidationError('the Board has no Stages');
       checkStage(config.stages, stage);
       const assignees = await checkAssignees(input.assignees ?? []);
-      if (input.epicId) await checkEpic(input.epicId);
       const customFields = validateFieldValues(config.customFields, input.customFields ?? {}, {
         requireRequired: true,
       });
@@ -156,7 +142,6 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
           stage,
           rank,
           assignees,
-          epicId: input.epicId ?? null,
           priority: input.priority ?? null,
           labels: unique(input.labels ?? []),
           dueDate: input.dueDate ?? null,
@@ -184,10 +169,6 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
         const added = await checkAssignees(patch.addAssignees ?? []);
         const removed = (patch.removeAssignees ?? []).map(resolveMe);
         next.assignees = unique([...story.assignees, ...added]).filter((h) => !removed.includes(h));
-      }
-      if (patch.epicId !== undefined) {
-        if (patch.epicId !== null) await checkEpic(patch.epicId);
-        next.epicId = patch.epicId;
       }
       if (patch.priority !== undefined) next.priority = patch.priority;
       if (patch.labels !== undefined) next.labels = unique(patch.labels);
@@ -267,21 +248,18 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
 /** What a Story on a Board can be set to, for the TUI's story form and filters. */
 export interface StoryChoices extends EffectiveBoardConfig {
   assignees: Assignee[];
-  /** Open Epics. */
-  epics: Epic[];
   /** Labels already used on the Board. */
   labels: string[];
 }
 
 export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<StoryChoices> {
   const repos = createRepositories(ctx.root);
-  const [config, root, epics, labels] = await Promise.all([
+  const [config, root, labels] = await Promise.all([
     resolveCascade(ctx.root, boardId),
     repos.rootConfig.get(),
-    repos.epics.list(),
     createStoriesService(ctx, repos).labelsInUse(boardId),
   ]);
-  return { ...config, assignees: root.assignees, epics: epics.filter((e) => !e.closed), labels };
+  return { ...config, assignees: root.assignees, labels };
 }
 
 /** Every given filter must match (contracts §5). */
@@ -297,7 +275,6 @@ function storyMatcher(
     if (filter.category && category !== filter.category) return false;
     if (filter.open && category === 'done') return false;
     if (assignees?.length && !story.assignees.some((h) => assignees.includes(h))) return false;
-    if (filter.epicId !== undefined && story.epicId !== filter.epicId) return false;
     if (filter.labels?.length && !story.labels.some((l) => filter.labels?.includes(l))) return false;
     if (filter.priorities?.length && !(story.priority && filter.priorities.includes(story.priority))) return false;
     if (search && !`${story.name}\n${story.description}`.toLowerCase().includes(search)) return false;

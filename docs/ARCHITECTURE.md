@@ -9,7 +9,7 @@
 
 - Storage should be configured to adhere to the core concepts.
 
-- The Data Root holds Boards, Stages, Stories, Tasks, Epics and Assignees. There are no Workspaces (ADR-0007).
+- The Data Root holds Boards, Stages, Stories, Tasks and Assignees. There are no Workspaces (ADR-0007) and no Epics (ADR-0008).
 
 - A Board contains Stories
 
@@ -28,8 +28,6 @@
 
 - Tasks should contain a `storyId` field.
 
-- Epics live in the Data Root and can span any Boards. A Story links to its Epic with `epicId` (ADR-0004).
-
 - We should have a storage layer that reads and writes data and uses `zod` to make sure everything is correct.
 
 - Use a folder based architecture.
@@ -41,8 +39,6 @@ rowbly/
       board.config.json
       stories/
         <story_slug>.json
-  epics/
-    <epic_slug>.json
 
 ```
 
@@ -94,7 +90,6 @@ Here is a non-exhaustive list of CLI features we need to cover. Assume that more
 - CRUD for Board custom fields
 - CRUD for board stages
 - CRUD for Tasks
-- CRUD for Epics
 
 ## Out of Scope
 

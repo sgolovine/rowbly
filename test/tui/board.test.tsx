@@ -206,13 +206,13 @@ describe('board view', () => {
   it('narrows the cards with the filter and clears it', async () => {
     const t = await seed();
     const app = await open(t);
-    // assignee, me, label, priority, epic, text
+    // assignee, me, label, priority, text
     await app.press('/', KEYS.down, ' ', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
     expect(app.lastFrame()).toContain('● Backlog (1)');
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-4'));
-    await app.press('/', ...Array(5).fill(KEYS.down), ...'footer', KEYS.enter);
+    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
     expect(app.lastFrame()).toContain('WEB-5');
     app.unmount();
@@ -221,7 +221,7 @@ describe('board view', () => {
   it('filters on several values per field, like the Stories list', async () => {
     const t = await seed();
     const app = await open(t);
-    // assignees, me, labels, priorities, epic, text: P0 and P3 at once.
+    // assignees, me, labels, priorities, text: P0 and P3 at once.
     await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
     let frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
     expect(frame).toContain('WEB-4');

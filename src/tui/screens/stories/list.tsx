@@ -124,7 +124,6 @@ export function StoryListScreen({ params }: ScreenProps) {
               stages: unique([...stagesOf.values()].flatMap((stages) => stages.map((s) => s.key))),
               assignees: choices.assignees.map((a) => a.handle),
               labels: boards ? unique(boards.flatMap((b) => b.labels)).sort() : choices.labels,
-              epics: choices.epics.map((e) => e.id),
             })}
             initialValues={filterInitialValues(filters)}
             onSubmit={(values) => {

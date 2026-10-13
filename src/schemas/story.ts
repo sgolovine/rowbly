@@ -43,7 +43,6 @@ export const StorySchema = z.object({
   stage: SlugSchema,
   rank: z.string().min(1),
   assignees: z.array(SlugSchema),
-  epicId: SlugSchema.nullable(),
   priority: PrioritySchema.nullable(),
   labels: z.array(LabelSchema),
   dueDate: IsoDateSchema.nullable(),

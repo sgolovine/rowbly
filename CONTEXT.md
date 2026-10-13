@@ -7,7 +7,7 @@ A developer-focused, file-backed Kanban tracker that runs as a CLI and an intera
 ### Containers
 
 **Data Root**:
-The `.rowbly/` directory that holds all Rowbly data (Boards, Epics and the Assignee roster) and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`; it is the only container above a Board.
+The `.rowbly/` directory that holds all Rowbly data (Boards and the Assignee roster) and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`; it is the only container above a Board.
 _Avoid_: database, store, repo, workspace, project
 
 **Board**:
@@ -27,14 +27,6 @@ _Avoid_: story id, story slug
 **Task**:
 A smaller unit of work inside exactly one Story, with its own title, description, Stage and Comments; it has no Assignees of its own and belongs to the Story's Assignees.
 _Avoid_: sub-task, subtask, checklist item
-
-**Epic**:
-A grouping of Stories that can span any Boards in the Data Root, identified by a slug; a Story belongs to at most one Epic.
-_Avoid_: initiative, theme
-
-**Epic Progress**:
-The share of an Epic's Stories whose Stage is in the `done` Stage Category; it is derived, never stored.
-_Avoid_: epic status
 
 **Priority**:
 A Story's urgency on the fixed scale `P0` (most urgent) to `P4`, or none.

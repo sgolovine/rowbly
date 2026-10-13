@@ -14,12 +14,10 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
       board.config.json                    # required — board metadata + key prefix + optional overrides
       stories/
         <STORY-KEY>.json                   # one Story, with its Tasks and Comments embedded
-  epics/
-    <epic-id>.json
 ```
 
 - `docs/ARCHITECTURE.md` called the root `rowbly/`; it is `.rowbly/` (ADR-0002).
-- There is no Workspace level (ADR-0007): Boards and Epics sit directly in the Data Root.
+- There is no Workspace level (ADR-0007): Boards sit directly in the Data Root. There are no Epics (ADR-0008).
 - `board.config.json` is **required** (it holds identity metadata); its `stages`/`customFields` keys are optional overrides.
 - The id stored inside a file must equal its folder/file name. A mismatch is a `DataIntegrityError` (and a `doctor` finding).
 - Any file or folder not matching this layout is ignored by repositories and reported by `doctor` as a warning.
@@ -28,7 +26,7 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
 
 | Identifier | Format | Mutable? | Uniqueness |
 | --- | --- | --- | --- |
-| Board id, Epic id, Stage key, Custom Field key, Assignee handle | slug: `^[a-z0-9]+(?:-[a-z0-9]+)*$`, 1–40 chars | **No** (v1 has no rename; `name` is editable) | Board, Epic, Assignee: Data Root · Stage, Field: one config list |
+| Board id, Stage key, Custom Field key, Assignee handle | slug: `^[a-z0-9]+(?:-[a-z0-9]+)*$`, 1–40 chars | **No** (v1 has no rename; `name` is editable) | Board, Assignee: Data Root · Stage, Field: one config list |
 | Board key prefix | `^[A-Z][A-Z0-9]{1,9}$` | **No** | Entire Data Root (so a bare Story Key always resolves) |
 | Story Key | `<PREFIX>-<n>`, n ≥ 1, allocated as max existing n on that Board + 1 (ADR-0003). Deleted keys may be reused. | No | Board (hence Data Root) |
 | Task id | `<STORY-KEY>.<n>`, n from the Story's `nextTaskNumber`, never reused | No | Story |
@@ -87,17 +85,12 @@ interface Story {                  // stories/<KEY>.json
   version: 1; key: StoryKey; boardId: Slug;
   name: string /*1–200*/; description: string /*markdown, default ''*/;
   stage: Slug; rank: string /*fractional-indexing key*/;
-  assignees: Slug[]; epicId: Slug | null; priority: Priority | null;
+  assignees: Slug[]; priority: Priority | null;
   labels: Label[]; dueDate: IsoDate | null;
   customFields: Record<Slug, CustomFieldValue>;
   createdBy: Slug | null; createdAt: Timestamp; updatedAt: Timestamp;
   nextTaskNumber: number /*int ≥1*/;
   tasks: Task[]; comments: Comment[];
-}
-
-interface Epic {                   // epics/<id>.json
-  version: 1; id: Slug; name: string; description: string;
-  closed: boolean; createdAt: Timestamp; updatedAt: Timestamp;
 }
 
 interface LocalState {             // local.json
@@ -108,7 +101,7 @@ interface LocalState {             // local.json
 **Two validation levels.**
 
 1. *Shape* (zod) is enforced by the storage layer on every read and write.
-2. *Referential* rules are enforced by services on writes. A Story's `stage` and each Task's `stage` must be in the Board's effective stages. `assignees` must be in the roster. `epicId` must be an existing Epic in the Data Root. `customFields` keys must be effective fields, values must match the field type and options, and required fields must be present. `createdBy`/`author` is set to Me when Me is in the roster, else `null`.
+2. *Referential* rules are enforced by services on writes. A Story's `stage` and each Task's `stage` must be in the Board's effective stages. `assignees` must be in the roster. `customFields` keys must be effective fields, values must match the field type and options, and required fields must be present. `createdBy`/`author` is set to Me when Me is in the roster, else `null`.
 
 Referential drift that can only arise from hand edits or merges (for example a missing stage) is reported by `doctor`. Reads stay tolerant: they do not throw on referential drift.
 
@@ -164,12 +157,12 @@ rowbly stages list | add <key> --name <n> --category <c> [--before <key>|--after
 rowbly fields list | add <key> --name <n> --type <t> [--options a,b] [--required] [--min] [--max] [--integer] [--description]
              | edit <key> [--name] [--description] [--required|--optional] [--options] [--min] [--max] [--integer] | remove <key>   [--board] [--level]
 
-rowbly stories list [--stage <k>…] [--category <c>] [--open] [--assignee <h|me>…] [--epic <id>|--no-epic] [--label <l>…]
+rowbly stories list [--stage <k>…] [--category <c>] [--open] [--assignee <h|me>…] [--label <l>…]
                     [--priority <P>…] [--search <text>] [--sort rank|priority|created|updated|due] [--board] [--all-boards]
-rowbly stories create --name <n> [desc flags] [--stage <k>] [--assignee …] [--epic <id>] [--priority <P>] [--label …] [--due <date>] [--field k=v …] [--board]
+rowbly stories create --name <n> [desc flags] [--stage <k>] [--assignee …] [--priority <P>] [--label …] [--due <date>] [--field k=v …] [--board]
 rowbly stories show <KEY>
 rowbly stories edit <KEY> [--name] [desc flags] [--assignee … (replace) | --add-assignee … | --remove-assignee …]
-                    [--epic <id> | --no-epic] [--priority <P> | --no-priority] [--label … | --add-label … | --remove-label …]
+                    [--priority <P> | --no-priority] [--label … | --add-label … | --remove-label …]
                     [--due <date> | --no-due] [--field k=v …] [--unset-field <k> …]
 rowbly stories move <KEY> <stage> [--top]      # default: bottom of target stage
 rowbly stories rank <KEY> (--before <KEY>|--after <KEY>|--top|--bottom)
@@ -178,9 +171,6 @@ rowbly stories delete <KEY>
 rowbly tasks list <KEY> | create <KEY> --name <n> [desc flags] [--stage <k>] | show <TASK-ID>
             | edit <TASK-ID> [--name] [desc flags] | move <TASK-ID> <stage> | delete <TASK-ID>
 rowbly comments list <KEY|TASK-ID> | add <KEY|TASK-ID> [body flags] | edit <KEY|TASK-ID> <comment-id> [body flags] | delete <KEY|TASK-ID> <comment-id>
-
-rowbly epics list [--closed|--all] | create <id> --name <n> [--description] | show <id> | edit <id> [--name] [--description]
-            | close <id> | reopen <id> | delete <id>
 
 rowbly doctor [--fix]
 ```
@@ -194,7 +184,7 @@ Defaults: a new Story goes into the **first** effective stage, at the bottom. A 
 | (uncaught) | `INTERNAL` | 1 | bugs |
 | `UsageError` | `USAGE` | 2 | bad flags, missing args, context not resolvable, non-interactive without `--yes` |
 | `ValidationError` | `VALIDATION` | 2 | schema or referential rule violated on input; `details.issues` |
-| `NotFoundError` | `NOT_FOUND` | 3 | unknown board/story/task/comment/epic/stage/field/assignee |
+| `NotFoundError` | `NOT_FOUND` | 3 | unknown board/story/task/comment/stage/field/assignee |
 | `ConflictError` | `CONFLICT` | 4 | id/prefix already exists; deletion refused (§7); key collision |
 | `DataRootNotFoundError` | `NO_DATA_ROOT` | 5 | no Data Root found |
 | `DataIntegrityError` | `DATA_INTEGRITY` | 6 | file on disk fails schema or id/path mismatch; `details.path` |
@@ -209,7 +199,6 @@ Human mode writes `error: <message>` (red) plus an optional hint to stderr. `--j
 | Remove a Custom Field | Strip its values from all Stories on affected Boards; warn with a count. |
 | Edit field options | Strip values that are no longer valid; warn with a count. |
 | Remove an Assignee | Remove the handle from all Stories in the Data Root; warn with a count. |
-| Delete an Epic | Set `epicId: null` on its Stories; warn with a count. |
 | Delete a Board | Refuse if non-empty unless `--force`, which deletes recursively. Always confirm (or `--yes`). |
 | Delete a Story / Task / Comment | Confirm (or `--yes`). |
 
@@ -233,7 +222,6 @@ interface EffectiveBoardConfig {
   customFields: CustomFieldDef[]; customFieldsSource: ConfigLevel;
 }
 type ConfigLevel = 'board' | 'global' | 'default';
-interface EpicView extends Epic { stories: Story[]; progress: { done: number; total: number } }
 
 interface Services {
   context:    { resolveBoard(flag?: string): Promise<Slug>;
@@ -260,9 +248,6 @@ interface Services {
                 move(taskId, stage): Promise<Task>; remove(taskId): Promise<void> };
   comments:   { list(target: StoryKey | TaskId): Promise<Comment[]>; add(target, body): Promise<Comment>;
                 update(target, id, body): Promise<Comment>; remove(target, id): Promise<void> };
-  epics:      { list(opts?: { closed?: boolean | 'all' }): Promise<EpicView[]>; get(id): Promise<EpicView>;
-                create(input): Promise<Epic>; update(id, patch): Promise<Epic>;
-                setClosed(id, closed: boolean): Promise<Epic>; remove(id): Promise<{ storiesUnlinked: number }> };
   doctor:     { check(): Promise<DoctorReport>; fix(): Promise<DoctorReport> };
 }
 type ConfigTarget = { level: 'global' } | { level: 'board'; boardId: Slug };
@@ -277,11 +262,11 @@ Input, patch, filter, `InitOptions`/`InitResult` and `DoctorReport` types are de
 ```ts
 findDataRoot(opts: { cwd: string; flag?: string; env: NodeJS.ProcessEnv; home: string }): Promise<DataRoot>;
 paths(root): { rootConfig; localState; boardsDir; board(b); boardConfig(b);
-               storiesDir(b); story(b,key); epicsDir; epic(id) };
+               storiesDir(b); story(b,key) };
 readJson<T>(path, schema: ZodType<T>): Promise<T>;        // ENOENT → NotFoundError; bad JSON/schema → DataIntegrityError
 writeJson<T>(path, schema, value: T): Promise<void>;     // validate → mkdir -p → write tmp → rename; 2-space, trailing \n,
                                                          // keys in schema order (serialize the zod-parsed value)
-repositories: boards, stories, epics, rootConfig, localState — list/get/put/delete over the paths above;
+repositories: boards, stories, rootConfig, localState — list/get/put/delete over the paths above;
               stories.allInBoard(boardId), stories.findByKey(key) via prefix index.
 resolveCascade(root, boardId): Promise<EffectiveBoardConfig>;
 ```

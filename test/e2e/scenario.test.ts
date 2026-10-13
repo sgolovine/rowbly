@@ -83,9 +83,7 @@ describe('end-to-end scenario', () => {
     expect((await repos().boards.get('api')).stages).toBeUndefined();
   });
 
-  it('4. creates 5 Stories with mixed fields, in two Epics across two Boards', async () => {
-    await ok('epics', 'create', 'launch', '--name', 'Launch');
-    await ok('epics', 'create', 'polish', '--name', 'Polish');
+  it('4. creates 5 Stories with mixed fields across two Boards', async () => {
     const created = [
       await json(
         'stories',
@@ -98,15 +96,13 @@ describe('end-to-end scenario', () => {
         'ui,auth',
         '--assignee',
         'alice',
-        '--epic',
-        'launch',
         '--field',
         'size=m',
         '--due',
         '2026-11-01',
       ),
-      await json('stories', 'create', '--name', 'Signup', '--assignee', 'bob', '--epic', 'launch', '--field', 'size=s'),
-      await json('stories', 'create', '--name', 'Footer', '--label', 'ui', '--epic', 'polish'),
+      await json('stories', 'create', '--name', 'Signup', '--assignee', 'bob', '--field', 'size=s'),
+      await json('stories', 'create', '--name', 'Footer', '--label', 'ui'),
       await json(
         'stories',
         'create',
@@ -120,10 +116,8 @@ describe('end-to-end scenario', () => {
         'alice',
         '--assignee',
         'bob',
-        '--epic',
-        'launch',
       ),
-      await json('stories', 'create', '--name', 'Rate limit', '--board', 'api', '--epic', 'polish'),
+      await json('stories', 'create', '--name', 'Rate limit', '--board', 'api'),
     ] as Story[];
     expect(created.map((s) => s.key)).toEqual(['WEB-1', 'WEB-2', 'WEB-3', 'API-1', 'API-2']);
     expect(created[0]).toMatchObject({
@@ -131,7 +125,6 @@ describe('end-to-end scenario', () => {
       priority: 'P1',
       labels: ['ui', 'auth'],
       assignees: ['alice'],
-      epicId: 'launch',
       dueDate: '2026-11-01',
       customFields: { size: 'm' },
       createdBy: 'alice',
@@ -181,18 +174,7 @@ describe('end-to-end scenario', () => {
     expect(saved.tasks[0]?.comments.map((c) => c.body.trim())).toContain('From stdin');
   });
 
-  it('7. shows Epic Progress', async () => {
-    const launch = await json('epics', 'show', 'launch');
-    expect(launch.progress).toEqual({ done: 2, total: 3 });
-    expect(launch.stories.map((s: Story) => s.key).sort()).toEqual(['API-1', 'WEB-1', 'WEB-2']);
-    const out = await ok('epics', 'show', 'launch');
-    expect(out).toMatch(/Progress {2}2\/3/);
-    expect(out).toMatch(/^api$/m);
-    expect(out).toMatch(/^web$/m);
-    expect((await json('epics', 'show', 'polish')).progress).toEqual({ done: 0, total: 2 });
-  });
-
-  it('8. removes a Stage with --move-to', async () => {
+  it('7. removes a Stage with --move-to', async () => {
     const refused = await rowbly('stages', 'remove', 'review');
     expect(refused.exitCode).toBe(4);
     const removed = await json('stages', 'remove', 'review', '--move-to', 'in-progress');
@@ -201,7 +183,7 @@ describe('end-to-end scenario', () => {
     expect((await repos().boards.get('web')).stages?.map((s) => s.key)).not.toContain('review');
   });
 
-  it('9. removes an Assignee and warns with the Story count', async () => {
+  it('8. removes an Assignee and warns with the Story count', async () => {
     const result = await rowbly('assignees', 'remove', 'bob');
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toContain('warning: Assignee "bob" removed from 2 stories');
@@ -209,14 +191,14 @@ describe('end-to-end scenario', () => {
     expect((await story('WEB-2')).assignees).toEqual([]);
   });
 
-  it('10. doctor finds nothing wrong', async () => {
+  it('9. doctor finds nothing wrong', async () => {
     const result = await rowbly('doctor');
     expect(result.exitCode).toBe(0);
     const report = await json('doctor');
     expect(report.findings).toEqual([]);
   });
 
-  it('11. --json from every list command round-trips the files on disk', async () => {
+  it('10. --json from every list command round-trips the files on disk', async () => {
     const r = repos();
     const webConfig = await r.boards.get('web');
     const webStories = await r.stories.allInBoard('web');
@@ -235,7 +217,5 @@ describe('end-to-end scenario', () => {
     expect(await json('tasks', 'list', 'WEB-2')).toEqual(signup.tasks);
     expect(await json('comments', 'list', 'WEB-2')).toEqual(signup.comments);
     expect(await json('comments', 'list', 'WEB-2.1')).toEqual(signup.tasks[0]?.comments);
-    const epics = await json('epics', 'list', '--all');
-    expect(epics.map(({ stories, progress, ...epic }: Record<string, unknown>) => epic)).toEqual(await r.epics.list());
   });
 });

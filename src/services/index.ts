@@ -6,7 +6,6 @@ import { createCommentsService } from './comments';
 import { createConfigService } from './config';
 import { createContextService } from './context';
 import { createDoctorService } from './doctor';
-import { createEpicsService } from './epics';
 import { createFieldsService } from './fields';
 import { createSetupService } from './setup';
 import { createStagesService } from './stages';
@@ -30,7 +29,6 @@ export function createServices(ctx: RowblyContext): Services {
     stories: createStoriesService(ctx, repos),
     tasks: createTasksService(ctx, repos),
     comments: createCommentsService(ctx, repos),
-    epics: createEpicsService(ctx, repos),
     doctor: createDoctorService(ctx, repos),
   };
 }

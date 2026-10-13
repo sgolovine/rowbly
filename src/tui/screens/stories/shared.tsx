@@ -6,7 +6,7 @@ import type { Services } from '../../../services';
 import { StageBadge } from '../../components';
 import { useIsActive } from '../../hooks';
 
-/** The select choice meaning "no value" (no Epic, no Priority, an unset Custom Field). */
+/** The select choice meaning "no value" (no Priority, an unset Custom Field). */
 export const NONE = '(none)';
 
 /** `params.boardId` when given, else the Board in context. */

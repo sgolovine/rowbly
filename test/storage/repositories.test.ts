@@ -1,9 +1,9 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DataIntegrityError, NotFoundError } from '../../src/core';
 import { createRepositories, paths } from '../../src/storage';
-import { FIXED_NOW, makeBoard, makeEpic, makeStory, tempRoot } from '../helpers';
+import { FIXED_NOW, makeBoard, makeStory, tempRoot } from '../helpers';
 
 describe('paths', () => {
   it('covers every path in the Data Root layout', () => {
@@ -15,8 +15,6 @@ describe('paths', () => {
     expect(p.boardConfig('web')).toBe('/r/.rowbly/boards/web/board.config.json');
     expect(p.storiesDir('web')).toBe('/r/.rowbly/boards/web/stories');
     expect(p.story('web', 'WEB-4')).toBe('/r/.rowbly/boards/web/stories/WEB-4.json');
-    expect(p.epicsDir).toBe('/r/.rowbly/epics');
-    expect(p.epic('launch')).toBe('/r/.rowbly/epics/launch.json');
   });
 });
 
@@ -133,23 +131,5 @@ describe('stories', () => {
     await repos.stories.delete('web', 'WEB-12');
     expect(await repos.stories.maxNumber('web')).toBe(3);
     await expect(repos.stories.delete('web', 'WEB-12')).rejects.toThrow(NotFoundError);
-  });
-});
-
-describe('epics', () => {
-  it('lists, gets, puts and deletes', async () => {
-    const t = await tempRoot();
-    const repos = createRepositories(t.root);
-    expect(await repos.epics.list()).toEqual([]);
-    const launch = await makeEpic(t.path, { id: 'launch' });
-    await makeEpic(t.path, { id: 'beta' });
-    expect((await repos.epics.list()).map((e) => e.id)).toEqual(['beta', 'launch']);
-    expect(await repos.epics.get('launch')).toEqual(launch);
-    await repos.epics.put({ ...launch, closed: true });
-    expect((await repos.epics.get('launch')).closed).toBe(true);
-    const written = await readFile(join(t.path, 'epics/launch.json'), 'utf8');
-    expect(written.endsWith('}\n')).toBe(true);
-    await repos.epics.delete('launch');
-    await expect(repos.epics.get('launch')).rejects.toThrow(NotFoundError);
   });
 });

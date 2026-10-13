@@ -47,7 +47,6 @@ const COMMAND_GROUPS = [
   'stories',
   'tasks',
   'comments',
-  'epics',
   'doctor',
 ];
 

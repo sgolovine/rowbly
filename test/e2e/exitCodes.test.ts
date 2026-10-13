@@ -35,7 +35,6 @@ describe('exit codes (contracts §6)', () => {
       why: 'an Assignee that is not in the roster',
     },
     { code: 'NOT_FOUND', exit: 3, args: ['stories', 'show', 'WEB-99'], why: 'unknown Story Key' },
-    { code: 'NOT_FOUND', exit: 3, args: ['epics', 'show', 'nope'], why: 'unknown Epic' },
     {
       code: 'CONFLICT',
       exit: 4,

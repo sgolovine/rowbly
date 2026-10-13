@@ -89,7 +89,6 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     { label: 'Stage', value: <StoryStage stages={config.stages} story={story} /> },
     { label: 'Priority', value: story.priority ?? none },
     { label: 'Assignees', value: story.assignees.join(', ') || none },
-    { label: 'Epic', value: story.epicId ?? none },
     { label: 'Labels', value: story.labels.join(', ') || none },
     { label: 'Due', value: story.dueDate ?? none },
     ...Object.entries(story.customFields).map(([field, value]) => ({

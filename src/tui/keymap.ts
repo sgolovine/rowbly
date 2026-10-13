@@ -27,7 +27,6 @@ export interface Destination {
 export const DESTINATIONS: readonly Destination[] = [
   { label: 'Board', screen: 'board' },
   { label: 'Stories', screen: 'stories' },
-  { label: 'Epics', screen: 'epics' },
   { label: 'Boards', screen: 'boards' },
   { label: 'Assignees', screen: 'assignees' },
   { label: 'Stages', screen: 'stages' },

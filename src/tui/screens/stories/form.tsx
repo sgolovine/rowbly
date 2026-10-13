@@ -41,7 +41,6 @@ export function StoryFormScreen({ params }: ScreenProps) {
       name: String(values.name),
       description: String(values.description ?? ''),
       assignees: (values.assignees as string[] | null) ?? [],
-      epicId: optional(values.epicId),
       priority: optional(values.priority) as Priority | null,
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
@@ -64,7 +63,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
     <Box flexDirection="column" gap={1}>
       <Text bold>{story ? `Edit ${story.key}` : `New Story on ${boardId}`}</Text>
       <Form
-        fields={formFields(choices, story)}
+        fields={formFields(choices)}
         initialValues={initialValues(choices, story, params.stage as string | undefined)}
         onSubmit={submit}
       />
@@ -73,15 +72,12 @@ export function StoryFormScreen({ params }: ScreenProps) {
   );
 }
 
-function formFields(choices: StoryChoices, story: Story | null): FormField[] {
-  const epics = choices.epics.map((e) => e.id);
-  if (story?.epicId && !epics.includes(story.epicId)) epics.push(story.epicId);
+function formFields(choices: StoryChoices): FormField[] {
   return [
     { name: 'name', label: 'Name', kind: 'text', required: true },
     { name: 'description', label: 'Description', kind: 'multiline' },
     { name: 'stage', label: 'Stage', kind: 'select', required: true, options: choices.stages.map((s) => s.key) },
     { name: 'assignees', label: 'Assignees', kind: 'multiselect', options: choices.assignees.map((a) => a.handle) },
-    { name: 'epicId', label: 'Epic', kind: 'select', options: [NONE, ...epics] },
     { name: 'priority', label: 'Priority', kind: 'select', options: [NONE, ...PrioritySchema.options] },
     { name: 'labels', label: 'Labels (a,b)', kind: 'text' },
     { name: 'dueDate', label: 'Due', kind: 'date' },
@@ -115,7 +111,6 @@ function initialValues(choices: StoryChoices, story: Story | null, stage?: strin
     description: story?.description ?? '',
     stage: story?.stage ?? stage ?? choices.stages[0]?.key ?? null,
     assignees: story?.assignees ?? [],
-    epicId: story?.epicId ?? NONE,
     priority: story?.priority ?? NONE,
     labels: story?.labels.join(',') ?? '',
     dueDate: story?.dueDate ?? null,

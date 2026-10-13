@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { StorySchema } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeEpic, makeRootConfig, makeStory, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeRootConfig, makeStory, runCli, tempRoot } from '../helpers';
 
 const web = { boardId: 'web' };
 
@@ -146,7 +146,6 @@ describe('rowbly stories', () => {
 
   it('list renders the human table and validates enum flags', async () => {
     const { t, cli } = await setup();
-    await makeEpic(t.path, { id: 'launch' });
     await makeStory(t.path, {
       ...web,
       key: 'WEB-1',
@@ -156,16 +155,13 @@ describe('rowbly stories', () => {
       assignees: ['alice'],
       labels: ['ui'],
       dueDate: '2026-11-01',
-      epicId: 'launch',
     });
     await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Other' });
     const table = await cli('stories', 'list');
     expect(table.stdout).toContain('KEY    NAME   STAGE');
     expect(table.stdout).toMatch(/WEB-1 +Login +● In Progress +P1 +alice +ui +2026-11-01/);
-    const epicless = await cli('stories', 'list', '--no-epic', '--json');
-    expect(JSON.parse(epicless.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-2']);
-    const inEpic = await cli('stories', 'list', '--epic', 'launch', '--priority', 'p1', '--json');
-    expect(JSON.parse(inEpic.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-1']);
+    const p1 = await cli('stories', 'list', '--priority', 'p1', '--json');
+    expect(JSON.parse(p1.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-1']);
     expect((await cli('stories', 'list', '--sort', 'weird')).exitCode).toBe(2);
     expect((await cli('stories', 'list', '--category', 'weird')).exitCode).toBe(2);
     expect((await cli('stories', 'list', '--priority', 'P9')).exitCode).toBe(2);
@@ -244,7 +240,6 @@ describe('rowbly stories', () => {
     expect(story).toMatchObject({ assignees: ['bob'], customFields: { estimate: 8 } });
     expect((await cli('stories', 'edit', 'WEB-1')).stderr).toContain('nothing to change');
     expect((await cli('stories', 'edit', 'WEB-1', '--assignee', 'bob', '--add-assignee', 'alice')).exitCode).toBe(2);
-    expect((await cli('stories', 'edit', 'WEB-1', '--epic', 'ghost')).exitCode).toBe(2);
     expect((await cli('stories', 'edit', 'WEB-1', '--due', 'tomorrow')).exitCode).toBe(2);
   });
 

@@ -13,7 +13,6 @@ describe('screen registry', () => {
         'context',
         'demo',
         'doctor',
-        'epics',
         'fields',
         'home',
         'setup',

@@ -8,7 +8,6 @@ import {
   CustomFieldListSchema,
   CustomFieldValueSchema,
   DEFAULT_STAGES,
-  EpicSchema,
   IsoDateSchema,
   KeyPrefixSchema,
   LabelSchema,
@@ -46,7 +45,6 @@ const story = {
   stage: 'todo',
   rank: 'a0',
   assignees: ['sam'],
-  epicId: 'auth',
   priority: 'P1',
   labels: ['frontend'],
   dueDate: '2026-11-01',
@@ -65,15 +63,6 @@ const board = {
   description: '',
   keyPrefix: 'WEB',
   stages: [...DEFAULT_STAGES],
-  createdAt: T,
-  updatedAt: T,
-};
-const epic = {
-  version: 1,
-  id: 'auth',
-  name: 'Auth',
-  description: '',
-  closed: false,
   createdAt: T,
   updatedAt: T,
 };
@@ -211,7 +200,7 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   {
     name: 'Story',
     schema: StorySchema,
-    valid: [story, { ...story, epicId: null, priority: null, dueDate: null, createdBy: null, customFields: {} }],
+    valid: [story, { ...story, priority: null, dueDate: null, createdBy: null, customFields: {} }],
     invalid: [
       { ...story, key: 'web-42' },
       { ...story, priority: 'P9' },
@@ -222,16 +211,6 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
       { ...story, customFields: { Points: 3 } },
       { ...story, name: '' },
       { ...story, tasks: undefined },
-    ],
-  },
-  {
-    name: 'Epic',
-    schema: EpicSchema,
-    valid: [epic, { ...epic, closed: true }],
-    invalid: [
-      { ...epic, closed: 'no' },
-      { ...epic, id: 'Auth' },
-      { ...epic, version: undefined },
     ],
   },
   {
@@ -288,7 +267,7 @@ describe('serialization', () => {
   });
 
   it('drops unknown keys', () => {
-    const parsed = EpicSchema.parse({ ...epic, extra: true });
+    const parsed = StorySchema.parse({ ...story, extra: true });
     expect(parsed).not.toHaveProperty('extra');
   });
 });

@@ -2,7 +2,7 @@
 
 A developer-focused, file-backed Kanban tracker for the terminal.
 
-Rowbly keeps Boards, Stories, Tasks, Epics and Comments as pretty-printed JSON files in a `.rowbly/` folder, so a small team can keep its tracker inside a code repository and share it through git, with no server and no database. Use it in two ways, with the same features in both:
+Rowbly keeps Boards, Stories, Tasks and Comments as pretty-printed JSON files in a `.rowbly/` folder, so a small team can keep its tracker inside a code repository and share it through git, with no server and no database. Use it in two ways, with the same features in both:
 
 - `rowbly` with no command opens a full-screen interactive app (the TUI) with a Kanban board, detail views and forms.
 - `rowbly <noun> <verb> …` runs one command and exits, for scripts and quick edits. Every list and show command has `--json` output.
@@ -36,10 +36,10 @@ rowbly                               # open the board in the TUI
 
 The exact meaning of each term is in [`CONTEXT.md`](CONTEXT.md). In short:
 
-- A **Data Root** (`.rowbly/`) holds everything: **Boards**, **Epics** and one **Assignee** roster.
+- A **Data Root** (`.rowbly/`) holds everything: **Boards** and one **Assignee** roster.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
-- A Story has a name, a markdown description, Assignees, an optional Epic, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, embedded **Tasks** (`WEB-42.1`) and **Comments**.
-- Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`. **Epic Progress** is the share of an Epic's Stories in a `done` Stage.
+- A Story has a name, a markdown description, Assignees, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, embedded **Tasks** (`WEB-42.1`) and **Comments**.
+- Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`.
 - **Me** is the Assignee you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
 
 ## Data Root and git workflow
@@ -51,17 +51,16 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
   rowbly.config.json                 # Assignee roster, optional Stages / Custom Fields
   local.json                         # Local State (git-ignored)
   .gitignore                         # keeps local.json out of git
-  epics/<epic>.json
   boards/<board>/
     board.config.json                # name, key prefix, optional Stages / Custom Fields
     stories/<KEY>.json               # one Story with its Tasks and Comments
 ```
 
-Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` out. Each Story is its own file and an Epic link lives on the Story, so most changes touch one small file and merge cleanly.
+Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` out. Each Story is its own file, so most changes touch one small file and merge cleanly.
 
 - **Story Keys** are the highest number on the Board plus one. There is no shared counter, so two branches can both create `WEB-7`. After such a merge, run `rowbly doctor --fix`: it keeps the earlier Story as `WEB-7` and renumbers the other one (and its Task ids). Update branch names or commit messages that used the renumbered key.
 - **Deleted keys may be reused.** If the highest-numbered Story is deleted, the next new Story gets its number. git history still shows which Story a key meant at any time.
-- **Run `rowbly doctor` after every merge** that touched `.rowbly/`. It reports conflict markers, invalid files, references to Stages, Assignees or Epics that no longer exist, and other drift, and `--fix` repairs what is safe to repair. See [Doctor](#doctor).
+- **Run `rowbly doctor` after every merge** that touched `.rowbly/`. It reports conflict markers, invalid files, references to Stages or Assignees that no longer exist, and other drift, and `--fix` repairs what is safe to repair. See [Doctor](#doctor).
 
 ## Configuration Cascade
 
@@ -201,15 +200,15 @@ rowbly fields remove <key>
 
 ```text
 rowbly stories list [--stage <k>…] [--category todo|in_progress|done] [--open] [--assignee <h|me>…]
-                    [--epic <id>|--no-epic] [--label <l>…] [--priority <P>…] [--search <text>]
+                    [--label <l>…] [--priority <P>…] [--search <text>]
                     [--sort rank|priority|created|updated|due] [--board <id>] [--all-boards]
 rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
-                      [--assignee <h>…] [--epic <id>] [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
+                      [--assignee <h>…] [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
                       [--field key=value …] [--board <id>]
 rowbly stories show <KEY>
 rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--assignee <h>… | --add-assignee <h>… | --remove-assignee <h>…]
-                    [--epic <id> | --no-epic] [--priority <P> | --no-priority]
+                    [--priority <P> | --no-priority]
                     [--label <l>… | --add-label <l>… | --remove-label <l>…]
                     [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
 rowbly stories move <KEY> <stage> [--top]
@@ -221,7 +220,7 @@ rowbly stories delete <KEY>                          # confirms; pass --yes when
 - A new Story goes to the bottom of its Stage (default: the first effective Stage). `createdBy` is Me when Me is in the roster.
 - Story Keys are case-insensitive (`web-2` is `WEB-2`) and need no `--board`: the key prefix finds the Board.
 - Repeatable flags (`--assignee`, `--label`, `--stage`, `--priority`, `--field`) may also be comma-separated. `--assignee me` means Me; it exits 2 when Me is not set.
-- Assignees must be in the roster, the Epic must exist in the Data Root, and Custom Field values must fit their field; required fields must have a value. A violation exits 2 and `--json` lists the valid choices in `details` (for example `validHandles`).
+- Assignees must be in the roster and Custom Field values must fit their field; required fields must have a value. A violation exits 2 and `--json` lists the valid choices in `details` (for example `validHandles`).
 - `list` lists the current Board; `--all-boards` lists every Board in the Data Root. It sorts by Stage order then Rank. `--sort priority` puts the most urgent first, `created` the oldest first, `updated` the newest first and `due` the soonest first. `--open` hides Stories in a `done` Stage. `--search` matches name and description, ignoring case.
 - `move` places the Story at the bottom of the target Stage, or at the top with `--top`. `rank` reorders a Story within its Stage. Both write only that Story's file.
 - `--json` prints Story objects: an array for `list`, one Story for `create`, `show`, `edit`, `move` and `rank`, and `{ deleted }` for `delete`.
@@ -266,24 +265,6 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; pass --yes when 
 - `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
 <!-- END comments -->
 
-<!-- BEGIN epics -->
-### Epics
-
-An Epic groups Stories from any Boards in the Data Root. A Story links to an Epic through its `epicId` (`stories create/edit --epic <id>`). Epic Progress is the number of its Stories in a `done`-category Stage, judged by each Story's own Board, out of all its Stories.
-
-```text
-rowbly epics list [--closed|--all]                 # open Epics by default: ID, NAME, PROGRESS, BOARDS, CLOSED
-rowbly epics create <id> --name <name> [--description <text> | --description-file <path|-> | --edit]
-rowbly epics show <id>                             # details, progress, and Stories grouped by Board
-rowbly epics edit <id> [--name <name>] [--description <text> | --description-file <path|-> | --edit]
-rowbly epics close <id>                            # allowed even with open Stories
-rowbly epics reopen <id>
-rowbly epics delete <id> [--yes]                   # unlinks its Stories (epicId: null) and warns with the count
-```
-
-In the TUI, open **Epics** from the `g` palette: `enter` opens an Epic, `n` creates one, `a` cycles through open, all and closed Epics. On an Epic, `enter` opens a Story, `e` edits, `c` closes or reopens, and `d` deletes.
-<!-- END epics -->
-
 <!-- BEGIN doctor -->
 ### Doctor
 
@@ -305,7 +286,6 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `DUPLICATE_PREFIX` | error | Two Boards with the same key prefix | — |
 | `UNKNOWN_STAGE` | error | A Story or Task in a Stage that is not in its Board's effective Stages | — (use `stories move` / `tasks move`) |
 | `UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the roster | Removes it |
-| `MISSING_EPIC` | warning | An `epicId` with no Epic file | Sets it to `null` |
 | `UNKNOWN_FIELD` / `INVALID_FIELD_VALUE` | warning | A Custom Field value with no definition, or one that does not fit its definition | Strips unknown fields; invalid values are only reported |
 | `MISSING_REQUIRED_FIELD` | warning | A required Custom Field without a value | — |
 | `TASK_COUNTER_BEHIND` | warning | `nextTaskNumber` at or below the highest Task number | Sets it to the highest + 1 |
@@ -333,7 +313,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `g` | go to any screen: Board, Stories, Epics, Boards, Assignees, Stages, Fields, Config, Context, Doctor |
+| `g` | go to any screen: Board, Stories, Boards, Assignees, Stages, Fields, Config, Context, Doctor |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -343,14 +323,12 @@ In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a 
 
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities, Epic or text (several values per field), `c` clear the filter, `b` switch Board (changes the context), `r` reload |
-| Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, Epic, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
+| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `b` switch Board (changes the context), `r` reload |
+| Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
 | Task | `tab`/`←`/`→` switch between Details and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story or Task › Comments | `c` add, `e` edit, `d` delete (bodies open in `$EDITOR`) |
-| Epics | `enter` open, `n` new, `a` show open → all → closed Epics |
-| Epic | `enter` open a Story, `e` edit, `c` close or reopen, `d` delete |
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
@@ -368,7 +346,7 @@ In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a 
 | 1 | Internal error (a bug, or an unexpected failure such as an unreadable file) | `INTERNAL` |
 | 2 | Usage error: bad flags, a missing argument, context that cannot be resolved, or a destructive command without `--yes` when not interactive | `USAGE` |
 | 2 | Validation error: input that breaks a schema or reference rule; `details.issues` lists them | `VALIDATION` |
-| 3 | Not found: an unknown Board, Story, Task, Comment, Epic, Stage, Custom Field or Assignee | `NOT_FOUND` |
+| 3 | Not found: an unknown Board, Story, Task, Comment, Stage, Custom Field or Assignee | `NOT_FOUND` |
 | 4 | Conflict: an id or key prefix that exists, or a refused deletion | `CONFLICT` |
 | 5 | No Data Root found (run `rowbly init`) | `NO_DATA_ROOT` |
 | 6 | Data integrity: a file that is not valid JSON, fails its schema, or whose id does not match its path; `details.path` names it | `DATA_INTEGRITY` |
@@ -389,6 +367,6 @@ In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a 
 
 The build specification lives in [`docs/spec/`](docs/spec/README.md) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](CONTEXT.md).
 
-- `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`, `makeEpic`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
+- `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
 - `test/tui/helpers.tsx` provides `renderTui()` with a `press(...keys)` helper and `waitForFrame(app, text | RegExp | predicate)`, which polls the screen. Wait for what a screen shows rather than sleeping a fixed time.
 - `test/e2e` runs the whole product through the built CLI, checks every exit code, and fails if a word that `CONTEXT.md` says to avoid reaches a help page or a message.

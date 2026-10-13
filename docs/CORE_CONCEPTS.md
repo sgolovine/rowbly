@@ -14,6 +14,4 @@ Rowbly is setup as a Kanban. Here are the core concepts:
 
 **Task(s)**: Optional sub-items that slot below Stories.
 
-**Epic(s)**: A grouping of stories that can span multiple **Boards** in the Data Root
-
 **Assignees**: Individuals assigned to a particular story. One roster per Data Root.
