@@ -33,6 +33,7 @@ export const DESTINATIONS: readonly Destination[] = [
   { label: 'Stages', screen: 'stages' },
   { label: 'Fields', screen: 'fields' },
   { label: 'Context', screen: 'context' },
+  { label: 'Doctor', screen: 'doctor' },
 ];
 
 export type GlobalAction = 'quit' | 'back' | 'help' | 'goto';

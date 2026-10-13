@@ -273,7 +273,35 @@ Every verb takes `--workspace <id>` (default: `ROWBLY_WORKSPACE`, then the curre
 <!-- BEGIN doctor -->
 ### Doctor
 
-_Not implemented yet._
+`doctor` validates the whole Data Root. Run it after merging a branch that changed `.rowbly/`.
+
+```text
+rowbly doctor           # report findings grouped by severity; exit 0 with no errors, 6 when errors remain
+rowbly doctor --fix     # repair what is safe to repair, then report what remains
+rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
+```
+
+| Code | Severity | Detects | `--fix` |
+| --- | --- | --- | --- |
+| `SCHEMA_INVALID` | error | A file that is not valid JSON, fails its schema, or a required config file that is missing | — |
+| `ID_PATH_MISMATCH` | error | An id or key inside a file that does not match its path | — |
+| `STORY_KEY_CONFLICT` | error | A Story file with git conflict markers from two branches that each created the same key | Keeps the earlier Story under the key and gives the later one the next free key |
+| `DUPLICATE_KEY` | error | Two Story files with the same `key` | Renumbers the Story created later |
+| `CONFLICT_MARKERS` | error | Conflict markers in any other file, including one Story edited on both branches | — (merge by hand) |
+| `DUPLICATE_PREFIX` | error | Two Boards with the same key prefix | — |
+| `UNKNOWN_STAGE` | error | A Story or Task in a Stage that is not in its Board's effective Stages | — (use `stories move` / `tasks move`) |
+| `UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the Workspace roster | Removes it |
+| `MISSING_EPIC` | warning | An `epicId` with no Epic file | Sets it to `null` |
+| `UNKNOWN_FIELD` / `INVALID_FIELD_VALUE` | warning | A Custom Field value with no definition, or one that does not fit its definition | Strips unknown fields; invalid values are only reported |
+| `MISSING_REQUIRED_FIELD` | warning | A required Custom Field without a value | — |
+| `TASK_COUNTER_BEHIND` | warning | `nextTaskNumber` at or below the highest Task number | Sets it to the highest + 1 |
+| `DUPLICATE_RANK` | warning | Stories in one Stage with the same Rank | Re-ranks the tied Stories, keeping the current order |
+| `STALE_LOCAL_STATE` | warning | `local.json` names a Workspace, Board or Me that does not exist | Clears those entries |
+| `UNKNOWN_FILE` | info | A file outside the Data Root layout | — |
+
+Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
+
+In the TUI, open **Doctor** from the `g` palette: `f` fixes and `r` checks again.
 <!-- END doctor -->
 
 <!-- BEGIN tui -->
