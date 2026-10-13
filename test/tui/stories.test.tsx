@@ -56,7 +56,7 @@ describe('story form', () => {
     await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down);
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);
     expect(app.lastFrame()).toContain('‹ s ›');
-    await app.press(KEYS.enter);
+    await app.press(KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1 Login page') && f.includes('Details'));
 
     expect(await story(t, 'WEB-1')).toMatchObject({
@@ -75,7 +75,7 @@ describe('story form', () => {
     const t = await setup();
     const app = await open(t, 'story-form', web);
     await waitForFrame(app, (f) => f.includes('Name*'));
-    await app.press(...'X', ...Array(5).fill(KEYS.down), ...'Bad Label', KEYS.enter);
+    await app.press(...'X', ...Array(5).fill(KEYS.down), ...'Bad Label', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('must be lower-kebab-case'));
     expect(await createRepositories(t.root).stories.allInBoard('web')).toEqual([]);
     app.unmount();
@@ -91,7 +91,7 @@ describe('story form', () => {
     // stage → todo; size: (none) s m l → back to (none) unsets it
     await app.press(KEYS.down, KEYS.down, KEYS.right);
     await app.press(KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.left, KEYS.left);
-    await app.press(KEYS.enter);
+    await app.press(KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1 New') && f.includes('Updated WEB-1'));
     expect(await story(t, 'WEB-1')).toMatchObject({ name: 'New', stage: 'todo', customFields: {} });
     app.unmount();
@@ -144,17 +144,17 @@ describe('story list', () => {
     expect(app.lastFrame()).toContain('/ filter · c clear filter');
     // The help lists the screen's `/` instead of the global "filter lists".
     await app.press('?');
-    expect(app.lastFrame()).toMatch(/│ \/\s+filter\s+│/);
+    expect(app.lastFrame()).toMatch(/│\s+\/\s+filter\s+│/);
     expect(app.lastFrame()).not.toContain('filter lists');
     await app.press('?');
 
     // stage, assignee, me, label, priority, search
-    await app.press('/', KEYS.down, KEYS.down, ' ', KEYS.enter);
+    await app.press('/', KEYS.down, KEYS.down, ' ', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-2'));
 
-    await app.press('/', ...Array(5).fill(KEYS.down), ...'nothing', KEYS.enter);
+    await app.press('/', ...Array(5).fill(KEYS.down), ...'nothing', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('No Stories match.'));
     app.unmount();
   });
@@ -167,12 +167,22 @@ describe('story list', () => {
     const app = await open(t, 'stories');
     expect(app.lastFrame()).toContain('WEB-3 Shipped');
     // stages, assignees, me, labels, priorities, search, category, open, sort
-    await app.press('/', ...Array(7).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.enter);
+    await app.press('/', ...Array(7).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filters: open · sorted by priority') && !f.includes('WEB-3'));
     const frame = app.lastFrame() ?? '';
     expect(frame.indexOf('WEB-2 High')).toBeLessThan(frame.indexOf('WEB-1 Low'));
     // Several priorities at once, like a repeated --priority.
-    await app.press('c', '/', ...Array(4).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
+    await app.press(
+      'c',
+      '/',
+      ...Array(4).fill(KEYS.down),
+      ' ',
+      KEYS.right,
+      KEYS.right,
+      KEYS.right,
+      ' ',
+      KEYS.ctrlEnter,
+    );
     await waitForFrame(app, (f) => f.includes('filters: P0 P3') && !f.includes('WEB-3'));
     expect(app.lastFrame()).toContain('WEB-1 Low');
     app.unmount();

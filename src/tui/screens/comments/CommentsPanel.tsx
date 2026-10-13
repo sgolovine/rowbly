@@ -1,24 +1,27 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { ConfirmDialog, Loading } from '../../components';
-import { useAsync, useEditor, useIsActive, useRowblyContext, useServices, useToast } from '../../hooks';
+import { useAsync, useIsActive, useRowblyContext, useServices, useToast } from '../../hooks';
+import { useRouter } from '../../router';
 import { CursorRows, useCursor } from '../stages/shared';
+import { useReloadOnReturn } from '../stories/shared';
 
 export interface CommentsPanelProps {
   /** A Story Key or a Task id. */
   target: string;
 }
 
-/** The Comments on a Story or Task, oldest first: `c` add, `e` edit and `d` delete; bodies are written in `$EDITOR`. */
+/** The Comments on a Story or Task, oldest first: `c` add and `e` edit (in the Comment form), `d` delete. */
 export function CommentsPanel({ target }: CommentsPanelProps) {
   const services = useServices();
   const ctx = useRowblyContext();
   const toast = useToast();
-  const edit = useEditor();
+  const router = useRouter();
   const active = useIsActive();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const data = useAsync(() => services.comments.list(target), [services, target]);
+  useReloadOnReturn(data.reload);
   const comments = data.data ?? [];
   const viewing = active && !confirming && !busy;
   const [cursor] = useCursor(comments.length, viewing);
@@ -40,16 +43,10 @@ export function CommentsPanel({ target }: CommentsPanelProps) {
 
   useInput(
     (input) => {
-      if (input === 'c') {
-        void run(async () => services.comments.add(target, (await edit('')).trim()), 'Added Comment');
-      } else if (!comment) {
-        return;
-      } else if (input === 'e') {
-        void run(
-          async () => services.comments.update(target, comment.id, (await edit(comment.body)).trim()),
-          'Updated Comment',
-        );
-      } else if (input === 'd') setConfirming(true);
+      if (input === 'c') router.push('comment-form', { target, title: 'New Comment' });
+      else if (!comment) return;
+      else if (input === 'e') router.push('comment-form', { target, id: comment.id, title: 'Edit Comment' });
+      else if (input === 'd') setConfirming(true);
     },
     { isActive: viewing && data.data !== undefined },
   );

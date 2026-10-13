@@ -7,8 +7,8 @@ export const MIN_COLUMN_WIDTH = 24;
 export const GUTTER_WIDTH = 3;
 /** Lines per card, including the gap below it. */
 export const CARD_HEIGHT = 4;
-/** Terminal lines used by everything except the cards: shell header and footer, board title, column headers. */
-const CHROME_HEIGHT = 12;
+/** Lines of the board view that are not cards: column header and rule, scroll markers. */
+const CHROME_HEIGHT = 4;
 
 /** One list of Stories per Stage, in Stage order. Stories in an unknown Stage (drift) are left out. */
 export type Columns = Story[][];
@@ -86,9 +86,9 @@ export function columnLayout(stageCount: number, width: number): { visible: numb
   return { visible, width: Math.max(MIN_COLUMN_WIDTH, Math.floor(room / visible)) };
 }
 
-/** How many cards fit in a column on a terminal `rows` lines high. */
-export function cardsPerColumn(rows: number): number {
-  return Math.max(1, Math.floor((rows - CHROME_HEIGHT) / CARD_HEIGHT));
+/** How many cards fit in a column of a board view `height` lines high. */
+export function cardsPerColumn(height: number): number {
+  return Math.max(1, Math.floor((height - CHROME_HEIGHT) / CARD_HEIGHT));
 }
 
 /** The first visible item of a window of `size` over `total` items, moved as little as possible to show `index`. */

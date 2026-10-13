@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ConfirmDialog, type DetailRow, DetailView, Loading, SelectList } from '../../components';
+import { ConfirmDialog, type DetailRow, DetailView, Loading, SelectList, Tabs } from '../../components';
 import { useAsync, useIsActive, useKeyCapture, useKeyHints, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { CommentsPanel } from '../comments/CommentsPanel';
@@ -107,13 +107,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
         </Text>{' '}
         <Text bold>{story.name}</Text>
       </Text>
-      <Box gap={1}>
-        {TABS.map((name, i) => (
-          <Text key={name} inverse={i === tab} color={i === tab ? 'cyan' : undefined}>
-            {` ${name} `}
-          </Text>
-        ))}
-      </Box>
+      <Tabs tabs={TABS} selected={tab} onSelect={setTab} active={active && viewing} />
       {tab === 0 && <DetailView rows={rows} body={story.description} />}
       {tab === 1 && <StoryTasksTab storyKey={story.key} />}
       {tab === 2 && <CommentsPanel target={story.key} />}

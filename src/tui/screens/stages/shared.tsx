@@ -14,10 +14,14 @@ export interface ConfigScope {
   boardId: Slug | null;
 }
 
-/** Resolves the scope once: `params.boardId` wins, else the context Board, else no Board (global only). */
+/**
+ * Resolves the scope once: `params.global` keeps to the global level, else `params.boardId` wins,
+ * else the context Board, else no Board (global only).
+ */
 export function useConfigScope(params: Record<string, unknown>) {
   const services = useServices();
   return useAsync<ConfigScope>(async () => {
+    if (params.global === true) return { boardId: null };
     const given = params.boardId as Slug | undefined;
     if (given) return { boardId: given };
     try {
@@ -26,7 +30,7 @@ export function useConfigScope(params: Record<string, unknown>) {
       if (!(err instanceof UsageError)) throw err;
       return { boardId: null };
     }
-  }, [services, params.boardId]);
+  }, [services, params.global, params.boardId]);
 }
 
 export function levelsFor(scope: ConfigScope): LevelName[] {
@@ -42,14 +46,18 @@ export function targetFor(scope: ConfigScope, level: LevelName): ConfigTarget {
 export function LevelBar({ levels, level, source }: { levels: LevelName[]; level: LevelName; source?: ConfigLevel }) {
   return (
     <Box gap={1}>
-      <Text dimColor>Level:</Text>
+      <Box flexShrink={0}>
+        <Text dimColor>Level:</Text>
+      </Box>
       {levels.map((name) => (
-        <Text key={name} inverse={name === level} color={name === level ? 'cyan' : undefined}>
-          {` ${name} `}
-        </Text>
+        <Box key={name} flexShrink={0}>
+          <Text inverse={name === level} color={name === level ? 'cyan' : undefined}>
+            {` ${name} `}
+          </Text>
+        </Box>
       ))}
       {source && (
-        <Text dimColor>
+        <Text dimColor wrap="truncate-end">
           {source === level ? '· own list' : `· inherited from ${source} (copied to ${level} on first edit)`}
         </Text>
       )}

@@ -1,9 +1,15 @@
 import { createContext, useContext, useEffect, useId, useSyncExternalStore } from 'react';
 import type { KeyHint } from '../keymap';
 
+/** What a screen shows on the left of the header: a bold title and a dim detail after it. */
+export interface HeaderLabel {
+  title: string;
+  detail?: string;
+}
+
 /**
  * Shared state between the shell and the screens: who is capturing keys, which screens hold a
- * dirty form, and each screen's key hints. Screens are identified by their depth in the router stack.
+ * dirty form, and each screen's key hints and header label. Screens are identified by their depth in the router stack.
  */
 export interface ShellRegistry {
   /** Stops the shell from handling printable keys (and `esc` too when `escape` is set) until released. */
@@ -14,8 +20,10 @@ export interface ShellRegistry {
   isDirty(depth?: number): boolean;
   setHints(depth: number, hints: readonly KeyHint[] | null): void;
   hints(depth: number): readonly KeyHint[];
+  setLabel(depth: number, label: HeaderLabel | null): void;
+  label(depth: number): HeaderLabel | null;
   subscribe(listener: () => void): () => void;
-  /** Changes whenever the hints change. */
+  /** Changes whenever the hints or labels change. */
   version(): number;
 }
 
@@ -24,8 +32,13 @@ export function createShellRegistry(): ShellRegistry {
   let escapes = 0;
   const dirty = new Map<string, number>();
   const hints = new Map<number, readonly KeyHint[]>();
+  const labels = new Map<number, HeaderLabel>();
   const listeners = new Set<() => void>();
   let version = 0;
+  const changed = () => {
+    version += 1;
+    for (const listener of listeners) listener();
+  };
   return {
     capture(withEscape) {
       text += 1;
@@ -50,10 +63,15 @@ export function createShellRegistry(): ShellRegistry {
     setHints(depth, next) {
       if (next) hints.set(depth, next);
       else hints.delete(depth);
-      version += 1;
-      for (const listener of listeners) listener();
+      changed();
     },
     hints: (depth) => hints.get(depth) ?? [],
+    setLabel(depth, label) {
+      if (label) labels.set(depth, label);
+      else labels.delete(depth);
+      changed();
+    },
+    label: (depth) => labels.get(depth) ?? null,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -111,4 +129,28 @@ export function useScreenHints(depth: number): readonly KeyHint[] {
   const shell = useContext(ShellContext);
   useSyncExternalStore(shell.subscribe, shell.version);
   return shell.hints(depth);
+}
+
+/**
+ * Sets the label the header shows for the current screen. Only the root screen's label shows, so this
+ * returns false for a screen in a modal, which should show the label itself.
+ */
+export function useHeaderLabel(label: HeaderLabel | null | undefined): boolean {
+  const shell = useContext(ShellContext);
+  const depth = useContext(ScreenDepthContext);
+  const title = label?.title;
+  const detail = label?.detail;
+  useEffect(() => {
+    if (depth < 0 || title === undefined) return;
+    shell.setLabel(depth, { title, detail });
+    return () => shell.setLabel(depth, null);
+  }, [shell, depth, title, detail]);
+  return depth === 0;
+}
+
+/** The header label of the screen at `depth`. */
+export function useScreenLabel(depth: number): HeaderLabel | null {
+  const shell = useContext(ShellContext);
+  useSyncExternalStore(shell.subscribe, shell.version);
+  return shell.label(depth);
 }

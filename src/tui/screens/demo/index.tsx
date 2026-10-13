@@ -2,11 +2,21 @@ import { Box, Text, useInput } from 'ink';
 import { type ReactNode, useState } from 'react';
 import { ValidationError } from '../../../core';
 import { DEFAULT_STAGES } from '../../../schemas';
-import { ConfirmDialog, DetailView, Form, type FormField, Loading, SelectList, StageBadge } from '../../components';
+import {
+  ConfirmDialog,
+  DetailView,
+  Form,
+  type FormField,
+  Loading,
+  SelectList,
+  StageBadge,
+  TextArea,
+  TextInput,
+} from '../../components';
 import { useIsActive, useKeyHints, useToast } from '../../hooks';
 import type { ScreenRegistry } from '../types';
 
-const SECTIONS = ['SelectList', 'Form', 'ConfirmDialog'] as const;
+const SECTIONS = ['SelectList', 'TextInput', 'TextArea', 'Form', 'ConfirmDialog'] as const;
 type Section = (typeof SECTIONS)[number];
 
 const FIELDS: FormField[] = [
@@ -27,17 +37,19 @@ const ASSIGNEES = [
 
 /**
  * Dev-only (`ROWBLY_TUI_DEMO=1`): every primitive on one screen, with static sample data.
- * `tab` moves keyboard focus between the interactive sections. Submit the form with the name
+ * `ctrl+n` moves keyboard focus between the interactive sections. Submit the form with the name
  * "invalid" to see a `ValidationError` shown inline.
  */
 function DemoScreen() {
   const toast = useToast();
   const active = useIsActive();
   const [section, setSection] = useState<Section>('SelectList');
-  useKeyHints([{ key: 'tab', description: 'next section' }]);
+  const [line, setLine] = useState('Fix login focus');
+  const [text, setText] = useState('The login form loses focus\nafter submit.');
+  useKeyHints([{ key: 'ctrl+n', description: 'next section' }]);
   useInput(
-    (_input, key) => {
-      if (key.tab) setSection((s) => SECTIONS[(SECTIONS.indexOf(s) + 1) % SECTIONS.length] ?? s);
+    (input, key) => {
+      if (key.ctrl && input === 'n') setSection((s) => SECTIONS[(SECTIONS.indexOf(s) + 1) % SECTIONS.length] ?? s);
     },
     { isActive: active },
   );
@@ -73,6 +85,20 @@ function DemoScreen() {
           onSubmit={(values) => toast.push('info', `selected: ${values.join(', ') || 'none'}`)}
           isActive={section === 'SelectList'}
         />
+      </Panel>
+      <Panel title="TextInput" focused={section === 'TextInput'}>
+        <Box width={40}>
+          <TextInput
+            value={line}
+            onChange={setLine}
+            focus={active && section === 'TextInput'}
+            width={40}
+            placeholder="Name"
+          />
+        </Box>
+      </Panel>
+      <Panel title="TextArea" focused={section === 'TextArea'}>
+        <TextArea value={text} onChange={setText} focus={active && section === 'TextArea'} width={40} rows={3} />
       </Panel>
       <Panel title="Form" focused={section === 'Form'}>
         <Form

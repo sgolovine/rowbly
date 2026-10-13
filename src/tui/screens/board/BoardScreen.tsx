@@ -2,12 +2,15 @@ import { Box, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
 import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
-import { ConfirmDialog, Form, type FormValues, Loading, SelectList } from '../../components';
+import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
   useAsync,
+  useBoardSelection,
+  useHeaderLabel,
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useLayout,
   useRowblyContext,
   useServices,
   useToast,
@@ -33,7 +36,7 @@ import {
   swapCard,
 } from './layout';
 
-type Mode = 'view' | 'filter' | 'switch' | 'confirm-delete';
+type Mode = 'view' | 'filter' | 'confirm-delete';
 
 /** The cursor: a column (Stage index) and a card within it. */
 interface Cursor {
@@ -42,7 +45,7 @@ interface Cursor {
 }
 
 /**
- * The Kanban board for the Board in context (`b` switches it), or for `params.boardId` without changing
+ * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
  * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them.
  */
@@ -52,7 +55,9 @@ export function BoardScreen({ params }: ScreenProps) {
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
-  const { columns: termWidth, rows: termRows } = useWindowSize();
+  const { rows: termRows } = useWindowSize();
+  const room = useLayout();
+  const selection = useBoardSelection();
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -60,20 +65,20 @@ export function BoardScreen({ params }: ScreenProps) {
   const writing = useRef(false);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
-  // A Board opened for viewing only; `b` switches the context and drops it.
+  // A Board opened for viewing only; picking a Board in the sidebar drops it.
   const [viewing, setViewing] = useState(params.boardId as Slug | undefined);
 
   const scope = useAsync(async () => {
     const boardId = viewing ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
     return { boardId, choices: await storyChoices(ctx, boardId) };
-  }, [services, ctx, viewing]);
+    // `selection.version` reloads it when another Board is picked in the sidebar.
+  }, [services, ctx, viewing, selection.version]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
     return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, toFilter(filters)) };
   }, [services, scope.data, filters]);
-  const boards = useAsync(async () => (mode === 'switch' ? services.boards.list() : null), [services, mode]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   // What is on screen: the columns and the Board and Stages they were grouped by.
@@ -114,11 +119,29 @@ export function BoardScreen({ params }: ScreenProps) {
     }
   };
 
-  const moveTo = (to: number) => {
+  /** Moves the card at `from` (the cursor by default) to the bottom of column `to`. */
+  const moveTo = (to: number, from: Cursor = { col, row }) => {
     const stage = stages[to];
-    if (!card || !stage) return;
-    const next = moveCard(columns, col, row, to, stage.key);
-    void write(next, { col: to, row: (next[to]?.length ?? 1) - 1 }, () => services.stories.move(card.key, stage.key));
+    const moved = columns[from.col]?.[from.row];
+    if (!moved || !stage || to === from.col) return;
+    const next = moveCard(columns, from.col, from.row, to, stage.key);
+    void write(next, { col: to, row: (next[to]?.length ?? 1) - 1 }, () => services.stories.move(moved.key, stage.key));
+  };
+
+  /** A card dragged with the mouse onto column `to`. */
+  const drop = (to: number, key: unknown) => {
+    if (writing.current) return;
+    const from = columns.findIndex((cards) => cards.some((s) => s.key === key));
+    if (from < 0) return;
+    moveTo(to, { col: from, row: columns[from]?.findIndex((s) => s.key === key) ?? 0 });
+  };
+
+  /** A click selects a card (or a column, at row `-1`); a click on the selected card opens it. */
+  const click = (at: Cursor) => {
+    if (at.row < 0) return setCursor({ col: at.col, row: at.col === col ? row : 0 });
+    const clicked = columns[at.col]?.[at.row];
+    if (clicked && at.col === col && at.row === row) router.push('story', { key: clicked.key, title: clicked.key });
+    else setCursor(at);
   };
 
   const reorder = (delta: -1 | 1) => {
@@ -146,38 +169,34 @@ export function BoardScreen({ params }: ScreenProps) {
     });
   };
 
-  const switchTo = async (boardId: Slug) => {
-    try {
-      await services.context.use(boardId);
-      setViewing(undefined);
-      scope.reload();
-      setFilters({});
-      setCursor({ col: 0, row: 0 });
-      firstCol.current = 0;
-      firstRows.current.clear();
-    } catch (err) {
-      toast.error(err);
-    }
-    setMode('view');
-  };
+  // Another Board picked in the sidebar starts from a clean view.
+  const seenVersion = useRef(selection.version);
+  useEffect(() => {
+    if (seenVersion.current === selection.version) return;
+    seenVersion.current = selection.version;
+    setViewing(undefined);
+    setFilters({});
+    setCursor({ col: 0, row: 0 });
+    firstCol.current = 0;
+    firstRows.current.clear();
+  }, [selection.version]);
 
-  useKeyCapture(active && (mode === 'filter' || mode === 'switch'), { escape: true });
-  useEscape(active && (mode === 'filter' || mode === 'switch'), () => setMode('view'));
+  useKeyCapture(active && mode === 'filter', { escape: true });
+  useEscape(active && mode === 'filter', () => setMode('view'));
   useKeyHints(
     mode === 'view'
       ? [
           { key: 'h/l j/k', description: 'select' },
           { key: 'enter', description: 'open' },
-          { key: 'H/L', description: 'move Stage' },
-          { key: 'K/J', description: 'reorder' },
-          { key: 'T/B', description: 'to top/bottom' },
+          { key: 'H/L', description: 'move Stage', secondary: true },
+          { key: 'K/J', description: 'reorder', secondary: true },
+          { key: 'T/B', description: 'to top/bottom', secondary: true },
           { key: 'n', description: 'new' },
-          { key: 'e', description: 'edit' },
-          { key: 'd', description: 'delete' },
+          { key: 'e', description: 'edit', secondary: true },
+          { key: 'd', description: 'delete', secondary: true },
           { key: '/', description: 'filter' },
-          { key: 'c', description: 'clear filter' },
-          { key: 'b', description: 'switch Board' },
-          { key: 'r', description: 'reload' },
+          { key: 'c', description: 'clear filter', secondary: true },
+          { key: 'r', description: 'reload', secondary: true },
         ]
       : [{ key: 'esc', description: 'cancel' }],
   );
@@ -202,41 +221,55 @@ export function BoardScreen({ params }: ScreenProps) {
       else if (input === 'n') router.push('story-form', { boardId, stage: stages[col]?.key, title: 'New Story' });
       else if (input === '/') setMode('filter');
       else if (input === 'c') setFilters({});
-      else if (input === 'b') setMode('switch');
       else if (input === 'r') scope.reload();
     },
     { isActive: active && mode === 'view' },
   );
 
-  if (!scope.data) return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
-  const { boardId, choices } = scope.data;
-
-  // The shell pads the screen by one column on each side.
-  const layout = columnLayout(stages.length, termWidth - 2);
+  const layout = columnLayout(stages.length, room.width);
   firstCol.current = follow(firstCol.current, col, layout.visible, stages.length);
   const shownStages = stages.slice(firstCol.current, firstCol.current + layout.visible);
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = hiddenLeft + hiddenRight > 0;
-  const size = cardsPerColumn(termRows);
   const summary = describeFilters(filters);
+  const boardId = scope.data?.boardId;
   const inContext = ctx?.local.board === boardId;
+
+  const label = scope.data && {
+    title: scope.data.choices.board.name,
+    detail: [
+      scope.data.boardId,
+      scrolled ? `Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : '',
+      viewing && !inContext ? 'viewing only (context unchanged)' : '',
+      summary ? `filter: ${summary}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
+  // The Board's name and state show in the shell's header, or above the columns in a modal.
+  const inHeader = useHeaderLabel(label);
+
+  if (!scope.data || !label) {
+    return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
+  }
+  const { choices } = scope.data;
+  // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
+  // title line and gap when the label is shown here.
+  const size = cardsPerColumn((room.height ?? termRows - 3) - (inHeader ? 0 : 2));
 
   return (
     <Box flexDirection="column">
-      <Text wrap="truncate-end">
-        <Text bold>{choices.board.name}</Text>
-        <Text dimColor>
-          {` ${boardId}`}
-          {scrolled ? ` · Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : ''}
-          {viewing && !inContext ? ' · viewing only (context unchanged)' : ''}
-          {summary ? ` · filter: ${summary}` : ''}
+      {!inHeader && (
+        <Text wrap="truncate-end">
+          <Text bold>{label.title}</Text>
+          <Text dimColor>{` ${label.detail}`}</Text>
         </Text>
-      </Text>
+      )}
       {shown?.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
       ) : (
-        <Box marginTop={1}>
+        <Box marginTop={inHeader ? 0 : 1}>
           {scrolled && <Gutter text={hiddenLeft > 0 ? `‹${hiddenLeft}` : ''} />}
           {shownStages.map((stage, i) => {
             const index = hiddenLeft + i;
@@ -254,6 +287,8 @@ export function BoardScreen({ params }: ScreenProps) {
                 size={size}
                 selected={index === col ? row : null}
                 active={active && mode === 'view'}
+                onClick={(at) => click({ col: index, row: at })}
+                onDrop={(key) => drop(index, key)}
               />
             );
           })}
@@ -261,8 +296,7 @@ export function BoardScreen({ params }: ScreenProps) {
         </Box>
       )}
       {mode === 'filter' && (
-        <Box flexDirection="column">
-          <Text bold>Filter Stories</Text>
+        <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
           <Form
             fields={filterFields(
               {
@@ -277,34 +311,19 @@ export function BoardScreen({ params }: ScreenProps) {
               setMode('view');
             }}
           />
-        </Box>
-      )}
-      {mode === 'switch' && (
-        <Box flexDirection="column">
-          <Text bold>Switch Board</Text>
-          {boards.data ? (
-            <SelectList
-              items={boards.data.map((b) => ({
-                value: b.id,
-                label: b.name,
-                description: b.id === boardId ? `${b.id} (current)` : b.id,
-              }))}
-              onSelect={(item) => void switchTo(item.value)}
-            />
-          ) : (
-            <Loading label="Loading Boards…" />
-          )}
-        </Box>
+        </Modal>
       )}
       {mode === 'confirm-delete' && card && (
-        <ConfirmDialog
-          message={`Delete ${card.key} "${card.name}" with its Tasks and Comments?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => remove(card)}
-          onCancel={() => setMode('view')}
-        />
+        <Modal size="dialog">
+          <ConfirmDialog
+            message={`Delete ${card.key} "${card.name}" with its Tasks and Comments?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            onConfirm={() => remove(card)}
+            onCancel={() => setMode('view')}
+          />
+        </Modal>
       )}
     </Box>
   );

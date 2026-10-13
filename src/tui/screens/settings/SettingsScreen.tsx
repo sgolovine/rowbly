@@ -1,0 +1,105 @@
+import { Box, Text, useInput } from 'ink';
+import { useContext, useMemo, useState } from 'react';
+import { UsageError } from '../../../core';
+import { Loading } from '../../components';
+import {
+  ActiveContext,
+  LayoutContext,
+  ShellContext,
+  useAsync,
+  useIsActive,
+  useKeyHints,
+  useLayout,
+  useServices,
+} from '../../hooks';
+import { type KeyHint, moveDelta } from '../../keymap';
+import { SECTION_NAV_WIDTH, SectionNav } from './SectionNav';
+import { sectionShell } from './sectionShell';
+import { sectionScreen, settingsGroups } from './sections';
+
+type Focus = 'nav' | 'section';
+
+/**
+ * Rowbly's settings (`,`): the sections down the left, grouped into the global ones and those of the
+ * Board in context, and the selected one's screen on the right. `tab` moves focus between the two;
+ * screens a section opens stack on top as usual.
+ */
+export function SettingsScreen() {
+  const services = useServices();
+  const shell = useContext(ShellContext);
+  const active = useIsActive();
+  const layout = useLayout();
+  // Resolved again when the screen is back on top, in case a section switched the Board.
+  const board = useAsync(async () => {
+    try {
+      return await services.boards.get(await services.context.resolveBoard());
+    } catch (err) {
+      if (err instanceof UsageError) return null;
+      throw err;
+    }
+  }, [services, active]);
+  const groups = useMemo(() => settingsGroups(board.data ?? null), [board.data]);
+  const sections = groups.flatMap((group) => group.sections);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [focus, setFocus] = useState<Focus>('nav');
+  const [sectionHints, setSectionHints] = useState<readonly KeyHint[]>([]);
+  const childShell = useMemo(() => sectionShell(shell, setSectionHints), [shell]);
+  const selected = Math.max(
+    0,
+    sections.findIndex((s) => s.id === selectedId),
+  );
+  const section = sections[selected];
+  const Section = section ? sectionScreen(section) : undefined;
+
+  useKeyHints(
+    focus === 'nav'
+      ? [
+          { key: '↑/↓', description: 'section' },
+          { key: 'enter/tab', description: 'focus section' },
+        ]
+      : [...sectionHints, { key: 'tab', description: 'sections' }],
+  );
+  useInput(
+    (input, key) => {
+      if (shell.captured().text) return;
+      if (focus === 'section') {
+        if (key.tab) setFocus('nav');
+        return;
+      }
+      const delta = moveDelta(input, key);
+      if (delta !== 0) setSelectedId(sections[(selected + delta + sections.length) % sections.length]?.id ?? null);
+      else if (key.tab || key.return || key.rightArrow) setFocus('section');
+    },
+    { isActive: active && board.data !== undefined },
+  );
+
+  if (board.data === undefined && board.loading) return <Loading label="Loading settings…" />;
+  const sectionLayout = { width: Math.max(20, layout.width - SECTION_NAV_WIDTH - 2), height: layout.height };
+  return (
+    <Box height={layout.height} gap={2}>
+      <SectionNav
+        groups={groups}
+        selected={section?.id ?? ''}
+        focused={focus === 'nav'}
+        clickable={active}
+        onSelect={(id) => {
+          setSelectedId(id);
+          setFocus('section');
+        }}
+      />
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden">
+        <ShellContext.Provider value={childShell}>
+          <ActiveContext.Provider value={active && focus === 'section'}>
+            <LayoutContext.Provider value={sectionLayout}>
+              {Section && section ? (
+                <Section key={section.id} params={section.params ?? {}} />
+              ) : (
+                <Text dimColor>Nothing to show.</Text>
+              )}
+            </LayoutContext.Provider>
+          </ActiveContext.Provider>
+        </ShellContext.Provider>
+      </Box>
+    </Box>
+  );
+}

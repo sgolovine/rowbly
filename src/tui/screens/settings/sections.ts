@@ -1,0 +1,70 @@
+import type { BoardConfig } from '../../../schemas';
+import { assigneesScreens } from '../assignees';
+import { boardsScreens } from '../boards';
+import { doctorScreens } from '../doctor';
+import { fieldsScreens } from '../fields';
+import { setupScreens } from '../setup';
+import { stagesScreens } from '../stages';
+import type { ScreenComponent, ScreenRegistry } from '../types';
+
+/** One entry in the settings sidebar: the screen shown beside it and the params it gets. */
+export interface SettingsSection {
+  id: string;
+  label: string;
+  screen: string;
+  params?: Record<string, unknown>;
+}
+
+/** A heading in the settings sidebar and the sections under it. */
+export interface SettingsGroup {
+  title: string;
+  /** Shown dim under the title when the group has no sections. */
+  empty?: string;
+  sections: readonly SettingsSection[];
+}
+
+/**
+ * The settings shared by every Board in the Data Root first, then those of the Board in context.
+ * Without a Board in context the Board group is empty.
+ */
+export function settingsGroups(board: BoardConfig | null): SettingsGroup[] {
+  const boardId = board?.id;
+  return [
+    {
+      title: 'Global',
+      sections: [
+        { id: 'boards', label: 'Boards', screen: 'boards' },
+        { id: 'assignees', label: 'Assignees', screen: 'assignees' },
+        { id: 'global-stages', label: 'Stages', screen: 'stages', params: { global: true } },
+        { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
+        { id: 'context', label: 'Context', screen: 'context' },
+        { id: 'doctor', label: 'Doctor', screen: 'doctor' },
+      ],
+    },
+    {
+      title: board ? `Board: ${board.name}` : 'Board',
+      empty: 'None in context',
+      sections: boardId
+        ? [
+            // The Board detail, which shows the effective configuration (`config show`).
+            { id: 'board-config', label: 'Config', screen: 'board-detail', params: { boardId, title: 'Config' } },
+            { id: 'board-stages', label: 'Stages', screen: 'stages', params: { boardId } },
+            { id: 'board-fields', label: 'Fields', screen: 'fields', params: { boardId } },
+          ]
+        : [],
+    },
+  ];
+}
+
+const SECTION_SCREENS: ScreenRegistry = {
+  ...boardsScreens,
+  ...assigneesScreens,
+  ...stagesScreens,
+  ...fieldsScreens,
+  ...setupScreens,
+  ...doctorScreens,
+};
+
+export function sectionScreen(section: SettingsSection): ScreenComponent | undefined {
+  return SECTION_SCREENS[section.screen];
+}

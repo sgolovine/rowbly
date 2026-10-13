@@ -17,6 +17,8 @@ export interface Router {
   pop(): boolean;
   /** Swaps the current screen for `screen`. */
   replace(screen: string, params?: RouteParams): void;
+  /** Closes every screen and opens `screen` as the root. */
+  reset(screen: string, params?: RouteParams): void;
 }
 
 const RouterContext = createContext<Router | null>(null);
@@ -34,6 +36,7 @@ export function RouterProvider({ initial, children }: { initial: Route; children
         return true;
       },
       replace: (screen, params = {}) => setStack((prev) => [...prev.slice(0, -1), { screen, params }]),
+      reset: (screen, params = {}) => setStack([{ screen, params }]),
     }),
     [stack, initial],
   );

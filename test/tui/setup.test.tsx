@@ -1,7 +1,7 @@
 import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import type { LocalState } from '../../src/schemas';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
@@ -51,9 +51,9 @@ describe('setup screen (first run)', () => {
     expect(app.lastFrame()).toContain('Leave the Board id empty to skip the first Board.');
     expect(app.lastFrame()).not.toContain('Workspace');
     // Board id; Board name and prefix take their defaults.
-    await app.press(...'web', KEYS.enter);
-    // The board view (WP09: home opens it when a Board is in context), with the new context in the header.
-    await waitForFrame(app, 'web › Board');
+    await app.press(...'web', KEYS.ctrlEnter);
+    // The board view (WP09: home opens it when a Board is in context), with the new context in the sidebar.
+    await waitForFrame(app, (f) => f.includes('▌ 1 web') && f.includes('● Backlog (0)'));
 
     const repos = createRepositories({ path: join(cwd, '.rowbly'), kind: 'local' });
     expect(await repos.boards.get('web')).toMatchObject({ name: 'web', keyPrefix: 'WEB' });
@@ -69,7 +69,7 @@ describe('setup screen (first run)', () => {
     await waitForFrame(app, 'No Data Root found');
     await app.press('j', KEYS.enter);
     await waitForFrame(app, 'Board id');
-    await app.press(KEYS.enter);
+    await app.press(KEYS.ctrlEnter);
     await waitForFrame(app, 'Go to');
     await access(join(home, '.rowbly', 'rowbly.config.json'));
     await expect(access(join(home, '.rowbly', 'boards'))).rejects.toThrow();
@@ -100,13 +100,14 @@ describe('context switcher', () => {
     return t;
   }
 
-  it('switches Boards from the g palette', async () => {
+  it('switches Boards from the settings', async () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home', { version: 1, board: 'api' });
-    await waitForFrame(app, 'api › Board');
-    await app.press('g');
-    // Context is the second-to-last palette entry.
-    await app.press(...Array(7).fill('j'), KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('▌ 1 api') && f.includes('● Backlog (0)'));
+    // Context is the fifth section, the second-to-last global one.
+    await app.press(',');
+    await waitForFrame(app, 'Board: ');
+    await app.press(...Array(4).fill('j'), KEYS.enter);
     await waitForFrame(app, 'api *');
     expect(app.lastFrame()).toContain('Switch Board');
     expect(app.lastFrame()).toContain('web web (WEB)');
@@ -118,7 +119,7 @@ describe('context switcher', () => {
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, board: 'web' });
     // The board view at the root follows the new context (WP09).
     await waitForFrame(app, 'web web');
-    expect(app.lastFrame()).toContain('web › Board');
+    expect(app.lastFrame()).toContain('▌ 2 web');
     app.unmount();
   });
 
@@ -129,7 +130,10 @@ describe('context switcher', () => {
     await app.press('c');
     await waitForFrame(app, 'Cleared the current Board');
     expect(ctx.local).toEqual({ version: 1, me: 'sam' });
-    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' });
+    // The header reads `ctx.me`, which is set before Local State is written.
+    await vi.waitFor(async () =>
+      expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' }),
+    );
     app.unmount();
   });
 
@@ -147,7 +151,9 @@ describe('context switcher', () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home');
     await waitForFrame(app, 'Go to');
-    await app.press('g', ...Array(7).fill('j'), KEYS.enter);
+    await app.press(',');
+    await waitForFrame(app, 'None in context');
+    await app.press(...Array(4).fill('j'), KEYS.enter);
     await waitForFrame(app, 'Switch Board');
     await app.press('m');
     await waitForFrame(app, 'sam Sam');
@@ -156,7 +162,10 @@ describe('context switcher', () => {
     await app.press(KEYS.enter);
     await waitForFrame(app, 'me: sam');
     expect(ctx.me).toBe('sam');
-    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' });
+    // The header reads `ctx.me`, which is set before Local State is written.
+    await vi.waitFor(async () =>
+      expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' }),
+    );
     expect(app.lastFrame()).toContain('me: sam');
     app.unmount();
   });

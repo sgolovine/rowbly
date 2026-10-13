@@ -1,7 +1,9 @@
-import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { Box, type DOMElement, type Key, Text, useInput } from 'ink';
+import { useRef, useState } from 'react';
 import { ValidationError } from '../../core';
-import { useDirty, useEditor, useIsActive, useKeyCapture, useToast } from '../hooks';
+import { useDirty, useIsActive, useLayout, useMouse, useToast } from '../hooks';
+import { TextArea } from './TextArea';
+import { TextInput } from './TextInput';
 
 export type FieldKind = 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
 
@@ -29,6 +31,7 @@ export interface FormProps {
 
 type Raw = string | boolean | string[] | null;
 
+/** Kinds edited in a `TextInput`, where letters are text rather than keys. */
 const TYPED_KINDS: readonly FieldKind[] = ['text', 'number', 'date'];
 
 function toRaw(field: FormField, value: FormValue | undefined): Raw {
@@ -82,15 +85,22 @@ function issuesByField(
   return { byField, rest };
 }
 
+/** Whether a key submits the form from any field: `ctrl+enter`, or `ctrl+s` where the terminal cannot tell `ctrl+enter` from `enter`. */
+function isSubmitKey(input: string, key: Key): boolean {
+  return (key.return && key.ctrl) || (key.ctrl && input === 's');
+}
+
 /**
- * A keyboard form. `↑/↓` move between fields; text, number and date fields take typing;
- * `space` toggles booleans and multiselect options; `←/→` change selects; `e` opens `$EDITOR` on a
- * multiline field; `enter` or `ctrl+s` submits.
+ * A keyboard form, with a Save button after the last field. `enter`, `tab` and `↓` move to the next
+ * field and `shift+tab` and `↑` to the previous one; text, number and date fields are `TextInput`s;
+ * multiline fields are `TextArea`s, where `enter` starts a new line and `↑/↓` leave the text from its
+ * first and last rows; `space` toggles booleans and multiselect options; `←/→` change selects.
+ * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` on the Save button submits.
  */
 export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: FormProps) {
   const active = useIsActive() && isActive;
   const toast = useToast();
-  const edit = useEditor();
+  const layout = useLayout();
   const [initial] = useState(() => Object.fromEntries(fields.map((f) => [f.name, toRaw(f, initialValues[f.name])])));
   const [values, setValues] = useState<Record<string, Raw>>(initial);
   const [focus, setFocus] = useState(0);
@@ -99,10 +109,10 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
+  // `focus === fields.length` is the Save button.
   const field = fields[focus];
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
-  useKeyCapture(active && field !== undefined && TYPED_KINDS.includes(field.kind));
 
   const set = (name: string, raw: Raw) => {
     setValues((prev) => ({ ...prev, [name]: raw }));
@@ -134,33 +144,35 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
     }
   };
 
-  const openEditor = async (name: string, current: string) => {
-    try {
-      set(name, await edit(current));
-    } catch (err) {
-      toast.error(err);
-    }
-  };
-
   const moveFocus = (delta: number) => {
-    setFocus((f) => Math.max(0, Math.min(fields.length - 1, f + delta)));
+    setFocus((f) => Math.max(0, Math.min(fields.length, f + delta)));
     setOptionCursor(0);
   };
 
   useInput(
     (input, key) => {
-      if (busy || !field) return;
+      if (busy) return;
+      if (isSubmitKey(input, key)) {
+        void submit();
+        return;
+      }
+      if (key.tab) {
+        moveFocus(key.shift ? -1 : 1);
+        return;
+      }
+      if (!field) {
+        if (key.return) void submit();
+        else if (key.upArrow || input === 'k') moveFocus(-1);
+        return;
+      }
+      // The TextArea handles its own `enter` and `↑/↓`, and calls back when they leave it.
+      if (field.kind === 'multiline') return;
       const raw = values[field.name] ?? null;
       const typed = TYPED_KINDS.includes(field.kind);
-      if (key.return || (key.ctrl && input === 's')) {
-        void submit();
+      if (key.return || key.downArrow || (!typed && input === 'j')) {
+        moveFocus(1);
       } else if (key.upArrow || (!typed && input === 'k')) {
         moveFocus(-1);
-      } else if (key.downArrow || (!typed && input === 'j')) {
-        moveFocus(1);
-      } else if (typed) {
-        if (key.backspace || key.delete) set(field.name, String(raw).slice(0, -1));
-        else if (input && !key.ctrl && !key.meta && !key.escape) set(field.name, String(raw) + input);
       } else if (field.kind === 'boolean') {
         if (input === ' ' || key.leftArrow || key.rightArrow) set(field.name, raw !== true);
       } else if (field.kind === 'select') {
@@ -181,40 +193,152 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
             set(field.name, current.includes(option) ? current.filter((o) => o !== option) : [...current, option]);
           }
         }
-      } else if (field.kind === 'multiline' && (input === 'e' || input === ' ')) {
-        void openEditor(field.name, typeof raw === 'string' ? raw : '');
       }
     },
     { isActive: active },
   );
 
-  const labelWidth = Math.max(...fields.map((f) => f.label.length)) + 3;
+  const labelWidth = Math.max(...fields.map((f) => f.label.length + (f.required ? 1 : 0))) + 4;
+  const inputWidth = Math.max(16, Math.min(INPUT_MAX_WIDTH, layout.width - labelWidth));
+  // Space the fields out when the room allows: a blank line after each field plus the button row.
+  const lines = fields.reduce((sum, f) => sum + (f.kind === 'multiline' ? TEXTAREA_ROWS : 1) + 1, 0);
+  const roomy = layout.height !== undefined && layout.height >= lines + 3;
   return (
-    <Box flexDirection="column">
-      {fields.map((f, i) => {
-        const focused = i === focus && active;
-        return (
-          <Box key={f.name} flexDirection="column">
-            <Box>
-              <Box width={labelWidth} flexShrink={0}>
-                <Text color={focused ? 'cyan' : undefined}>
-                  {i === focus ? '› ' : '  '}
-                  {f.label}
-                  {f.required ? '*' : ''}
-                </Text>
-              </Box>
-              <FieldValue field={f} raw={values[f.name] ?? null} focused={focused} optionCursor={optionCursor} />
-            </Box>
-            {errors[f.name] && <Text color="red">{`${' '.repeat(labelWidth)}${errors[f.name]}`}</Text>}
-          </Box>
-        );
-      })}
-      {formErrors.map((message) => (
-        <Text key={message} color="red">
-          {message}
-        </Text>
+    <Box flexDirection="column" gap={roomy ? 1 : 0}>
+      {fields.map((f, i) => (
+        <FieldRow
+          key={f.name}
+          field={f}
+          raw={values[f.name] ?? null}
+          focused={i === focus}
+          active={active}
+          error={errors[f.name]}
+          labelWidth={labelWidth}
+          inputWidth={inputWidth}
+          optionCursor={optionCursor}
+          onChange={(raw) => set(f.name, raw)}
+          onLeave={moveFocus}
+          onClick={() => {
+            if (i !== focus) moveFocus(i - focus);
+          }}
+        />
       ))}
-      <Text dimColor>{busy ? 'Saving…' : 'enter/ctrl+s submit · ↑/↓ move'}</Text>
+      <Box flexDirection="column">
+        {formErrors.map((message) => (
+          <Text key={message} color="red">
+            {message}
+          </Text>
+        ))}
+        <Box gap={2} marginLeft={labelWidth}>
+          <SaveButton busy={busy} focused={field === undefined} active={active} onClick={() => void submit()} />
+          <Text dimColor wrap="truncate-end">
+            {field
+              ? `${FIELD_HELP[field.kind]} · ${field.kind === 'multiline' ? 'tab' : 'enter/tab'} next`
+              : 'enter save'}
+            {' · ctrl+enter/ctrl+s save'}
+          </Text>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+/** Widest an input grows; longer text scrolls inside it. */
+const INPUT_MAX_WIDTH = 64;
+/** Rows a multiline field shows; longer text scrolls inside it. */
+const TEXTAREA_ROWS = 5;
+const INPUT_BACKGROUND = '#30303c';
+const FOCUSED_BACKGROUND = '#3a3a52';
+
+const FIELD_HELP: Record<FieldKind, string> = {
+  text: 'type to edit',
+  number: 'type a number',
+  date: 'type YYYY-MM-DD',
+  boolean: 'space toggles',
+  select: '←/→ change',
+  multiselect: '←/→ pick · space toggles',
+  multiline: 'enter new line',
+};
+
+function FieldRow({
+  field,
+  raw,
+  focused,
+  active,
+  error,
+  labelWidth,
+  inputWidth,
+  optionCursor,
+  onChange,
+  onLeave,
+  onClick,
+}: {
+  field: FormField;
+  raw: Raw;
+  focused: boolean;
+  active: boolean;
+  error?: string;
+  labelWidth: number;
+  inputWidth: number;
+  optionCursor: number;
+  onChange(raw: Raw): void;
+  onLeave(direction: -1 | 1): void;
+  onClick(): void;
+}) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, active);
+  const lit = focused && active;
+  return (
+    <Box ref={ref} flexDirection="column" flexShrink={0}>
+      <Box>
+        <Box width={labelWidth} flexShrink={0}>
+          <Text color={lit ? 'cyan' : undefined} bold={lit} dimColor={!focused}>
+            {focused ? '› ' : '  '}
+            {field.label}
+            {field.required ? '*' : ''}
+          </Text>
+        </Box>
+        <Box
+          width={inputWidth}
+          flexShrink={0}
+          paddingX={1}
+          backgroundColor={lit ? FOCUSED_BACKGROUND : INPUT_BACKGROUND}
+        >
+          <FieldValue
+            field={field}
+            raw={raw}
+            focused={lit}
+            optionCursor={optionCursor}
+            width={inputWidth - 2}
+            onChange={onChange}
+            onLeave={onLeave}
+          />
+        </Box>
+      </Box>
+      {error && <Text color="red">{`${' '.repeat(labelWidth)}${error}`}</Text>}
+    </Box>
+  );
+}
+
+function SaveButton({
+  busy,
+  focused,
+  active,
+  onClick,
+}: {
+  busy: boolean;
+  focused: boolean;
+  active: boolean;
+  onClick(): void;
+}) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, active && !busy);
+  const lit = focused && active;
+  return (
+    <Box ref={ref} flexShrink={0}>
+      <Text inverse={lit} color="cyan" backgroundColor={lit ? undefined : INPUT_BACKGROUND} bold>
+        {busy ? ' Saving… ' : ' Save '}
+      </Text>
     </Box>
   );
 }
@@ -224,11 +348,17 @@ function FieldValue({
   raw,
   focused,
   optionCursor,
+  width,
+  onChange,
+  onLeave,
 }: {
   field: FormField;
   raw: Raw;
   focused: boolean;
   optionCursor: number;
+  width: number;
+  onChange(raw: Raw): void;
+  onLeave(direction: -1 | 1): void;
 }) {
   switch (field.kind) {
     case 'boolean':
@@ -248,25 +378,27 @@ function FieldValue({
         </Box>
       );
     }
-    case 'multiline': {
-      const text = typeof raw === 'string' ? raw : '';
-      const lines = text.split('\n').filter((line) => line.trim());
-      const preview =
-        lines.length === 0 ? '(empty)' : `${lines[0]}${lines.length > 1 ? ` (+${lines.length - 1} lines)` : ''}`;
+    case 'multiline':
       return (
-        <Text>
-          <Text dimColor={lines.length === 0}>{preview}</Text>
-          {focused && <Text dimColor> e to edit</Text>}
-        </Text>
+        <TextArea
+          value={typeof raw === 'string' ? raw : ''}
+          onChange={onChange}
+          focus={focused}
+          width={width}
+          rows={TEXTAREA_ROWS}
+          placeholder="(empty)"
+          onLeave={onLeave}
+        />
       );
-    }
     default:
       return (
-        <Text>
-          {String(raw)}
-          {focused && <Text inverse> </Text>}
-          {field.kind === 'date' && raw === '' && <Text dimColor>YYYY-MM-DD</Text>}
-        </Text>
+        <TextInput
+          value={String(raw)}
+          onChange={onChange}
+          focus={focused}
+          width={width}
+          placeholder={field.kind === 'date' ? 'YYYY-MM-DD' : undefined}
+        />
       );
   }
 }

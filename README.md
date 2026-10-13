@@ -115,11 +115,11 @@ rowbly config show [--board <id>]
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
-  The **Context** entry of the `g` palette switches the Board; press `m` there to pick Me from the
+  The **Context** section of the settings (`,`) switches the Board; press `m` there to pick Me from the
   roster, or `c` to clear the current Board. While `~/.rowbly` does not exist,
   Context also lists **Create global Data Root**, which runs the same form as the first-run screen
   (`init --global`) and then returns to the Data Root you are using.
-- The **Config** entry of the `g` palette is the TUI's `config show`: the Board detail for the Board
+- The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
 
@@ -295,7 +295,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 
 Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
 
-In the TUI, open **Doctor** from the `g` palette: `f` fixes and `r` checks again.
+In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks again.
 <!-- END doctor -->
 
 <!-- BEGIN tui -->
@@ -313,22 +313,22 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `g` | go to any screen: Board, Stories, Boards, Assignees, Stages, Fields, Config, Context, Doctor |
+| `,` | settings, in a sidebar grouped into Global (Boards, Assignees, global Stages and Fields, Context, Doctor) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a multi-choice option, `←`/`→` change a choice, `e` opens `$EDITOR` for a description, and `enter` or `ctrl+s` saves.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions and Comments are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
 ### Keys per screen
 
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `b` switch Board (changes the context), `r` reload |
+| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
 | Task | `tab`/`←`/`→` switch between Details and Comments, `e` edit, `m` move to a Stage, `d` delete |
-| Story or Task › Comments | `c` add, `e` edit, `d` delete (bodies open in `$EDITOR`) |
+| Story or Task › Comments | `c` add, `e` edit (both open the Comment form), `d` delete |
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |

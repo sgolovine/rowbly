@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -18,7 +19,7 @@ import {
   truncate,
 } from '../../src/tui/screens/board/layout';
 import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, type Rendered, renderTui, waitForFrame } from './helpers';
+import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
 
@@ -105,13 +106,20 @@ async function open(
     rows?: number;
     patch?: (services: Services) => Services;
     local?: RowblyContext['local'];
+    mouse?: EventEmitter;
   } = {},
 ) {
   const local = opts.local ?? { version: 1, board: 'web' };
   const { ctx, toasts } = contextFor(t, createToastStore(), local);
   const services = (opts.patch ?? ((s) => s))(createServices(ctx));
   const app = renderTui(
-    <App ctx={ctx} services={services} initial={{ screen: opts.screen ?? 'board', params: {} }} toasts={toasts} />,
+    <App
+      ctx={ctx}
+      services={services}
+      initial={{ screen: opts.screen ?? 'board', params: {} }}
+      toasts={toasts}
+      mouse={opts.mouse}
+    />,
   );
   resize(app, opts.columns ?? 120, opts.rows ?? 40);
   await waitForFrame(app, (frame) => frame.includes('WEB-') && !frame.includes('Loading'));
@@ -124,6 +132,8 @@ function resize(app: Rendered, columns: number, rows: number) {
   app.stdout.emit('resize');
 }
 
+const ctxBoard = async (t: TempRoot) => (await createRepositories(t.root).localState.get()).board;
+
 const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.findByKey(key);
 
 /** Every Story file's contents, by file name. */
@@ -133,6 +143,9 @@ async function storyFiles(t: TempRoot): Promise<Record<string, string>> {
   for (const name of await readdir(dir)) files[name] = await readFile(join(dir, name), 'utf8');
   return files;
 }
+
+/** The frame without the temp Data Root's random folder name, shown as the project name. */
+const stable = (frame: string) => frame.replace(/rowbly-test-\w{6}/, 'rowbly-test-XXXXXX');
 
 /** The lines of the frame between the board title and the footer. */
 const frameLines = (app: Rendered) => (app.lastFrame() ?? '').split('\n');
@@ -146,11 +159,11 @@ describe('board view', () => {
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
     // key + Priority, truncated name, Assignees + Task summary
     expect(frame).toContain('▌ WEB-1 P1');
-    expect(frame).toMatch(/Login page with a rather.*…/);
+    expect(frame).toMatch(/Login page with a ra.*…/);
     expect(frame).toContain('@alice @bob · ✓ 1/3');
     expect(frame.indexOf('WEB-1')).toBeLessThan(frame.indexOf('WEB-2'));
     expect(frame.indexOf('WEB-2')).toBeLessThan(frame.indexOf('WEB-3'));
-    expect(frame).toMatchSnapshot();
+    expect(stable(frame)).toMatchSnapshot();
     app.unmount();
   });
 
@@ -207,12 +220,12 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     // assignee, me, label, priority, text
-    await app.press('/', KEYS.down, ' ', KEYS.enter);
+    await app.press('/', KEYS.down, ' ', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
     expect(app.lastFrame()).toContain('● Backlog (1)');
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-4'));
-    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.enter);
+    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
     expect(app.lastFrame()).toContain('WEB-5');
     app.unmount();
@@ -222,13 +235,13 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     // assignees, me, labels, priorities, text: P0 and P3 at once.
-    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
+    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.ctrlEnter);
     let frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
     expect(frame).toContain('WEB-4');
     expect(frame).toContain('WEB-5');
     expect(frame).not.toContain('WEB-6');
     // Both Assignees: any of them matches, like a repeated --assignee.
-    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.enter);
+    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.ctrlEnter);
     frame = await waitForFrame(app, (f) => f.includes('filter: @alice @bob') && !f.includes('WEB-5'));
     expect(frame).toContain('WEB-1');
     expect(frame).toContain('WEB-4');
@@ -271,31 +284,31 @@ describe('board view', () => {
   it('scrolls horizontally at 80 columns with 6 Stages without wrapping cards', async () => {
     const t = await seed(SIX_STAGES);
     const app = await open(t, { columns: 80 });
-    await waitForFrame(app, (f) => f.includes('Stages 1–3 of 6'));
+    await waitForFrame(app, (f) => f.includes('Stages 1–2 of 6'));
     let frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Stages 1–3 of 6');
-    expect(frame).toContain('3›');
-    expect(frame).not.toContain('Review');
+    expect(frame).toContain('Stages 1–2 of 6');
+    expect(frame).toContain('4›');
+    expect(frame).not.toContain('Doing');
     for (const line of frame.split('\n')) expect(line.length).toBeLessThanOrEqual(80);
     // The long name stays on one line, cut with an ellipsis.
     expect(frame.split('\n').filter((l) => l.includes('Login page'))).toHaveLength(1);
     await app.press('l', 'l', 'l', 'l');
-    await waitForFrame(app, (f) => f.includes('Stages 3–5 of 6') && f.includes('● QA (0)'));
+    await waitForFrame(app, (f) => f.includes('Stages 4–5 of 6') && f.includes('● QA (0)'));
     frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Stages 3–5 of 6');
-    expect(frame).toContain('‹2');
+    expect(frame).toContain('Stages 4–5 of 6');
+    expect(frame).toContain('‹3');
     expect(frame).toContain('1›');
     expect(frame).toContain('● QA (0)');
     expect(frame).not.toContain('Backlog');
     for (const line of frame.split('\n')) expect(line.length).toBeLessThanOrEqual(80);
-    expect(frame).toMatchSnapshot();
+    expect(stable(frame)).toMatchSnapshot();
     app.unmount();
   });
 
   it('scrolls a column vertically when it has more cards than fit', async () => {
     const t = await seed();
-    // 24 rows leave room for 3 cards.
-    const app = await open(t, { rows: 24 });
+    // 22 rows leave room for 3 cards.
+    const app = await open(t, { rows: 22 });
     await makeStory(t.path, { ...web, key: 'WEB-7', name: 'Fourth', stage: 'backlog', rank: 'a3' });
     await app.press('r');
     await waitForFrame(app, (f) => f.includes('● Backlog (4)'));
@@ -322,7 +335,7 @@ describe('board view', () => {
     const app = await open(t);
     await app.press('l', 'l', 'n');
     await waitForFrame(app, (f) => f.includes('New Story on web') && f.includes('‹ doing ›'));
-    await app.press(...'From board', KEYS.enter);
+    await app.press(...'From board', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Created WEB-7'));
     expect((await story(t, 'WEB-7')).stage).toBe('doing');
     await app.press(KEYS.escape);
@@ -345,15 +358,56 @@ describe('board view', () => {
     app.unmount();
   });
 
-  it('switches Board with b and remembers it in Local State', async () => {
+  it('selects a card with a click, opens it with a second and drags it to another Stage', async () => {
     const t = await seed();
-    const app = await open(t);
-    await app.press('b');
-    await waitForFrame(app, (f) => f.includes('Website web (current)'));
-    await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('API api') && f.includes('● Backlog (0)'));
-    expect(app.lastFrame()).not.toContain('WEB-');
-    expect(await createRepositories(t.root).localState.get()).toMatchObject({ board: 'api' });
+    const mouse = new EventEmitter();
+    const app = await open(t, { mouse });
+    const at = (text: string) => {
+      const lines = frameLines(app);
+      const y = lines.findIndex((line) => line.includes(text));
+      return { x: lines[y]?.indexOf(text) ?? -1, y };
+    };
+    const click = async (point: { x: number; y: number }, release = point) => {
+      mouse.emit('mouse', { kind: 'press', ...point });
+      mouse.emit('mouse', { kind: 'release', ...release });
+      await tick();
+    };
+
+    // Click targets register in effects, which can trail the first frame on a busy machine.
+    await tick(200);
+    await click(at('Dark mode'));
+    await waitForFrame(app, '▌ Dark mode');
+    // Drag WEB-2 from Backlog and drop it on the Done column.
+    await click(at('Signup form'), at('Release v1'));
+    await waitForFrame(app, (f) => f.includes('● Backlog (2)') && f.includes('● Done (2)'));
+    // The board updates before the write lands.
+    await vi.waitFor(async () => expect((await story(t, 'WEB-2')).stage).toBe('done'));
+    await click(at('Signup form'));
+    await click(at('Signup form'));
+    await waitForFrame(app, 'Comments');
+    await tick(200);
+    await click(at(' Comments '));
+    await waitForFrame(app, 'No Comments yet');
+    await click(at(' Tasks '));
+    await waitForFrame(app, 'No Tasks yet');
+    app.unmount();
+  });
+
+  it('switches Board from the sidebar with a click and with ] and [', async () => {
+    const t = await seed();
+    const mouse = new EventEmitter();
+    const app = await open(t, { mouse });
+    await tick(200);
+    await app.press(']');
+    await waitForFrame(app, (f) => f.includes('▌ 1 API') && f.includes('API api'));
+    await expect(ctxBoard(t)).resolves.toBe('api');
+    const lines = frameLines(app);
+    const y = lines.findIndex((line) => line.includes('2 Website'));
+    mouse.emit('mouse', { kind: 'press', x: 4, y });
+    mouse.emit('mouse', { kind: 'release', x: 4, y });
+    await waitForFrame(app, (f) => f.includes('▌ 2 Website') && f.includes('WEB-1'));
+    await app.press('1');
+    await waitForFrame(app, 'API api');
     app.unmount();
   });
 });
