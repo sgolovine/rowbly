@@ -2,7 +2,7 @@
 
 Rowbly keeps its core small and adds features as Plugins. This page collects the plugin architecture in one place. The terms are in [`CONTEXT.md`](../CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in [`CONTEXT-MAP.md`](../CONTEXT-MAP.md). The reasons are in ADR-0009 to ADR-0017.
 
-The plugin system is built: the Plugin API, the registry, loading, the operations pipeline, Plugin Data and Plugin files, the `plugins` commands and settings section, and the slots below. The Epics Built-in Plugin is built. The Specs Built-in Plugin is not built yet; [Writing a Built-in Plugin](#writing-a-built-in-plugin) is how they will be.
+The plugin system is built: the Plugin API, the registry, loading, the operations pipeline, Plugin Data and Plugin files, the `plugins` commands and settings section, and the slots below. The Epics and Specs Built-in Plugins are built; [Writing a Built-in Plugin](#writing-a-built-in-plugin) explains how.
 
 ## Scope of the first build
 
@@ -126,7 +126,7 @@ rowbly stories edit … [--epic <id> | --no-epic]
 Spec documents for Stories and Boards (ADR-0015). Terms: [`src/plugins/specs/CONTEXT.md`](../src/plugins/specs/CONTEXT.md).
 
 - A Board Spec is `boards/<board>/plugins/specs/<slug>.md`. A Story Spec is `boards/<board>/stories/<KEY>/plugins/specs/spec.md`. The first `# ` heading is the title.
-- A Story has at most one Story Spec, and its Specs bag links to any number of Board Specs of its own Board, by slug.
+- A Story has at most one Story Spec, and its Specs bag links to any number of Board Specs of its own Board, by slug: `"plugins": { "specs": { "specs": ["auth", "api"] } }`.
 - Deleting a Board Spec unlinks it from every Story, with a warning. A Board that has Board Specs is not deleted without `--force` (exit 4), even when it has no Stories.
 
 ```text
@@ -154,7 +154,8 @@ rowbly stories list … [--spec <slug>…]
 - **Clashes** are found when the Plugins load: a Plugin id that is a core command or an earlier Plugin's id, an option that a core command or an earlier Plugin has (by name, ignoring `no-`), an Action key that a core screen uses (`CORE_KEYS` in `src/tui/keymap.ts`) or an earlier Plugin uses, a second replacement of an operation, or options on a core command that does not take them. Plugin screens, form fields, filter fields and doctor codes are named after the Plugin, so they cannot clash.
 - **Doctor codes** of a Plugin are its own codes prefixed by its id in upper case (`MISSING_EPIC` → `EPICS_MISSING_EPIC`). Core adds `PLUGIN_FAILED` (error), `PLUGIN_DATA_INVALID` (warning: a bag of a Plugin that is on does not match its schema) and `PLUGIN_DATA_UNCHECKED` (info: one per Plugin that is off or unknown and has data).
 - **`_Avoid_` words**: the language test reads them from each `src/plugins/<id>/CONTEXT.md` and applies them to that Plugin's source and to its `rowbly <id>` help pages. The help test turns every Built-in Plugin on, so Plugin commands and options are checked too.
-- **Epics bag key** is decided: `plugins.epics.epic`. Still open for the Specs build: the key names inside its bag, and the doctor code for a Story that links to a missing Board Spec.
+- **Epics bag key** is decided: `plugins.epics.epic`.
+- Specs details decided: the Story bag key is `specs` (an array of Board Spec slugs). `SPECS_MISSING_SPEC` (warning) reports a Story that links to missing Board Specs; `--fix` unlinks them. The Spec filter matches any selected Board Spec.
 
 ## Writing a Built-in Plugin
 
