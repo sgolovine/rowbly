@@ -16,7 +16,7 @@ import {
 import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
 import { useEscape } from '../stages/shared';
-import { boardRefFor, NONE, useReloadOnReturn } from '../stories/shared';
+import { NONE, useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
 import {
@@ -44,17 +44,16 @@ interface Cursor {
 }
 
 /**
- * The Kanban board for `params.ref` (default: the Board in context): one column per Stage, cards in
- * Rank order. Moves and reorders show at once and are reverted if the service refuses them.
+ * The Kanban board for the Board in context (`b` switches it): one column per Stage, cards in Rank
+ * order. Moves and reorders show at once and are reverted if the service refuses them.
  */
-export function BoardScreen({ params }: ScreenProps) {
+export function BoardScreen(_props: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
   const { columns: termWidth, rows: termRows } = useWindowSize();
-  const [switched, setSwitched] = useState<BoardRef | null>(null);
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -64,10 +63,10 @@ export function BoardScreen({ params }: ScreenProps) {
   const firstRows = useRef(new Map<string, number>());
 
   const scope = useAsync(async () => {
-    const ref = switched ?? (await boardRefFor(services, params));
+    const ref = await services.context.resolveBoard();
     if (!ctx) throw new Error('no Data Root');
     return { ref, choices: await storyChoices(ctx, ref) };
-  }, [services, ctx, params.ref, switched]);
+  }, [services, ctx]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { ref, choices } = scope.data;
@@ -139,7 +138,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const switchTo = async (ref: BoardRef) => {
     try {
       await services.context.use(ref.workspaceId, ref.boardId);
-      setSwitched(ref);
+      scope.reload();
       setFilters({});
       setCursor({ col: 0, row: 0 });
       firstCol.current = 0;
