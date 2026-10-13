@@ -64,7 +64,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'a', description: 'add' },
+          { key: 'n', description: 'add' },
           { key: 'e', description: 'edit' },
           { key: 'K/J', description: 'move up/down' },
           { key: 'd', description: 'remove' },
@@ -109,7 +109,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       if (input === 'l') {
         setLevel(levels[(levels.indexOf(level) + 1) % levels.length] ?? level);
         setCursor(0);
-      } else if (input === 'a') setMode({ kind: 'add' });
+      } else if (input === 'n') setMode({ kind: 'add' });
       else if (!current) return;
       else if (input === 'e') setMode({ kind: 'edit', stage: current });
       else if (input === 'd') setMode({ kind: 'confirm-remove', stage: current });

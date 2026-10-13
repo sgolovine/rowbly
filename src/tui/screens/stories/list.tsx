@@ -46,8 +46,8 @@ export function StoryListScreen({ params }: ScreenProps) {
       : [
           { key: 'enter', description: 'open' },
           { key: 'n', description: 'new' },
-          { key: 'f', description: 'filter' },
-          { key: 'c', description: 'clear filters' },
+          { key: '/', description: 'filter' },
+          { key: 'c', description: 'clear filter' },
         ],
   );
 
@@ -55,7 +55,7 @@ export function StoryListScreen({ params }: ScreenProps) {
     (input, key) => {
       if (!scope.data) return;
       if (input === 'n') router.push('story-form', { ref: scope.data.ref, title: 'New Story' });
-      else if (input === 'f') setFiltering(true);
+      else if (input === '/') setFiltering(true);
       else if (input === 'c') setFilters({});
       else if (key.return && stories[cursor]) {
         const story = stories[cursor];

@@ -54,7 +54,7 @@ describe('stages screen', () => {
   it('adds a Stage at a position relative to the highlighted Stage', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
-    await app.press('j', 'j', 'a');
+    await app.press('j', 'j', 'n');
     expect(app.lastFrame()).toContain('Add a Stage');
     expect(app.lastFrame()).toContain('‹ after in-progress ›');
     await app.press(...'qa', KEYS.down, ...'QA', KEYS.down, KEYS.right, KEYS.enter);
@@ -93,7 +93,13 @@ describe('stages screen', () => {
   it('esc cancels a form without leaving the screen', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
-    await app.press('a', KEYS.escape);
+    expect(app.lastFrame()).toContain('n add ·');
+    await app.press('n');
+    expect(app.lastFrame()).toContain('Add a Stage');
+    // The form's own esc replaces the shell's "esc back" in the footer.
+    expect(app.lastFrame()).toContain('esc cancel · g go to');
+    expect(app.lastFrame()).not.toContain('esc back');
+    await app.press(KEYS.escape);
     expect(app.lastFrame()).not.toContain('Add a Stage');
     expect(app.lastFrame()).toContain('Stages');
     app.unmount();
@@ -105,8 +111,8 @@ describe('fields screen', () => {
     const t = await setup();
     await makeStory(t.path, { ...web, key: 'WEB-1' });
     const app = await open(t, 'fields');
-    expect(app.lastFrame()).toContain('No Custom Fields. Press a to add one.');
-    await app.press('a', 'j', 'j', 'j', 'j', 'j', KEYS.enter);
+    expect(app.lastFrame()).toContain('No Custom Fields. Press n to add one.');
+    await app.press('n', 'j', 'j', 'j', 'j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Add a select field');
     expect(app.lastFrame()).toContain('Options (a,b,c)');
     await app.press(...'size', KEYS.down, ...'Size', KEYS.down, KEYS.down, KEYS.down, ...'s,m,l', KEYS.enter);
@@ -124,7 +130,7 @@ describe('fields screen', () => {
   it('shows number settings in the form and removes a field', async () => {
     const t = await setup();
     const app = await open(t, 'fields');
-    await app.press('a', 'j', KEYS.enter);
+    await app.press('n', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Whole numbers');
     await app.press(...'est', KEYS.down, ...'Estimate', KEYS.down, KEYS.down, KEYS.down, '0', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('Estimate est · number (≥ 0)'));

@@ -171,9 +171,11 @@ function Header() {
 }
 
 function Footer({ hints, atRoot }: { hints: readonly KeyHint[]; atRoot: boolean }) {
+  // A screen that gives `esc` its own meaning (e.g. cancel an inline form) replaces the shell's.
+  const ownEscape = hints.some((hint) => hint.key === 'esc');
   const shown = [
     ...hints,
-    ...(atRoot ? [] : [{ key: 'esc', description: 'back' }]),
+    ...(atRoot || ownEscape ? [] : [{ key: 'esc', description: 'back' }]),
     { key: 'g', description: 'go to' },
     { key: '?', description: 'help' },
     ...(atRoot ? [{ key: 'q', description: 'quit' }] : []),
@@ -217,7 +219,8 @@ function ToastLine({ toast }: { toast: Toast }) {
 }
 
 function HelpOverlay({ hints }: { hints: readonly KeyHint[] }) {
-  const rows = [...hints, ...GLOBAL_KEYS];
+  // A screen's own meaning for a key (e.g. `/` on the board, `esc` in a form) replaces the global one.
+  const rows = [...hints, ...GLOBAL_KEYS.filter((global) => !hints.some((hint) => hint.key === global.key))];
   const width = Math.max(...rows.map((row) => row.key.length)) + 2;
   return (
     <Box flexDirection="column" borderStyle="round" paddingX={1} alignSelf="flex-start">

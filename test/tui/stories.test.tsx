@@ -151,16 +151,22 @@ describe('story list', () => {
     const app = await open(t, 'stories', {}, 'alice');
     expect(app.lastFrame()).toContain('WEB-1 Mine ● Backlog @alice #ui');
     expect(app.lastFrame()).toContain('WEB-2 Theirs');
+    expect(app.lastFrame()).toContain('/ filter · c clear filter');
+    // The help lists the screen's `/` instead of the global "filter lists".
+    await app.press('?');
+    expect(app.lastFrame()).toMatch(/│ \/\s+filter\s+│/);
+    expect(app.lastFrame()).not.toContain('filter lists');
+    await app.press('?');
 
     // stage, assignee, me, label, priority, epic, search
-    await app.press('f', KEYS.down, KEYS.down, ' ', KEYS.enter);
+    await app.press('/', KEYS.down, KEYS.down, ' ', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-2'));
 
-    await app.press('f', ...Array(5).fill(KEYS.down), KEYS.right, KEYS.right, KEYS.enter);
+    await app.press('/', ...Array(5).fill(KEYS.down), KEYS.right, KEYS.right, KEYS.enter);
     await waitForFrame(app, (f) => f.includes('filters: Epic launch') && !f.includes('WEB-1'));
-    await app.press('c', 'f', ...Array(6).fill(KEYS.down), ...'nothing', KEYS.enter);
+    await app.press('c', '/', ...Array(6).fill(KEYS.down), ...'nothing', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('No Stories match.'));
     app.unmount();
   });
