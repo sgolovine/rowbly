@@ -53,7 +53,8 @@ describe('home screen', () => {
     }
     await app.press('j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Home › Epics');
-    expect(app.lastFrame()).toContain('Epics: not implemented (WP07)');
+    // No Data Root in this test, so the Epics screen reports that instead of listing Epics.
+    expect(app.lastFrame()).toContain('no Data Root found');
     app.unmount();
   });
 });

@@ -1,7 +1,7 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { EpicsScreen } from './EpicsScreen';
 
-// Stub: WP07 replaces this area's screens.
+/** One `epics` entry: `{}` lists Epics, `{ view: 'detail', id }` shows one, `{ view: 'form', id? }` creates or edits. */
 export const epicsScreens: ScreenRegistry = {
-  epics: placeholderScreen('Epics', 'WP07'),
+  epics: EpicsScreen,
 };
