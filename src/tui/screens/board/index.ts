@@ -1,7 +1,8 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { BoardScreen } from './BoardScreen';
 
-// Stub: WP09 replaces this area's screens.
+export { withBoardHome } from './BoardHome';
+
 export const boardScreens: ScreenRegistry = {
-  board: placeholderScreen('Board', 'WP09'),
+  board: BoardScreen,
 };

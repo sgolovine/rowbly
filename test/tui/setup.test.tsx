@@ -62,9 +62,8 @@ describe('setup screen (first run)', () => {
     });
     expect(await repos.localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
     expect(await readFile(join(cwd, '.rowbly', '.gitignore'), 'utf8')).toBe('local.json\n');
-    // Home menu, with the new context in the header.
-    expect(app.lastFrame()).toContain('Go to');
-    expect(app.lastFrame()).toContain('acme › web');
+    // The board view (WP09: home opens it when a Board is in context), with the new context in the header.
+    expect(app.lastFrame()).toContain('acme › web › Board');
     app.unmount();
   });
 
@@ -130,7 +129,9 @@ describe('context switcher', () => {
     expect(ctx.local).toEqual({ version: 1, workspace: 'acme', board: 'web' });
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, workspace: 'acme', board: 'web' });
     expect(app.lastFrame()).toContain('Now using acme/web');
-    expect(app.lastFrame()).toContain('acme › web › Home');
+    // The board view at the root follows the new context (WP09).
+    expect(app.lastFrame()).toContain('acme › web › Board');
+    expect(app.lastFrame()).toContain('web acme/web');
     app.unmount();
   });
 

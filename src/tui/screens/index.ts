@@ -1,5 +1,5 @@
 import { assigneesScreens } from './assignees';
-import { boardScreens } from './board';
+import { boardScreens, withBoardHome } from './board';
 import { boardsScreens } from './boards';
 import { commentsScreens } from './comments';
 import { demoScreens } from './demo';
@@ -32,4 +32,5 @@ export const screens: ScreenRegistry = {
   ...boardScreens,
   ...doctorScreens,
   ...demoScreens,
+  home: withBoardHome(homeScreens.home),
 };
