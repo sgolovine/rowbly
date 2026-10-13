@@ -1,7 +1,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { runCli } from '../helpers';
+import { builtInPlugins } from '../../src/plugins';
+import { makeRootConfig, runCli, tempRoot } from '../helpers';
 import { userText } from './sourceText';
 
 /**
@@ -21,6 +22,22 @@ const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
 ];
 
 const SRC = fileURLToPath(new URL('../../src/', import.meta.url));
+
+/**
+ * Each Plugin's `_Avoid_` words, from the CONTEXT.md in its folder (listed in CONTEXT-MAP.md). They
+ * apply to the Plugin's own source and help pages; core never uses a Plugin's terms at all.
+ */
+async function pluginAvoidWords(): Promise<Map<string, RegExp>> {
+  const words = new Map<string, RegExp>();
+  const dirs = (await readdir(`${SRC}plugins`, { withFileTypes: true })).filter((d) => d.isDirectory());
+  for (const { name } of dirs) {
+    const context = await readFile(`${SRC}plugins/${name}/CONTEXT.md`, 'utf8');
+    const avoid = [...context.matchAll(/^_Avoid_:\s*(.+)$/gm)].flatMap((m) => (m[1] ?? '').split(','));
+    const escaped = avoid.map((w) => w.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+    words.set(name, new RegExp(`\\b(${escaped.join('|')})\\b`, 'i'));
+  }
+  return words;
+}
 
 /** The text with its allowed uses blanked out. */
 function strip(file: string, text: string): string {
@@ -47,6 +64,25 @@ describe('language audit', () => {
     expect(found).toEqual([]);
   });
 
+  it("no Plugin's _Avoid_ word appears in its own user-facing text", async () => {
+    const plugins = await pluginAvoidWords();
+    // Guards the parser: the Built-in Plugins' glossaries are there.
+    expect(plugins.get('epics')?.test('an initiative')).toBe(true);
+    expect(plugins.get('specs')?.test('the design doc')).toBe(true);
+    const found: string[] = [];
+    for (const [id, avoid] of plugins) {
+      const files = (await readdir(`${SRC}plugins/${id}`, { recursive: true })).filter((f) => /\.tsx?$/.test(f));
+      for (const file of files) {
+        const source = await readFile(`${SRC}plugins/${id}/${file}`, 'utf8');
+        for (const { line, text } of userText(source, file.endsWith('.tsx'))) {
+          const match = text.match(avoid);
+          if (match) found.push(`src/plugins/${id}/${file}:${line} "${match[0]}" in ${JSON.stringify(text)}`);
+        }
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
   it('the audit catches an _Avoid_ word in a string, a template and JSX text', () => {
     const source = [
       "const a = 'Open the ticket';",
@@ -62,20 +98,34 @@ describe('language audit', () => {
   });
 
   // About 50 CLI runs; they run in parallel, but a loaded machine still needs more than the default.
+  // Every Built-in Plugin is on, so its commands and its options on core commands are in the help.
   it('no _Avoid_ word appears in any --help text', { timeout: 60_000 }, async () => {
-    const root = await runCli(['--help']);
+    const t = await tempRoot();
+    await makeRootConfig(t.path, {
+      plugins: Object.fromEntries(builtInPlugins.map((p) => [p.id, { enabled: true }])),
+    });
+    const help = (args: string[]) => runCli([...args, '--help'], { root: t.path });
+    const root = await help([]);
     const groups = commandsIn(root.stdout);
     expect(groups).toContain('stories');
-    const groupPages = await Promise.all(groups.map((group) => runCli([group, '--help'])));
+    const groupPages = await Promise.all(groups.map((group) => help([group])));
     const verbPages = await Promise.all(
       groups.flatMap((group, i) =>
-        commandsIn(groupPages[i]?.stdout ?? '').map((verb) => runCli([group, verb, '--help'])),
+        commandsIn(groupPages[i]?.stdout ?? '').map(async (verb) => ({ group, page: await help([group, verb]) })),
       ),
     );
-    const pages = [root, ...groupPages, ...verbPages];
+    const pages = [
+      { group: '', page: root },
+      ...groupPages.map((page, i) => ({ group: groups[i] ?? '', page })),
+      ...verbPages,
+    ];
     expect(pages.length).toBeGreaterThan(40);
-    const found = pages.flatMap((page) =>
-      page.stdout.split('\n').filter((line) => AVOID.test(line.replace(/\bLocal State\b|\buser\.email\b/g, ' '))),
+    const plugins = await pluginAvoidWords();
+    const found = pages.flatMap(({ group, page }) =>
+      page.stdout.split('\n').filter((line) => {
+        const text = line.replace(/\bLocal State\b|\buser\.email\b/g, ' ');
+        return AVOID.test(text) || plugins.get(group)?.test(text);
+      }),
     );
     expect(found).toEqual([]);
   });

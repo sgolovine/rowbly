@@ -1,9 +1,11 @@
 import { readdir, readFile } from 'node:fs/promises';
+import { builtinModules } from 'node:module';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const SRC = fileURLToPath(new URL('../src', import.meta.url));
+const FIXTURES = fileURLToPath(new URL('./plugins/fixtures', import.meta.url));
 
 async function sourceFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -30,10 +32,26 @@ function specifiers(source: string): string[] {
   return found;
 }
 
-/** The top-level layer of a file under src/ (`cli` for src/cli.ts). */
+/** A file's path below src/, `/`-separated. */
+function srcPath(file: string): string {
+  return relative(SRC, file).split(sep).join('/');
+}
+
+/**
+ * The layer of a file under src/: its top-level folder, or file name for `cli.ts` and `main.ts`.
+ * `plugin-api/tui.ts` is a layer of its own, because only it may import the TUI.
+ */
 function layerOf(file: string): string {
-  const [first = ''] = relative(SRC, file).split(sep);
+  const path = srcPath(file);
+  if (path === 'plugin-api/tui.ts') return 'plugin-api-tui';
+  const [first = ''] = path.split('/');
   return first.replace(/\.tsx?$/, '');
+}
+
+/** The Plugin a file belongs to (`src/plugins/<id>/…`), or `null` for core and the registry. */
+function pluginOf(file: string): string | null {
+  const parts = srcPath(file).split('/');
+  return parts[0] === 'plugins' && parts.length > 2 ? (parts[1] ?? null) : null;
 }
 
 /** README §3: each layer may import only from the layers listed (always including itself). */
@@ -45,8 +63,14 @@ const ALLOWED: Record<string, string[]> = {
   output: ['core', 'schemas', 'services', 'output'],
   commands: ['core', 'schemas', 'storage', 'services', 'output', 'commands'],
   tui: ['core', 'schemas', 'storage', 'services', 'output', 'tui'],
-  cli: ['core', 'commands', 'output', 'tui'],
+  'plugin-api': ['core', 'schemas', 'services', 'output', 'plugin-api'],
+  'plugin-api-tui': ['tui', 'plugin-api-tui'],
+  plugins: ['plugin-api', 'plugin-api-tui', 'plugins'],
+  main: ['core', 'storage', 'services', 'commands', 'output', 'tui'],
+  cli: ['main', 'plugins'],
 };
+
+const NODE_BUILTINS = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]));
 
 describe('architecture', async () => {
   const files = await sourceFiles(SRC);
@@ -57,7 +81,7 @@ describe('architecture', async () => {
       if (layerOf(file) === 'storage') continue;
       const source = await readFile(file, 'utf8');
       for (const spec of specifiers(source)) {
-        if (/^(node:)?fs(\/|$)/.test(spec)) offenders.push(`${relative(SRC, file)} imports ${spec}`);
+        if (/^(node:)?fs(\/|$)/.test(spec)) offenders.push(`${srcPath(file)} imports ${spec}`);
       }
     }
     expect(offenders).toEqual([]);
@@ -69,16 +93,81 @@ describe('architecture', async () => {
       const layer = layerOf(file);
       const allowed = ALLOWED[layer];
       if (!allowed) {
-        offenders.push(`${relative(SRC, file)} is not in a known layer`);
+        offenders.push(`${srcPath(file)} is not in a known layer`);
         continue;
       }
       const source = await readFile(file, 'utf8');
       for (const spec of specifiers(source)) {
         if (!spec.startsWith('.')) continue;
         const target = layerOf(join(file, '..', spec));
-        if (target !== '..' && !allowed.includes(target)) offenders.push(`${relative(SRC, file)} imports ${spec}`);
+        if (target !== '..' && !allowed.includes(target)) offenders.push(`${srcPath(file)} imports ${spec}`);
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  // ADR-0009: a Plugin imports only the Plugin API (and its own files), and uses no Node built-ins
+  // or packages of its own; everything else reaches it through Plugin API capabilities.
+  it('a Plugin imports only the Plugin API and its own files', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const plugin = pluginOf(file);
+      if (plugin === null) continue;
+      for (const spec of specifiers(await readFile(file, 'utf8'))) {
+        if (!spec.startsWith('.')) {
+          const why = NODE_BUILTINS.has(spec) ? 'a Node built-in' : 'a package';
+          offenders.push(`${srcPath(file)} imports ${why}: ${spec}`);
+          continue;
+        }
+        const target = srcPath(join(file, '..', spec));
+        const api = target === 'plugin-api' || target.startsWith('plugin-api/');
+        const own = target === `plugins/${plugin}` || target.startsWith(`plugins/${plugin}/`);
+        if (!api && !own) {
+          offenders.push(`${srcPath(file)} imports ${spec}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // The fixture Plugins stand in for Built-in Plugins in the tests, so they follow the same rule.
+  it('the fixture Plugins import only the Plugin API and each other', async () => {
+    const offenders: string[] = [];
+    for (const file of await sourceFiles(FIXTURES)) {
+      if (file.endsWith(`${sep}cli.ts`)) continue;
+      for (const spec of specifiers(await readFile(file, 'utf8'))) {
+        const target = spec.startsWith('.') ? join(file, '..', spec) : '';
+        const api = target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep));
+        if (!api && !target.startsWith(FIXTURES)) offenders.push(`${relative(FIXTURES, file)} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('core never imports a Plugin, and only the entry point reads the registry', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const path = srcPath(file);
+      if (path === 'cli.ts' || path.startsWith('plugins/')) continue;
+      for (const spec of specifiers(await readFile(file, 'utf8'))) {
+        if (!spec.startsWith('.')) continue;
+        const target = srcPath(join(file, '..', spec));
+        if (target === 'plugins' || target.startsWith('plugins/')) offenders.push(`${path} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('the checks above see the rules being broken', () => {
+    const plugin = join(SRC, 'plugins', 'demo', 'index.ts');
+    expect(pluginOf(plugin)).toBe('demo');
+    expect(pluginOf(join(SRC, 'plugins', 'index.ts'))).toBeNull();
+    expect(layerOf(join(SRC, 'plugin-api', 'tui.ts'))).toBe('plugin-api-tui');
+    expect(NODE_BUILTINS.has('node:fs')).toBe(true);
+    expect(NODE_BUILTINS.has('child_process')).toBe(true);
+    expect(specifiers("import { x } from '../../services';\nconst m = await import('./tui');")).toEqual([
+      '../../services',
+      './tui',
+    ]);
   });
 });
