@@ -144,7 +144,7 @@ describe('story list', () => {
     expect(app.lastFrame()).toContain('/ filter · c clear filter');
     // The help lists the screen's `/` instead of the global "filter lists".
     await app.press('?');
-    expect(app.lastFrame()).toMatch(/│ \/\s+filter\s+│/);
+    expect(app.lastFrame()).toMatch(/│\s+\/\s+filter\s+│/);
     expect(app.lastFrame()).not.toContain('filter lists');
     await app.press('?');
 

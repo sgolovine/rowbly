@@ -2,12 +2,14 @@ import { Box, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
 import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
-import { ConfirmDialog, Form, type FormValues, Loading, SelectList } from '../../components';
+import { ConfirmDialog, Form, type FormValues, Loading, Modal, SelectList } from '../../components';
 import {
   useAsync,
+  useBoardSelection,
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useLayout,
   useRowblyContext,
   useServices,
   useToast,
@@ -52,7 +54,9 @@ export function BoardScreen({ params }: ScreenProps) {
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
-  const { columns: termWidth, rows: termRows } = useWindowSize();
+  const { rows: termRows } = useWindowSize();
+  const room = useLayout();
+  const selection = useBoardSelection();
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -67,7 +71,8 @@ export function BoardScreen({ params }: ScreenProps) {
     const boardId = viewing ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
     return { boardId, choices: await storyChoices(ctx, boardId) };
-  }, [services, ctx, viewing]);
+    // `selection.version` reloads it when another Board is picked in the sidebar.
+  }, [services, ctx, viewing, selection.version]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
@@ -114,11 +119,29 @@ export function BoardScreen({ params }: ScreenProps) {
     }
   };
 
-  const moveTo = (to: number) => {
+  /** Moves the card at `from` (the cursor by default) to the bottom of column `to`. */
+  const moveTo = (to: number, from: Cursor = { col, row }) => {
     const stage = stages[to];
-    if (!card || !stage) return;
-    const next = moveCard(columns, col, row, to, stage.key);
-    void write(next, { col: to, row: (next[to]?.length ?? 1) - 1 }, () => services.stories.move(card.key, stage.key));
+    const moved = columns[from.col]?.[from.row];
+    if (!moved || !stage || to === from.col) return;
+    const next = moveCard(columns, from.col, from.row, to, stage.key);
+    void write(next, { col: to, row: (next[to]?.length ?? 1) - 1 }, () => services.stories.move(moved.key, stage.key));
+  };
+
+  /** A card dragged with the mouse onto column `to`. */
+  const drop = (to: number, key: unknown) => {
+    if (writing.current) return;
+    const from = columns.findIndex((cards) => cards.some((s) => s.key === key));
+    if (from < 0) return;
+    moveTo(to, { col: from, row: columns[from]?.findIndex((s) => s.key === key) ?? 0 });
+  };
+
+  /** A click selects a card (or a column, at row `-1`); a click on the selected card opens it. */
+  const click = (at: Cursor) => {
+    if (at.row < 0) return setCursor({ col: at.col, row: at.col === col ? row : 0 });
+    const clicked = columns[at.col]?.[at.row];
+    if (clicked && at.col === col && at.row === row) router.push('story', { key: clicked.key, title: clicked.key });
+    else setCursor(at);
   };
 
   const reorder = (delta: -1 | 1) => {
@@ -146,19 +169,21 @@ export function BoardScreen({ params }: ScreenProps) {
     });
   };
 
+  // Another Board picked here or in the sidebar starts from a clean view.
+  const seenVersion = useRef(selection.version);
+  useEffect(() => {
+    if (seenVersion.current === selection.version) return;
+    seenVersion.current = selection.version;
+    setViewing(undefined);
+    setFilters({});
+    setCursor({ col: 0, row: 0 });
+    firstCol.current = 0;
+    firstRows.current.clear();
+  }, [selection.version]);
+
   const switchTo = async (boardId: Slug) => {
-    try {
-      await services.context.use(boardId);
-      setViewing(undefined);
-      scope.reload();
-      setFilters({});
-      setCursor({ col: 0, row: 0 });
-      firstCol.current = 0;
-      firstRows.current.clear();
-    } catch (err) {
-      toast.error(err);
-    }
     setMode('view');
+    await selection.select(boardId);
   };
 
   useKeyCapture(active && (mode === 'filter' || mode === 'switch'), { escape: true });
@@ -211,14 +236,14 @@ export function BoardScreen({ params }: ScreenProps) {
   if (!scope.data) return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
   const { boardId, choices } = scope.data;
 
-  // The shell pads the screen by one column on each side.
-  const layout = columnLayout(stages.length, termWidth - 2);
+  const layout = columnLayout(stages.length, room.width);
   firstCol.current = follow(firstCol.current, col, layout.visible, stages.length);
   const shownStages = stages.slice(firstCol.current, firstCol.current + layout.visible);
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = hiddenLeft + hiddenRight > 0;
-  const size = cardsPerColumn(termRows);
+  // Without a fixed height (tests), size to the terminal less the shell's header and footer.
+  const size = cardsPerColumn(room.height ?? termRows - 3);
   const summary = describeFilters(filters);
   const inContext = ctx?.local.board === boardId;
 
@@ -254,6 +279,8 @@ export function BoardScreen({ params }: ScreenProps) {
                 size={size}
                 selected={index === col ? row : null}
                 active={active && mode === 'view'}
+                onClick={(at) => click({ col: index, row: at })}
+                onDrop={(key) => drop(index, key)}
               />
             );
           })}
@@ -261,8 +288,7 @@ export function BoardScreen({ params }: ScreenProps) {
         </Box>
       )}
       {mode === 'filter' && (
-        <Box flexDirection="column">
-          <Text bold>Filter Stories</Text>
+        <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
           <Form
             fields={filterFields(
               {
@@ -277,11 +303,10 @@ export function BoardScreen({ params }: ScreenProps) {
               setMode('view');
             }}
           />
-        </Box>
+        </Modal>
       )}
       {mode === 'switch' && (
-        <Box flexDirection="column">
-          <Text bold>Switch Board</Text>
+        <Modal title="Switch Board" size="dialog" maxWidth={60}>
           {boards.data ? (
             <SelectList
               items={boards.data.map((b) => ({
@@ -294,17 +319,19 @@ export function BoardScreen({ params }: ScreenProps) {
           ) : (
             <Loading label="Loading Boards…" />
           )}
-        </Box>
+        </Modal>
       )}
       {mode === 'confirm-delete' && card && (
-        <ConfirmDialog
-          message={`Delete ${card.key} "${card.name}" with its Tasks and Comments?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => remove(card)}
-          onCancel={() => setMode('view')}
-        />
+        <Modal size="dialog">
+          <ConfirmDialog
+            message={`Delete ${card.key} "${card.name}" with its Tasks and Comments?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            onConfirm={() => remove(card)}
+            onCancel={() => setMode('view')}
+          />
+        </Modal>
       )}
     </Box>
   );

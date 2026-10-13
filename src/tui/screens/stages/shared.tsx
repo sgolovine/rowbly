@@ -42,14 +42,18 @@ export function targetFor(scope: ConfigScope, level: LevelName): ConfigTarget {
 export function LevelBar({ levels, level, source }: { levels: LevelName[]; level: LevelName; source?: ConfigLevel }) {
   return (
     <Box gap={1}>
-      <Text dimColor>Level:</Text>
+      <Box flexShrink={0}>
+        <Text dimColor>Level:</Text>
+      </Box>
       {levels.map((name) => (
-        <Text key={name} inverse={name === level} color={name === level ? 'cyan' : undefined}>
-          {` ${name} `}
-        </Text>
+        <Box key={name} flexShrink={0}>
+          <Text inverse={name === level} color={name === level ? 'cyan' : undefined}>
+            {` ${name} `}
+          </Text>
+        </Box>
       ))}
       {source && (
-        <Text dimColor>
+        <Text dimColor wrap="truncate-end">
           {source === level ? '· own list' : `· inherited from ${source} (copied to ${level} on first edit)`}
         </Text>
       )}

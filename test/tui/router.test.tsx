@@ -114,12 +114,12 @@ describe('router', () => {
     const app = renderApp({ ...screens, a: testScreen('A'), b: screens.form as ScreenRegistry[string] });
     await app.press('n', 'x');
     // Typing goes into the field, not to the shell.
-    expect(app.lastFrame()).toContain('Name x');
+    expect(app.lastFrame()).toMatch(/Name\s+x/);
     await app.press(KEYS.escape);
     expect(app.lastFrame()).toContain('Go back and discard unsaved changes?');
     await app.press('n');
     expect(app.lastFrame()).not.toContain('discard');
-    expect(app.lastFrame()).toContain('Name x');
+    expect(app.lastFrame()).toMatch(/Name\s+x/);
     await app.press(KEYS.escape, 'y');
     expect(app.lastFrame()).toContain('Screen A');
     app.unmount();
@@ -129,12 +129,12 @@ describe('router', () => {
     const app = renderApp(screens, 'form2');
     await app.press('x', 'q');
     // `q` typed into a text field is text, not quit.
-    expect(app.lastFrame()).toContain('Name xq');
+    expect(app.lastFrame()).toMatch(/Name\s+xq/);
     await app.press(KEYS.down, 'q');
     expect(app.lastFrame()).toContain('Quit and discard unsaved changes?');
     await app.press(KEYS.escape);
     expect(app.lastFrame()).not.toContain('Quit and discard');
-    expect(app.lastFrame()).toContain('Name xq');
+    expect(app.lastFrame()).toMatch(/Name\s+xq/);
     app.unmount();
   });
 });

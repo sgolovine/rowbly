@@ -1,18 +1,29 @@
-import { Box, Text, useApp, useInput, useStdout, useWindowSize } from 'ink';
-import { Component, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import type { EventEmitter } from 'node:events';
+import { basename, dirname } from 'node:path';
+import { Box, type DOMElement, Text, useApp, useInput, useStdout, useWindowSize } from 'ink';
+import { Component, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { NotFoundError, RowblyError } from '../core';
+import type { BoardConfig } from '../schemas';
 import { createServices, type RowblyContext, type Services } from '../services';
-import { ConfirmDialog, SelectList } from './components';
+import { ConfirmDialog, Modal, SelectList } from './components';
 import {
   ActiveContext,
+  type BoardSelection,
+  BoardSelectionContext,
+  createMouseRegistry,
   createShellRegistry,
   createToastStore,
+  LayoutContext,
+  MouseContext,
   ScreenDepthContext,
   ServicesContext,
   ShellContext,
   type Toast,
   ToastContext,
   type ToastStore,
+  useAsync,
+  useMouse,
+  useMouseSource,
   useScreenHints,
   useToast,
   useToasts,
@@ -28,12 +39,16 @@ export interface AppProps {
   /** Pass the store that `ctx.warn` feeds; a fresh one is made otherwise. */
   toasts?: ToastStore;
   screens?: ScreenRegistry;
+  /** Emits the `mouse` events read by `MouseStdin`; without it the app is keyboard-only. */
+  mouse?: EventEmitter;
 }
 
 /** The whole TUI: providers around the shell. */
-export function App({ ctx, services, initial, toasts, screens = defaultScreens }: AppProps) {
+export function App({ ctx, services, initial, toasts, screens = defaultScreens, mouse }: AppProps) {
   const toastStore = useMemo(() => toasts ?? createToastStore(), [toasts]);
   const shell = useMemo(createShellRegistry, []);
+  const mouseRegistry = useMemo(createMouseRegistry, []);
+  useMouseSource(mouseRegistry, mouse);
   const [current, setCurrent] = useState({ ctx, services });
   const servicesValue = useMemo(
     () => ({
@@ -46,9 +61,11 @@ export function App({ ctx, services, initial, toasts, screens = defaultScreens }
     <ServicesContext.Provider value={servicesValue}>
       <ToastContext.Provider value={toastStore}>
         <ShellContext.Provider value={shell}>
-          <RouterProvider initial={initial}>
-            <Shell screens={screens} />
-          </RouterProvider>
+          <MouseContext.Provider value={mouseRegistry}>
+            <RouterProvider initial={initial}>
+              <Shell screens={screens} />
+            </RouterProvider>
+          </MouseContext.Provider>
         </ShellContext.Provider>
       </ToastContext.Provider>
     </ServicesContext.Provider>
@@ -57,16 +74,57 @@ export function App({ ctx, services, initial, toasts, screens = defaultScreens }
 
 type Overlay = { kind: 'help' } | { kind: 'goto' } | { kind: 'confirm'; action: 'quit' | 'back' };
 
+/** Width of the Board sidebar, including its border. */
+export const SIDEBAR_WIDTH = 22;
+/** Lines taken by the header (with its rule) and the footer. */
+const HEADER_HEIGHT = 2;
+const FOOTER_HEIGHT = 1;
+
+/**
+ * The frame: a header with the project and its actions, the Board sidebar, and the main area. The
+ * root screen fills the main area; every screen opened on top of it, and the shell's own overlays,
+ * show in a modal over it.
+ */
 function Shell({ screens }: { screens: ScreenRegistry }) {
   const router = useRouter();
   const shell = useContext(ShellContext);
+  const { ctx, services } = useContext(ServicesContext);
+  const toast = useToast();
   const { exit } = useApp();
-  const { rows } = useWindowSize();
+  const { columns, rows } = useWindowSize();
   // Fill the terminal only on a real one, so test frames stay compact.
-  const height = (useStdout().stdout as NodeJS.WriteStream).isTTY ? rows : undefined;
+  const fullscreen = (useStdout().stdout as NodeJS.WriteStream).isTTY === true;
+  const toastCount = useToasts().length;
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const [boardVersion, setBoardVersion] = useState(0);
   const depth = router.stack.length - 1;
   const atRoot = depth === 0;
+  const idle = atRoot && overlay === null;
+
+  const selection = useMemo<BoardSelection>(
+    () => ({
+      version: boardVersion,
+      async select(boardId) {
+        if (!services) return;
+        try {
+          await services.context.use(boardId);
+          setBoardVersion((v) => v + 1);
+          if (router.stack[0]?.screen !== 'board') router.reset('board');
+        } catch (err) {
+          toast.error(err);
+        }
+      },
+    }),
+    [boardVersion, services, router, toast],
+  );
+
+  // `depth` reloads the list when a modal closes, e.g. after creating a Board.
+  const sidebar = useAsync(async () => (services ? services.boards.list() : null), [services, boardVersion, depth]);
+  const boards = sidebar.data ?? [];
+  // Read on every render: other screens (Context) switch the Board in `ctx.local` directly. Like
+  // `resolveBoard`, without a context Board the only Board is the current one.
+  const contextIndex = boards.findIndex((b) => b.id === ctx?.local.board);
+  const currentIndex = contextIndex < 0 && boards.length === 1 ? 0 : contextIndex;
 
   const back = () => {
     if (atRoot) return;
@@ -77,6 +135,8 @@ function Shell({ screens }: { screens: ScreenRegistry }) {
     if (shell.isDirty()) setOverlay({ kind: 'confirm', action: 'quit' });
     else exit();
   };
+  const newStory = () => router.push('story-form', { title: 'New Story' });
+  const newBoard = () => router.push('board-form', { title: 'New Board' });
 
   useInput((input, key) => {
     const captured = shell.captured();
@@ -92,63 +152,128 @@ function Shell({ screens }: { screens: ScreenRegistry }) {
     else if (action === 'quit' && atRoot) quit();
     else if (action === 'help') setOverlay({ kind: 'help' });
     else if (action === 'goto') setOverlay({ kind: 'goto' });
+    else if (atRoot && services && input === 'N') newBoard();
+    else if (atRoot && boards.length > 0) {
+      const target = boardKey(input, currentIndex, boards.length);
+      const board = target === null ? undefined : boards[target];
+      if (board && target !== currentIndex) void selection.select(board.id);
+    }
   });
 
   const hints = useScreenHints(depth);
+  const sidebarWidth = services ? SIDEBAR_WIDTH : 0;
+  // The main area is padded by one column on each side.
+  const mainWidth = Math.max(20, columns - sidebarWidth - 2);
+  const mainHeight = fullscreen ? Math.max(5, rows - HEADER_HEIGHT - FOOTER_HEIGHT - toastCount) : undefined;
+  const screenHidden = overlay !== null && overlay.kind !== 'confirm';
+  const top = router.stack[depth];
 
   return (
-    <Box flexDirection="column" height={height}>
-      <Header />
-      <Box flexDirection="column" flexGrow={1} paddingX={1} marginY={1}>
-        <Box flexDirection="column" display={overlay && overlay.kind !== 'confirm' ? 'none' : 'flex'}>
-          {router.stack.map((route, i) => (
-            <ScreenSlot
-              // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
-              key={`${i}:${route.screen}`}
-              route={route}
-              depth={i}
-              top={i === depth}
-              active={i === depth && overlay === null}
-              screens={screens}
+    <BoardSelectionContext.Provider value={selection}>
+      <Box flexDirection="column" height={fullscreen ? rows : undefined}>
+        <Header onNewStory={services ? newStory : undefined} clickable={idle} />
+        <Box flexGrow={1}>
+          {services && (
+            <Sidebar
+              boards={boards}
+              current={currentIndex}
+              height={mainHeight}
+              clickable={idle}
+              onSelect={(boardId) => void selection.select(boardId)}
+              onNewBoard={newBoard}
             />
-          ))}
+          )}
+          <Box flexDirection="column" flexGrow={1} flexShrink={1} paddingX={1} height={mainHeight} overflow="hidden">
+            <LayoutContext.Provider value={{ width: mainWidth, height: mainHeight }}>
+              {router.stack[0] && (
+                <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
+                  <ScreenSlot route={router.stack[0]} depth={0} top active={idle} screens={screens} />
+                </Box>
+              )}
+              {depth > 0 && top && (
+                <Box display={screenHidden ? 'none' : 'flex'} flexDirection="column">
+                  <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
+                    {router.stack.slice(1).map((route, i) => (
+                      <ScreenSlot
+                        // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
+                        key={`${i + 1}:${route.screen}`}
+                        route={route}
+                        depth={i + 1}
+                        top={i + 1 === depth}
+                        active={i + 1 === depth && overlay === null}
+                        screens={screens}
+                      />
+                    ))}
+                  </Modal>
+                </Box>
+              )}
+              {overlay?.kind === 'help' && (
+                <Modal title="Keys" size="dialog">
+                  <HelpOverlay hints={hints} />
+                </Modal>
+              )}
+              {overlay?.kind === 'goto' && (
+                <Modal title="Go to" size="dialog">
+                  <GotoPalette
+                    onPick={(destination) => {
+                      setOverlay(null);
+                      router.push(destination.screen, destination.params);
+                    }}
+                  />
+                </Modal>
+              )}
+              {overlay?.kind === 'confirm' && (
+                <Modal size="dialog">
+                  <ConfirmDialog
+                    message={
+                      overlay.action === 'quit'
+                        ? 'Quit and discard unsaved changes?'
+                        : 'Go back and discard unsaved changes?'
+                    }
+                    confirmLabel="Discard"
+                    cancelLabel="Keep editing"
+                    destructive
+                    onConfirm={() => {
+                      setOverlay(null);
+                      if (overlay.action === 'quit') exit();
+                      else router.pop();
+                    }}
+                    onCancel={() => setOverlay(null)}
+                  />
+                </Modal>
+              )}
+            </LayoutContext.Provider>
+          </Box>
         </Box>
-        {overlay?.kind === 'help' && <HelpOverlay hints={hints} />}
-        {overlay?.kind === 'goto' && (
-          <GotoPalette
-            onPick={(destination) => {
-              setOverlay(null);
-              router.push(destination.screen, destination.params);
-            }}
-          />
-        )}
-        {overlay?.kind === 'confirm' && (
-          <ConfirmDialog
-            message={
-              overlay.action === 'quit' ? 'Quit and discard unsaved changes?' : 'Go back and discard unsaved changes?'
-            }
-            confirmLabel="Discard"
-            cancelLabel="Keep editing"
-            destructive
-            onConfirm={() => {
-              setOverlay(null);
-              if (overlay.action === 'quit') exit();
-              else router.pop();
-            }}
-            onCancel={() => setOverlay(null)}
-          />
-        )}
+        <ToastArea />
+        <Footer hints={atRoot ? hints : []} atRoot={atRoot} />
       </Box>
-      <ToastArea />
-      <Footer hints={hints} atRoot={atRoot} />
-    </Box>
+    </BoardSelectionContext.Provider>
   );
 }
 
-function Header() {
-  const router = useRouter();
+/** The keys shown along the bottom of a screen's modal: its own, then `esc` unless it took that over. */
+function modalHints(hints: readonly KeyHint[]): KeyHint[] {
+  return hints.some((hint) => hint.key === 'esc') ? [...hints] : [...hints, { key: 'esc', description: 'back' }];
+}
+
+/** The sidebar index a Board key selects: `[`/`]` step and wrap, `1`–`9` jump. */
+export function boardKey(input: string, current: number, count: number): number | null {
+  if (input === '[') return (Math.max(current, 0) - 1 + count) % count;
+  if (input === ']') return (current + 1) % count;
+  if (/^[1-9]$/.test(input) && Number(input) <= count) return Number(input) - 1;
+  return null;
+}
+
+/** The project the Data Root belongs to: the folder holding `.rowbly`, or "Global" for `~/.rowbly`. */
+export function projectName(ctx: RowblyContext | null): string {
+  if (!ctx) return 'Rowbly';
+  if (ctx.root.kind === 'global') return 'Global';
+  return basename(dirname(ctx.root.path)) || 'Rowbly';
+}
+
+function Header({ onNewStory, clickable }: { onNewStory?: () => void; clickable: boolean }) {
   const { ctx } = useContext(ServicesContext);
-  const crumbs = [ctx?.local.board, ...router.stack.map(routeTitle)].filter(Boolean);
   return (
     <Box
       justifyContent="space-between"
@@ -157,31 +282,119 @@ function Header() {
       borderTop={false}
       borderLeft={false}
       borderRight={false}
+      borderDimColor
+      flexShrink={0}
     >
-      <Text>
-        <Text bold color="cyan">
-          Rowbly
-        </Text>
-        {'  '}
-        {crumbs.join(' › ')}
+      <Text bold color="cyan" wrap="truncate-end">
+        {projectName(ctx)}
       </Text>
-      <Text dimColor>me: {ctx?.me ?? '—'}</Text>
+      <Box gap={2} flexShrink={0}>
+        <Text dimColor>me: {ctx?.me ?? '—'}</Text>
+        {onNewStory && <HeaderButton label="+ New Story" onClick={onNewStory} clickable={clickable} />}
+      </Box>
+    </Box>
+  );
+}
+
+function HeaderButton({ label, onClick, clickable }: { label: string; onClick(): void; clickable: boolean }) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, clickable);
+  return (
+    <Box ref={ref}>
+      <Text inverse color="cyan">{` ${label} `}</Text>
+    </Box>
+  );
+}
+
+function Sidebar({
+  boards,
+  current,
+  height,
+  clickable,
+  onSelect,
+  onNewBoard,
+}: {
+  boards: readonly BoardConfig[];
+  current: number;
+  height?: number;
+  clickable: boolean;
+  onSelect(boardId: string): void;
+  onNewBoard(): void;
+}) {
+  return (
+    <Box
+      flexDirection="column"
+      width={SIDEBAR_WIDTH}
+      height={height}
+      flexShrink={0}
+      paddingX={1}
+      borderStyle="single"
+      borderTop={false}
+      borderBottom={false}
+      borderLeft={false}
+      borderDimColor
+    >
+      <Text dimColor bold>
+        BOARDS
+      </Text>
+      <Box flexDirection="column" marginTop={1}>
+        {boards.length === 0 && <Text dimColor>No Boards yet.</Text>}
+        {boards.map((board, i) => (
+          <SidebarItem
+            key={board.id}
+            index={i}
+            name={board.name}
+            selected={i === current}
+            clickable={clickable}
+            onClick={() => onSelect(board.id)}
+          />
+        ))}
+      </Box>
+      <Box flexGrow={1} minHeight={1} />
+      <Box gap={1}>
+        <HeaderButton label="+ New Board" onClick={onNewBoard} clickable={clickable} />
+        <Text dimColor>N</Text>
+      </Box>
+    </Box>
+  );
+}
+
+function SidebarItem({
+  index,
+  name,
+  selected,
+  clickable,
+  onClick,
+}: {
+  index: number;
+  name: string;
+  selected: boolean;
+  clickable: boolean;
+  onClick(): void;
+}) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, clickable);
+  return (
+    <Box ref={ref}>
+      <Text wrap="truncate-end" color={selected ? 'cyan' : undefined} bold={selected}>
+        {selected ? '▌ ' : '  '}
+        <Text dimColor={!selected}>{index < 9 ? `${index + 1} ` : '  '}</Text>
+        {name}
+      </Text>
     </Box>
   );
 }
 
 function Footer({ hints, atRoot }: { hints: readonly KeyHint[]; atRoot: boolean }) {
-  // A screen that gives `esc` its own meaning (e.g. cancel an inline form) replaces the shell's.
-  const ownEscape = hints.some((hint) => hint.key === 'esc');
+  // Away from the root the screen's keys are on its modal; this keeps to the global ones.
   const shown = [
     ...hints,
-    ...(atRoot || ownEscape ? [] : [{ key: 'esc', description: 'back' }]),
     { key: 'g', description: 'go to' },
     { key: '?', description: 'help' },
     ...(atRoot ? [{ key: 'q', description: 'quit' }] : []),
   ];
   return (
-    <Box paddingX={1}>
+    <Box paddingX={1} flexShrink={0}>
       <Text dimColor wrap="truncate-end">
         {shown.map((hint) => `${hint.key} ${hint.description}`).join(' · ')}
       </Text>
@@ -223,23 +436,20 @@ function HelpOverlay({ hints }: { hints: readonly KeyHint[] }) {
   const rows = [...hints, ...GLOBAL_KEYS.filter((global) => !hints.some((hint) => hint.key === global.key))];
   const width = Math.max(...rows.map((row) => row.key.length)) + 2;
   return (
-    <Box flexDirection="column" borderStyle="round" paddingX={1} alignSelf="flex-start">
-      <Text bold>Keys</Text>
+    <Box flexDirection="column">
       {rows.map((row) => (
         <Text key={`${row.key}:${row.description}`}>
           <Text color="cyan">{row.key.padEnd(width)}</Text>
           {row.description}
         </Text>
       ))}
-      <Text dimColor>esc or ? to close</Text>
     </Box>
   );
 }
 
 function GotoPalette({ onPick }: { onPick(destination: Destination): void }) {
   return (
-    <Box flexDirection="column" borderStyle="round" paddingX={1} alignSelf="flex-start">
-      <Text bold>Go to</Text>
+    <Box flexDirection="column">
       <SelectList
         items={DESTINATIONS.map((d) => ({ value: d.label, label: d.label }))}
         limit={DESTINATIONS.length}

@@ -15,7 +15,7 @@ describe('demo screen', () => {
     }
     expect(frame).toContain('● In Progress');
     expect(frame).toContain('[x] ada');
-    expect(frame).toContain('Labels      [ ] api  [x] ui  [ ] docs');
+    expect(frame).toMatch(/Labels\s+\[ \] api {2}\[x\] ui {2}\[ \] docs/);
     expect(frame).toContain('Delete (y)');
     expect(frame).toMatchSnapshot();
     app.unmount();

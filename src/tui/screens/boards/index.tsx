@@ -16,6 +16,7 @@ import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenRegistry } from '../types';
 import { BoardDetailScreen } from './BoardDetail';
+import { BoardFormScreen } from './BoardForm';
 
 type Mode =
   | { kind: 'list' }
@@ -179,4 +180,5 @@ function BoardsScreen() {
 export const boardsScreens: ScreenRegistry = {
   boards: BoardsScreen,
   'board-detail': BoardDetailScreen,
+  'board-form': BoardFormScreen,
 };

@@ -5,10 +5,11 @@ import { DataRootNotFoundError, RowblyError } from '../core';
 import { createContext, createServices, type RowblyContext } from '../services';
 import { App } from './app';
 import { createToastStore, type ToastStore } from './hooks';
+import { MOUSE_OFF, MOUSE_ON, MouseStdin } from './mouse';
 import type { Route } from './router';
 
-/** Shows the cursor and leaves the alternate screen buffer. Harmless when already restored. */
-export const RESTORE_SEQUENCE = '\u001B[?25h\u001B[?1049l';
+/** Stops mouse reporting, shows the cursor and leaves the alternate screen buffer. Harmless when already restored. */
+export const RESTORE_SEQUENCE = `${MOUSE_OFF}\u001B[?25h\u001B[?1049l`;
 
 export interface TerminalIo {
   stdin: Pick<NodeJS.ReadStream, 'isTTY'> & { setRawMode?(mode: boolean): unknown };
@@ -99,10 +100,12 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
     ctx === undefined ? await resolveContext(env, options.cwd ?? process.cwd(), options.root, toasts) : ctx;
   const services = resolved ? createServices(resolved) : null;
 
+  // On a terminal, clicks are read off stdin before Ink sees it.
+  const stdin = io.stdin.isTTY ? new MouseStdin(io.stdin as NodeJS.ReadStream) : undefined;
   const instance = render(
-    createElement(App, { ctx: resolved, services, initial: initialRoute(resolved, env), toasts }),
+    createElement(App, { ctx: resolved, services, initial: initialRoute(resolved, env), toasts, mouse: stdin?.mouse }),
     {
-      stdin: io.stdin as NodeJS.ReadStream,
+      stdin: (stdin ?? io.stdin) as NodeJS.ReadStream,
       stdout: io.stdout as NodeJS.WriteStream,
       stderr: io.stderr as NodeJS.WriteStream,
       alternateScreen: true,
@@ -110,6 +113,7 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
       patchConsole: options.io === undefined,
     },
   );
+  if (stdin) io.stdout.write(MOUSE_ON);
   const cleanup = createTerminalCleanup(() => instance.unmount(), io);
   const uninstall = installCrashGuards(cleanup, proc, io, toasts);
   try {

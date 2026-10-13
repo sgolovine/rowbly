@@ -1,9 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`demo screen > renders every primitive 1`] = `
-" Rowbly  Demo                                                                                 me: —
+" Rowbly                                                                                       me: —
 ────────────────────────────────────────────────────────────────────────────────────────────────────
-
    StageBadge
    ● Backlog  ● Todo  ● In Progress  ● Done
 
@@ -26,14 +25,14 @@ exports[`demo screen > renders every primitive 1`] = `
      [ ] linus Linus Torvalds
 
    Form
-   › Name*       Fix login focus
-     Description (empty)
+   › Name*         Fix login focus
+     Description   (empty)
      Points
-     Blocked     [ ] no
-     Due date    YYYY-MM-DD
-     Priority    ‹ P1 ›
-     Labels      [ ] api  [x] ui  [ ] docs
-   enter/ctrl+s submit · ↑/↓ move
+     Blocked       [ ] no
+     Due date      YYYY-MM-DD
+     Priority      ‹ P1 ›
+     Labels        [ ] api  [x] ui  [ ] docs
+                   Save   type to edit · enter/ctrl+s submit · ↑/↓ move
 
    ConfirmDialog
    ╭────────────────────────────╮
@@ -41,6 +40,5 @@ exports[`demo screen > renders every primitive 1`] = `
    │                            │
    │  Delete (y)    Cancel (n)  │
    ╰────────────────────────────╯
-
  tab next section · g go to · ? help · q quit"
 `;

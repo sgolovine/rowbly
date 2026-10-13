@@ -103,13 +103,13 @@ describe('G2 effective configuration (config show)', () => {
     const t = await seed();
     await makeRootConfig(t.path, { ...ROOT_CONFIG, stages: [{ key: 'idea', name: 'Idea', category: 'todo' }] });
     const { app } = open(t, 'home', {}, { version: 1, board: 'api' });
-    await waitForFrame(app, 'api › Board');
+    await waitForFrame(app, 'API api');
     await app.press('g');
     await waitForFrame(app, 'Config');
     // The first enter ends filtering, the second opens the highlighted destination.
     await app.press('/', ...'conf', KEYS.enter, KEYS.enter);
     const frame = await waitForFrame(app, 'Key prefix');
-    expect(frame).toContain('api › Board › Config');
+    expect(frame).toContain('Board › Config');
     expect(frame).toMatch(/Board\s+api/);
     expect(frame).toContain('Stages (from global)');
     expect(frame).toContain('● Idea idea · todo 0 Stories');
@@ -157,14 +157,15 @@ describe('G4 viewing another Board without changing the context', () => {
     await waitForFrame(app, 'Website web · WEB (current)');
     await app.press('v');
     const frame = await waitForFrame(app, (f) => f.includes('API-1') && f.includes('● Backlog (1)'));
-    expect(frame).toContain('API api · viewing only (context unchanged)');
-    expect(frame).toContain('web › Boards › Board');
+    expect(frame).toMatch(/API api · .*viewing only \(context unchanged\)/);
+    expect(frame).toContain('Boards › Board');
     expect(ctx.local).toEqual(CONTEXT);
     expect(await localOnDisk(t)).toEqual(CONTEXT);
 
     // b still switches the context, and the board then follows it.
     await app.press('b');
-    await waitForFrame(app, 'Website web');
+    // The Boards list stays on screen below, so wait for the picker's own entry.
+    await waitForFrame(app, /Switch Board[\s\S]*Website web/);
     await app.press('j', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('WEB-1') && !f.includes('viewing only'));
     expect(await localOnDisk(t)).toEqual(CONTEXT);
@@ -213,7 +214,7 @@ describe('G5 creating the global Data Root after one exists (init --global)', ()
     // The app stays on the current Data Root and context.
     expect(ctx.root).toEqual(t.root);
     expect(await localOnDisk(t)).toEqual({ version: 1 });
-    expect(app.lastFrame()).toContain('web › Context');
+    expect(app.lastFrame()).toContain('Switch Board');
     // Now that it exists, it is no longer offered (rechecked on return).
     await waitForFrame(app, (f) => !f.includes('Create global Data Root'));
     app.unmount();

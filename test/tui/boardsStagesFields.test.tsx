@@ -42,7 +42,7 @@ describe('stages screen', () => {
     const app = await open(t, 'stages');
     const frame = app.lastFrame() ?? '';
     expect(frame).toContain('Level:  board   global');
-    expect(frame).toContain('inherited from default (copied to board on first edit)');
+    expect(frame).toContain('inherited from default (copied to board on first');
     expect(frame).toContain('› 1. ● Backlog backlog · todo');
     expect(frame).toContain('3. ● In Progress in-progress · in_progress');
     await app.press('l');
@@ -113,7 +113,7 @@ describe('stages screen', () => {
     expect(app.lastFrame()).not.toContain('esc back');
     await app.press(KEYS.escape);
     expect(app.lastFrame()).not.toContain('Add a Stage');
-    expect(app.lastFrame()).toContain('Stages');
+    expect(app.lastFrame()).toContain('Level:');
     app.unmount();
   });
 });

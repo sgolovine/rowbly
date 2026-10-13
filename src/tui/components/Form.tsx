@@ -1,7 +1,7 @@
-import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { Box, type DOMElement, Text, useInput } from 'ink';
+import { useRef, useState } from 'react';
 import { ValidationError } from '../../core';
-import { useDirty, useEditor, useIsActive, useKeyCapture, useToast } from '../hooks';
+import { useDirty, useEditor, useIsActive, useKeyCapture, useLayout, useMouse, useToast } from '../hooks';
 
 export type FieldKind = 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
 
@@ -90,6 +90,7 @@ function issuesByField(
 export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: FormProps) {
   const active = useIsActive() && isActive;
   const toast = useToast();
+  const layout = useLayout();
   const edit = useEditor();
   const [initial] = useState(() => Object.fromEntries(fields.map((f) => [f.name, toRaw(f, initialValues[f.name])])));
   const [values, setValues] = useState<Record<string, Raw>>(initial);
@@ -188,33 +189,116 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
     { isActive: active },
   );
 
-  const labelWidth = Math.max(...fields.map((f) => f.label.length)) + 3;
+  const labelWidth = Math.max(...fields.map((f) => f.label.length + (f.required ? 1 : 0))) + 4;
+  const inputWidth = Math.max(16, Math.min(INPUT_MAX_WIDTH, layout.width - labelWidth));
+  // Space the fields out when the room allows: two lines per field plus the button row.
+  const roomy = layout.height !== undefined && layout.height >= fields.length * 2 + 3;
   return (
-    <Box flexDirection="column">
-      {fields.map((f, i) => {
-        const focused = i === focus && active;
-        return (
-          <Box key={f.name} flexDirection="column">
-            <Box>
-              <Box width={labelWidth} flexShrink={0}>
-                <Text color={focused ? 'cyan' : undefined}>
-                  {i === focus ? '› ' : '  '}
-                  {f.label}
-                  {f.required ? '*' : ''}
-                </Text>
-              </Box>
-              <FieldValue field={f} raw={values[f.name] ?? null} focused={focused} optionCursor={optionCursor} />
-            </Box>
-            {errors[f.name] && <Text color="red">{`${' '.repeat(labelWidth)}${errors[f.name]}`}</Text>}
-          </Box>
-        );
-      })}
-      {formErrors.map((message) => (
-        <Text key={message} color="red">
-          {message}
-        </Text>
+    <Box flexDirection="column" gap={roomy ? 1 : 0}>
+      {fields.map((f, i) => (
+        <FieldRow
+          key={f.name}
+          field={f}
+          raw={values[f.name] ?? null}
+          focused={i === focus}
+          active={active}
+          error={errors[f.name]}
+          labelWidth={labelWidth}
+          inputWidth={inputWidth}
+          optionCursor={optionCursor}
+          onClick={() => {
+            if (i !== focus) moveFocus(i - focus);
+          }}
+        />
       ))}
-      <Text dimColor>{busy ? 'Saving…' : 'enter/ctrl+s submit · ↑/↓ move'}</Text>
+      <Box flexDirection="column">
+        {formErrors.map((message) => (
+          <Text key={message} color="red">
+            {message}
+          </Text>
+        ))}
+        <Box gap={2} marginLeft={labelWidth}>
+          <SaveButton busy={busy} active={active} onClick={() => void submit()} />
+          <Text dimColor wrap="truncate-end">
+            {field ? `${FIELD_HELP[field.kind]} · ` : ''}enter/ctrl+s submit · ↑/↓ move
+          </Text>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+/** Widest an input grows; longer text scrolls inside it. */
+const INPUT_MAX_WIDTH = 64;
+const INPUT_BACKGROUND = '#30303c';
+const FOCUSED_BACKGROUND = '#3a3a52';
+
+const FIELD_HELP: Record<FieldKind, string> = {
+  text: 'type to edit',
+  number: 'type a number',
+  date: 'type YYYY-MM-DD',
+  boolean: 'space toggles',
+  select: '←/→ change',
+  multiselect: '←/→ pick · space toggles',
+  multiline: 'e opens $EDITOR',
+};
+
+function FieldRow({
+  field,
+  raw,
+  focused,
+  active,
+  error,
+  labelWidth,
+  inputWidth,
+  optionCursor,
+  onClick,
+}: {
+  field: FormField;
+  raw: Raw;
+  focused: boolean;
+  active: boolean;
+  error?: string;
+  labelWidth: number;
+  inputWidth: number;
+  optionCursor: number;
+  onClick(): void;
+}) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, active);
+  const lit = focused && active;
+  return (
+    <Box ref={ref} flexDirection="column">
+      <Box>
+        <Box width={labelWidth} flexShrink={0}>
+          <Text color={lit ? 'cyan' : undefined} bold={lit} dimColor={!focused}>
+            {focused ? '› ' : '  '}
+            {field.label}
+            {field.required ? '*' : ''}
+          </Text>
+        </Box>
+        <Box
+          width={inputWidth}
+          flexShrink={0}
+          paddingX={1}
+          backgroundColor={lit ? FOCUSED_BACKGROUND : INPUT_BACKGROUND}
+        >
+          <FieldValue field={field} raw={raw} focused={lit} optionCursor={optionCursor} width={inputWidth - 2} />
+        </Box>
+      </Box>
+      {error && <Text color="red">{`${' '.repeat(labelWidth)}${error}`}</Text>}
+    </Box>
+  );
+}
+
+function SaveButton({ busy, active, onClick }: { busy: boolean; active: boolean; onClick(): void }) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, active && !busy);
+  return (
+    <Box ref={ref} flexShrink={0}>
+      <Text inverse color="cyan" bold>
+        {busy ? ' Saving… ' : ' Save '}
+      </Text>
     </Box>
   );
 }
@@ -224,11 +308,13 @@ function FieldValue({
   raw,
   focused,
   optionCursor,
+  width,
 }: {
   field: FormField;
   raw: Raw;
   focused: boolean;
   optionCursor: number;
+  width: number;
 }) {
   switch (field.kind) {
     case 'boolean':
@@ -254,7 +340,7 @@ function FieldValue({
       const preview =
         lines.length === 0 ? '(empty)' : `${lines[0]}${lines.length > 1 ? ` (+${lines.length - 1} lines)` : ''}`;
       return (
-        <Text>
+        <Text wrap="truncate-end">
           <Text dimColor={lines.length === 0}>{preview}</Text>
           {focused && <Text dimColor> e to edit</Text>}
         </Text>
@@ -262,8 +348,9 @@ function FieldValue({
     }
     default:
       return (
-        <Text>
-          {String(raw)}
+        <Text wrap="truncate-start">
+          {/* Keep the end of long input, where the cursor is, in view. */}
+          {String(raw).slice(-Math.max(1, width - 1))}
           {focused && <Text inverse> </Text>}
           {field.kind === 'date' && raw === '' && <Text dimColor>YYYY-MM-DD</Text>}
         </Text>
