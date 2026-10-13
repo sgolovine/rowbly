@@ -32,14 +32,16 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   useKeyCapture(active && mode === 'move', { escape: true });
   useEscape(active && mode === 'move', () => setMode('view'));
   useKeyHints(
-    viewing
-      ? [
-          { key: 'tab/←/→', description: 'switch tab' },
-          { key: 'e', description: 'edit' },
-          { key: 'm', description: 'move Stage' },
-          { key: 'd', description: 'delete' },
-        ]
-      : [{ key: 'esc', description: 'cancel' }],
+    !viewing
+      ? [{ key: 'esc', description: 'cancel' }]
+      : tab === 0
+        ? [
+            { key: 'tab/←/→', description: 'switch tab' },
+            { key: 'e', description: 'edit' },
+            { key: 'm', description: 'move Stage' },
+            { key: 'd', description: 'delete' },
+          ]
+        : [{ key: 'tab/←/→', description: 'switch tab' }],
   );
 
   useInput(
@@ -48,6 +50,8 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       if (!story) return;
       if (key.tab || key.rightArrow) setTab((t) => (t + 1) % TABS.length);
       else if (key.leftArrow) setTab((t) => (t + TABS.length - 1) % TABS.length);
+      // The Tasks and Comments tabs handle their own keys.
+      else if (tab !== 0) return;
       else if (input === 'e') router.push('story-form', { key: story.key, title: `Edit ${story.key}` });
       else if (input === 'm') setMode('move');
       else if (input === 'd') setMode('confirm-delete');
