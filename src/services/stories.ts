@@ -11,16 +11,18 @@ import {
   ValidationError,
 } from '../core';
 import {
+  type Assignee,
   type BoardRef,
   type CustomFieldValue,
   type EffectiveBoardConfig,
+  type Epic,
   type Priority,
   type Slug,
   type Stage,
   type Story,
   StorySchema,
 } from '../schemas';
-import { type Repositories, resolveCascade } from '../storage';
+import { createRepositories, type Repositories, resolveCascade } from '../storage';
 import { validateFieldValues } from './_customFieldValues';
 import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
@@ -266,6 +268,26 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories): S
     for (const key of patch.unsetFields ?? []) delete merged[key];
     return validateFieldValues((await effective(story)).customFields, merged, { requireRequired: true });
   }
+}
+
+/** What a Story on a Board can be set to, for the TUI's story form and filters. */
+export interface StoryChoices extends EffectiveBoardConfig {
+  assignees: Assignee[];
+  /** Open Epics in the Workspace. */
+  epics: Epic[];
+  /** Labels already used on the Board. */
+  labels: string[];
+}
+
+export async function storyChoices(ctx: RowblyContext, ref: BoardRef): Promise<StoryChoices> {
+  const repos = createRepositories(ctx.root);
+  const [config, workspace, epics, labels] = await Promise.all([
+    resolveCascade(ctx.root, ref),
+    repos.workspaces.get(ref.workspaceId),
+    repos.epics.list(ref.workspaceId),
+    createStoriesService(ctx, repos).labelsInUse(ref),
+  ]);
+  return { ...config, assignees: workspace.assignees, epics: epics.filter((e) => !e.closed), labels };
 }
 
 /** Every given filter must match (contracts §5). */

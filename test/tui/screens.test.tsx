@@ -5,7 +5,7 @@ import { CommentsPanel } from '../../src/tui/screens/comments/CommentsPanel';
 import { StoryTasksTab } from '../../src/tui/screens/tasks/StoryTasksTab';
 
 describe('screen registry', () => {
-  it('has one entry per area', () => {
+  it("has every area's screens", () => {
     expect(Object.keys(screens).sort()).toEqual(
       [
         'assignees',
@@ -20,6 +20,8 @@ describe('screen registry', () => {
         'setup',
         'stages',
         'stories',
+        'story',
+        'story-form',
         'tasks',
         'workspaces',
       ].sort(),
