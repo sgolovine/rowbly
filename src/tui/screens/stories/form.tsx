@@ -14,7 +14,7 @@ import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 import { boardRefFor, NONE } from './shared';
 
-/** Creates a Story (`params.ref`, default: the Board in context) or edits one (`params.key`). */
+/** Creates a Story (`params.ref`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
 export function StoryFormScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
@@ -65,7 +65,11 @@ export function StoryFormScreen({ params }: ScreenProps) {
   return (
     <Box flexDirection="column" gap={1}>
       <Text bold>{story ? `Edit ${story.key}` : `New Story on ${ref.workspaceId}/${ref.boardId}`}</Text>
-      <Form fields={formFields(choices, story)} initialValues={initialValues(choices, story)} onSubmit={submit} />
+      <Form
+        fields={formFields(choices, story)}
+        initialValues={initialValues(choices, story, params.stage as string | undefined)}
+        onSubmit={submit}
+      />
       {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>
   );
@@ -107,11 +111,11 @@ function customFormField(def: CustomFieldDef): FormField {
   }
 }
 
-function initialValues(choices: StoryChoices, story: Story | null): FormValues {
+function initialValues(choices: StoryChoices, story: Story | null, stage?: string): FormValues {
   const values: FormValues = {
     name: story?.name ?? '',
     description: story?.description ?? '',
-    stage: story?.stage ?? choices.stages[0]?.key ?? null,
+    stage: story?.stage ?? stage ?? choices.stages[0]?.key ?? null,
     assignees: story?.assignees ?? [],
     epicId: story?.epicId ?? NONE,
     priority: story?.priority ?? NONE,
