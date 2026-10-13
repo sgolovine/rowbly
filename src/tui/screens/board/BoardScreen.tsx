@@ -251,7 +251,7 @@ export function BoardScreen(_props: ScreenProps) {
       )}
       {mode === 'filter' && (
         <Box flexDirection="column">
-          <Text bold>Filter cards</Text>
+          <Text bold>Filter Stories</Text>
           <Form
             fields={[
               {
