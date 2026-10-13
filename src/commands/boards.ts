@@ -72,7 +72,7 @@ export function registerBoards(program: Command): void {
 
   boards
     .command('edit <id>')
-    .description('Edit a Board’s name or description')
+    .description("Edit a Board's name or description")
     .option('--name <name>', 'new display name')
     .option('--description <text>', 'new description')
     .option(...wsOption)
