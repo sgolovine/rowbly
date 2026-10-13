@@ -62,6 +62,8 @@ describe('doctor screen', () => {
   it('checks again with r and is reachable from the g palette', async () => {
     const { tmp, render } = await setup('home');
     const app = render();
+    // Home opens the board once it has loaded; wait so that does not close the palette.
+    await waitForFrame(app, '● Backlog (0)');
     await app.press('g');
     await waitForFrame(app, 'Doctor');
     // The first enter ends filtering, the second opens the highlighted destination.
