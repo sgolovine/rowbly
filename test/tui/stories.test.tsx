@@ -138,10 +138,10 @@ describe('story detail', () => {
     await app.press(KEYS.enter);
     await waitFor(app, (f) => f.includes('Details'));
     await app.press(KEYS.tab);
-    expect(app.lastFrame()).toContain('Tasks for WEB-1');
+    await waitFor(app, (f) => f.includes('No Tasks yet'));
     await app.press(KEYS.tab);
-    expect(app.lastFrame()).toContain('Comments on WEB-1');
-    await app.press('d');
+    await waitFor(app, (f) => f.includes('No Comments yet'));
+    await app.press(KEYS.tab, 'd');
     expect(app.lastFrame()).toContain('Delete WEB-1');
     await app.press('y');
     await waitFor(app, (f) => f.includes('Deleted WEB-1') && f.includes('No Stories yet'));
