@@ -11,13 +11,17 @@ import type { ScreenProps } from '../types';
 
 /**
  * First run, when no Data Root exists: pick where to create one, then the same flow as `rowbly init`.
+ * With `params.global` (from the Context screen) it goes straight to the form for `~/.rowbly`, like
+ * `init --global`, and returns afterwards without leaving the current Data Root.
  * `params.cwd` and `params.home` override the process values (for tests).
  */
 export function SetupScreen({ params }: ScreenProps) {
   const cwd = typeof params.cwd === 'string' ? params.cwd : process.cwd();
   const home = typeof params.home === 'string' ? params.home : homedir();
   const toast = useToast();
-  const [root, setRoot] = useState<DataRoot | null>(null);
+  const [root, setRoot] = useState<DataRoot | null>(() =>
+    params.global === true ? initTarget({ cwd, home, global: true }) : null,
+  );
   useKeyHints([{ key: 'enter', description: root ? 'create' : 'choose' }]);
 
   if (!root) {
@@ -46,12 +50,13 @@ export function SetupScreen({ params }: ScreenProps) {
       </Box>
     );
   }
-  return <InitForm root={root} cwd={cwd} home={home} />;
+  return <InitForm root={root} cwd={cwd} home={home} stay={params.global === true} />;
 }
 
 const text = (value: FormValues[string] | undefined) => (typeof value === 'string' ? value.trim() : '');
 
-function InitForm({ root, cwd, home }: { root: DataRoot; cwd: string; home: string }) {
+/** `stay`: keep the current Data Root and go back, instead of opening the app on the new one. */
+function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home: string; stay: boolean }) {
   const toast = useToast();
   const router = useRouter();
   const activate = useActivate();
@@ -83,6 +88,10 @@ function InitForm({ root, cwd, home }: { root: DataRoot; cwd: string; home: stri
             : undefined;
           await createServices(newContext(root, warn)).setup.init({ root, workspace, board });
           toast.push('info', `Created ${root.path}`);
+          if (stay) {
+            router.pop();
+            return;
+          }
           activate(await createContext({ cwd, env: {}, home, root: root.path, warn }));
           router.replace('home');
         }}
