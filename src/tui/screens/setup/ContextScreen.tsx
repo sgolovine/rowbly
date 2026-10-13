@@ -1,6 +1,8 @@
+import { homedir } from 'node:os';
 import { Box, Text, useInput } from 'ink';
 import { useContext } from 'react';
-import { meSource } from '../../../services/setup';
+import { ConflictError } from '../../../core';
+import { assertInitTarget, initTarget, meSource } from '../../../services/setup';
 import { Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
@@ -8,15 +10,20 @@ import type { ScreenProps } from '../types';
 
 /**
  * The context switcher: pick a Workspace, then one of its Boards (`params.workspaceId`). The
- * `whoami` view (`params.view`) picks Me from the current Workspace's roster.
+ * `whoami` view (`params.view`) picks Me from the current Workspace's roster. While `~/.rowbly` does
+ * not exist, it also offers to create it, like `init --global`. `params.home` overrides the home
+ * directory (for tests).
  */
 export function ContextScreen({ params }: ScreenProps) {
   if (params.view === 'whoami') return <WhoamiPicker />;
   if (typeof params.workspaceId === 'string') return <BoardPicker workspaceId={params.workspaceId} />;
-  return <WorkspacePicker />;
+  return <WorkspacePicker home={typeof params.home === 'string' ? params.home : homedir()} />;
 }
 
-function WorkspacePicker() {
+/** The picker entry that opens the global `init` form. */
+const CREATE_GLOBAL = '\u0000global';
+
+function WorkspacePicker({ home }: { home: string }) {
   const services = useServices();
   const ctx = useRowblyContext();
   const router = useRouter();
@@ -24,6 +31,17 @@ function WorkspacePicker() {
   const shell = useContext(ShellContext);
   const active = useIsActive();
   const workspaces = useAsync(() => services.workspaces.list(), []);
+  const globalRoot = initTarget({ cwd: process.cwd(), home, global: true });
+  // Rechecked when the screen is back on top, e.g. after the global Data Root was created.
+  const canCreateGlobal = useAsync(async () => {
+    try {
+      await assertInitTarget(globalRoot);
+      return true;
+    } catch (err) {
+      if (err instanceof ConflictError) return false;
+      throw err;
+    }
+  }, [globalRoot.path, active]);
   useKeyHints([
     { key: 'enter', description: 'choose workspace' },
     { key: 'm', description: 'who am I' },
@@ -48,13 +66,22 @@ function WorkspacePicker() {
     <Box flexDirection="column">
       <Text bold>Switch Workspace</Text>
       <SelectList
-        items={workspaces.data.map((ws) => ({
-          value: ws.id,
-          label: ws.id === ctx?.local.workspace ? `${ws.id} *` : ws.id,
-          description: ws.name,
-        }))}
+        items={[
+          ...workspaces.data.map((ws) => ({
+            value: ws.id,
+            label: ws.id === ctx?.local.workspace ? `${ws.id} *` : ws.id,
+            description: ws.name,
+          })),
+          ...(canCreateGlobal.data
+            ? [{ value: CREATE_GLOBAL, label: 'Create global Data Root', description: globalRoot.path }]
+            : []),
+        ]}
         emptyText="No Workspaces yet. Create one from Workspaces."
         onSelect={async (item) => {
+          if (item.value === CREATE_GLOBAL) {
+            router.push('setup', { global: true, home, title: 'Global Data Root' });
+            return;
+          }
           try {
             if ((await services.boards.list(item.value)).length > 0) {
               router.push('context', { workspaceId: item.value, title: item.value });

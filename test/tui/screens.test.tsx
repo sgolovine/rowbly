@@ -8,6 +8,7 @@ describe('screen registry', () => {
       [
         'assignees',
         'board',
+        'board-detail',
         'boards',
         'context',
         'demo',

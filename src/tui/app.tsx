@@ -17,7 +17,7 @@ import {
   useToast,
   useToasts,
 } from './hooks';
-import { DESTINATIONS, GLOBAL_KEYS, globalAction, type KeyHint } from './keymap';
+import { DESTINATIONS, type Destination, GLOBAL_KEYS, globalAction, type KeyHint } from './keymap';
 import { type Route, RouterProvider, routeTitle, useRouter } from './router';
 import { screens as defaultScreens, type ScreenRegistry } from './screens';
 
@@ -116,9 +116,9 @@ function Shell({ screens }: { screens: ScreenRegistry }) {
         {overlay?.kind === 'help' && <HelpOverlay hints={hints} />}
         {overlay?.kind === 'goto' && (
           <GotoPalette
-            onPick={(screen) => {
+            onPick={(destination) => {
               setOverlay(null);
-              router.push(screen);
+              router.push(destination.screen, destination.params);
             }}
           />
         )}
@@ -236,13 +236,17 @@ function HelpOverlay({ hints }: { hints: readonly KeyHint[] }) {
   );
 }
 
-function GotoPalette({ onPick }: { onPick(screen: string): void }) {
+function GotoPalette({ onPick }: { onPick(destination: Destination): void }) {
   return (
     <Box flexDirection="column" borderStyle="round" paddingX={1} alignSelf="flex-start">
       <Text bold>Go to</Text>
       <SelectList
-        items={DESTINATIONS.map((d) => ({ value: d.screen, label: d.label }))}
-        onSelect={(item) => onPick(item.value)}
+        items={DESTINATIONS.map((d) => ({ value: d.label, label: d.label }))}
+        limit={DESTINATIONS.length}
+        onSelect={(item) => {
+          const destination = DESTINATIONS.find((d) => d.label === item.value);
+          if (destination) onPick(destination);
+        }}
       />
     </Box>
   );

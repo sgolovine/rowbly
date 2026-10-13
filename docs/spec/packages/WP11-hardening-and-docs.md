@@ -33,7 +33,7 @@ Check the whole product end to end, make it consistent, and document it.
    - Exit codes match contracts §6, checked by a table-driven test.
 4. **README.**
    - What Rowbly is.
-   - Install (`pnpm install && pnpm build && pnpm link --global`).
+   - Install (`pnpm install && pnpm build && pnpm add -g "$PWD"`).
    - A quick start: `init`, `use`, `stories create`, then `rowbly`.
    - Concepts, linking to `CONTEXT.md`.
    - Data Root and git workflow, including that deleted keys may be reused and how to use `doctor` after merges.

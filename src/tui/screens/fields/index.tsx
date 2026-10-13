@@ -236,7 +236,8 @@ function toProps(type: CustomFieldType, values: FormValues, editing: boolean): C
   return props;
 }
 
-function describeField(f: CustomFieldDef): string {
+/** A Custom Field's type and its settings, e.g. `select: s, m, l` or `number (≥ 0)`. */
+export function describeField(f: CustomFieldDef): string {
   if (f.type === 'select' || f.type === 'multiselect') return `${f.type}: ${f.options.join(', ')}`;
   if (f.type === 'number') {
     const limits = [

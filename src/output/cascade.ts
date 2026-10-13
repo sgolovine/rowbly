@@ -1,3 +1,4 @@
+import type { ConfigLevel } from '../schemas';
 import type { OverrideLevels } from '../services/workspaces';
 
 /** Where a Workspace's Stages or Custom Fields lists are defined, e.g. `defined at global, board web`. */
@@ -8,4 +9,9 @@ export function describeCascadeLevels(levels: OverrideLevels, fallback: string):
     ...levels.boards.map((board) => `board ${board}`),
   ];
   return defined.length === 0 ? fallback : `defined at ${defined.join(', ')}`;
+}
+
+/** The Configuration Cascade level a Board's effective Stages or Custom Fields come from, e.g. `from board`. */
+export function describeSource(level: ConfigLevel): string {
+  return `from ${level}`;
 }

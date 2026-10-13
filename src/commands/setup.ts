@@ -2,7 +2,7 @@ import { homedir } from 'node:os';
 import { confirm, isCancel } from '@clack/prompts';
 import type { Command } from 'commander';
 import { UsageError } from '../core';
-import { colorByCategory, colors, printResult, printWarnings, renderTable } from '../output';
+import { colorByCategory, colors, describeSource, printResult, printWarnings, renderTable } from '../output';
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { createServices, type InitOptions, type InitResult, type RowblyContext, type Services } from '../services';
 import { assertInitTarget, claimMe, initTarget, type MeSource, meSource, newContext } from '../services/setup';
@@ -244,10 +244,10 @@ function renderEffective(config: EffectiveBoardConfig): string {
   return [
     `${colors.bold(`${board.workspaceId}/${board.id}`)}  ${board.name} (${board.keyPrefix})`,
     '',
-    `Stages ${colors.dim(`(from ${config.stagesSource})`)}`,
+    `Stages ${colors.dim(`(${describeSource(config.stagesSource)})`)}`,
     stages,
     '',
-    `Custom Fields ${colors.dim(`(from ${config.customFieldsSource})`)}`,
+    `Custom Fields ${colors.dim(`(${describeSource(config.customFieldsSource)})`)}`,
     fields,
   ].join('\n');
 }

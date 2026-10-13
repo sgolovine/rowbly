@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { UsageError } from '../core';
-import { colorByCategory, colors, printResult, renderTable } from '../output';
+import { colorByCategory, colors, describeSource, printResult, renderTable } from '../output';
 import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { storyCountsByStage } from '../services/boards';
 import {
@@ -123,7 +123,7 @@ function renderBoardShow(data: EffectiveBoardConfig & { storyCounts: Record<stri
   if (board.description) lines.push(board.description);
   lines.push(
     '',
-    colors.bold(`Stages (from ${data.stagesSource})`),
+    colors.bold(`Stages (${describeSource(data.stagesSource)})`),
     renderTable(
       ['KEY', 'NAME', 'CATEGORY', 'STORIES'],
       data.stages.map((s) => [s.key, colorByCategory(s.category, s.name), s.category, String(storyCounts[s.key] ?? 0)]),
@@ -133,7 +133,7 @@ function renderBoardShow(data: EffectiveBoardConfig & { storyCounts: Record<stri
   for (const key of unknown) {
     lines.push(colors.yellow(`${storyCounts[key]} Stories are in unknown Stage "${key}" (run \`rowbly doctor\`)`));
   }
-  lines.push('', colors.bold(`Custom Fields (from ${data.customFieldsSource})`));
+  lines.push('', colors.bold(`Custom Fields (${describeSource(data.customFieldsSource)})`));
   lines.push(data.customFields.length === 0 ? colors.dim('none') : renderFieldTable(data.customFields));
   return lines.join('\n');
 }

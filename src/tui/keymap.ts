@@ -21,6 +21,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 export interface Destination {
   label: string;
   screen: string;
+  params?: Record<string, unknown>;
 }
 
 export const DESTINATIONS: readonly Destination[] = [
@@ -32,6 +33,8 @@ export const DESTINATIONS: readonly Destination[] = [
   { label: 'Assignees', screen: 'assignees' },
   { label: 'Stages', screen: 'stages' },
   { label: 'Fields', screen: 'fields' },
+  // The Board detail, which shows the effective configuration (`config show`).
+  { label: 'Config', screen: 'board-detail', params: { title: 'Config' } },
   { label: 'Context', screen: 'context' },
   { label: 'Doctor', screen: 'doctor' },
 ];

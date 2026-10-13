@@ -219,6 +219,23 @@ describe('board view', () => {
     app.unmount();
   });
 
+  it('filters on several values per field, like the Stories list', async () => {
+    const t = await seed();
+    const app = await open(t);
+    // assignees, me, labels, priorities, epic, text: P0 and P3 at once.
+    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
+    let frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
+    expect(frame).toContain('WEB-4');
+    expect(frame).toContain('WEB-5');
+    expect(frame).not.toContain('WEB-6');
+    // Both Assignees: any of them matches, like a repeated --assignee.
+    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.enter);
+    frame = await waitForFrame(app, (f) => f.includes('filter: @alice @bob') && !f.includes('WEB-5'));
+    expect(frame).toContain('WEB-1');
+    expect(frame).toContain('WEB-4');
+    app.unmount();
+  });
+
   it('reverts a move the service refuses and shows a toast', async () => {
     const t = await seed();
     let release = () => {};

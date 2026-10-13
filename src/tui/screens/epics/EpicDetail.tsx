@@ -8,7 +8,7 @@ import { useRouter } from '../../router';
 import { ProgressBar } from './ProgressBar';
 
 /** An Epic, its progress and its Stories grouped by Board; `enter` opens a Story's detail screen. */
-export function EpicDetail({ id }: { id: string }) {
+export function EpicDetail({ id, workspaceId }: { id: string; workspaceId?: string }) {
   const services = useServices();
   const router = useRouter();
   const toast = useToast();
@@ -16,10 +16,10 @@ export function EpicDetail({ id }: { id: string }) {
   const active = useIsActive();
   const [confirming, setConfirming] = useState(false);
   const epic = useAsync(async () => {
-    const ws = await services.context.resolveWorkspace();
+    const ws = workspaceId ?? (await services.context.resolveWorkspace());
     const view = await services.epics.get(ws, id);
     return { view, stages: await stagesByBoard(services.config, view) };
-  }, [services, id, active]);
+  }, [services, id, workspaceId, active]);
 
   const run = async (action: () => Promise<unknown>) => {
     try {
@@ -39,7 +39,7 @@ export function EpicDetail({ id }: { id: string }) {
     (input) => {
       const view = epic.data?.view;
       if (!view || confirming || shell.captured().text) return;
-      if (input === 'e') router.push('epics', { view: 'form', id, title: 'Edit' });
+      if (input === 'e') router.push('epics', { view: 'form', id, workspaceId, title: 'Edit' });
       else if (input === 'd') setConfirming(true);
       else if (input === 'c') {
         void run(async () => {
