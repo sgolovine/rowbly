@@ -3,7 +3,14 @@ import { NotFoundError } from '../core';
 import { colors, printResult } from '../output';
 import type { Comment } from '../schemas';
 import type { Services } from '../services';
-import { confirmDestructive, type GlobalOptions, promptIfMissing, readLongText, withContext } from './_shared';
+import {
+  confirmDestructive,
+  type GlobalOptions,
+  pluginOptions,
+  promptIfMissing,
+  readLongText,
+  withContext,
+} from './_shared';
 
 interface BodyOptions {
   body?: string;
@@ -30,7 +37,7 @@ export function registerComments(program: Command): void {
     async (target: string, opts: BodyOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const body = await readBody(opts, globals);
-        const comment = await services.comments.add(target, body);
+        const comment = await services.comments.add(target, body, pluginOptions(cmd));
         printResult(comment, { json: globals.json, human: (c) => `Added Comment ${c.id}` });
       }),
   );
@@ -40,7 +47,7 @@ export function registerComments(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         const initial = opts.edit ? (await find(services, target, id)).body : undefined;
         const body = await readBody(opts, globals, initial);
-        const comment = await services.comments.update(target, id, body);
+        const comment = await services.comments.update(target, id, body, pluginOptions(cmd));
         printResult(comment, { json: globals.json, human: (c) => `Updated Comment ${c.id}` });
       }),
   );
@@ -52,7 +59,7 @@ export function registerComments(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         await find(services, target, id);
         await confirmDestructive(`Delete Comment ${id}?`, globals);
-        await services.comments.remove(target, id);
+        await services.comments.remove(target, id, pluginOptions(cmd));
         printResult({ deleted: id }, { json: globals.json, human: () => `Deleted Comment ${id}` });
       }),
     );

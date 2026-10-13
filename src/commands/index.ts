@@ -4,6 +4,7 @@ import { registerBoards } from './boards';
 import { registerComments } from './comments';
 import { registerDoctor } from './doctor';
 import { registerFields } from './fields';
+import { registerPlugins } from './plugins';
 import { registerSetup } from './setup';
 import { registerStages } from './stages';
 import { registerStories } from './stories';
@@ -20,4 +21,7 @@ export function registerCommands(program: Command): void {
   registerTasks(program);
   registerComments(program);
   registerDoctor(program);
+  registerPlugins(program);
 }
+
+export { attachPlugins, PLUGIN_OPTION_COMMANDS } from './plugins';

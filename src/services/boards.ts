@@ -11,42 +11,52 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
     get: (id) => repos.boards.get(id),
 
     create: (input) =>
-      ops.run('boards.create', input, async (changes) => {
-        const now = toTimestamp(ctx.now());
-        const board = parseBoard({
-          version: 1,
-          id: input.id,
-          name: input.name,
-          description: input.description ?? '',
-          keyPrefix: input.keyPrefix.toUpperCase(),
-          createdAt: now,
-          updatedAt: now,
-        });
-        if (await exists(board.id)) {
-          throw new ConflictError(`Board "${board.id}" already exists`);
-        }
-        const holder = await repos.boards.findByPrefix(board.keyPrefix);
-        if (holder) {
-          throw new ConflictError(`key prefix "${board.keyPrefix}" is already used by Board "${holder.id}"`, {
-            hint: 'key prefixes are unique across the Data Root; choose another --prefix',
+      ops.run(
+        'boards.create',
+        input,
+        async (changes) => {
+          const now = toTimestamp(ctx.now());
+          const board = parseBoard({
+            version: 1,
+            id: input.id,
+            name: input.name,
+            description: input.description ?? '',
+            keyPrefix: input.keyPrefix.toUpperCase(),
+            createdAt: now,
+            updatedAt: now,
           });
-        }
-        // Stages and Custom Fields are inherited until a level is edited (copy-on-write).
-        return changes.putBoard(board);
-      }),
+          if (await exists(board.id)) {
+            throw new ConflictError(`Board "${board.id}" already exists`);
+          }
+          const holder = await repos.boards.findByPrefix(board.keyPrefix);
+          if (holder) {
+            throw new ConflictError(`key prefix "${board.keyPrefix}" is already used by Board "${holder.id}"`, {
+              hint: 'key prefixes are unique across the Data Root; choose another --prefix',
+            });
+          }
+          // Stages and Custom Fields are inherited until a level is edited (copy-on-write).
+          return changes.putBoard(board);
+        },
+        (changes, board) => changes.board(board.id)?.after ?? board,
+      ),
 
     update: (id, patch) =>
-      ops.run('boards.update', { id, ...patch }, async (changes) => {
-        const board = await repos.boards.get(id);
-        return changes.putBoard(
-          parseBoard({
-            ...board,
-            ...(patch.name !== undefined ? { name: patch.name } : {}),
-            ...(patch.description !== undefined ? { description: patch.description } : {}),
-            updatedAt: toTimestamp(ctx.now()),
-          }),
-        );
-      }),
+      ops.run(
+        'boards.update',
+        { id, ...patch },
+        async (changes) => {
+          const board = await repos.boards.get(id);
+          return changes.putBoard(
+            parseBoard({
+              ...board,
+              ...(patch.name !== undefined ? { name: patch.name } : {}),
+              ...(patch.description !== undefined ? { description: patch.description } : {}),
+              updatedAt: toTimestamp(ctx.now()),
+            }),
+          );
+        },
+        (changes, board) => changes.board(board.id)?.after ?? board,
+      ),
 
     async remove(id, opts) {
       const board = await repos.boards.get(id);

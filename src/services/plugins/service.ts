@@ -1,9 +1,12 @@
 import { NotFoundError, ValidationError } from '../../core';
-import type { PluginsService, RowblyContext } from '../types';
+import type { Story } from '../../schemas';
+import type { Repositories } from '../../storage';
+import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
 import type { OperationRunner } from './runtime';
+import type { PluginRow } from './types';
 
-export function createPluginsService(ctx: RowblyContext, ops: OperationRunner): PluginsService {
+export function createPluginsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): PluginsService {
   const statuses = () => ctx.plugins?.status() ?? [];
 
   function definition(id: string) {
@@ -18,7 +21,8 @@ export function createPluginsService(ctx: RowblyContext, ops: OperationRunner): 
     async get(id) {
       const status = statuses().find((s) => s.id === id);
       if (!status) throw notFound(id);
-      return status;
+      const { enabled: _enabled, ...settings } = (await repos.rootConfig.get()).plugins?.[id] ?? {};
+      return { ...status, settings };
     },
 
     enable: (id, opts = {}) =>
@@ -56,4 +60,14 @@ export function createPluginsService(ctx: RowblyContext, ops: OperationRunner): 
 
 function notFound(id: string): NotFoundError {
   return new NotFoundError(`Plugin "${id}" not found`, { hint: 'see `rowbly plugins list`' });
+}
+
+/** The rows each Plugin that is on adds about a Story (`stories show`, the TUI Story screen), in registry order. */
+export async function pluginStoryRows(ctx: RowblyContext, services: Services, story: Story): Promise<PluginRow[]> {
+  const rows: PluginRow[] = [];
+  for (const { definition } of ctx.plugins?.active() ?? []) {
+    if (definition.storyRows)
+      rows.push(...(await definition.storyRows(story, services.plugins.context(definition.id))));
+  }
+  return rows;
 }

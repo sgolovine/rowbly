@@ -2,7 +2,7 @@ import { formatTaskId, NotFoundError, parseTaskId, toTimestamp, ValidationError 
 import { type Stage, type Story, type Task, TaskSchema } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import type { CoreChangeSet } from './plugins/changeSet';
-import type { OperationRunner } from './plugins/runtime';
+import { latestTask, type OperationRunner } from './plugins/runtime';
 import type { RowblyContext, TasksService } from './types';
 
 export function createTasksService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): TasksService {
@@ -26,46 +26,61 @@ export function createTasksService(ctx: RowblyContext, repos: Repositories, ops:
     get: (taskId) => findTask(repos, taskId),
 
     create: (storyKey, input) =>
-      ops.run('tasks.create', { storyKey, ...input }, async (changes) => {
-        const story = await repos.stories.findByKey(storyKey);
-        const stages = await stagesOf(story);
-        const stage = input.stage ?? stages[0]?.key;
-        if (stage === undefined) throw new ValidationError('the Board has no Stages');
-        checkStage(stages, stage);
-        const now = toTimestamp(ctx.now());
-        const task = parseTask({
-          id: formatTaskId(story.key, story.nextTaskNumber),
-          name: input.name,
-          description: input.description ?? '',
-          stage,
-          comments: [],
-          createdAt: now,
-          updatedAt: now,
-        });
-        await changes.putStory({
-          ...story,
-          updatedAt: now,
-          nextTaskNumber: story.nextTaskNumber + 1,
-          tasks: [...story.tasks, task],
-        });
-        return task;
-      }),
+      ops.run(
+        'tasks.create',
+        { storyKey, ...input },
+        async (changes) => {
+          const story = await repos.stories.findByKey(storyKey);
+          const stages = await stagesOf(story);
+          const stage = input.stage ?? stages[0]?.key;
+          if (stage === undefined) throw new ValidationError('the Board has no Stages');
+          checkStage(stages, stage);
+          const now = toTimestamp(ctx.now());
+          const task = parseTask({
+            id: formatTaskId(story.key, story.nextTaskNumber),
+            name: input.name,
+            description: input.description ?? '',
+            stage,
+            comments: [],
+            createdAt: now,
+            updatedAt: now,
+          });
+          await changes.putStory({
+            ...story,
+            updatedAt: now,
+            nextTaskNumber: story.nextTaskNumber + 1,
+            tasks: [...story.tasks, task],
+          });
+          return task;
+        },
+        latestTask,
+      ),
 
     update: (taskId, patch) =>
-      ops.run('tasks.update', { taskId, ...patch }, async (changes) => {
-        const { story, task } = await findTask(repos, taskId);
-        const next = { ...task };
-        if (patch.name !== undefined) next.name = patch.name;
-        if (patch.description !== undefined) next.description = patch.description;
-        return save(changes, story, next);
-      }),
+      ops.run(
+        'tasks.update',
+        { taskId, ...patch },
+        async (changes) => {
+          const { story, task } = await findTask(repos, taskId);
+          const next = { ...task };
+          if (patch.name !== undefined) next.name = patch.name;
+          if (patch.description !== undefined) next.description = patch.description;
+          return save(changes, story, next);
+        },
+        latestTask,
+      ),
 
     move: (taskId, stage, opts = {}) =>
-      ops.run('tasks.move', { taskId, stage, ...opts }, async (changes) => {
-        const { story, task } = await findTask(repos, taskId);
-        checkStage(await stagesOf(story), stage);
-        return save(changes, story, { ...task, stage });
-      }),
+      ops.run(
+        'tasks.move',
+        { taskId, stage, ...opts },
+        async (changes) => {
+          const { story, task } = await findTask(repos, taskId);
+          checkStage(await stagesOf(story), stage);
+          return save(changes, story, { ...task, stage });
+        },
+        latestTask,
+      ),
 
     remove: (taskId, opts = {}) =>
       ops.run('tasks.remove', { taskId, ...opts }, async (changes) => {

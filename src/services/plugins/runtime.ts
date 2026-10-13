@@ -1,4 +1,5 @@
-import { ConflictError, isRowblyError, NotFoundError, PluginError, ValidationError } from '../../core';
+import { ConflictError, isRowblyError, NotFoundError, PluginError, parseTaskId, ValidationError } from '../../core';
+import type { Story, Task } from '../../schemas';
 import { editTextInEditor, type Repositories } from '../../storage';
 import type { RowblyContext, Services } from '../types';
 import { CoreChangeSet, listPluginFiles, readPluginFile } from './changeSet';
@@ -6,6 +7,7 @@ import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import type {
   Bagged,
+  ChangeSetView,
   GuardResult,
   OperationEvent,
   OperationHooks,
@@ -20,11 +22,13 @@ export interface OperationRunner {
   /**
    * Runs `body`, which fills a Change Set, or the replacement a Plugin declared for `name`; then
    * every transform, then every guard; saves the Change Set once; then runs the reactions.
+   * `latest` gives the result as the transforms left it, e.g. the created Story with its bags.
    */
   run<I extends object, R>(
     name: string,
     input: I & OperationInput,
     body: (changes: CoreChangeSet) => Promise<R>,
+    latest?: (changes: ChangeSetView, result: R) => R,
   ): Promise<R>;
   /** The context of a Plugin that is on. */
   context(id: string): PluginContext;
@@ -57,6 +61,7 @@ export function createOperationRunner(
       name: string,
       input: I & OperationInput,
       body: (changes: CoreChangeSet) => Promise<R>,
+      latest?: (changes: ChangeSetView, result: R) => R,
     ): Promise<R> {
       const changes = new CoreChangeSet(ctx.root, repos);
       const plugins = active();
@@ -105,6 +110,7 @@ export function createOperationRunner(
         }
       }
 
+      if (latest) result = latest(changes.view(), result);
       await changes.save();
 
       const reactions = async () => {
@@ -219,4 +225,15 @@ export function deepMerge(base: Record<string, unknown>, over: Record<string, un
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** The version of a Story that an operation saves: its Change Set's, after every transform. */
+export function latestStory(changes: ChangeSetView, story: Story): Story {
+  return changes.story(story.key)?.after ?? story;
+}
+
+/** The version of a Task that an operation saves. */
+export function latestTask(changes: ChangeSetView, task: Task): Task {
+  const story = changes.story(parseTaskId(task.id).storyKey)?.after;
+  return story?.tasks.find((t) => t.id === task.id) ?? task;
 }

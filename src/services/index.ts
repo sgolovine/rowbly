@@ -21,11 +21,12 @@ export {
   failureWarning,
   type LoadPluginsOptions,
   loadPlugins,
+  onOff,
   type PluginHost,
-  type PluginState,
   type PluginStatus,
   type ReservedNames,
 } from './plugins/host';
+export { pluginStoryRows } from './plugins/service';
 export type * from './plugins/types';
 export type * from './types';
 
@@ -48,7 +49,7 @@ export function createServices(ctx: RowblyContext): Services {
     tasks: createTasksService(ctx, repos, ops),
     comments: createCommentsService(ctx, repos, ops),
     doctor: createDoctorService(ctx, repos, ops),
-    plugins: createPluginsService(ctx, ops),
+    plugins: createPluginsService(ctx, repos, ops),
   };
   return services;
 }

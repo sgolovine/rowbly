@@ -350,7 +350,8 @@ export interface DoctorService {
 export interface PluginsService {
   /** Every Built-in Plugin, and any other Plugin `rowbly.config.json` names, with its state this run. */
   list(): Promise<PluginStatus[]>;
-  get(id: string): Promise<PluginStatus>;
+  /** A Plugin's state and its settings in `rowbly.config.json`. */
+  get(id: string): Promise<PluginStatus & { settings: Record<string, unknown> }>;
   /** Sets `enabled: true`; the Plugin's settings must be valid. */
   enable(id: string, opts?: OperationOptions): Promise<{ id: string; enabled: boolean }>;
   /** Sets `enabled: false`; keeps the Plugin's settings and data. */

@@ -13,14 +13,18 @@ export interface ReservedNames {
   keys: readonly string[];
 }
 
-export type PluginState = 'on' | 'off' | 'failed';
-
+/**
+ * A Plugin is on when it is both `enabled` and `loaded`. One that is enabled but did not load
+ * failed to load, and `reason` says why.
+ */
 export interface PluginStatus {
   id: string;
   name: string;
   description: string;
-  /** `on`: loaded this run; `off`; `failed`: on in `rowbly.config.json` but skipped. */
-  state: PluginState;
+  /** `rowbly.config.json` turns it on. */
+  enabled: boolean;
+  /** It runs this time. */
+  loaded: boolean;
   /** Whether this Rowbly version has the Plugin. */
   known: boolean;
   /** Why it failed to load. */
@@ -69,22 +73,23 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
       id: definition.id,
       name: definition.name,
       description: definition.description,
-      state: 'off',
+      enabled: false,
+      loaded: false,
       known: true,
     };
     statuses.push(status);
     const entry = entries[definition.id];
     if (entry?.enabled !== true) continue;
+    status.enabled = true;
     try {
       const { enabled: _enabled, ...raw } = entry;
       const settings = parseSettings(definition, raw);
       const claim = claimNames(definition, claims);
       await definition.start?.({ settings });
       claim();
-      status.state = 'on';
+      status.loaded = true;
       active.push({ definition, settings, entry: raw });
     } catch (err) {
-      status.state = 'failed';
       status.reason = err instanceof Error ? err.message : String(err);
     }
   }
@@ -96,7 +101,8 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
       id,
       name: id,
       description: '',
-      state: enabled ? 'failed' : 'off',
+      enabled,
+      loaded: false,
       known: false,
       ...(enabled ? { reason: 'this version of Rowbly does not have it' } : {}),
     });
@@ -106,11 +112,11 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
     registry,
     status: () => statuses.map((s) => ({ ...s })),
     active: () => active,
-    failures: () => statuses.filter((s) => s.state === 'failed'),
+    failures: () => statuses.filter((s) => s.enabled && !s.loaded),
     markFailed(id, reason) {
       const status = statuses.find((s) => s.id === id);
-      if (status?.state !== 'on') return;
-      status.state = 'failed';
+      if (!status?.loaded) return;
+      status.loaded = false;
       status.reason = reason;
       active.splice(
         active.findIndex((p) => p.definition.id === id),
@@ -118,6 +124,11 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
       );
     },
   };
+}
+
+/** `on`, `off`, or `failed` (enabled, but it did not load). */
+export function onOff(status: PluginStatus): 'on' | 'off' | 'failed' {
+  return status.loaded ? 'on' : status.enabled ? 'failed' : 'off';
 }
 
 /** The warning shown once per run for a Plugin that failed to load. */
