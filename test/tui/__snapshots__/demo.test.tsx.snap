@@ -1,0 +1,46 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`demo screen > renders every primitive 1`] = `
+" Rowbly  Demo                                                                                 me: —
+────────────────────────────────────────────────────────────────────────────────────────────────────
+
+   StageBadge
+   ● Backlog  ● Todo  ● In Progress  ● Done
+
+   DetailView
+   Key        WEB-42
+   Stage      ● In Progress
+   Assignees  ada, grace
+   Priority   P1
+
+   Context
+   The login form loses focus after submit.
+   • reproduce on Safari
+
+   Spinner / Loading
+   ⠋ Loading stories…
+
+ ▸ SelectList (multi-select, / filters)
+   › [x] ada Ada Lovelace
+     [ ] grace Grace Hopper
+     [ ] linus Linus Torvalds
+
+   Form
+   › Name*       Fix login focus
+     Description (empty)
+     Points
+     Blocked     [ ] no
+     Due date    YYYY-MM-DD
+     Priority    ‹ P1 ›
+     Labels      [ ] api  [x] ui  [ ] docs
+   enter/ctrl+s submit · ↑/↓ move
+
+   ConfirmDialog
+   ╭────────────────────────────╮
+   │ Delete story WEB-42?       │
+   │                            │
+   │  Delete (y)    Cancel (n)  │
+   ╰────────────────────────────╯
+
+ tab next section · g go to · ? help · q quit"
+`;

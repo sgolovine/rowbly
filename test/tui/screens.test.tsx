@@ -5,7 +5,7 @@ import { CommentsPanel } from '../../src/tui/screens/comments/CommentsPanel';
 import { StoryTasksTab } from '../../src/tui/screens/tasks/StoryTasksTab';
 
 describe('screen registry', () => {
-  it('has one placeholder entry per area', () => {
+  it('has one entry per area', () => {
     expect(Object.keys(screens).sort()).toEqual(
       [
         'assignees',
@@ -26,7 +26,10 @@ describe('screen registry', () => {
     );
   });
 
-  it.each(Object.entries(screens))('renders the %s placeholder', (_name, Screen) => {
+  // WP02 built `home` and `demo`; they have their own tests.
+  const placeholders = Object.entries(screens).filter(([name]) => name !== 'home' && name !== 'demo');
+
+  it.each(placeholders)('renders the %s placeholder', (_name, Screen) => {
     const { lastFrame, unmount } = render(<Screen params={{}} />);
     expect(lastFrame()).toMatch(/not implemented \(WP\d\d\)/);
     unmount();

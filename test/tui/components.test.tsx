@@ -1,0 +1,289 @@
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Text, useInput } from 'ink';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ConflictError, ValidationError } from '../../src/core';
+import {
+  ConfirmDialog,
+  DetailView,
+  Form,
+  type FormField,
+  markdownToPlain,
+  SelectList,
+  StageBadge,
+} from '../../src/tui/components';
+import { useIsActive } from '../../src/tui/hooks';
+import { useRouter } from '../../src/tui/router';
+import { KEYS, renderApp, renderTui } from './helpers';
+
+const ITEMS = [
+  { value: 'ada', label: 'ada' },
+  { value: 'grace', label: 'grace' },
+  { value: 'linus', label: 'linus' },
+];
+
+describe('SelectList', () => {
+  it('moves with arrows and j/k and selects with enter', async () => {
+    const onSelect = vi.fn();
+    const ui = renderTui(<SelectList items={ITEMS} onSelect={onSelect} />);
+    await ui.press('j', KEYS.down, 'k', KEYS.enter);
+    expect(onSelect).toHaveBeenCalledWith(ITEMS[1]);
+    expect(ui.lastFrame()).toContain('› grace');
+    ui.unmount();
+  });
+
+  it('filters by label with / and clears the filter on esc', async () => {
+    const onSelect = vi.fn();
+    const ui = renderTui(<SelectList items={ITEMS} onSelect={onSelect} />);
+    await ui.press('/', 'l', 'i');
+    expect(ui.lastFrame()).toContain('/li');
+    expect(ui.lastFrame()).toContain('linus');
+    expect(ui.lastFrame()).not.toContain('grace');
+    await ui.press(KEYS.enter, KEYS.enter);
+    expect(onSelect).toHaveBeenCalledWith(ITEMS[2]);
+    await ui.press('/', KEYS.escape);
+    expect(ui.lastFrame()).toContain('grace');
+    expect(ui.lastFrame()).not.toContain('/');
+    ui.unmount();
+  });
+
+  it('shows an empty state and a no-match state', async () => {
+    const empty = renderTui(<SelectList items={[]} emptyText="No stories yet." />);
+    expect(empty.lastFrame()).toContain('No stories yet.');
+    empty.unmount();
+
+    const ui = renderTui(<SelectList items={ITEMS} />);
+    await ui.press('/', 'z', 'z');
+    expect(ui.lastFrame()).toContain('No matches for "zz".');
+    ui.unmount();
+  });
+
+  it('toggles items with space and submits them in multi-select mode', async () => {
+    const onSubmit = vi.fn();
+    const onChange = vi.fn();
+    const ui = renderTui(
+      <SelectList items={ITEMS} multi defaultSelected={['ada']} onChange={onChange} onSubmit={onSubmit} />,
+    );
+    expect(ui.lastFrame()).toContain('[x] ada');
+    await ui.press(' ', 'j', 'j', ' ');
+    expect(ui.lastFrame()).toContain('[ ] ada');
+    expect(ui.lastFrame()).toContain('[x] linus');
+    expect(onChange).toHaveBeenLastCalledWith(['linus']);
+    // Filtering keeps the checked set.
+    await ui.press('/', 'g', KEYS.enter, ' ', KEYS.enter);
+    expect(onSubmit).toHaveBeenCalledWith(['linus', 'grace']);
+    ui.unmount();
+  });
+
+  it('ignores keys when inactive', async () => {
+    const onSelect = vi.fn();
+    const ui = renderTui(<SelectList items={ITEMS} onSelect={onSelect} isActive={false} />);
+    await ui.press(KEYS.enter);
+    expect(onSelect).not.toHaveBeenCalled();
+    ui.unmount();
+  });
+});
+
+const FIELDS: FormField[] = [
+  { name: 'name', label: 'Name', kind: 'text', required: true },
+  { name: 'points', label: 'Points', kind: 'number' },
+  { name: 'due', label: 'Due', kind: 'date' },
+  { name: 'blocked', label: 'Blocked', kind: 'boolean' },
+  { name: 'priority', label: 'Priority', kind: 'select', options: ['P0', 'P1', 'P2'] },
+  { name: 'labels', label: 'Labels', kind: 'multiselect', options: ['api', 'ui'] },
+];
+
+describe('Form', () => {
+  it('shows inline validation messages and does not submit', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(<Form fields={FIELDS} onSubmit={onSubmit} />);
+    await ui.press(KEYS.down, 'x', KEYS.down, '2', '0', '2', '6', KEYS.enter);
+    expect(onSubmit).not.toHaveBeenCalled();
+    const frame = ui.lastFrame() ?? '';
+    expect(frame).toContain('required');
+    expect(frame).toContain('must be a number');
+    expect(frame).toContain('must be a date (YYYY-MM-DD)');
+    ui.unmount();
+  });
+
+  it('submits typed values of every kind with enter', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(<Form fields={FIELDS} initialValues={{ name: 'Fix' }} onSubmit={onSubmit} />);
+    await ui.press(' ', 'l', 'o', 'g', 'i', 'n', KEYS.backspace, 'n');
+    await ui.press(KEYS.down, '3', KEYS.down, ...'2026-10-12');
+    await ui.press(KEYS.down, ' ', KEYS.down, KEYS.right, KEYS.right, KEYS.down, KEYS.right, ' ', KEYS.enter);
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: 'Fix login',
+      points: 3,
+      due: '2026-10-12',
+      blocked: true,
+      priority: 'P1',
+      labels: ['ui'],
+    });
+    ui.unmount();
+  });
+
+  it('submits with ctrl+s', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(<Form fields={FIELDS} initialValues={{ name: 'Fix' }} onSubmit={onSubmit} />);
+    await ui.press(KEYS.ctrlS);
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: 'Fix',
+      points: null,
+      due: null,
+      blocked: false,
+      priority: null,
+      labels: [],
+    });
+    ui.unmount();
+  });
+
+  it('shows ValidationError issues next to their fields', async () => {
+    const ui = renderTui(
+      <Form
+        fields={FIELDS}
+        initialValues={{ name: 'Fix' }}
+        onSubmit={() => {
+          throw new ValidationError('story is invalid', {
+            details: {
+              issues: [
+                { path: ['name'], message: 'name is already taken' },
+                { path: ['customFields', 'size'], message: 'size must be one of S, M, L' },
+              ],
+            },
+          });
+        }}
+      />,
+    );
+    await ui.press(KEYS.enter);
+    const frame = ui.lastFrame() ?? '';
+    expect(frame).toMatch(/Name\*\s+Fix\s*\n\s+name is already taken/);
+    expect(frame).toContain('size must be one of S, M, L');
+    ui.unmount();
+  });
+
+  it('shows any other error from submit as a toast', async () => {
+    const screens = {
+      a: () => (
+        <Form
+          fields={[{ name: 'id', label: 'Id', kind: 'text' }]}
+          onSubmit={() => Promise.reject(new ConflictError('workspace "acme" already exists'))}
+        />
+      ),
+    };
+    const app = renderApp(screens);
+    await app.press(KEYS.enter);
+    expect(app.lastFrame()).toContain('error: workspace "acme" already exists');
+    app.unmount();
+  });
+
+  describe('multiline fields', () => {
+    let dir: string;
+    const saved = { EDITOR: process.env.EDITOR, VISUAL: process.env.VISUAL };
+
+    beforeEach(async () => {
+      dir = await mkdtemp(join(tmpdir(), 'rowbly-editor-'));
+      const script = join(dir, 'editor.sh');
+      // Appends to whatever the form passed in, so the test sees both the hand-in and the hand-back.
+      await writeFile(script, '#!/bin/sh\nprintf "%s\\nfrom the editor" "$(cat "$1")" > "$1"\n');
+      await chmod(script, 0o755);
+      process.env.EDITOR = script;
+      delete process.env.VISUAL;
+    });
+
+    afterEach(async () => {
+      for (const [key, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+      await rm(dir, { recursive: true, force: true });
+    });
+
+    it('opens $EDITOR on e and receives the saved text', async () => {
+      const onSubmit = vi.fn();
+      const ui = renderTui(
+        <Form
+          fields={[{ name: 'description', label: 'Description', kind: 'multiline' }]}
+          initialValues={{ description: 'first line' }}
+          onSubmit={onSubmit}
+        />,
+      );
+      await ui.press('e');
+      await vi.waitFor(() => expect(ui.lastFrame()).toContain('first line (+1 lines)'));
+      await ui.press(KEYS.enter);
+      expect(onSubmit).toHaveBeenCalledWith({ description: 'first line\nfrom the editor' });
+      ui.unmount();
+    });
+  });
+});
+
+describe('ConfirmDialog', () => {
+  const setup = () => {
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    const ui = renderTui(<ConfirmDialog message="Delete story WEB-42?" onConfirm={onConfirm} onCancel={onCancel} />);
+    return { ui, onConfirm, onCancel };
+  };
+
+  it('confirms with y and with enter on the confirm button', async () => {
+    const { ui, onConfirm, onCancel } = setup();
+    expect(ui.lastFrame()).toContain('Delete story WEB-42?');
+    await ui.press('y');
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    await ui.press(KEYS.left, KEYS.enter);
+    expect(onConfirm).toHaveBeenCalledTimes(2);
+    expect(onCancel).not.toHaveBeenCalled();
+    ui.unmount();
+  });
+
+  it('cancels with n, esc and enter by default', async () => {
+    const { ui, onConfirm, onCancel } = setup();
+    await ui.press('n', KEYS.escape, KEYS.enter);
+    expect(onCancel).toHaveBeenCalledTimes(3);
+    expect(onConfirm).not.toHaveBeenCalled();
+    ui.unmount();
+  });
+
+  it('keeps esc from reaching the shell', async () => {
+    const onCancel = vi.fn();
+    function Opener() {
+      const router = useRouter();
+      useInput((input) => input === 'n' && router.push('b'), { isActive: useIsActive() });
+      return <Text>Screen A</Text>;
+    }
+    const screens = {
+      a: Opener,
+      b: () => <ConfirmDialog message="Sure?" onConfirm={() => {}} onCancel={onCancel} />,
+    };
+    const app = renderApp(screens);
+    await app.press('n', KEYS.escape);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    // Still on b: the shell did not go back.
+    expect(app.lastFrame()).toContain('Sure?');
+    app.unmount();
+  });
+});
+
+describe('DetailView and StageBadge', () => {
+  it('renders rows and a markdown body as plain text', () => {
+    const ui = renderTui(
+      <DetailView
+        rows={[
+          { label: 'Key', value: 'WEB-1' },
+          { label: 'Stage', value: <StageBadge stage={{ name: 'Done', category: 'done' }} /> },
+        ]}
+        body={'# Title\nSome **bold** and `code`, see [docs](https://x.dev).'}
+      />,
+    );
+    const frame = ui.lastFrame() ?? '';
+    expect(frame).toMatch(/Key\s+WEB-1/);
+    expect(frame).toContain('● Done');
+    expect(frame).toContain('Title\nSome bold and code, see docs (https://x.dev).');
+    ui.unmount();
+  });
+
+  it('strips list markers', () => {
+    expect(markdownToPlain('- one\n  * two')).toBe('• one\n  • two');
+  });
+});
