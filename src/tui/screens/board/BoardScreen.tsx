@@ -1,7 +1,6 @@
 import { Box, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
-import { type BoardRef, type Priority, PrioritySchema, type Stage, type Story } from '../../../schemas';
-import type { StoryFilter } from '../../../services';
+import type { BoardRef, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, SelectList } from '../../components';
 import {
@@ -16,7 +15,8 @@ import {
 import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
 import { useEscape } from '../stages/shared';
-import { NONE, useReloadOnReturn } from '../stories/shared';
+import { describeFilters, filterFields, filterInitialValues, toFilter } from '../stories/filter';
+import { useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
 import {
@@ -33,9 +33,6 @@ import {
   swapCard,
 } from './layout';
 
-/** The select choice meaning "do not filter on this". */
-const ANY = '(any)';
-
 type Mode = 'view' | 'filter' | 'switch' | 'confirm-delete';
 
 /** The cursor: a column (Stage index) and a card within it. */
@@ -45,10 +42,11 @@ interface Cursor {
 }
 
 /**
- * The Kanban board for the Board in context (`b` switches it): one column per Stage, cards in Rank
- * order. Moves and reorders show at once and are reverted if the service refuses them.
+ * The Kanban board for the Board in context (`b` switches it), or for `params.ref` without changing
+ * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
+ * reverted if the service refuses them.
  */
-export function BoardScreen(_props: ScreenProps) {
+export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
   const toast = useToast();
@@ -62,12 +60,14 @@ export function BoardScreen(_props: ScreenProps) {
   const writing = useRef(false);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
+  // A Board opened for viewing only; `b` switches the context and drops it.
+  const [viewing, setViewing] = useState(params.ref as BoardRef | undefined);
 
   const scope = useAsync(async () => {
-    const ref = await services.context.resolveBoard();
+    const ref = viewing ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
     return { ref, choices: await storyChoices(ctx, ref) };
-  }, [services, ctx]);
+  }, [services, ctx, viewing]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { ref, choices } = scope.data;
@@ -152,6 +152,7 @@ export function BoardScreen(_props: ScreenProps) {
   const switchTo = async (ref: BoardRef) => {
     try {
       await services.context.use(ref.workspaceId, ref.boardId);
+      setViewing(undefined);
       scope.reload();
       setFilters({});
       setCursor({ col: 0, row: 0 });
@@ -222,6 +223,7 @@ export function BoardScreen(_props: ScreenProps) {
   const scrolled = hiddenLeft + hiddenRight > 0;
   const size = cardsPerColumn(termRows);
   const summary = describeFilters(filters);
+  const inContext = ctx?.local.workspace === ref.workspaceId && ctx?.local.board === ref.boardId;
 
   return (
     <Box flexDirection="column">
@@ -230,6 +232,7 @@ export function BoardScreen(_props: ScreenProps) {
         <Text dimColor>
           {` ${ref.workspaceId}/${ref.boardId}`}
           {scrolled ? ` · Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : ''}
+          {viewing && !inContext ? ' · viewing only (context unchanged)' : ''}
           {summary ? ` · filter: ${summary}` : ''}
         </Text>
       </Text>
@@ -264,20 +267,15 @@ export function BoardScreen(_props: ScreenProps) {
         <Box flexDirection="column">
           <Text bold>Filter Stories</Text>
           <Form
-            fields={[
+            fields={filterFields(
               {
-                name: 'assignee',
-                label: 'Assignee',
-                kind: 'select',
-                options: [ANY, ...choices.assignees.map((a) => a.handle)],
+                assignees: choices.assignees.map((a) => a.handle),
+                labels: choices.labels,
+                epics: choices.epics.map((e) => e.id),
               },
-              { name: 'me', label: 'Assigned to me', kind: 'boolean' },
-              { name: 'label', label: 'Label', kind: 'select', options: [ANY, ...choices.labels] },
-              { name: 'priority', label: 'Priority', kind: 'select', options: [ANY, ...PrioritySchema.options] },
-              { name: 'epic', label: 'Epic', kind: 'select', options: [ANY, NONE, ...choices.epics.map((e) => e.id)] },
-              { name: 'search', label: 'Text', kind: 'text' },
-            ]}
-            initialValues={{ assignee: ANY, label: ANY, priority: ANY, epic: ANY, ...filters }}
+              { board: true },
+            )}
+            initialValues={filterInitialValues(filters)}
             onSubmit={(values) => {
               setFilters(values);
               setMode('view');
@@ -325,35 +323,4 @@ function Gutter({ text }: { text: string }) {
       </Text>
     </Box>
   );
-}
-
-function chosen(value: unknown): string | undefined {
-  return typeof value === 'string' && value !== '' && value !== ANY ? value : undefined;
-}
-
-function toFilter(filters: FormValues): StoryFilter {
-  const assignees = [chosen(filters.assignee), filters.me === true ? 'me' : undefined].filter((a) => a !== undefined);
-  const label = chosen(filters.label);
-  const priority = chosen(filters.priority) as Priority | undefined;
-  const epic = chosen(filters.epic);
-  const search = chosen(filters.search);
-  return {
-    ...(assignees.length > 0 ? { assignees } : {}),
-    ...(label ? { labels: [label] } : {}),
-    ...(priority ? { priorities: [priority] } : {}),
-    ...(epic ? { epicId: epic === NONE ? null : epic } : {}),
-    ...(search ? { search } : {}),
-  };
-}
-
-function describeFilters(filters: FormValues): string {
-  const parts = [
-    chosen(filters.assignee) && `@${filters.assignee}`,
-    filters.me === true && 'mine',
-    chosen(filters.label) && `#${filters.label}`,
-    chosen(filters.priority),
-    chosen(filters.epic) && (filters.epic === NONE ? 'no Epic' : `Epic ${filters.epic}`),
-    chosen(filters.search) && `"${filters.search}"`,
-  ];
-  return parts.filter(Boolean).join(' · ');
 }

@@ -1,39 +1,50 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { type Priority, PrioritySchema, type StageCategory, StageCategorySchema } from '../../../schemas';
-import type { StoryFilter, StorySort } from '../../../services';
+import type { Stage } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { Form, type FormValues, Loading } from '../../components';
 import { useAsync, useIsActive, useKeyCapture, useKeyHints, useRowblyContext, useServices } from '../../hooks';
 import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenProps } from '../types';
-import { boardRefFor, NONE, StoryStage, useReloadOnReturn } from './shared';
+import { describeFilters, filterFields, filterInitialValues, toFilter } from './filter';
+import { boardRefFor, StoryStage, useReloadOnReturn } from './shared';
 
-/** The select choice meaning "do not filter on this". */
-const ANY = '(any)';
-const SORTS: readonly StorySort[] = ['rank', 'priority', 'created', 'updated', 'due'];
-
-/** Filter form values, kept so reopening the form shows the current filters. */
-type Filters = FormValues;
-
-/** The Stories of a Board (`params.ref`, default: the Board in context), with filters. */
+/**
+ * The Stories of a Board (`params.ref`, default: the Board in context), with filters. `A` toggles
+ * every Board of its Workspace, like `stories list --all-boards`.
+ */
 export function StoryListScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
   const router = useRouter();
   const active = useIsActive();
-  const [filters, setFilters] = useState<Filters>({});
+  const [filters, setFilters] = useState<FormValues>({});
   const [filtering, setFiltering] = useState(false);
+  const [allBoards, setAllBoards] = useState(false);
   const scope = useAsync(async () => {
     const ref = await boardRefFor(services, params);
     if (!ctx) throw new Error('no Data Root');
     return { ref, choices: await storyChoices(ctx, ref) };
   }, [services, ctx, params.ref]);
-  const list = useAsync(
-    async () => (scope.data ? services.stories.list(scope.data.ref, toFilter(filters)) : null),
-    [services, scope.data, filters],
-  );
+  // Every Board's Stages and Labels, only while showing all Boards.
+  const workspace = useAsync(async () => {
+    if (!allBoards || !scope.data) return null;
+    const { workspaceId } = scope.data.ref;
+    const boards = await services.boards.list(workspaceId);
+    return Promise.all(
+      boards.map(async (b) => {
+        const ref = { workspaceId, boardId: b.id };
+        const [config, labels] = await Promise.all([services.config.effective(ref), services.stories.labelsInUse(ref)]);
+        return { boardId: b.id, stages: config.stages, labels };
+      }),
+    );
+  }, [services, scope.data, allBoards]);
+  const list = useAsync(async () => {
+    if (!scope.data) return null;
+    const { ref } = scope.data;
+    return services.stories.list(allBoards ? { workspaceId: ref.workspaceId } : ref, toFilter(filters));
+  }, [services, scope.data, filters, allBoards]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   const stories = list.data ?? [];
@@ -49,6 +60,7 @@ export function StoryListScreen({ params }: ScreenProps) {
           { key: 'n', description: 'new' },
           { key: '/', description: 'filter' },
           { key: 'c', description: 'clear filter' },
+          { key: 'A', description: allBoards ? 'this Board only' : 'all Boards' },
         ],
   );
 
@@ -58,6 +70,7 @@ export function StoryListScreen({ params }: ScreenProps) {
       if (input === 'n') router.push('story-form', { ref: scope.data.ref, title: 'New Story' });
       else if (input === '/') setFiltering(true);
       else if (input === 'c') setFilters({});
+      else if (input === 'A') setAllBoards((all) => !all);
       else if (key.return && stories[cursor]) {
         const story = stories[cursor];
         router.push('story', { key: story.key, title: story.key });
@@ -68,15 +81,21 @@ export function StoryListScreen({ params }: ScreenProps) {
 
   if (!scope.data) return scope.loading ? <Loading label="Loading Stories…" /> : <Text color="red">No Board.</Text>;
   const { ref, choices } = scope.data;
+  const boards = allBoards ? workspace.data : null;
+  const stagesOf = new Map<string, readonly Stage[]>(
+    boards ? boards.map((b) => [b.boardId, b.stages]) : [[ref.boardId, choices.stages]],
+  );
+  const unique = (values: string[]) => [...new Set(values)];
   const summary = describeFilters(filters);
+  const boardWidth = Math.max(0, ...stories.map((s) => s.boardId.length));
 
   return (
     <Box flexDirection="column" gap={1}>
       <Text dimColor>
-        Board {ref.workspaceId}/{ref.boardId}
+        {allBoards ? `All Boards in ${ref.workspaceId}` : `Board ${ref.workspaceId}/${ref.boardId}`}
         {summary ? ` · filters: ${summary}` : ''}
       </Text>
-      {!list.data ? (
+      {!list.data || (allBoards && !boards) ? (
         <Loading label="Loading Stories…" />
       ) : stories.length === 0 ? (
         <Text dimColor>{summary ? 'No Stories match.' : 'No Stories yet. Press n to create one.'}</Text>
@@ -86,7 +105,8 @@ export function StoryListScreen({ params }: ScreenProps) {
           active={active && !filtering}
           rows={stories.map((s) => (
             <Text key={s.key}>
-              <Text color="cyan">{s.key}</Text> {s.name} <StoryStage stages={choices.stages} story={s} />
+              {allBoards ? <Text dimColor>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}
+              <Text color="cyan">{s.key}</Text> {s.name} <StoryStage stages={stagesOf.get(s.boardId) ?? []} story={s} />
               {s.priority ? <Text color="magenta"> {s.priority}</Text> : null}
               {s.assignees.length > 0 ? <Text dimColor> @{s.assignees.join(' @')}</Text> : null}
               {s.labels.length > 0 ? <Text dimColor> #{s.labels.join(' #')}</Text> : null}
@@ -99,29 +119,14 @@ export function StoryListScreen({ params }: ScreenProps) {
         <Box flexDirection="column">
           <Text bold>Filter Stories</Text>
           <Form
-            fields={[
-              { name: 'stage', label: 'Stages', kind: 'multiselect', options: choices.stages.map((s) => s.key) },
-              {
-                name: 'assignee',
-                label: 'Assignees',
-                kind: 'multiselect',
-                options: choices.assignees.map((a) => a.handle),
-              },
-              { name: 'me', label: 'Assigned to me', kind: 'boolean' },
-              { name: 'label', label: 'Labels', kind: 'multiselect', options: choices.labels },
-              { name: 'priority', label: 'Priorities', kind: 'multiselect', options: PrioritySchema.options },
-              { name: 'epic', label: 'Epic', kind: 'select', options: [ANY, NONE, ...choices.epics.map((e) => e.id)] },
-              { name: 'search', label: 'Search', kind: 'text' },
-              {
-                name: 'category',
-                label: 'Stage Category',
-                kind: 'select',
-                options: [ANY, ...StageCategorySchema.options],
-              },
-              { name: 'open', label: 'Open only', kind: 'boolean' },
-              { name: 'sort', label: 'Sort', kind: 'select', options: SORTS },
-            ]}
-            initialValues={{ epic: ANY, category: ANY, sort: 'rank', ...filters }}
+            fields={filterFields({
+              // Across Boards, any Stage key or Label of any Board, like `--stage` with `--all-boards`.
+              stages: unique([...stagesOf.values()].flatMap((stages) => stages.map((s) => s.key))),
+              assignees: choices.assignees.map((a) => a.handle),
+              labels: boards ? unique(boards.flatMap((b) => b.labels)).sort() : choices.labels,
+              epics: choices.epics.map((e) => e.id),
+            })}
+            initialValues={filterInitialValues(filters)}
             onSubmit={(values) => {
               setFilters(values);
               setFiltering(false);
@@ -131,55 +136,4 @@ export function StoryListScreen({ params }: ScreenProps) {
       )}
     </Box>
   );
-}
-
-function chosen(value: unknown): string | undefined {
-  return typeof value === 'string' && value !== '' && value !== ANY ? value : undefined;
-}
-
-/** The chosen options of a multiselect. */
-function many(value: unknown): string[] {
-  return Array.isArray(value) ? value.map(String) : [];
-}
-
-function toFilter(filters: Filters): StoryFilter {
-  const stages = many(filters.stage);
-  const assignees = [...many(filters.assignee), ...(filters.me === true ? ['me'] : [])];
-  const labels = many(filters.label);
-  const priorities = many(filters.priority) as Priority[];
-  const epic = chosen(filters.epic);
-  const search = chosen(filters.search);
-  const category = chosen(filters.category) as StageCategory | undefined;
-  const sort = chosen(filters.sort) as StorySort | undefined;
-  return {
-    ...(stages.length > 0 ? { stages } : {}),
-    ...(assignees.length > 0 ? { assignees } : {}),
-    ...(labels.length > 0 ? { labels } : {}),
-    ...(priorities.length > 0 ? { priorities } : {}),
-    ...(epic ? { epicId: epic === NONE ? null : epic } : {}),
-    ...(search ? { search } : {}),
-    ...(category ? { category } : {}),
-    ...(filters.open === true ? { open: true } : {}),
-    ...(sort && sort !== 'rank' ? { sort } : {}),
-  };
-}
-
-function describeFilters(filters: Filters): string {
-  const list = (value: unknown, prefix = '') =>
-    many(value)
-      .map((v) => `${prefix}${v}`)
-      .join(' ');
-  const parts = [
-    many(filters.stage).length > 0 && `stage ${list(filters.stage)}`,
-    list(filters.assignee, '@'),
-    filters.me === true && 'mine',
-    list(filters.label, '#'),
-    list(filters.priority),
-    chosen(filters.epic) && (filters.epic === NONE ? 'no Epic' : `Epic ${filters.epic}`),
-    chosen(filters.search) && `"${filters.search}"`,
-    chosen(filters.category) && `${filters.category} Stages`,
-    filters.open === true && 'open',
-    chosen(filters.sort) && filters.sort !== 'rank' && `sorted by ${filters.sort}`,
-  ];
-  return parts.filter(Boolean).join(' · ');
 }

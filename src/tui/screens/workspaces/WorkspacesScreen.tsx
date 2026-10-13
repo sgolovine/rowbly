@@ -1,5 +1,5 @@
 import { Box, Text, useInput } from 'ink';
-import { useContext, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { describeCascadeLevels } from '../../../output';
 import { plural, workspaceOverview } from '../../../services/workspaces';
 import { ConfirmDialog, DetailView, Form, Loading, SelectList } from '../../components';
@@ -28,14 +28,20 @@ function WorkspaceList() {
   const active = useIsActive();
   // Reload whenever the screen comes back to the top, e.g. after a form closes.
   const workspaces = useAsync(() => services.workspaces.list(), [active]);
+  const highlighted = useRef<string | undefined>(undefined);
   useKeyHints([
     { key: 'enter', description: 'use & open' },
+    { key: 'v', description: 'view without using' },
     { key: 'n', description: 'new workspace' },
   ]);
   useInput(
     (input) => {
-      if (input === 'n' && !shell.captured().text)
-        router.push('workspaces', { view: 'create', title: 'New Workspace' });
+      if (shell.captured().text) return;
+      if (input === 'n') router.push('workspaces', { view: 'create', title: 'New Workspace' });
+      else if (input === 'v' && highlighted.current) {
+        const id = highlighted.current;
+        router.push('workspaces', { view: 'detail', id, title: `${id} (view)` });
+      }
     },
     { isActive: active },
   );
@@ -51,6 +57,9 @@ function WorkspaceList() {
           description: ws.name,
         }))}
         emptyText="No Workspaces yet. Press n to create one."
+        onHighlight={(item) => {
+          highlighted.current = item?.value;
+        }}
         onSelect={async (item) => {
           try {
             await services.context.use(item.value);
@@ -65,7 +74,7 @@ function WorkspaceList() {
   );
 }
 
-type Action = 'assignees' | 'edit' | 'delete';
+type Action = 'boards' | 'epics' | 'assignees' | 'edit' | 'delete';
 
 function WorkspaceDetail({ id }: { id: string }) {
   const ctx = useRowblyContext();
@@ -122,12 +131,17 @@ function WorkspaceDetail({ id }: { id: string }) {
       ) : (
         <SelectList<Action>
           items={[
+            { value: 'boards', label: 'Boards', description: plural(o.boards, 'Board') },
+            { value: 'epics', label: 'Epics', description: plural(o.epics, 'Epic') },
             { value: 'assignees', label: 'Assignees', description: 'manage the roster' },
             { value: 'edit', label: 'Edit', description: 'name and description' },
             { value: 'delete', label: 'Delete', description: nonEmpty ? 'with everything inside' : undefined },
           ]}
           onSelect={(item) => {
-            if (item.value === 'assignees') router.push('assignees', { workspaceId: id, title: `Assignees (${id})` });
+            if (item.value === 'boards') router.push('boards', { workspaceId: id, title: `Boards (${id})` });
+            else if (item.value === 'epics') router.push('epics', { workspaceId: id, title: `Epics (${id})` });
+            else if (item.value === 'assignees')
+              router.push('assignees', { workspaceId: id, title: `Assignees (${id})` });
             else if (item.value === 'edit') router.push('workspaces', { view: 'edit', id, title: `Edit ${id}` });
             else setConfirming(true);
           }}

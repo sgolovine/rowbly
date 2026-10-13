@@ -14,6 +14,8 @@ export interface SelectListProps<T> {
   items: readonly SelectItem<T>[];
   /** Single mode: `enter` picks the highlighted item. */
   onSelect?(item: SelectItem<T>): void;
+  /** Called with the highlighted item whenever it changes, so a screen's own keys can act on it. */
+  onHighlight?(item: SelectItem<T> | undefined): void;
   /** Multi-select mode: `space` toggles, `enter` submits the checked values. */
   multi?: boolean;
   /** Initially checked values in multi-select mode. */
@@ -31,6 +33,7 @@ export interface SelectListProps<T> {
 export function SelectList<T>({
   items,
   onSelect,
+  onHighlight,
   multi = false,
   defaultSelected = [],
   onChange,
@@ -53,6 +56,10 @@ export function SelectList<T>({
   useEffect(() => {
     if (cursor !== index) setCursor(index);
   }, [cursor, index]);
+
+  const highlighted = visible[index];
+  // biome-ignore lint/correctness/useExhaustiveDependencies: report only when the highlighted item changes.
+  useEffect(() => onHighlight?.(highlighted), [highlighted]);
 
   const toggle = (value: T) => {
     const next = selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value];

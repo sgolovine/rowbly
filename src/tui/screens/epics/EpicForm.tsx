@@ -11,14 +11,14 @@ const CREATE_FIELDS: FormField[] = [
 const EDIT_FIELDS = CREATE_FIELDS.slice(1);
 
 /** Creates an Epic, or edits Epic `id` when given. */
-export function EpicForm({ id }: { id?: string }) {
+export function EpicForm({ id, workspaceId }: { id?: string; workspaceId?: string }) {
   const services = useServices();
   const router = useRouter();
   const toast = useToast();
   const loaded = useAsync(async () => {
-    const ws = await services.context.resolveWorkspace();
+    const ws = workspaceId ?? (await services.context.resolveWorkspace());
     return { ws, epic: id ? await services.epics.get(ws, id) : null };
-  }, [services, id]);
+  }, [services, id, workspaceId]);
 
   if (!loaded.data) return loaded.loading ? <Loading /> : null;
   const { ws, epic } = loaded.data;
@@ -38,7 +38,7 @@ export function EpicForm({ id }: { id?: string }) {
           } else {
             const created = await services.epics.create(ws, { id: String(values.id), name, description });
             toast.push('info', `Created Epic ${created.id}`);
-            router.replace('epics', { view: 'detail', id: created.id, title: created.name });
+            router.replace('epics', { view: 'detail', id: created.id, workspaceId, title: created.name });
           }
         }}
       />

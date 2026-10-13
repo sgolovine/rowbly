@@ -83,11 +83,12 @@ describe('workspaces screen', () => {
     await waitForFrame(app, 'acme');
     await app.press(KEYS.enter);
     await waitForFrame(app, /Boards\s+1/);
-    await app.press('j', 'j', KEYS.enter);
-    expect(app.lastFrame()).toContain('Delete Workspace "acme" and everything in it (1 Board, 0 Epics)?');
+    // Boards, Epics, Assignees, Edit, Delete
+    await app.press('j', 'j', 'j', 'j', KEYS.enter);
+    await waitForFrame(app, 'Delete Workspace "acme" and everything in it (1 Board, 0 Epics)?');
     await app.press('n');
     expect(app.lastFrame()).not.toContain('Delete Workspace');
-    await app.press('j', 'j', KEYS.enter, 'y');
+    await app.press('j', 'j', 'j', 'j', KEYS.enter, 'y');
     await waitForFrame(app, 'No Workspaces yet');
     expect(app.lastFrame()).toContain('Deleted Workspace acme');
     expect(await createRepositories(t.root).workspaces.list()).toEqual([]);
