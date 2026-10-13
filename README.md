@@ -82,19 +82,54 @@ _Not implemented yet._
 <!-- BEGIN boards -->
 ### Boards
 
-_Not implemented yet._
+```text
+rowbly boards list                                   [--workspace <id>]
+rowbly boards create <id> --name <n> --prefix <P> [--description <text>]
+rowbly boards show [<id>|<ws>/<id>]                  # effective Stages and Custom Fields, their source level, Stories per Stage
+rowbly boards edit <id> [--name <n>] [--description <text>]
+rowbly boards delete <id> [--force]                  # confirms; pass --yes when not interactive
+```
+
+- The key prefix (`WEB` in `WEB-42`) must be unique across the whole Data Root; a clash exits 4. Lower case is accepted and upper-cased.
+- A new Board has no Stage or Custom Field lists of its own: it inherits them through the Configuration Cascade.
+- `delete` refuses a Board that has Stories (exit 4) unless `--force`. Deleting the current Board clears it from Local State.
 <!-- END boards -->
 
 <!-- BEGIN stages -->
 ### Stages
 
-_Not implemented yet._
+```text
+rowbly stages list
+rowbly stages add <key> --name <n> --category todo|in_progress|done [--before <key>|--after <key>]
+rowbly stages edit <key> [--name <n>] [--category <c>]
+rowbly stages move <key> (--before <key>|--after <key>|--first|--last)
+rowbly stages remove <key> [--move-to <key>]
+# every verb also takes: [--board <id>|<ws>/<id>] [--workspace <id>] [--level board|workspace|global]
+```
+
+- `--level` picks the Configuration Cascade level to edit. The default is `board` when a Board is in context, otherwise `workspace`.
+- Editing a level that has no list of its own first copies the list it inherits, then applies the change. An edit at `workspace` or `global` level applies to every Board that inherits from it; the output lists those Boards.
+- `remove` refuses (exit 4) while a Story or Task on an affected Board is in the Stage. `--move-to` moves them first; moved Stories go to the bottom of the target Stage. The last Stage cannot be removed.
+- `--json` prints `{ level, items, affectedBoards }` (plus `storiesMoved`/`tasksMoved` for `remove`).
 <!-- END stages -->
 
 <!-- BEGIN fields -->
 ### Custom Fields
 
-_Not implemented yet._
+```text
+rowbly fields list
+rowbly fields add <key> --name <n> --type text|number|boolean|date|url|select|multiselect
+                  [--options a,b] [--required] [--min <n>] [--max <n>] [--integer] [--description <text>]
+rowbly fields edit <key> [--name <n>] [--description <text>] [--required|--optional] [--options a,b]
+                  [--min <n>] [--max <n>] [--integer]
+rowbly fields remove <key>
+# every verb also takes: [--board <id>|<ws>/<id>] [--workspace <id>] [--level board|workspace|global]
+```
+
+- Levels and copy-on-write work as for Stages. A field's key and type never change.
+- `--options` applies to `select`/`multiselect` and may be repeated or comma-separated; `--min`, `--max` and `--integer` apply to `number`.
+- `remove` strips the field's values from every Story on the affected Boards. An edit (for example dropping an option) strips the values that no longer fit. Both print a warning with the count.
+- Values are given to Stories as `--field key=value`: `true`/`false`, numbers, `YYYY-MM-DD` dates, absolute http(s) URLs, and comma-separated multiselect values.
 <!-- END fields -->
 
 <!-- BEGIN stories -->
