@@ -6,15 +6,18 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
 
 ```text
 .rowbly/                                   # Data Root (or ~/.rowbly)
-  rowbly.config.json                       # required — global config + Assignee roster
+  rowbly.config.json                       # required — global config + Assignee roster + Plugin entries
   local.json                               # Local State — gitignored, never committed
   .gitignore                               # contains: local.json
+  plugins/<plugin-id>/…                    # a Plugin's Data Root files (ADR-0013)
   boards/
     <board-id>/
       board.config.json                    # required — board metadata + key prefix + optional overrides
+      plugins/<plugin-id>/…                # a Plugin's Board files
       stories/
         <STORY-KEY>/
           story.json                       # one Story, with its Tasks and Comments embedded
+          plugins/<plugin-id>/…            # a Plugin's Story files
 ```
 
 - `docs/ARCHITECTURE.md` called the root `rowbly/`; it is `.rowbly/` (ADR-0002).
@@ -22,6 +25,7 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
 - `board.config.json` is **required** (it holds identity metadata); its `stages`/`customFields` keys are optional overrides.
 - The id stored inside a file must equal its folder/file name. A mismatch is a `DataIntegrityError` (and a `doctor` finding).
 - Any file or folder not matching this layout is ignored by repositories and reported by `doctor` as a warning.
+- Deleting a Story or a Board deletes its folder, Plugin files included; renumbering a Story moves its whole folder.
 
 ### Identifier rules
 
@@ -57,13 +61,17 @@ type CustomFieldDef = {
 );
 type CustomFieldValue = string | number | boolean | string[];
 
-interface Assignee { handle: Slug; name: string; email?: string }
+/** Plugin Data (ADR-0011): one bag per Plugin id. Core keeps every bag as stored. */
+type PluginBags = Record<string, Record<string, unknown>>;
+
+interface Assignee { handle: Slug; name: string; email?: string; plugins?: PluginBags }
 
 interface RowblyConfig {           // rowbly.config.json
   version: 1;
   assignees: Assignee[];           // the Data Root's roster; default []
   stages?: Stage[];                // ≥1, unique keys
   customFields?: CustomFieldDef[]; // unique keys
+  plugins?: Record<string, { enabled?: boolean; [setting: string]: unknown }>; // ADR-0010; `enabled` is reserved
 }
 
 interface BoardConfig {            // board.config.json
@@ -71,18 +79,21 @@ interface BoardConfig {            // board.config.json
   keyPrefix: KeyPrefix;
   stages?: Stage[]; customFields?: CustomFieldDef[];
   createdAt: Timestamp; updatedAt: Timestamp;
+  plugins?: PluginBags;            // Plugin settings for this Board, deep-merged over the Data Root's
 }
 
 type Priority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
 
-interface Comment { id: string; author: Slug | null; body: string /*≥1*/; createdAt: Timestamp; updatedAt: Timestamp }
+interface Comment {
+  id: string; author: Slug | null; body: string /*≥1*/; createdAt: Timestamp; updatedAt: Timestamp; plugins?: PluginBags;
+}
 
 interface Task {
   id: TaskId; name: string /*1–200*/; description: string; stage: Slug;
-  comments: Comment[]; createdAt: Timestamp; updatedAt: Timestamp;
+  comments: Comment[]; createdAt: Timestamp; updatedAt: Timestamp; plugins?: PluginBags;
 }
 
-interface Story {                  // stories/<KEY>.json
+interface Story {                  // stories/<KEY>/story.json
   version: 1; key: StoryKey; boardId: Slug;
   name: string /*1–200*/; description: string /*markdown, default ''*/;
   stage: Slug; rank: string /*fractional-indexing key*/;
@@ -92,10 +103,11 @@ interface Story {                  // stories/<KEY>.json
   createdBy: Slug | null; createdAt: Timestamp; updatedAt: Timestamp;
   nextTaskNumber: number /*int ≥1*/;
   tasks: Task[]; comments: Comment[];
+  plugins?: PluginBags;
 }
 
 interface LocalState {             // local.json
-  version: 1; board?: Slug; me?: Slug;
+  version: 1; board?: Slug; me?: Slug; plugins?: PluginBags;
 }
 ```
 
@@ -174,7 +186,12 @@ rowbly tasks list <KEY> | create <KEY> --name <n> [desc flags] [--stage <k>] | s
 rowbly comments list <KEY|TASK-ID> | add <KEY|TASK-ID> [body flags] | edit <KEY|TASK-ID> <comment-id> [body flags] | delete <KEY|TASK-ID> <comment-id>
 
 rowbly doctor [--fix]
+
+rowbly plugins list | show <id> | enable <id> | disable <id>   # ADR-0010; a change takes effect on the next run
+rowbly <plugin-id> …                           # the commands of a Plugin that is on
 ```
+
+Plugins that are on may add long options to these commands: `assignees add|edit|remove`, `boards create|edit|delete`, `stories list|create|edit|move|rank|delete`, `tasks create|edit|move|delete` and `comments add|edit|delete`. Their values reach the operation as Plugin input (`stories list`: the filter).
 
 Defaults: a new Story goes into the **first** effective stage, at the bottom. A new Task goes into the first effective stage. `stories list` sorts by stage order, then rank, unless `--sort` is given. `--open` means stage category ≠ `done`. `--search` is a case-insensitive substring match on name and description.
 
@@ -189,6 +206,8 @@ Defaults: a new Story goes into the **first** effective stage, at the bottom. A 
 | `ConflictError` | `CONFLICT` | 4 | id/prefix already exists; deletion refused (§7); key collision |
 | `DataRootNotFoundError` | `NO_DATA_ROOT` | 5 | no Data Root found |
 | `DataIntegrityError` | `DATA_INTEGRITY` | 6 | file on disk fails schema or id/path mismatch; `details.path` |
+
+A Plugin's guard that rejects an operation is a `ConflictError` (exit 4), and anything a Plugin's guard, transform or replacement throws is a `PluginError` (code `INTERNAL`, exit 1, hint: how to turn the Plugin off); both carry `details.plugin`.
 
 Human mode writes `error: <message>` (red) plus an optional hint to stderr. `--json` mode writes `{"error":{"code","message","details"}}` to stderr. Warnings go to stderr in both modes; in `--json` mode they are written as `{"warning":…}` lines.
 
@@ -215,6 +234,8 @@ interface RowblyContext {
   now(): Date;                          // injectable clock
   newId(): string;                      // injectable nanoid(8)
   warn(message: string): void;          // collected by caller for output
+  plugins?: PluginHost;                 // the Plugins loaded for this Data Root; none when omitted
+  backgroundReactions?: boolean;        // the TUI: do not wait for Plugin reactions
 }
 
 interface EffectiveBoardConfig {
@@ -250,11 +271,16 @@ interface Services {
   comments:   { list(target: StoryKey | TaskId): Promise<Comment[]>; add(target, body): Promise<Comment>;
                 update(target, id, body): Promise<Comment>; remove(target, id): Promise<void> };
   doctor:     { check(): Promise<DoctorReport>; fix(): Promise<DoctorReport> };
+  plugins:    { list(): Promise<PluginStatus[]>; get(id): Promise<PluginStatus & { settings }>;
+                enable(id, opts?): Promise<{ id; enabled }>; disable(id, opts?): Promise<{ id; enabled }>;
+                context(id): PluginContext };
 }
 type ConfigTarget = { level: 'global' } | { level: 'board'; boardId: Slug };
 type Position = { before: Slug } | { after: Slug } | 'first' | 'last';
 type RankPosition = { before: StoryKey } | { after: StoryKey } | 'top' | 'bottom';
 ```
+
+**Operations (ADR-0012).** Every method that changes data is an operation named `<service>.<method>` (`init` is not one). It collects a Change Set and saves it once, through the Plugin pipeline: replacement or core, transforms, guards, save, reactions. Plugin input reaches it as `plugins: { <id>: … }` in its last argument: the input or patch of `create`/`update`/`add`, `{ force, plugins }` / `{ moveTo, plugins }` / `{ top, plugins }` where the method takes options, and otherwise a trailing `opts?: OperationOptions`. `StoryFilter.plugins` holds Plugin filters. See `docs/PLUGINS.md`.
 
 Input, patch, filter, `InitOptions`/`InitResult` and `DoctorReport` types are defined by WP00 in `types.ts`. Their fields mirror the CLI flags in §5. Each owning package fills in the implementation; WP00 ships each service as stubs that throw `new Error('not implemented: <WPxx>')`.
 
@@ -263,7 +289,8 @@ Input, patch, filter, `InitOptions`/`InitResult` and `DoctorReport` types are de
 ```ts
 findDataRoot(opts: { cwd: string; flag?: string; env: NodeJS.ProcessEnv; home: string }): Promise<DataRoot>;
 paths(root): { rootConfig; localState; boardsDir; board(b); boardConfig(b);
-               storiesDir(b); story(b,key) };
+               storiesDir(b); storyDir(b,key); story(b,key);
+               rootPlugin(id); boardPlugin(b,id); storyPlugin(b,key,id) };
 readJson<T>(path, schema: ZodType<T>): Promise<T>;        // ENOENT → NotFoundError; bad JSON/schema → DataIntegrityError
 writeJson<T>(path, schema, value: T): Promise<void>;     // validate → mkdir -p → write tmp → rename; 2-space, trailing \n,
                                                          // keys in schema order (serialize the zod-parsed value)

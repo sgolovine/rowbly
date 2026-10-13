@@ -2,7 +2,7 @@
 
 Rowbly keeps its core small and adds features as Plugins. This page collects the plugin architecture in one place. The terms are in [`CONTEXT.md`](../CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in [`CONTEXT-MAP.md`](../CONTEXT-MAP.md). The reasons are in ADR-0009 to ADR-0017.
 
-Nothing on this page is built yet.
+The plugin system is built: the Plugin API, the registry, loading, the operations pipeline, Plugin Data and Plugin files, the `plugins` commands and settings section, and the slots below. The Epics and Specs Built-in Plugins are not built yet; [Writing a Built-in Plugin](#writing-a-built-in-plugin) is how they will be.
 
 ## Scope of the first build
 
@@ -145,14 +145,141 @@ rowbly stories list … [--spec <slug>…]
 
 - TUI: a **Spec** tab on the Story screen (the Story Spec, then the Board Specs it links to), a **Specs** multi-choice of the Board's Board Specs in the Story form, a **Specs** entry in the home menu to list, create, edit and delete the Board's Board Specs, a list of Board Specs in the Board detail, and a Spec filter on the Stories list and the board. Specs are edited in the multi-line text box.
 
-## Open details for implementation
+## Details decided in the build
 
-These were not decided in the design interview:
+- **The Plugin API** is `src/plugin-api/` (types in `src/services/plugins/types.ts`); see [Writing a Built-in Plugin](#writing-a-built-in-plugin). A Plugin declares everything up front in one `definePlugin({ … })` object. Its TUI part is a separate module that `tui()` loads.
+- **Operation names** are `<service>.<method>`: `stories.create`, `stories.update`, `stories.move`, `stories.rank`, `stories.remove`, `tasks.create|update|move|remove`, `comments.add|update|remove`, `boards.create|update|remove`, `assignees.add|update|remove`, `stages.add|update|move|remove`, `fields.add|update|remove`, `context.use|clearUse|setMe`, `plugins.enable|disable` and `doctor.fix` (one per fix pass). A Plugin's own operations are `<id>.<name>`, such as `epics.delete`. `rowbly init` is not an operation: no Plugin can be on before the Data Root exists. The input of each core operation holds the service method's arguments by name, plus `plugins` (`CoreOperations` in the types).
+- **A Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text, by its path in the Data Root). `before: null` is a created record, `after: null` a deleted one. Tasks and Comments are in their Story's record, Assignees in the root config. A renumbered Story is one `story` change whose `before` and `after` have different keys; saving it moves the whole Story folder. Deleting a Board lists a `story` change for each of its Stories, then the `board` change. Deleting a Story or Board deletes its folder with its Plugin files; those files are not listed.
+- **Handler order**: the replacement (if one is declared) or the core operation fills the Change Set; then every transform, then every guard, each in registry order, so a guard sees the final Change Set; then the save; then every reaction. The record an operation returns is read back from the Change Set, so `stories create --epic auth --json` prints the bag the Epics transform wrote.
+- **Clashes** are found when the Plugins load: a Plugin id that is a core command or an earlier Plugin's id, an option that a core command or an earlier Plugin has (by name, ignoring `no-`), an Action key that a core screen uses (`CORE_KEYS` in `src/tui/keymap.ts`) or an earlier Plugin uses, a second replacement of an operation, or options on a core command that does not take them. Plugin screens, form fields, filter fields and doctor codes are named after the Plugin, so they cannot clash.
+- **Doctor codes** of a Plugin are its own codes prefixed by its id in upper case (`MISSING_EPIC` → `EPICS_MISSING_EPIC`). Core adds `PLUGIN_FAILED` (error), `PLUGIN_DATA_INVALID` (warning: a bag of a Plugin that is on does not match its schema) and `PLUGIN_DATA_UNCHECKED` (info: one per Plugin that is off or unknown and has data).
+- **`_Avoid_` words**: the language test reads them from each `src/plugins/<id>/CONTEXT.md` and applies them to that Plugin's source and to its `rowbly <id>` help pages. The help test turns every Built-in Plugin on, so Plugin commands and options are checked too.
+- Still open, for the Epics and Specs builds: the key names inside each bag (such as `epic`), and the doctor code for a Story that links to a missing Board Spec.
 
-- The shape of the Plugin API: its module, and how a Plugin declares its contributions.
-- Operation names, and the shape of a Change Set, for example how a renumbered Story appears in it.
-- The order of handlers. Suggested: a replacement (if any) produces the Change Set, then transforms, then guards, so that a guard sees the final Change Set.
-- The key names inside each bag, such as `epic` for Epics and the list of linked Board Specs for Specs.
-- A doctor code for a Story that links to a missing Board Spec, and whether `--fix` unlinks it.
-- How each Plugin's `_Avoid_` words reach the language test.
-- Updates to the README (it still shows `stories/<KEY>.json`), `docs/ARCHITECTURE.md` and `docs/spec/contracts.md`.
+## Writing a Built-in Plugin
+
+A Built-in Plugin is a folder `src/plugins/<id>/` with a `CONTEXT.md` (its glossary, linked from `CONTEXT-MAP.md`) and an `index.ts` that exports its definition. Add it to `builtInPlugins` in `src/plugins/index.ts`; the order there is the order Plugins run in. Every file of the Plugin imports only `src/plugin-api` (and `src/plugin-api/tui` in its TUI part) and its own files: no Node built-ins and no packages, not even `zod` (use the `z` that the Plugin API exports). The architecture test checks this.
+
+```ts
+// src/plugins/epics/index.ts
+import { definePlugin, z } from '../../plugin-api';
+
+const StoryBag = z.object({ epic: z.string() });
+
+export const epics = definePlugin({
+  id: 'epics',                       // its command, bag key and folder name
+  name: 'Epics',
+  description: 'Group Stories from any Boards into Epics',
+  settings: z.object({}),            // its entry in rowbly.config.json, without `enabled`
+  bags: { story: StoryBag },         // checked by doctor; also story, task, comment, assignee, local
+  hooks: { /* by operation name: { guard, transform, react } */ },
+  options: { /* options on core commands */ },
+  commands(group, cli) { /* verbs of `rowbly epics` */ },
+  filterStories(story, filter, plugin) { /* StoryFilter.plugins.epics */ },
+  storyRows: async (story, plugin) => [],  // rows of `stories show` and the TUI Story screen
+  doctor: { check: ({ data, plugin }) => [] },
+  actions: [],                       // TUI Actions, by target
+  tui: () => import('./tui').then((m) => m.tui),
+});
+```
+
+Only `id`, `name` and `description` are required. The types are in `src/services/plugins/types.ts`, re-exported by the Plugin API.
+
+### The context
+
+Every handler, command, screen and Action gets a `PluginContext` (as `plugin`):
+
+| Member | What it does |
+| --- | --- |
+| `settings`, `boardSettings(boardId)` | The Data Root settings, checked by the `settings` schema when the Plugin loaded; a Board's settings are its bag deep-merged over them (lists replace). |
+| `readBag(record, schema)`, `writeBag(record, bag)` | This Plugin's bag on any record: parsed (`undefined` when missing or invalid), or a copy of the record with the bag set (`undefined` removes it). |
+| `files.read(scope, name)`, `files.list(scope)` | Its files in `plugins/<id>/` at a scope: `'dataRoot'`, `{ board }` or `{ story }`. Writes go through a Change Set. |
+| `services` | Every core service. Reads are free; a core operation called here saves on its own, so do not call one from a handler. |
+| `operation(name, input, body)` | Runs one of the Plugin's own operations, `<id>.<name>`, through the whole pipeline; `body` fills its Change Set. |
+| `editText(initial)` | Opens `$VISUAL`/`$EDITOR` (command mode only). |
+| `warn(message)`, `me`, `now()` | A warning after the command or a toast; Me; the clock. |
+
+### Operations and Change Sets
+
+```ts
+hooks: {
+  'stories.create': {
+    // `pluginInput` is this Plugin's part of `input.plugins`, e.g. from `--epic auth`.
+    async transform({ changes, pluginInput, plugin }) {
+      const created = changes.changes.find((c) => c.type === 'story' && c.before === null);
+      if (created?.type !== 'story' || !created.after || pluginInput === undefined) return;
+      await changes.updateStory(created.after.key, (story) => plugin.writeBag(story, pluginInput as object));
+    },
+  },
+  'boards.remove': {
+    guard: ({ input }) => (input.force ? undefined : { reject: 'the Board has Board Specs', hint: 'pass --force' }),
+  },
+},
+```
+
+- A **transform** changes the Change Set: `putStory`, `updateStory(key, fn)` (the latest version, from the Change Set or disk), `deleteStory`, `putBoard`, `updateBoard`, `updateRootConfig`, `updateLocalState`, and for its own files `readFile`, `writeFile` and `deleteFile`. Every record is checked against its schema when it is put.
+- A **guard** returns `{ reject, hint? }` to stop the operation (exit 4), or `undefined`.
+- A **reaction** gets the saved Change Set (read-only) and the `result`, and acts only outside Rowbly's data. Its failure only warns.
+- A **replacement** (`replaces: { 'tasks.create': async ({ core, changes, input }) => … }`) runs instead of core; `core()` runs core into the same Change Set.
+- Anything a guard, transform or replacement throws fails the operation with exit 1 and `details.plugin`. A Plugin's own command may throw `NotFoundError`, `UsageError` and the other errors the Plugin API exports, with their usual exit codes.
+- Change data in a transform, never in a reaction, so one user action is one save.
+
+A Plugin's own data change is an operation of its own, so other Plugins can hook it:
+
+```ts
+await plugin.operation('delete', { id }, async (changes) => {
+  await changes.deleteFile('dataRoot', `${id}.json`);
+  for (const story of linked) await changes.updateStory(story.key, (s) => plugin.writeBag(s, undefined));
+});
+```
+
+### Command mode
+
+```ts
+commands(group, cli) {
+  group
+    .command('show <id>')
+    .description('Show an Epic with its Stories')
+    .action((id: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print, json }) => {
+        const epic = await plugin.files.read('dataRoot', `${id}.json`);
+        if (epic === null) throw new NotFoundError(`Epic "${id}" not found`);
+        print(JSON.parse(epic), (e) => e.name);
+      }),
+    );
+},
+options: {
+  'stories create': {
+    options: [{ flags: '--epic <id>', description: 'the Epic of the new Story' }],
+    input: ({ epic }) => (epic === undefined ? undefined : { epic }),
+  },
+  'stories list': {
+    options: [{ flags: '--epic <id>', description: 'only Stories of this Epic' }, { flags: '--no-epic', description: 'only Stories without an Epic' }],
+    input: ({ epic }) => (epic === undefined ? undefined : epic),   // becomes StoryFilter.plugins.epics
+  },
+},
+filterStories: (story, filter, plugin) => (plugin.readBag(story, StoryBag)?.epic ?? false) === filter,
+```
+
+- `group` is the commander command `rowbly <id>`. `cli.run(cmd, action)` gives the action `plugin`, `services`, `json`, `print(data, human)`, `confirm(message)` (needs `--yes` when not interactive), `prompt(value, { flag, message })`, `readText({ text, file, edit }, { name, initial })` and `resolveBoard(flag)`, and prints warnings and errors like core commands. `cli.collect` and `cli.parseRepeatable` handle repeatable flags.
+- `options` adds long flags to core commands (`PluginOptionCommand` lists which). `input` turns the parsed values, by commander attribute name, into this Plugin's input of the operation, or its filter for `stories list`; `undefined` means the Plugin's options were not used. Pair `--x <v>` with `--no-x`, since `--no-x` alone makes `x` default to `true`.
+- `colors` and `renderTable` from the Plugin API format human output like core.
+
+### TUI
+
+`tui()` returns a `PluginTui`, built from `src/plugin-api/tui` (Ink's `Box`, `Text`, `useInput`, React hooks, and Rowbly's `Form`, `SelectList`, `DetailView`, `Loading`, `useAsync`, `useKeyHints` and others):
+
+| Slot | What a Plugin gives |
+| --- | --- |
+| `screens` | Components by name, with `{ params, plugin, ui }`. `ui.open(name, params)` opens one; `ui.toast`, `ui.error`, `ui.back`. |
+| `home`, `settings` | `{ label, screen, params? }` links in the home menu and the Global settings group. |
+| `storyForm` | `fields({ boardId, story, plugin })` and `input(values, story)`: the Plugin's input of `stories.create` / `stories.update`. |
+| `storyFilter` | `fields({ boardId, plugin })`, `filter(values)` (passed to `filterStories`) and `describe(values)` for the filter line, on the Stories list and the board. |
+| `storyTabs` | `{ label, component }` tabs on the Story screen, with `{ story, active, plugin, ui }`. |
+| `boardSections` | Components shown in the Board detail, with `{ board, plugin, ui }`. |
+
+`storyRows` (in the definition) also shows on the Story screen. **Actions** are in the definition, so their keys are checked when the Plugin loads: `{ key, label, target: 'board' | 'story' | 'task' | 'none', run({ focus, plugin, ui }) }`. They show in the footer, the help and as header buttons wherever their target is in focus, and may only open or show something (ADR-0017).
+
+### Tests
+
+Test a Plugin through the services with `loadPlugins` and a registry that holds it, and in command mode through a built CLI; `test/plugins/` does both for the fixture Plugins and is a model.
