@@ -258,7 +258,7 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; pass --yes when 
 An Epic groups Stories across the Boards of one Workspace. A Story links to an Epic through its `epicId` (`stories create/edit --epic <id>`). Epic Progress is the number of its Stories in a `done`-category Stage, judged by each Story's own Board, out of all its Stories.
 
 ```text
-rowbly epics list [--closed|--all]                 # open Epics by default: Id, Name, Progress, Boards, Closed
+rowbly epics list [--closed|--all]                 # open Epics by default: ID, NAME, PROGRESS, BOARDS, CLOSED
 rowbly epics create <id> --name <name> [--description <text> | --description-file <path|-> | --edit]
 rowbly epics show <id>                             # details, progress, and Stories grouped by Board
 rowbly epics edit <id> [--name <name>] [--description <text> | --description-file <path|-> | --edit]

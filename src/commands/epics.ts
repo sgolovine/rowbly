@@ -133,7 +133,7 @@ function boardsSpanned(view: EpicView): string {
 
 function epicTable(views: EpicView[]): string {
   return renderTable(
-    ['Id', 'Name', 'Progress', 'Boards', 'Closed'],
+    ['ID', 'NAME', 'PROGRESS', 'BOARDS', 'CLOSED'],
     views.map((v) => [v.id, v.name, progressText(v.progress), boardsSpanned(v), v.closed ? 'yes' : 'no']),
   );
 }

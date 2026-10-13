@@ -80,3 +80,19 @@ describe('renderTable', () => {
     expect(table.split('\n')).toHaveLength(3);
   });
 });
+
+describe('table headers', () => {
+  it('are upper case in every command table', async () => {
+    const { readdir, readFile } = await import('node:fs/promises');
+    const dir = new URL('../../src/commands/', import.meta.url);
+    const heads: string[] = [];
+    for (const file of await readdir(dir)) {
+      const source = await readFile(new URL(file, dir), 'utf8');
+      for (const [, head] of source.matchAll(/renderTable\(\s*\[([^\]]*)\]/g)) {
+        heads.push(...[...(head ?? '').matchAll(/'([^']*)'/g)].map(([, title]) => `${file}: ${title}`));
+      }
+    }
+    expect(heads.length).toBeGreaterThan(20);
+    expect(heads.filter((h) => h.split(': ')[1] !== h.split(': ')[1]?.toUpperCase())).toEqual([]);
+  });
+});
