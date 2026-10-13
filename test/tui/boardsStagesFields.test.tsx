@@ -56,7 +56,7 @@ describe('stages screen', () => {
     await app.press('j', 'j', 'n');
     expect(app.lastFrame()).toContain('Add a Stage');
     expect(app.lastFrame()).toContain('‹ after in-progress ›');
-    await app.press(...'qa', KEYS.down, ...'QA', KEYS.down, KEYS.right, KEYS.enter);
+    await app.press(...'qa', KEYS.down, ...'QA', KEYS.down, KEYS.right, KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('4. ● QA qa · in_progress'));
     expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'qa', 'done']);
     expect(app.lastFrame()).toContain('· own list');
@@ -82,7 +82,7 @@ describe('stages screen', () => {
     await app.press('J');
     await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
     expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
-    await app.press('e', ...Array(7).fill(KEYS.backspace), ...'Icebox', KEYS.enter);
+    await app.press('e', ...Array(7).fill(KEYS.backspace), ...'Icebox', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('2. ● Icebox backlog'));
     app.unmount();
   });
@@ -127,12 +127,12 @@ describe('fields screen', () => {
     await app.press('n', 'j', 'j', 'j', 'j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Add a select field');
     expect(app.lastFrame()).toContain('Options (a,b,c)');
-    await app.press(...'size', KEYS.down, ...'Size', KEYS.down, KEYS.down, KEYS.down, ...'s,m,l', KEYS.enter);
+    await app.press(...'size', KEYS.down, ...'Size', KEYS.down, KEYS.down, KEYS.down, ...'s,m,l', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Size size · select: s, m, l'));
 
     const repos = createRepositories(t.root);
     await repos.stories.put({ ...(await repos.stories.findByKey('WEB-1')), customFields: { size: 'l' } });
-    await app.press('e', KEYS.down, KEYS.down, KEYS.down, KEYS.backspace, KEYS.backspace, KEYS.enter);
+    await app.press('e', KEYS.down, KEYS.down, KEYS.down, KEYS.backspace, KEYS.backspace, KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Updated size') && f.includes('select: s, m\n'));
     expect(app.lastFrame()).toContain('stripped 1 value of "size"');
     expect((await repos.stories.findByKey('WEB-1')).customFields).toEqual({});
@@ -144,7 +144,7 @@ describe('fields screen', () => {
     const app = await open(t, 'fields');
     await app.press('n', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Whole numbers');
-    await app.press(...'est', KEYS.down, ...'Estimate', KEYS.down, KEYS.down, KEYS.down, '0', KEYS.enter);
+    await app.press(...'est', KEYS.down, ...'Estimate', KEYS.down, KEYS.down, KEYS.down, '0', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Estimate est · number (≥ 0)'));
     await app.press('d', 'y');
     await waitForFrame(app, (f) => f.includes('Removed Estimate; stripped 0 values'));
@@ -159,10 +159,10 @@ describe('boards screen', () => {
     const app = await open(t, 'boards', { version: 1, board: 'web' });
     expect(app.lastFrame()).toContain('Web web · WEB (current)');
 
-    await app.press('n', ...'api', KEYS.down, ...'Api', KEYS.down, ...'API', KEYS.enter);
+    await app.press('n', ...'api', KEYS.down, ...'Api', KEYS.down, ...'API', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Created Api (API)') && f.includes('Api api · API'));
 
-    await app.press('e', KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'API svc', KEYS.enter);
+    await app.press('e', KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'API svc', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('API svc api · API'));
 
     await app.press('j', 'd', 'y');

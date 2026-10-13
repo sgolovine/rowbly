@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import { Form, type FormValues, Loading } from '../../components';
 import { useAsync, useKeyHints, useServices, useToast } from '../../hooks';
+import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 
@@ -16,10 +17,7 @@ export function TaskFormScreen({ params }: ScreenProps) {
     const config = await services.config.effective(story.boardId);
     return { story, task: found?.task ?? null, stages: config.stages.map((s) => s.key) };
   }, [services, id, params.storyKey]);
-  useKeyHints([
-    { key: 'enter', description: 'save' },
-    { key: 'e', description: 'edit description' },
-  ]);
+  useKeyHints(FORM_KEYS);
 
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
   const { story, task, stages } = data.data;

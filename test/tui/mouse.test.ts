@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
-import { boardKey } from '../../src/tui/app';
 import { extractMouse, type MouseEvent, MouseStdin } from '../../src/tui/mouse';
+import { boardKey } from '../../src/tui/shell';
 
 describe('mouse input', () => {
   it('takes left-button SGR reports out of the input, 0-based', () => {

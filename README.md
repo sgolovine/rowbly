@@ -317,18 +317,18 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a multi-choice option, `←`/`→` change a choice, `e` opens `$EDITOR` for a description, and `enter` or `ctrl+s` saves.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions and Comments are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
 ### Keys per screen
 
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `b` switch Board (changes the context), `r` reload |
+| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
 | Task | `tab`/`←`/`→` switch between Details and Comments, `e` edit, `m` move to a Stage, `d` delete |
-| Story or Task › Comments | `c` add, `e` edit, `d` delete (bodies open in `$EDITOR`) |
+| Story or Task › Comments | `c` add, `e` edit (both open the Comment form), `d` delete |
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |

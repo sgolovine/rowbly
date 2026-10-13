@@ -2,7 +2,7 @@ import { Box, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
 import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
-import { ConfirmDialog, Form, type FormValues, Loading, Modal, SelectList } from '../../components';
+import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
   useAsync,
   useBoardSelection,
@@ -35,7 +35,7 @@ import {
   swapCard,
 } from './layout';
 
-type Mode = 'view' | 'filter' | 'switch' | 'confirm-delete';
+type Mode = 'view' | 'filter' | 'confirm-delete';
 
 /** The cursor: a column (Stage index) and a card within it. */
 interface Cursor {
@@ -44,7 +44,7 @@ interface Cursor {
 }
 
 /**
- * The Kanban board for the Board in context (`b` switches it), or for `params.boardId` without changing
+ * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
  * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them.
  */
@@ -64,7 +64,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const writing = useRef(false);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
-  // A Board opened for viewing only; `b` switches the context and drops it.
+  // A Board opened for viewing only; picking a Board in the sidebar drops it.
   const [viewing, setViewing] = useState(params.boardId as Slug | undefined);
 
   const scope = useAsync(async () => {
@@ -78,7 +78,6 @@ export function BoardScreen({ params }: ScreenProps) {
     const { boardId, choices } = scope.data;
     return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, toFilter(filters)) };
   }, [services, scope.data, filters]);
-  const boards = useAsync(async () => (mode === 'switch' ? services.boards.list() : null), [services, mode]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   // What is on screen: the columns and the Board and Stages they were grouped by.
@@ -169,7 +168,7 @@ export function BoardScreen({ params }: ScreenProps) {
     });
   };
 
-  // Another Board picked here or in the sidebar starts from a clean view.
+  // Another Board picked in the sidebar starts from a clean view.
   const seenVersion = useRef(selection.version);
   useEffect(() => {
     if (seenVersion.current === selection.version) return;
@@ -181,13 +180,8 @@ export function BoardScreen({ params }: ScreenProps) {
     firstRows.current.clear();
   }, [selection.version]);
 
-  const switchTo = async (boardId: Slug) => {
-    setMode('view');
-    await selection.select(boardId);
-  };
-
-  useKeyCapture(active && (mode === 'filter' || mode === 'switch'), { escape: true });
-  useEscape(active && (mode === 'filter' || mode === 'switch'), () => setMode('view'));
+  useKeyCapture(active && mode === 'filter', { escape: true });
+  useEscape(active && mode === 'filter', () => setMode('view'));
   useKeyHints(
     mode === 'view'
       ? [
@@ -201,7 +195,6 @@ export function BoardScreen({ params }: ScreenProps) {
           { key: 'd', description: 'delete' },
           { key: '/', description: 'filter' },
           { key: 'c', description: 'clear filter' },
-          { key: 'b', description: 'switch Board' },
           { key: 'r', description: 'reload' },
         ]
       : [{ key: 'esc', description: 'cancel' }],
@@ -227,7 +220,6 @@ export function BoardScreen({ params }: ScreenProps) {
       else if (input === 'n') router.push('story-form', { boardId, stage: stages[col]?.key, title: 'New Story' });
       else if (input === '/') setMode('filter');
       else if (input === 'c') setFilters({});
-      else if (input === 'b') setMode('switch');
       else if (input === 'r') scope.reload();
     },
     { isActive: active && mode === 'view' },
@@ -303,22 +295,6 @@ export function BoardScreen({ params }: ScreenProps) {
               setMode('view');
             }}
           />
-        </Modal>
-      )}
-      {mode === 'switch' && (
-        <Modal title="Switch Board" size="dialog" maxWidth={60}>
-          {boards.data ? (
-            <SelectList
-              items={boards.data.map((b) => ({
-                value: b.id,
-                label: b.name,
-                description: b.id === boardId ? `${b.id} (current)` : b.id,
-              }))}
-              onSelect={(item) => void switchTo(item.value)}
-            />
-          ) : (
-            <Loading label="Loading Boards…" />
-          )}
         </Modal>
       )}
       {mode === 'confirm-delete' && card && (

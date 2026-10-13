@@ -9,7 +9,8 @@ import { MOUSE_OFF, MOUSE_ON, MouseStdin } from './mouse';
 import type { Route } from './router';
 
 /** Stops mouse reporting, shows the cursor and leaves the alternate screen buffer. Harmless when already restored. */
-export const RESTORE_SEQUENCE = `${MOUSE_OFF}\u001B[?25h\u001B[?1049l`;
+// `CSI < u` pops the kitty keyboard mode; terminals without it ignore the sequence.
+export const RESTORE_SEQUENCE = `${MOUSE_OFF}\u001B[<u\u001B[?25h\u001B[?1049l`;
 
 export interface TerminalIo {
   stdin: Pick<NodeJS.ReadStream, 'isTTY'> & { setRawMode?(mode: boolean): unknown };
@@ -109,6 +110,8 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
       stdout: io.stdout as NodeJS.WriteStream,
       stderr: io.stderr as NodeJS.WriteStream,
       alternateScreen: true,
+      // Terminals with the kitty keyboard protocol report `ctrl+enter`, which submits forms.
+      kittyKeyboard: { mode: 'auto' },
       // Routing global console output through Ink only makes sense on the real process streams.
       patchConsole: options.io === undefined,
     },

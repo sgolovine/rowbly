@@ -24,15 +24,27 @@ exports[`demo screen > renders every primitive 1`] = `
      [ ] grace Grace Hopper
      [ ] linus Linus Torvalds
 
+   TextInput
+   Fix login focus
+
+   TextArea
+   The login form loses focus
+   after submit.
+
+
    Form
    › Name*         Fix login focus
      Description   (empty)
+
+
+
+
      Points
      Blocked       [ ] no
      Due date      YYYY-MM-DD
      Priority      ‹ P1 ›
      Labels        [ ] api  [x] ui  [ ] docs
-                   Save   type to edit · enter/ctrl+s submit · ↑/↓ move
+                   Save   type to edit · enter/tab next · ctrl+enter/ctrl+s save
 
    ConfirmDialog
    ╭────────────────────────────╮
@@ -40,5 +52,5 @@ exports[`demo screen > renders every primitive 1`] = `
    │                            │
    │  Delete (y)    Cancel (n)  │
    ╰────────────────────────────╯
- tab next section · g go to · ? help · q quit"
+ ctrl+n next section · g go to · ? help · q quit"
 `;

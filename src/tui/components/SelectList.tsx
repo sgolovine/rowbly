@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
 import { moveDelta } from '../keymap';
+import { TextInput } from './TextInput';
 
 export interface SelectItem<T = string> {
   value: T;
@@ -74,9 +75,7 @@ export function SelectList<T>({
           setFilter('');
           setFiltering(false);
         } else if (key.return) setFiltering(false);
-        else if (key.backspace || key.delete) setFilter((f) => f.slice(0, -1));
         else if (key.upArrow || key.downArrow) setCursor(index + moveDelta(input, key, false));
-        else if (input && !key.ctrl && !key.meta) setFilter((f) => f + input);
         return;
       }
       const delta = moveDelta(input, key);
@@ -104,11 +103,10 @@ export function SelectList<T>({
   return (
     <Box flexDirection="column">
       {(filtering || filter) && (
-        <Text>
+        <Box>
           <Text color="cyan">/</Text>
-          {filter}
-          {filtering && <Text inverse> </Text>}
-        </Text>
+          <TextInput value={filter} onChange={setFilter} focus={active && filtering} />
+        </Box>
       )}
       {visible.length === 0 && <Text dimColor>{items.length === 0 ? emptyText : `No matches for "${filter}".`}</Text>}
       {rows.map((item, i) => {

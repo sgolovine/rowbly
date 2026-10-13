@@ -20,6 +20,13 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: 'q', description: 'quit (from the root)' },
 ];
 
+/** The keys of a `Form`, for screens that show one. */
+export const FORM_KEYS: readonly KeyHint[] = [
+  { key: 'tab/enter', description: 'next field' },
+  { key: 'shift+tab', description: 'previous field' },
+  { key: 'ctrl+enter/ctrl+s', description: 'save' },
+];
+
 /** A place the `g` palette and the home menu can open. */
 export interface Destination {
   label: string;

@@ -1,7 +1,4 @@
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
@@ -41,27 +38,6 @@ async function open(t: TempRoot, screen: string, params: RouteParams = {}) {
 
 const story = (t: TempRoot) => createRepositories(t.root).stories.findByKey('WEB-1');
 
-let dir: string;
-const saved = { EDITOR: process.env.EDITOR, VISUAL: process.env.VISUAL };
-
-beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'rowbly-editor-'));
-  const script = join(dir, 'editor.sh');
-  // Appends a line to whatever the panel handed in.
-  await writeFile(script, '#!/bin/sh\nprintf "%s\\nfrom the editor" "$(cat "$1")" > "$1"\n');
-  await chmod(script, 0o755);
-  process.env.EDITOR = script;
-  delete process.env.VISUAL;
-});
-
-afterEach(async () => {
-  for (const [key, value] of Object.entries(saved)) {
-    if (value === undefined) delete process.env[key];
-    else process.env[key] = value;
-  }
-  await rm(dir, { recursive: true, force: true });
-});
-
 describe('story detail Tasks tab', () => {
   it('adds a Task, moves its Stage and deletes it', async () => {
     const t = await setup();
@@ -72,7 +48,7 @@ describe('story detail Tasks tab', () => {
     await app.press('n');
     // The breadcrumb shows the title while the form loads; wait for the form itself.
     await waitForFrame(app, (f) => f.includes('New Task on WEB-1') && f.includes('Name*'));
-    await app.press(...'Write tests', KEYS.enter);
+    await app.press(...'Write tests', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Write tests ● Backlog'));
     expect((await story(t)).tasks).toMatchObject([{ id: 'WEB-1.1', name: 'Write tests', stage: 'backlog' }]);
 
@@ -100,7 +76,7 @@ describe('story detail Tasks tab', () => {
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Old'));
     await app.press('e');
     await waitForFrame(app, (f) => f.includes('Edit WEB-1.1') && f.includes('Name*'));
-    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.enter);
+    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
 
     await app.press(KEYS.enter);
@@ -109,8 +85,10 @@ describe('story detail Tasks tab', () => {
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('No Comments yet. Press c to add one.'));
     await app.press('c');
+    await waitForFrame(app, (f) => f.includes('New Comment on WEB-1.1') && f.includes('Comment*'));
+    await app.press(...'Looks good', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Added Comment'));
-    expect((await story(t)).tasks[0]?.comments).toMatchObject([{ author: 'alice', body: 'from the editor' }]);
+    expect((await story(t)).tasks[0]?.comments).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
     expect((await story(t)).comments).toEqual([]);
     app.unmount();
   });
@@ -129,7 +107,7 @@ describe('task detail', () => {
 
     await app.press('e');
     await waitForFrame(app, (f) => f.includes('Edit WEB-1.1') && f.includes('Name*'));
-    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.enter);
+    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
     expect((await story(t)).tasks[0]?.name).toBe('New');
 
@@ -162,14 +140,22 @@ describe('CommentsPanel', () => {
     await waitForFrame(app, (f) => f.includes('No Comments yet'));
 
     await app.press('c');
+    await waitForFrame(app, (f) => f.includes('New Comment on WEB-1') && f.includes('Comment*'));
+    // An empty Comment is refused in the form.
+    await app.press(KEYS.ctrlEnter);
+    await waitForFrame(app, 'required');
+    await app.press(...'first line', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Added Comment') && f.includes('alice · just now'));
-    expect(app.lastFrame()).toContain('from the editor');
-    expect((await story(t)).comments).toMatchObject([{ id: 'id000001', author: 'alice', body: 'from the editor' }]);
+    expect(app.lastFrame()).toContain('first line');
+    expect((await story(t)).comments).toMatchObject([{ id: 'id000001', author: 'alice', body: 'first line' }]);
 
     clock.advance(5 * 60_000);
     await app.press('e');
+    await waitForFrame(app, (f) => f.includes('Edit Comment on WEB-1') && f.includes('first line'));
+    // `enter` starts a new line in the Comment.
+    await app.press(KEYS.enter, ...'second line', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Updated Comment') && f.includes('alice · 5m ago (edited)'));
-    expect((await story(t)).comments[0]?.body).toBe('from the editor\nfrom the editor');
+    expect((await story(t)).comments[0]?.body).toBe('first line\nsecond line');
 
     await app.press('d');
     await waitForFrame(app, (f) => f.includes('Delete the Comment by alice?'));

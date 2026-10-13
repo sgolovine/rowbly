@@ -1,8 +1,6 @@
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { Text, useInput } from 'ink';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, ValidationError } from '../../src/core';
 import {
   ConfirmDialog,
@@ -12,6 +10,8 @@ import {
   markdownToPlain,
   SelectList,
   StageBadge,
+  TextArea,
+  TextInput,
 } from '../../src/tui/components';
 import { useIsActive } from '../../src/tui/hooks';
 import { useRouter } from '../../src/tui/router';
@@ -98,7 +98,7 @@ describe('Form', () => {
   it('shows inline validation messages and does not submit', async () => {
     const onSubmit = vi.fn();
     const ui = renderTui(<Form fields={FIELDS} onSubmit={onSubmit} />);
-    await ui.press(KEYS.down, 'x', KEYS.down, '2', '0', '2', '6', KEYS.enter);
+    await ui.press(KEYS.down, 'x', KEYS.down, '2', '0', '2', '6', KEYS.ctrlEnter);
     expect(onSubmit).not.toHaveBeenCalled();
     const frame = ui.lastFrame() ?? '';
     expect(frame).toContain('required');
@@ -107,12 +107,12 @@ describe('Form', () => {
     ui.unmount();
   });
 
-  it('submits typed values of every kind with enter', async () => {
+  it('submits typed values of every kind with ctrl+enter', async () => {
     const onSubmit = vi.fn();
     const ui = renderTui(<Form fields={FIELDS} initialValues={{ name: 'Fix' }} onSubmit={onSubmit} />);
     await ui.press(' ', 'l', 'o', 'g', 'i', 'n', KEYS.backspace, 'n');
     await ui.press(KEYS.down, '3', KEYS.down, ...'2026-10-12');
-    await ui.press(KEYS.down, ' ', KEYS.down, KEYS.right, KEYS.right, KEYS.down, KEYS.right, ' ', KEYS.enter);
+    await ui.press(KEYS.down, ' ', KEYS.down, KEYS.right, KEYS.right, KEYS.down, KEYS.right, ' ', KEYS.ctrlEnter);
     expect(onSubmit).toHaveBeenCalledWith({
       name: 'Fix login',
       points: 3,
@@ -156,7 +156,7 @@ describe('Form', () => {
         }}
       />,
     );
-    await ui.press(KEYS.enter);
+    await ui.press(KEYS.ctrlEnter);
     const frame = ui.lastFrame() ?? '';
     expect(frame).toMatch(/Name\*\s+Fix\s*\n\s+name is already taken/);
     expect(frame).toContain('size must be one of S, M, L');
@@ -173,48 +173,142 @@ describe('Form', () => {
       ),
     };
     const app = renderApp(screens);
-    await app.press(KEYS.enter);
+    await app.press(KEYS.ctrlEnter);
     expect(app.lastFrame()).toContain('error: board "web" already exists');
     app.unmount();
   });
 
-  describe('multiline fields', () => {
-    let dir: string;
-    const saved = { EDITOR: process.env.EDITOR, VISUAL: process.env.VISUAL };
+  it('moves to the next field with enter and tab, back with shift+tab, and saves with enter on Save', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(
+      <Form
+        fields={[
+          { name: 'name', label: 'Name', kind: 'text' },
+          { name: 'points', label: 'Points', kind: 'number' },
+        ]}
+        onSubmit={onSubmit}
+      />,
+    );
+    await ui.press('a', KEYS.enter, '1', KEYS.shiftTab, 'b', KEYS.tab, '2', KEYS.tab);
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(ui.lastFrame()).toContain('enter save');
+    await ui.press(KEYS.enter);
+    expect(onSubmit).toHaveBeenCalledWith({ name: 'ab', points: 12 });
+    ui.unmount();
+  });
 
-    beforeEach(async () => {
-      dir = await mkdtemp(join(tmpdir(), 'rowbly-editor-'));
-      const script = join(dir, 'editor.sh');
-      // Appends to whatever the form passed in, so the test sees both the hand-in and the hand-back.
-      await writeFile(script, '#!/bin/sh\nprintf "%s\\nfrom the editor" "$(cat "$1")" > "$1"\n');
-      await chmod(script, 0o755);
-      process.env.EDITOR = script;
-      delete process.env.VISUAL;
-    });
+  it('edits text at the caret', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(
+      <Form
+        fields={[{ name: 'name', label: 'Name', kind: 'text' }]}
+        initialValues={{ name: 'Fx' }}
+        onSubmit={onSubmit}
+      />,
+    );
+    await ui.press(KEYS.left, 'i', KEYS.home, '[', KEYS.end, ']', KEYS.ctrlS);
+    expect(onSubmit).toHaveBeenCalledWith({ name: '[Fix]' });
+    ui.unmount();
+  });
 
-    afterEach(async () => {
-      for (const [key, value] of Object.entries(saved)) {
-        if (value === undefined) delete process.env[key];
-        else process.env[key] = value;
-      }
-      await rm(dir, { recursive: true, force: true });
-    });
+  it('edits multiline fields in place: enter starts a line, ↑/↓ leave from the edges', async () => {
+    const onSubmit = vi.fn();
+    const ui = renderTui(
+      <Form
+        fields={[
+          { name: 'name', label: 'Name', kind: 'text' },
+          { name: 'description', label: 'Description', kind: 'multiline' },
+          { name: 'points', label: 'Points', kind: 'number' },
+        ]}
+        initialValues={{ name: 'Fix', description: 'first line' }}
+        onSubmit={onSubmit}
+      />,
+    );
+    await ui.press(KEYS.tab, KEYS.enter, ...'second', KEYS.up, KEYS.up, KEYS.down, KEYS.down, KEYS.down, '3');
+    expect(ui.lastFrame()).toMatch(/first line\s*\n\s*second/);
+    await ui.press(KEYS.ctrlEnter);
+    expect(onSubmit).toHaveBeenCalledWith({ name: 'Fix', description: 'first line\nsecond', points: 3 });
+    ui.unmount();
+  });
+});
 
-    it('opens $EDITOR on e and receives the saved text', async () => {
-      const onSubmit = vi.fn();
-      const ui = renderTui(
-        <Form
-          fields={[{ name: 'description', label: 'Description', kind: 'multiline' }]}
-          initialValues={{ description: 'first line' }}
-          onSubmit={onSubmit}
-        />,
-      );
-      await ui.press('e');
-      await vi.waitFor(() => expect(ui.lastFrame()).toContain('first line (+1 lines)'));
-      await ui.press(KEYS.enter);
-      expect(onSubmit).toHaveBeenCalledWith({ description: 'first line\nfrom the editor' });
-      ui.unmount();
-    });
+describe('TextInput', () => {
+  it('scrolls long text to keep the caret in view', async () => {
+    const onChange = vi.fn();
+    const ui = renderTui(<TextInput value="abcdefghij" onChange={onChange} width={4} />);
+    await ui.press();
+    expect(ui.lastFrame()).toBe('hij');
+    await ui.press(...Array(8).fill(KEYS.left));
+    expect(ui.lastFrame()).toBe('cdef');
+    await ui.press(KEYS.backspace);
+    expect(onChange).toHaveBeenCalledWith('acdefghij');
+    ui.unmount();
+  });
+});
+
+describe('TextArea', () => {
+  it('wraps long lines and moves between wrapped rows with ↑/↓', async () => {
+    const onLeave = vi.fn();
+    function Editor() {
+      const [value, setValue] = useState('abcdefgh');
+      return <TextArea value={value} onChange={setValue} width={5} rows={3} onLeave={onLeave} />;
+    }
+    const ui = renderTui(<Editor />);
+    await ui.press();
+    expect(ui.lastFrame()?.trimEnd()).toBe('abcd\nefgh');
+    await ui.press(KEYS.up, 'x');
+    expect(ui.lastFrame()?.trimEnd()).toBe('abcd\nxefg\nh');
+    await ui.press(KEYS.up, KEYS.up);
+    expect(onLeave).toHaveBeenCalledWith(-1);
+    ui.unmount();
+  });
+});
+
+describe('TextArea blank lines and fast keys', () => {
+  function Editor({ initial, onValue }: { initial: string; onValue?(value: string): void }) {
+    const [value, setValue] = useState(initial);
+    return (
+      <TextArea
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          onValue?.(next);
+        }}
+        width={20}
+        rows={6}
+      />
+    );
+  }
+
+  it('keeps a row for every blank line, wherever the caret is', async () => {
+    const ui = renderTui(<Editor initial={'one\n\n\ntwo'} />);
+    await ui.press();
+    expect(
+      ui
+        .lastFrame()
+        ?.split('\n')
+        .slice(0, 4)
+        .map((l) => l.trimEnd()),
+    ).toEqual(['one', '', '', 'two']);
+    await ui.press(KEYS.up);
+    expect(
+      ui
+        .lastFrame()
+        ?.split('\n')
+        .slice(0, 4)
+        .map((l) => l.trimEnd()),
+    ).toEqual(['one', '', '', 'two']);
+    ui.unmount();
+  });
+
+  it('applies keys that arrive before a re-render', async () => {
+    const onValue = vi.fn();
+    const ui = renderTui(<Editor initial="" onValue={onValue} />);
+    await ui.press();
+    for (const key of ['a', KEYS.enter, KEYS.enter, 'b']) ui.stdin.write(key);
+    await ui.press();
+    expect(onValue).toHaveBeenLastCalledWith('a\n\nb');
+    ui.unmount();
   });
 });
 

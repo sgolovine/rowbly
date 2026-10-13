@@ -9,11 +9,17 @@ export const KEYS = {
   down: '\u001B[B',
   left: '\u001B[D',
   right: '\u001B[C',
+  home: '\u001B[H',
+  end: '\u001B[F',
   enter: '\r',
   escape: '\u001B',
   tab: '\t',
+  shiftTab: '\u001B[Z',
   backspace: '\u007F',
   ctrlS: '\u0013',
+  ctrlN: '\u000E',
+  /** As terminals with the kitty keyboard protocol send it. */
+  ctrlEnter: '\u001B[13;5u',
 } as const;
 
 /** Lets Ink process input and re-render. `esc` needs longer: Ink waits to tell it apart from escape sequences. */

@@ -10,6 +10,7 @@ import type { CustomFieldValuesInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
 import { useAsync, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
+import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 import { boardIdFor, NONE } from './shared';
@@ -27,10 +28,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
     if (!ctx) throw new Error('no Data Root');
     return { story, boardId, choices: await storyChoices(ctx, boardId) };
   }, [services, ctx, key, params.boardId]);
-  useKeyHints([
-    { key: 'enter', description: 'save' },
-    { key: 'e', description: 'edit description' },
-  ]);
+  useKeyHints(FORM_KEYS);
 
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
   const { story, boardId, choices } = data.data;

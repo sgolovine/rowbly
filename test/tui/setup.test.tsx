@@ -51,7 +51,7 @@ describe('setup screen (first run)', () => {
     expect(app.lastFrame()).toContain('Leave the Board id empty to skip the first Board.');
     expect(app.lastFrame()).not.toContain('Workspace');
     // Board id; Board name and prefix take their defaults.
-    await app.press(...'web', KEYS.enter);
+    await app.press(...'web', KEYS.ctrlEnter);
     // The board view (WP09: home opens it when a Board is in context), with the new context in the sidebar.
     await waitForFrame(app, (f) => f.includes('▌ 1 web') && f.includes('● Backlog (0)'));
 
@@ -69,7 +69,7 @@ describe('setup screen (first run)', () => {
     await waitForFrame(app, 'No Data Root found');
     await app.press('j', KEYS.enter);
     await waitForFrame(app, 'Board id');
-    await app.press(KEYS.enter);
+    await app.press(KEYS.ctrlEnter);
     await waitForFrame(app, 'Go to');
     await access(join(home, '.rowbly', 'rowbly.config.json'));
     await expect(access(join(home, '.rowbly', 'boards'))).rejects.toThrow();

@@ -5,3 +5,6 @@ export * from './Modal';
 export * from './SelectList';
 export * from './Spinner';
 export * from './StageBadge';
+export * from './Tabs';
+export * from './TextArea';
+export * from './TextInput';

@@ -220,12 +220,12 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     // assignee, me, label, priority, text
-    await app.press('/', KEYS.down, ' ', KEYS.enter);
+    await app.press('/', KEYS.down, ' ', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
     expect(app.lastFrame()).toContain('● Backlog (1)');
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-4'));
-    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.enter);
+    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
     expect(app.lastFrame()).toContain('WEB-5');
     app.unmount();
@@ -235,13 +235,13 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     // assignees, me, labels, priorities, text: P0 and P3 at once.
-    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
+    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.ctrlEnter);
     let frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
     expect(frame).toContain('WEB-4');
     expect(frame).toContain('WEB-5');
     expect(frame).not.toContain('WEB-6');
     // Both Assignees: any of them matches, like a repeated --assignee.
-    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.enter);
+    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.ctrlEnter);
     frame = await waitForFrame(app, (f) => f.includes('filter: @alice @bob') && !f.includes('WEB-5'));
     expect(frame).toContain('WEB-1');
     expect(frame).toContain('WEB-4');
@@ -335,7 +335,7 @@ describe('board view', () => {
     const app = await open(t);
     await app.press('l', 'l', 'n');
     await waitForFrame(app, (f) => f.includes('New Story on web') && f.includes('‹ doing ›'));
-    await app.press(...'From board', KEYS.enter);
+    await app.press(...'From board', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('Created WEB-7'));
     expect((await story(t, 'WEB-7')).stage).toBe('doing');
     await app.press(KEYS.escape);
@@ -385,6 +385,11 @@ describe('board view', () => {
     await click(at('Signup form'));
     await click(at('Signup form'));
     await waitForFrame(app, 'Comments');
+    await tick(200);
+    await click(at(' Comments '));
+    await waitForFrame(app, 'No Comments yet');
+    await click(at(' Tasks '));
+    await waitForFrame(app, 'No Tasks yet');
     app.unmount();
   });
 
@@ -403,18 +408,6 @@ describe('board view', () => {
     await waitForFrame(app, (f) => f.includes('▌ 2 Website') && f.includes('WEB-1'));
     await app.press('1');
     await waitForFrame(app, 'API api');
-    app.unmount();
-  });
-
-  it('switches Board with b and remembers it in Local State', async () => {
-    const t = await seed();
-    const app = await open(t);
-    await app.press('b');
-    await waitForFrame(app, (f) => f.includes('Website web (current)'));
-    await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('API api') && f.includes('● Backlog (0)'));
-    expect(app.lastFrame()).not.toContain('WEB-');
-    expect(await createRepositories(t.root).localState.get()).toMatchObject({ board: 'api' });
     app.unmount();
   });
 });

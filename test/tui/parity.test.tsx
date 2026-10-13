@@ -137,7 +137,7 @@ describe('G3 all-Boards Stories list (stories list --all-boards)', () => {
     expect(frame).toContain('web  WEB-3 Lost ● gone?');
 
     // Priorities: P1 across both Boards (stages, assignees, me, labels, priorities).
-    await app.press('/', ...Array(4).fill(KEYS.down), KEYS.right, ' ', KEYS.enter);
+    await app.press('/', ...Array(4).fill(KEYS.down), KEYS.right, ' ', KEYS.ctrlEnter);
     frame = await waitForFrame(app, (f) => f.includes('filters: P1') && !f.includes('WEB-2'));
     expect(frame).toContain('API-1 Tokens');
     expect(frame).toContain('WEB-1 Login');
@@ -162,17 +162,9 @@ describe('G4 viewing another Board without changing the context', () => {
     expect(ctx.local).toEqual(CONTEXT);
     expect(await localOnDisk(t)).toEqual(CONTEXT);
 
-    // b still switches the context, and the board then follows it.
-    await app.press('b');
-    // The Boards list stays on screen below, so wait for the picker's own entry.
-    await waitForFrame(app, /Switch Board[\s\S]*Website web/);
-    await app.press('j', KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('WEB-1') && !f.includes('viewing only'));
-    expect(await localOnDisk(t)).toEqual(CONTEXT);
-    await app.press('b');
-    await waitForFrame(app, 'Website web (current)');
-    await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('API-1'));
+    // The sidebar still switches the context, and the board then follows it.
+    await app.press('1');
+    await waitForFrame(app, (f) => f.includes('API-1') && !f.includes('viewing only'));
     expect(await localOnDisk(t)).toEqual({ version: 1, board: 'api' });
     app.unmount();
   });
@@ -205,7 +197,7 @@ describe('G5 creating the global Data Root after one exists (init --global)', ()
     // api, web, then the new entry.
     await app.press('j', 'j', KEYS.enter);
     await waitForFrame(app, `Create ${globalPath}`);
-    await app.press(...'notes', KEYS.enter);
+    await app.press(...'notes', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes(`Created ${globalPath}`) && f.includes('Switch Board'));
 
     const global = createRepositories({ path: globalPath, kind: 'global' });

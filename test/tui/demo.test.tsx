@@ -10,7 +10,16 @@ describe('demo screen', () => {
     const app = renderApp(screens, 'demo');
     await app.press();
     const frame = stable(app.lastFrame());
-    for (const primitive of ['StageBadge', 'DetailView', 'Loading', 'SelectList', 'Form', 'ConfirmDialog']) {
+    for (const primitive of [
+      'StageBadge',
+      'DetailView',
+      'Loading',
+      'SelectList',
+      'TextInput',
+      'TextArea',
+      'Form',
+      'ConfirmDialog',
+    ]) {
       expect(frame).toContain(primitive);
     }
     expect(frame).toContain('● In Progress');
@@ -21,13 +30,15 @@ describe('demo screen', () => {
     app.unmount();
   });
 
-  it('moves focus between sections with tab and shows form validation inline', async () => {
+  it('moves focus between sections with ctrl+n and shows form validation inline', async () => {
     const app = renderApp(screens, 'demo');
-    await app.press(KEYS.tab);
+    await app.press(KEYS.ctrlN);
+    expect(app.lastFrame()).toContain('▸ TextInput');
+    await app.press(KEYS.ctrlN, KEYS.ctrlN);
     expect(app.lastFrame()).toContain('▸ Form');
-    await app.press(...Array(15).fill(KEYS.backspace), ...'invalid', KEYS.enter);
+    await app.press(...Array(15).fill(KEYS.backspace), ...'invalid', KEYS.ctrlEnter);
     expect(app.lastFrame()).toContain('name is already taken');
-    await app.press(KEYS.tab, 'y');
+    await app.press(KEYS.ctrlN, 'y');
     expect(app.lastFrame()).toContain('▸ ConfirmDialog');
     expect(app.lastFrame()).toContain('confirmed');
     app.unmount();
