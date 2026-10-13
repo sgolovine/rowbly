@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "stages": [
+    {
+      "key": "backlog",
+      "name": "Backlog",
+      "category": "todo"
+    },
+    {
+      "key": "todo",
+      "name": "Todo",
+      "category": "todo"
+    },
+    {
+      "key": "in-progress",
+      "name": "In Progress",
+      "category": "in_progress"
+    },
+    {
+      "key": "done",
+      "name": "Done",
+      "category": "done"
+    }
+  ]
+}

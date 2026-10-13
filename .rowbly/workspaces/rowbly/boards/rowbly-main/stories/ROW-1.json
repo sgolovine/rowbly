@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "key": "ROW-1",
+  "workspaceId": "rowbly",
+  "boardId": "rowbly-main",
+  "name": "Testing",
+  "description": "This is a test\n",
+  "stage": "backlog",
+  "rank": "a0",
+  "assignees": [],
+  "epicId": null,
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-13T02:47:29.438Z",
+  "updatedAt": "2026-10-13T02:47:29.438Z",
+  "nextTaskNumber": 1,
+  "tasks": [],
+  "comments": []
+}

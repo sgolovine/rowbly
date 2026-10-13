@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "key": "ROW-2",
+  "workspaceId": "rowbly",
+  "boardId": "rowbly-main",
+  "name": "Another Story",
+  "description": "",
+  "stage": "backlog",
+  "rank": "a1",
+  "assignees": [],
+  "epicId": null,
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-13T02:48:13.977Z",
+  "updatedAt": "2026-10-13T02:48:38.786Z",
+  "nextTaskNumber": 1,
+  "tasks": [],
+  "comments": []
+}
