@@ -8,7 +8,7 @@ This folder is the single source of truth for building Rowbly v1 with a **superv
 | [contracts.md](contracts.md) | everyone | Frozen data layout, schemas, CLI surface, service interfaces, exit codes |
 | [supervisor.md](supervisor.md) | supervisor | Runbook: dispatch, review, merge, checkpoints |
 | [worker.md](worker.md) | workers | Rules of engagement and Definition of Done |
-| [packages/](packages/) | one worker each | Work packages WP00–WP11 |
+| [packages/](packages/) | one worker each | Work packages WP00–WP11 (WP12 was briefed by the supervisor directly) |
 
 Also binding: [`/CONTEXT.md`](../../CONTEXT.md) (glossary — use its terms exactly, never the `_Avoid_` words) and [`docs/adr/`](../adr/) (decisions — do not reverse without the user).
 
@@ -92,7 +92,8 @@ Phase 4   WP11 Hardening & Docs (needs all)
 | [WP08](packages/WP08-setup-and-context.md) | Setup & Context | WP03, WP04 | 2 | merged (#8) |
 | [WP09](packages/WP09-kanban-board-view.md) | Kanban Board View | WP05 | 3 | merged (#11) |
 | [WP10](packages/WP10-doctor.md) | Doctor | WP05, WP06, WP07 | 3 | merged (#12) |
-| [WP11](packages/WP11-hardening-and-docs.md) | Hardening & Docs | all | 4 | merged (this PR) |
+| [WP11](packages/WP11-hardening-and-docs.md) | Hardening & Docs | all | 4 | merged (#13) |
+| WP12 (no package file; supervisor brief) | TUI Parity Gaps: closes G1–G7 from the WP11 parity audit | WP11 | 4 | in review |
 
 Phase numbers are for humans; the supervisor schedules strictly by the **Depends on** column, max 5 workers at once, and pauses at the two checkpoints.
 

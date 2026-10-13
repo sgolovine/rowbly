@@ -120,7 +120,11 @@ rowbly config show [--workspace <id>] [--board <id>|<ws>/<id>]
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
   The **Context** entry of the `g` palette switches Workspace and Board; press `m` there to pick Me
-  from the roster, or `c` to clear the current Workspace and Board.
+  from the roster, or `c` to clear the current Workspace and Board. While `~/.rowbly` does not exist,
+  Context also lists **Create global Data Root**, which runs the same form as the first-run screen
+  (`init --global`) and then returns to the Data Root you are using.
+- The **Config** entry of the `g` palette is the TUI's `config show`: the Board detail for the Board
+  in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
 
 <!-- BEGIN workspaces -->
@@ -178,6 +182,7 @@ rowbly boards delete <id> [--force]                  # confirms; pass --yes when
 - The key prefix (`WEB` in `WEB-42`) must be unique across the whole Data Root; a clash exits 4. Lower case is accepted and upper-cased.
 - A new Board has no Stage or Custom Field lists of its own: it inherits them through the Configuration Cascade.
 - `delete` refuses a Board that has Stories (exit 4) unless `--force`. Deleting the current Board clears it from Local State.
+- In the TUI, **Boards** `enter` opens the Board detail (`boards show`): name, key prefix, description, Stories per Stage, and the effective Stages and Custom Fields with their source level. `v` opens a Board's board for viewing only, like `--board` on a read command: the current context and `local.json` do not change.
 <!-- END boards -->
 
 <!-- BEGIN stages -->
@@ -246,6 +251,7 @@ rowbly stories delete <KEY>                          # confirms; pass --yes when
 - `list` sorts by Stage order then Rank. `--sort priority` puts the most urgent first, `created` the oldest first, `updated` the newest first and `due` the soonest first. `--open` hides Stories in a `done` Stage. `--search` matches name and description, ignoring case.
 - `move` places the Story at the bottom of the target Stage, or at the top with `--top`. `rank` reorders a Story within its Stage. Both write only that Story's file.
 - `--json` prints Story objects: an array for `list`, one Story for `create`, `show`, `edit`, `move` and `rank`, and `{ deleted }` for `delete`.
+- In the TUI, the **Stories** list's `A` shows every Board of the Workspace (`--all-boards`), with the Board on each row. The `/` filter on the Stories list and on the board takes several values per field, like a repeated flag.
 <!-- END stories -->
 
 <!-- BEGIN tasks -->
@@ -266,6 +272,7 @@ rowbly tasks delete <TASK-ID>                        # confirms; pass --yes when
 - Tasks have no Assignees of their own; `show` displays the Story's Assignees.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects: an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
+- In the TUI, a Story's **Tasks** tab and the Task detail both edit (`e`), move (`m`) and delete (`d`) a Task. The Task detail keeps its Comments on a second tab.
 <!-- END tasks -->
 
 <!-- BEGIN comments -->
@@ -300,7 +307,7 @@ rowbly epics reopen <id>
 rowbly epics delete <id> [--yes]                   # unlinks its Stories (epicId: null) and warns with the count
 ```
 
-Every verb takes `--workspace <id>` (default: `ROWBLY_WORKSPACE`, then the current context). In the TUI, open **Epics** from the `g` palette: `enter` opens an Epic, `n` creates one, `a` cycles through open, all and closed Epics. On an Epic, `enter` opens a Story, `e` edits, `c` closes or reopens, and `d` deletes.
+Every verb takes `--workspace <id>` (default: `ROWBLY_WORKSPACE`, then the current context). In the TUI, open **Epics** from the `g` palette: `enter` opens an Epic, `n` creates one, `a` cycles through open, all and closed Epics. On an Epic, `enter` opens a Story, `e` edits, `c` closes or reopens, and `d` deletes. The Epics of another Workspace (`--workspace`) open from that Workspace's detail (**Workspaces** `v`), without changing the context.
 <!-- END epics -->
 
 <!-- BEGIN doctor -->
@@ -352,7 +359,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `g` | go to any screen: Board, Stories, Epics, Workspaces, Boards, Assignees, Stages, Fields, Context, Doctor |
+| `g` | go to any screen: Board, Stories, Epics, Workspaces, Boards, Assignees, Stages, Fields, Config, Context, Doctor |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -362,19 +369,21 @@ In a form, `↑`/`↓` move between fields, `space` toggles a yes/no field or a 
 
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignee, Me, Label, Priority, Epic or text, `c` clear the filter, `b` switch Board, `r` reload |
-| Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, Epic, text, Stage Category or open only, and sort, `c` clear the filter |
+| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities, Epic or text (several values per field), `c` clear the filter, `b` switch Board (changes the context), `r` reload |
+| Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, Epic, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards of the Workspace / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
+| Task | `tab`/`←`/`→` switch between Details and Comments, `e` edit, `m` move to a Stage, `d` delete |
 | Story or Task › Comments | `c` add, `e` edit, `d` delete (bodies open in `$EDITOR`) |
 | Epics | `enter` open, `n` new, `a` show open → all → closed Epics |
 | Epic | `enter` open a Story, `e` edit, `c` close or reopen, `d` delete |
-| Workspaces | `enter` use and open (then: Assignees, Edit, Delete), `n` new |
+| Workspaces | `enter` use and open (then: Boards, Epics, Assignees, Edit, Delete), `v` open without using it, `n` new |
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
-| Boards | `enter`/`s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
+| Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
+| Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
 | Stages | `n` add, `e` edit, `K`/`J` move up / down, `T`/`B` move first / last, `d` remove (asks where to move Stories still in it), `l` switch level |
 | Fields | `n` add, `e` edit, `d` remove, `l` switch level |
-| Context | `enter` switch Workspace, then Board, `m` pick Me from the roster, `c` clear the current Workspace and Board |
+| Context | `enter` switch Workspace, then Board (or create the global Data Root while it does not exist), `m` pick Me from the roster, `c` clear the current Workspace and Board |
 | Doctor | `f` fix, `r` check again |
 <!-- END tui -->
 

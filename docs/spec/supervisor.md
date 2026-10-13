@@ -97,7 +97,7 @@ If a CCR would reverse an ADR or a decision recorded in `CONTEXT.md`, you cannot
   - the merged PRs,
   - the test count,
   - any known gaps,
-  - how to install it (`pnpm build && pnpm link --global`).
+  - how to install it (`pnpm build && pnpm add -g "$PWD"`).
 
 ## 7. Things you never do
 
