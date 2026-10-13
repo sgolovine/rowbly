@@ -162,7 +162,9 @@ describe('G4 viewing another Board without changing the context', () => {
     expect(ctx.local).toEqual(CONTEXT);
     expect(await localOnDisk(t)).toEqual(CONTEXT);
 
-    // The sidebar still switches the context, and the board then follows it.
+    // The sidebar still switches the context (from the root screen), and the board then follows it.
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => !f.includes('Boards › Board'));
     await app.press('1');
     await waitForFrame(app, (f) => f.includes('API-1') && !f.includes('viewing only'));
     expect(await localOnDisk(t)).toEqual({ version: 1, board: 'api' });

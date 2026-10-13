@@ -2,13 +2,11 @@
 
 exports[`board view > renders one column per Stage with counts and cards in Rank order 1`] = `
 "╭─rowbly-test-XXXXXX──────────────────────────────────────────────────────────────────────────────────────╮╭───────────╮
-│                                                                                               me: alice ││+ New Story│
+│ Website web                                                                                   me: alice ││+ New Story│
 ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────╯╰───────────╯
 ╭─Boards─────────────╮╭─Board──────────────────────────────────────────────────────────────────────────────────────────╮
-│  1 API             ││Website web                                                                                     │
-│▌ 2 Website         ││                                                                                                │
-│                    ││● Backlog (3)           ● Todo (1)              ● Doing (1)             ● Done (1)              │
-│                    ││━━━━━━━━━━━━━━━━━━━━━━━ ─────────────────────── ─────────────────────── ─────────────────────── │
+│  1 API             ││● Backlog (3)           ● Todo (1)              ● Doing (1)             ● Done (1)              │
+│▌ 2 Website         ││━━━━━━━━━━━━━━━━━━━━━━━ ─────────────────────── ─────────────────────── ─────────────────────── │
 │                    ││                                                                                                │
 │                    ││▌ WEB-1 P1                WEB-4 P3                WEB-5 P0                WEB-6                 │
 │                    ││▌ Login page with a ra…   Dark mode               Fix footer              Release v1            │
@@ -23,20 +21,20 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 ││  + New Board N   │││                                                                                                │
 │╰──────────────────╯││                                                                                                │
 ╰────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────╯
- h/l j/k select · enter open · H/L move Stage · K/J reorder · T/B to top/bottom · n new · e edit · d delete · / filter…"
+ h/l j/k select · enter open · n new · / filter · ? help · q quit"
 `;
 
 exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
 "╭─rowbly-test-XXXXXX──────────────────────────────────────────────╮╭───────────╮
-│                                                       me: alice ││+ New Story│
+│ Website web · Stages 4–5 of 6                         me: alice ││+ New Story│
 ╰─────────────────────────────────────────────────────────────────╯╰───────────╯
 ╭─Boards─────────────╮╭─Board──────────────────────────────────────────────────╮
-│  1 API             ││Website web · Stages 4–5 of 6                           │
-│▌ 2 Website         ││                                                        │
-│                    ││‹3 ● Review (0)             ● QA (0)                 1› │
-│╭──────────────────╮││   ──────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━━    │
+│  1 API             ││‹3 ● Review (0)             ● QA (0)                 1› │
+│▌ 2 Website         ││   ──────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━━    │
+│                    ││                                                        │
+│╭──────────────────╮││   (empty)                  (empty)                     │
 ││  + New Board N   │││                                                        │
-│╰──────────────────╯││   (empty)                  (empty)                     │
+│╰──────────────────╯││                                                        │
 ╰────────────────────╯╰────────────────────────────────────────────────────────╯
- h/l j/k select · enter open · H/L move Stage · K/J reorder · T/B to top/botto…"
+ h/l j/k select · enter open · n new · / filter · ? help · q quit"
 `;
