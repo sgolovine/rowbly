@@ -85,6 +85,18 @@ describe('context.resolveBoard', () => {
     expect(await context.resolveBoard()).toEqual({ workspaceId: 'labs', boardId: 'ml' });
   });
 
+  it('scopes the board fallbacks to the workspace flag', async () => {
+    const t = await twoWorkspaces();
+    // Local State points at acme/web; `--workspace labs` (single Board `ml`) overrides it.
+    const { context } = createServices(contextFor(t, { version: 1, workspace: 'acme', board: 'web' }));
+    expect(await context.resolveBoard(undefined, 'labs')).toEqual({ workspaceId: 'labs', boardId: 'ml' });
+    expect(await context.resolveBoard('ml', 'labs')).toEqual({ workspaceId: 'labs', boardId: 'ml' });
+    expect(await context.resolveBoard(undefined, 'acme')).toEqual({ workspaceId: 'acme', boardId: 'web' });
+    // An explicit ws/board wins over the workspace flag.
+    expect(await context.resolveBoard('acme/api', 'labs')).toEqual({ workspaceId: 'acme', boardId: 'api' });
+    await expect(context.resolveBoard(undefined, 'nope')).rejects.toThrow(NotFoundError);
+  });
+
   it('with several Boards and no context, the result is UsageError', async () => {
     const t = await twoWorkspaces();
     const { context } = createServices(contextFor(t, { version: 1, workspace: 'acme' }));

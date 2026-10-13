@@ -20,16 +20,21 @@ export function createContextService(ctx: RowblyContext, repos: Repositories): C
     throw new UsageError('workspace required', { hint: 'pass --workspace <id> or run `rowbly use <workspace>`' });
   }
 
-  /** `flag` (`--board ?? ROWBLY_BOARD`, may be `ws/board`) → Local State (same Workspace only) → the only Board. */
-  async function resolveBoard(flag?: string): Promise<BoardRef> {
-    if (flag) {
-      const slash = flag.indexOf('/');
-      const workspaceId = slash === -1 ? await resolveWorkspace() : flag.slice(0, slash);
-      const boardId = slash === -1 ? flag : flag.slice(slash + 1);
-      const board = await repos.boards.get({ workspaceId, boardId });
+  /**
+   * `flag` (`--board ?? ROWBLY_BOARD`, may be `ws/board`) → Local State (same Workspace only) → the only
+   * Board. Unless `flag` names one, the Workspace is resolved from `workspaceFlag` as in `resolveWorkspace`.
+   */
+  async function resolveBoard(flag?: string, workspaceFlag?: string): Promise<BoardRef> {
+    const slash = flag?.indexOf('/') ?? -1;
+    if (flag && slash !== -1) {
+      const board = await repos.boards.get({ workspaceId: flag.slice(0, slash), boardId: flag.slice(slash + 1) });
       return { workspaceId: board.workspaceId, boardId: board.id };
     }
-    const workspaceId = await resolveWorkspace();
+    const workspaceId = await resolveWorkspace(workspaceFlag);
+    if (flag) {
+      const board = await repos.boards.get({ workspaceId, boardId: flag });
+      return { workspaceId: board.workspaceId, boardId: board.id };
+    }
     const stored = ctx.local.board;
     if (stored && ctx.local.workspace === workspaceId) {
       const ref = { workspaceId, boardId: stored };
