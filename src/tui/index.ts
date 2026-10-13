@@ -82,6 +82,8 @@ export interface StartTuiOptions {
   proc?: GuardedProcess;
   env?: NodeJS.ProcessEnv;
   cwd?: string;
+  /** `--root`. Unlike a discovered Data Root, a missing one fails instead of opening setup. */
+  root?: string;
 }
 
 /**
@@ -93,7 +95,8 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
   const proc = options.proc ?? process;
   const env = options.env ?? process.env;
   const toasts = createToastStore();
-  const resolved = ctx === undefined ? await resolveContext(env, options.cwd ?? process.cwd(), toasts) : ctx;
+  const resolved =
+    ctx === undefined ? await resolveContext(env, options.cwd ?? process.cwd(), options.root, toasts) : ctx;
   const services = resolved ? createServices(resolved) : null;
 
   const instance = render(
@@ -117,13 +120,18 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
   }
 }
 
-/** The demo needs no data, and a missing Data Root routes to setup. */
-async function resolveContext(env: NodeJS.ProcessEnv, cwd: string, toasts: ToastStore): Promise<RowblyContext | null> {
+/** The demo needs no data, and a missing Data Root routes to setup unless `--root` named it. */
+async function resolveContext(
+  env: NodeJS.ProcessEnv,
+  cwd: string,
+  root: string | undefined,
+  toasts: ToastStore,
+): Promise<RowblyContext | null> {
   if (env.ROWBLY_TUI_DEMO === '1') return null;
   try {
-    return await createContext({ cwd, env, home: homedir(), warn: (message) => toasts.push('warning', message) });
+    return await createContext({ cwd, env, home: homedir(), root, warn: (message) => toasts.push('warning', message) });
   } catch (err) {
-    if (err instanceof DataRootNotFoundError) return null;
+    if (err instanceof DataRootNotFoundError && !root) return null;
     throw err;
   }
 }
