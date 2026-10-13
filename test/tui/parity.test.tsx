@@ -106,8 +106,8 @@ describe('G2 effective configuration (config show)', () => {
     await waitForFrame(app, 'API api');
     await app.press(',');
     await waitForFrame(app, 'Board: ');
-    // Config is the first section of the Board, after the six global ones.
-    await app.press(...Array(6).fill('j'));
+    // Config is the first section of the Board, after the seven global ones.
+    await app.press(...Array(7).fill('j'));
     const frame = await waitForFrame(app, 'Key prefix');
     expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Board\s+api/);

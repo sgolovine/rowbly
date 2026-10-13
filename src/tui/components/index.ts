@@ -4,6 +4,7 @@ export * from './DetailView';
 export * from './Form';
 export * from './Modal';
 export * from './Panel';
+export * from './PluginSlot';
 export * from './SelectList';
 export * from './Spinner';
 export * from './StageBadge';

@@ -4,6 +4,7 @@ import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
+  useActionFocus,
   useAsync,
   useBoardSelection,
   useHeaderLabel,
@@ -11,6 +12,7 @@ import {
   useKeyCapture,
   useKeyHints,
   useLayout,
+  usePlugins,
   useRowblyContext,
   useServices,
   useToast,
@@ -19,6 +21,7 @@ import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
 import { useEscape } from '../stages/shared';
 import { describeFilters, filterFields, filterInitialValues, toFilter } from '../stories/filter';
+import { describeWithPlugins, storyFilterFields, withPluginFilters } from '../stories/pluginFields';
 import { useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
@@ -58,6 +61,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const { rows: termRows } = useWindowSize();
   const room = useLayout();
   const selection = useBoardSelection();
+  const { plugins } = usePlugins();
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -71,14 +75,16 @@ export function BoardScreen({ params }: ScreenProps) {
   const scope = useAsync(async () => {
     const boardId = viewing ?? (await services.context.resolveBoard());
     if (!ctx) throw new Error('no Data Root');
-    return { boardId, choices: await storyChoices(ctx, boardId) };
+    const extra = await storyFilterFields(plugins, services, boardId);
+    return { boardId, choices: await storyChoices(ctx, boardId), extra };
     // `selection.version` reloads it when another Board is picked in the sidebar.
-  }, [services, ctx, viewing, selection.version]);
+  }, [services, ctx, viewing, selection.version, plugins]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
-    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, toFilter(filters)) };
-  }, [services, scope.data, filters]);
+    const filter = withPluginFilters(toFilter(filters), plugins, filters);
+    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, filter) };
+  }, [services, scope.data, filters, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   // What is on screen: the columns and the Board and Stages they were grouped by.
@@ -95,6 +101,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const col = Math.max(0, Math.min(cursor.col, stages.length - 1));
   const row = Math.max(0, Math.min(cursor.row, (columns[col]?.length ?? 0) - 1));
   const card = columns[col]?.[row];
+  useActionFocus({ board: scope.data?.choices.board, story: card });
 
   /**
    * Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a
@@ -232,7 +239,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = hiddenLeft + hiddenRight > 0;
-  const summary = describeFilters(filters);
+  const summary = describeWithPlugins(describeFilters(filters), plugins, filters);
   const boardId = scope.data?.boardId;
   const inContext = ctx?.local.board === boardId;
 
@@ -253,7 +260,7 @@ export function BoardScreen({ params }: ScreenProps) {
   if (!scope.data || !label) {
     return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
   }
-  const { choices } = scope.data;
+  const { choices, extra } = scope.data;
   // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
   // title line and gap when the label is shown here.
   const size = cardsPerColumn((room.height ?? termRows - 3) - (inHeader ? 0 : 2));
@@ -298,14 +305,17 @@ export function BoardScreen({ params }: ScreenProps) {
       {mode === 'filter' && (
         <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
           <Form
-            fields={filterFields(
-              {
-                assignees: choices.assignees.map((a) => a.handle),
-                labels: choices.labels,
-              },
-              { board: true },
-            )}
-            initialValues={filterInitialValues(filters)}
+            fields={[
+              ...filterFields(
+                {
+                  assignees: choices.assignees.map((a) => a.handle),
+                  labels: choices.labels,
+                },
+                { board: true },
+              ),
+              ...extra.fields,
+            ]}
+            initialValues={{ ...extra.values, ...filterInitialValues(filters) }}
             onSubmit={(values) => {
               setFilters(values);
               setMode('view');

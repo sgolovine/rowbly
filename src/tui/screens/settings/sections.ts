@@ -1,8 +1,10 @@
 import type { BoardConfig } from '../../../schemas';
+import { pluginRoute, type TuiPlugin } from '../../hooks';
 import { assigneesScreens } from '../assignees';
 import { boardsScreens } from '../boards';
 import { doctorScreens } from '../doctor';
 import { fieldsScreens } from '../fields';
+import { pluginsScreens } from '../plugins';
 import { setupScreens } from '../setup';
 import { stagesScreens } from '../stages';
 import type { ScreenComponent, ScreenRegistry } from '../types';
@@ -25,9 +27,10 @@ export interface SettingsGroup {
 
 /**
  * The settings shared by every Board in the Data Root first, then those of the Board in context.
- * Without a Board in context the Board group is empty.
+ * Without a Board in context the Board group is empty. The sections that Plugins add follow the
+ * global ones.
  */
-export function settingsGroups(board: BoardConfig | null): SettingsGroup[] {
+export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiPlugin[] = []): SettingsGroup[] {
   const boardId = board?.id;
   return [
     {
@@ -39,6 +42,13 @@ export function settingsGroups(board: BoardConfig | null): SettingsGroup[] {
         { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
         { id: 'context', label: 'Context', screen: 'context' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
+        { id: 'plugins', label: 'Plugins', screen: 'plugins' },
+        ...plugins.flatMap((plugin) =>
+          (plugin.tui.settings ?? []).map((link) => {
+            const route = pluginRoute(plugin.id, link.screen, link.params);
+            return { id: `plugin:${plugin.id}:${link.label}`, label: link.label, ...route };
+          }),
+        ),
       ],
     },
     {
@@ -63,6 +73,7 @@ const SECTION_SCREENS: ScreenRegistry = {
   ...fieldsScreens,
   ...setupScreens,
   ...doctorScreens,
+  ...pluginsScreens,
 };
 
 export function sectionScreen(section: SettingsSection): ScreenComponent | undefined {

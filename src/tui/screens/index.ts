@@ -6,6 +6,7 @@ import { demoScreens } from './demo';
 import { doctorScreens } from './doctor';
 import { fieldsScreens } from './fields';
 import { homeScreens } from './home';
+import { pluginsScreens } from './plugins';
 import { settingsScreens } from './settings';
 import { setupScreens } from './setup';
 import { stagesScreens } from './stages';
@@ -29,6 +30,7 @@ export const screens: ScreenRegistry = {
   ...boardScreens,
   ...doctorScreens,
   ...settingsScreens,
+  ...pluginsScreens,
   ...demoScreens,
   home: withBoardHome(homeScreens.home),
 };

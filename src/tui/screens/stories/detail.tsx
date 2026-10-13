@@ -1,7 +1,18 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ConfirmDialog, type DetailRow, DetailView, Loading, SelectList, Tabs } from '../../components';
-import { useAsync, useIsActive, useKeyCapture, useKeyHints, useServices, useToast } from '../../hooks';
+import { pluginStoryRows } from '../../../services';
+import { ConfirmDialog, type DetailRow, DetailView, Loading, PluginSlot, SelectList, Tabs } from '../../components';
+import {
+  useActionFocus,
+  useAsync,
+  useIsActive,
+  useKeyCapture,
+  useKeyHints,
+  usePlugins,
+  useRowblyContext,
+  useServices,
+  useToast,
+} from '../../hooks';
 import { useRouter } from '../../router';
 import { CommentsPanel } from '../comments/CommentsPanel';
 import { useEscape } from '../stages/shared';
@@ -12,22 +23,31 @@ import { StoryStage, useReloadOnReturn } from './shared';
 const TABS = ['Details', 'Tasks', 'Comments'] as const;
 type Mode = 'view' | 'move' | 'confirm-delete';
 
-/** One Story (`params.key`) with tabs Details | Tasks | Comments; `e` edits, `m` moves, `d` deletes. */
+/**
+ * One Story (`params.key`) with tabs Details | Tasks | Comments, then the tabs Plugins add; `e`
+ * edits, `m` moves, `d` deletes.
+ */
 export function StoryDetailScreen({ params }: ScreenProps) {
   const services = useServices();
+  const ctx = useRowblyContext();
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
+  const { plugins } = usePlugins();
   const key = String(params.key ?? '');
   const [tab, setTab] = useState(0);
   const [mode, setMode] = useState<Mode>('view');
   const data = useAsync(async () => {
     const story = await services.stories.get(key);
     const config = await services.config.effective(story.boardId);
-    return { story, config };
-  }, [services, key]);
+    const extraRows = ctx ? await pluginStoryRows(ctx, services, story) : [];
+    return { story, config, extraRows };
+  }, [services, ctx, key]);
   useReloadOnReturn(data.reload);
+  useActionFocus({ story: data.data?.story });
   const viewing = mode === 'view';
+  const pluginTabs = plugins.flatMap((p) => (p.tui.storyTabs ?? []).map((t) => ({ plugin: p.id, ...t })));
+  const tabs = [...TABS, ...pluginTabs.map((t) => t.label)];
 
   useKeyCapture(active && mode === 'move', { escape: true });
   useEscape(active && mode === 'move', () => setMode('view'));
@@ -48,9 +68,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     (input, key) => {
       const story = data.data?.story;
       if (!story) return;
-      if (key.tab || key.rightArrow) setTab((t) => (t + 1) % TABS.length);
-      else if (key.leftArrow) setTab((t) => (t + TABS.length - 1) % TABS.length);
-      // The Tasks and Comments tabs handle their own keys.
+      if (key.tab || key.rightArrow) setTab((t) => (t + 1) % tabs.length);
+      else if (key.leftArrow) setTab((t) => (t + tabs.length - 1) % tabs.length);
+      // The Tasks, Comments and Plugin tabs handle their own keys.
       else if (tab !== 0) return;
       else if (input === 'e') router.push('story-form', { key: story.key, title: `Edit ${story.key}` });
       else if (input === 'm') setMode('move');
@@ -60,7 +80,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   );
 
   if (!data.data) return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color="red">No Story.</Text>;
-  const { story, config } = data.data;
+  const { story, config, extraRows } = data.data;
 
   const move = async (stage: string) => {
     try {
@@ -91,6 +111,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     { label: 'Assignees', value: story.assignees.join(', ') || none },
     { label: 'Labels', value: story.labels.join(', ') || none },
     { label: 'Due', value: story.dueDate ?? none },
+    ...extraRows,
     ...Object.entries(story.customFields).map(([field, value]) => ({
       label: config.customFields.find((f) => f.key === field)?.name ?? field,
       value: Array.isArray(value) ? value.join(', ') : String(value),
@@ -107,10 +128,20 @@ export function StoryDetailScreen({ params }: ScreenProps) {
         </Text>{' '}
         <Text bold>{story.name}</Text>
       </Text>
-      <Tabs tabs={TABS} selected={tab} onSelect={setTab} active={active && viewing} />
+      <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />
       {tab === 0 && <DetailView rows={rows} body={story.description} />}
       {tab === 1 && <StoryTasksTab storyKey={story.key} />}
       {tab === 2 && <CommentsPanel target={story.key} />}
+      {pluginTabs.map(
+        ({ plugin, label, component: PluginTab }, i) =>
+          tab === TABS.length + i && (
+            <PluginSlot
+              key={`${plugin}:${label}`}
+              plugin={plugin}
+              render={(context, ui) => <PluginTab story={story} active={active && viewing} plugin={context} ui={ui} />}
+            />
+          ),
+      )}
       {mode === 'move' && (
         <Box flexDirection="column">
           <Text bold>Move {story.key} to</Text>

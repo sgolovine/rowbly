@@ -9,10 +9,11 @@ import {
 import type { CustomFieldValuesInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
-import { useAsync, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
+import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
 import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
+import { storyFormFields, storyFormInput } from './pluginFields';
 import { boardIdFor, NONE } from './shared';
 
 /** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
@@ -21,17 +22,19 @@ export function StoryFormScreen({ params }: ScreenProps) {
   const ctx = useRowblyContext();
   const toast = useToast();
   const router = useRouter();
+  const { plugins } = usePlugins();
   const key = params.key as string | undefined;
   const data = useAsync(async () => {
     const story = key ? await services.stories.get(key) : null;
     const boardId = story ? story.boardId : await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
-    return { story, boardId, choices: await storyChoices(ctx, boardId) };
-  }, [services, ctx, key, params.boardId]);
+    const extra = await storyFormFields(plugins, services, { boardId, story });
+    return { story, boardId, choices: await storyChoices(ctx, boardId), extra };
+  }, [services, ctx, key, params.boardId, plugins]);
   useKeyHints(FORM_KEYS);
 
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
-  const { story, boardId, choices } = data.data;
+  const { story, boardId, choices, extra } = data.data;
 
   const submit = async (values: FormValues) => {
     const fields = customFieldValues(choices.customFields, values);
@@ -42,6 +45,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
       priority: optional(values.priority) as Priority | null,
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
+      ...withPlugins(storyFormInput(plugins, values, story)),
     };
     const stage = String(values.stage);
     if (!story) {
@@ -61,8 +65,8 @@ export function StoryFormScreen({ params }: ScreenProps) {
     <Box flexDirection="column" gap={1}>
       <Text bold>{story ? `Edit ${story.key}` : `New Story on ${boardId}`}</Text>
       <Form
-        fields={formFields(choices)}
-        initialValues={initialValues(choices, story, params.stage as string | undefined)}
+        fields={[...formFields(choices), ...extra.fields]}
+        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
         onSubmit={submit}
       />
       {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
@@ -135,6 +139,10 @@ function customFieldValues(defs: readonly CustomFieldDef[], values: FormValues):
     result[def.key] = value as CustomFieldValue;
   }
   return result;
+}
+
+function withPlugins(plugins: ReturnType<typeof storyFormInput>) {
+  return plugins ? { plugins } : {};
 }
 
 function optional(value: FormValue | undefined): string | null {

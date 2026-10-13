@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { ConfirmDialog, type DetailRow, DetailView, Loading, SelectList, Tabs } from '../../components';
-import { useAsync, useIsActive, useKeyCapture, useKeyHints, useServices, useToast } from '../../hooks';
+import { useActionFocus, useAsync, useIsActive, useKeyCapture, useKeyHints, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { CommentsPanel } from '../comments/CommentsPanel';
 import { useEscape } from '../stages/shared';
@@ -29,6 +29,7 @@ export function TaskDetailScreen({ params }: ScreenProps) {
     return { story, task, stages: config.stages };
   }, [services, id]);
   useReloadOnReturn(data.reload);
+  useActionFocus({ story: data.data?.story, task: data.data?.task });
   const viewing = mode === 'view';
 
   useKeyCapture(active && mode === 'move', { escape: true });

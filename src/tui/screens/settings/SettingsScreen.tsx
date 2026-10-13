@@ -10,6 +10,7 @@ import {
   useIsActive,
   useKeyHints,
   useLayout,
+  usePlugins,
   useServices,
 } from '../../hooks';
 import { type KeyHint, moveDelta } from '../../keymap';
@@ -38,7 +39,8 @@ export function SettingsScreen() {
       throw err;
     }
   }, [services, active]);
-  const groups = useMemo(() => settingsGroups(board.data ?? null), [board.data]);
+  const { plugins } = usePlugins();
+  const groups = useMemo(() => settingsGroups(board.data ?? null, plugins), [board.data, plugins]);
   const sections = groups.flatMap((group) => group.sections);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focus, setFocus] = useState<Focus>('nav');

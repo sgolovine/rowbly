@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useId, useSyncExternalStore } from 'react';
+import type { ActionFocus } from '../../services';
 import type { KeyHint } from '../keymap';
 
 /** What a screen shows on the left of the header: a bold title and a dim detail after it. */
@@ -22,6 +23,9 @@ export interface ShellRegistry {
   hints(depth: number): readonly KeyHint[];
   setLabel(depth: number, label: HeaderLabel | null): void;
   label(depth: number): HeaderLabel | null;
+  /** What is in focus on the screen at `depth`, for Plugin Actions (ADR-0017). */
+  setFocus(depth: number, focus: ActionFocus | null): void;
+  focus(depth: number): ActionFocus | null;
   subscribe(listener: () => void): () => void;
   /** Changes whenever the hints or labels change. */
   version(): number;
@@ -33,6 +37,7 @@ export function createShellRegistry(): ShellRegistry {
   const dirty = new Map<string, number>();
   const hints = new Map<number, readonly KeyHint[]>();
   const labels = new Map<number, HeaderLabel>();
+  const focuses = new Map<number, ActionFocus>();
   const listeners = new Set<() => void>();
   let version = 0;
   const changed = () => {
@@ -72,6 +77,12 @@ export function createShellRegistry(): ShellRegistry {
       changed();
     },
     label: (depth) => labels.get(depth) ?? null,
+    setFocus(depth, focus) {
+      if (focus) focuses.set(depth, focus);
+      else focuses.delete(depth);
+      changed();
+    },
+    focus: (depth) => focuses.get(depth) ?? null,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -153,4 +164,28 @@ export function useScreenLabel(depth: number): HeaderLabel | null {
   const shell = useContext(ShellContext);
   useSyncExternalStore(shell.subscribe, shell.version);
   return shell.label(depth);
+}
+
+/**
+ * Declares the Board, Story or Task in focus on the current screen, so the Plugin Actions that
+ * target it show in the footer, the help and the header (ADR-0017).
+ */
+export function useActionFocus(focus: ActionFocus): void {
+  const shell = useContext(ShellContext);
+  const depth = useContext(ScreenDepthContext);
+  const { board, story, task } = focus;
+  const key = [board?.id, board?.updatedAt, story?.key, story?.updatedAt, task?.id, task?.updatedAt].join('|');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands in for the focused records.
+  useEffect(() => {
+    if (depth < 0) return;
+    shell.setFocus(depth, { board, story, task });
+    return () => shell.setFocus(depth, null);
+  }, [shell, depth, key]);
+}
+
+/** What is in focus on the screen at `depth`. */
+export function useScreenFocus(depth: number): ActionFocus | null {
+  const shell = useContext(ShellContext);
+  useSyncExternalStore(shell.subscribe, shell.version);
+  return shell.focus(depth);
 }
