@@ -8,6 +8,7 @@ export interface DataRootPaths {
   board(board: Slug): string;
   boardConfig(board: Slug): string;
   storiesDir(board: Slug): string;
+  storyDir(board: Slug, key: StoryKey): string;
   story(board: Slug, key: StoryKey): string;
 }
 
@@ -16,6 +17,7 @@ export function paths(root: DataRoot): DataRootPaths {
   const boardsDir = join(root.path, 'boards');
   const board = (b: Slug) => join(boardsDir, b);
   const storiesDir = (b: Slug) => join(board(b), 'stories');
+  const storyDir = (b: Slug, key: StoryKey) => join(storiesDir(b), key);
   return {
     rootConfig: join(root.path, 'rowbly.config.json'),
     localState: join(root.path, 'local.json'),
@@ -23,6 +25,7 @@ export function paths(root: DataRoot): DataRootPaths {
     board,
     boardConfig: (b) => join(board(b), 'board.config.json'),
     storiesDir,
-    story: (b, key) => join(storiesDir(b), `${key}.json`),
+    storyDir,
+    story: (b, key) => join(storyDir(b, key), 'story.json'),
   };
 }

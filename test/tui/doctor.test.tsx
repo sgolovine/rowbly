@@ -72,7 +72,7 @@ describe('doctor screen', () => {
     await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone' });
     await app.press('r');
     await waitForFrame(app, 'UNKNOWN_STAGE');
-    expect(await readdir(join(tmp.path, 'boards/web/stories'))).toEqual(['WEB-1.json']);
+    expect(await readdir(join(tmp.path, 'boards/web/stories'))).toEqual(['WEB-1']);
     app.unmount();
   });
 });

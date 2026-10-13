@@ -33,7 +33,7 @@ export const TaskSchema = z.object({
 });
 export type Task = z.infer<typeof TaskSchema>;
 
-/** `stories/<KEY>.json`: one Story with its Tasks and Comments embedded. */
+/** `stories/<KEY>/story.json`: one Story with its Tasks and Comments embedded. */
 export const StorySchema = z.object({
   version: VersionSchema,
   key: StoryKeySchema,

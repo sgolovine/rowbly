@@ -13,7 +13,8 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
     <board-id>/
       board.config.json                    # required — board metadata + key prefix + optional overrides
       stories/
-        <STORY-KEY>.json                   # one Story, with its Tasks and Comments embedded
+        <STORY-KEY>/
+          story.json                       # one Story, with its Tasks and Comments embedded
 ```
 
 - `docs/ARCHITECTURE.md` called the root `rowbly/`; it is `.rowbly/` (ADR-0002).

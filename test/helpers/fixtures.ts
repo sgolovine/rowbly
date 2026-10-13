@@ -65,5 +65,5 @@ export async function makeStory(
     comments: [],
     ...overrides,
   };
-  return writeFixture(join(root, 'boards', story.boardId, 'stories', `${story.key}.json`), StorySchema, story);
+  return writeFixture(join(root, 'boards', story.boardId, 'stories', story.key, 'story.json'), StorySchema, story);
 }

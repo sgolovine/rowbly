@@ -126,14 +126,14 @@ export function createDoctorService(ctx: RowblyContext, repos: Repositories): Do
     // 1. Sort every file into the layout (contracts §1); anything else is unknown.
     for (const file of files) {
       const parts = file.split('/');
-      const [top, id = '', sub, name = ''] = parts;
+      const [top, id = '', sub, key = '', name] = parts;
       if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore'].includes(file)) continue;
       if (top === 'boards' && isSlug(id)) {
         if (parts.length === 3 && sub === 'board.config.json') {
           boardOf(id);
           continue;
         }
-        if (parts.length === 4 && sub === 'stories' && /\.json$/.test(name) && STORY_KEY_RE.test(fileKey(name))) {
+        if (parts.length === 5 && sub === 'stories' && STORY_KEY_RE.test(key) && name === 'story.json') {
           boardOf(id).storyFiles.push(file);
           continue;
         }
@@ -503,12 +503,12 @@ export function conflictSides(text: string): [string, string] | null {
 }
 
 function storyPath(story: Story): string {
-  return `boards/${story.boardId}/stories/${story.key}.json`;
+  return `boards/${story.boardId}/stories/${story.key}/story.json`;
 }
 
-/** `…/stories/WEB-4.json` → `WEB-4`. */
+/** `…/stories/WEB-4/story.json` → `WEB-4`. */
 function fileKey(file: string): string {
-  return (file.split('/').pop() ?? '').replace(/\.json$/, '');
+  return file.split('/').at(-2) ?? '';
 }
 
 function numberOf(key: string): number {

@@ -140,7 +140,7 @@ const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.f
 async function storyFiles(t: TempRoot): Promise<Record<string, string>> {
   const dir = join(t.path, 'boards', 'web', 'stories');
   const files: Record<string, string> = {};
-  for (const name of await readdir(dir)) files[name] = await readFile(join(dir, name), 'utf8');
+  for (const name of await readdir(dir)) files[name] = await readFile(join(dir, name, 'story.json'), 'utf8');
   return files;
 }
 
@@ -193,7 +193,7 @@ describe('board view', () => {
       const after = await storyFiles(t);
       return Object.keys(after).filter((name) => after[name] !== before[name]);
     };
-    await vi.waitFor(async () => expect(await changed()).toEqual(['WEB-3.json']));
+    await vi.waitFor(async () => expect(await changed()).toEqual(['WEB-3']));
     const [one, two, three] = await Promise.all(['WEB-1', 'WEB-2', 'WEB-3'].map(async (k) => (await story(t, k)).rank));
     expect([one, three, two]).toEqual([one, three, two].sort());
     app.unmount();

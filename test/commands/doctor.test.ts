@@ -74,7 +74,7 @@ describe('rowbly doctor', () => {
     await git(tmp.dir, 'commit', '-qm', 'signup');
     await git(tmp.dir, 'checkout', '-q', 'login');
     await expect(git(tmp.dir, 'merge', 'signup')).rejects.toMatchObject({
-      stdout: expect.stringMatching(/CONFLICT \(add\/add\).*WEB-4\.json/),
+      stdout: expect.stringMatching(/CONFLICT \(add\/add\).*WEB-4\/story\.json/),
     });
 
     const check = await cli('doctor');
@@ -84,7 +84,7 @@ describe('rowbly doctor', () => {
     const json = await cli('doctor', '--json');
     expect(json.exitCode).toBe(6);
     expect(parseReport(json.stdout).findings).toEqual([
-      expect.objectContaining({ code: 'STORY_KEY_CONFLICT', severity: 'error', path: `${STORIES}/WEB-4.json` }),
+      expect.objectContaining({ code: 'STORY_KEY_CONFLICT', severity: 'error', path: `${STORIES}/WEB-4/story.json` }),
     ]);
 
     const fix = await cli('doctor', '--fix', '--json');
@@ -93,9 +93,9 @@ describe('rowbly doctor', () => {
       'kept WEB-4 ("Login page") and renumbered "Signup page" to WEB-5',
     );
     const files = await readdir(join(tmp.path, STORIES));
-    expect(files.sort()).toEqual(['WEB-1.json', 'WEB-2.json', 'WEB-3.json', 'WEB-4.json', 'WEB-5.json']);
+    expect(files.sort()).toEqual(['WEB-1', 'WEB-2', 'WEB-3', 'WEB-4', 'WEB-5']);
     const read = async (key: string) =>
-      StorySchema.parse(JSON.parse(await readFile(join(tmp.path, STORIES, `${key}.json`), 'utf8')));
+      StorySchema.parse(JSON.parse(await readFile(join(tmp.path, STORIES, key, 'story.json'), 'utf8')));
     expect((await read('WEB-4')).name).toBe('Login page');
     expect((await read('WEB-5')).name).toBe('Signup page');
     expect((await cli('stories', 'show', 'WEB-5')).exitCode).toBe(0);
@@ -112,12 +112,12 @@ describe('rowbly doctor', () => {
     expect(stdout).toBe(
       [
         'Errors (1)',
-        `  UNKNOWN_STAGE  ${STORIES}/WEB-1.json`,
+        `  UNKNOWN_STAGE  ${STORIES}/WEB-1/story.json`,
         '    WEB-1 is in unknown Stage "gone"',
         '    hint: run `rowbly stories move WEB-1 <stage>`',
         '',
         'Warnings (1)',
-        `  UNKNOWN_ASSIGNEE  ${STORIES}/WEB-1.json (fixable)`,
+        `  UNKNOWN_ASSIGNEE  ${STORIES}/WEB-1/story.json (fixable)`,
         '    WEB-1 has Assignees not in the roster: ghost',
         '',
         'Info (1)',
@@ -132,7 +132,9 @@ describe('rowbly doctor', () => {
 
     const fix = await cli('doctor', '--fix');
     expect(fix.exitCode).toBe(6);
-    expect(fix.stdout).toMatch(/^Fixed \(1\)\n {2}UNKNOWN_ASSIGNEE {2}\S+WEB-1\.json\n {4}removed ghost from WEB-1\n/);
+    expect(fix.stdout).toMatch(
+      /^Fixed \(1\)\n {2}UNKNOWN_ASSIGNEE {2}\S+WEB-1\/story\.json\n {4}removed ghost from WEB-1\n/,
+    );
     expect(fix.stdout).toContain('1 error, 0 warnings, 1 info');
     expect(fix.stdout).not.toContain('hint: run `rowbly doctor --fix`');
   });
@@ -155,7 +157,7 @@ describe('rowbly doctor', () => {
       expect.objectContaining({
         code: 'UNKNOWN_STAGE',
         severity: 'error',
-        path: `${STORIES}/WEB-1.json`,
+        path: `${STORIES}/WEB-1/story.json`,
         message: 'WEB-1 is in unknown Stage "in-progress"',
         fixable: false,
       }),

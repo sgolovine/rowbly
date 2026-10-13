@@ -38,7 +38,8 @@ rowbly/
     <board_slug>/
       board.config.json
       stories/
-        <story_slug>.json
+        <story_key>/
+          story.json
 
 ```
 

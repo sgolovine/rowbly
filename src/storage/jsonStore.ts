@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import type { ZodType } from 'zod';
 import { DataIntegrityError, NotFoundError, ValidationError } from '../core';
@@ -72,6 +72,17 @@ export async function listEntries(dir: string, kind: 'file' | 'directory'): Prom
       .sort();
   } catch (err) {
     if (isEnoent(err)) return [];
+    throw err;
+  }
+}
+
+/** Whether a file or folder exists at `path`. */
+export async function exists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch (err) {
+    if (isEnoent(err)) return false;
     throw err;
   }
 }
