@@ -70,6 +70,13 @@ describe('epics screens', () => {
     expect(app.lastFrame()).not.toContain('Old work');
     await app.press('a');
     await waitForFrame(app, 'Old work ░░░░░░░░░░ 0/0 · old · closed');
+    expect(app.lastFrame()).toContain('Launch');
+    // Then closed ones only, like `epics list --closed`, then back to open.
+    await app.press('a');
+    await waitForFrame(app, (f) => f.includes('Closed Epics') && !f.includes('Launch'));
+    expect(app.lastFrame()).toContain('Old work');
+    await app.press('a');
+    await waitForFrame(app, (f) => f.includes('Open Epics') && !f.includes('Old work'));
     app.unmount();
   });
 

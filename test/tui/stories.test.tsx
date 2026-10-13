@@ -129,6 +129,7 @@ describe('story detail', () => {
     const app = await open(t, 'stories');
     await app.press(KEYS.enter);
     await waitForFrame(app, (f) => f.includes('Details'));
+    expect(app.lastFrame()).toMatch(/Updated\s+2026-/);
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('No Tasks yet'));
     await app.press(KEYS.tab);
@@ -168,6 +169,25 @@ describe('story list', () => {
     await waitForFrame(app, (f) => f.includes('filters: Epic launch') && !f.includes('WEB-1'));
     await app.press('c', '/', ...Array(6).fill(KEYS.down), ...'nothing', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('No Stories match.'));
+    app.unmount();
+  });
+
+  it('filters open Stories and sorts them, like --open and --sort', async () => {
+    const t = await setup();
+    await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Low', stage: 'backlog', rank: 'a0', priority: 'P3' });
+    await makeStory(t.path, { ...web, key: 'WEB-2', name: 'High', stage: 'backlog', rank: 'a1', priority: 'P0' });
+    await makeStory(t.path, { ...web, key: 'WEB-3', name: 'Shipped', stage: 'done', rank: 'a0', priority: 'P1' });
+    const app = await open(t, 'stories');
+    expect(app.lastFrame()).toContain('WEB-3 Shipped');
+    // stages, assignees, me, labels, priorities, epic, search, category, open, sort
+    await app.press('/', ...Array(8).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('filters: open · sorted by priority') && !f.includes('WEB-3'));
+    const frame = app.lastFrame() ?? '';
+    expect(frame.indexOf('WEB-2 High')).toBeLessThan(frame.indexOf('WEB-1 Low'));
+    // Several priorities at once, like a repeated --priority.
+    await app.press('c', '/', ...Array(4).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('filters: P0 P3') && !f.includes('WEB-3'));
+    expect(app.lastFrame()).toContain('WEB-1 Low');
     app.unmount();
   });
 });

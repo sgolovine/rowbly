@@ -187,6 +187,23 @@ describe('board view', () => {
     app.unmount();
   });
 
+  it('ranks a Story to the top and the bottom of its Stage with T and B', async () => {
+    const t = await seed();
+    const app = await open(t);
+    const order = async () => {
+      const ranked = await Promise.all(['WEB-1', 'WEB-2', 'WEB-3'].map(async (k) => [(await story(t, k)).rank, k]));
+      return ranked.sort(([a], [b]) => ((a ?? '') < (b ?? '') ? -1 : 1)).map(([, k]) => k);
+    };
+    await app.press('j', 'j', 'T');
+    await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-1'));
+    await vi.waitFor(async () => expect(await order()).toEqual(['WEB-3', 'WEB-1', 'WEB-2']));
+    // The cursor followed the Story to the top.
+    await app.press('B');
+    await waitForFrame(app, (f) => f.indexOf('WEB-3') > f.indexOf('WEB-2'));
+    await vi.waitFor(async () => expect(await order()).toEqual(['WEB-1', 'WEB-2', 'WEB-3']));
+    app.unmount();
+  });
+
   it('narrows the cards with the filter and clears it', async () => {
     const t = await seed();
     const app = await open(t);

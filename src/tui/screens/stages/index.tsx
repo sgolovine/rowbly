@@ -67,6 +67,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
           { key: 'n', description: 'add' },
           { key: 'e', description: 'edit' },
           { key: 'K/J', description: 'move up/down' },
+          { key: 'T/B', description: 'move first/last' },
           { key: 'd', description: 'remove' },
           { key: 'l', description: 'switch level' },
         ]
@@ -117,7 +118,8 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
         void move(current, { before: stages[cursor - 1]?.key ?? '' }, cursor - 1);
       } else if (input === 'J' && cursor < stages.length - 1) {
         void move(current, { after: stages[cursor + 1]?.key ?? '' }, cursor + 1);
-      }
+      } else if (input === 'T' && cursor > 0) void move(current, 'first', 0);
+      else if (input === 'B' && cursor < stages.length - 1) void move(current, 'last', stages.length - 1);
     },
     { isActive: active && listing && !list.loading },
   );

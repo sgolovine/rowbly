@@ -64,6 +64,19 @@ describe('stages screen', () => {
     app.unmount();
   });
 
+  it('moves a Stage last and first with B and T', async () => {
+    const t = await setup();
+    const app = await open(t, 'stages');
+    expect(app.lastFrame()).toContain('T/B move first/last');
+    await app.press('B');
+    await waitForFrame(app, (f) => f.includes('› 4. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done', 'backlog']);
+    await app.press('T');
+    await waitForFrame(app, (f) => f.includes('› 1. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'done']);
+    app.unmount();
+  });
+
   it('moves a Stage down and edits it', async () => {
     const t = await setup();
     const app = await open(t, 'stages');

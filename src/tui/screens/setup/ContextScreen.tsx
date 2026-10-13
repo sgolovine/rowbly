@@ -27,10 +27,18 @@ function WorkspacePicker() {
   useKeyHints([
     { key: 'enter', description: 'choose workspace' },
     { key: 'm', description: 'who am I' },
+    { key: 'c', description: 'clear context' },
   ]);
   useInput(
     (input) => {
-      if (input === 'm' && !shell.captured().text) router.push('context', { view: 'whoami', title: 'Who am I' });
+      if (shell.captured().text) return;
+      if (input === 'm') router.push('context', { view: 'whoami', title: 'Who am I' });
+      else if (input === 'c') {
+        services.context.clearUse().then(() => {
+          toast.push('info', 'Cleared the current Workspace and Board');
+          router.pop();
+        }, toast.error);
+      }
     },
     { isActive: active },
   );

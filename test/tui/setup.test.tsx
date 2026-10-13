@@ -123,6 +123,17 @@ describe('context switcher', () => {
     app.unmount();
   });
 
+  it('c clears the current Workspace and Board', async () => {
+    const t = await twoWorkspaces();
+    const { app, ctx } = renderApp(t, 'context', { version: 1, workspace: 'acme', board: 'api', me: 'sam' });
+    await waitForFrame(app, 'acme *');
+    await app.press('c');
+    await waitForFrame(app, 'Cleared the current Workspace and Board');
+    expect(ctx.local).toEqual({ version: 1, me: 'sam' });
+    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' });
+    app.unmount();
+  });
+
   it('a Workspace without Boards is used directly', async () => {
     const t = await twoWorkspaces();
     const { app, ctx } = renderApp(t, 'context');

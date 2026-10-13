@@ -5,29 +5,35 @@ import { ShellContext, useAsync, useIsActive, useKeyHints, useServices } from '.
 import { useRouter } from '../../router';
 import { progressText } from './ProgressBar';
 
-/** Open Epics with their progress bars; `a` also shows closed ones. */
+type Shown = 'open' | 'all' | 'closed';
+const NEXT: Record<Shown, Shown> = { open: 'all', all: 'closed', closed: 'open' };
+const CLOSED_OPTION = { open: false, all: 'all', closed: true } as const;
+const TITLE = { open: 'Open Epics', all: 'All Epics', closed: 'Closed Epics' };
+const EMPTY = { open: 'No open Epics.', all: 'No Epics yet.', closed: 'No closed Epics.' };
+
+/** Epics with their progress bars; `a` cycles open → all → closed, like `epics list [--all|--closed]`. */
 export function EpicList() {
   const services = useServices();
   const router = useRouter();
   const shell = useContext(ShellContext);
   const active = useIsActive();
-  const [showClosed, setShowClosed] = useState(false);
+  const [shown, setShown] = useState<Shown>('open');
   // Reloads when the screen is back on top, so edits made deeper in the stack show up.
   const epics = useAsync(async () => {
     const ws = await services.context.resolveWorkspace();
-    return services.epics.list(ws, { closed: showClosed ? 'all' : false });
-  }, [services, showClosed, active]);
+    return services.epics.list(ws, { closed: CLOSED_OPTION[shown] });
+  }, [services, shown, active]);
 
   useKeyHints([
     { key: 'enter', description: 'open' },
     { key: 'n', description: 'new' },
-    { key: 'a', description: showClosed ? 'hide closed' : 'show closed' },
+    { key: 'a', description: `show ${NEXT[shown]}` },
   ]);
   useInput(
     (input) => {
       if (shell.captured().text) return;
       if (input === 'n') router.push('epics', { view: 'form', title: 'New Epic' });
-      else if (input === 'a') setShowClosed((s) => !s);
+      else if (input === 'a') setShown((s) => NEXT[s]);
     },
     { isActive: active },
   );
@@ -35,14 +41,14 @@ export function EpicList() {
   if (!epics.data) return epics.loading ? <Loading label="Loading Epics…" /> : null;
   return (
     <Box flexDirection="column">
-      <Text bold>{showClosed ? 'All Epics' : 'Open Epics'}</Text>
+      <Text bold>{TITLE[shown]}</Text>
       <SelectList
         items={epics.data.map((epic) => ({
           value: epic.id,
           label: epic.name,
           description: `${progressText(epic.progress)} · ${epic.id}${epic.closed ? ' · closed' : ''}`,
         }))}
-        emptyText={showClosed ? 'No Epics yet. Press n to create one.' : 'No open Epics. Press n to create one.'}
+        emptyText={`${EMPTY[shown]} Press n to create one.`}
         onSelect={(item) => router.push('epics', { view: 'detail', id: item.value, title: item.label })}
       />
     </Box>

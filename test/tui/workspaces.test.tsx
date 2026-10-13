@@ -59,6 +59,8 @@ describe('workspaces screen', () => {
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, workspace: 'labs' });
     expect(app.lastFrame()).toContain('Now using Workspace labs');
     expect(app.lastFrame()).toMatch(/Boards\s+0/);
+    expect(app.lastFrame()).toMatch(/Stages\s+built-in defaults/);
+    expect(app.lastFrame()).toMatch(/Custom Fields\s+none/);
     app.unmount();
   });
 
