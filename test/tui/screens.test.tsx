@@ -26,9 +26,8 @@ describe('screen registry', () => {
     );
   });
 
-  // These areas are built and have their own tests.
-  const built = ['home', 'demo', 'boards', 'stages', 'fields'];
-  const placeholders = Object.entries(screens).filter(([name]) => !built.includes(name));
+  // Built screens have their own tests; only the remaining placeholders are checked here.
+  const placeholders = Object.entries(screens).filter(([, Screen]) => Screen.displayName?.startsWith('Placeholder('));
 
   it.each(placeholders)('renders the %s placeholder', (_name, Screen) => {
     const { lastFrame, unmount } = render(<Screen params={{}} />);

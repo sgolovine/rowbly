@@ -1,7 +1,6 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { WorkspacesScreen } from './WorkspacesScreen';
 
-// Stub: WP03 replaces this area's screens.
 export const workspacesScreens: ScreenRegistry = {
-  workspaces: placeholderScreen('Workspaces', 'WP03'),
+  workspaces: WorkspacesScreen,
 };
