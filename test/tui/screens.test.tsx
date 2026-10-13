@@ -26,8 +26,9 @@ describe('screen registry', () => {
     );
   });
 
-  // WP02 built `home` and `demo`; they have their own tests.
-  const placeholders = Object.entries(screens).filter(([name]) => name !== 'home' && name !== 'demo');
+  // These areas are built and have their own tests.
+  const built = ['home', 'demo', 'boards', 'stages', 'fields'];
+  const placeholders = Object.entries(screens).filter(([name]) => !built.includes(name));
 
   it.each(placeholders)('renders the %s placeholder', (_name, Screen) => {
     const { lastFrame, unmount } = render(<Screen params={{}} />);
