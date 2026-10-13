@@ -103,8 +103,8 @@ describe('context switcher', () => {
     const { app, ctx } = renderApp(t, 'home', { version: 1, workspace: 'acme', board: 'api' });
     await waitForFrame(app, 'acme › api › Board');
     await app.press('g');
-    // Context is the last palette entry.
-    await app.press(...Array(8).fill('j'), KEYS.enter);
+    // Context is the second-to-last palette entry.
+    await app.press(...Array(9).fill('j'), KEYS.enter);
     await waitForFrame(app, 'acme *');
     expect(app.lastFrame()).toContain('Switch Workspace');
 
@@ -149,7 +149,7 @@ describe('context switcher', () => {
     const t = await twoWorkspaces();
     const { app, ctx } = renderApp(t, 'home', { version: 1, workspace: 'acme' });
     await waitForFrame(app, 'Go to');
-    await app.press('g', ...Array(8).fill('j'), KEYS.enter);
+    await app.press('g', ...Array(9).fill('j'), KEYS.enter);
     await waitForFrame(app, 'acme *');
     await app.press('m');
     await waitForFrame(app, 'sam Sam');

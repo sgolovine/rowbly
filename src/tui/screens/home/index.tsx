@@ -13,8 +13,12 @@ function HomeScreen() {
     <Box flexDirection="column">
       <Text bold>Go to</Text>
       <SelectList
-        items={DESTINATIONS.map((d) => ({ value: d.screen, label: d.label }))}
-        onSelect={(item) => router.push(item.value)}
+        items={DESTINATIONS.map((d) => ({ value: d.label, label: d.label }))}
+        limit={DESTINATIONS.length}
+        onSelect={(item) => {
+          const destination = DESTINATIONS.find((d) => d.label === item.value);
+          if (destination) router.push(destination.screen, destination.params);
+        }}
       />
     </Box>
   );

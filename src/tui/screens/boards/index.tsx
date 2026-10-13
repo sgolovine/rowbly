@@ -15,6 +15,7 @@ import {
 import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenProps, ScreenRegistry } from '../types';
+import { BoardDetailScreen } from './BoardDetail';
 
 type Mode =
   | { kind: 'list' }
@@ -23,7 +24,10 @@ type Mode =
   | { kind: 'confirm-delete'; board: BoardConfig }
   | { kind: 'confirm-force'; board: BoardConfig; stories: number };
 
-/** The Boards of the current Workspace (or `params.workspaceId`): create, edit, delete, and open Stages/Fields. */
+/**
+ * The Boards of the current Workspace (or `params.workspaceId`): create, edit, delete, open a Board's
+ * detail, Stages or Fields, and view its board without changing the context.
+ */
 function BoardsScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
@@ -65,6 +69,8 @@ function BoardsScreen({ params }: ScreenProps) {
   useKeyHints(
     listing
       ? [
+          { key: 'enter', description: 'open' },
+          { key: 'v', description: 'view board' },
           { key: 'n', description: 'new' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'delete' },
@@ -81,7 +87,9 @@ function BoardsScreen({ params }: ScreenProps) {
       const ref = { workspaceId: current.workspaceId, boardId: current.id };
       if (input === 'e') setMode({ kind: 'edit', board: current });
       else if (input === 'd') setMode({ kind: 'confirm-delete', board: current });
-      else if (input === 's' || key.return) router.push('stages', { ref, title: `${current.name} Stages` });
+      else if (key.return) router.push('board-detail', { ref, title: current.name });
+      else if (input === 'v') router.push('board', { ref });
+      else if (input === 's') router.push('stages', { ref, title: `${current.name} Stages` });
       else if (input === 'f') router.push('fields', { ref, title: `${current.name} Fields` });
     },
     { isActive: active && listing && !list.loading },
@@ -174,4 +182,5 @@ function BoardsScreen({ params }: ScreenProps) {
 
 export const boardsScreens: ScreenRegistry = {
   boards: BoardsScreen,
+  'board-detail': BoardDetailScreen,
 };
