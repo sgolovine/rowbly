@@ -23,7 +23,7 @@ Rowbly is a developer-focused, file-backed Kanban tracker.
 - **Stories** are keyed `WEB-42` (board prefix + max+1, ADR-0003), never move between Boards, sit in one Stage with a manual Rank, and carry: name, description (markdown), assignees, epic, Priority (`P0`–`P4`), Labels, due date, Custom Field values, createdBy, timestamps, embedded Tasks and Comments.
 - **Tasks** (`WEB-42.1`) are mini-stories embedded in the Story file: name, description, Stage, Comments. No assignees of their own — they belong to the Story's Assignees.
 - **Stages and Custom Fields** are configuration, resolved through the Configuration Cascade `rowbly.config.json` → `workspace.config.json` → `board.config.json`; most specific defined list replaces (ADR-0005). Every Stage has a Stage Category (`todo | in_progress | done`).
-- **Out of scope for v1:** authentication/authorization, any server, SQLite, npm publishing (install via `pnpm link --global` / `npm i -g .`), creating the GitHub remote (the user manages it), moving Stories between Boards.
+- **Out of scope for v1:** authentication/authorization, any server, SQLite, npm publishing (install via `pnpm add -g "$PWD"` / `npm i -g .`), creating the GitHub remote (the user manages it), moving Stories between Boards.
 
 ## 2. Tech stack (fixed)
 

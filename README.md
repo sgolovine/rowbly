@@ -14,11 +14,11 @@ Requires Node.js 22 or newer and pnpm.
 ```sh
 git clone <this repository> rowbly
 cd rowbly
-pnpm install && pnpm build && pnpm link --global   # or: npm i -g .
+pnpm install && pnpm build && pnpm add -g "$PWD"   # or: npm i -g .
 rowbly --version
 ```
 
-`pnpm link --global` puts `rowbly` on your `PATH`. Rowbly is not published to npm.
+`pnpm add -g "$PWD"` installs `rowbly` into pnpm's global bin directory. If that directory is not on your `PATH`, pnpm tells you to run `pnpm setup` once. Rowbly is not published to npm.
 
 ## Quick start
 
