@@ -1,9 +1,9 @@
 // Small filesystem and process helpers that the Command and TUI layers need but may not
 // implement themselves, because only storage may import `node:fs`.
 import { execFile, spawn } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { NotFoundError, UsageError } from '../core';
 
@@ -15,6 +15,23 @@ export async function readTextFile(path: string): Promise<string> {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') throw new NotFoundError(`file not found: ${path}`);
     throw err;
   }
+}
+
+/** Whether anything (file or folder) exists at `path`. */
+export async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw err;
+  }
+}
+
+/** Writes a UTF-8 text file, creating its folder first. */
+export async function writeTextFile(path: string, text: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, text, 'utf8');
 }
 
 /**
