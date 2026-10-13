@@ -130,10 +130,12 @@ describe('epics screens', () => {
     await app.press('c');
     await settle();
     expect((await repos.epics.get('acme', 'launch')).closed).toBe(true);
-    expect(app.lastFrame()).toMatch(/Status\s+closed/);
+    expect(app.lastFrame()).toMatch(/Closed\s+yes/);
     await app.press('c');
     await settle();
     expect((await repos.epics.get('acme', 'launch')).closed).toBe(false);
+    expect(app.lastFrame()).toMatch(/Closed\s+no/);
+    expect(app.lastFrame()).not.toMatch(/status/i);
     app.unmount();
   });
 
