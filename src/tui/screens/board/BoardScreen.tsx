@@ -83,7 +83,8 @@ export function BoardScreen(_props: ScreenProps) {
   const stages = shown?.stages ?? [];
 
   useEffect(() => {
-    if (!list.data) return;
+    // A load that was already running when a write started may predate it; the write reloads after.
+    if (!list.data || writing.current) return;
     setColumns(groupColumns(list.data.stages, list.data.stories));
     setShown({ ref: list.data.ref, stages: list.data.stages });
   }, [list.data]);
@@ -92,7 +93,10 @@ export function BoardScreen(_props: ScreenProps) {
   const row = Math.max(0, Math.min(cursor.row, (columns[col]?.length ?? 0) - 1));
   const card = columns[col]?.[row];
 
-  /** Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a toast. */
+  /**
+   * Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a
+   * toast. Either way it then reloads the board from disk.
+   */
   const write = async (next: Columns, nextCursor: Cursor, run: () => Promise<Story | undefined>) => {
     const before = { columns, cursor: { col, row } };
     writing.current = true;
@@ -107,6 +111,8 @@ export function BoardScreen(_props: ScreenProps) {
       toast.error(err);
     } finally {
       writing.current = false;
+      // Supersedes any load still in flight (for example the reload on return), which could be stale.
+      list.reload();
     }
   };
 
