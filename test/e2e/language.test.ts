@@ -61,15 +61,18 @@ describe('language audit', () => {
     expect(hits).toEqual(['ticket', 'sub-tasks', 'card']);
   });
 
-  it('no _Avoid_ word appears in any --help text', async () => {
+  // About 60 CLI runs; they run in parallel, but a loaded machine still needs more than the default.
+  it('no _Avoid_ word appears in any --help text', { timeout: 60_000 }, async () => {
     const root = await runCli(['--help']);
     const groups = commandsIn(root.stdout);
     expect(groups).toContain('stories');
-    const pages = [root];
-    for (const group of groups) {
-      const page = await runCli([group, '--help']);
-      pages.push(page, ...(await Promise.all(commandsIn(page.stdout).map((verb) => runCli([group, verb, '--help'])))));
-    }
+    const groupPages = await Promise.all(groups.map((group) => runCli([group, '--help'])));
+    const verbPages = await Promise.all(
+      groups.flatMap((group, i) =>
+        commandsIn(groupPages[i]?.stdout ?? '').map((verb) => runCli([group, verb, '--help'])),
+      ),
+    );
+    const pages = [root, ...groupPages, ...verbPages];
     expect(pages.length).toBeGreaterThan(50);
     const found = pages.flatMap((page) =>
       page.stdout.split('\n').filter((line) => AVOID.test(line.replace(/\bLocal State\b|\buser\.email\b/g, ' '))),

@@ -9,7 +9,7 @@ import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
 import { relativeTime } from '../../src/tui/screens/comments/CommentsPanel';
 import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, renderTui, tick, waitForFrame } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { workspaceId: 'acme', boardId: 'web' };
 
@@ -70,8 +70,8 @@ describe('story detail Tasks tab', () => {
     await waitForFrame(app, (f) => f.includes('No Tasks yet. Press n to create one.'));
 
     await app.press('n');
-    await waitForFrame(app, (f) => f.includes('New Task on WEB-1'));
-    await tick(50);
+    // The breadcrumb shows the title while the form loads; wait for the form itself.
+    await waitForFrame(app, (f) => f.includes('New Task on WEB-1') && f.includes('Name*'));
     await app.press(...'Write tests', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Write tests ● Backlog'));
     expect((await story(t)).tasks).toMatchObject([{ id: 'WEB-1.1', name: 'Write tests', stage: 'backlog' }]);
@@ -99,8 +99,7 @@ describe('story detail Tasks tab', () => {
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Old'));
     await app.press('e');
-    await waitForFrame(app, (f) => f.includes('Edit WEB-1.1'));
-    await tick(50);
+    await waitForFrame(app, (f) => f.includes('Edit WEB-1.1') && f.includes('Name*'));
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New', KEYS.enter);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
 
