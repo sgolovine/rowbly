@@ -38,17 +38,11 @@ describe('rowbly CLI', () => {
     expect(stdout).toContain('--no-prompt');
   });
 
-  it('reaches the stub for an unimplemented verb and exits 1', async () => {
-    const { stderr, exitCode } = await runCli(['doctor']);
-    expect(exitCode).toBe(1);
-    expect(stderr).toBe('error: not implemented: WP10\n');
-  });
-
   it('reports errors as JSON with --json', async () => {
     const { stdout, stderr, exitCode } = await runCli(['doctor', '--json']);
-    expect(exitCode).toBe(1);
+    expect(exitCode).toBe(5);
     expect(stdout).toBe('');
-    expect(JSON.parse(stderr)).toEqual({ error: { code: 'INTERNAL', message: 'not implemented: WP10', details: {} } });
+    expect(JSON.parse(stderr)).toEqual({ error: { code: 'NO_DATA_ROOT', message: 'no Data Root found', details: {} } });
   });
 
   it('exits 2 for an unknown command or option', async () => {
