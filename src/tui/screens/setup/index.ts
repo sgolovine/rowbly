@@ -1,7 +1,8 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { ContextScreen } from './ContextScreen';
+import { SetupScreen } from './SetupScreen';
 
-// Stub: WP08 replaces this area's screens.
 export const setupScreens: ScreenRegistry = {
-  setup: placeholderScreen('Setup', 'WP08'),
+  setup: SetupScreen,
+  context: ContextScreen,
 };

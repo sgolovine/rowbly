@@ -4,4 +4,4 @@ export { type FindDataRootOptions, findDataRoot } from './dataRoot';
 export { readJson, writeJson } from './jsonStore';
 export { type DataRootPaths, paths } from './paths';
 export * from './repositories';
-export { editTextInEditor, gitUserEmail, readTextFile } from './system';
+export { editTextInEditor, gitUserEmail, pathExists, readTextFile, writeTextFile } from './system';

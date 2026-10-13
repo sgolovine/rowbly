@@ -6,6 +6,8 @@ export interface ServicesValue {
   /** `null` when no Data Root exists yet (the setup screen is shown). */
   ctx: RowblyContext | null;
   services: Services | null;
+  /** Switches the app to another context, e.g. the Data Root the setup screen just created. */
+  activate?(ctx: RowblyContext): void;
 }
 
 export const ServicesContext = createContext<ServicesValue>({ ctx: null, services: null });
@@ -20,4 +22,9 @@ export function useServices(): Services {
 /** The resolved context (Data Root, Local State, Me), or `null` before setup. */
 export function useRowblyContext(): RowblyContext | null {
   return useContext(ServicesContext).ctx;
+}
+
+/** Switches the whole app to `ctx` and fresh services over it. A no-op outside the App. */
+export function useActivate(): (ctx: RowblyContext) => void {
+  return useContext(ServicesContext).activate ?? (() => {});
 }

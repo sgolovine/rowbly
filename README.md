@@ -64,7 +64,30 @@ Colour follows `NO_COLOR` and `FORCE_COLOR`.
 <!-- BEGIN setup -->
 ### Setup: `init`, `use`, `whoami`, `config`
 
-_Not implemented yet._
+```sh
+rowbly init [--global] [--workspace <id> --workspace-name <name> [--board <id> --board-name <name> --prefix <P>]]
+rowbly use [<workspace>[/<board>]] [--clear]
+rowbly whoami [<handle>] [--clear]
+rowbly config show [--workspace <id>] [--board <id>|<ws>/<id>]
+```
+
+- `init` creates `.rowbly/` in the current directory (`~/.rowbly` with `--global`, or the `--root` /
+  `ROWBLY_ROOT` path). It writes `rowbly.config.json` with the default Stages and a `.gitignore` that
+  keeps `local.json` out of git. An existing Data Root exits 4. With the Workspace and Board flags it
+  also creates them and makes them the current context, so later commands need no flags. In an
+  interactive terminal it asks for them instead (suggesting the Board id upper-cased as the prefix).
+- `use acme/web` stores the current Workspace and Board in `local.json`; `use acme` stores only the
+  Workspace. Without a target it prints the current context and where each part came from: a flag,
+  the environment (`ROWBLY_WORKSPACE` / `ROWBLY_BOARD`), `local.json`, or the only one there is.
+- `whoami` prints Me and whether it came from `local.json` or from the roster email that matches
+  `git config user.email`. `whoami <handle>` claims a handle; one missing from the current
+  Workspace's roster is stored with a warning.
+- `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
+  Cascade level each list comes from (`board`, `workspace`, `global` or `default`). `--json` prints
+  an `EffectiveBoardConfig`.
+- In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
+  The **Context** entry of the `g` palette switches Workspace and Board; press `m` there to pick Me
+  from the roster.
 <!-- END setup -->
 
 <!-- BEGIN workspaces -->
