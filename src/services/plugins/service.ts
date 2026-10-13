@@ -62,12 +62,21 @@ function notFound(id: string): NotFoundError {
   return new NotFoundError(`Plugin "${id}" not found`, { hint: 'see `rowbly plugins list`' });
 }
 
-/** The rows each Plugin that is on adds about a Story (`stories show`, the TUI Story screen), in registry order. */
+/**
+ * The rows each Plugin that is on adds about a Story (`stories show`, the TUI Story screen), in
+ * registry order. Rows only show something, so a Plugin that fails to give them only warns.
+ */
 export async function pluginStoryRows(ctx: RowblyContext, services: Services, story: Story): Promise<PluginRow[]> {
   const rows: PluginRow[] = [];
   for (const { definition } of ctx.plugins?.active() ?? []) {
-    if (definition.storyRows)
+    if (!definition.storyRows) continue;
+    try {
       rows.push(...(await definition.storyRows(story, services.plugins.context(definition.id))));
+    } catch (err) {
+      ctx.warn(
+        `Plugin "${definition.id}" failed to show its rows: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
   return rows;
 }

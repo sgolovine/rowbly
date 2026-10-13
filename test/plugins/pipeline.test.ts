@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, PluginError, ValidationError } from '../../src/core';
 import { type Change, definePlugin } from '../../src/plugin-api';
 import { StorySchema } from '../../src/schemas';
+import { pluginStoryRows } from '../../src/services';
 import { makeStory, writeFixture } from '../helpers';
 import { echo, faulty, notes, order, stamp, tracer } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
@@ -313,3 +314,25 @@ async function pathExists(path: string): Promise<boolean> {
 function stamps() {
   return { createdAt: '2026-10-12T17:21:07.000Z', updatedAt: '2026-10-12T17:21:07.000Z' };
 }
+
+describe('Story rows', () => {
+  it('come from each Plugin in registry order; one that throws only warns', async () => {
+    const broken = definePlugin({
+      id: 'broken',
+      name: 'Broken',
+      description: '',
+      storyRows: async () => {
+        throw new Error('no rows');
+      },
+    });
+    const t = await pluginRoot({ notes: true, broken: true, tracer: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-3', plugins: { notes: { note: 'n' } } });
+    const { ctx, services, warnings } = await withPlugins(t, [notes, broken, tracer]);
+    const rows = await pluginStoryRows(ctx, services, await services.stories.get('WEB-3'));
+    expect(rows).toEqual([
+      { label: 'Note', value: 'note: n' },
+      { label: 'Number', value: '3' },
+    ]);
+    expect(warnings).toEqual(['Plugin "broken" failed to show its rows: no rows']);
+  });
+});
