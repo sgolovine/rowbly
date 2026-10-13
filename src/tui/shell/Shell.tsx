@@ -1,6 +1,6 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { useContext, useMemo, useState } from 'react';
-import { ConfirmDialog, Modal } from '../components';
+import { ConfirmDialog, Modal, Panel } from '../components';
 import {
   type BoardSelection,
   BoardSelectionContext,
@@ -109,9 +109,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
 
   const hints = useScreenHints(depth);
   const sidebarWidth = services ? SIDEBAR_WIDTH : 0;
-  // The main area is padded by one column on each side.
+  // The main panel's border takes a column on each side.
   const mainWidth = Math.max(20, columns - sidebarWidth - 2);
-  const mainHeight = fullscreen ? Math.max(5, rows - HEADER_HEIGHT - FOOTER_HEIGHT - toastCount) : undefined;
+  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT - toastCount) : undefined;
+  const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay !== null && overlay.kind !== 'confirm';
   const top = router.stack[depth];
 
@@ -130,8 +131,15 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
               onNewBoard={newBoard}
             />
           )}
-          <Box flexDirection="column" flexGrow={1} flexShrink={1} paddingX={1} height={mainHeight} overflow="hidden">
-            <LayoutContext.Provider value={{ width: mainWidth, height: mainHeight }}>
+          <Panel
+            title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
+            color={idle ? 'cyan' : undefined}
+            flexGrow={1}
+            flexShrink={1}
+            height={mainHeight}
+            overflow="hidden"
+          >
+            <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
               {router.stack[0] && (
                 <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
                   <ScreenSlot route={router.stack[0]} depth={0} top active={idle} screens={screens} />
@@ -199,7 +207,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 </Modal>
               )}
             </LayoutContext.Provider>
-          </Box>
+          </Panel>
         </Box>
         <ToastArea />
         <Footer hints={atRoot ? hints : []} atRoot={atRoot} />

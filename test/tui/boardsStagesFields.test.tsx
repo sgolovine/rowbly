@@ -133,7 +133,7 @@ describe('fields screen', () => {
     const repos = createRepositories(t.root);
     await repos.stories.put({ ...(await repos.stories.findByKey('WEB-1')), customFields: { size: 'l' } });
     await app.press('e', KEYS.down, KEYS.down, KEYS.down, KEYS.backspace, KEYS.backspace, KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('Updated size') && f.includes('select: s, m\n'));
+    await waitForFrame(app, (f) => f.includes('Updated size') && f.includes('select: s, m '));
     expect(app.lastFrame()).toContain('stripped 1 value of "size"');
     expect((await repos.stories.findByKey('WEB-1')).customFields).toEqual({});
     app.unmount();

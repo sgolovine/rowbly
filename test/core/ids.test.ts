@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { formatStoryKey, formatTaskId, isSlug, parseStoryKey, parseTaskId, UsageError } from '../../src/core';
+import {
+  formatStoryKey,
+  formatTaskId,
+  isSlug,
+  KEY_PREFIX_RE,
+  keyPrefixFromName,
+  parseStoryKey,
+  parseTaskId,
+  slugFromName,
+  UsageError,
+} from '../../src/core';
 
 describe('parseStoryKey', () => {
   it('accepts lower-case input and canonicalises it', () => {
@@ -41,5 +51,43 @@ describe('formatters and slugs', () => {
     expect(isSlug('In-Progress')).toBe(false);
     expect(isSlug('a--b')).toBe(false);
     expect(isSlug('-a')).toBe(false);
+  });
+});
+
+describe('slugFromName', () => {
+  it.each([
+    ['Rowbly', 'rowbly'],
+    ['My Web App', 'my-web-app'],
+    ['  Café / API v2! ', 'cafe-api-v2'],
+    ['!!!', 'board'],
+  ])('%j → %j', (name, slug) => {
+    expect(slugFromName(name)).toBe(slug);
+  });
+
+  it('numbers a taken slug and stays within the length limit', () => {
+    expect(slugFromName('Web', new Set(['web', 'web-2']))).toBe('web-3');
+    const long = slugFromName('a'.repeat(50), new Set(['a'.repeat(40)]));
+    expect(long).toBe(`${'a'.repeat(38)}-2`);
+    expect(isSlug(long)).toBe(true);
+  });
+});
+
+describe('keyPrefixFromName', () => {
+  it.each([
+    ['Rowbly', 'ROW'],
+    ['My Web App', 'MWA'],
+    ['web-app', 'WA'],
+    ['2024 Roadmap', 'ROA'],
+    ['X', 'XBR'],
+    ['42', 'BRD'],
+    ['a b c d e f g h i j k l', 'ABCDEFGHIJ'],
+  ])('%j → %j', (name, prefix) => {
+    expect(keyPrefixFromName(name)).toBe(prefix);
+    expect(KEY_PREFIX_RE.test(prefix)).toBe(true);
+  });
+
+  it('numbers a taken prefix', () => {
+    expect(keyPrefixFromName('Rowbly', new Set(['ROW', 'ROW2']))).toBe('ROW3');
+    expect(keyPrefixFromName('a b c d e f g h i j', new Set(['ABCDEFGHIJ']))).toBe('ABCDEFGHI2');
   });
 });

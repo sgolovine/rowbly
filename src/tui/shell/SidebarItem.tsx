@@ -2,6 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import { useMouse } from '../hooks';
 
+/** One Board, as a row as wide as the sidebar; the current one is filled. */
 export function SidebarItem({
   index,
   name,
@@ -18,8 +19,8 @@ export function SidebarItem({
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick }, clickable);
   return (
-    <Box ref={ref}>
-      <Text wrap="truncate-end" color={selected ? 'cyan' : undefined} bold={selected}>
+    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? 'cyan' : undefined}>
+      <Text wrap="truncate-end" color={selected ? 'black' : undefined} bold={selected}>
         {selected ? '▌ ' : '  '}
         <Text dimColor={!selected}>{index < 9 ? `${index + 1} ` : '  '}</Text>
         {name}

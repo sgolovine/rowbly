@@ -2,8 +2,8 @@ import { basename, dirname } from 'node:path';
 import { Box, Text } from 'ink';
 import { useContext } from 'react';
 import type { RowblyContext } from '../../services';
+import { Button, Panel } from '../components';
 import { ServicesContext } from '../hooks';
-import { HeaderButton } from './HeaderButton';
 
 /** The project the Data Root belongs to: the folder holding `.rowbly`, or "Global" for `~/.rowbly`. */
 export function projectName(ctx: RowblyContext | null): string {
@@ -14,24 +14,13 @@ export function projectName(ctx: RowblyContext | null): string {
 
 export function Header({ onNewStory, clickable }: { onNewStory?: () => void; clickable: boolean }) {
   const { ctx } = useContext(ServicesContext);
+  // The button sits beside the panel rather than inside it, so the header stays three lines tall.
   return (
-    <Box
-      justifyContent="space-between"
-      paddingX={1}
-      borderStyle="single"
-      borderTop={false}
-      borderLeft={false}
-      borderRight={false}
-      borderDimColor
-      flexShrink={0}
-    >
-      <Text bold color="cyan" wrap="truncate-end">
-        {projectName(ctx)}
-      </Text>
-      <Box gap={2} flexShrink={0}>
+    <Box flexShrink={0}>
+      <Panel title={projectName(ctx)} flexGrow={1} flexShrink={1} paddingX={1} alignItems="flex-end">
         <Text dimColor>me: {ctx?.me ?? '—'}</Text>
-        {onNewStory && <HeaderButton label="+ New Story" onClick={onNewStory} clickable={clickable} />}
-      </Box>
+      </Panel>
+      {onNewStory && <Button label="+ New Story" onClick={onNewStory} clickable={clickable} compact />}
     </Box>
   );
 }

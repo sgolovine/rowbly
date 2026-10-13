@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink';
 import type { BoardConfig } from '../../schemas';
-import { HeaderButton } from './HeaderButton';
+import { Button, Panel } from '../components';
 import { SIDEBAR_WIDTH } from './layout';
 import { SidebarItem } from './SidebarItem';
 
@@ -20,23 +20,13 @@ export function Sidebar({
   onNewBoard(): void;
 }) {
   return (
-    <Box
-      flexDirection="column"
-      width={SIDEBAR_WIDTH}
-      height={height}
-      flexShrink={0}
-      paddingX={1}
-      borderStyle="single"
-      borderTop={false}
-      borderBottom={false}
-      borderLeft={false}
-      borderDimColor
-    >
-      <Text dimColor bold>
-        BOARDS
-      </Text>
-      <Box flexDirection="column" marginTop={1}>
-        {boards.length === 0 && <Text dimColor>No Boards yet.</Text>}
+    <Panel title="Boards" width={SIDEBAR_WIDTH} height={height}>
+      <Box flexDirection="column" flexShrink={1} overflow="hidden">
+        {boards.length === 0 && (
+          <Box paddingX={1}>
+            <Text dimColor>No Boards yet.</Text>
+          </Box>
+        )}
         {boards.map((board, i) => (
           <SidebarItem
             key={board.id}
@@ -49,10 +39,7 @@ export function Sidebar({
         ))}
       </Box>
       <Box flexGrow={1} minHeight={1} />
-      <Box gap={1}>
-        <HeaderButton label="+ New Board" onClick={onNewBoard} clickable={clickable} />
-        <Text dimColor>N</Text>
-      </Box>
-    </Box>
+      <Button label="+ New Board" keyName="N" onClick={onNewBoard} clickable={clickable} />
+    </Panel>
   );
 }
