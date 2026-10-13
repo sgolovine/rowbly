@@ -3,11 +3,11 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createServices, type DoctorCode, type RowblyContext } from '../../src/services';
 import { conflictSides } from '../../src/services/doctor';
-import { fixedClock, fixedIds, makeBoard, makeEpic, makeStory, makeWorkspace, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeEpic, makeRootConfig, makeStory, tempRoot } from '../helpers';
 
-const BOARD = 'workspaces/acme/boards/web';
+const BOARD = 'boards/web';
 
-/** Workspace `acme` (roster: sam) with Board `web` (prefix WEB, default stages, one `size` field). */
+/** Roster: sam; Board `web` (prefix WEB, default stages, one `size` field). */
 async function setup() {
   const tmp = await tempRoot();
   const clock = fixedClock();
@@ -19,15 +19,14 @@ async function setup() {
     newId: fixedIds(),
     warn: () => {},
   };
-  await makeWorkspace(tmp.path, { id: 'acme', assignees: [{ handle: 'sam', name: 'Sam' }] });
+  await makeRootConfig(tmp.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
   await makeBoard(tmp.path, {
     id: 'web',
-    workspaceId: 'acme',
     keyPrefix: 'WEB',
     customFields: [{ key: 'size', name: 'Size', type: 'number', required: false, integer: true }],
   });
   const story = (key: string, overrides: Parameters<typeof makeStory>[1] extends infer T ? Partial<T> : never = {}) =>
-    makeStory(tmp.path, { key, workspaceId: 'acme', boardId: 'web', rank: `a${key.split('-')[1]}`, ...overrides });
+    makeStory(tmp.path, { key, boardId: 'web', rank: `a${key.split('-')[1]}`, ...overrides });
   const read = async (rel: string) => JSON.parse(await readFile(join(tmp.path, rel), 'utf8'));
   const write = async (rel: string, text: string) => {
     await mkdir(dirname(join(tmp.path, rel)), { recursive: true });
@@ -63,12 +62,12 @@ describe('doctor service', () => {
     const { doctor, story, write } = await setup();
     await story('WEB-1');
     await write(`${BOARD}/stories/WEB-1.json`, '{ "version": 1, "key": "WEB-1" }\n');
-    await write('workspaces/acme/epics/broken.json', '{ nope');
+    await write('epics/broken.json', '{ nope');
     const report = await doctor.check();
     const byPath = Object.fromEntries(report.findings.map((f) => [f.path, f]));
     expect(byPath[`${BOARD}/stories/WEB-1.json`]).toMatchObject({ code: 'SCHEMA_INVALID', severity: 'error' });
     expect(byPath[`${BOARD}/stories/WEB-1.json`]?.details?.issues).toBeInstanceOf(Array);
-    expect(byPath['workspaces/acme/epics/broken.json']).toMatchObject({
+    expect(byPath['epics/broken.json']).toMatchObject({
       code: 'SCHEMA_INVALID',
       message: 'file is not valid JSON',
     });
@@ -88,21 +87,18 @@ describe('doctor service', () => {
 
   it('reports conflict markers in other files and duplicate prefixes', async () => {
     const { doctor, write, tmp } = await setup();
-    await makeBoard(tmp.path, { id: 'site', workspaceId: 'acme', keyPrefix: 'WEB' });
-    await write('workspaces/acme/workspace.config.json', '<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> other\n');
-    // The workspace is unreadable, so the prefix check skips its Boards; use a second Workspace.
-    await makeWorkspace(tmp.path, { id: 'beta' });
-    await makeBoard(tmp.path, { id: 'one', workspaceId: 'beta', keyPrefix: 'API' });
-    await makeBoard(tmp.path, { id: 'two', workspaceId: 'beta', keyPrefix: 'API' });
+    await write('epics/launch.json', '<<<<<<< HEAD\n{}\n=======\n{}\n>>>>>>> other\n');
+    await makeBoard(tmp.path, { id: 'one', keyPrefix: 'API' });
+    await makeBoard(tmp.path, { id: 'two', keyPrefix: 'API' });
     const report = await doctor.check();
     expect(report.findings).toContainEqual(
-      expect.objectContaining({ code: 'CONFLICT_MARKERS', path: 'workspaces/acme/workspace.config.json' }),
+      expect.objectContaining({ code: 'CONFLICT_MARKERS', path: 'epics/launch.json' }),
     );
     expect(report.findings).toContainEqual(
       expect.objectContaining({
         code: 'DUPLICATE_PREFIX',
-        path: 'workspaces/beta/boards/two/board.config.json',
-        message: 'key prefix API is used by beta/one, beta/two',
+        path: 'boards/two/board.config.json',
+        message: 'key prefix API is used by one, two',
       }),
     );
   });
@@ -207,11 +203,11 @@ describe('doctor service', () => {
 
   it('unlinks missing Epics but keeps links to Epic files that are merely invalid', async () => {
     const { doctor, story, read, write, tmp } = await setup();
-    await makeEpic(tmp.path, { id: 'launch', workspaceId: 'acme' });
+    await makeEpic(tmp.path, { id: 'launch' });
     await story('WEB-1', { epicId: 'gone' });
     await story('WEB-2', { epicId: 'launch' });
     await story('WEB-3', { epicId: 'broken' });
-    await write('workspaces/acme/epics/broken.json', '{}');
+    await write('epics/broken.json', '{}');
     expect(await codes(doctor)).toEqual(['SCHEMA_INVALID', 'MISSING_EPIC']);
     await expectFixed(doctor, 'MISSING_EPIC');
     expect((await read(`${BOARD}/stories/WEB-1.json`)).epicId).toBeNull();
@@ -222,7 +218,6 @@ describe('doctor service', () => {
     const { doctor, story, read, tmp } = await setup();
     await makeBoard(tmp.path, {
       id: 'web',
-      workspaceId: 'acme',
       keyPrefix: 'WEB',
       customFields: [
         { key: 'size', name: 'Size', type: 'number', required: false, integer: true },
@@ -273,30 +268,36 @@ describe('doctor service', () => {
 
   it('clears stale Local State entries', async () => {
     const { doctor, read, write } = await setup();
-    await write('local.json', JSON.stringify({ version: 1, workspace: 'acme', board: 'gone', me: 'nobody' }));
-    expect((await doctor.check()).findings.map((f) => [f.code, f.message])).toEqual([
-      ['STALE_LOCAL_STATE', 'current Board "gone" does not exist in Workspace "acme"'],
-      ['STALE_LOCAL_STATE', 'Me "nobody" is not in any Workspace roster'],
+    await write('local.json', JSON.stringify({ version: 1, board: 'gone', me: 'nobody' }));
+    const report = await doctor.check();
+    expect(report.findings.map((f) => [f.code, f.path, f.message])).toEqual([
+      ['STALE_LOCAL_STATE', 'local.json', 'current Board "gone" does not exist'],
+      ['STALE_LOCAL_STATE', 'local.json', 'Me "nobody" is not in the roster'],
     ]);
     await expectFixed(doctor, 'STALE_LOCAL_STATE');
-    expect(await read('local.json')).toEqual({ version: 1, workspace: 'acme' });
+    expect(await read('local.json')).toEqual({ version: 1 });
 
-    await write('local.json', JSON.stringify({ version: 1, workspace: 'gone', board: 'web', me: 'sam' }));
-    expect(await codes(doctor)).toEqual(['STALE_LOCAL_STATE', 'STALE_LOCAL_STATE']);
+    // A missing Board alone is cleared, keeping a valid Me.
+    await write('local.json', JSON.stringify({ version: 1, board: 'gone', me: 'sam' }));
+    expect(await codes(doctor)).toEqual(['STALE_LOCAL_STATE']);
     await expectFixed(doctor, 'STALE_LOCAL_STATE');
     expect(await read('local.json')).toEqual({ version: 1, me: 'sam' });
+
+    // Valid entries are left alone.
+    await write('local.json', JSON.stringify({ version: 1, board: 'web', me: 'sam' }));
+    expect(await codes(doctor)).toEqual([]);
   });
 
   it('reports files outside the layout and folders missing their config', async () => {
     const { doctor, write, tmp } = await setup();
     await write('notes.txt', 'hi');
     await write(`${BOARD}/stories/readme.md`, 'hi');
-    await makeStory(tmp.path, { key: 'API-1', workspaceId: 'acme', boardId: 'api' });
+    await makeStory(tmp.path, { key: 'API-1', boardId: 'api' });
     const report = await doctor.check();
     expect(report.findings.map((f) => [f.severity, f.code, f.path])).toEqual([
-      ['error', 'SCHEMA_INVALID', 'workspaces/acme/boards/api/board.config.json'],
-      ['info', 'UNKNOWN_FILE', 'notes.txt'],
+      ['error', 'SCHEMA_INVALID', 'boards/api/board.config.json'],
       ['info', 'UNKNOWN_FILE', `${BOARD}/stories/readme.md`],
+      ['info', 'UNKNOWN_FILE', 'notes.txt'],
     ]);
     expect(report.summary).toEqual({ errors: 1, warnings: 0, info: 2 });
   });
