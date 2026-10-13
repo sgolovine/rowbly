@@ -122,8 +122,6 @@ describe('story detail', () => {
     expect(app.lastFrame()).toMatch(/Updated\s+2026-/);
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('No Tasks yet'));
-    await app.press(KEYS.tab);
-    await waitForFrame(app, (f) => f.includes('No Comments yet'));
     await app.press(KEYS.tab, 'd');
     expect(app.lastFrame()).toContain('Delete WEB-1');
     await app.press('y');

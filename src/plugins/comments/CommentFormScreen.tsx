@@ -1,21 +1,12 @@
-import { Box, Text } from 'ink';
-import { Form, type FormValues, Loading } from '../../components';
-import { useAsync, useKeyHints, useServices, useToast } from '../../hooks';
-import { FORM_KEYS } from '../../keymap';
-import { useRouter } from '../../router';
-import type { ScreenProps } from '../types';
+import type { PluginScreenProps } from '../../plugin-api';
+import { Box, FORM_KEYS, Form, type FormValues, Loading, Text, useAsync, useKeyHints } from '../../plugin-api/tui';
+import { addComment, editComment, getComment } from './comments';
 
 /** Adds a Comment to a Story or Task (`params.target`), or edits one (`params.id`). */
-export function CommentFormScreen({ params }: ScreenProps) {
-  const services = useServices();
-  const toast = useToast();
-  const router = useRouter();
+export function CommentFormScreen({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
   const target = String(params.target ?? '');
   const id = params.id as string | undefined;
-  const data = useAsync(
-    async () => (id ? ((await services.comments.list(target)).find((c) => c.id === id) ?? null) : null),
-    [services, target, id],
-  );
+  const data = useAsync(async () => (id ? getComment(plugin, target, id) : null), [plugin, target, id]);
   useKeyHints(FORM_KEYS);
 
   if (data.loading) return <Loading label="Loading…" />;
@@ -25,13 +16,13 @@ export function CommentFormScreen({ params }: ScreenProps) {
   const submit = async (values: FormValues) => {
     const body = String(values.body ?? '').trim();
     if (comment) {
-      await services.comments.update(target, comment.id, body);
-      toast.push('info', 'Updated Comment');
+      await editComment(plugin, target, comment.id, body);
+      ui.toast('Updated Comment');
     } else {
-      await services.comments.add(target, body);
-      toast.push('info', 'Added Comment');
+      await addComment(plugin, target, body);
+      ui.toast('Added Comment');
     }
-    router.pop();
+    ui.back();
   };
 
   return (

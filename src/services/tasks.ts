@@ -41,7 +41,6 @@ export function createTasksService(ctx: RowblyContext, repos: Repositories, ops:
             name: input.name,
             description: input.description ?? '',
             stage,
-            comments: [],
             createdAt: now,
             updatedAt: now,
           });

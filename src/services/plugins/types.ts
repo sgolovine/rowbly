@@ -5,7 +5,6 @@ import type { ZodType } from 'zod';
 import type {
   Assignee,
   BoardConfig,
-  Comment,
   LocalState,
   PluginBags,
   RowblyConfig,
@@ -41,7 +40,7 @@ import type {
 
 /**
  * One stored record that an operation creates (`before: null`), changes, or deletes (`after: null`).
- * Tasks and Comments live in their Story's record and Assignees in the root config, so changes to
+ * Tasks live in their Story's record and Assignees in the root config, so changes to
  * them are Story or root config changes. A renumbered Story is one Story change whose `before` and
  * `after` have different keys; saving it moves the whole Story folder, Plugin files included.
  */
@@ -171,9 +170,6 @@ export interface CoreOperations {
   'tasks.update': { input: { taskId: string } & TaskPatch; result: Task };
   'tasks.move': { input: { taskId: string; stage: Slug } & OperationOptions; result: Task };
   'tasks.remove': { input: { taskId: string } & OperationOptions; result: undefined };
-  'comments.add': { input: { target: string; body: string } & OperationOptions; result: Comment };
-  'comments.update': { input: { target: string; id: string; body: string } & OperationOptions; result: Comment };
-  'comments.remove': { input: { target: string; id: string } & OperationOptions; result: undefined };
   'plugins.enable': { input: { id: string } & OperationOptions; result: unknown };
   'plugins.disable': { input: { id: string } & OperationOptions; result: unknown };
   /** One pass of `doctor --fix`: the findings it fixes. */
@@ -268,6 +264,8 @@ export interface PluginContext<S = unknown> {
   /** Me, or `null`. */
   readonly me: Slug | null;
   now(): Date;
+  /** A new random 8-character id, for records the Plugin keeps in its bags. */
+  newId(): string;
 }
 
 // ── Command mode ────────────────────────────────────────────────────────────
@@ -319,10 +317,7 @@ export type PluginOptionCommand =
   | 'tasks create'
   | 'tasks edit'
   | 'tasks move'
-  | 'tasks delete'
-  | 'comments add'
-  | 'comments edit'
-  | 'comments delete';
+  | 'tasks delete';
 
 /** A Plugin's options on one core command. */
 export interface PluginCommandOptions {
@@ -335,7 +330,7 @@ export interface PluginCommandOptions {
   input(values: Record<string, unknown>): unknown;
 }
 
-/** A labelled value shown in `stories show` and on the TUI Story screen. */
+/** A labelled value shown in `stories show` or `tasks show`, and on the TUI Story or Task screen. */
 export interface PluginRow {
   label: string;
   value: string;
@@ -437,6 +432,15 @@ export interface PluginStoryTabProps<S> {
   ui: PluginUi;
 }
 
+export interface PluginTaskTabProps<S> {
+  story: Story;
+  task: Task;
+  /** Whether the tab gets keys now. */
+  active: boolean;
+  plugin: PluginContext<S>;
+  ui: PluginUi;
+}
+
 export interface PluginBoardSectionProps<S> {
   board: BoardConfig;
   plugin: PluginContext<S>;
@@ -459,6 +463,7 @@ export interface PluginTui<S> {
   storyForm?: PluginStoryForm<S>;
   storyFilter?: PluginStoryFilter<S>;
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
+  taskTabs?: { label: string; component: ComponentType<PluginTaskTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
 }
 
@@ -468,7 +473,6 @@ export interface PluginTui<S> {
 export interface PluginBagSchemas {
   story?: ZodType;
   task?: ZodType;
-  comment?: ZodType;
   assignee?: ZodType;
   local?: ZodType;
 }
@@ -495,6 +499,8 @@ export interface PluginDefinition<S = Record<string, unknown>> {
   filterStories?(story: Story, filter: unknown, plugin: PluginContext<S>): boolean;
   /** Rows for `stories show` and the TUI Story screen. */
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
+  /** Rows for `tasks show` and the TUI Task screen. */
+  taskRows?(task: Task, story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
   doctor?: PluginDoctor<S>;
   actions?: PluginAction<S>[];
   /** Loads the TUI part, e.g. `() => import('./tui').then((m) => m.tui)`. */

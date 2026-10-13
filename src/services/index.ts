@@ -2,7 +2,6 @@ import { nanoid } from 'nanoid';
 import { createRepositories, findDataRoot, gitUserEmail } from '../storage';
 import { createAssigneesService } from './assignees';
 import { createBoardsService } from './boards';
-import { createCommentsService } from './comments';
 import { createConfigService } from './config';
 import { createContextService } from './context';
 import { createDoctorService } from './doctor';
@@ -26,7 +25,7 @@ export {
   type PluginStatus,
   type ReservedNames,
 } from './plugins/host';
-export { pluginStoryRows } from './plugins/service';
+export { pluginStoryRows, pluginTaskRows } from './plugins/service';
 export type * from './plugins/types';
 export type * from './types';
 
@@ -47,7 +46,6 @@ export function createServices(ctx: RowblyContext): Services {
     fields: createFieldsService(ctx, repos, ops),
     stories: createStoriesService(ctx, repos, ops),
     tasks: createTasksService(ctx, repos, ops),
-    comments: createCommentsService(ctx, repos, ops),
     doctor: createDoctorService(ctx, repos, ops),
     plugins: createPluginsService(ctx, repos, ops),
   };

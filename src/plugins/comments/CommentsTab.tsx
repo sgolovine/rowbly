@@ -1,0 +1,117 @@
+import type { PluginStoryTabProps, Task } from '../../plugin-api';
+import {
+  Box,
+  ConfirmDialog,
+  Loading,
+  moveDelta,
+  Text,
+  useAsync,
+  useInput,
+  useIsActive,
+  useKeyHints,
+  useState,
+} from '../../plugin-api/tui';
+import { deleteComment, listComments } from './comments';
+import { relativeTime } from './relativeTime';
+
+export type CommentsTabProps = PluginStoryTabProps<Record<string, unknown>> & { task?: Task };
+
+/**
+ * The Thread of a Story, or of a Task on the Task screen, oldest first: `c` add and `e` edit (in the
+ * Comment form), `d` delete.
+ */
+export function CommentsTab({ story, task, active, plugin, ui }: CommentsTabProps) {
+  const target = task?.id ?? story.key;
+  const isActive = useIsActive() && active;
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState(0);
+  // `isActive` reloads the Thread when the Comment form closes.
+  const data = useAsync(() => listComments(plugin, target), [plugin, target, isActive]);
+  const comments = data.data ?? [];
+  const viewing = isActive && !confirming && !busy && data.data !== undefined;
+  const cursor = Math.max(0, Math.min(selected, comments.length - 1));
+  const comment = comments[cursor];
+  useKeyHints(
+    viewing
+      ? [
+          { key: 'tab/←/→', description: 'switch tab' },
+          { key: 'c', description: 'add Comment' },
+          ...(comment
+            ? [
+                { key: 'e', description: 'edit Comment' },
+                { key: 'd', description: 'delete Comment' },
+              ]
+            : []),
+        ]
+      : [],
+  );
+
+  useInput(
+    (input, key) => {
+      const delta = moveDelta(input, key);
+      if (delta) setSelected(Math.max(0, Math.min(comments.length - 1, cursor + delta)));
+      else if (input === 'c') ui.open('form', { target, title: 'New Comment' });
+      else if (!comment) return;
+      else if (input === 'e') ui.open('form', { target, id: comment.id, title: 'Edit Comment' });
+      else if (input === 'd') setConfirming(true);
+    },
+    { isActive: viewing },
+  );
+
+  const remove = async (id: string) => {
+    setBusy(true);
+    try {
+      await deleteComment(plugin, target, id);
+      ui.toast('Deleted Comment');
+      data.reload();
+    } catch (err) {
+      ui.error(err);
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  if (!data.data) return data.loading ? <Loading label="Loading Comments…" /> : <Text color="red">No Comments.</Text>;
+  const now = plugin.now();
+
+  return (
+    <Box flexDirection="column" gap={1}>
+      {comments.length === 0 ? (
+        <Text dimColor>No Comments yet. Press c to add one.</Text>
+      ) : (
+        <Box flexDirection="column">
+          {comments.map((c, i) => (
+            <Box key={c.id}>
+              <Text color={i === cursor && viewing ? 'cyan' : undefined}>{i === cursor ? '› ' : '  '}</Text>
+              <Box flexDirection="column">
+                <Text>
+                  <Text bold>{c.author ?? 'unknown'}</Text>
+                  <Text dimColor>
+                    {' '}
+                    · {relativeTime(c.createdAt, now)}
+                    {c.updatedAt !== c.createdAt ? ' (edited)' : ''}
+                  </Text>
+                </Text>
+                <Text>{c.body}</Text>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+      <Text dimColor>c add · e edit · d delete</Text>
+      {confirming && comment && (
+        <ConfirmDialog
+          message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          destructive
+          isActive={isActive && !busy}
+          onConfirm={() => void remove(comment.id)}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
+    </Box>
+  );
+}

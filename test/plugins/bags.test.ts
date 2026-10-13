@@ -9,7 +9,6 @@ import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 /** The bag of a Plugin that this Rowbly version does not know. */
 const GHOST = { ghost: { deep: { list: [1, 2] }, flag: true } };
 const stamps = { createdAt: FIXED_NOW, updatedAt: FIXED_NOW };
-const comment = (id: string) => ({ id, author: null, body: 'Hi', ...stamps, plugins: GHOST });
 
 /** Every kind of record, each with a ghost bag; Notes is off. */
 async function bagged() {
@@ -32,14 +31,12 @@ async function bagged() {
     assignees: ['alice', 'bob'],
     customFields: { size: 's' },
     plugins: { ...GHOST, notes: { note: 'kept while off' } },
-    comments: [comment('c1')],
     tasks: [
       {
         id: 'WEB-1.1',
         name: 'T',
         description: '',
         stage: 'backlog',
-        comments: [comment('c2')],
         ...stamps,
         plugins: GHOST,
       },
@@ -62,9 +59,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     await services.tasks.create('WEB-1', { name: 'New' });
     await services.tasks.update('WEB-1.1', { name: 'T2' });
     await services.tasks.move('WEB-1.1', 'done');
-    await services.comments.add('WEB-1', 'Another');
-    await services.comments.update('WEB-1', 'c1', 'Edited');
-    await services.comments.update('WEB-1.1', 'c2', 'Edited');
     await services.boards.update('web', { description: 'Changed' });
     await services.assignees.update('alice', { name: 'Alice A' });
     await services.assignees.remove('bob');
@@ -80,10 +74,8 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
       stage: 'todo',
       plugins: { ...GHOST, notes: { note: 'kept while off' } },
     });
-    const [task] = story.tasks as { plugins: unknown; comments: { plugins: unknown }[] }[];
+    const [task] = story.tasks as { plugins: unknown }[];
     expect(task?.plugins).toEqual(GHOST);
-    expect(task?.comments[0]?.plugins).toEqual(GHOST);
-    expect((story.comments as { plugins?: unknown }[])[0]?.plugins).toEqual(GHOST);
 
     const root = await readJsonFile(t, 'rowbly.config.json');
     expect(root.assignees).toEqual([{ handle: 'alice', name: 'Alice A', plugins: GHOST }]);

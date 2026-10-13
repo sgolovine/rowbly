@@ -1,7 +1,6 @@
 import { assigneesScreens } from './assignees';
 import { boardScreens, withBoardHome } from './board';
 import { boardsScreens } from './boards';
-import { commentsScreens } from './comments';
 import { demoScreens } from './demo';
 import { doctorScreens } from './doctor';
 import { fieldsScreens } from './fields';
@@ -26,7 +25,6 @@ export const screens: ScreenRegistry = {
   ...fieldsScreens,
   ...storiesScreens,
   ...tasksScreens,
-  ...commentsScreens,
   ...boardScreens,
   ...doctorScreens,
   ...settingsScreens,

@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colorByCategory, colors, printResult, renderTable } from '../output';
 import type { Stage, Story, Task } from '../schemas';
-import type { Services } from '../services';
+import { pluginTaskRows, type Services } from '../services';
 import { confirmDestructive, pluginOptions, promptIfMissing, readLongText, withContext } from './_shared';
 
 interface TaskOptions {
@@ -50,13 +50,17 @@ export function registerTasks(program: Command): void {
 
   tasks
     .command('show <task-id>')
-    .description("Show a Task with its Stage, description, Comments and the Story's Assignees")
+    .description("Show a Task with its Stage, description and the Story's Assignees")
     .action(async (taskId: string, _opts: unknown, cmd: Command) =>
-      withContext(cmd, async ({ services, globals }) => {
+      withContext(cmd, async ({ ctx, services, globals }) => {
         const { story, task } = await services.tasks.get(taskId);
         if (globals.json) return printResult(task, { json: true, human: () => '' });
         const stages = await stagesOf(services, story);
-        printResult(task, { json: false, human: (t) => renderTask(t, story, stages) });
+        const rows = (await pluginTaskRows(ctx, services, task, story)).map((r): [string, string] => [
+          r.label,
+          r.value,
+        ]);
+        printResult(task, { json: false, human: (t) => renderTask(t, story, stages, rows) });
       }),
     );
 
@@ -90,7 +94,7 @@ export function registerTasks(program: Command): void {
 
   tasks
     .command('delete <task-id>')
-    .description('Delete a Task with its Comments (its id is never reused)')
+    .description('Delete a Task (its id is never reused)')
     .action(async (taskId: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const { task } = await services.tasks.get(taskId);
@@ -129,17 +133,18 @@ function stageBadge(stages: readonly Stage[], key: string): string {
 function renderTasks(tasks: readonly Task[], stages: readonly Stage[]): string {
   if (tasks.length === 0) return colors.dim('No Tasks yet.');
   return renderTable(
-    ['ID', 'NAME', 'STAGE', 'COMMENTS'],
-    tasks.map((t) => [t.id, t.name, stageBadge(stages, t.stage), String(t.comments.length)]),
+    ['ID', 'NAME', 'STAGE'],
+    tasks.map((t) => [t.id, t.name, stageBadge(stages, t.stage)]),
   );
 }
 
-function renderTask(task: Task, story: Story, stages: readonly Stage[]): string {
+function renderTask(task: Task, story: Story, stages: readonly Stage[], extra: readonly [string, string][]): string {
   const none = colors.dim('—');
   const rows: [string, string][] = [
     ['Story', `${story.key} ${story.name}`],
     ['Stage', stageBadge(stages, task.stage)],
     ['Assignees', story.assignees.length ? `${story.assignees.join(', ')} ${colors.dim('(from the Story)')}` : none],
+    ...extra,
     ['Created', task.createdAt],
     ['Updated', task.updatedAt],
   ];
@@ -149,6 +154,5 @@ function renderTask(task: Task, story: Story, stages: readonly Stage[]): string 
     ...rows.map(([label, value]) => `${colors.dim(`${label}:`.padEnd(width))}${value}`),
   ];
   if (task.description.trim()) lines.push('', colors.bold('Description'), task.description);
-  lines.push('', `Comments: ${task.comments.length}`);
   return lines.join('\n');
 }

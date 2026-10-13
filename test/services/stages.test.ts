@@ -128,7 +128,6 @@ describe('stages.remove', () => {
           name: 'Task',
           description: '',
           stage: 'todo',
-          comments: [],
           createdAt: '2026-10-12T17:21:07.000Z',
           updatedAt: '2026-10-12T17:21:07.000Z',
         },

@@ -14,17 +14,16 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { CommentsPanel } from '../comments/CommentsPanel';
 import { useEscape } from '../stages/shared';
 import { StoryTasksTab } from '../tasks/StoryTasksTab';
 import type { ScreenProps } from '../types';
 import { StoryStage, useReloadOnReturn } from './shared';
 
-const TABS = ['Details', 'Tasks', 'Comments'] as const;
+const TABS = ['Details', 'Tasks'] as const;
 type Mode = 'view' | 'move' | 'confirm-delete';
 
 /**
- * One Story (`params.key`) with tabs Details | Tasks | Comments, then the tabs Plugins add; `e`
+ * One Story (`params.key`) with tabs Details | Tasks, then the tabs Plugins add; `e`
  * edits, `m` moves, `d` deletes.
  */
 export function StoryDetailScreen({ params }: ScreenProps) {
@@ -70,7 +69,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       if (!story) return;
       if (key.tab || key.rightArrow) setTab((t) => (t + 1) % tabs.length);
       else if (key.leftArrow) setTab((t) => (t + tabs.length - 1) % tabs.length);
-      // The Tasks, Comments and Plugin tabs handle their own keys.
+      // The Tasks and Plugin tabs handle their own keys.
       else if (tab !== 0) return;
       else if (input === 'e') router.push('story-form', { key: story.key, title: `Edit ${story.key}` });
       else if (input === 'm') setMode('move');
@@ -131,7 +130,6 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />
       {tab === 0 && <DetailView rows={rows} body={story.description} />}
       {tab === 1 && <StoryTasksTab storyKey={story.key} />}
-      {tab === 2 && <CommentsPanel target={story.key} />}
       {pluginTabs.map(
         ({ plugin, label, component: PluginTab }, i) =>
           tab === TABS.length + i && (
@@ -157,7 +155,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       )}
       {mode === 'confirm-delete' && (
         <ConfirmDialog
-          message={`Delete ${story.key} "${story.name}" with its Tasks and Comments?`}
+          message={`Delete ${story.key} "${story.name}" with its Tasks?`}
           confirmLabel="Delete"
           cancelLabel="Cancel"
           destructive

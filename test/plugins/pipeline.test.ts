@@ -186,7 +186,7 @@ describe('Change Sets', () => {
       name: 'Watch',
       description: '',
       hooks: Object.fromEntries(
-        ['stories.rank', 'tasks.move', 'comments.add', 'assignees.remove', 'context.use'].map((op) => [
+        ['stories.rank', 'tasks.move', 'assignees.remove', 'context.use'].map((op) => [
           op,
           {
             transform: ({ name, pluginInput }: { name: string; pluginInput: unknown }) =>
@@ -199,20 +199,18 @@ describe('Change Sets', () => {
     await makeStory(t.path, {
       boardId: 'web',
       key: 'WEB-1',
-      tasks: [{ id: 'WEB-1.1', name: 'T', description: '', stage: 'backlog', comments: [], ...stamps() }],
+      tasks: [{ id: 'WEB-1.1', name: 'T', description: '', stage: 'backlog', ...stamps() }],
       nextTaskNumber: 2,
     });
     const { services } = await withPlugins(t, [watch]);
     const plugins = { watch: 1 };
     await services.stories.rank('WEB-1', 'top', { plugins });
     await services.tasks.move('WEB-1.1', 'done', { plugins });
-    await services.comments.add('WEB-1', 'Hi', { plugins });
     await services.assignees.remove('alice', { plugins });
     await services.context.use('web', { plugins });
     expect(inputs).toEqual([
       ['stories.rank', 1],
       ['tasks.move', 1],
-      ['comments.add', 1],
       ['assignees.remove', 1],
       ['context.use', 1],
     ]);

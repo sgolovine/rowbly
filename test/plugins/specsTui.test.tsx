@@ -70,7 +70,7 @@ describe('Specs TUI', () => {
   it('the Story Spec tab shows own text then linked Board Specs and offers create/edit/delete', async () => {
     const { app, plugin } = await setup('story', { key: 'WEB-1' });
     await waitForFrame(app, 'Login');
-    await app.press(KEYS.tab, KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab, KEYS.tab);
     expect(await waitForFrame(app, 'Board requirements')).toContain('No Story Spec');
     await app.press('e');
     await waitForFrame(app, 'Title');
@@ -111,7 +111,7 @@ describe('Specs TUI', () => {
       true,
     );
     await waitForFrame(app, 'Login');
-    await app.press(KEYS.tab, KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab, KEYS.tab);
     const initial = await waitForFrame(app, 'Line 0');
     expect(initial).not.toContain('Board requirements');
     await app.press(...Array(40).fill('j'));

@@ -3,7 +3,6 @@ import type { ZodType } from 'zod';
 import {
   AssigneeSchema,
   BoardConfigSchema,
-  CommentSchema,
   CustomFieldDefSchema,
   CustomFieldListSchema,
   CustomFieldValueSchema,
@@ -26,13 +25,11 @@ import {
 
 const T = '2026-10-12T17:21:07.000Z';
 
-const comment = { id: 'c0000001', author: 'sam', body: 'Looks good', createdAt: T, updatedAt: T };
 const task = {
   id: 'WEB-42.1',
   name: 'Write tests',
   description: '',
   stage: 'todo',
-  comments: [comment],
   createdAt: T,
   updatedAt: T,
 };
@@ -54,7 +51,6 @@ const story = {
   updatedAt: T,
   nextTaskNumber: 2,
   tasks: [task],
-  comments: [],
 };
 const board = {
   version: 1,
@@ -179,22 +175,13 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
     ],
   },
   {
-    name: 'Comment',
-    schema: CommentSchema,
-    valid: [comment, { ...comment, author: null }],
-    invalid: [
-      { ...comment, body: '' },
-      { ...comment, author: undefined },
-    ],
-  },
-  {
     name: 'Task',
     schema: TaskSchema,
     valid: [task],
     invalid: [
       { ...task, id: 'WEB-42' },
       { ...task, name: 'x'.repeat(201) },
-      { ...task, comments: undefined },
+      { ...task, stage: undefined },
     ],
   },
   {
@@ -274,13 +261,9 @@ describe('serialization', () => {
       ...story,
       plugins: bags,
       tasks: story.tasks.map((t) => ({ ...t, plugins: bags })),
-      comments: [
-        { id: 'c1', author: null, body: 'Hi', createdAt: story.createdAt, updatedAt: story.createdAt, plugins: bags },
-      ],
     });
     expect(parsed.plugins).toEqual(bags);
     expect(parsed.tasks[0]?.plugins).toEqual(bags);
-    expect(parsed.comments[0]?.plugins).toEqual(bags);
   });
 
   it('drops unknown keys', () => {

@@ -1,15 +1,15 @@
 # Plugins
 
-Rowbly keeps its core small and adds features as Plugins. This page collects the plugin architecture in one place. The terms are in [`CONTEXT.md`](../CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in [`CONTEXT-MAP.md`](../CONTEXT-MAP.md). The reasons are in ADR-0009 to ADR-0017.
+Rowbly keeps its core small and adds features as Plugins. This page collects the plugin architecture in one place. The terms are in [`CONTEXT.md`](../CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in [`CONTEXT-MAP.md`](../CONTEXT-MAP.md). The reasons are in ADR-0009 to ADR-0018.
 
-The plugin system is built: the Plugin API, the registry, loading, the operations pipeline, Plugin Data and Plugin files, the `plugins` commands and settings section, and the slots below. The Epics and Specs Built-in Plugins are built; [Writing a Built-in Plugin](#writing-a-built-in-plugin) explains how.
+The plugin system is built: the Plugin API, the registry, loading, the operations pipeline, Plugin Data and Plugin files, the `plugins` commands and settings section, and the slots below. The Epics, Specs and Comments Built-in Plugins are built; [Writing a Built-in Plugin](#writing-a-built-in-plugin) explains how.
 
 ## Scope of the first build
 
 - The plugin system, with the whole pipeline (guard, transform, replace, react), tested with fixture Plugins.
-- Two Built-in Plugins: [Epics](#epics) and [Specs](#specs).
+- Built-in Plugins: [Epics](#epics), [Specs](#specs) and [Comments](#comments).
 - Not built: the Git Plugin (designed in ADR-0016), third-party Plugins, dependencies between Plugins, and deleting a Plugin's data.
-- Today's core features stay in core.
+- Today's core features stay in core, except Comments, which moved out into a Built-in Plugin (ADR-0018).
 
 ## Where Plugins live (ADR-0009)
 
@@ -57,7 +57,7 @@ A Plugin that fails to load (it throws while it starts, its settings are invalid
     board.config.json       # Board bags (settings that cascade)
     plugins/<id>/…          # Board files of a Plugin, e.g. Board Specs
     stories/<KEY>/
-      story.json            # Story bags, and Task and Comment bags inside it
+      story.json            # Story bags, and Task bags inside it, e.g. Comments
       plugins/<id>/…        # Story files of a Plugin, e.g. the Story Spec
 ```
 
@@ -86,7 +86,7 @@ Every Service Layer operation, from core or from a Plugin, collects a Change Set
 
 Every data change a Plugin offers works in both the CLI and the TUI.
 
-Slots that Plugins can add to now: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, Board detail sections, `stories show` rows, and Actions. Board card lines, `stories list` columns and the other closed lists open when a Plugin first needs them.
+Slots that Plugins can add to now: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story and Task detail tabs and rows, Board detail sections, `stories show` and `tasks show` rows, and Actions. Board card lines, `stories list` columns and the other closed lists open when a Plugin first needs them.
 
 **Actions** (ADR-0017) are TUI only. An Action names a target (a Board, a Story, a Task, or nothing) and shows wherever that target is in focus, in the footer and the help, and as a button in the header. A data change made by an Action must also be a Plugin command or a Plugin option on a core command.
 
@@ -145,11 +145,29 @@ rowbly stories list … [--spec <slug>…]
 
 - TUI: a **Spec** tab on the Story screen (the Story Spec, then the Board Specs it links to), a **Specs** multi-choice of the Board's Board Specs in the Story form, a **Specs** entry in the home menu to list, create, edit and delete the Board's Board Specs, a list of Board Specs in the Board detail, and a Spec filter on the Stories list and the board. Specs are edited in the multi-line text box.
 
+## Comments
+
+Comments on Stories and Tasks, moved out of core (ADR-0018). Terms: [`src/plugins/comments/CONTEXT.md`](../src/plugins/comments/CONTEXT.md).
+
+- A Thread is Plugin Data on its Story or Task: `"plugins": { "comments": { "comments": [ … ] } }`. Each Comment is `id` (8 random characters), `author` (Me when Me is in the roster, else `null`), `body`, `createdAt`, `updatedAt`. The bag is removed with the last Comment.
+- The operations are `comments.add`, `comments.update` and `comments.remove`, with input `{ target, body }`, `{ target, id, body }` and `{ target, id }`, so other Plugins can hook them.
+- Comments from before ADR-0018 (the `comments` arrays on Stories and Tasks) are not migrated.
+
+```text
+rowbly comments list <KEY|TASK-ID>
+rowbly comments add <KEY|TASK-ID> [--body <text>|--body-file <path|->|--edit]
+rowbly comments edit <KEY|TASK-ID> <comment-id> [body flags]
+rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; --yes when not interactive
+```
+
+- TUI: a **Comments** tab on the Story screen and on the Task screen (`c` add, `e` edit, `d` delete), and the Comment form, a multi-line text box.
+- `stories show`, `tasks show` and the Details tabs have a Comments row with the count.
+
 ## Details decided in the build
 
 - **The Plugin API** is `src/plugin-api/` (types in `src/services/plugins/types.ts`); see [Writing a Built-in Plugin](#writing-a-built-in-plugin). A Plugin declares everything up front in one `definePlugin({ … })` object. Its TUI part is a separate module that `tui()` loads.
-- **Operation names** are `<service>.<method>`: `stories.create`, `stories.update`, `stories.move`, `stories.rank`, `stories.remove`, `tasks.create|update|move|remove`, `comments.add|update|remove`, `boards.create|update|remove`, `assignees.add|update|remove`, `stages.add|update|move|remove`, `fields.add|update|remove`, `context.use|clearUse|setMe`, `plugins.enable|disable` and `doctor.fix` (one per fix pass). A Plugin's own operations are `<id>.<name>`, such as `epics.delete`. `rowbly init` is not an operation: no Plugin can be on before the Data Root exists. The input of each core operation holds the service method's arguments by name, plus `plugins` (`CoreOperations` in the types).
-- **A Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text, by its path in the Data Root). `before: null` is a created record, `after: null` a deleted one. Tasks and Comments are in their Story's record, Assignees in the root config. A renumbered Story is one `story` change whose `before` and `after` have different keys; saving it moves the whole Story folder. Deleting a Board lists a `story` change for each of its Stories, then the `board` change. Deleting a Story or Board deletes its folder with its Plugin files; those files are not listed.
+- **Operation names** are `<service>.<method>`: `stories.create`, `stories.update`, `stories.move`, `stories.rank`, `stories.remove`, `tasks.create|update|move|remove`, `boards.create|update|remove`, `assignees.add|update|remove`, `stages.add|update|move|remove`, `fields.add|update|remove`, `context.use|clearUse|setMe`, `plugins.enable|disable` and `doctor.fix` (one per fix pass). A Plugin's own operations are `<id>.<name>`, such as `epics.delete` or `comments.add`. `rowbly init` is not an operation: no Plugin can be on before the Data Root exists. The input of each core operation holds the service method's arguments by name, plus `plugins` (`CoreOperations` in the types).
+- **A Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text, by its path in the Data Root). `before: null` is a created record, `after: null` a deleted one. Tasks are in their Story's record, Assignees in the root config. A renumbered Story is one `story` change whose `before` and `after` have different keys; saving it moves the whole Story folder. Deleting a Board lists a `story` change for each of its Stories, then the `board` change. Deleting a Story or Board deletes its folder with its Plugin files; those files are not listed.
 - **Handler order**: the replacement (if one is declared) or the core operation fills the Change Set; then every transform, then every guard, each in registry order, so a guard sees the final Change Set; then the save; then every reaction. The record an operation returns is read back from the Change Set, so `stories create --epic auth --json` prints the bag the Epics transform wrote.
 - **Clashes** are found when the Plugins load: a Plugin id that is a core command or an earlier Plugin's id, an option that a core command or an earlier Plugin has (by name, ignoring `no-`), an Action key that a core screen uses (`CORE_KEYS` in `src/tui/keymap.ts`) or an earlier Plugin uses, a second replacement of an operation, or options on a core command that does not take them. Plugin screens, form fields, filter fields and doctor codes are named after the Plugin, so they cannot clash.
 - **Doctor codes** of a Plugin are its own codes prefixed by its id in upper case (`MISSING_EPIC` → `EPICS_MISSING_EPIC`). Core adds `PLUGIN_FAILED` (error), `PLUGIN_DATA_INVALID` (warning: a bag of a Plugin that is on does not match its schema) and `PLUGIN_DATA_UNCHECKED` (info: one per Plugin that is off or unknown and has data).
@@ -172,12 +190,13 @@ export const epics = definePlugin({
   name: 'Epics',
   description: 'Group Stories from any Boards into Epics',
   settings: z.object({}),            // its entry in rowbly.config.json, without `enabled`
-  bags: { story: StoryBag },         // checked by doctor; also story, task, comment, assignee, local
+  bags: { story: StoryBag },         // checked by doctor; also task, assignee, local
   hooks: { /* by operation name: { guard, transform, react } */ },
   options: { /* options on core commands */ },
   commands(group, cli) { /* verbs of `rowbly epics` */ },
   filterStories(story, filter, plugin) { /* StoryFilter.plugins.epics */ },
   storyRows: async (story, plugin) => [],  // rows of `stories show` and the TUI Story screen
+  taskRows: async (task, story, plugin) => [],  // rows of `tasks show` and the TUI Task screen
   doctor: { check: ({ data, plugin }) => [] },
   actions: [],                       // TUI Actions, by target
   tui: () => import('./tui').then((m) => m.tui),
@@ -198,7 +217,7 @@ Every handler, command, screen and Action gets a `PluginContext` (as `plugin`):
 | `services` | Every core service. Reads are free; a core operation called here saves on its own, so do not call one from a handler. |
 | `operation(name, input, body)` | Runs one of the Plugin's own operations, `<id>.<name>`, through the whole pipeline; `body` fills its Change Set. |
 | `editText(initial)` | Opens `$VISUAL`/`$EDITOR` (command mode only). |
-| `warn(message)`, `me`, `now()` | A warning after the command or a toast; Me; the clock. |
+| `warn(message)`, `me`, `now()`, `newId()` | A warning after the command or a toast; Me; the clock; a new random 8-character id. |
 
 ### Operations and Change Sets
 
@@ -277,9 +296,10 @@ filterStories: (story, filter, plugin) => (plugin.readBag(story, StoryBag)?.epic
 | `storyForm` | `fields({ boardId, story, plugin })` and `input(values, story)`: the Plugin's input of `stories.create` / `stories.update`. |
 | `storyFilter` | `fields({ boardId, plugin })`, `filter(values)` (passed to `filterStories`) and `describe(values)` for the filter line, on the Stories list and the board. |
 | `storyTabs` | `{ label, component }` tabs on the Story screen, with `{ story, active, plugin, ui }`. |
+| `taskTabs` | `{ label, component }` tabs on the Task screen, with `{ story, task, active, plugin, ui }`. |
 | `boardSections` | Components shown in the Board detail, with `{ board, plugin, ui }`. |
 
-`storyRows` (in the definition) also shows on the Story screen. **Actions** are in the definition, so their keys are checked when the Plugin loads: `{ key, label, target: 'board' | 'story' | 'task' | 'none', run({ focus, plugin, ui }) }`. They show in the footer, the help and as header buttons wherever their target is in focus, and may only open or show something (ADR-0017).
+`storyRows` and `taskRows` (in the definition) also show on the Story and Task screens. **Actions** are in the definition, so their keys are checked when the Plugin loads: `{ key, label, target: 'board' | 'story' | 'task' | 'none', run({ focus, plugin, ui }) }`. They show in the footer, the help and as header buttons wherever their target is in focus, and may only open or show something (ADR-0017).
 
 ### Tests
 

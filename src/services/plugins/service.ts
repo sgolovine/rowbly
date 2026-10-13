@@ -1,10 +1,10 @@
 import { NotFoundError, ValidationError } from '../../core';
-import type { Story } from '../../schemas';
+import type { Story, Task } from '../../schemas';
 import type { Repositories } from '../../storage';
 import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
 import type { OperationRunner } from './runtime';
-import type { PluginRow } from './types';
+import type { AnyPluginDefinition, PluginContext, PluginRow } from './types';
 
 export function createPluginsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): PluginsService {
   const statuses = () => ctx.plugins?.status() ?? [];
@@ -66,12 +66,24 @@ function notFound(id: string): NotFoundError {
  * The rows each Plugin that is on adds about a Story (`stories show`, the TUI Story screen), in
  * registry order. Rows only show something, so a Plugin that fails to give them only warns.
  */
-export async function pluginStoryRows(ctx: RowblyContext, services: Services, story: Story): Promise<PluginRow[]> {
+export function pluginStoryRows(ctx: RowblyContext, services: Services, story: Story): Promise<PluginRow[]> {
+  return pluginRows(ctx, services, (definition, plugin) => definition.storyRows?.(story, plugin));
+}
+
+/** The rows each Plugin that is on adds about a Task (`tasks show`, the TUI Task screen). */
+export function pluginTaskRows(ctx: RowblyContext, services: Services, task: Task, story: Story): Promise<PluginRow[]> {
+  return pluginRows(ctx, services, (definition, plugin) => definition.taskRows?.(task, story, plugin));
+}
+
+async function pluginRows(
+  ctx: RowblyContext,
+  services: Services,
+  rowsOf: (definition: AnyPluginDefinition, plugin: PluginContext) => Promise<PluginRow[]> | undefined,
+): Promise<PluginRow[]> {
   const rows: PluginRow[] = [];
   for (const { definition } of ctx.plugins?.active() ?? []) {
-    if (!definition.storyRows) continue;
     try {
-      rows.push(...(await definition.storyRows(story, services.plugins.context(definition.id))));
+      rows.push(...((await rowsOf(definition, services.plugins.context(definition.id))) ?? []));
     } catch (err) {
       ctx.warn(
         `Plugin "${definition.id}" failed to show its rows: ${err instanceof Error ? err.message : String(err)}`,

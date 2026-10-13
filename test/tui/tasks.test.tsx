@@ -4,7 +4,6 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
-import { relativeTime } from '../../src/tui/screens/comments/CommentsPanel';
 import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
@@ -68,7 +67,7 @@ describe('story detail Tasks tab', () => {
     app.unmount();
   });
 
-  it('edits a Task and opens its detail with inherited Assignees and Comments', async () => {
+  it('edits a Task and opens its detail with inherited Assignees', async () => {
     const t = await setup();
     const { app, services } = await open(t, 'story', { key: 'WEB-1' });
     await services.tasks.create('WEB-1', { name: 'Old' });
@@ -81,15 +80,6 @@ describe('story detail Tasks tab', () => {
 
     await app.press(KEYS.enter);
     await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
-    // Comments are on their own tab, so `e` and `d` on Details act on the Task.
-    await app.press(KEYS.tab);
-    await waitForFrame(app, (f) => f.includes('No Comments yet. Press c to add one.'));
-    await app.press('c');
-    await waitForFrame(app, (f) => f.includes('New Comment on WEB-1.1') && f.includes('Comment*'));
-    await app.press(...'Looks good', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('Added Comment'));
-    expect((await story(t)).tasks[0]?.comments).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
-    expect((await story(t)).comments).toEqual([]);
     app.unmount();
   });
 });
@@ -118,7 +108,7 @@ describe('task detail', () => {
     expect((await story(t)).tasks[0]?.stage).toBe('in-progress');
 
     await app.press('d');
-    await waitForFrame(app, (f) => f.includes('Delete WEB-1.1 "New" with its Comments?'));
+    await waitForFrame(app, (f) => f.includes('Delete WEB-1.1 "New"?'));
     await app.press('n');
     await waitForFrame(app, (f) => !f.includes('Delete WEB-1.1'));
     expect((await story(t)).tasks).toHaveLength(1);
@@ -129,49 +119,5 @@ describe('task detail', () => {
     await waitForFrame(app, (f) => f.includes('Deleted WEB-1.1') && f.includes('No Tasks yet'));
     expect((await story(t)).tasks).toEqual([]);
     app.unmount();
-  });
-});
-
-describe('CommentsPanel', () => {
-  it('adds, edits and deletes a Comment from the story detail tabs', async () => {
-    const t = await setup();
-    const { app, clock } = await open(t, 'story', { key: 'WEB-1' });
-    await app.press(KEYS.tab, KEYS.tab);
-    await waitForFrame(app, (f) => f.includes('No Comments yet'));
-
-    await app.press('c');
-    await waitForFrame(app, (f) => f.includes('New Comment on WEB-1') && f.includes('Comment*'));
-    // An empty Comment is refused in the form.
-    await app.press(KEYS.ctrlEnter);
-    await waitForFrame(app, 'required');
-    await app.press(...'first line', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('Added Comment') && f.includes('alice · just now'));
-    expect(app.lastFrame()).toContain('first line');
-    expect((await story(t)).comments).toMatchObject([{ id: 'id000001', author: 'alice', body: 'first line' }]);
-
-    clock.advance(5 * 60_000);
-    await app.press('e');
-    await waitForFrame(app, (f) => f.includes('Edit Comment on WEB-1') && f.includes('first line'));
-    // `enter` starts a new line in the Comment.
-    await app.press(KEYS.enter, ...'second line', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('Updated Comment') && f.includes('alice · 5m ago (edited)'));
-    expect((await story(t)).comments[0]?.body).toBe('first line\nsecond line');
-
-    await app.press('d');
-    await waitForFrame(app, (f) => f.includes('Delete the Comment by alice?'));
-    await app.press('y');
-    await waitForFrame(app, (f) => f.includes('Deleted Comment') && f.includes('No Comments yet'));
-    const after = await story(t);
-    expect(after.comments).toEqual([]);
-    expect(after.name).toBe('Login');
-    app.unmount();
-  });
-
-  it('formats relative times', () => {
-    const now = new Date('2026-10-12T17:21:07.000Z');
-    expect(relativeTime('2026-10-12T17:21:00.000Z', now)).toBe('just now');
-    expect(relativeTime('2026-10-12T14:21:07.000Z', now)).toBe('3h ago');
-    expect(relativeTime('2026-10-10T17:21:07.000Z', now)).toBe('2d ago');
-    expect(relativeTime('2025-10-12T17:21:07.000Z', now)).toBe('1y ago');
   });
 });

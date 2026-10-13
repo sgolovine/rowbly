@@ -1,7 +1,6 @@
 import type { Command } from 'commander';
 import { registerAssignees } from './assignees';
 import { registerBoards } from './boards';
-import { registerComments } from './comments';
 import { registerDoctor } from './doctor';
 import { registerFields } from './fields';
 import { registerPlugins } from './plugins';
@@ -19,7 +18,6 @@ export function registerCommands(program: Command): void {
   registerFields(program);
   registerStories(program);
   registerTasks(program);
-  registerComments(program);
   registerDoctor(program);
   registerPlugins(program);
 }
