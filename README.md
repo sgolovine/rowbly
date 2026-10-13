@@ -182,7 +182,19 @@ _Not implemented yet._
 <!-- BEGIN epics -->
 ### Epics
 
-_Not implemented yet._
+An Epic groups Stories across the Boards of one Workspace. A Story links to an Epic through its `epicId` (`stories create/edit --epic <id>`). Epic Progress is the number of its Stories in a `done`-category Stage, judged by each Story's own Board, out of all its Stories.
+
+```text
+rowbly epics list [--closed|--all]                 # open Epics by default: Id, Name, Progress, Boards, Closed
+rowbly epics create <id> --name <name> [--description <text> | --description-file <path|-> | --edit]
+rowbly epics show <id>                             # details, progress, and Stories grouped by Board
+rowbly epics edit <id> [--name <name>] [--description <text> | --description-file <path|-> | --edit]
+rowbly epics close <id>                            # allowed even with open Stories
+rowbly epics reopen <id>
+rowbly epics delete <id> [--yes]                   # unlinks its Stories (epicId: null) and warns with the count
+```
+
+Every verb takes `--workspace <id>` (default: `ROWBLY_WORKSPACE`, then the current context). In the TUI, open **Epics** from the `g` palette: `enter` opens an Epic, `n` creates one, `a` shows closed Epics. On an Epic, `enter` opens a Story, `e` edits, `c` closes or reopens, and `d` deletes.
 <!-- END epics -->
 
 <!-- BEGIN doctor -->
