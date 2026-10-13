@@ -3,7 +3,6 @@ import pkg from '../package.json' with { type: 'json' };
 import { registerCommands } from './commands';
 import { ExitCode, exitCodeFor, UsageError } from './core';
 import { printError } from './output';
-import { startTui } from './tui';
 
 export function createProgram(): Command {
   const program = new Command('rowbly')
@@ -60,6 +59,8 @@ export async function main(argv: string[]): Promise<number> {
       return ExitCode.usage;
     }
     try {
+      // Loaded on demand: Ink and React take most of the start-up time of every other command.
+      const { startTui } = await import('./tui');
       await startTui(undefined, { root: globals.root });
       return ExitCode.ok;
     } catch (err) {
