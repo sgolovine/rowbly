@@ -195,13 +195,38 @@ rowbly stories delete <KEY>                          # confirms; pass --yes when
 <!-- BEGIN tasks -->
 ### Tasks
 
-_Not implemented yet._
+```text
+rowbly tasks list <KEY>
+rowbly tasks create <KEY> --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
+rowbly tasks show <TASK-ID>
+rowbly tasks edit <TASK-ID> [--name <n>] [description flags]
+rowbly tasks move <TASK-ID> <stage>
+rowbly tasks delete <TASK-ID>                        # confirms; pass --yes when not interactive
+```
+
+- Tasks live inside their Story's file. A Task id is the Story Key plus a number (`WEB-42.1`), taken from the Story's `nextTaskNumber`. Ids are never reused: after deleting `WEB-42.3`, the next Task is still `WEB-42.4`.
+- A new Task goes into the first effective Stage unless `--stage` is given. The Stage must be one of the Board's effective Stages; `move` to any other Stage exits 2.
+- Tasks are listed in creation order and have no Rank.
+- Tasks have no Assignees of their own; `show` displays the Story's Assignees.
+- Every change updates both the Task's and the Story's `updatedAt`.
+- `--json` prints Task objects: an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
 <!-- END tasks -->
 
 <!-- BEGIN comments -->
 ### Comments
 
-_Not implemented yet._
+```text
+rowbly comments list <KEY|TASK-ID>
+rowbly comments add <KEY|TASK-ID> [--body <text>|--body-file <path|->|--edit]
+rowbly comments edit <KEY|TASK-ID> <comment-id> [--body <text>|--body-file <path|->|--edit]
+rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; pass --yes when not interactive
+```
+
+- The target is a Story Key (`WEB-42`) for a Comment on the Story, or a Task id (`WEB-42.1`) for a Comment on that Task.
+- The author is Me when Me is in the Workspace roster, otherwise none. Comment ids are 8-character random ids.
+- The body comes from exactly one of `--body`, `--body-file` (`-` reads stdin) or `--edit` (`$VISUAL`/`$EDITOR`, fallback `vi`). Without any of them, an interactive run asks for the body; otherwise the command exits 2. An empty body exits 2.
+- `list` shows Comments oldest first. `edit` updates the Comment's `updatedAt`.
+- `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
 <!-- END comments -->
 
 <!-- BEGIN epics -->

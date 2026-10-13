@@ -1,7 +1,9 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { TaskDetailScreen } from './TaskDetailScreen';
+import { TaskFormScreen } from './TaskFormScreen';
 
-// Stub: WP06 replaces this area's screens.
+// The Tasks tab itself (`StoryTasksTab`) is embedded in the Story detail screen.
 export const tasksScreens: ScreenRegistry = {
-  tasks: placeholderScreen('Tasks', 'WP06'),
+  task: TaskDetailScreen,
+  'task-form': TaskFormScreen,
 };
