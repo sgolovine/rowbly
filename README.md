@@ -164,7 +164,32 @@ rowbly fields remove <key>
 <!-- BEGIN stories -->
 ### Stories
 
-_Not implemented yet._
+```text
+rowbly stories list [--stage <k>…] [--category todo|in_progress|done] [--open] [--assignee <h|me>…]
+                    [--epic <id>|--no-epic] [--label <l>…] [--priority <P>…] [--search <text>]
+                    [--sort rank|priority|created|updated|due] [--board <id>] [--all-boards]
+rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
+                      [--assignee <h>…] [--epic <id>] [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
+                      [--field key=value …] [--board <id>]
+rowbly stories show <KEY>
+rowbly stories edit <KEY> [--name <n>] [description flags]
+                    [--assignee <h>… | --add-assignee <h>… | --remove-assignee <h>…]
+                    [--epic <id> | --no-epic] [--priority <P> | --no-priority]
+                    [--label <l>… | --add-label <l>… | --remove-label <l>…]
+                    [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
+rowbly stories move <KEY> <stage> [--top]
+rowbly stories rank <KEY> (--before <KEY>|--after <KEY>|--top|--bottom)
+rowbly stories delete <KEY>                          # confirms; pass --yes when not interactive
+```
+
+- A new Story gets the next Story Key on its Board: the highest existing number plus one. If the highest-numbered Story is deleted, its key is given to the next new Story.
+- A new Story goes to the bottom of its Stage (default: the first effective Stage). `createdBy` is Me when Me is in the Workspace roster.
+- Story Keys are case-insensitive (`web-2` is `WEB-2`) and need no `--board`: the key prefix finds the Board.
+- Repeatable flags (`--assignee`, `--label`, `--stage`, `--priority`, `--field`) may also be comma-separated. `--assignee me` means Me; it exits 2 when Me is not set.
+- Assignees must be in the Workspace roster, the Epic must exist in the Workspace, and Custom Field values must fit their field; required fields must have a value. A violation exits 2 and `--json` lists the valid choices in `details` (for example `validHandles`).
+- `list` sorts by Stage order then Rank. `--sort priority` puts the most urgent first, `created` the oldest first, `updated` the newest first and `due` the soonest first. `--open` hides Stories in a `done` Stage. `--search` matches name and description, ignoring case.
+- `move` places the Story at the bottom of the target Stage, or at the top with `--top`. `rank` reorders a Story within its Stage. Both write only that Story's file.
+- `--json` prints Story objects: an array for `list`, one Story for `create`, `show`, `edit`, `move` and `rank`, and `{ deleted }` for `delete`.
 <!-- END stories -->
 
 <!-- BEGIN tasks -->
