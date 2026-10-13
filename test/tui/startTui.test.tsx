@@ -56,12 +56,22 @@ function fakeTerminal() {
   return { stdin, stdout, stderr, proc, io, guarded: proc as unknown as GuardedProcess };
 }
 
+/** Waits until the app has installed its crash guards and started reading keys (raw mode on). */
+async function started(t: ReturnType<typeof fakeTerminal>) {
+  await vi.waitFor(
+    () => {
+      expect(t.proc.listenerCount('SIGINT')).toBe(1);
+      expect(t.stdin.rawMode).toContain(true);
+    },
+    { timeout: 5_000, interval: 20 },
+  );
+}
+
 describe('startTui', () => {
   it('restores the terminal after q', async () => {
     const t = fakeTerminal();
     const done = startTui(null, { io: t.io, proc: t.guarded, env: {} });
-    await tick(100);
-    expect(t.proc.listenerCount('SIGINT')).toBe(1);
+    await started(t);
     t.stdin.type('q');
     await done;
     expect(t.stdout.output.endsWith(RESTORE_SEQUENCE)).toBe(true);
@@ -74,7 +84,7 @@ describe('startTui', () => {
   it('restores the terminal and exits 1 after an injected crash', async () => {
     const t = fakeTerminal();
     const done = startTui(null, { io: t.io, proc: t.guarded, env: {} });
-    await tick(100);
+    await started(t);
     t.proc.emit('uncaughtException', new Error('boom'));
     await done;
     expect(t.stdout.output).toContain(RESTORE_SEQUENCE);
@@ -86,7 +96,7 @@ describe('startTui', () => {
   it('restores the terminal and exits 130 on SIGINT', async () => {
     const t = fakeTerminal();
     const done = startTui(null, { io: t.io, proc: t.guarded, env: {} });
-    await tick(100);
+    await started(t);
     t.proc.emit('SIGINT');
     await done;
     expect(t.stdout.output).toContain(RESTORE_SEQUENCE);
@@ -96,8 +106,9 @@ describe('startTui', () => {
   it('shows an unhandled RowblyError rejection as a toast instead of crashing', async () => {
     const t = fakeTerminal();
     const done = startTui(null, { io: t.io, proc: t.guarded, env: {} });
-    await tick(100);
+    await started(t);
     t.proc.emit('unhandledRejection', new NotFoundError('board "web" not found'));
+    // Ink only flushes the fake (non-TTY) stdout on exit, so give the toast a moment to render first.
     await tick(100);
     expect(t.proc.exit).not.toHaveBeenCalled();
     t.stdin.type('q');

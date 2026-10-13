@@ -22,7 +22,7 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 
 
 
- h/l j/k select · enter open · H/L move Stage · K/J reorder · n new · e edit · d delete · / filter · c clear filter · …"
+ h/l j/k select · enter open · H/L move Stage · K/J reorder · T/B to top/bottom · n new · e edit · d delete · / filter…"
 `;
 
 exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
@@ -39,5 +39,5 @@ exports[`board view > scrolls horizontally at 80 columns with 6 Stages without w
 
 
 
- h/l j/k select · enter open · H/L move Stage · K/J reorder · n new · e edit ·…"
+ h/l j/k select · enter open · H/L move Stage · K/J reorder · T/B to top/botto…"
 `;

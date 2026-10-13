@@ -67,7 +67,7 @@ export function EpicDetail({ id }: { id: string }) {
       <DetailView
         rows={[
           { label: 'Epic', value: `${view.name} (${view.id})` },
-          { label: 'Status', value: view.closed ? 'closed' : 'open' },
+          { label: 'Closed', value: view.closed ? 'yes' : 'no' },
           { label: 'Progress', value: <ProgressBar progress={view.progress} /> },
         ]}
         body={view.description}

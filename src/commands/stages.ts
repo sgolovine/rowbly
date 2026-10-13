@@ -125,7 +125,7 @@ export function registerStages(program: Command): void {
   withLevelOptions(
     stages
       .command('edit <key>')
-      .description('Edit a Stage’s name or Stage Category')
+      .description("Edit a Stage's name or Stage Category")
       .option('--name <name>', 'new display name')
       .option('--category <category>', 'new Stage Category: todo, in_progress or done'),
   ).action(async (key: string, opts: StageOptions, cmd: Command) =>

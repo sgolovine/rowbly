@@ -97,6 +97,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       value: Array.isArray(value) ? value.join(', ') : String(value),
     })),
     { label: 'Created', value: `${story.createdAt}${story.createdBy ? ` by ${story.createdBy}` : ''}` },
+    { label: 'Updated', value: story.updatedAt },
   ];
 
   return (

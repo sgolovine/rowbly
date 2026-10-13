@@ -37,6 +37,7 @@ describe('rowbly epics', () => {
     expect(JSON.parse(json.stdout).progress).toEqual({ done: 2, total: 3 });
 
     const { stdout } = await cli('epics', 'list');
+    expect(stdout).toMatch(/^ID\s+NAME\s+PROGRESS\s+BOARDS\s+CLOSED\s*$/m);
     expect(stdout).toMatch(/launch\s+Launch\s+2\/3 [█░]{10}\s+api, web\s+no/);
   });
 

@@ -23,7 +23,7 @@ Rowbly is a developer-focused, file-backed Kanban tracker.
 - **Stories** are keyed `WEB-42` (board prefix + max+1, ADR-0003), never move between Boards, sit in one Stage with a manual Rank, and carry: name, description (markdown), assignees, epic, Priority (`P0`–`P4`), Labels, due date, Custom Field values, createdBy, timestamps, embedded Tasks and Comments.
 - **Tasks** (`WEB-42.1`) are mini-stories embedded in the Story file: name, description, Stage, Comments. No assignees of their own — they belong to the Story's Assignees.
 - **Stages and Custom Fields** are configuration, resolved through the Configuration Cascade `rowbly.config.json` → `workspace.config.json` → `board.config.json`; most specific defined list replaces (ADR-0005). Every Stage has a Stage Category (`todo | in_progress | done`).
-- **Out of scope for v1:** authentication/authorization, any server, SQLite, npm publishing (install via `pnpm link --global` / `npm i -g .`), creating the GitHub remote (the user manages it), moving Stories between Boards.
+- **Out of scope for v1:** authentication/authorization, any server, SQLite, npm publishing (install via `pnpm add -g "$PWD"` / `npm i -g .`), creating the GitHub remote (the user manages it), moving Stories between Boards.
 
 ## 2. Tech stack (fixed)
 
@@ -79,20 +79,20 @@ Phase 3   WP09 Kanban Board View (needs 05)
 Phase 4   WP11 Hardening & Docs (needs all)
 ```
 
-| WP | Title | Depends on | Phase |
-| --- | --- | --- | --- |
-| [WP00](packages/WP00-scaffold-and-contracts.md) | Scaffold & Contracts | — | 0 |
-| [WP01](packages/WP01-storage-and-config.md) | Storage & Config Layer | WP00 | 1 |
-| [WP02](packages/WP02-tui-foundation.md) | TUI Foundation | WP00 | 1 |
-| [WP03](packages/WP03-workspaces-and-assignees.md) | Workspaces & Assignees | WP01, WP02 | 2 |
-| [WP04](packages/WP04-boards-stages-fields.md) | Boards, Stages & Custom Fields | WP01, WP02 | 2 |
-| [WP05](packages/WP05-stories.md) | Stories | WP04 | 2 |
-| [WP06](packages/WP06-tasks-and-comments.md) | Tasks & Comments | WP05 | 2 |
-| [WP07](packages/WP07-epics.md) | Epics | WP01, WP02 | 2 |
-| [WP08](packages/WP08-setup-and-context.md) | Setup & Context | WP03, WP04 | 2 |
-| [WP09](packages/WP09-kanban-board-view.md) | Kanban Board View | WP05 | 3 |
-| [WP10](packages/WP10-doctor.md) | Doctor | WP05, WP06, WP07 | 3 |
-| [WP11](packages/WP11-hardening-and-docs.md) | Hardening & Docs | all | 4 |
+| WP | Title | Depends on | Phase | Status |
+| --- | --- | --- | --- | --- |
+| [WP00](packages/WP00-scaffold-and-contracts.md) | Scaffold & Contracts | — | 0 | merged (#1) |
+| [WP01](packages/WP01-storage-and-config.md) | Storage & Config Layer | WP00 | 1 | merged (#2) |
+| [WP02](packages/WP02-tui-foundation.md) | TUI Foundation | WP00 | 1 | merged (#3) |
+| [WP03](packages/WP03-workspaces-and-assignees.md) | Workspaces & Assignees | WP01, WP02 | 2 | merged (#6) |
+| [WP04](packages/WP04-boards-stages-fields.md) | Boards, Stages & Custom Fields | WP01, WP02 | 2 | merged (#7) |
+| [WP05](packages/WP05-stories.md) | Stories | WP04 | 2 | merged (#9) |
+| [WP06](packages/WP06-tasks-and-comments.md) | Tasks & Comments | WP05 | 2 | merged (#10) |
+| [WP07](packages/WP07-epics.md) | Epics | WP01, WP02 | 2 | merged (#5) |
+| [WP08](packages/WP08-setup-and-context.md) | Setup & Context | WP03, WP04 | 2 | merged (#8) |
+| [WP09](packages/WP09-kanban-board-view.md) | Kanban Board View | WP05 | 3 | merged (#11) |
+| [WP10](packages/WP10-doctor.md) | Doctor | WP05, WP06, WP07 | 3 | merged (#12) |
+| [WP11](packages/WP11-hardening-and-docs.md) | Hardening & Docs | all | 4 | merged (this PR) |
 
 Phase numbers are for humans; the supervisor schedules strictly by the **Depends on** column, max 5 workers at once, and pauses at the two checkpoints.
 

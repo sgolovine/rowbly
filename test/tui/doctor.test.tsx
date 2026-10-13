@@ -6,7 +6,7 @@ import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { screens } from '../../src/tui/screens';
 import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, tempRoot } from '../helpers';
-import { KEYS, type Rendered, renderTui } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 async function setup(initial = 'doctor') {
   const tmp = await tempRoot();
@@ -31,17 +31,6 @@ async function setup(initial = 'doctor') {
       />,
     );
   return { tmp, render };
-}
-
-/** Polls until the latest frame contains `text`, instead of sleeping a fixed time. */
-async function waitForFrame(app: Rendered, text: string, timeout = 3000): Promise<string> {
-  const start = Date.now();
-  for (;;) {
-    const frame = app.lastFrame() ?? '';
-    if (frame.includes(text)) return frame;
-    if (Date.now() - start > timeout) throw new Error(`timed out waiting for "${text}" in:\n${frame}`);
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
 }
 
 describe('doctor screen', () => {
@@ -73,6 +62,8 @@ describe('doctor screen', () => {
   it('checks again with r and is reachable from the g palette', async () => {
     const { tmp, render } = await setup('home');
     const app = render();
+    // Home opens the board once it has loaded; wait so that does not close the palette.
+    await waitForFrame(app, '● Backlog (0)');
     await app.press('g');
     await waitForFrame(app, 'Doctor');
     // The first enter ends filtering, the second opens the highlighted destination.

@@ -44,6 +44,17 @@ export function swapCard(columns: Columns, col: number, row: number, delta: -1 |
   });
 }
 
+/** Moves the card at `row` to the top or the bottom of its column. */
+export function edgeCard(columns: Columns, col: number, row: number, edge: 'top' | 'bottom'): Columns {
+  const card = columns[col]?.[row];
+  if (!card) return columns;
+  return columns.map((list, i) => {
+    if (i !== col) return list;
+    const rest = list.filter((_, j) => j !== row);
+    return edge === 'top' ? [card, ...rest] : [...rest, card];
+  });
+}
+
 export function removeCard(columns: Columns, key: string): Columns {
   return columns.map((cards) => cards.filter((s) => s.key !== key));
 }

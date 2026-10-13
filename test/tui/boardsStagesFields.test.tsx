@@ -5,7 +5,7 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, renderTui, tick } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { workspaceId: 'acme', boardId: 'web' };
 
@@ -30,16 +30,8 @@ async function open(t: TempRoot, screen: string, local: LocalState = { version: 
   const app = renderTui(
     <App ctx={ctx} services={createServices(ctx)} initial={{ screen, params: {} }} toasts={toasts} />,
   );
-  await waitFor(app, (frame) => !frame.includes('Loading'));
+  await waitForFrame(app, (frame) => !frame.includes('Loading'));
   return app;
-}
-
-async function waitFor(app: { lastFrame(): string | undefined }, ok: (frame: string) => boolean) {
-  for (let i = 0; i < 50; i++) {
-    if (ok(app.lastFrame() ?? '')) return;
-    await tick(20);
-  }
-  throw new Error(`timed out; last frame:\n${app.lastFrame()}`);
 }
 
 const stageKeys = async (t: TempRoot) =>
@@ -55,20 +47,33 @@ describe('stages screen', () => {
     expect(frame).toContain('› 1. ● Backlog backlog · todo');
     expect(frame).toContain('3. ● In Progress in-progress · in_progress');
     await app.press('l');
-    await waitFor(app, (f) => f.includes(' workspace ') && f.includes('copied to workspace'));
+    await waitForFrame(app, (f) => f.includes(' workspace ') && f.includes('copied to workspace'));
     app.unmount();
   });
 
   it('adds a Stage at a position relative to the highlighted Stage', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
-    await app.press('j', 'j', 'a');
+    await app.press('j', 'j', 'n');
     expect(app.lastFrame()).toContain('Add a Stage');
     expect(app.lastFrame()).toContain('‹ after in-progress ›');
     await app.press(...'qa', KEYS.down, ...'QA', KEYS.down, KEYS.right, KEYS.enter);
-    await waitFor(app, (f) => f.includes('4. ● QA qa · in_progress'));
+    await waitForFrame(app, (f) => f.includes('4. ● QA qa · in_progress'));
     expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'qa', 'done']);
     expect(app.lastFrame()).toContain('· own list');
+    app.unmount();
+  });
+
+  it('moves a Stage last and first with B and T', async () => {
+    const t = await setup();
+    const app = await open(t, 'stages');
+    expect(app.lastFrame()).toContain('T/B move first/last');
+    await app.press('B');
+    await waitForFrame(app, (f) => f.includes('› 4. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done', 'backlog']);
+    await app.press('T');
+    await waitForFrame(app, (f) => f.includes('› 1. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'done']);
     app.unmount();
   });
 
@@ -76,10 +81,10 @@ describe('stages screen', () => {
     const t = await setup();
     const app = await open(t, 'stages');
     await app.press('J');
-    await waitFor(app, (f) => f.includes('› 2. ● Backlog'));
+    await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
     expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
     await app.press('e', ...Array(7).fill(KEYS.backspace), ...'Icebox', KEYS.enter);
-    await waitFor(app, (f) => f.includes('2. ● Icebox backlog'));
+    await waitForFrame(app, (f) => f.includes('2. ● Icebox backlog'));
     app.unmount();
   });
 
@@ -90,9 +95,9 @@ describe('stages screen', () => {
     await app.press('d');
     expect(app.lastFrame()).toContain('Remove Stage Backlog at the board level?');
     await app.press('y');
-    await waitFor(app, (f) => f.includes('Backlog is used by 1 Stories and 0 Tasks. Move them to:'));
+    await waitForFrame(app, (f) => f.includes('Backlog is used by 1 Stories and 0 Tasks. Move them to:'));
     await app.press('j', KEYS.enter);
-    await waitFor(app, (f) => f.includes('Removed Backlog; moved 1 Stories and 0 Tasks to in-progress'));
+    await waitForFrame(app, (f) => f.includes('Removed Backlog; moved 1 Stories and 0 Tasks to in-progress'));
     expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done']);
     expect((await createRepositories(t.root).stories.findByKey('WEB-1')).stage).toBe('in-progress');
     app.unmount();
@@ -101,7 +106,13 @@ describe('stages screen', () => {
   it('esc cancels a form without leaving the screen', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
-    await app.press('a', KEYS.escape);
+    expect(app.lastFrame()).toContain('n add ·');
+    await app.press('n');
+    expect(app.lastFrame()).toContain('Add a Stage');
+    // The form's own esc replaces the shell's "esc back" in the footer.
+    expect(app.lastFrame()).toContain('esc cancel · g go to');
+    expect(app.lastFrame()).not.toContain('esc back');
+    await app.press(KEYS.escape);
     expect(app.lastFrame()).not.toContain('Add a Stage');
     expect(app.lastFrame()).toContain('Stages');
     app.unmount();
@@ -113,17 +124,17 @@ describe('fields screen', () => {
     const t = await setup();
     await makeStory(t.path, { ...web, key: 'WEB-1' });
     const app = await open(t, 'fields');
-    expect(app.lastFrame()).toContain('No Custom Fields. Press a to add one.');
-    await app.press('a', 'j', 'j', 'j', 'j', 'j', KEYS.enter);
+    expect(app.lastFrame()).toContain('No Custom Fields. Press n to add one.');
+    await app.press('n', 'j', 'j', 'j', 'j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Add a select field');
     expect(app.lastFrame()).toContain('Options (a,b,c)');
     await app.press(...'size', KEYS.down, ...'Size', KEYS.down, KEYS.down, KEYS.down, ...'s,m,l', KEYS.enter);
-    await waitFor(app, (f) => f.includes('Size size · select: s, m, l'));
+    await waitForFrame(app, (f) => f.includes('Size size · select: s, m, l'));
 
     const repos = createRepositories(t.root);
     await repos.stories.put({ ...(await repos.stories.findByKey('WEB-1')), customFields: { size: 'l' } });
     await app.press('e', KEYS.down, KEYS.down, KEYS.down, KEYS.backspace, KEYS.backspace, KEYS.enter);
-    await waitFor(app, (f) => f.includes('Updated size') && f.includes('select: s, m\n'));
+    await waitForFrame(app, (f) => f.includes('Updated size') && f.includes('select: s, m\n'));
     expect(app.lastFrame()).toContain('stripped 1 value of "size"');
     expect((await repos.stories.findByKey('WEB-1')).customFields).toEqual({});
     app.unmount();
@@ -132,12 +143,12 @@ describe('fields screen', () => {
   it('shows number settings in the form and removes a field', async () => {
     const t = await setup();
     const app = await open(t, 'fields');
-    await app.press('a', 'j', KEYS.enter);
+    await app.press('n', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Whole numbers');
     await app.press(...'est', KEYS.down, ...'Estimate', KEYS.down, KEYS.down, KEYS.down, '0', KEYS.enter);
-    await waitFor(app, (f) => f.includes('Estimate est · number (≥ 0)'));
+    await waitForFrame(app, (f) => f.includes('Estimate est · number (≥ 0)'));
     await app.press('d', 'y');
-    await waitFor(app, (f) => f.includes('Removed Estimate; stripped 0 values'));
+    await waitForFrame(app, (f) => f.includes('Removed Estimate; stripped 0 values'));
     app.unmount();
   });
 });
@@ -150,15 +161,15 @@ describe('boards screen', () => {
     expect(app.lastFrame()).toContain('Web web · WEB (current)');
 
     await app.press('n', ...'api', KEYS.down, ...'Api', KEYS.down, ...'API', KEYS.enter);
-    await waitFor(app, (f) => f.includes('Created Api (API)') && f.includes('Api api · API'));
+    await waitForFrame(app, (f) => f.includes('Created Api (API)') && f.includes('Api api · API'));
 
     await app.press('e', KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'API svc', KEYS.enter);
-    await waitFor(app, (f) => f.includes('API svc api · API'));
+    await waitForFrame(app, (f) => f.includes('API svc api · API'));
 
     await app.press('j', 'd', 'y');
-    await waitFor(app, (f) => f.includes('Web has 1 Stories. Delete the Board and all of them?'));
+    await waitForFrame(app, (f) => f.includes('Web has 1 Stories. Delete the Board and all of them?'));
     await app.press('y');
-    await waitFor(app, (f) => f.includes('Deleted Web'));
+    await waitForFrame(app, (f) => f.includes('Deleted Web'));
     expect((await createRepositories(t.root).boards.list('acme')).map((b) => b.id)).toEqual(['api']);
     app.unmount();
   });
@@ -167,7 +178,7 @@ describe('boards screen', () => {
     const t = await setup();
     const app = await open(t, 'boards');
     await app.press('s');
-    await waitFor(app, (f) => f.includes('Web Stages') && f.includes('1. ● Backlog'));
+    await waitForFrame(app, (f) => f.includes('Web Stages') && f.includes('1. ● Backlog'));
     app.unmount();
   });
 });

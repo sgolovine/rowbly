@@ -23,6 +23,7 @@ import {
   type Columns,
   cardsPerColumn,
   columnLayout,
+  edgeCard,
   follow,
   GUTTER_WIDTH,
   groupColumns,
@@ -83,7 +84,8 @@ export function BoardScreen(_props: ScreenProps) {
   const stages = shown?.stages ?? [];
 
   useEffect(() => {
-    if (!list.data) return;
+    // A load that was already running when a write started may predate it; the write reloads after.
+    if (!list.data || writing.current) return;
     setColumns(groupColumns(list.data.stages, list.data.stories));
     setShown({ ref: list.data.ref, stages: list.data.stages });
   }, [list.data]);
@@ -92,7 +94,10 @@ export function BoardScreen(_props: ScreenProps) {
   const row = Math.max(0, Math.min(cursor.row, (columns[col]?.length ?? 0) - 1));
   const card = columns[col]?.[row];
 
-  /** Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a toast. */
+  /**
+   * Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a
+   * toast. Either way it then reloads the board from disk.
+   */
   const write = async (next: Columns, nextCursor: Cursor, run: () => Promise<Story | undefined>) => {
     const before = { columns, cursor: { col, row } };
     writing.current = true;
@@ -107,6 +112,8 @@ export function BoardScreen(_props: ScreenProps) {
       toast.error(err);
     } finally {
       writing.current = false;
+      // Supersedes any load still in flight (for example the reload on return), which could be stale.
+      list.reload();
     }
   };
 
@@ -124,6 +131,13 @@ export function BoardScreen(_props: ScreenProps) {
     void write(swapCard(columns, col, row, delta), { col, row: row + delta }, () =>
       services.stories.rank(card.key, position),
     );
+  };
+
+  const rankTo = (edge: 'top' | 'bottom') => {
+    const size = columns[col]?.length ?? 0;
+    const to = edge === 'top' ? 0 : size - 1;
+    if (!card || to === row) return;
+    void write(edgeCard(columns, col, row, edge), { col, row: to }, () => services.stories.rank(card.key, edge));
   };
 
   const remove = (story: Story) => {
@@ -158,6 +172,7 @@ export function BoardScreen(_props: ScreenProps) {
           { key: 'enter', description: 'open' },
           { key: 'H/L', description: 'move Stage' },
           { key: 'K/J', description: 'reorder' },
+          { key: 'T/B', description: 'to top/bottom' },
           { key: 'n', description: 'new' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'delete' },
@@ -178,6 +193,8 @@ export function BoardScreen(_props: ScreenProps) {
       else if (input === 'L') moveTo(col + 1);
       else if (input === 'K') reorder(-1);
       else if (input === 'J') reorder(1);
+      else if (input === 'T') rankTo('top');
+      else if (input === 'B') rankTo('bottom');
       else if (input === 'h' || key.leftArrow) setCursor({ col: Math.max(0, col - 1), row });
       else if (input === 'l' || key.rightArrow) setCursor({ col: Math.min(stages.length - 1, col + 1), row });
       else if (delta) setCursor({ col, row: Math.max(0, row + delta) });
@@ -245,7 +262,7 @@ export function BoardScreen(_props: ScreenProps) {
       )}
       {mode === 'filter' && (
         <Box flexDirection="column">
-          <Text bold>Filter cards</Text>
+          <Text bold>Filter Stories</Text>
           <Form
             fields={[
               {

@@ -3,7 +3,6 @@ import pkg from '../package.json' with { type: 'json' };
 import { registerCommands } from './commands';
 import { ExitCode, exitCodeFor, UsageError } from './core';
 import { printError } from './output';
-import { startTui } from './tui';
 
 export function createProgram(): Command {
   const program = new Command('rowbly')
@@ -35,15 +34,38 @@ function handleError(err: unknown, json: boolean): number {
   return exitCodeFor(err);
 }
 
+/**
+ * The global options when `argv` has no command, i.e. only `--root <path>`, `--json`, `--yes` and
+ * `--no-prompt` (or nothing at all); otherwise `null`. `--help` and `--version` are left to commander.
+ */
+export function globalsOnly(argv: readonly string[]): { root?: string } | null {
+  const globals: { root?: string } = {};
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i] as string;
+    if (arg === '--json' || arg === '--yes' || arg === '--no-prompt') continue;
+    if (arg.startsWith('--root=')) globals.root = arg.slice('--root='.length);
+    else if (arg === '--root' && i + 1 < argv.length) globals.root = argv[++i];
+    else return null;
+  }
+  return globals;
+}
+
 export async function main(argv: string[]): Promise<number> {
   const program = createProgram();
-  if (argv.length === 0) {
-    if (process.stdin.isTTY && process.stdout.isTTY) {
-      await startTui();
-      return ExitCode.ok;
+  const globals = globalsOnly(argv);
+  if (globals) {
+    if (!(process.stdin.isTTY && process.stdout.isTTY)) {
+      program.outputHelp({ error: true });
+      return ExitCode.usage;
     }
-    program.outputHelp({ error: true });
-    return ExitCode.usage;
+    try {
+      // Loaded on demand: Ink and React take most of the start-up time of every other command.
+      const { startTui } = await import('./tui');
+      await startTui(undefined, { root: globals.root });
+      return ExitCode.ok;
+    } catch (err) {
+      return handleError(err, argv.includes('--json'));
+    }
   }
   try {
     await program.parseAsync(argv, { from: 'user' });

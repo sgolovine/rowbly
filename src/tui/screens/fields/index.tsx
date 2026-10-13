@@ -73,7 +73,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'a', description: 'add' },
+          { key: 'n', description: 'add' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'remove' },
           { key: 'l', description: 'switch level' },
@@ -86,7 +86,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
       if (input === 'l') {
         setLevel(levels[(levels.indexOf(level) + 1) % levels.length] ?? level);
         setCursor(0);
-      } else if (input === 'a') setMode({ kind: 'pick-type' });
+      } else if (input === 'n') setMode({ kind: 'pick-type' });
       else if (current && input === 'e') setMode({ kind: 'edit', field: current });
       else if (current && input === 'd') setMode({ kind: 'confirm-remove', field: current });
     },
@@ -99,7 +99,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
       {list.loading && !list.data ? (
         <Loading label="Loading Custom Fields…" />
       ) : fields.length === 0 ? (
-        <Text dimColor>No Custom Fields. Press a to add one.</Text>
+        <Text dimColor>No Custom Fields. Press n to add one.</Text>
       ) : (
         <CursorRows
           cursor={cursor}

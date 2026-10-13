@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
 import { UsageError } from '../core';
-import { colors, printResult, renderTable } from '../output';
+import { colors, describeCascadeLevels, printResult, renderTable } from '../output';
 import type { WorkspaceConfig } from '../schemas';
-import { assertWorkspaceRemovable, type OverrideLevels, workspaceOverview } from '../services/workspaces';
+import { assertWorkspaceRemovable, workspaceOverview } from '../services/workspaces';
 import {
   type ContextFlags,
   confirmDestructive,
@@ -92,8 +92,8 @@ export function registerWorkspaces(program: Command): void {
               `Boards         ${o.boards}`,
               `Epics          ${o.epics}`,
               `Assignees      ${o.assignees}`,
-              `Stages         ${describeOverrides(o.overrides.stages, 'built-in defaults')}`,
-              `Custom Fields  ${describeOverrides(o.overrides.customFields, 'none')}`,
+              `Stages         ${describeCascadeLevels(o.overrides.stages, 'built-in defaults')}`,
+              `Custom Fields  ${describeCascadeLevels(o.overrides.customFields, 'none')}`,
             ].join('\n'),
         });
       }),
@@ -135,13 +135,4 @@ export function registerWorkspaces(program: Command): void {
 
 function firstLine(text: string): string {
   return text.split('\n')[0] ?? '';
-}
-
-function describeOverrides(levels: OverrideLevels, fallback: string): string {
-  const defined = [
-    ...(levels.global ? ['global'] : []),
-    ...(levels.workspace ? ['workspace'] : []),
-    ...levels.boards.map((board) => `board ${board}`),
-  ];
-  return defined.length === 0 ? fallback : `defined at ${defined.join(', ')}`;
 }

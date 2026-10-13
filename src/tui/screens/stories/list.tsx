@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { type Priority, PrioritySchema } from '../../../schemas';
-import type { StoryFilter } from '../../../services';
+import { type Priority, PrioritySchema, type StageCategory, StageCategorySchema } from '../../../schemas';
+import type { StoryFilter, StorySort } from '../../../services';
 import { storyChoices } from '../../../services/stories';
 import { Form, type FormValues, Loading } from '../../components';
 import { useAsync, useIsActive, useKeyCapture, useKeyHints, useRowblyContext, useServices } from '../../hooks';
@@ -12,6 +12,7 @@ import { boardRefFor, NONE, StoryStage, useReloadOnReturn } from './shared';
 
 /** The select choice meaning "do not filter on this". */
 const ANY = '(any)';
+const SORTS: readonly StorySort[] = ['rank', 'priority', 'created', 'updated', 'due'];
 
 /** Filter form values, kept so reopening the form shows the current filters. */
 type Filters = FormValues;
@@ -46,8 +47,8 @@ export function StoryListScreen({ params }: ScreenProps) {
       : [
           { key: 'enter', description: 'open' },
           { key: 'n', description: 'new' },
-          { key: 'f', description: 'filter' },
-          { key: 'c', description: 'clear filters' },
+          { key: '/', description: 'filter' },
+          { key: 'c', description: 'clear filter' },
         ],
   );
 
@@ -55,7 +56,7 @@ export function StoryListScreen({ params }: ScreenProps) {
     (input, key) => {
       if (!scope.data) return;
       if (input === 'n') router.push('story-form', { ref: scope.data.ref, title: 'New Story' });
-      else if (input === 'f') setFiltering(true);
+      else if (input === '/') setFiltering(true);
       else if (input === 'c') setFilters({});
       else if (key.return && stories[cursor]) {
         const story = stories[cursor];
@@ -99,20 +100,28 @@ export function StoryListScreen({ params }: ScreenProps) {
           <Text bold>Filter Stories</Text>
           <Form
             fields={[
-              { name: 'stage', label: 'Stage', kind: 'select', options: [ANY, ...choices.stages.map((s) => s.key)] },
+              { name: 'stage', label: 'Stages', kind: 'multiselect', options: choices.stages.map((s) => s.key) },
               {
                 name: 'assignee',
-                label: 'Assignee',
-                kind: 'select',
-                options: [ANY, ...choices.assignees.map((a) => a.handle)],
+                label: 'Assignees',
+                kind: 'multiselect',
+                options: choices.assignees.map((a) => a.handle),
               },
               { name: 'me', label: 'Assigned to me', kind: 'boolean' },
-              { name: 'label', label: 'Label', kind: 'select', options: [ANY, ...choices.labels] },
-              { name: 'priority', label: 'Priority', kind: 'select', options: [ANY, ...PrioritySchema.options] },
+              { name: 'label', label: 'Labels', kind: 'multiselect', options: choices.labels },
+              { name: 'priority', label: 'Priorities', kind: 'multiselect', options: PrioritySchema.options },
               { name: 'epic', label: 'Epic', kind: 'select', options: [ANY, NONE, ...choices.epics.map((e) => e.id)] },
               { name: 'search', label: 'Search', kind: 'text' },
+              {
+                name: 'category',
+                label: 'Stage Category',
+                kind: 'select',
+                options: [ANY, ...StageCategorySchema.options],
+              },
+              { name: 'open', label: 'Open only', kind: 'boolean' },
+              { name: 'sort', label: 'Sort', kind: 'select', options: SORTS },
             ]}
-            initialValues={{ stage: ANY, assignee: ANY, label: ANY, priority: ANY, epic: ANY, ...filters }}
+            initialValues={{ epic: ANY, category: ANY, sort: 'rank', ...filters }}
             onSubmit={(values) => {
               setFilters(values);
               setFiltering(false);
@@ -128,32 +137,49 @@ function chosen(value: unknown): string | undefined {
   return typeof value === 'string' && value !== '' && value !== ANY ? value : undefined;
 }
 
+/** The chosen options of a multiselect. */
+function many(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
 function toFilter(filters: Filters): StoryFilter {
-  const stage = chosen(filters.stage);
-  const assignees = [chosen(filters.assignee), filters.me === true ? 'me' : undefined].filter((a) => a !== undefined);
-  const label = chosen(filters.label);
-  const priority = chosen(filters.priority) as Priority | undefined;
+  const stages = many(filters.stage);
+  const assignees = [...many(filters.assignee), ...(filters.me === true ? ['me'] : [])];
+  const labels = many(filters.label);
+  const priorities = many(filters.priority) as Priority[];
   const epic = chosen(filters.epic);
   const search = chosen(filters.search);
+  const category = chosen(filters.category) as StageCategory | undefined;
+  const sort = chosen(filters.sort) as StorySort | undefined;
   return {
-    ...(stage ? { stages: [stage] } : {}),
+    ...(stages.length > 0 ? { stages } : {}),
     ...(assignees.length > 0 ? { assignees } : {}),
-    ...(label ? { labels: [label] } : {}),
-    ...(priority ? { priorities: [priority] } : {}),
+    ...(labels.length > 0 ? { labels } : {}),
+    ...(priorities.length > 0 ? { priorities } : {}),
     ...(epic ? { epicId: epic === NONE ? null : epic } : {}),
     ...(search ? { search } : {}),
+    ...(category ? { category } : {}),
+    ...(filters.open === true ? { open: true } : {}),
+    ...(sort && sort !== 'rank' ? { sort } : {}),
   };
 }
 
 function describeFilters(filters: Filters): string {
+  const list = (value: unknown, prefix = '') =>
+    many(value)
+      .map((v) => `${prefix}${v}`)
+      .join(' ');
   const parts = [
-    chosen(filters.stage) && `stage ${filters.stage}`,
-    chosen(filters.assignee) && `@${filters.assignee}`,
+    many(filters.stage).length > 0 && `stage ${list(filters.stage)}`,
+    list(filters.assignee, '@'),
     filters.me === true && 'mine',
-    chosen(filters.label) && `#${filters.label}`,
-    chosen(filters.priority),
+    list(filters.label, '#'),
+    list(filters.priority),
     chosen(filters.epic) && (filters.epic === NONE ? 'no Epic' : `Epic ${filters.epic}`),
     chosen(filters.search) && `"${filters.search}"`,
+    chosen(filters.category) && `${filters.category} Stages`,
+    filters.open === true && 'open',
+    chosen(filters.sort) && filters.sort !== 'rank' && `sorted by ${filters.sort}`,
   ];
   return parts.filter(Boolean).join(' · ');
 }
