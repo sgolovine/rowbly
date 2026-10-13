@@ -70,13 +70,42 @@ _Not implemented yet._
 <!-- BEGIN workspaces -->
 ### Workspaces
 
-_Not implemented yet._
+A Workspace holds Boards, Epics and an Assignee roster.
+
+```sh
+rowbly workspaces list
+rowbly workspaces create <id> --name <name> [--description <text> | --description-file <path|-> | --edit]
+rowbly workspaces show [<id>] [--workspace <id>]
+rowbly workspaces edit <id> [--name <name>] [--description <text> | --description-file <path|-> | --edit]
+rowbly workspaces delete <id> [--force] [--yes]
+```
+
+- `create` writes `workspaces/<id>/workspace.config.json` with an empty roster. An existing id exits 4.
+  A missing `--name` is prompted for in an interactive terminal; otherwise the command exits 2.
+- `show` prints the name, description, number of Boards, Epics and Assignees, and which levels of the
+  Configuration Cascade define Stages and Custom Fields. Without an id it shows the current Workspace.
+- `delete` refuses a Workspace with Boards or Epics (exit 4) unless `--force`, which deletes everything
+  inside it. It always asks for confirmation; in a non-interactive run pass `--yes`. Deleting the current
+  Workspace clears it from the Local State.
 <!-- END workspaces -->
 
 <!-- BEGIN assignees -->
 ### Assignees
 
-_Not implemented yet._
+Each Workspace has its own roster of Assignees. Every verb takes `--workspace <id>` (or
+`ROWBLY_WORKSPACE`); otherwise the current Workspace is used.
+
+```sh
+rowbly assignees list
+rowbly assignees add <handle> --name <name> [--email <email>]
+rowbly assignees edit <handle> [--name <name>] [--email <email>]   # --email "" removes the email
+rowbly assignees remove <handle>
+```
+
+- Handles are slugs, unique within the Workspace. An email is optional but must be valid; it lets
+  Rowbly recognise Me from `git config user.email`.
+- `remove` also takes the handle off every Story in the Workspace and warns with the count, e.g.
+  `warning: Assignee "sam" removed from 1 story`.
 <!-- END assignees -->
 
 <!-- BEGIN boards -->
