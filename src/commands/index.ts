@@ -1,0 +1,27 @@
+import type { Command } from 'commander';
+import { registerAssignees } from './assignees';
+import { registerBoards } from './boards';
+import { registerComments } from './comments';
+import { registerDoctor } from './doctor';
+import { registerEpics } from './epics';
+import { registerFields } from './fields';
+import { registerSetup } from './setup';
+import { registerStages } from './stages';
+import { registerStories } from './stories';
+import { registerTasks } from './tasks';
+import { registerWorkspaces } from './workspaces';
+
+/** Registers every command area. Each area owns its own file; this registry does not change. */
+export function registerCommands(program: Command): void {
+  registerSetup(program);
+  registerWorkspaces(program);
+  registerAssignees(program);
+  registerBoards(program);
+  registerStages(program);
+  registerFields(program);
+  registerStories(program);
+  registerTasks(program);
+  registerComments(program);
+  registerEpics(program);
+  registerDoctor(program);
+}
