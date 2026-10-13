@@ -6,6 +6,11 @@ import type { Story } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
 import { type RunCliResult, runCli } from '../helpers';
 
+/** The Comments the Comments Plugin keeps on a Story or Task. */
+function thread(record: Pick<Story, 'plugins'> | undefined): { author: string | null; body: string }[] {
+  return (record?.plugins?.comments?.comments ?? []) as { author: string | null; body: string }[];
+}
+
 /**
  * The whole product end to end, through the built CLI only, as CI runs it: no TTY (runCli closes
  * stdin) and NO_COLOR=1. Each step builds on the previous one, so they run in order.
@@ -156,11 +161,12 @@ describe('end-to-end scenario', () => {
     expect(all.slice(0, 2)).toEqual(['API-1', 'WEB-1']);
   });
 
-  it('6. adds Tasks and Comments', async () => {
+  it('6. adds Tasks, and Comments with the Comments Plugin on', async () => {
     const task = await json('tasks', 'create', 'WEB-2', '--name', 'Write tests');
     expect(task).toMatchObject({ id: 'WEB-2.1', stage: 'backlog' });
     await ok('tasks', 'create', 'WEB-2', '--name', 'Fix copy', '--stage', 'todo');
     await ok('tasks', 'move', 'WEB-2.1', 'done');
+    await ok('plugins', 'enable', 'comments');
     await ok('comments', 'add', 'WEB-2', '--body', 'Looks good');
     const piped = await runCli(['comments', 'add', 'WEB-2.1', '--body-file', '-'], { cwd: dir, stdin: 'From stdin\n' });
     expect(piped.exitCode).toBe(0);
@@ -170,8 +176,8 @@ describe('end-to-end scenario', () => {
       ['WEB-2.1', 'done'],
       ['WEB-2.2', 'todo'],
     ]);
-    expect(saved.comments).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
-    expect(saved.tasks[0]?.comments.map((c) => c.body.trim())).toContain('From stdin');
+    expect(thread(saved)).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
+    expect(thread(saved.tasks[0]).map((c) => c.body.trim())).toContain('From stdin');
   });
 
   it('7. removes a Stage with --move-to', async () => {
@@ -215,7 +221,7 @@ describe('end-to-end scenario', () => {
     expect(sortByKey(await json('stories', 'list'))).toEqual(sortByKey(webStories));
     expect(sortByKey(await json('stories', 'list', '--all-boards'))).toEqual(sortByKey(allStories));
     expect(await json('tasks', 'list', 'WEB-2')).toEqual(signup.tasks);
-    expect(await json('comments', 'list', 'WEB-2')).toEqual(signup.comments);
-    expect(await json('comments', 'list', 'WEB-2.1')).toEqual(signup.tasks[0]?.comments);
+    expect(await json('comments', 'list', 'WEB-2')).toEqual(thread(signup));
+    expect(await json('comments', 'list', 'WEB-2.1')).toEqual(thread(signup.tasks[0]));
   });
 });

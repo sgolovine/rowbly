@@ -53,7 +53,6 @@ async function seed(stages: Stage[] = FOUR_STAGES) {
     name: `Task ${n}`,
     description: '',
     stage,
-    comments: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   });
@@ -384,12 +383,12 @@ describe('board view', () => {
     await vi.waitFor(async () => expect((await story(t, 'WEB-2')).stage).toBe('done'));
     await click(at('Signup form'));
     await click(at('Signup form'));
-    await waitForFrame(app, 'Comments');
+    await waitForFrame(app, ' Tasks ');
     await tick(200);
-    await click(at(' Comments '));
-    await waitForFrame(app, 'No Comments yet');
     await click(at(' Tasks '));
     await waitForFrame(app, 'No Tasks yet');
+    await click(at(' Details '));
+    await waitForFrame(app, (f) => /Updated\s+20/.test(f));
     app.unmount();
   });
 

@@ -32,9 +32,6 @@ export const PLUGIN_OPTION_COMMANDS: readonly PluginOptionCommand[] = [
   'tasks edit',
   'tasks move',
   'tasks delete',
-  'comments add',
-  'comments edit',
-  'comments delete',
 ];
 
 export function registerPlugins(program: Command): void {

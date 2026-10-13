@@ -70,7 +70,6 @@ export function StoryTasksTab({ storyKey }: StoryTasksTabProps) {
           rows={tasks.map((t) => (
             <Text key={t.id}>
               <Text color="cyan">{t.id}</Text> {t.name} <StoryStage stages={stages} story={t} />
-              {t.comments.length > 0 && <Text dimColor> · {plural(t.comments.length, 'Comment')}</Text>}
             </Text>
           ))}
         />
@@ -93,7 +92,7 @@ export function StoryTasksTab({ storyKey }: StoryTasksTabProps) {
       )}
       {mode === 'confirm-delete' && task && (
         <ConfirmDialog
-          message={`Delete ${task.id} "${task.name}" with its Comments?`}
+          message={`Delete ${task.id} "${task.name}"?`}
           confirmLabel="Delete"
           cancelLabel="Cancel"
           destructive
@@ -103,8 +102,4 @@ export function StoryTasksTab({ storyKey }: StoryTasksTabProps) {
       )}
     </Box>
   );
-}
-
-function plural(n: number, noun: string): string {
-  return `${n} ${noun}${n === 1 ? '' : 's'}`;
 }

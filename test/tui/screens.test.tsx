@@ -11,7 +11,6 @@ describe('screen registry', () => {
         'board-detail',
         'board-form',
         'boards',
-        'comment-form',
         'context',
         'demo',
         'doctor',

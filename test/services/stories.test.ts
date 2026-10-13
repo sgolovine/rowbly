@@ -42,7 +42,6 @@ describe('stories.create', () => {
       createdBy: 'alice',
       nextTaskNumber: 1,
       tasks: [],
-      comments: [],
       customFields: {},
       createdAt: '2026-10-12T17:21:07.000Z',
     });

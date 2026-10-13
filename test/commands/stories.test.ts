@@ -193,7 +193,6 @@ describe('rowbly stories', () => {
           name: 'A',
           description: '',
           stage: 'done',
-          comments: [],
           createdAt: '2026-10-12T17:21:07.000Z',
           updatedAt: '2026-10-12T17:21:07.000Z',
         },
@@ -202,7 +201,6 @@ describe('rowbly stories', () => {
           name: 'B',
           description: '',
           stage: 'todo',
-          comments: [],
           createdAt: '2026-10-12T17:21:07.000Z',
           updatedAt: '2026-10-12T17:21:07.000Z',
         },
@@ -217,7 +215,6 @@ describe('rowbly stories', () => {
     expect(human.stdout).toMatch(/Estimate: +5/);
     expect(human.stdout).toContain('The **login** page');
     expect(human.stdout).toContain('Tasks: 1/2 done');
-    expect(human.stdout).toContain('Comments: 0');
   });
 
   it('edit applies replace, add/remove, --no-* and field flags', async () => {

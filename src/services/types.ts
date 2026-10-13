@@ -3,7 +3,6 @@
 import type {
   Assignee,
   BoardConfig,
-  Comment,
   ConfigLevel,
   CustomFieldDef,
   CustomFieldInput,
@@ -21,7 +20,6 @@ import type {
   Story,
   StoryKey,
   Task,
-  TaskId,
 } from '../schemas';
 import type { PluginHost, PluginStatus } from './plugins/host';
 import type { PluginContext } from './plugins/types';
@@ -333,14 +331,6 @@ export interface TasksService {
   remove(taskId: string, opts?: OperationOptions): Promise<void>;
 }
 
-/** `target` is a Story Key or a Task id (case-insensitive). */
-export interface CommentsService {
-  list(target: StoryKey | TaskId): Promise<Comment[]>;
-  add(target: StoryKey | TaskId, body: string, opts?: OperationOptions): Promise<Comment>;
-  update(target: StoryKey | TaskId, id: string, body: string, opts?: OperationOptions): Promise<Comment>;
-  remove(target: StoryKey | TaskId, id: string, opts?: OperationOptions): Promise<void>;
-}
-
 export interface DoctorService {
   check(): Promise<DoctorReport>;
   fix(): Promise<DoctorReport>;
@@ -370,7 +360,6 @@ export interface Services {
   fields: FieldsService;
   stories: StoriesService;
   tasks: TasksService;
-  comments: CommentsService;
   doctor: DoctorService;
   plugins: PluginsService;
 }

@@ -8,6 +8,7 @@ export { z } from 'zod';
 export {
   ConflictError,
   isSlug,
+  isTaskId,
   NotFoundError,
   parseStoryKey,
   RowblyError,
@@ -19,7 +20,6 @@ export { colors, renderTable } from '../output';
 export type {
   Assignee,
   BoardConfig,
-  Comment,
   CustomFieldDef,
   CustomFieldValue,
   EffectiveBoardConfig,
@@ -81,6 +81,7 @@ export type {
   PluginStoryFilter,
   PluginStoryForm,
   PluginStoryTabProps,
+  PluginTaskTabProps,
   PluginTui,
   PluginUi,
   ReactEvent,

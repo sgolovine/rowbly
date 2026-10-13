@@ -25,7 +25,7 @@ The permanent, human-typeable identifier of a Story, made of its Board's key pre
 _Avoid_: story id, story slug
 
 **Task**:
-A smaller unit of work inside exactly one Story, with its own title, description, Stage and Comments; it has no Assignees of its own and belongs to the Story's Assignees.
+A smaller unit of work inside exactly one Story, with its own title, description and Stage; it has no Assignees of its own and belongs to the Story's Assignees.
 _Avoid_: sub-task, subtask, checklist item
 
 **Priority**:
@@ -35,10 +35,6 @@ _Avoid_: severity, importance
 **Label**:
 A free-form lower-kebab-case tag on a Story.
 _Avoid_: tag, category
-
-**Comment**:
-A note attached to a Story or a Task.
-_Avoid_: reply, note
 
 ### Board configuration
 
@@ -69,7 +65,7 @@ A person in the Data Root's roster (in `rowbly.config.json`) who can be assigned
 _Avoid_: user, owner, member
 
 **Me**:
-The Assignee handle the local developer has claimed with `rowbly whoami`, used as Comment author and Story creator.
+The Assignee handle the local developer has claimed with `rowbly whoami`, used as Story creator and by Plugins that record who did something.
 _Avoid_: current user, login
 
 **Local State**:
@@ -87,7 +83,7 @@ A Plugin that ships as part of Rowbly itself.
 _Avoid_: first-party plugin, official plugin, core plugin
 
 **Plugin Data**:
-The values a Plugin keeps under its own name on the Data Root, a Board, Story, Task, Comment or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
+The values a Plugin keeps under its own name on the Data Root, a Board, Story, Task or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
 _Avoid_: custom data, extension data
 
 **Action**:

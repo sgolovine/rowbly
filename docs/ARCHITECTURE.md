@@ -16,7 +16,6 @@
 - Each story contains the following:
   - Name
   - Description
-  - Comments
   - Custom Fields
   - Stage
 

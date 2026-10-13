@@ -43,7 +43,6 @@ describe('tasks.create', () => {
       name: 'Write tests',
       description: '',
       stage: 'backlog',
-      comments: [],
       createdAt: '2026-10-12T17:22:07.000Z',
       updatedAt: '2026-10-12T17:22:07.000Z',
     });

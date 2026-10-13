@@ -46,7 +46,6 @@ const COMMAND_GROUPS = [
   'fields',
   'stories',
   'tasks',
-  'comments',
   'doctor',
 ];
 

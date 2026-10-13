@@ -8,8 +8,6 @@ Rowbly is setup as a Kanban. Here are the core concepts:
 
 **Story / Stories**: The main things that go on the board. Tracked via **Stages** on a **Board**. Contains **Sub-Tasks**
 
-**Comment(s)**: Linked to each story. Part of a Board.
-
 **Custom Fields**: Scoped to boards, go onto all stories of a board. 
 
 **Task(s)**: Optional sub-items that slot below Stories.

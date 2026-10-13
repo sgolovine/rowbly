@@ -210,6 +210,7 @@ function pluginContext(
       return ctx.me;
     },
     now: () => ctx.now(),
+    newId: () => ctx.newId(),
   };
 }
 

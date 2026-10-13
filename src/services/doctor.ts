@@ -440,11 +440,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     for (const story of valid.stories) {
       const file = storyPath(story);
       bagsSeen(story, file);
-      for (const task of story.tasks) {
-        bagsSeen(task, file);
-        for (const comment of task.comments) bagsSeen(comment, file);
-      }
-      for (const comment of story.comments) bagsSeen(comment, file);
+      for (const task of story.tasks) bagsSeen(task, file);
     }
     bagsSeen(local.state, 'local.json');
     findings.push(...(await pluginFindings(valid, local.state, pluginData)));
@@ -531,13 +527,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       for (const story of data.stories) {
         const file = storyPath(story);
         check(bags.story, story.plugins?.[id], file, story.key);
-        for (const comment of story.comments)
-          check(bags.comment, comment.plugins?.[id], file, `${story.key} Comment ${comment.id}`);
-        for (const task of story.tasks) {
-          check(bags.task, task.plugins?.[id], file, task.id);
-          for (const comment of task.comments)
-            check(bags.comment, comment.plugins?.[id], file, `${task.id} Comment ${comment.id}`);
-        }
+        for (const task of story.tasks) check(bags.task, task.plugins?.[id], file, task.id);
       }
       if (!doctor) continue;
       const context = ops.context(id);

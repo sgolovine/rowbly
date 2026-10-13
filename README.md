@@ -2,7 +2,7 @@
 
 A developer-focused, file-backed Kanban tracker for the terminal.
 
-Rowbly keeps Boards, Stories, Tasks and Comments as pretty-printed JSON files in a `.rowbly/` folder, so a small team can keep its tracker inside a code repository and share it through git, with no server and no database. Use it in two ways, with the same features in both:
+Rowbly keeps Boards, Stories and Tasks as pretty-printed JSON files in a `.rowbly/` folder, so a small team can keep its tracker inside a code repository and share it through git, with no server and no database. Use it in two ways, with the same features in both:
 
 - `rowbly` with no command opens a full-screen interactive app (the TUI) with a Kanban board, detail views and forms.
 - `rowbly <noun> <verb> …` runs one command and exits, for scripts and quick edits. Every list and show command has `--json` output.
@@ -30,7 +30,7 @@ rowbly stories create --name "Login page" --priority P1
 rowbly                               # open the board in the TUI
 ```
 
-`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` after `rowbly assignees add <handle> --name <name>` to set Me, the author of your Stories and Comments.
+`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` after `rowbly assignees add <handle> --name <name>` to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
 
 ## Concepts
 
@@ -38,7 +38,7 @@ The exact meaning of each term is in [`CONTEXT.md`](CONTEXT.md). In short:
 
 - A **Data Root** (`.rowbly/`) holds everything: **Boards** and one **Assignee** roster.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
-- A Story has a name, a markdown description, Assignees, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, embedded **Tasks** (`WEB-42.1`) and **Comments**.
+- A Story has a name, a markdown description, Assignees, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, and embedded **Tasks** (`WEB-42.1`).
 - Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`.
 - **Me** is the Assignee you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
 - **Plugins** add optional features; a Data Root turns each one on or off for everyone who uses it. See [Plugins](#plugins).
@@ -57,7 +57,7 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
     board.config.json                # name, key prefix, optional Stages / Custom Fields
     plugins/<id>/                    # files of a Plugin, for this Board
     stories/<KEY>/
-      story.json                     # one Story with its Tasks and Comments
+      story.json                     # one Story with its Tasks
       plugins/<id>/                  # files of a Plugin, for this Story
 ```
 
@@ -91,7 +91,7 @@ A Board uses the most specific level that defines the list; the lists are not me
 
 `ROWBLY_BOARD` stands in for `--board`. Colour follows `NO_COLOR` and `FORCE_COLOR`. A command asks for a missing value (or a confirmation) only when stdin and stdout are terminals and neither `--json` nor `--no-prompt` is given; otherwise it exits 2, and destructive commands need `--yes`.
 
-Long text such as a description takes `--description <text>`, `--description-file <path>` (`-` reads stdin) or `--edit`, which opens `$VISUAL` or `$EDITOR` (fallback `vi`). Comments take `--body`, `--body-file` and `--edit` in the same way. Repeatable flags such as `--assignee`, `--label` and `--field key=value` may also be comma-separated.
+Long text such as a description takes `--description <text>`, `--description-file <path>` (`-` reads stdin) or `--edit`, which opens `$VISUAL` or `$EDITOR` (fallback `vi`). Repeatable flags such as `--assignee`, `--label` and `--field key=value` may also be comma-separated.
 
 ## Command reference
 
@@ -250,11 +250,13 @@ rowbly tasks delete <TASK-ID>                        # confirms; pass --yes when
 - Tasks have no Assignees of their own; `show` displays the Story's Assignees.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects: an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
-- In the TUI, a Story's **Tasks** tab and the Task detail both edit (`e`), move (`m`) and delete (`d`) a Task. The Task detail keeps its Comments on a second tab.
+- In the TUI, a Story's **Tasks** tab and the Task detail both edit (`e`), move (`m`) and delete (`d`) a Task.
 <!-- END tasks -->
 
 <!-- BEGIN comments -->
 ### Comments
+
+Comments are a Built-in Plugin: run `rowbly plugins enable comments` first.
 
 ```text
 rowbly comments list <KEY|TASK-ID>
@@ -268,6 +270,8 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; pass --yes when 
 - The body comes from exactly one of `--body`, `--body-file` (`-` reads stdin) or `--edit` (`$VISUAL`/`$EDITOR`, fallback `vi`). Without any of them, an interactive run asks for the body; otherwise the command exits 2. An empty body exits 2.
 - `list` shows Comments oldest first. `edit` updates the Comment's `updatedAt`.
 - `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
+- Comments are stored as Plugin Data on their Story or Task (`"plugins": { "comments": { "comments": [ … ] } }`). `stories show` and `tasks show` count them.
+- In the TUI, the Story screen and the Task screen each get a **Comments** tab: `c` add, `e` edit (both open the Comment form), `d` delete.
 <!-- END comments -->
 
 <!-- BEGIN doctor -->
@@ -320,7 +324,7 @@ rowbly plugins disable <id>    # keeps its settings and data
 ```
 
 - A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). `rowbly init` turns no Plugins on. A change takes effect the next time Rowbly runs.
-- A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
+- A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show` and `tasks show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
 - A Plugin that fails to load (it throws while it starts, its settings are invalid, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning on every run, and `doctor` reports it.
 - A Plugin can refuse a change (exit 4). If a Plugin fails while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, both errors carry `details.plugin`.
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
@@ -345,7 +349,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions and Comments are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
 ### Keys per screen
 
@@ -353,10 +357,9 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 | --- | --- |
 | Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
-| Story | `tab`/`←`/`→` switch between Details, Tasks and Comments, `e` edit, `m` move to a Stage, `d` delete |
+| Story | `tab`/`←`/`→` switch between Details, Tasks and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
-| Task | `tab`/`←`/`→` switch between Details and Comments, `e` edit, `m` move to a Stage, `d` delete |
-| Story or Task › Comments | `c` add, `e` edit (both open the Comment form), `d` delete |
+| Task | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
@@ -366,7 +369,7 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board, Story or Task they act on is in focus.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story and Task screens, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board, Story or Task they act on is in focus.
 <!-- END tui -->
 
 ## Exit codes

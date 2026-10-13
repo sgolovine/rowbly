@@ -112,7 +112,6 @@ describe('doctor service', () => {
           name: 'T',
           description: '',
           stage: 'nope',
-          comments: [],
           createdAt: '2026-10-12T17:21:07.000Z',
           updatedAt: '2026-10-12T17:21:07.000Z',
         },

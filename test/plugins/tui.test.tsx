@@ -73,7 +73,7 @@ describe('Plugin slots in the TUI', () => {
     await app.press('?');
     expect(await waitForFrame(app, 'Keys')).toMatch(/Z\s+Note/);
     await app.press(KEYS.escape);
-    await app.press(KEYS.tab, KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab, KEYS.tab);
     await waitForFrame(app, 'Tab note: hello');
     await app.press('Z');
     frame = await waitForFrame(app, 'Note of WEB-1: hello');
