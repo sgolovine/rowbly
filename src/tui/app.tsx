@@ -191,7 +191,16 @@ function Shell({ screens }: { screens: ScreenRegistry }) {
                 </Box>
               )}
               {depth > 0 && top && (
-                <Box display={screenHidden ? 'none' : 'flex'} flexDirection="column">
+                // Pinned to the top of the main area so the Modal centres there rather than below
+                // the root screen's content.
+                <Box
+                  display={screenHidden ? 'none' : 'flex'}
+                  flexDirection="column"
+                  position={fullscreen ? 'absolute' : 'relative'}
+                  top={0}
+                  left={0}
+                  width="100%"
+                >
                   <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
                     {router.stack.slice(1).map((route, i) => (
                       <ScreenSlot

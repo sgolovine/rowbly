@@ -94,8 +94,18 @@ export function Modal({ title, hints, size = 'panel', maxWidth = 96, children }:
     </Box>
   );
   if (!overlay) return <Box alignSelf="flex-start">{frame}</Box>;
+  // An absolute box is placed in its direct parent, which may be only as tall as its content (a
+  // Board with no Stories), so the height is the known room rather than `100%` of the parent.
   return (
-    <Box position="absolute" top={0} left={0} width="100%" height="100%" justifyContent="center" alignItems="center">
+    <Box
+      position="absolute"
+      top={0}
+      left={0}
+      width="100%"
+      height={outer.height}
+      justifyContent="center"
+      alignItems="center"
+    >
       {frame}
     </Box>
   );
