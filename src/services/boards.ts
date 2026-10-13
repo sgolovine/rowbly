@@ -1,68 +1,81 @@
 import { ConflictError, NotFoundError, toTimestamp, ValidationError } from '../core';
 import { type BoardConfig, BoardConfigSchema, type Slug } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
+import type { OperationRunner } from './plugins/runtime';
 import type { BoardsService, RowblyContext } from './types';
 
-export function createBoardsService(ctx: RowblyContext, repos: Repositories): BoardsService {
+export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): BoardsService {
   return {
     list: () => repos.boards.list(),
 
     get: (id) => repos.boards.get(id),
 
-    async create(input) {
-      const now = toTimestamp(ctx.now());
-      const board = parseBoard({
-        version: 1,
-        id: input.id,
-        name: input.name,
-        description: input.description ?? '',
-        keyPrefix: input.keyPrefix.toUpperCase(),
-        createdAt: now,
-        updatedAt: now,
-      });
-      if (await exists(board.id)) {
-        throw new ConflictError(`Board "${board.id}" already exists`);
-      }
-      const holder = await repos.boards.findByPrefix(board.keyPrefix);
-      if (holder) {
-        throw new ConflictError(`key prefix "${board.keyPrefix}" is already used by Board "${holder.id}"`, {
-          hint: 'key prefixes are unique across the Data Root; choose another --prefix',
-        });
-      }
-      // Stages and Custom Fields are inherited until a level is edited (copy-on-write).
-      await repos.boards.put(board);
-      return board;
-    },
-
-    async update(id, patch) {
-      const board = await repos.boards.get(id);
-      const next = parseBoard({
-        ...board,
-        ...(patch.name !== undefined ? { name: patch.name } : {}),
-        ...(patch.description !== undefined ? { description: patch.description } : {}),
-        updatedAt: toTimestamp(ctx.now()),
-      });
-      await repos.boards.put(next);
-      return next;
-    },
-
-    async remove(id, { force }) {
-      const board = await repos.boards.get(id);
-      if (!force) {
-        const stories = await repos.stories.allInBoard(board.id);
-        if (stories.length > 0) {
-          throw new ConflictError(`Board "${board.id}" has ${stories.length} Stories`, {
-            details: { stories: stories.length },
-            hint: 'pass --force to delete it with all its Stories',
+    create: (input) =>
+      ops.run(
+        'boards.create',
+        input,
+        async (changes) => {
+          const now = toTimestamp(ctx.now());
+          const board = parseBoard({
+            version: 1,
+            id: input.id,
+            name: input.name,
+            description: input.description ?? '',
+            keyPrefix: input.keyPrefix.toUpperCase(),
+            createdAt: now,
+            updatedAt: now,
           });
+          if (await exists(board.id)) {
+            throw new ConflictError(`Board "${board.id}" already exists`);
+          }
+          const holder = await repos.boards.findByPrefix(board.keyPrefix);
+          if (holder) {
+            throw new ConflictError(`key prefix "${board.keyPrefix}" is already used by Board "${holder.id}"`, {
+              hint: 'key prefixes are unique across the Data Root; choose another --prefix',
+            });
+          }
+          // Stages and Custom Fields are inherited until a level is edited (copy-on-write).
+          return changes.putBoard(board);
+        },
+        (changes, board) => changes.board(board.id)?.after ?? board,
+      ),
+
+    update: (id, patch) =>
+      ops.run(
+        'boards.update',
+        { id, ...patch },
+        async (changes) => {
+          const board = await repos.boards.get(id);
+          return changes.putBoard(
+            parseBoard({
+              ...board,
+              ...(patch.name !== undefined ? { name: patch.name } : {}),
+              ...(patch.description !== undefined ? { description: patch.description } : {}),
+              updatedAt: toTimestamp(ctx.now()),
+            }),
+          );
+        },
+        (changes, board) => changes.board(board.id)?.after ?? board,
+      ),
+
+    async remove(id, opts) {
+      const board = await repos.boards.get(id);
+      const local = await ops.run('boards.remove', { ...opts, id: board.id }, async (changes) => {
+        if (!opts.force) {
+          const stories = await repos.stories.allInBoard(board.id);
+          if (stories.length > 0) {
+            throw new ConflictError(`Board "${board.id}" has ${stories.length} Stories`, {
+              details: { stories: stories.length },
+              hint: 'pass --force to delete it with all its Stories',
+            });
+          }
         }
-      }
-      await repos.boards.delete(board.id);
-      if (ctx.local.board === board.id) {
-        const { board: _current, ...rest } = ctx.local;
-        await repos.localState.put(rest);
-        ctx.local = rest;
-      }
+        // Its folder goes with it: Stories and Plugin files too (ADR-0013).
+        await changes.deleteBoard(board.id);
+        if (ctx.local.board !== board.id) return null;
+        return changes.updateLocalState(({ board: _current, ...rest }) => rest);
+      });
+      if (local) ctx.local = local;
     },
   };
 

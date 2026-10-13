@@ -3,11 +3,21 @@ import { useState } from 'react';
 import type { Stage } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { Form, type FormValues, Loading } from '../../components';
-import { useAsync, useIsActive, useKeyCapture, useKeyHints, useRowblyContext, useServices } from '../../hooks';
+import {
+  useActionFocus,
+  useAsync,
+  useIsActive,
+  useKeyCapture,
+  useKeyHints,
+  usePlugins,
+  useRowblyContext,
+  useServices,
+} from '../../hooks';
 import { useRouter } from '../../router';
 import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenProps } from '../types';
 import { describeFilters, filterFields, filterInitialValues, toFilter } from './filter';
+import { describeWithPlugins, storyFilterFields, withPluginFilters } from './pluginFields';
 import { boardIdFor, StoryStage, useReloadOnReturn } from './shared';
 
 /**
@@ -22,11 +32,13 @@ export function StoryListScreen({ params }: ScreenProps) {
   const [filters, setFilters] = useState<FormValues>({});
   const [filtering, setFiltering] = useState(false);
   const [allBoards, setAllBoards] = useState(false);
+  const { plugins } = usePlugins();
   const scope = useAsync(async () => {
     const boardId = await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
-    return { boardId, choices: await storyChoices(ctx, boardId) };
-  }, [services, ctx, params.boardId]);
+    const extra = await storyFilterFields(plugins, services, boardId);
+    return { boardId, choices: await storyChoices(ctx, boardId), extra };
+  }, [services, ctx, params.boardId, plugins]);
   // Every Board's Stages and Labels, only while showing all Boards.
   const everyBoard = useAsync(async () => {
     if (!allBoards || !scope.data) return null;
@@ -43,12 +55,14 @@ export function StoryListScreen({ params }: ScreenProps) {
   }, [services, scope.data, allBoards]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
-    return services.stories.list(allBoards ? null : scope.data.boardId, toFilter(filters));
-  }, [services, scope.data, filters, allBoards]);
+    const filter = withPluginFilters(toFilter(filters), plugins, filters);
+    return services.stories.list(allBoards ? null : scope.data.boardId, filter);
+  }, [services, scope.data, filters, allBoards, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   const stories = list.data ?? [];
   const [cursor] = useCursor(stories.length, active && !filtering);
+  useActionFocus({ story: stories[cursor] });
 
   useKeyCapture(active && filtering, { escape: true });
   useEscape(active && filtering, () => setFiltering(false));
@@ -80,13 +94,13 @@ export function StoryListScreen({ params }: ScreenProps) {
   );
 
   if (!scope.data) return scope.loading ? <Loading label="Loading Stories…" /> : <Text color="red">No Board.</Text>;
-  const { boardId, choices } = scope.data;
+  const { boardId, choices, extra } = scope.data;
   const boards = allBoards ? everyBoard.data : null;
   const stagesOf = new Map<string, readonly Stage[]>(
     boards ? boards.map((b) => [b.boardId, b.stages]) : [[boardId, choices.stages]],
   );
   const unique = (values: string[]) => [...new Set(values)];
-  const summary = describeFilters(filters);
+  const summary = describeWithPlugins(describeFilters(filters), plugins, filters);
   const boardWidth = Math.max(0, ...stories.map((s) => s.boardId.length));
 
   return (
@@ -119,13 +133,16 @@ export function StoryListScreen({ params }: ScreenProps) {
         <Box flexDirection="column">
           <Text bold>Filter Stories</Text>
           <Form
-            fields={filterFields({
-              // Across Boards, any Stage key or Label of any Board, like `--stage` with `--all-boards`.
-              stages: unique([...stagesOf.values()].flatMap((stages) => stages.map((s) => s.key))),
-              assignees: choices.assignees.map((a) => a.handle),
-              labels: boards ? unique(boards.flatMap((b) => b.labels)).sort() : choices.labels,
-            })}
-            initialValues={filterInitialValues(filters)}
+            fields={[
+              ...filterFields({
+                // Across Boards, any Stage key or Label of any Board, like `--stage` with `--all-boards`.
+                stages: unique([...stagesOf.values()].flatMap((stages) => stages.map((s) => s.key))),
+                assignees: choices.assignees.map((a) => a.handle),
+                labels: boards ? unique(boards.flatMap((b) => b.labels)).sort() : choices.labels,
+              }),
+              ...extra.fields,
+            ]}
+            initialValues={{ ...extra.values, ...filterInitialValues(filters) }}
             onSubmit={(values) => {
               setFilters(values);
               setFiltering(false);

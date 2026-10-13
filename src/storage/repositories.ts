@@ -13,7 +13,7 @@ import {
   type StoryKey,
   StorySchema,
 } from '../schemas';
-import { listEntries, readJson, remove, writeJson } from './jsonStore';
+import { exists, listEntries, readJson, remove, writeJson } from './jsonStore';
 import { paths } from './paths';
 
 export interface RootConfigRepository {
@@ -113,11 +113,10 @@ export function createRepositories(root: DataRoot): Repositories {
   }
 
   async function storyKeysInBoard(board: Slug): Promise<StoryKey[]> {
-    const files = await listEntries(p.storiesDir(board), 'file');
-    return files
-      .filter((name) => name.endsWith('.json'))
-      .map((name) => name.slice(0, -'.json'.length))
-      .filter((key) => STORY_KEY_RE.test(key));
+    const keys = (await listEntries(p.storiesDir(board), 'directory')).filter((key) => STORY_KEY_RE.test(key));
+    // A Story folder without its `story.json` is not part of the layout; skip it.
+    const present = await Promise.all(keys.map((key) => exists(p.story(board, key))));
+    return keys.filter((_, i) => present[i]);
   }
 
   const stories: StoryRepository = {
@@ -137,7 +136,7 @@ export function createRepositories(root: DataRoot): Repositories {
     },
     async delete(board, key) {
       if (!STORY_KEY_RE.test(key)) throw storyNotFound(key);
-      await rethrowNotFound(remove(p.story(board, key)), () => storyNotFound(key));
+      await rethrowNotFound(remove(p.storyDir(board, key)), () => storyNotFound(key));
     },
     async maxNumber(board) {
       const { keyPrefix } = await boards.get(board);

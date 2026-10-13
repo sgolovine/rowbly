@@ -70,7 +70,7 @@ describe('rowbly stories', () => {
       customFields: { estimate: 3 },
       description: 'Some *markdown*',
     });
-    expect(await readdir(`${t.path}/boards/web/stories`)).toEqual(['WEB-1.json']);
+    expect(await readdir(`${t.path}/boards/web/stories`)).toEqual(['WEB-1']);
   });
 
   it('exits 2 for an unknown Assignee and lists the valid handles in details', async () => {
@@ -113,7 +113,7 @@ describe('rowbly stories', () => {
     expect((await cli('stories', 'rank', 'WEB-3', '--before', 'WEB-1')).exitCode).toBe(0);
     const list = await cli('stories', 'list', '--json');
     expect(JSON.parse(list.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-3', 'WEB-1', 'WEB-2']);
-    expect(git('diff', '--name-only').trim()).toBe('.rowbly/boards/web/stories/WEB-3.json');
+    expect(git('diff', '--name-only').trim()).toBe('.rowbly/boards/web/stories/WEB-3/story.json');
     expect((await cli('stories', 'rank', 'WEB-3')).exitCode).toBe(2);
     expect((await cli('stories', 'rank', 'WEB-3', '--top', '--bottom')).exitCode).toBe(2);
   });

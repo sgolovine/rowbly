@@ -61,12 +61,12 @@ describe('doctor service', () => {
   it('reports schema failures, bad JSON and id/path mismatches', async () => {
     const { doctor, story, write } = await setup();
     await story('WEB-1');
-    await write(`${BOARD}/stories/WEB-1.json`, '{ "version": 1, "key": "WEB-1" }\n');
+    await write(`${BOARD}/stories/WEB-1/story.json`, '{ "version": 1, "key": "WEB-1" }\n');
     await write(`${BOARD}/board.config.json`, '{ nope');
     const report = await doctor.check();
     const byPath = Object.fromEntries(report.findings.map((f) => [f.path, f]));
-    expect(byPath[`${BOARD}/stories/WEB-1.json`]).toMatchObject({ code: 'SCHEMA_INVALID', severity: 'error' });
-    expect(byPath[`${BOARD}/stories/WEB-1.json`]?.details?.issues).toBeInstanceOf(Array);
+    expect(byPath[`${BOARD}/stories/WEB-1/story.json`]).toMatchObject({ code: 'SCHEMA_INVALID', severity: 'error' });
+    expect(byPath[`${BOARD}/stories/WEB-1/story.json`]?.details?.issues).toBeInstanceOf(Array);
     expect(byPath[`${BOARD}/board.config.json`]).toMatchObject({
       code: 'SCHEMA_INVALID',
       message: 'file is not valid JSON',
@@ -76,12 +76,12 @@ describe('doctor service', () => {
   it('reports a Story whose key or Board does not match its path', async () => {
     const { doctor, story, write } = await setup();
     const s = await story('WEB-1');
-    await write(`${BOARD}/stories/WEB-7.json`, JSON.stringify({ ...s, key: 'WEB-8' }));
-    await write(`${BOARD}/stories/WEB-9.json`, JSON.stringify({ ...s, key: 'WEB-9', boardId: 'api' }));
+    await write(`${BOARD}/stories/WEB-7/story.json`, JSON.stringify({ ...s, key: 'WEB-8' }));
+    await write(`${BOARD}/stories/WEB-9/story.json`, JSON.stringify({ ...s, key: 'WEB-9', boardId: 'api' }));
     const report = await doctor.check();
     expect(report.findings).toEqual([
-      expect.objectContaining({ code: 'ID_PATH_MISMATCH', path: `${BOARD}/stories/WEB-7.json`, fixable: false }),
-      expect.objectContaining({ code: 'ID_PATH_MISMATCH', path: `${BOARD}/stories/WEB-9.json`, fixable: false }),
+      expect.objectContaining({ code: 'ID_PATH_MISMATCH', path: `${BOARD}/stories/WEB-7/story.json`, fixable: false }),
+      expect.objectContaining({ code: 'ID_PATH_MISMATCH', path: `${BOARD}/stories/WEB-9/story.json`, fixable: false }),
     ]);
   });
 
@@ -138,7 +138,7 @@ describe('doctor service', () => {
       tasks: [{ ...taskFixture('WEB-4.1') }],
     };
     // `theirs` is the earlier Story here, so the order of the sides must not matter.
-    await write(`${BOARD}/stories/WEB-4.json`, conflictText(second, first));
+    await write(`${BOARD}/stories/WEB-4/story.json`, conflictText(second, first));
     expect(await codes(doctor)).toEqual(['STORY_KEY_CONFLICT']);
 
     clock.set('2026-10-13T00:00:00.000Z');
@@ -146,7 +146,7 @@ describe('doctor service', () => {
     expect(report.fixed).toEqual([
       {
         code: 'STORY_KEY_CONFLICT',
-        path: `${BOARD}/stories/WEB-4.json`,
+        path: `${BOARD}/stories/WEB-4/story.json`,
         message: 'kept WEB-4 ("Login") and renumbered "Signup" to WEB-5',
       },
       expect.objectContaining({
@@ -155,9 +155,9 @@ describe('doctor service', () => {
       }),
     ]);
     expect(report.summary).toEqual({ errors: 0, warnings: 0, info: 0 });
-    expect(await storyFiles()).toEqual(['WEB-1.json', 'WEB-2.json', 'WEB-3.json', 'WEB-4.json', 'WEB-5.json']);
-    expect(await read(`${BOARD}/stories/WEB-4.json`)).toEqual(first);
-    const renumbered = await read(`${BOARD}/stories/WEB-5.json`);
+    expect(await storyFiles()).toEqual(['WEB-1', 'WEB-2', 'WEB-3', 'WEB-4', 'WEB-5']);
+    expect(await read(`${BOARD}/stories/WEB-4/story.json`)).toEqual(first);
+    const renumbered = await read(`${BOARD}/stories/WEB-5/story.json`);
     expect(renumbered).toMatchObject({ key: 'WEB-5', name: 'Signup', updatedAt: '2026-10-13T00:00:00.000Z' });
     expect(renumbered.tasks[0].id).toBe('WEB-5.1');
     expect(renumbered.rank > first.rank).toBe(true);
@@ -166,7 +166,7 @@ describe('doctor service', () => {
   it('treats a conflict between two edits of one Story as a manual merge', async () => {
     const { doctor, story, write } = await setup();
     const s = await story('WEB-1');
-    await write(`${BOARD}/stories/WEB-1.json`, conflictText({ ...s, name: 'Ours' }, { ...s, name: 'Theirs' }));
+    await write(`${BOARD}/stories/WEB-1/story.json`, conflictText({ ...s, name: 'Ours' }, { ...s, name: 'Theirs' }));
     const report = await doctor.fix();
     expect(report.fixed).toEqual([]);
     expect(report.findings.map((f) => [f.code, f.fixable])).toEqual([['CONFLICT_MARKERS', false]]);
@@ -175,18 +175,18 @@ describe('doctor service', () => {
   it('fixes duplicate keys by renumbering the Story created later', async () => {
     const { doctor, story, read, write, storyFiles } = await setup();
     const early = await story('WEB-2', { name: 'Early', rank: 'a1', createdAt: '2026-10-01T00:00:00.000Z' });
-    // A later Story sits at WEB-2's path, while the earlier one was copied to WEB-3.json.
+    // A later Story sits at WEB-2's path, while the earlier one was copied to WEB-3's path.
     const late = { ...early, name: 'Late', rank: 'a2', createdAt: '2026-10-02T00:00:00.000Z' };
-    await write(`${BOARD}/stories/WEB-2.json`, JSON.stringify(late));
-    await write(`${BOARD}/stories/WEB-3.json`, JSON.stringify(early));
+    await write(`${BOARD}/stories/WEB-2/story.json`, JSON.stringify(late));
+    await write(`${BOARD}/stories/WEB-3/story.json`, JSON.stringify(early));
     expect(await codes(doctor)).toEqual(['DUPLICATE_KEY']);
 
     const report = await expectFixed(doctor, 'DUPLICATE_KEY');
     expect(report.fixed.map((f) => f.message)).toEqual(['renumbered WEB-2 ("Late") to WEB-4']);
     expect(report.findings).toEqual([]);
-    expect(await storyFiles()).toEqual(['WEB-2.json', 'WEB-4.json']);
-    expect(await read(`${BOARD}/stories/WEB-2.json`)).toMatchObject({ key: 'WEB-2', name: 'Early' });
-    expect(await read(`${BOARD}/stories/WEB-4.json`)).toMatchObject({ key: 'WEB-4', name: 'Late' });
+    expect(await storyFiles()).toEqual(['WEB-2', 'WEB-4']);
+    expect(await read(`${BOARD}/stories/WEB-2/story.json`)).toMatchObject({ key: 'WEB-2', name: 'Early' });
+    expect(await read(`${BOARD}/stories/WEB-4/story.json`)).toMatchObject({ key: 'WEB-4', name: 'Late' });
   });
 
   it('removes unknown Assignees', async () => {
@@ -196,7 +196,7 @@ describe('doctor service', () => {
       expect.objectContaining({ code: 'UNKNOWN_ASSIGNEE', severity: 'warning', fixable: true }),
     ]);
     await expectFixed(doctor, 'UNKNOWN_ASSIGNEE');
-    expect((await read(`${BOARD}/stories/WEB-1.json`)).assignees).toEqual(['sam']);
+    expect((await read(`${BOARD}/stories/WEB-1/story.json`)).assignees).toEqual(['sam']);
   });
 
   it('strips unknown Custom Fields and only reports invalid or missing values', async () => {
@@ -218,7 +218,7 @@ describe('doctor service', () => {
     ]);
     const report = await expectFixed(doctor, 'UNKNOWN_FIELD');
     expect(report.findings.map((f) => f.code)).toEqual(['INVALID_FIELD_VALUE', 'MISSING_REQUIRED_FIELD']);
-    expect((await read(`${BOARD}/stories/WEB-1.json`)).customFields).toEqual({ size: 2.5, team: 'core' });
+    expect((await read(`${BOARD}/stories/WEB-1/story.json`)).customFields).toEqual({ size: 2.5, team: 'core' });
   });
 
   it('moves a task counter that is behind past the highest Task number', async () => {
@@ -226,7 +226,7 @@ describe('doctor service', () => {
     await story('WEB-1', { nextTaskNumber: 2, tasks: [taskFixture('WEB-1.1'), taskFixture('WEB-1.3')] });
     expect(await codes(doctor)).toEqual(['TASK_COUNTER_BEHIND']);
     await expectFixed(doctor, 'TASK_COUNTER_BEHIND');
-    expect((await read(`${BOARD}/stories/WEB-1.json`)).nextTaskNumber).toBe(4);
+    expect((await read(`${BOARD}/stories/WEB-1/story.json`)).nextTaskNumber).toBe(4);
   });
 
   it('re-ranks only the Stories that share a Rank, keeping their order', async () => {
@@ -244,7 +244,7 @@ describe('doctor service', () => {
       }),
     ]);
     await expectFixed(doctor, 'DUPLICATE_RANK');
-    const rank = async (key: string) => (await read(`${BOARD}/stories/${key}.json`)).rank as string;
+    const rank = async (key: string) => (await read(`${BOARD}/stories/${key}/story.json`)).rank as string;
     expect(await rank('WEB-2')).toBe('a1');
     const third = await rank('WEB-3');
     expect('a1' < third && third < 'a2').toBe(true);

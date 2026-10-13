@@ -1,7 +1,7 @@
 // Raw access to the Data Root for `doctor`, which must see the files that repositories skip
 // (unknown files, conflict markers, id/path mismatches) instead of failing on them.
-import { readdir, readFile, rm } from 'node:fs/promises';
-import { join, sep } from 'node:path';
+import { readdir, readFile, rm, rmdir } from 'node:fs/promises';
+import { dirname, join, sep } from 'node:path';
 import type { DataRoot } from '../schemas';
 
 /** Every file under the Data Root, as sorted `/`-separated paths relative to it. */
@@ -23,7 +23,16 @@ export function readDataRootFile(root: DataRoot, relPath: string): Promise<strin
   return readFile(join(root.path, relPath), 'utf8');
 }
 
-/** Deletes a file by its path relative to the Data Root; a missing file is not an error. */
+/**
+ * Deletes a file by its path relative to the Data Root, and its folder when that is left empty.
+ * A missing file is not an error.
+ */
 export async function removeDataRootFile(root: DataRoot, relPath: string): Promise<void> {
-  await rm(join(root.path, relPath), { force: true });
+  const path = join(root.path, relPath);
+  await rm(path, { force: true });
+  try {
+    await rmdir(dirname(path));
+  } catch {
+    // The folder still holds other files (or is already gone); keep it.
+  }
 }

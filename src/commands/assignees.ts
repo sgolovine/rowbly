@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colors, printResult, renderTable } from '../output';
 import type { Assignee } from '../schemas';
-import { promptIfMissing, withContext } from './_shared';
+import { pluginOptions, promptIfMissing, withContext } from './_shared';
 
 interface AssigneeFlags {
   name?: string;
@@ -43,7 +43,7 @@ export function registerAssignees(program: Command): void {
     .action((handle: string, opts: AssigneeFlags, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Assignee name' });
-        const assignee = await services.assignees.add({ handle, name, email: opts.email });
+        const assignee = await services.assignees.add({ handle, name, email: opts.email, ...pluginOptions(cmd) });
         printResult(assignee, { json: globals.json, human: (a) => `Added Assignee ${renderAssignee(a)}` });
       }),
     );
@@ -55,11 +55,12 @@ export function registerAssignees(program: Command): void {
     .option('--email <email>', 'new email address; an empty value removes it')
     .action((handle: string, opts: AssigneeFlags, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        if (opts.name === undefined && opts.email === undefined) {
+        const plugins = pluginOptions(cmd);
+        if (opts.name === undefined && opts.email === undefined && !plugins.plugins) {
           throw new UsageError('nothing to change', { hint: 'pass --name or --email' });
         }
         const email = opts.email === undefined ? undefined : opts.email || null;
-        const assignee = await services.assignees.update(handle, { name: opts.name, email });
+        const assignee = await services.assignees.update(handle, { name: opts.name, email, ...plugins });
         printResult(assignee, { json: globals.json, human: (a) => `Updated Assignee ${renderAssignee(a)}` });
       }),
     );
@@ -69,7 +70,7 @@ export function registerAssignees(program: Command): void {
     .description('Remove an Assignee from the roster and from every Story')
     .action((handle: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const result = await services.assignees.remove(handle);
+        const result = await services.assignees.remove(handle, pluginOptions(cmd));
         printResult({ removed: handle, ...result }, { json: globals.json, human: () => `Removed Assignee ${handle}` });
       }),
     );

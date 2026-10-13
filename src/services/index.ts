@@ -7,30 +7,51 @@ import { createConfigService } from './config';
 import { createContextService } from './context';
 import { createDoctorService } from './doctor';
 import { createFieldsService } from './fields';
+import type { PluginHost } from './plugins/host';
+import { createOperationRunner } from './plugins/runtime';
+import { createPluginsService } from './plugins/service';
 import { createSetupService } from './setup';
 import { createStagesService } from './stages';
 import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
 
+export {
+  type ActivePlugin,
+  failureWarning,
+  type LoadPluginsOptions,
+  loadPlugins,
+  onOff,
+  type PluginHost,
+  type PluginStatus,
+  type ReservedNames,
+} from './plugins/host';
+export { pluginStoryRows } from './plugins/service';
+export type * from './plugins/types';
 export type * from './types';
 
-/** All services over one context. Repositories (and their caches) are shared for its lifetime. */
+/**
+ * All services over one context. Repositories (and their caches) are shared for its lifetime. Every
+ * operation runs through the Plugin pipeline of `ctx.plugins` (ADR-0012).
+ */
 export function createServices(ctx: RowblyContext): Services {
   const repos = createRepositories(ctx.root);
-  return {
-    context: createContextService(ctx, repos),
+  const ops = createOperationRunner(ctx, repos, () => services);
+  const services: Services = {
+    context: createContextService(ctx, repos, ops),
     setup: createSetupService(ctx, repos),
     config: createConfigService(ctx, repos),
-    assignees: createAssigneesService(ctx, repos),
-    boards: createBoardsService(ctx, repos),
-    stages: createStagesService(ctx, repos),
-    fields: createFieldsService(ctx, repos),
-    stories: createStoriesService(ctx, repos),
-    tasks: createTasksService(ctx, repos),
-    comments: createCommentsService(ctx, repos),
-    doctor: createDoctorService(ctx, repos),
+    assignees: createAssigneesService(ctx, repos, ops),
+    boards: createBoardsService(ctx, repos, ops),
+    stages: createStagesService(ctx, repos, ops),
+    fields: createFieldsService(ctx, repos, ops),
+    stories: createStoriesService(ctx, repos, ops),
+    tasks: createTasksService(ctx, repos, ops),
+    comments: createCommentsService(ctx, repos, ops),
+    doctor: createDoctorService(ctx, repos, ops),
+    plugins: createPluginsService(ctx, repos, ops),
   };
+  return services;
 }
 
 export interface CreateContextOptions {
@@ -40,6 +61,10 @@ export interface CreateContextOptions {
   /** `--root`. */
   root?: string;
   warn(message: string): void;
+  /** The Plugins loaded for this Data Root. */
+  plugins?: PluginHost;
+  /** Do not wait for reactions (the TUI). */
+  backgroundReactions?: boolean;
 }
 
 /**
@@ -56,6 +81,8 @@ export async function createContext(opts: CreateContextOptions): Promise<RowblyC
     now: () => new Date(),
     newId: () => nanoid(8),
     warn: opts.warn,
+    ...(opts.plugins ? { plugins: opts.plugins } : {}),
+    ...(opts.backgroundReactions ? { backgroundReactions: true } : {}),
   };
   if (ctx.me === null) ctx.me = await meFromGitEmail(ctx, opts);
   return ctx;

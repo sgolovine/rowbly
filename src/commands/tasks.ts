@@ -3,7 +3,7 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, printResult, renderTable } from '../output';
 import type { Stage, Story, Task } from '../schemas';
 import type { Services } from '../services';
-import { confirmDestructive, promptIfMissing, readLongText, withContext } from './_shared';
+import { confirmDestructive, pluginOptions, promptIfMissing, readLongText, withContext } from './_shared';
 
 interface TaskOptions {
   name?: string;
@@ -42,6 +42,7 @@ export function registerTasks(program: Command): void {
         name,
         description: await readDescription(opts),
         stage: opts.stage,
+        ...pluginOptions(cmd),
       });
       printResult(task, { json: globals.json, human: (t) => `Created ${t.id}: ${t.name}` });
     }),
@@ -68,10 +69,11 @@ export function registerTasks(program: Command): void {
     withContext(cmd, async ({ services, globals }) => {
       const current = opts.edit ? (await services.tasks.get(taskId)).task : undefined;
       const description = await readDescription(opts, current?.description);
-      if (opts.name === undefined && description === undefined) {
+      const plugins = pluginOptions(cmd);
+      if (opts.name === undefined && description === undefined && !plugins.plugins) {
         throw new UsageError('nothing to change', { hint: 'see `rowbly tasks edit --help`' });
       }
-      const task = await services.tasks.update(taskId, { name: opts.name, description });
+      const task = await services.tasks.update(taskId, { name: opts.name, description, ...plugins });
       printResult(task, { json: globals.json, human: (t) => `Updated ${t.id}` });
     }),
   );
@@ -81,7 +83,7 @@ export function registerTasks(program: Command): void {
     .description("Move a Task to another of its Board's Stages")
     .action(async (taskId: string, stage: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const task = await services.tasks.move(taskId, stage);
+        const task = await services.tasks.move(taskId, stage, pluginOptions(cmd));
         printResult(task, { json: globals.json, human: (t) => `Moved ${t.id} to ${t.stage}` });
       }),
     );
@@ -93,7 +95,7 @@ export function registerTasks(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         const { task } = await services.tasks.get(taskId);
         await confirmDestructive(`Delete ${task.id} "${task.name}"?`, globals);
-        await services.tasks.remove(task.id);
+        await services.tasks.remove(task.id, pluginOptions(cmd));
         printResult({ deleted: task.id }, { json: globals.json, human: () => `Deleted ${task.id}` });
       }),
     );

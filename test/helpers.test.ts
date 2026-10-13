@@ -25,7 +25,7 @@ describe('test helpers', () => {
     await makeBoard(path, { id: 'web', keyPrefix: 'WEB' });
     await makeStory(path, { key: 'WEB-1', boardId: 'web', labels: ['auth'] });
 
-    const storyFile = join(path, 'boards/web/stories/WEB-1.json');
+    const storyFile = join(path, 'boards/web/stories/WEB-1/story.json');
     const text = await readFile(storyFile, 'utf8');
     expect(text.endsWith('}\n')).toBe(true);
     expect(text).toContain('\n  "version": 1,');

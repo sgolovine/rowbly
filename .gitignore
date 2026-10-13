@@ -2,8 +2,4 @@ node_modules/
 dist/
 coverage/
 .fleet/
-
-
-# only commit main board
-.rowbly/boards/
-!.rowbly/boards/rowbly
+.test-dist/

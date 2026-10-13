@@ -41,6 +41,7 @@ The exact meaning of each term is in [`CONTEXT.md`](CONTEXT.md). In short:
 - A Story has a name, a markdown description, Assignees, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, embedded **Tasks** (`WEB-42.1`) and **Comments**.
 - Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`.
 - **Me** is the Assignee you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
+- **Plugins** add optional features; a Data Root turns each one on or off for everyone who uses it. See [Plugins](#plugins).
 
 ## Data Root and git workflow
 
@@ -51,12 +52,16 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
   rowbly.config.json                 # Assignee roster, optional Stages / Custom Fields
   local.json                         # Local State (git-ignored)
   .gitignore                         # keeps local.json out of git
+  plugins/<id>/                      # files of a Plugin, for the whole Data Root
   boards/<board>/
     board.config.json                # name, key prefix, optional Stages / Custom Fields
-    stories/<KEY>.json               # one Story with its Tasks and Comments
+    plugins/<id>/                    # files of a Plugin, for this Board
+    stories/<KEY>/
+      story.json                     # one Story with its Tasks and Comments
+      plugins/<id>/                  # files of a Plugin, for this Story
 ```
 
-Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` out. Each Story is its own file, so most changes touch one small file and merge cleanly.
+Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
 - **Story Keys** are the highest number on the Board plus one. There is no shared counter, so two branches can both create `WEB-7`. After such a merge, run `rowbly doctor --fix`: it keeps the earlier Story as `WEB-7` and renumbers the other one (and its Task ids). Update branch names or commit messages that used the renumbered key.
 - **Deleted keys may be reused.** If the highest-numbered Story is deleted, the next new Story gets its number. git history still shows which Story a key meant at any time.
@@ -292,11 +297,34 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `DUPLICATE_RANK` | warning | Stories in one Stage with the same Rank | Re-ranks the tied Stories, keeping the current order |
 | `STALE_LOCAL_STATE` | warning | `local.json` names a Board that does not exist, or a Me that is not in the roster | Clears those entries |
 | `UNKNOWN_FILE` | info | A file outside the Data Root layout | — |
+| `PLUGIN_FAILED` | error | A Plugin that is on failed to load | — (see `rowbly plugins list`) |
+| `PLUGIN_DATA_INVALID` | warning | Plugin Data of a Plugin that is on that does not match its schema | — |
+| `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or that this version does not have, reported once per Plugin | — |
+| `<PLUGIN>_…` | any | The checks of a Plugin that is on, such as `EPICS_MISSING_EPIC` | As the Plugin says |
 
-Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
+Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match and moving its folder with its Plugin files. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
 
 In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks again.
 <!-- END doctor -->
+
+<!-- BEGIN plugins -->
+### Plugins
+
+Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [`docs/PLUGINS.md`](docs/PLUGINS.md).
+
+```text
+rowbly plugins list            # every Built-in Plugin, whether it is on, and any that failed to load
+rowbly plugins show <id>       # a Plugin and its settings
+rowbly plugins enable <id>
+rowbly plugins disable <id>    # keeps its settings and data
+```
+
+- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). `rowbly init` turns no Plugins on. A change takes effect the next time Rowbly runs.
+- A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
+- A Plugin that fails to load (it throws while it starts, its settings are invalid, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning on every run, and `doctor` reports it.
+- A Plugin can refuse a change (exit 4). If a Plugin fails while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, both errors carry `details.plugin`.
+- In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
+<!-- END plugins -->
 
 <!-- BEGIN tui -->
 ## Interactive mode (TUI)
@@ -313,7 +341,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `,` | settings, in a sidebar grouped into Global (Boards, Assignees, global Stages and Fields, Context, Doctor) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings, in a sidebar grouped into Global (Boards, Assignees, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -336,6 +364,9 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 | Fields | `n` add, `e` edit, `d` remove, `l` switch level |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` pick Me from the roster, `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
+| Plugins | `enter` turn the Plugin on or off |
+
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board, Story or Task they act on is in focus.
 <!-- END tui -->
 
 ## Exit codes
@@ -343,11 +374,11 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 | Code | Meaning | `--json` error code |
 | --- | --- | --- |
 | 0 | Success | — |
-| 1 | Internal error (a bug, or an unexpected failure such as an unreadable file) | `INTERNAL` |
+| 1 | Internal error (a bug, an unexpected failure such as an unreadable file, or a Plugin that failed while handling a change) | `INTERNAL` |
 | 2 | Usage error: bad flags, a missing argument, context that cannot be resolved, or a destructive command without `--yes` when not interactive | `USAGE` |
 | 2 | Validation error: input that breaks a schema or reference rule; `details.issues` lists them | `VALIDATION` |
 | 3 | Not found: an unknown Board, Story, Task, Comment, Stage, Custom Field or Assignee | `NOT_FOUND` |
-| 4 | Conflict: an id or key prefix that exists, or a refused deletion | `CONFLICT` |
+| 4 | Conflict: an id or key prefix that exists, a refused deletion, or a change a Plugin refused | `CONFLICT` |
 | 5 | No Data Root found (run `rowbly init`) | `NO_DATA_ROOT` |
 | 6 | Data integrity: a file that is not valid JSON, fails its schema, or whose id does not match its path; `details.path` names it | `DATA_INTEGRITY` |
 
@@ -369,4 +400,5 @@ The build specification lives in [`docs/spec/`](docs/spec/README.md) and the dec
 
 - `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
 - `test/tui/helpers.tsx` provides `renderTui()` with a `press(...keys)` helper and `waitForFrame(app, text | RegExp | predicate)`, which polls the screen. Wait for what a screen shows rather than sleeping a fixed time.
+- `test/plugins` tests the plugin system with fixture Plugins. The test setup also builds `.test-dist/cli.js`, the CLI with the fixture Plugins as its registry; `runCli(args, { cli: FIXTURE_CLI_PATH })` runs it.
 - `test/e2e` runs the whole product through the built CLI, checks every exit code, and fails if a word that `CONTEXT.md` says to avoid reaches a help page or a message.

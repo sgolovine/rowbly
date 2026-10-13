@@ -106,8 +106,8 @@ describe('G2 effective configuration (config show)', () => {
     await waitForFrame(app, 'API api');
     await app.press(',');
     await waitForFrame(app, 'Board: ');
-    // Config is the first section of the Board, after the six global ones.
-    await app.press(...Array(6).fill('j'));
+    // Config is the first section of the Board, after the seven global ones.
+    await app.press(...Array(7).fill('j'));
     const frame = await waitForFrame(app, 'Key prefix');
     expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Board\s+api/);
@@ -162,7 +162,9 @@ describe('G4 viewing another Board without changing the context', () => {
     expect(ctx.local).toEqual(CONTEXT);
     expect(await localOnDisk(t)).toEqual(CONTEXT);
 
-    // The sidebar still switches the context, and the board then follows it.
+    // The sidebar still switches the context (from the root screen), and the board then follows it.
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => !f.includes('Boards › Board'));
     await app.press('1');
     await waitForFrame(app, (f) => f.includes('API-1') && !f.includes('viewing only'));
     expect(await localOnDisk(t)).toEqual({ version: 1, board: 'api' });

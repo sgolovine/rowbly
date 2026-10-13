@@ -22,6 +22,12 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: 'q', description: 'quit (from the root)' },
 ];
 
+/**
+ * Every key that the shell or a core screen handles. A Plugin's Actions must use other keys
+ * (ADR-0017), so a Plugin with an Action on one of these fails to load.
+ */
+export const CORE_KEYS: readonly string[] = [...'?,/[] 123456789', ...'qaABcdefhHjJkKlLmnNorsTvy'];
+
 /** The keys of a `Form`, for screens that show one. */
 export const FORM_KEYS: readonly KeyHint[] = [
   { key: 'tab/enter', description: 'next field' },

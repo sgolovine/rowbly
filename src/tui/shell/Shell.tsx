@@ -5,9 +5,12 @@ import {
   type BoardSelection,
   BoardSelectionContext,
   LayoutContext,
+  pluginUi,
   ServicesContext,
   ShellContext,
   useAsync,
+  usePlugins,
+  useScreenFocus,
   useScreenHints,
   useScreenLabel,
   useToast,
@@ -18,7 +21,7 @@ import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
 import { boardKey } from './boardKey';
 import { Footer } from './Footer';
-import { Header } from './Header';
+import { Header, type HeaderAction } from './Header';
 import { HelpOverlay } from './HelpOverlay';
 import { FOOTER_HEIGHT, HEADER_HEIGHT, SIDEBAR_WIDTH } from './layout';
 import { ScreenSlot } from './ScreenSlot';
@@ -47,6 +50,27 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const depth = router.stack.length - 1;
   const atRoot = depth === 0;
   const idle = atRoot && overlay === null;
+  const { plugins } = usePlugins();
+  const focus = useScreenFocus(depth);
+
+  // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
+  const actions: HeaderAction[] = services
+    ? plugins.flatMap((plugin) =>
+        plugin.actions
+          .filter((action) => action.target === 'none' || focus?.[action.target])
+          .map((action) => ({
+            key: action.key,
+            label: action.label,
+            run: () => {
+              const ui = pluginUi(plugin.id, router, toast);
+              Promise.resolve()
+                .then(() => action.run({ focus: focus ?? {}, plugin: services.plugins.context(plugin.id), ui }))
+                .catch((err: unknown) => toast.error(err));
+            },
+          })),
+      )
+    : [];
+  const actionHints: KeyHint[] = actions.map((action) => ({ key: action.key, description: action.label }));
 
   const selection = useMemo<BoardSelection>(
     () => ({
@@ -96,6 +120,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       return;
     }
     if (captured.text && !key.escape) return;
+    const pluginAction = actions.find((a) => a.key === input);
+    if (pluginAction && !key.ctrl && !key.meta) return pluginAction.run();
     const action = globalAction(input, key);
     if (action === 'back') back();
     else if (action === 'quit' && atRoot) quit();
@@ -109,7 +135,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     }
   });
 
-  const hints = useScreenHints(depth);
+  const hints = [...useScreenHints(depth), ...actionHints];
   const label = useScreenLabel(0);
   const sidebarWidth = services ? SIDEBAR_WIDTH : 0;
   // The main panel's border takes a column on each side.
@@ -122,7 +148,13 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   return (
     <BoardSelectionContext.Provider value={selection}>
       <Box flexDirection="column" height={fullscreen ? rows : undefined}>
-        <Header label={label} onNewStory={services ? newStory : undefined} clickable={idle} />
+        <Header
+          label={label}
+          onNewStory={services ? newStory : undefined}
+          clickable={idle}
+          actions={actions}
+          actionsClickable={overlay === null}
+        />
         <Box flexGrow={1}>
           {services && (
             <Sidebar

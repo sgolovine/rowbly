@@ -12,14 +12,26 @@ export function projectName(ctx: RowblyContext | null): string {
   return basename(dirname(ctx.root.path)) || 'Rowbly';
 }
 
+/** A Plugin Action in focus, shown as a header button (ADR-0017). */
+export interface HeaderAction {
+  key: string;
+  label: string;
+  run(): void;
+}
+
 export function Header({
   label,
   onNewStory,
   clickable,
+  actions = [],
+  actionsClickable = clickable,
 }: {
   label: HeaderLabel | null;
   onNewStory?: () => void;
   clickable: boolean;
+  actions?: readonly HeaderAction[];
+  /** Actions act on the screen in focus, which may be in a modal. */
+  actionsClickable?: boolean;
 }) {
   const { ctx } = useContext(ServicesContext);
   // The button sits beside the panel rather than inside it, so the header stays three lines tall.
@@ -38,6 +50,16 @@ export function Header({
           <Text dimColor>me: {ctx?.me ?? '—'}</Text>
         </Box>
       </Panel>
+      {actions.map((action) => (
+        <Button
+          key={action.key}
+          label={action.label}
+          keyName={action.key}
+          onClick={action.run}
+          clickable={actionsClickable}
+          compact
+        />
+      ))}
       {onNewStory && <Button label="+ New Story" onClick={onNewStory} clickable={clickable} compact />}
     </Box>
   );

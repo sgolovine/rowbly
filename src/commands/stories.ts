@@ -11,7 +11,14 @@ import {
   StageCategorySchema,
   type Story,
 } from '../schemas';
-import type { RankPosition, Services, StoryFilter, StoryPatch, StorySort } from '../services';
+import {
+  pluginStoryRows,
+  type RankPosition,
+  type Services,
+  type StoryFilter,
+  type StoryPatch,
+  type StorySort,
+} from '../services';
 import {
   boardFlag,
   type ContextFlags,
@@ -19,6 +26,8 @@ import {
   confirmDestructive,
   parseFieldAssignments,
   parseRepeatable,
+  pluginInput,
+  pluginOptions,
   promptIfMissing,
   readLongText,
   withContext,
@@ -75,7 +84,8 @@ export function registerStories(program: Command): void {
     .option(...boardOption)
     .action(async (opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const filter = listFilter(opts);
+        const plugins = pluginInput(cmd);
+        const filter = { ...listFilter(opts), ...(plugins ? { plugins } : {}) };
         const boardId = opts.allBoards ? null : await services.context.resolveBoard(boardFlag(opts));
         const list = await services.stories.list(boardId, filter);
         if (globals.json) return printResult(list, { json: true, human: () => '' });
@@ -110,6 +120,7 @@ export function registerStories(program: Command): void {
         labels: parseRepeatable(opts.label),
         dueDate: opts.due || undefined,
         customFields: parseFieldAssignments(opts.field),
+        ...pluginOptions(cmd),
       });
       printResult(story, { json: globals.json, human: (s) => `Created ${s.key}: ${s.name}` });
     }),
@@ -119,11 +130,12 @@ export function registerStories(program: Command): void {
     .command('show <key>')
     .description('Show a Story with its Custom Fields, description, Task summary and Comment count')
     .action(async (key: string, _opts: unknown, cmd: Command) =>
-      withContext(cmd, async ({ services, globals }) => {
+      withContext(cmd, async ({ ctx, services, globals }) => {
         const story = await services.stories.get(key);
         if (globals.json) return printResult(story, { json: true, human: () => '' });
         const config = await services.config.effective(story.boardId);
-        printResult(story, { json: false, human: (s) => renderStory(s, config.stages, config.customFields) });
+        const rows = (await pluginStoryRows(ctx, services, story)).map((r): [string, string] => [r.label, r.value]);
+        printResult(story, { json: false, human: (s) => renderStory(s, config.stages, config.customFields, rows) });
       }),
     );
 
@@ -147,7 +159,7 @@ export function registerStories(program: Command): void {
   ).action(async (key: string, opts: StoryOptions, cmd: Command) =>
     withContext(cmd, async ({ services, globals }) => {
       const current = opts.edit ? await services.stories.get(key) : undefined;
-      const patch = editPatch(opts, await readDescription(opts, current?.description));
+      const patch = { ...editPatch(opts, await readDescription(opts, current?.description)), ...pluginOptions(cmd) };
       if (Object.values(patch).every((value) => value === undefined)) {
         throw new UsageError('nothing to change', { hint: 'see `rowbly stories edit --help`' });
       }
@@ -162,7 +174,7 @@ export function registerStories(program: Command): void {
     .option('--top', 'place it at the top of the Stage')
     .action(async (key: string, stage: string, opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const story = await services.stories.move(key, stage, { top: opts.top ?? false });
+        const story = await services.stories.move(key, stage, { top: opts.top ?? false, ...pluginOptions(cmd) });
         printResult(story, { json: globals.json, human: (s) => `Moved ${s.key} to ${s.stage}` });
       }),
     );
@@ -176,7 +188,7 @@ export function registerStories(program: Command): void {
     .option('--bottom', 'place it at the bottom of its Stage')
     .action(async (key: string, opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const story = await services.stories.rank(key, rankPosition(opts));
+        const story = await services.stories.rank(key, rankPosition(opts), pluginOptions(cmd));
         printResult(story, { json: globals.json, human: (s) => `Ranked ${s.key}` });
       }),
     );
@@ -188,7 +200,7 @@ export function registerStories(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         const story = await services.stories.get(key);
         await confirmDestructive(`Delete ${story.key} "${story.name}"?`, globals);
-        await services.stories.remove(story.key);
+        await services.stories.remove(story.key, pluginOptions(cmd));
         printResult({ deleted: story.key }, { json: globals.json, human: () => `Deleted ${story.key}` });
       }),
     );
@@ -301,7 +313,12 @@ function renderStories(stories: readonly Story[], stages: Map<string, Stage[]>):
   );
 }
 
-function renderStory(story: Story, stages: readonly Stage[], fields: readonly CustomFieldDef[]): string {
+function renderStory(
+  story: Story,
+  stages: readonly Stage[],
+  fields: readonly CustomFieldDef[],
+  extra: readonly [string, string][],
+): string {
   const none = colors.dim('—');
   const rows: [string, string][] = [
     ['Stage', stageBadge(stages, story.stage)],
@@ -309,6 +326,7 @@ function renderStory(story: Story, stages: readonly Stage[], fields: readonly Cu
     ['Assignees', story.assignees.join(', ') || none],
     ['Labels', story.labels.join(', ') || none],
     ['Due', story.dueDate ?? none],
+    ...extra,
     ['Created', `${story.createdAt}${story.createdBy ? ` by ${story.createdBy}` : ''}`],
     ['Updated', story.updatedAt],
   ];

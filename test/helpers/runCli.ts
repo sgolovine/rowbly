@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const CLI_PATH = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
+/** The same program with the fixture Plugins of test/plugins/fixtures as its registry. */
+export const FIXTURE_CLI_PATH = fileURLToPath(new URL('../../.test-dist/cli.js', import.meta.url));
 
 export interface RunCliOptions {
   /** Data Root path, passed as `ROWBLY_ROOT`. */
@@ -15,6 +17,8 @@ export interface RunCliOptions {
   stdin?: string;
   /** Working directory; defaults to a fresh empty temp directory. */
   cwd?: string;
+  /** The built CLI to run; defaults to `CLI_PATH`. */
+  cli?: string;
 }
 
 export interface RunCliResult {
@@ -37,15 +41,15 @@ export async function runCli(args: string[], opts: RunCliOptions = {}): Promise<
     ...opts.env,
   };
   try {
-    return await run(args, opts.cwd ?? isolated, env, opts.stdin ?? '');
+    return await run(opts.cli ?? CLI_PATH, args, opts.cwd ?? isolated, env, opts.stdin ?? '');
   } finally {
     await rm(isolated, { recursive: true, force: true });
   }
 }
 
-function run(args: string[], cwd: string, env: NodeJS.ProcessEnv, stdin: string): Promise<RunCliResult> {
+function run(cli: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, stdin: string): Promise<RunCliResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [CLI_PATH, ...args], { cwd, env });
+    const child = spawn(process.execPath, [cli, ...args], { cwd, env });
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8').on('data', (chunk: string) => {

@@ -4,7 +4,8 @@ import { createElement } from 'react';
 import { DataRootNotFoundError, RowblyError } from '../core';
 import { createContext, createServices, type RowblyContext } from '../services';
 import { App } from './app';
-import { createToastStore, type ToastStore } from './hooks';
+import { createToastStore, type ToastStore, type TuiPlugin } from './hooks';
+import { type PluginLoader, withPlugins } from './loadPlugins';
 import { MOUSE_OFF, MOUSE_ON, MouseStdin } from './mouse';
 import type { Route } from './router';
 
@@ -86,6 +87,8 @@ export interface StartTuiOptions {
   cwd?: string;
   /** `--root`. Unlike a discovered Data Root, a missing one fails instead of opening setup. */
   root?: string;
+  /** Loads the Plugins that a Data Root turns on; without it no Plugin runs. */
+  loadPlugins?: PluginLoader;
 }
 
 /**
@@ -99,12 +102,21 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
   const toasts = createToastStore();
   const resolved =
     ctx === undefined ? await resolveContext(env, options.cwd ?? process.cwd(), options.root, toasts) : ctx;
+  const plugins: TuiPlugin[] = resolved ? await withPlugins(resolved, options.loadPlugins, toasts) : [];
   const services = resolved ? createServices(resolved) : null;
 
   // On a terminal, clicks are read off stdin before Ink sees it.
   const stdin = io.stdin.isTTY ? new MouseStdin(io.stdin as NodeJS.ReadStream) : undefined;
   const instance = render(
-    createElement(App, { ctx: resolved, services, initial: initialRoute(resolved, env), toasts, mouse: stdin?.mouse }),
+    createElement(App, {
+      ctx: resolved,
+      services,
+      initial: initialRoute(resolved, env),
+      toasts,
+      mouse: stdin?.mouse,
+      plugins,
+      loadPlugins: options.loadPlugins,
+    }),
     {
       stdin: (stdin ?? io.stdin) as NodeJS.ReadStream,
       stdout: io.stdout as NodeJS.WriteStream,

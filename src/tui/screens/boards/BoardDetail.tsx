@@ -2,8 +2,16 @@ import { Box, Text, useInput } from 'ink';
 import { describeSource } from '../../../output';
 import type { Slug } from '../../../schemas';
 import { storyCountsByStage } from '../../../services/boards';
-import { DetailView, Loading, StageBadge } from '../../components';
-import { useAsync, useIsActive, useKeyHints, useRowblyContext, useServices } from '../../hooks';
+import { DetailView, Loading, PluginSlot, StageBadge } from '../../components';
+import {
+  useActionFocus,
+  useAsync,
+  useIsActive,
+  useKeyHints,
+  usePlugins,
+  useRowblyContext,
+  useServices,
+} from '../../hooks';
 import { useRouter } from '../../router';
 import { describeField } from '../fields';
 import { useReloadOnReturn } from '../stories/shared';
@@ -12,8 +20,8 @@ import type { ScreenProps } from '../types';
 /**
  * One Board (`params.boardId`, default: the Board in context), like `boards show` and `config show`:
  * its key prefix and description, Stories per Stage, and the effective Stages and Custom Fields
- * with the Configuration Cascade level each list comes from. Opening its board or Stories from here
- * does not change the context.
+ * with the Configuration Cascade level each list comes from, then the sections Plugins add. Opening
+ * its board or Stories from here does not change the context.
  */
 export function BoardDetailScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -27,6 +35,8 @@ export function BoardDetailScreen({ params }: ScreenProps) {
     return { config, counts };
   }, [services, ctx, params.boardId]);
   useReloadOnReturn(data.reload);
+  useActionFocus({ board: data.data?.config.board });
+  const { plugins } = usePlugins();
 
   useKeyHints([
     { key: 'v', description: 'view board' },
@@ -94,6 +104,16 @@ export function BoardDetailScreen({ params }: ScreenProps) {
           ))
         )}
       </Box>
+      {plugins.flatMap((p) =>
+        (p.tui.boardSections ?? []).map((Section, i) => (
+          <PluginSlot
+            // biome-ignore lint/suspicious/noArrayIndexKey: a Plugin's sections keep their order.
+            key={`${p.id}:${i}`}
+            plugin={p.id}
+            render={(context, ui) => <Section board={board} plugin={context} ui={ui} />}
+          />
+        )),
+      )}
     </Box>
   );
 }

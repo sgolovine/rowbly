@@ -14,7 +14,7 @@ describe('paths', () => {
     expect(p.board('web')).toBe('/r/.rowbly/boards/web');
     expect(p.boardConfig('web')).toBe('/r/.rowbly/boards/web/board.config.json');
     expect(p.storiesDir('web')).toBe('/r/.rowbly/boards/web/stories');
-    expect(p.story('web', 'WEB-4')).toBe('/r/.rowbly/boards/web/stories/WEB-4.json');
+    expect(p.story('web', 'WEB-4')).toBe('/r/.rowbly/boards/web/stories/WEB-4/story.json');
   });
 });
 
@@ -117,7 +117,8 @@ describe('stories', () => {
   it('a key that does not match the file name is DataIntegrityError', async () => {
     const t = await seed();
     const story = await makeStory(t.path, { key: 'WEB-1', boardId: 'web' });
-    await writeFile(join(t.path, 'boards/web/stories/WEB-2.json'), JSON.stringify({ ...story, key: 'WEB-1' }));
+    await mkdir(join(t.path, 'boards/web/stories/WEB-2'));
+    await writeFile(join(t.path, 'boards/web/stories/WEB-2/story.json'), JSON.stringify({ ...story, key: 'WEB-1' }));
     await expect(createRepositories(t.root).stories.findByKey('WEB-2')).rejects.toThrow(DataIntegrityError);
   });
 

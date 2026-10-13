@@ -32,13 +32,18 @@
 
 - Use a folder based architecture.
 ```
-rowbly/
+.rowbly/
   rowbly.config.json
+  local.json
+  plugins/<plugin_id>/...
   boards/
     <board_slug>/
       board.config.json
+      plugins/<plugin_id>/...
       stories/
-        <story_slug>.json
+        <story_key>/
+          story.json
+          plugins/<plugin_id>/...
 
 ```
 
@@ -90,6 +95,27 @@ Here is a non-exhaustive list of CLI features we need to cover. Assume that more
 - CRUD for Board custom fields
 - CRUD for board stages
 - CRUD for Tasks
+
+## Plugins
+
+Features beyond the core come as Plugins. See [`PLUGINS.md`](PLUGINS.md) and ADR-0009 to ADR-0017.
+
+The source is in layers; each imports only the layers below it, and `test/architecture.test.ts` enforces it:
+
+| Layer | Path | May import |
+| --- | --- | --- |
+| Core | `src/core` | — |
+| Schemas | `src/schemas` | core |
+| Storage | `src/storage` (the only layer that touches `node:fs`) | core, schemas |
+| Services | `src/services`, with the plugin host, the operations pipeline and the Plugin types in `src/services/plugins/` | core, schemas, storage |
+| Output | `src/output` | core, schemas, services |
+| Commands, TUI | `src/commands`, `src/tui` | the layers above |
+| Plugin API | `src/plugin-api` (`tui.ts` may also import the TUI) | core, schemas, services, output |
+| Plugins | `src/plugins/<id>/` | the Plugin API and their own files only |
+| Program | `src/main.ts` | commands, TUI, services, storage, output, core |
+| Entry point | `src/cli.ts`, the only reader of the registry `src/plugins/index.ts` | program, Plugins |
+
+Every Service Layer operation runs through `OperationRunner.run`: it fills a Change Set, runs the Plugins' replacement, transforms and guards, saves the Change Set once, then runs their reactions. The entry point loads the Plugins that the Data Root turns on before it builds the program, because their commands and options are part of it.
 
 ## Out of Scope
 

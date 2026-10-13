@@ -3,7 +3,7 @@ import { confirm, isCancel, select, text } from '@clack/prompts';
 import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { printWarnings } from '../output';
-import type { RowblyContext, Services } from '../services';
+import type { PluginHost, PluginInput, RowblyContext, Services } from '../services';
 import { createContext, createServices } from '../services';
 import { editTextInEditor, readTextFile } from '../storage';
 
@@ -36,6 +36,53 @@ export function boardFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.e
   return opts.board || env.ROWBLY_BOARD || undefined;
 }
 
+/** The Plugins of a program: their host, and which of them add options to each core command. */
+export interface ProgramPlugins {
+  host: PluginHost;
+  options: Map<string, { id: string; attributes: string[]; input(values: Record<string, unknown>): unknown }[]>;
+}
+
+const programPlugins = new WeakMap<Command, ProgramPlugins>();
+
+export function setProgramPlugins(program: Command, plugins: ProgramPlugins): void {
+  programPlugins.set(program, plugins);
+}
+
+/** The Plugins of the program `cmd` belongs to. */
+export function pluginsOf(cmd: Command): ProgramPlugins | undefined {
+  let root = cmd;
+  while (root.parent) root = root.parent;
+  return programPlugins.get(root);
+}
+
+/** A command's path below the program, e.g. `stories create`. */
+export function commandPath(cmd: Command): string {
+  const names: string[] = [];
+  for (let at: Command | null = cmd; at?.parent; at = at.parent) names.unshift(at.name());
+  return names.join(' ');
+}
+
+/**
+ * The Plugin input that the Plugins' options on `cmd` give (ADR-0012): `{ <id>: … }`, or
+ * `undefined` when none was used.
+ */
+export function pluginInput(cmd: Command): PluginInput | undefined {
+  const opts = cmd.opts<Record<string, unknown>>();
+  const input: PluginInput = {};
+  for (const { id, attributes, input: toInput } of pluginsOf(cmd)?.options.get(commandPath(cmd)) ?? []) {
+    const values = Object.fromEntries(attributes.map((name) => [name, opts[name]]));
+    const value = toInput(values);
+    if (value !== undefined) input[id] = value;
+  }
+  return Object.keys(input).length > 0 ? input : undefined;
+}
+
+/** `{ plugins }` for an operation's options, or `{}` when no Plugin option was used. */
+export function pluginOptions(cmd: Command): { plugins?: PluginInput } {
+  const plugins = pluginInput(cmd);
+  return plugins ? { plugins } : {};
+}
+
 export interface CommandEnv {
   ctx: RowblyContext;
   services: Services;
@@ -56,6 +103,7 @@ export async function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Prom
       home: homedir(),
       root: globals.root,
       warn: (message) => warnings.push(message),
+      plugins: pluginsOf(cmd)?.host,
     });
     return await fn({ ctx, services: createServices(ctx), globals });
   } finally {

@@ -3,7 +3,7 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, renderTable } from '../output';
 import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { storyCountsByStage } from '../services/boards';
-import { boardFlag, confirmDestructive, promptIfMissing, withContext } from './_shared';
+import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from './_shared';
 
 interface BoardOptions {
   name?: string;
@@ -37,7 +37,13 @@ export function registerBoards(program: Command): void {
           flag: '--prefix',
           message: 'Story Key prefix (e.g. WEB)',
         });
-        const board = await services.boards.create({ id, name, keyPrefix, description: opts.description });
+        const board = await services.boards.create({
+          id,
+          name,
+          keyPrefix,
+          description: opts.description,
+          ...pluginOptions(cmd),
+        });
         printResult(board, {
           json: globals.json,
           human: (b) => `Created Board ${b.id} (${b.keyPrefix})`,
@@ -64,10 +70,11 @@ export function registerBoards(program: Command): void {
     .option('--description <text>', 'new description')
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        if (opts.name === undefined && opts.description === undefined) {
+        const plugins = pluginOptions(cmd);
+        if (opts.name === undefined && opts.description === undefined && !plugins.plugins) {
           throw new UsageError('nothing to change', { hint: 'pass --name and/or --description' });
         }
-        const board = await services.boards.update(id, { name: opts.name, description: opts.description });
+        const board = await services.boards.update(id, { name: opts.name, description: opts.description, ...plugins });
         printResult(board, { json: globals.json, human: (b) => `Updated Board ${b.id}` });
       }),
     );
@@ -83,7 +90,7 @@ export function registerBoards(program: Command): void {
           opts.force ? `Delete Board ${boardId} and all of its Stories?` : `Delete Board ${boardId}?`,
           globals,
         );
-        await services.boards.remove(boardId, { force: opts.force ?? false });
+        await services.boards.remove(boardId, { force: opts.force ?? false, ...pluginOptions(cmd) });
         printResult({ deleted: boardId }, { json: globals.json, human: () => `Deleted Board ${boardId}` });
       }),
     );

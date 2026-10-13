@@ -1,9 +1,10 @@
 import { NotFoundError, UsageError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
-import type { ContextService, RowblyContext } from './types';
+import type { OperationRunner } from './plugins/runtime';
+import type { ContextService, OperationOptions, RowblyContext } from './types';
 
-export function createContextService(ctx: RowblyContext, repos: Repositories): ContextService {
+export function createContextService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): ContextService {
   /** `flag` (callers pass `--board ?? ROWBLY_BOARD`) → Local State → the only Board. */
   async function resolveBoard(flag?: string): Promise<Slug> {
     if (flag) return (await repos.boards.get(flag)).id;
@@ -20,8 +21,14 @@ export function createContextService(ctx: RowblyContext, repos: Repositories): C
     throw new UsageError('board required', { hint: 'pass --board <id> or run `rowbly use <board>`' });
   }
 
-  async function save(next: LocalState): Promise<LocalState> {
-    await repos.localState.put(next);
+  /** Saves Local State through operation `name` and keeps `ctx.local` in step with it. */
+  async function save<I extends object>(
+    name: string,
+    input: I & OperationOptions,
+    update: (state: LocalState) => LocalState,
+  ): Promise<LocalState> {
+    // `ctx.local` is the Local State this run started from (and has changed since).
+    const next = await ops.run(name, input, (changes) => changes.updateLocalState(() => update(ctx.local)));
     ctx.local = next;
     return next;
   }
@@ -29,30 +36,29 @@ export function createContextService(ctx: RowblyContext, repos: Repositories): C
   return {
     resolveBoard,
 
-    async use(board) {
+    async use(board, opts = {}) {
       const boardId = (await repos.boards.get(board)).id;
-      return save({ ...ctx.local, board: boardId });
+      return save('context.use', { board, ...opts }, (state) => ({ ...state, board: boardId }));
     },
 
-    async clearUse() {
-      const { board: _b, ...rest } = ctx.local;
-      await save(rest);
+    async clearUse(opts = {}) {
+      await save('context.clearUse', { ...opts }, ({ board: _b, ...rest }) => rest);
     },
 
-    async setMe(handle) {
-      const { me: _me, ...rest } = ctx.local;
-      if (handle === null) {
-        ctx.me = null;
-        return save(rest);
+    async setMe(handle, opts = {}) {
+      if (handle !== null) {
+        const { assignees } = await repos.rootConfig.get();
+        if (!assignees.some((a) => a.handle === handle)) {
+          throw new NotFoundError(`Assignee "${handle}" not found`, {
+            hint: 'run `rowbly assignees add <handle> --name <name>`',
+          });
+        }
       }
-      const { assignees } = await repos.rootConfig.get();
-      if (!assignees.some((a) => a.handle === handle)) {
-        throw new NotFoundError(`Assignee "${handle}" not found`, {
-          hint: 'run `rowbly assignees add <handle> --name <name>`',
-        });
-      }
+      const next = await save('context.setMe', { handle, ...opts }, ({ me: _me, ...rest }) =>
+        handle === null ? rest : { ...rest, me: handle },
+      );
       ctx.me = handle;
-      return save({ ...rest, me: handle });
+      return next;
     },
   };
 }

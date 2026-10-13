@@ -1,4 +1,5 @@
 // Service Layer contract (contracts §8). Frozen: changes need an approved CCR.
+
 import type {
   Assignee,
   BoardConfig,
@@ -22,6 +23,8 @@ import type {
   Task,
   TaskId,
 } from '../schemas';
+import type { PluginHost, PluginStatus } from './plugins/host';
+import type { PluginContext } from './plugins/types';
 
 export type { ConfigLevel, DataRoot, EffectiveBoardConfig };
 
@@ -36,6 +39,21 @@ export interface RowblyContext {
   newId(): string;
   /** Collected by the caller for output. */
   warn(message: string): void;
+  /** The Plugins loaded for this Data Root; none when omitted. */
+  plugins?: PluginHost;
+  /** Run reactions after the save without waiting for them (the TUI); command mode waits. */
+  backgroundReactions?: boolean;
+}
+
+/** Plugin input, keyed by Plugin id: `{ epics: { epic: 'auth' } }` (ADR-0012). */
+export type PluginInput = Record<string, unknown>;
+
+/**
+ * Plugin input reaches an operation as `plugins` in the operation's last argument: its input or
+ * patch, or else a trailing `opts`.
+ */
+export interface OperationOptions {
+  plugins?: PluginInput;
 }
 
 export type ConfigTarget = { level: 'global' } | { level: 'board'; boardId: Slug };
@@ -58,13 +76,13 @@ export interface InitResult {
 
 // ── Assignees ───────────────────────────────────────────────────────────────
 
-export interface AssigneeInput {
+export interface AssigneeInput extends OperationOptions {
   handle: Slug;
   name: string;
   email?: string;
 }
 
-export interface AssigneePatch {
+export interface AssigneePatch extends OperationOptions {
   name?: string;
   /** `null` removes the email. */
   email?: string | null;
@@ -72,14 +90,14 @@ export interface AssigneePatch {
 
 // ── Boards, Stages & Custom Fields ──────────────────────────────────────────
 
-export interface BoardCreateInput {
+export interface BoardCreateInput extends OperationOptions {
   id: Slug;
   name: string;
   keyPrefix: KeyPrefix;
   description?: string;
 }
 
-export interface BoardPatch {
+export interface BoardPatch extends OperationOptions {
   name?: string;
   description?: string;
 }
@@ -90,13 +108,13 @@ export interface StageInput {
   category: StageCategory;
 }
 
-export interface StagePatch {
+export interface StagePatch extends OperationOptions {
   name?: string;
   category?: StageCategory;
 }
 
 /** Editable Custom Field properties. `type` and `key` are immutable; `null` clears an optional property. */
-export interface CustomFieldPatch {
+export interface CustomFieldPatch extends OperationOptions {
   name?: string;
   description?: string | null;
   required?: boolean;
@@ -128,6 +146,8 @@ export interface StoryFilter {
   search?: string;
   /** `--sort`; the default is Stage order, then Rank. */
   sort?: StorySort;
+  /** Plugin filters, keyed by Plugin id; each Plugin's `filterStories` decides what matches. */
+  plugins?: PluginInput;
 }
 
 /**
@@ -136,7 +156,7 @@ export interface StoryFilter {
  */
 export type CustomFieldValuesInput = Record<Slug, CustomFieldValue>;
 
-export interface StoryCreateInput {
+export interface StoryCreateInput extends OperationOptions {
   name: string;
   description?: string;
   /** Defaults to the first effective Stage. */
@@ -150,7 +170,7 @@ export interface StoryCreateInput {
 }
 
 /** Mirrors `stories edit` flags. `null` clears (`--no-priority`, `--no-due`). */
-export interface StoryPatch {
+export interface StoryPatch extends OperationOptions {
   name?: string;
   description?: string;
   /** `--assignee`: replaces the whole list. */
@@ -175,14 +195,14 @@ export interface StoryPatch {
 
 // ── Tasks ───────────────────────────────────────────────────────────────────
 
-export interface TaskCreateInput {
+export interface TaskCreateInput extends OperationOptions {
   name: string;
   description?: string;
   /** Defaults to the first effective Stage. */
   stage?: Slug;
 }
 
-export interface TaskPatch {
+export interface TaskPatch extends OperationOptions {
   name?: string;
   description?: string;
 }
@@ -191,7 +211,7 @@ export interface TaskPatch {
 
 export type DoctorSeverity = 'error' | 'warning' | 'info';
 
-export type DoctorCode =
+export type CoreDoctorCode =
   | 'SCHEMA_INVALID'
   | 'ID_PATH_MISMATCH'
   | 'STORY_KEY_CONFLICT'
@@ -206,7 +226,13 @@ export type DoctorCode =
   | 'TASK_COUNTER_BEHIND'
   | 'DUPLICATE_RANK'
   | 'STALE_LOCAL_STATE'
-  | 'UNKNOWN_FILE';
+  | 'UNKNOWN_FILE'
+  | 'PLUGIN_FAILED'
+  | 'PLUGIN_DATA_INVALID'
+  | 'PLUGIN_DATA_UNCHECKED';
+
+/** A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. */
+export type DoctorCode = CoreDoctorCode | (string & {});
 
 export interface DoctorFinding {
   code: DoctorCode;
@@ -238,9 +264,9 @@ export interface DoctorReport {
 
 export interface ContextService {
   resolveBoard(flag?: string): Promise<Slug>;
-  use(board: Slug): Promise<LocalState>;
-  clearUse(): Promise<void>;
-  setMe(handle: Slug | null): Promise<LocalState>;
+  use(board: Slug, opts?: OperationOptions): Promise<LocalState>;
+  clearUse(opts?: OperationOptions): Promise<void>;
+  setMe(handle: Slug | null, opts?: OperationOptions): Promise<LocalState>;
 }
 
 export interface SetupService {
@@ -255,7 +281,7 @@ export interface AssigneesService {
   list(): Promise<Assignee[]>;
   add(input: AssigneeInput): Promise<Assignee>;
   update(handle: Slug, patch: AssigneePatch): Promise<Assignee>;
-  remove(handle: Slug): Promise<{ storiesUpdated: number }>;
+  remove(handle: Slug, opts?: OperationOptions): Promise<{ storiesUpdated: number }>;
 }
 
 export interface BoardsService {
@@ -263,26 +289,26 @@ export interface BoardsService {
   get(id: Slug): Promise<BoardConfig>;
   create(input: BoardCreateInput): Promise<BoardConfig>;
   update(id: Slug, patch: BoardPatch): Promise<BoardConfig>;
-  remove(id: Slug, opts: { force: boolean }): Promise<void>;
+  remove(id: Slug, opts: { force: boolean } & OperationOptions): Promise<void>;
 }
 
 export interface StagesService {
   list(boardId: Slug): Promise<{ stages: Stage[]; source: ConfigLevel }>;
-  add(target: ConfigTarget, input: StageInput, position?: Position): Promise<Stage[]>;
+  add(target: ConfigTarget, input: StageInput, position?: Position, opts?: OperationOptions): Promise<Stage[]>;
   update(target: ConfigTarget, key: Slug, patch: StagePatch): Promise<Stage[]>;
-  move(target: ConfigTarget, key: Slug, position: Position): Promise<Stage[]>;
+  move(target: ConfigTarget, key: Slug, position: Position, opts?: OperationOptions): Promise<Stage[]>;
   remove(
     target: ConfigTarget,
     key: Slug,
-    opts: { moveTo?: Slug },
+    opts: { moveTo?: Slug } & OperationOptions,
   ): Promise<{ storiesMoved: number; tasksMoved: number }>;
 }
 
 export interface FieldsService {
   list(boardId: Slug): Promise<{ fields: CustomFieldDef[]; source: ConfigLevel }>;
-  add(target: ConfigTarget, def: CustomFieldInput): Promise<CustomFieldDef[]>;
+  add(target: ConfigTarget, def: CustomFieldInput, opts?: OperationOptions): Promise<CustomFieldDef[]>;
   update(target: ConfigTarget, key: Slug, patch: CustomFieldPatch): Promise<CustomFieldDef[]>;
-  remove(target: ConfigTarget, key: Slug): Promise<{ valuesStripped: number }>;
+  remove(target: ConfigTarget, key: Slug, opts?: OperationOptions): Promise<{ valuesStripped: number }>;
 }
 
 export interface StoriesService {
@@ -292,9 +318,9 @@ export interface StoriesService {
   get(key: string): Promise<Story>;
   create(boardId: Slug, input: StoryCreateInput): Promise<Story>;
   update(key: string, patch: StoryPatch): Promise<Story>;
-  move(key: string, stage: Slug, opts?: { top?: boolean }): Promise<Story>;
-  rank(key: string, position: RankPosition): Promise<Story>;
-  remove(key: string): Promise<void>;
+  move(key: string, stage: Slug, opts?: { top?: boolean } & OperationOptions): Promise<Story>;
+  rank(key: string, position: RankPosition, opts?: OperationOptions): Promise<Story>;
+  remove(key: string, opts?: OperationOptions): Promise<void>;
   labelsInUse(boardId: Slug): Promise<string[]>;
 }
 
@@ -303,21 +329,35 @@ export interface TasksService {
   get(taskId: string): Promise<{ story: Story; task: Task }>;
   create(storyKey: string, input: TaskCreateInput): Promise<Task>;
   update(taskId: string, patch: TaskPatch): Promise<Task>;
-  move(taskId: string, stage: Slug): Promise<Task>;
-  remove(taskId: string): Promise<void>;
+  move(taskId: string, stage: Slug, opts?: OperationOptions): Promise<Task>;
+  remove(taskId: string, opts?: OperationOptions): Promise<void>;
 }
 
 /** `target` is a Story Key or a Task id (case-insensitive). */
 export interface CommentsService {
   list(target: StoryKey | TaskId): Promise<Comment[]>;
-  add(target: StoryKey | TaskId, body: string): Promise<Comment>;
-  update(target: StoryKey | TaskId, id: string, body: string): Promise<Comment>;
-  remove(target: StoryKey | TaskId, id: string): Promise<void>;
+  add(target: StoryKey | TaskId, body: string, opts?: OperationOptions): Promise<Comment>;
+  update(target: StoryKey | TaskId, id: string, body: string, opts?: OperationOptions): Promise<Comment>;
+  remove(target: StoryKey | TaskId, id: string, opts?: OperationOptions): Promise<void>;
 }
 
 export interface DoctorService {
   check(): Promise<DoctorReport>;
   fix(): Promise<DoctorReport>;
+}
+
+/** `rowbly plugins …` (ADR-0010). Turning a Plugin on or off takes effect on the next run. */
+export interface PluginsService {
+  /** Every Built-in Plugin, and any other Plugin `rowbly.config.json` names, with its state this run. */
+  list(): Promise<PluginStatus[]>;
+  /** A Plugin's state and its settings in `rowbly.config.json`. */
+  get(id: string): Promise<PluginStatus & { settings: Record<string, unknown> }>;
+  /** Sets `enabled: true`; the Plugin's settings must be valid. */
+  enable(id: string, opts?: OperationOptions): Promise<{ id: string; enabled: boolean }>;
+  /** Sets `enabled: false`; keeps the Plugin's settings and data. */
+  disable(id: string, opts?: OperationOptions): Promise<{ id: string; enabled: boolean }>;
+  /** The context a Plugin that is on gets in its commands, screens and Actions. */
+  context(id: string): PluginContext;
 }
 
 export interface Services {
@@ -332,4 +372,5 @@ export interface Services {
   tasks: TasksService;
   comments: CommentsService;
   doctor: DoctorService;
+  plugins: PluginsService;
 }
