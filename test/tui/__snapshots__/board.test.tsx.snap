@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`board view > renders one column per Stage with counts and cards in Rank order 1`] = `
+" Rowbly  acme › web › Board                                                                                   me: alice
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+ Website acme/web
+
+ ● Backlog (3)                ● Todo (1)                   ● Doing (1)                  ● Done (1)
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ──────────────────────────── ──────────────────────────── ────────────────────────────
+
+ ▌ WEB-1 P1                     WEB-4 P3                     WEB-5 P0                     WEB-6
+ ▌ Login page with a rather …   Dark mode                    Fix footer                   Release v1
+ ▌ @alice @bob · ✓ 1/3          @bob
+
+   WEB-2
+   Signup form
+
+
+   WEB-3
+   Password reset
+
+
+
+ h/l j/k select · enter open · H/L move Stage · K/J reorder · n new · e edit · d delete · / filter · c clear filter · …"
+`;
+
+exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
+" Rowbly  acme › web › Board                                           me: alice
+────────────────────────────────────────────────────────────────────────────────
+
+ Website acme/web · Stages 3–5 of 6
+
+ ‹2 ● Doing (1)             ● Review (0)            ● QA (0)                1›
+    ─────────────────────── ─────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━
+
+      WEB-5 P0              (empty)                 (empty)
+      Fix footer
+
+
+
+ h/l j/k select · enter open · H/L move Stage · K/J reorder · n new · e edit ·…"
+`;

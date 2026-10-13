@@ -279,5 +279,23 @@ _Not implemented yet._
 <!-- BEGIN tui -->
 ### Interactive mode (TUI)
 
-_Not implemented yet._
+Run `rowbly` with no arguments in a terminal to open the full-screen app. With a Board in context (`rowbly use <workspace>/<board>`, or the only Board in the only Workspace) it opens straight to the **Kanban board**; otherwise it opens the home menu. `g` opens any screen from anywhere, `?` lists the keys of the current screen, `esc` goes back and `q` quits from the root.
+
+The board shows one column per Stage, in the Board's Stage order. Each header shows the Stage name coloured by its Stage Category and the number of Stories; cards are in Rank order and show the Story Key, Priority, the name, Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` show the hidden columns), and a long column scrolls up and down.
+
+| Key | Action |
+| --- | --- |
+| `h`/`l`, `←`/`→` | previous / next column |
+| `j`/`k`, `↓`/`↑` | next / previous card |
+| `enter` | open the Story |
+| `H`/`L` | move the Story to the previous / next Stage (bottom of that Stage) |
+| `K`/`J` | move the Story up / down within its Stage (Rank) |
+| `n` | new Story in the current column |
+| `e` | edit the Story |
+| `d` | delete the Story (asks first) |
+| `/` | filter cards by Assignee, Me, Label, Priority, Epic or text; `c` clears the filter |
+| `b` | switch to another Board in the Workspace (remembered like `rowbly use`) |
+| `r` | reload from disk |
+
+Moves show at once; if the change cannot be saved, the card goes back where it was and an error is shown. The board also reloads when you come back to it from another screen.
 <!-- END tui -->
