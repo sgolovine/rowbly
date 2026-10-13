@@ -1,0 +1,7 @@
+# Plugin files live in a `plugins/<id>/` folder beside what they belong to
+
+A Plugin keeps its own files in a folder `plugins/<id>/` at the level they belong to: `.rowbly/plugins/<id>/` for the Data Root, `boards/<board>/plugins/<id>/` for a Board, and `boards/<board>/stories/<KEY>/plugins/<id>/` for a Story. For example, Epics are in `.rowbly/plugins/epics/<epic>.json`, and a Story Spec is `stories/WEB-1/plugins/specs/spec.md`. Tasks, Comments and Assignees have no folder of their own, so Plugins keep values for them only as Plugin Data (ADR-0011).
+
+Because the files sit with what they belong to, deleting a Story or a Board also deletes its Plugin files. For the same reason, `doctor --fix` must move a Story's whole folder when it renumbers the Story; today it moves only `story.json`. Because every Plugin file is in a `plugins/<id>/` folder, `rowbly doctor` can tell which Plugin a file belongs to, also while that Plugin is off, and a future core folder can never clash with a Plugin id. A Plugin that is on adds its own doctor checks and fixes for its files and bags, with codes prefixed by its id (for example `EPICS_MISSING_EPIC`). Doctor does not check the files and bags of a Plugin that is off or unknown; it reports them once, as info.
+
+We rejected folders named after the Plugin directly (such as `.rowbly/epics/`), which could clash with core names. We also rejected one folder per Plugin at the Data Root only, because then deleting or renumbering a Story would have to find and clean up its files somewhere else.

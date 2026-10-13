@@ -75,3 +75,21 @@ _Avoid_: current user, login
 **Local State**:
 Per-developer, never-committed settings in the Data Root (current Board and Me).
 _Avoid_: session, profile
+
+### Plugins
+
+**Plugin**:
+An optional, self-contained feature that adds to or changes what Rowbly does, turned on for a whole Data Root.
+_Avoid_: extension, add-on, module
+
+**Built-in Plugin**:
+A Plugin that ships as part of Rowbly itself.
+_Avoid_: first-party plugin, official plugin, core plugin
+
+**Plugin Data**:
+The values a Plugin keeps under its own name on the Data Root, a Board, Story, Task, Comment or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
+_Avoid_: custom data, extension data
+
+**Action**:
+A key, with a matching button, that a Plugin adds to the TUI wherever the Board, Story or Task it acts on is in focus.
+_Avoid_: button, shortcut, hotkey

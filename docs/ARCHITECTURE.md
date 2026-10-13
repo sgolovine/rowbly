@@ -92,6 +92,10 @@ Here is a non-exhaustive list of CLI features we need to cover. Assume that more
 - CRUD for board stages
 - CRUD for Tasks
 
+## Plugins
+
+Features beyond the core come as Plugins. See [`PLUGINS.md`](PLUGINS.md) and ADR-0009 to ADR-0017.
+
 ## Out of Scope
 
 These items are considered out of scope for this application
