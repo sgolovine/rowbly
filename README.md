@@ -299,7 +299,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STALE_LOCAL_STATE` | warning | `local.json` names a Workspace, Board or Me that does not exist | Clears those entries |
 | `UNKNOWN_FILE` | info | A file outside the Data Root layout | — |
 
-Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
+Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
 
 In the TUI, open **Doctor** from the `g` palette: `f` fixes and `r` checks again.
 <!-- END doctor -->
