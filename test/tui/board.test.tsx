@@ -18,7 +18,7 @@ import {
   truncate,
 } from '../../src/tui/screens/board/layout';
 import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, type Rendered, renderTui, tick } from './helpers';
+import { KEYS, type Rendered, renderTui, waitForFrame } from './helpers';
 
 const web = { workspaceId: 'acme', boardId: 'web' };
 
@@ -115,7 +115,7 @@ async function open(
     <App ctx={ctx} services={services} initial={{ screen: opts.screen ?? 'board', params: {} }} toasts={toasts} />,
   );
   resize(app, opts.columns ?? 120, opts.rows ?? 40);
-  await waitFor(app, (frame) => frame.includes('WEB-') && !frame.includes('Loading'));
+  await waitForFrame(app, (frame) => frame.includes('WEB-') && !frame.includes('Loading'));
   return app;
 }
 
@@ -123,14 +123,6 @@ function resize(app: Rendered, columns: number, rows: number) {
   Object.defineProperty(app.stdout, 'columns', { value: columns, configurable: true });
   Object.defineProperty(app.stdout, 'rows', { value: rows, configurable: true });
   app.stdout.emit('resize');
-}
-
-async function waitFor(app: { lastFrame(): string | undefined }, ok: (frame: string) => boolean) {
-  for (let i = 0; i < 100; i++) {
-    if (ok(app.lastFrame() ?? '')) return;
-    await tick(20);
-  }
-  throw new Error(`timed out; last frame:\n${app.lastFrame()}`);
 }
 
 const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.findByKey(key);
@@ -167,14 +159,14 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press('l', 'L');
-    await waitFor(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
+    await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
     const lines = frameLines(app).join('\n');
     expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
     expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
     // The cursor follows the card: H moves it back.
     await app.press('H');
-    await waitFor(app, (f) => f.includes('● Todo (1)'));
+    await waitForFrame(app, (f) => f.includes('● Todo (1)'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
     app.unmount();
   });
@@ -184,7 +176,7 @@ describe('board view', () => {
     const before = await storyFiles(t);
     const app = await open(t);
     await app.press('j', 'j', 'K');
-    await waitFor(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-2'));
+    await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-2'));
     const changed = async () => {
       const after = await storyFiles(t);
       return Object.keys(after).filter((name) => after[name] !== before[name]);
@@ -200,12 +192,12 @@ describe('board view', () => {
     const app = await open(t);
     // assignee, me, label, priority, epic, text
     await app.press('/', KEYS.down, ' ', KEYS.enter);
-    await waitFor(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
+    await waitForFrame(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
     expect(app.lastFrame()).toContain('● Backlog (1)');
     await app.press('c');
-    await waitFor(app, (f) => f.includes('WEB-4'));
+    await waitForFrame(app, (f) => f.includes('WEB-4'));
     await app.press('/', ...Array(5).fill(KEYS.down), ...'footer', KEYS.enter);
-    await waitFor(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
+    await waitForFrame(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
     expect(app.lastFrame()).toContain('WEB-5');
     app.unmount();
   });
@@ -229,9 +221,9 @@ describe('board view', () => {
     });
     await app.press('L');
     // Shown before the service answers: the move is held until `release()`.
-    await waitFor(app, (f) => f.includes('● Backlog (2)') && f.includes('● Todo (2)'));
+    await waitForFrame(app, (f) => f.includes('● Backlog (2)') && f.includes('● Todo (2)'));
     release();
-    await waitFor(
+    await waitForFrame(
       app,
       (f) =>
         f.includes('error: the Story changed on disk') &&
@@ -246,7 +238,7 @@ describe('board view', () => {
   it('scrolls horizontally at 80 columns with 6 Stages without wrapping cards', async () => {
     const t = await seed(SIX_STAGES);
     const app = await open(t, { columns: 80 });
-    await waitFor(app, (f) => f.includes('Stages 1–3 of 6'));
+    await waitForFrame(app, (f) => f.includes('Stages 1–3 of 6'));
     let frame = app.lastFrame() ?? '';
     expect(frame).toContain('Stages 1–3 of 6');
     expect(frame).toContain('3›');
@@ -255,7 +247,7 @@ describe('board view', () => {
     // The long name stays on one line, cut with an ellipsis.
     expect(frame.split('\n').filter((l) => l.includes('Login page'))).toHaveLength(1);
     await app.press('l', 'l', 'l', 'l');
-    await waitFor(app, (f) => f.includes('Stages 3–5 of 6') && f.includes('● QA (0)'));
+    await waitForFrame(app, (f) => f.includes('Stages 3–5 of 6') && f.includes('● QA (0)'));
     frame = app.lastFrame() ?? '';
     expect(frame).toContain('Stages 3–5 of 6');
     expect(frame).toContain('‹2');
@@ -273,11 +265,11 @@ describe('board view', () => {
     const app = await open(t, { rows: 24 });
     await makeStory(t.path, { ...web, key: 'WEB-7', name: 'Fourth', stage: 'backlog', rank: 'a3' });
     await app.press('r');
-    await waitFor(app, (f) => f.includes('● Backlog (4)'));
+    await waitForFrame(app, (f) => f.includes('● Backlog (4)'));
     expect(app.lastFrame()).toContain('↓ 1 more');
     expect(app.lastFrame()).not.toContain('WEB-7');
     await app.press('j', 'j', 'j');
-    await waitFor(app, (f) => f.includes('↑ 1 more') && f.includes('▌ WEB-7'));
+    await waitForFrame(app, (f) => f.includes('↑ 1 more') && f.includes('▌ WEB-7'));
     expect(app.lastFrame()).not.toContain('WEB-1 ');
     app.unmount();
   });
@@ -286,9 +278,9 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('Details') && f.includes('Login page'));
+    await waitForFrame(app, (f) => f.includes('Details') && f.includes('Login page'));
     await app.press(KEYS.escape);
-    await waitFor(app, (f) => f.includes('● Backlog (3)'));
+    await waitForFrame(app, (f) => f.includes('● Backlog (3)'));
     app.unmount();
   });
 
@@ -296,12 +288,12 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press('l', 'l', 'n');
-    await waitFor(app, (f) => f.includes('New Story on acme/web') && f.includes('‹ doing ›'));
+    await waitForFrame(app, (f) => f.includes('New Story on acme/web') && f.includes('‹ doing ›'));
     await app.press(...'From board', KEYS.enter);
-    await waitFor(app, (f) => f.includes('Created WEB-7'));
+    await waitForFrame(app, (f) => f.includes('Created WEB-7'));
     expect((await story(t, 'WEB-7')).stage).toBe('doing');
     await app.press(KEYS.escape);
-    await waitFor(app, (f) => f.includes('● Doing (2)'));
+    await waitForFrame(app, (f) => f.includes('● Doing (2)'));
     app.unmount();
   });
 
@@ -309,13 +301,13 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press('l', 'l', 'e');
-    await waitFor(app, (f) => f.includes('Edit WEB-5'));
+    await waitForFrame(app, (f) => f.includes('Edit WEB-5'));
     await app.press(KEYS.escape);
-    await waitFor(app, (f) => f.includes('● Doing (1)') && !f.includes('Edit WEB-5'));
+    await waitForFrame(app, (f) => f.includes('● Doing (1)') && !f.includes('Edit WEB-5'));
     await app.press('d');
-    await waitFor(app, (f) => f.includes('Delete WEB-5'));
+    await waitForFrame(app, (f) => f.includes('Delete WEB-5'));
     await app.press('y');
-    await waitFor(app, (f) => f.includes('Deleted WEB-5') && f.includes('● Doing (0)'));
+    await waitForFrame(app, (f) => f.includes('Deleted WEB-5') && f.includes('● Doing (0)'));
     await expect(story(t, 'WEB-5')).rejects.toThrow('not found');
     app.unmount();
   });
@@ -324,9 +316,9 @@ describe('board view', () => {
     const t = await seed();
     const app = await open(t);
     await app.press('b');
-    await waitFor(app, (f) => f.includes('Website web (current)'));
+    await waitForFrame(app, (f) => f.includes('Website web (current)'));
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('API acme/api') && f.includes('● Backlog (0)'));
+    await waitForFrame(app, (f) => f.includes('API acme/api') && f.includes('● Backlog (0)'));
     expect(app.lastFrame()).not.toContain('WEB-');
     expect(await createRepositories(t.root).localState.get()).toMatchObject({ workspace: 'acme', board: 'api' });
     app.unmount();
@@ -347,7 +339,7 @@ describe('home', () => {
     const app = renderTui(
       <App ctx={ctx} services={createServices(ctx)} initial={{ screen: 'home', params: {} }} toasts={toasts} />,
     );
-    await waitFor(app, (f) => f.includes('Go to'));
+    await waitForFrame(app, (f) => f.includes('Go to'));
     expect(screens.home).toBeDefined();
     app.unmount();
   });

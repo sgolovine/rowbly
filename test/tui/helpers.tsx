@@ -19,6 +19,30 @@ export const KEYS = {
 /** Lets Ink process input and re-render. `esc` needs longer: Ink waits to tell it apart from escape sequences. */
 export const tick = (ms = 30) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export type FrameMatcher = string | RegExp | ((frame: string) => boolean);
+
+/**
+ * Polls the last frame until it matches, then returns it. Use this instead of a fixed sleep before
+ * asserting on anything that waits for a service call, so tests hold up on a busy machine.
+ */
+export async function waitForFrame(
+  app: { lastFrame(): string | undefined },
+  match: FrameMatcher,
+  timeout = 5_000,
+): Promise<string> {
+  const ok =
+    typeof match === 'function'
+      ? match
+      : (f: string) => (typeof match === 'string' ? f.includes(match) : match.test(f));
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    const frame = app.lastFrame() ?? '';
+    if (ok(frame)) return frame;
+    if (Date.now() > deadline) throw new Error(`timed out waiting for ${String(match)}; last frame:\n${frame}`);
+    await tick(20);
+  }
+}
+
 export type Rendered = ReturnType<typeof render> & { press(...keys: string[]): Promise<void> };
 
 /** Renders `node` and returns a `press` helper that types each key and waits for the frame. */

@@ -4,7 +4,7 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { fixedClock, fixedIds, makeBoard, makeStory, makeWorkspace, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, renderTui, tick } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 /** The real App over a temp Data Root; `ctx.warn` feeds the toasts as in `startTui`. */
 function renderScreen(t: TempRoot, screen: string, params: Record<string, unknown> = {}) {
@@ -21,27 +21,19 @@ function renderScreen(t: TempRoot, screen: string, params: Record<string, unknow
   return { app, ctx };
 }
 
-/** Waits for async service calls to settle and the frame to update. */
-async function settle(app: { press(...keys: string[]): Promise<void> }) {
-  await tick(50);
-  await app.press();
-}
-
 describe('workspaces screen', () => {
   it('creates a Workspace through the form', async () => {
     const t = await tempRoot();
     const { app } = renderScreen(t, 'workspaces');
-    await settle(app);
-    expect(app.lastFrame()).toContain('No Workspaces yet. Press n to create one.');
+    await waitForFrame(app, 'No Workspaces yet. Press n to create one.');
 
     await app.press('n');
-    await settle(app);
+    await waitForFrame(app, 'Id*');
     expect(app.lastFrame()).toContain('New Workspace');
     await app.press(...'acme', KEYS.down, ...'Acme Corp', KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, 'acme Acme Corp');
 
     expect(app.lastFrame()).toContain('Created Workspace acme');
-    expect(app.lastFrame()).toContain('acme Acme Corp');
     expect(await createRepositories(t.root).workspaces.get('acme')).toMatchObject({ name: 'Acme Corp' });
     app.unmount();
   });
@@ -49,10 +41,9 @@ describe('workspaces screen', () => {
   it('shows service validation errors inline in the form', async () => {
     const t = await tempRoot();
     const { app } = renderScreen(t, 'workspaces', { view: 'create' });
-    await settle(app);
+    await waitForFrame(app, 'Id*');
     await app.press(...'Bad Id', KEYS.down, ...'x', KEYS.enter);
-    await settle(app);
-    expect(app.lastFrame()).toContain('must be a lower-kebab-case slug');
+    await waitForFrame(app, 'must be a lower-kebab-case slug');
     app.unmount();
   });
 
@@ -61,9 +52,9 @@ describe('workspaces screen', () => {
     await makeWorkspace(t.path, { id: 'acme', name: 'Acme' });
     await makeWorkspace(t.path, { id: 'labs', name: 'Labs' });
     const { app, ctx } = renderScreen(t, 'workspaces');
-    await settle(app);
+    await waitForFrame(app, 'labs Labs');
     await app.press('j', KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, /Boards\s+0/);
     expect(ctx.local.workspace).toBe('labs');
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, workspace: 'labs' });
     expect(app.lastFrame()).toContain('Now using Workspace labs');
@@ -75,9 +66,9 @@ describe('workspaces screen', () => {
     const t = await tempRoot();
     await makeWorkspace(t.path, { id: 'acme', name: 'Acme' });
     const { app } = renderScreen(t, 'workspaces', { view: 'edit', id: 'acme' });
-    await settle(app);
+    await waitForFrame(app, 'Edit Workspace acme');
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'ACME', KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, 'Updated Workspace acme');
     expect((await createRepositories(t.root).workspaces.get('acme')).name).toBe('ACME');
     app.unmount();
   });
@@ -87,17 +78,16 @@ describe('workspaces screen', () => {
     await makeWorkspace(t.path, { id: 'acme' });
     await makeBoard(t.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
     const { app } = renderScreen(t, 'workspaces');
-    await settle(app);
+    await waitForFrame(app, 'acme');
     await app.press(KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, /Boards\s+1/);
     await app.press('j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Delete Workspace "acme" and everything in it (1 Board, 0 Epics)?');
     await app.press('n');
     expect(app.lastFrame()).not.toContain('Delete Workspace');
     await app.press('j', 'j', KEYS.enter, 'y');
-    await settle(app);
+    await waitForFrame(app, 'No Workspaces yet');
     expect(app.lastFrame()).toContain('Deleted Workspace acme');
-    expect(app.lastFrame()).toContain('No Workspaces yet');
     expect(await createRepositories(t.root).workspaces.list()).toEqual([]);
     app.unmount();
   });
@@ -116,19 +106,16 @@ describe('assignees screen', () => {
     await makeBoard(t.path, { id: 'web', workspaceId: 'acme', keyPrefix: 'WEB' });
     await makeStory(t.path, { key: 'WEB-1', workspaceId: 'acme', boardId: 'web', assignees: ['sam'] });
     const { app } = renderScreen(t, 'assignees');
-    await settle(app);
+    await waitForFrame(app, 'sam Sam <sam@example.com>');
     expect(app.lastFrame()).toContain('Assignees in acme');
-    expect(app.lastFrame()).toContain('sam Sam <sam@example.com>');
 
     await app.press('j', KEYS.enter);
-    await settle(app);
-    expect(app.lastFrame()).toMatch(/Email\s+sam@example\.com/);
+    await waitForFrame(app, /Email\s+sam@example\.com/);
     await app.press('j', KEYS.enter);
     expect(app.lastFrame()).toContain('Remove Assignee "sam"?');
     await app.press('y');
-    await settle(app);
+    await waitForFrame(app, 'Assignee "sam" removed from 1 story');
 
-    expect(app.lastFrame()).toContain('Assignee "sam" removed from 1 story');
     expect(app.lastFrame()).toContain('Removed Assignee sam');
     const repos = createRepositories(t.root);
     expect((await repos.workspaces.get('acme')).assignees.map((a) => a.handle)).toEqual(['ana']);
@@ -140,22 +127,21 @@ describe('assignees screen', () => {
     const t = await tempRoot();
     await makeWorkspace(t.path, { id: 'acme' });
     const { app } = renderScreen(t, 'assignees', { workspaceId: 'acme' });
-    await settle(app);
+    await waitForFrame(app, 'No Assignees yet');
     await app.press('n');
-    await settle(app);
+    await waitForFrame(app, 'Handle*');
     await app.press(...'sam', KEYS.down, ...'Sam', KEYS.down, ...'nope', KEYS.enter);
-    await settle(app);
-    expect(app.lastFrame()).toContain('Invalid email address');
+    await waitForFrame(app, 'Invalid email address');
     await app.press(...Array(4).fill(KEYS.backspace), ...'sam@example.com', KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, 'sam Sam <sam@example.com>');
     expect(app.lastFrame()).toContain('Added Assignee sam');
 
     await app.press(KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, /Email\s+sam@example\.com/);
     await app.press(KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, 'Edit Assignee sam');
     await app.press(KEYS.down, ...Array(15).fill(KEYS.backspace), KEYS.enter);
-    await settle(app);
+    await waitForFrame(app, 'Updated Assignee sam');
     const [sam] = (await createRepositories(t.root).workspaces.get('acme')).assignees;
     expect(sam).toEqual({ handle: 'sam', name: 'Sam' });
     app.unmount();

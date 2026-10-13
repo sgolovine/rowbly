@@ -7,7 +7,7 @@ import { createToastStore } from '../../src/tui/hooks';
 import type { ScreenProps } from '../../src/tui/screens';
 import { epicsScreens } from '../../src/tui/screens/epics';
 import { fixedClock, fixedIds, makeBoard, makeEpic, makeStory, makeWorkspace, tempRoot } from '../helpers';
-import { KEYS, renderTui, tick } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 /** Stands in for the story detail screen (WP05). */
 function FakeStory({ params }: ScreenProps) {
@@ -53,31 +53,30 @@ async function setup() {
       toasts={toasts}
     />,
   );
+  await waitForFrame(app, 'Launch');
   return { app, repos: createRepositories(tmp.root), path: tmp.path };
 }
 
-/** Waits for the async service calls behind a screen to settle. */
-const settle = () => tick(150);
+/** Opens the Launch Epic's detail screen. */
+async function openLaunch(app: Awaited<ReturnType<typeof setup>>['app']) {
+  await app.press(KEYS.enter);
+  await waitForFrame(app, 'Launch (launch)');
+}
 
 describe('epics screens', () => {
   it('lists open epics with progress bars and shows closed ones on a', async () => {
     const { app } = await setup();
-    await settle();
     expect(app.lastFrame()).toContain('Launch ███████░░░ 2/3 · launch');
     expect(app.lastFrame()).not.toContain('Old work');
     await app.press('a');
-    await settle();
-    expect(app.lastFrame()).toContain('Old work ░░░░░░░░░░ 0/0 · old · closed');
+    await waitForFrame(app, 'Old work ░░░░░░░░░░ 0/0 · old · closed');
     app.unmount();
   });
 
   it('shows the epic detail and opens a story from it', async () => {
     const { app } = await setup();
-    await settle();
-    await app.press(KEYS.enter);
-    await settle();
+    await openLaunch(app);
     const frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Launch (launch)');
     expect(frame).toMatch(/Progress\s+███████░░░ 2\/3/);
     expect(frame).toContain('API-1  Do API-1 api · ● Done');
     expect(frame).toContain('WEB-1  Do WEB-1 web · ● Shipped');
@@ -91,65 +90,54 @@ describe('epics screens', () => {
 
   it('creates an epic through the form', async () => {
     const { app, repos } = await setup();
-    await settle();
     await app.press('n');
-    await settle();
+    await waitForFrame(app, 'Id*');
     await app.press(...'beta', KEYS.down, ...'Beta', KEYS.enter);
-    await settle();
+    await waitForFrame(app, 'Beta (beta)');
     expect(await repos.epics.get('acme', 'beta')).toMatchObject({ name: 'Beta', description: '', closed: false });
-    expect(app.lastFrame()).toContain('Beta (beta)');
     expect(app.lastFrame()).toContain('Created Epic beta');
     app.unmount();
   });
 
   it('shows a validation error inline for a bad id', async () => {
     const { app } = await setup();
-    await settle();
     await app.press('n');
-    await settle();
+    await waitForFrame(app, 'Id*');
     await app.press(...'Bad Id', KEYS.down, ...'x', KEYS.enter);
-    await settle();
+    await waitForFrame(app, /Id\*\s+Bad Id\n\s+must be a lower-kebab-case slug/);
     expect(app.lastFrame()).toContain('New Epic');
-    expect(app.lastFrame()).toMatch(/Id\*\s+Bad Id\n\s+must be a lower-kebab-case slug/);
     app.unmount();
   });
 
   it('edits, closes and reopens an epic from the detail screen', async () => {
     const { app, repos } = await setup();
-    await settle();
-    await app.press(KEYS.enter);
-    await settle();
+    await openLaunch(app);
+    expect(app.lastFrame()).toMatch(/Closed\s+no/);
     await app.press('e');
-    await settle();
+    await waitForFrame(app, 'Edit Epic launch');
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.backspace);
     await app.press(...'Go live', KEYS.enter);
-    await settle();
+    await waitForFrame(app, 'Go live (launch)');
     expect((await repos.epics.get('acme', 'launch')).name).toBe('Go live');
-    expect(app.lastFrame()).toContain('Go live (launch)');
 
     await app.press('c');
-    await settle();
+    await waitForFrame(app, /Closed\s+yes/);
     expect((await repos.epics.get('acme', 'launch')).closed).toBe(true);
-    expect(app.lastFrame()).toMatch(/Closed\s+yes/);
     await app.press('c');
-    await settle();
+    await waitForFrame(app, /Closed\s+no/);
     expect((await repos.epics.get('acme', 'launch')).closed).toBe(false);
-    expect(app.lastFrame()).toMatch(/Closed\s+no/);
     expect(app.lastFrame()).not.toMatch(/status/i);
     app.unmount();
   });
 
   it('deletes an epic after confirming and warns with the unlinked count', async () => {
     const { app, repos } = await setup();
-    await settle();
-    await app.press(KEYS.enter);
-    await settle();
+    await openLaunch(app);
     await app.press('d');
     expect(app.lastFrame()).toContain('Delete Epic "launch"? Its 3 Stories will be unlinked.');
     await app.press('y');
-    await settle();
+    await waitForFrame(app, 'No open Epics.');
     expect(app.lastFrame()).toContain('warning: unlinked 3 Stories from Epic "launch"');
-    expect(app.lastFrame()).toContain('No open Epics.');
     expect((await repos.stories.findByKey('WEB-1')).epicId).toBeNull();
     app.unmount();
   });

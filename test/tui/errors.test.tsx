@@ -5,7 +5,7 @@ import { NotFoundError } from '../../src/core';
 import { useAsync, useIsActive, useServices } from '../../src/tui/hooks';
 import { useRouter } from '../../src/tui/router';
 import type { ScreenRegistry } from '../../src/tui/screens';
-import { KEYS, renderApp, tick } from './helpers';
+import { KEYS, renderApp, waitForFrame } from './helpers';
 
 function Opener() {
   const router = useRouter();
@@ -22,8 +22,7 @@ describe('service errors', () => {
       return <Text>{error ? `failed, count ${count}` : 'loading'}</Text>;
     }
     const app = renderApp({ a: Loader });
-    await tick(50);
-    expect(app.lastFrame()).toContain('error: story "WEB-9" not found');
+    await waitForFrame(app, 'error: story "WEB-9" not found');
     await app.press('+', '+');
     expect(app.lastFrame()).toContain('failed, count 2');
     await app.press('?');

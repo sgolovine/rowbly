@@ -14,7 +14,7 @@ import {
   type TempRoot,
   tempRoot,
 } from '../helpers';
-import { KEYS, renderTui, tick } from './helpers';
+import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { workspaceId: 'acme', boardId: 'web' };
 
@@ -48,16 +48,8 @@ async function open(t: TempRoot, screen: string, params: RouteParams = {}, me: s
     warn: (message) => toasts.push('warning', message),
   };
   const app = renderTui(<App ctx={ctx} services={createServices(ctx)} initial={{ screen, params }} toasts={toasts} />);
-  await waitFor(app, (frame) => !frame.includes('Loading'));
+  await waitForFrame(app, (frame) => !frame.includes('Loading'));
   return app;
-}
-
-async function waitFor(app: { lastFrame(): string | undefined }, ok: (frame: string) => boolean) {
-  for (let i = 0; i < 50; i++) {
-    if (ok(app.lastFrame() ?? '')) return;
-    await tick(20);
-  }
-  throw new Error(`timed out; last frame:\n${app.lastFrame()}`);
 }
 
 const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.findByKey(key);
@@ -68,14 +60,14 @@ describe('story form', () => {
     const app = await open(t, 'stories');
     expect(app.lastFrame()).toContain('No Stories yet. Press n to create one.');
     await app.press('n');
-    await waitFor(app, (f) => f.includes('New Story on acme/web'));
+    await waitForFrame(app, (f) => f.includes('New Story on acme/web'));
     expect(app.lastFrame()).toContain('‹ backlog ›');
     // name, description, stage, assignees, epic, priority, labels, due, size
     await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down, KEYS.down);
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);
     expect(app.lastFrame()).toContain('‹ s ›');
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('WEB-1 Login page') && f.includes('Details'));
+    await waitForFrame(app, (f) => f.includes('WEB-1 Login page') && f.includes('Details'));
 
     expect(await story(t, 'WEB-1')).toMatchObject({
       name: 'Login page',
@@ -92,9 +84,9 @@ describe('story form', () => {
   it('shows validation errors from the service inline', async () => {
     const t = await setup();
     const app = await open(t, 'story-form', { ref: web });
-    await waitFor(app, (f) => f.includes('Name*'));
+    await waitForFrame(app, (f) => f.includes('Name*'));
     await app.press(...'X', ...Array(6).fill(KEYS.down), ...'Bad Label', KEYS.enter);
-    await waitFor(app, (f) => f.includes('must be lower-kebab-case'));
+    await waitForFrame(app, (f) => f.includes('must be lower-kebab-case'));
     expect(await createRepositories(t.root).stories.allInBoard(web)).toEqual([]);
     app.unmount();
   });
@@ -104,13 +96,13 @@ describe('story form', () => {
     await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Old', customFields: { size: 'm' } });
     const app = await open(t, 'story', { key: 'WEB-1' });
     await app.press('e');
-    await waitFor(app, (f) => f.includes('Name*'));
+    await waitForFrame(app, (f) => f.includes('Name*'));
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New');
     // stage → todo; size: (none) s m l → back to (none) unsets it
     await app.press(KEYS.down, KEYS.down, KEYS.right);
     await app.press(KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.left, KEYS.left);
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('WEB-1 New') && f.includes('Updated WEB-1'));
+    await waitForFrame(app, (f) => f.includes('WEB-1 New') && f.includes('Updated WEB-1'));
     expect(await story(t, 'WEB-1')).toMatchObject({ name: 'New', stage: 'todo', customFields: {} });
     app.unmount();
   });
@@ -126,7 +118,7 @@ describe('story detail', () => {
     await app.press('m');
     expect(app.lastFrame()).toContain('Move WEB-1 to');
     await app.press(KEYS.down, KEYS.down, KEYS.down, KEYS.enter);
-    await waitFor(app, (f) => f.includes('Moved WEB-1 to done') && f.includes('● Done'));
+    await waitForFrame(app, (f) => f.includes('Moved WEB-1 to done') && f.includes('● Done'));
     expect((await story(t, 'WEB-1')).stage).toBe('done');
     app.unmount();
   });
@@ -136,15 +128,15 @@ describe('story detail', () => {
     await makeStory(t.path, { ...web, key: 'WEB-1' });
     const app = await open(t, 'stories');
     await app.press(KEYS.enter);
-    await waitFor(app, (f) => f.includes('Details'));
+    await waitForFrame(app, (f) => f.includes('Details'));
     await app.press(KEYS.tab);
-    await waitFor(app, (f) => f.includes('No Tasks yet'));
+    await waitForFrame(app, (f) => f.includes('No Tasks yet'));
     await app.press(KEYS.tab);
-    await waitFor(app, (f) => f.includes('No Comments yet'));
+    await waitForFrame(app, (f) => f.includes('No Comments yet'));
     await app.press(KEYS.tab, 'd');
     expect(app.lastFrame()).toContain('Delete WEB-1');
     await app.press('y');
-    await waitFor(app, (f) => f.includes('Deleted WEB-1') && f.includes('No Stories yet'));
+    await waitForFrame(app, (f) => f.includes('Deleted WEB-1') && f.includes('No Stories yet'));
     await expect(story(t, 'WEB-1')).rejects.toThrow('not found');
     app.unmount();
   });
@@ -162,14 +154,14 @@ describe('story list', () => {
 
     // stage, assignee, me, label, priority, epic, search
     await app.press('f', KEYS.down, KEYS.down, ' ', KEYS.enter);
-    await waitFor(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
+    await waitForFrame(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
     await app.press('c');
-    await waitFor(app, (f) => f.includes('WEB-2'));
+    await waitForFrame(app, (f) => f.includes('WEB-2'));
 
     await app.press('f', ...Array(5).fill(KEYS.down), KEYS.right, KEYS.right, KEYS.enter);
-    await waitFor(app, (f) => f.includes('filters: Epic launch') && !f.includes('WEB-1'));
+    await waitForFrame(app, (f) => f.includes('filters: Epic launch') && !f.includes('WEB-1'));
     await app.press('c', 'f', ...Array(6).fill(KEYS.down), ...'nothing', KEYS.enter);
-    await waitFor(app, (f) => f.includes('No Stories match.'));
+    await waitForFrame(app, (f) => f.includes('No Stories match.'));
     app.unmount();
   });
 });
