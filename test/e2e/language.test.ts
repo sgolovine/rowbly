@@ -14,7 +14,7 @@ const AVOID =
 
 /** Legitimate uses, removed from the text before matching. */
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
-  { file: /^tui\//, text: /^column$/, why: 'Ink layout: flexDirection="column"' },
+  { file: /^(tui|plugins)\//, text: /^column$/, why: 'Ink layout: flexDirection="column"' },
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
   { text: /\buser\.email\b/g, why: 'the git config key' },
   { text: /\bLocal State\b/g, why: 'a CONTEXT.md term' },

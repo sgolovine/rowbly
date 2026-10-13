@@ -2,4 +2,6 @@
 // (src/cli.ts) reads it; core never imports a Plugin.
 import type { AnyPluginDefinition } from '../plugin-api';
 
-export const builtInPlugins: readonly AnyPluginDefinition[] = [];
+import { epics } from './epics';
+
+export const builtInPlugins: readonly AnyPluginDefinition[] = [epics];
