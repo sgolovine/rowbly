@@ -115,11 +115,11 @@ rowbly config show [--board <id>]
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
-  The **Context** entry of the `g` palette switches the Board; press `m` there to pick Me from the
+  The **Context** section of the settings (`,`) switches the Board; press `m` there to pick Me from the
   roster, or `c` to clear the current Board. While `~/.rowbly` does not exist,
   Context also lists **Create global Data Root**, which runs the same form as the first-run screen
   (`init --global`) and then returns to the Data Root you are using.
-- The **Config** entry of the `g` palette is the TUI's `config show`: the Board detail for the Board
+- The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
 
@@ -295,7 +295,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 
 Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
 
-In the TUI, open **Doctor** from the `g` palette: `f` fixes and `r` checks again.
+In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks again.
 <!-- END doctor -->
 
 <!-- BEGIN tui -->
@@ -313,7 +313,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `g` | go to any screen: Board, Stories, Boards, Assignees, Stages, Fields, Config, Context, Doctor |
+| `,` | settings, in a sidebar grouped into Global (Boards, Assignees, global Stages and Fields, Context, Doctor) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 

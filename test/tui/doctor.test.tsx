@@ -58,15 +58,15 @@ describe('doctor screen', () => {
     app.unmount();
   });
 
-  it('checks again with r and is reachable from the g palette', async () => {
+  it('checks again with r and is reachable from the settings', async () => {
     const { tmp, render } = await setup('home');
     const app = render();
-    // Home opens the board once it has loaded; wait so that does not close the palette.
+    // Home opens the board once it has loaded; wait so that does not close the settings.
     await waitForFrame(app, '● Backlog (0)');
-    await app.press('g');
-    await waitForFrame(app, 'Doctor');
-    // The first enter ends filtering, the second opens the highlighted destination.
-    await app.press('/', 'd', 'o', 'c', KEYS.enter, KEYS.enter);
+    await app.press(',');
+    await waitForFrame(app, 'Board: ');
+    // Doctor is the last global section.
+    await app.press(...Array(5).fill('j'), KEYS.enter);
     await waitForFrame(app, 'No problems found');
 
     await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone' });

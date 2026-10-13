@@ -7,8 +7,8 @@ export const MIN_COLUMN_WIDTH = 24;
 export const GUTTER_WIDTH = 3;
 /** Lines per card, including the gap below it. */
 export const CARD_HEIGHT = 4;
-/** Lines of the board view that are not cards: title, gap, column header and rule, scroll markers. */
-const CHROME_HEIGHT = 6;
+/** Lines of the board view that are not cards: column header and rule, scroll markers. */
+const CHROME_HEIGHT = 4;
 
 /** One list of Stories per Stage, in Stage order. Stories in an unknown Stage (drift) are left out. */
 export type Columns = Story[][];

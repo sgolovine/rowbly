@@ -99,17 +99,17 @@ describe('G1 Board detail (boards show)', () => {
 });
 
 describe('G2 effective configuration (config show)', () => {
-  it('is reachable from the g palette and shows the Board in context with each source level', async () => {
+  it('is reachable from the settings and shows the Board in context with each source level', async () => {
     const t = await seed();
     await makeRootConfig(t.path, { ...ROOT_CONFIG, stages: [{ key: 'idea', name: 'Idea', category: 'todo' }] });
     const { app } = open(t, 'home', {}, { version: 1, board: 'api' });
     await waitForFrame(app, 'API api');
-    await app.press('g');
-    await waitForFrame(app, 'Config');
-    // The first enter ends filtering, the second opens the highlighted destination.
-    await app.press('/', ...'conf', KEYS.enter, KEYS.enter);
+    await app.press(',');
+    await waitForFrame(app, 'Board: ');
+    // Config is the first section of the Board, after the six global ones.
+    await app.press(...Array(6).fill('j'));
     const frame = await waitForFrame(app, 'Key prefix');
-    expect(frame).toContain('Board › Config');
+    expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Board\s+api/);
     expect(frame).toContain('Stages (from global)');
     expect(frame).toContain('● Idea idea · todo 0 Stories');

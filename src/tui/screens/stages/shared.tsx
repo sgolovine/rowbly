@@ -14,10 +14,14 @@ export interface ConfigScope {
   boardId: Slug | null;
 }
 
-/** Resolves the scope once: `params.boardId` wins, else the context Board, else no Board (global only). */
+/**
+ * Resolves the scope once: `params.global` keeps to the global level, else `params.boardId` wins,
+ * else the context Board, else no Board (global only).
+ */
 export function useConfigScope(params: Record<string, unknown>) {
   const services = useServices();
   return useAsync<ConfigScope>(async () => {
+    if (params.global === true) return { boardId: null };
     const given = params.boardId as Slug | undefined;
     if (given) return { boardId: given };
     try {
@@ -26,7 +30,7 @@ export function useConfigScope(params: Record<string, unknown>) {
       if (!(err instanceof UsageError)) throw err;
       return { boardId: null };
     }
-  }, [services, params.boardId]);
+  }, [services, params.global, params.boardId]);
 }
 
 export function levelsFor(scope: ConfigScope): LevelName[] {

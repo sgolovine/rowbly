@@ -3,9 +3,9 @@ import type { KeyHint } from '../keymap';
 
 export function Footer({ hints, atRoot }: { hints: readonly KeyHint[]; atRoot: boolean }) {
   // Away from the root the screen's keys are on its modal; this keeps to the global ones.
+  // Only the primary keys fit here; `?` lists the rest.
   const shown = [
-    ...hints,
-    { key: 'g', description: 'go to' },
+    ...hints.filter((hint) => !hint.secondary),
     { key: '?', description: 'help' },
     ...(atRoot ? [{ key: 'q', description: 'quit' }] : []),
   ];

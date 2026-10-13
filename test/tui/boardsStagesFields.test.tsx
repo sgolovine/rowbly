@@ -109,7 +109,7 @@ describe('stages screen', () => {
     await app.press('n');
     expect(app.lastFrame()).toContain('Add a Stage');
     // The form's own esc replaces the shell's "esc back" in the footer.
-    expect(app.lastFrame()).toContain('esc cancel · g go to');
+    expect(app.lastFrame()).toContain('esc cancel · ? help');
     expect(app.lastFrame()).not.toContain('esc back');
     await app.press(KEYS.escape);
     expect(app.lastFrame()).not.toContain('Add a Stage');

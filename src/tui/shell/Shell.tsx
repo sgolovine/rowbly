@@ -9,6 +9,7 @@ import {
   ShellContext,
   useAsync,
   useScreenHints,
+  useScreenLabel,
   useToast,
   useToasts,
 } from '../hooks';
@@ -17,7 +18,6 @@ import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
 import { boardKey } from './boardKey';
 import { Footer } from './Footer';
-import { GotoPalette } from './GotoPalette';
 import { Header } from './Header';
 import { HelpOverlay } from './HelpOverlay';
 import { FOOTER_HEIGHT, HEADER_HEIGHT, SIDEBAR_WIDTH } from './layout';
@@ -25,7 +25,7 @@ import { ScreenSlot } from './ScreenSlot';
 import { Sidebar } from './Sidebar';
 import { ToastArea } from './ToastArea';
 
-type Overlay = { kind: 'help' } | { kind: 'goto' } | { kind: 'confirm'; action: 'quit' | 'back' };
+type Overlay = { kind: 'help' } | { kind: 'confirm'; action: 'quit' | 'back' };
 
 /**
  * The frame: a header with the project and its actions, the Board sidebar, and the main area. The
@@ -84,13 +84,15 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   };
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
+  const openSettings = () => {
+    if (services && !router.stack.some((route) => route.screen === 'settings')) router.push('settings');
+  };
 
   useInput((input, key) => {
     const captured = shell.captured();
     if (key.escape && captured.escape) return;
     if (overlay) {
       if (overlay.kind === 'help' && (key.escape || input === '?' || input === 'q')) setOverlay(null);
-      if (overlay.kind === 'goto' && key.escape) setOverlay(null);
       return;
     }
     if (captured.text && !key.escape) return;
@@ -98,7 +100,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     if (action === 'back') back();
     else if (action === 'quit' && atRoot) quit();
     else if (action === 'help') setOverlay({ kind: 'help' });
-    else if (action === 'goto') setOverlay({ kind: 'goto' });
+    else if (action === 'settings') openSettings();
     else if (atRoot && services && input === 'N') newBoard();
     else if (atRoot && boards.length > 0) {
       const target = boardKey(input, currentIndex, boards.length);
@@ -108,6 +110,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   });
 
   const hints = useScreenHints(depth);
+  const label = useScreenLabel(0);
   const sidebarWidth = services ? SIDEBAR_WIDTH : 0;
   // The main panel's border takes a column on each side.
   const mainWidth = Math.max(20, columns - sidebarWidth - 2);
@@ -119,7 +122,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   return (
     <BoardSelectionContext.Provider value={selection}>
       <Box flexDirection="column" height={fullscreen ? rows : undefined}>
-        <Header onNewStory={services ? newStory : undefined} clickable={idle} />
+        <Header label={label} onNewStory={services ? newStory : undefined} clickable={idle} />
         <Box flexGrow={1}>
           {services && (
             <Sidebar
@@ -174,16 +177,6 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
               {overlay?.kind === 'help' && (
                 <Modal title="Keys" size="dialog">
                   <HelpOverlay hints={hints} />
-                </Modal>
-              )}
-              {overlay?.kind === 'goto' && (
-                <Modal title="Go to" size="dialog">
-                  <GotoPalette
-                    onPick={(destination) => {
-                      setOverlay(null);
-                      router.push(destination.screen, destination.params);
-                    }}
-                  />
                 </Modal>
               )}
               {overlay?.kind === 'confirm' && (

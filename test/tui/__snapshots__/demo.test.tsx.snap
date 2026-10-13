@@ -55,5 +55,5 @@ exports[`demo screen > renders every primitive 1`] = `
 │  │  Delete (y)    Cancel (n)  │                                                                  │
 │  ╰────────────────────────────╯                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
- ctrl+n next section · g go to · ? help · q quit"
+ ctrl+n next section · ? help · q quit"
 `;

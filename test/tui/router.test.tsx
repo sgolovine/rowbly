@@ -78,32 +78,11 @@ describe('router', () => {
     app.unmount();
   });
 
-  it('opens the go-to palette with g and pushes the picked screen', async () => {
-    const app = renderApp(screens);
-    await app.press('g');
-    expect(app.lastFrame()).toContain('Go to');
-    expect(app.lastFrame()).toContain('Assignees');
-    expect(app.lastFrame()).not.toContain('Screen A');
-    await app.press(KEYS.down, KEYS.enter);
-    // The test registry has no "stories" screen.
-    expect(app.lastFrame()).toContain('A › Stories');
-    expect(app.lastFrame()).toContain('screen "stories" is not available');
-    app.unmount();
-  });
-
-  it('closes the palette on esc without leaving the screen', async () => {
-    const app = renderApp(screens, 'b');
-    await app.press('g', KEYS.escape);
-    expect(app.lastFrame()).toContain('Screen B');
-    expect(app.lastFrame()).not.toContain('Go to');
-    app.unmount();
-  });
-
   it('opens the help overlay with ? listing the current keys', async () => {
     const app = renderApp(screens);
     await app.press('?');
     expect(app.lastFrame()).toContain('Keys');
-    expect(app.lastFrame()).toContain('go to');
+    expect(app.lastFrame()).toContain('settings');
     expect(app.lastFrame()).toContain('filter lists');
     await app.press('?');
     expect(app.lastFrame()).toContain('Screen A');

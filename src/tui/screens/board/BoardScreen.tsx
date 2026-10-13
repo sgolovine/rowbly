@@ -6,6 +6,7 @@ import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../comp
 import {
   useAsync,
   useBoardSelection,
+  useHeaderLabel,
   useIsActive,
   useKeyCapture,
   useKeyHints,
@@ -187,15 +188,15 @@ export function BoardScreen({ params }: ScreenProps) {
       ? [
           { key: 'h/l j/k', description: 'select' },
           { key: 'enter', description: 'open' },
-          { key: 'H/L', description: 'move Stage' },
-          { key: 'K/J', description: 'reorder' },
-          { key: 'T/B', description: 'to top/bottom' },
+          { key: 'H/L', description: 'move Stage', secondary: true },
+          { key: 'K/J', description: 'reorder', secondary: true },
+          { key: 'T/B', description: 'to top/bottom', secondary: true },
           { key: 'n', description: 'new' },
-          { key: 'e', description: 'edit' },
-          { key: 'd', description: 'delete' },
+          { key: 'e', description: 'edit', secondary: true },
+          { key: 'd', description: 'delete', secondary: true },
           { key: '/', description: 'filter' },
-          { key: 'c', description: 'clear filter' },
-          { key: 'r', description: 'reload' },
+          { key: 'c', description: 'clear filter', secondary: true },
+          { key: 'r', description: 'reload', secondary: true },
         ]
       : [{ key: 'esc', description: 'cancel' }],
   );
@@ -225,35 +226,50 @@ export function BoardScreen({ params }: ScreenProps) {
     { isActive: active && mode === 'view' },
   );
 
-  if (!scope.data) return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
-  const { boardId, choices } = scope.data;
-
   const layout = columnLayout(stages.length, room.width);
   firstCol.current = follow(firstCol.current, col, layout.visible, stages.length);
   const shownStages = stages.slice(firstCol.current, firstCol.current + layout.visible);
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = hiddenLeft + hiddenRight > 0;
-  // Without a fixed height (tests), size to the terminal less the shell's header and footer.
-  const size = cardsPerColumn(room.height ?? termRows - 3);
   const summary = describeFilters(filters);
+  const boardId = scope.data?.boardId;
   const inContext = ctx?.local.board === boardId;
+
+  const label = scope.data && {
+    title: scope.data.choices.board.name,
+    detail: [
+      scope.data.boardId,
+      scrolled ? `Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : '',
+      viewing && !inContext ? 'viewing only (context unchanged)' : '',
+      summary ? `filter: ${summary}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
+  // The Board's name and state show in the shell's header, or above the columns in a modal.
+  const inHeader = useHeaderLabel(label);
+
+  if (!scope.data || !label) {
+    return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
+  }
+  const { choices } = scope.data;
+  // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
+  // title line and gap when the label is shown here.
+  const size = cardsPerColumn((room.height ?? termRows - 3) - (inHeader ? 0 : 2));
 
   return (
     <Box flexDirection="column">
-      <Text wrap="truncate-end">
-        <Text bold>{choices.board.name}</Text>
-        <Text dimColor>
-          {` ${boardId}`}
-          {scrolled ? ` · Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : ''}
-          {viewing && !inContext ? ' · viewing only (context unchanged)' : ''}
-          {summary ? ` · filter: ${summary}` : ''}
+      {!inHeader && (
+        <Text wrap="truncate-end">
+          <Text bold>{label.title}</Text>
+          <Text dimColor>{` ${label.detail}`}</Text>
         </Text>
-      </Text>
+      )}
       {shown?.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
       ) : (
-        <Box marginTop={1}>
+        <Box marginTop={inHeader ? 0 : 1}>
           {scrolled && <Gutter text={hiddenLeft > 0 ? `‹${hiddenLeft}` : ''} />}
           {shownStages.map((stage, i) => {
             const index = hiddenLeft + i;

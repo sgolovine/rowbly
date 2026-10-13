@@ -4,6 +4,8 @@ import type { Key } from 'ink';
 export interface KeyHint {
   key: string;
   description: string;
+  /** Left out of the footer to keep it short; the help overlay still lists it. */
+  secondary?: boolean;
 }
 
 /** The keys the shell handles on every screen. */
@@ -15,7 +17,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: '1-9', description: 'open Board 1-9 in the sidebar' },
   { key: 'N', description: 'new Board' },
   { key: 'esc', description: 'back' },
-  { key: 'g', description: 'go to' },
+  { key: ',', description: 'settings' },
   { key: '?', description: 'help' },
   { key: 'q', description: 'quit (from the root)' },
 ];
@@ -27,7 +29,7 @@ export const FORM_KEYS: readonly KeyHint[] = [
   { key: 'ctrl+enter/ctrl+s', description: 'save' },
 ];
 
-/** A place the `g` palette and the home menu can open. */
+/** A place the home menu can open. */
 export interface Destination {
   label: string;
   screen: string;
@@ -47,7 +49,7 @@ export const DESTINATIONS: readonly Destination[] = [
   { label: 'Doctor', screen: 'doctor' },
 ];
 
-export type GlobalAction = 'quit' | 'back' | 'help' | 'goto';
+export type GlobalAction = 'quit' | 'back' | 'help' | 'settings';
 
 /** The shell action bound to a key press, if any. */
 export function globalAction(input: string, key: Key): GlobalAction | null {
@@ -55,7 +57,7 @@ export function globalAction(input: string, key: Key): GlobalAction | null {
   if (key.ctrl || key.meta) return null;
   if (input === 'q') return 'quit';
   if (input === '?') return 'help';
-  if (input === 'g') return 'goto';
+  if (input === ',') return 'settings';
   return null;
 }
 

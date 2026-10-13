@@ -17,6 +17,7 @@ describe('screen registry', () => {
         'doctor',
         'fields',
         'home',
+        'settings',
         'setup',
         'stages',
         'stories',

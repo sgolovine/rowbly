@@ -100,13 +100,14 @@ describe('context switcher', () => {
     return t;
   }
 
-  it('switches Boards from the g palette', async () => {
+  it('switches Boards from the settings', async () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home', { version: 1, board: 'api' });
     await waitForFrame(app, (f) => f.includes('▌ 1 api') && f.includes('● Backlog (0)'));
-    await app.press('g');
-    // Context is the second-to-last palette entry.
-    await app.press(...Array(7).fill('j'), KEYS.enter);
+    // Context is the fifth section, the second-to-last global one.
+    await app.press(',');
+    await waitForFrame(app, 'Board: ');
+    await app.press(...Array(4).fill('j'), KEYS.enter);
     await waitForFrame(app, 'api *');
     expect(app.lastFrame()).toContain('Switch Board');
     expect(app.lastFrame()).toContain('web web (WEB)');
@@ -150,7 +151,9 @@ describe('context switcher', () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home');
     await waitForFrame(app, 'Go to');
-    await app.press('g', ...Array(7).fill('j'), KEYS.enter);
+    await app.press(',');
+    await waitForFrame(app, 'None in context');
+    await app.press(...Array(4).fill('j'), KEYS.enter);
     await waitForFrame(app, 'Switch Board');
     await app.press('m');
     await waitForFrame(app, 'sam Sam');

@@ -307,8 +307,8 @@ describe('board view', () => {
 
   it('scrolls a column vertically when it has more cards than fit', async () => {
     const t = await seed();
-    // 24 rows leave room for 3 cards.
-    const app = await open(t, { rows: 24 });
+    // 22 rows leave room for 3 cards.
+    const app = await open(t, { rows: 22 });
     await makeStory(t.path, { ...web, key: 'WEB-7', name: 'Fourth', stage: 'backlog', rank: 'a3' });
     await app.press('r');
     await waitForFrame(app, (f) => f.includes('● Backlog (4)'));
