@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { UsageError } from '../core';
-import { colors, describeOverrides, printResult, renderTable } from '../output';
+import { colors, describeCascadeLevels, printResult, renderTable } from '../output';
 import type { WorkspaceConfig } from '../schemas';
 import { assertWorkspaceRemovable, workspaceOverview } from '../services/workspaces';
 import {
@@ -92,8 +92,8 @@ export function registerWorkspaces(program: Command): void {
               `Boards         ${o.boards}`,
               `Epics          ${o.epics}`,
               `Assignees      ${o.assignees}`,
-              `Stages         ${describeOverrides(o.overrides.stages, 'built-in defaults')}`,
-              `Custom Fields  ${describeOverrides(o.overrides.customFields, 'none')}`,
+              `Stages         ${describeCascadeLevels(o.overrides.stages, 'built-in defaults')}`,
+              `Custom Fields  ${describeCascadeLevels(o.overrides.customFields, 'none')}`,
             ].join('\n'),
         });
       }),

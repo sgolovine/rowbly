@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { useContext, useState } from 'react';
-import { describeOverrides } from '../../../output';
+import { describeCascadeLevels } from '../../../output';
 import { plural, workspaceOverview } from '../../../services/workspaces';
 import { ConfirmDialog, DetailView, Form, Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
@@ -101,8 +101,8 @@ function WorkspaceDetail({ id }: { id: string }) {
           { label: 'Boards', value: String(o.boards) },
           { label: 'Epics', value: String(o.epics) },
           { label: 'Assignees', value: String(o.assignees) },
-          { label: 'Stages', value: describeOverrides(o.overrides.stages, 'built-in defaults') },
-          { label: 'Custom Fields', value: describeOverrides(o.overrides.customFields, 'none') },
+          { label: 'Stages', value: describeCascadeLevels(o.overrides.stages, 'built-in defaults') },
+          { label: 'Custom Fields', value: describeCascadeLevels(o.overrides.customFields, 'none') },
         ]}
         body={o.workspace.description}
       />
