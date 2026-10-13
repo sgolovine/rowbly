@@ -20,6 +20,8 @@ describe('screen registry', () => {
         'setup',
         'stages',
         'stories',
+        'story',
+        'story-form',
         'tasks',
         'workspaces',
       ].sort(),

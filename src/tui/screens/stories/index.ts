@@ -1,7 +1,10 @@
-import { placeholderScreen } from '../_placeholder';
 import type { ScreenRegistry } from '../types';
+import { StoryDetailScreen } from './detail';
+import { StoryFormScreen } from './form';
+import { StoryListScreen } from './list';
 
-// Stub: WP05 replaces this area's screens.
 export const storiesScreens: ScreenRegistry = {
-  stories: placeholderScreen('Stories', 'WP05'),
+  stories: StoryListScreen,
+  story: StoryDetailScreen,
+  'story-form': StoryFormScreen,
 };
