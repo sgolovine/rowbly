@@ -5,7 +5,7 @@ import type { ZodType } from 'zod';
 import { DataIntegrityError, NotFoundError, ValidationError } from '../core';
 
 /** A line starting with a git conflict marker. */
-const CONFLICT_MARKER_RE = /^<{7}(?: |$)/m;
+export const CONFLICT_MARKER_RE = /^<{7}(?: |$)/m;
 
 /**
  * ENOENT → `NotFoundError`; conflict markers → `DataIntegrityError` with `details.conflict`;
