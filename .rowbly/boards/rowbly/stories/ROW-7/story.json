@@ -4,8 +4,8 @@
   "boardId": "rowbly",
   "name": "Make story ccomments a plugin",
   "description": "",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "a4",
   "assignees": [],
   "priority": null,
   "labels": [],
@@ -13,8 +13,7 @@
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:56:05.303Z",
-  "updatedAt": "2026-10-13T19:56:05.303Z",
+  "updatedAt": "2026-10-14T00:51:39.679Z",
   "nextTaskNumber": 1,
-  "tasks": [],
-  "comments": []
+  "tasks": []
 }
