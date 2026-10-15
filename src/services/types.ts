@@ -191,6 +191,8 @@ export interface StoryPatch extends OperationOptions {
   customFields?: CustomFieldValuesInput;
   /** `--unset-field`. */
   unsetFields?: Slug[];
+  /** A new Stage moves the Story to the bottom of it, like `move`; the same Stage keeps the Rank. */
+  stage?: Slug;
 }
 
 // ── Tasks ───────────────────────────────────────────────────────────────────
@@ -205,6 +207,8 @@ export interface TaskCreateInput extends OperationOptions {
 export interface TaskPatch extends OperationOptions {
   name?: string;
   description?: string;
+  /** A new Stage, like `move`. */
+  stage?: Slug;
 }
 
 // ── Doctor ──────────────────────────────────────────────────────────────────

@@ -51,8 +51,8 @@ export function StoryFormScreen({ params }: ScreenProps) {
       return;
     }
     const unsetFields = Object.keys(story.customFields).filter((k) => fields[k] === undefined);
-    await services.stories.update(story.key, { ...common, customFields: fields, unsetFields });
-    if (stage !== story.stage) await services.stories.move(story.key, stage);
+    // One operation, so a rejected Stage change saves none of the edit (ARCH-43).
+    await services.stories.update(story.key, { ...common, stage, customFields: fields, unsetFields });
     toast.push('info', `Updated ${story.key}`);
     router.pop();
   };

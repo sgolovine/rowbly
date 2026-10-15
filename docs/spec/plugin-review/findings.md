@@ -309,8 +309,8 @@ Package: [WP05C-combined-edit.md](packages/WP05C-combined-edit.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ARCH-43](../../reviews/plugin-architecture/general-architecture.md#arch-43) | WP05 | P0 | Recommended / see scope | One TUI edit submission can commit twice and partially succeed | Required. | open |
-| [CQ-69](../../reviews/plugin-architecture/code-quality.md#cq-69) | WP04 | Optional | Optional | src/services/stories.ts:352 and src/services/tasks.ts:105: identical checkStage(config, stageId) validation. Optional extract with unchanged signature into src/services/stageVal… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-43](../../reviews/plugin-architecture/general-architecture.md#arch-43) | WP05 | P0 | Recommended / see scope | One TUI edit submission can commit twice and partially succeed | Required. | done — test/services/combinedEdit.test.ts, test/plugins/combinedEditTui.test.tsx |
+| [CQ-69](../../reviews/plugin-architecture/code-quality.md#cq-69) | WP04 | Optional | Optional | src/services/stories.ts:352 and src/services/tasks.ts:105: identical checkStage(config, stageId) validation. Optional extract with unchanged signature into src/services/stageVal… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | done — src/services/stageValidation.ts; errors pinned in test/services/combinedEdit.test.ts |
 
 ## WP08A
 

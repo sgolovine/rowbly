@@ -29,8 +29,8 @@ export function TaskFormScreen({ params }: ScreenProps) {
       const created = await services.tasks.create(story.key, { ...input, stage });
       toast.push('info', `Created ${created.id}`);
     } else {
-      await services.tasks.update(task.id, input);
-      if (stage !== task.stage) await services.tasks.move(task.id, stage);
+      // One operation, so a rejected Stage change saves none of the edit (ARCH-43).
+      await services.tasks.update(task.id, { ...input, stage });
       toast.push('info', `Updated ${task.id}`);
     }
     router.pop();
