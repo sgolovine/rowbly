@@ -1,6 +1,10 @@
 # Rowbly v1 — Contracts
 
-These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 turns §2, §6 and §8 into code; from then on, changing them requires a contract change request (supervisor.md §5). Terms follow `/CONTEXT.md`.
+> **Historical v1 specification.** This file is the contract the v1 build was written against. It is kept for reference and corrected only where it contradicts the current source. The current architecture is in [`docs/ARCHITECTURE.md`](../../ARCHITECTURE.md) and [`docs/PLUGINS.md`](../../PLUGINS.md); the current types are in `src/schemas/`, `src/services/types.ts` and `src/services/plugins/types.ts`. The contracts for the plugin-review remediation are in [`docs/spec/plugin-review/contracts.md`](../plugin-review/contracts.md).
+
+These contracts were **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 turned §2, §6 and §8 into code; from then on, changing them required a contract change request (supervisor.md §5). Terms follow [`docs/agents/CONTEXT.md`](../../agents/CONTEXT.md).
+
+**How the frozen contract was amended.** Each approved plugin ADR is such a change. ADR-0009 to ADR-0013 added the plugin host, Plugin Data bags, Plugin files and the operations pipeline. ADR-0014 brought Epics back as a Built-in Plugin; core still has none (ADR-0008). ADR-0018 moved Comments out of core into the Comments Built-in Plugin: core has no Comment schema, no `comments` arrays on Stories or Tasks, no Comments service and no Comments commands. ADR-0019 and ADR-0020 set the coordination, commit and plugin-execution contracts that the plugin-review remediation implements. The sections below reflect these amendments.
 
 ## 1. Data Root layout
 
@@ -16,12 +20,12 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
       plugins/<plugin-id>/…                # a Plugin's Board files
       stories/
         <STORY-KEY>/
-          story.json                       # one Story, with its Tasks and Comments embedded
+          story.json                       # one Story, with its Tasks embedded
           plugins/<plugin-id>/…            # a Plugin's Story files
 ```
 
 - `docs/ARCHITECTURE.md` called the root `rowbly/`; it is `.rowbly/` (ADR-0002).
-- There is no Workspace level (ADR-0007): Boards sit directly in the Data Root. There are no Epics (ADR-0008).
+- There is no Workspace level (ADR-0007): Boards sit directly in the Data Root. There are no Epics in core (ADR-0008); Epics are a Built-in Plugin (ADR-0014).
 - `board.config.json` is **required** (it holds identity metadata); its `stages`/`customFields` keys are optional overrides.
 - The id stored inside a file must equal its folder/file name. A mismatch is a `DataIntegrityError` (and a `doctor` finding).
 - Any file or folder not matching this layout is ignored by repositories and reported by `doctor` as a warning.
@@ -35,7 +39,6 @@ These contracts are **frozen at Checkpoint A** (after WP00–WP02 merge). WP00 t
 | Board key prefix | `^[A-Z][A-Z0-9]{1,9}$` | **No** | Entire Data Root (so a bare Story Key always resolves) |
 | Story Key | `<PREFIX>-<n>`, n ≥ 1, allocated as max existing n on that Board + 1 (ADR-0003). Deleted keys may be reused. | No | Board (hence Data Root) |
 | Task id | `<STORY-KEY>.<n>`, n from the Story's `nextTaskNumber`, never reused | No | Story |
-| Comment id | `nanoid(8)` | No | Story (including its Tasks) |
 | Label | lower-kebab-case, same regex as slug, 1–40 chars | — | — |
 
 Story Key input is case-insensitive (`web-42` → `WEB-42`).
@@ -84,13 +87,9 @@ interface BoardConfig {            // board.config.json
 
 type Priority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
 
-interface Comment {
-  id: string; author: Slug | null; body: string /*≥1*/; createdAt: Timestamp; updatedAt: Timestamp; plugins?: PluginBags;
-}
-
 interface Task {
   id: TaskId; name: string /*1–200*/; description: string; stage: Slug;
-  comments: Comment[]; createdAt: Timestamp; updatedAt: Timestamp; plugins?: PluginBags;
+  createdAt: Timestamp; updatedAt: Timestamp; plugins?: PluginBags;
 }
 
 interface Story {                  // stories/<KEY>/story.json
@@ -102,7 +101,7 @@ interface Story {                  // stories/<KEY>/story.json
   customFields: Record<Slug, CustomFieldValue>;
   createdBy: Slug | null; createdAt: Timestamp; updatedAt: Timestamp;
   nextTaskNumber: number /*int ≥1*/;
-  tasks: Task[]; comments: Comment[];
+  tasks: Task[];
   plugins?: PluginBags;
 }
 
@@ -114,7 +113,7 @@ interface LocalState {             // local.json
 **Two validation levels.**
 
 1. *Shape* (zod) is enforced by the storage layer on every read and write.
-2. *Referential* rules are enforced by services on writes. A Story's `stage` and each Task's `stage` must be in the Board's effective stages. `assignees` must be in the roster. `customFields` keys must be effective fields, values must match the field type and options, and required fields must be present. `createdBy`/`author` is set to Me when Me is in the roster, else `null`.
+2. *Referential* rules are enforced by services on writes. A Story's `stage` and each Task's `stage` must be in the Board's effective stages. `assignees` must be in the roster. `customFields` keys must be effective fields, values must match the field type and options, and required fields must be present. `createdBy` is set to Me when Me is in the roster, else `null`.
 
 Referential drift that can only arise from hand edits or merges (for example a missing stage) is reported by `doctor`. Reads stay tolerant: they do not throw on referential drift.
 
@@ -151,7 +150,7 @@ Global flags on every command: `--root <path>`, `--json`, `--yes` (skip confirma
 
 **Prompting.** Clack prompts for a missing required argument are allowed only when stdin and stdout are both TTYs and neither `--json` nor `--no-prompt` is set. Otherwise the command fails with a `UsageError`. Destructive commands confirm through Clack under the same conditions; when not interactive they require `--yes`.
 
-**Long text.** `--description <text>`, `--description-file <path|->`, or `--edit` opens `$VISUAL`/`$EDITOR` (fallback `vi`). Comments use `--body`, `--body-file` and `--edit` in the same way.
+**Long text.** `--description <text>`, `--description-file <path|->`, or `--edit` opens `$VISUAL`/`$EDITOR` (fallback `vi`).
 
 **Repeated values.** Flags such as `--assignee`, `--label` and `--field key=value` may be repeated, or given comma-separated.
 
@@ -183,7 +182,6 @@ rowbly stories delete <KEY>
 
 rowbly tasks list <KEY> | create <KEY> --name <n> [desc flags] [--stage <k>] | show <TASK-ID>
             | edit <TASK-ID> [--name] [desc flags] | move <TASK-ID> <stage> | delete <TASK-ID>
-rowbly comments list <KEY|TASK-ID> | add <KEY|TASK-ID> [body flags] | edit <KEY|TASK-ID> <comment-id> [body flags] | delete <KEY|TASK-ID> <comment-id>
 
 rowbly doctor [--fix]
 
@@ -191,9 +189,20 @@ rowbly plugins list | show <id> | enable <id> | disable <id>   # ADR-0010; a cha
 rowbly <plugin-id> …                           # the commands of a Plugin that is on
 ```
 
-Plugins that are on may add long options to these commands: `assignees add|edit|remove`, `boards create|edit|delete`, `stories list|create|edit|move|rank|delete`, `tasks create|edit|move|delete` and `comments add|edit|delete`. Their values reach the operation as Plugin input (`stories list`: the filter).
+Plugins that are on may add long options to these commands: `assignees add|edit|remove`, `boards create|edit|delete`, `stories list|create|edit|move|rank|delete` and `tasks create|edit|move|delete` (`PluginOptionCommand` in `src/services/plugins/types.ts`). Plugin commands, such as `comments add`, take no options from other Plugins. Their values reach the operation as Plugin input (`stories list`: the filter).
 
 Defaults: a new Story goes into the **first** effective stage, at the bottom. A new Task goes into the first effective stage. `stories list` sorts by stage order, then rank, unless `--sort` is given. `--open` means stage category ≠ `done`. `--search` is a case-insensitive substring match on name and description.
+
+### Built-in Plugin commands
+
+These commands exist only while their Plugin is on (`rowbly plugins enable <id>`; ADR-0010). `rowbly init` turns no Plugins on. The Epics and Specs commands are in [`docs/PLUGINS.md`](../../PLUGINS.md).
+
+```text
+# Comments (ADR-0018): rowbly plugins enable comments
+rowbly comments list <KEY|TASK-ID> | add <KEY|TASK-ID> [body flags] | edit <KEY|TASK-ID> <comment-id> [body flags] | delete <KEY|TASK-ID> <comment-id>
+```
+
+Body flags are `--body <text>`, `--body-file <path|->` or `--edit`, like the description flags. A Comment's id is 8 random characters, and its author is Me when Me is in the roster, else `null`. Comments are Plugin Data on their Story or Task (`plugins.comments.comments`).
 
 ## 6. Errors and exit codes (`src/core/errors.ts`)
 
@@ -202,7 +211,7 @@ Defaults: a new Story goes into the **first** effective stage, at the bottom. A 
 | (uncaught) | `INTERNAL` | 1 | bugs |
 | `UsageError` | `USAGE` | 2 | bad flags, missing args, context not resolvable, non-interactive without `--yes` |
 | `ValidationError` | `VALIDATION` | 2 | schema or referential rule violated on input; `details.issues` |
-| `NotFoundError` | `NOT_FOUND` | 3 | unknown board/story/task/comment/stage/field/assignee |
+| `NotFoundError` | `NOT_FOUND` | 3 | unknown board/story/task/stage/field/assignee, or a Plugin's own record such as a Comment |
 | `ConflictError` | `CONFLICT` | 4 | id/prefix already exists; deletion refused (§7); key collision |
 | `DataRootNotFoundError` | `NO_DATA_ROOT` | 5 | no Data Root found |
 | `DataIntegrityError` | `DATA_INTEGRITY` | 6 | file on disk fails schema or id/path mismatch; `details.path` |
@@ -220,7 +229,7 @@ Human mode writes `error: <message>` (red) plus an optional hint to stderr. `--j
 | Edit field options | Strip values that are no longer valid; warn with a count. |
 | Remove an Assignee | Remove the handle from all Stories in the Data Root; warn with a count. |
 | Delete a Board | Refuse if non-empty unless `--force`, which deletes recursively. Always confirm (or `--yes`). |
-| Delete a Story / Task / Comment | Confirm (or `--yes`). |
+| Delete a Story / Task | Confirm (or `--yes`). Plugin commands that delete, such as `comments delete`, confirm the same way. |
 
 ## 8. Service interfaces (`src/services/types.ts`)
 
@@ -268,8 +277,6 @@ interface Services {
   tasks:      { list(storyKey): Promise<Task[]>; get(taskId): Promise<{ story: Story; task: Task }>;
                 create(storyKey, input): Promise<Task>; update(taskId, patch): Promise<Task>;
                 move(taskId, stage): Promise<Task>; remove(taskId): Promise<void> };
-  comments:   { list(target: StoryKey | TaskId): Promise<Comment[]>; add(target, body): Promise<Comment>;
-                update(target, id, body): Promise<Comment>; remove(target, id): Promise<void> };
   doctor:     { check(): Promise<DoctorReport>; fix(): Promise<DoctorReport> };
   plugins:    { list(): Promise<PluginStatus[]>; get(id): Promise<PluginStatus & { settings }>;
                 enable(id, opts?): Promise<{ id; enabled }>; disable(id, opts?): Promise<{ id; enabled }>;
