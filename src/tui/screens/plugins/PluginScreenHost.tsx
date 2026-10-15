@@ -4,7 +4,7 @@ import { usePlugins, usePluginUi, useServices } from '../../hooks';
 import type { ScreenProps } from '../types';
 
 /** A Plugin's screen: `params.screen` of Plugin `params.plugin`, with the other params passed on. */
-export function PluginScreen({ params }: ScreenProps) {
+export function PluginScreenHost({ params }: ScreenProps) {
   const services = useServices();
   const { plugins } = usePlugins();
   const { plugin: id, screen, ...rest } = params;
