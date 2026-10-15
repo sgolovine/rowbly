@@ -1,10 +1,17 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ConfirmDialog, Loading, SelectList } from '../../components';
-import { useAsync, useIsActive, useKeyCapture, useServices, useToast } from '../../hooks';
+import { ConfirmDialog, CursorRows, Loading, SelectList, StoryStage } from '../../components';
+import {
+  useAsync,
+  useCursor,
+  useEscape,
+  useIsActive,
+  useKeyCapture,
+  useReloadOnReturn,
+  useServices,
+  useToast,
+} from '../../hooks';
 import { useRouter } from '../../router';
-import { CursorRows, useCursor, useEscape } from '../stages/shared';
-import { StoryStage, useReloadOnReturn } from '../stories/shared';
 
 export interface StoryTasksTabProps {
   storyKey: string;

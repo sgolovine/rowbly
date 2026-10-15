@@ -1,5 +1,6 @@
 export * from './Button';
 export * from './ConfirmDialog';
+export * from './CursorRows';
 export * from './DetailView';
 export * from './Form';
 export * from './Modal';
@@ -8,6 +9,7 @@ export * from './PluginSlot';
 export * from './SelectList';
 export * from './Spinner';
 export * from './StageBadge';
+export * from './StoryStage';
 export * from './Tabs';
 export * from './TextArea';
 export * from './TextInput';

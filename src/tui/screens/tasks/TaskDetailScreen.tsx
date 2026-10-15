@@ -1,21 +1,30 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { pluginTaskRows } from '../../../services';
-import { ConfirmDialog, type DetailRow, DetailView, Loading, PluginSlot, SelectList, Tabs } from '../../components';
+import {
+  ConfirmDialog,
+  type DetailRow,
+  DetailView,
+  Loading,
+  PluginSlot,
+  SelectList,
+  StoryStage,
+  Tabs,
+} from '../../components';
 import {
   useActionFocus,
   useAsync,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { useEscape } from '../stages/shared';
-import { StoryStage, useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 
 const TABS = ['Details'] as const;
@@ -135,7 +144,7 @@ export function TaskDetailScreen({ params }: ScreenProps) {
           tab === TABS.length + i && (
             <PluginSlot
               key={`${plugin}:${label}`}
-              plugin={plugin}
+              pluginId={plugin}
               render={(context, ui) => (
                 <PluginTab story={story} task={task} active={active && viewing} plugin={context} ui={ui} />
               )}

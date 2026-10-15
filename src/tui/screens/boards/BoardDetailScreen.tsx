@@ -9,12 +9,12 @@ import {
   useIsActive,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
 } from '../../hooks';
 import { useRouter } from '../../router';
 import { describeField } from '../fields';
-import { useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 
 /**
@@ -109,7 +109,7 @@ export function BoardDetailScreen({ params }: ScreenProps) {
           <PluginSlot
             // biome-ignore lint/suspicious/noArrayIndexKey: a Plugin's sections keep their order.
             key={`${p.id}:${i}`}
-            plugin={p.id}
+            pluginId={p.id}
             render={(context, ui) => <Section board={board} plugin={context} ui={ui} />}
           />
         )),
