@@ -1,11 +1,5 @@
 import { Box, Text } from 'ink';
-import {
-  type CustomFieldDef,
-  type CustomFieldValue,
-  type Priority,
-  PrioritySchema,
-  type Story,
-} from '../../../schemas';
+import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
 import type { CustomFieldValuesInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
@@ -13,8 +7,10 @@ import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useTo
 import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
+import { PluginFailures } from './PluginFailures';
 import { storyFormFields, storyFormInput } from './pluginFields';
 import { boardIdFor, NONE } from './shared';
+import { assigneesValue, priorityValue } from './storyFormValues';
 
 /** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
 export function StoryFormScreen({ params }: ScreenProps) {
@@ -41,11 +37,11 @@ export function StoryFormScreen({ params }: ScreenProps) {
     const common = {
       name: String(values.name),
       description: String(values.description ?? ''),
-      assignees: (values.assignees as string[] | null) ?? [],
-      priority: optional(values.priority) as Priority | null,
+      assignees: assigneesValue(values.assignees),
+      priority: priorityValue(values.priority),
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
-      ...withPlugins(storyFormInput(plugins, values, story)),
+      ...withPlugins(storyFormInput(plugins, extra, values, story)),
     };
     const stage = String(values.stage);
     if (!story) {
@@ -69,6 +65,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
         onSubmit={submit}
       />
+      <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
       {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>
   );
