@@ -99,7 +99,7 @@ export interface FileChange {
 
 /**
  * A deeply readonly copy of `T`: what Plugins read from a Change Set. Functions are kept as they are.
- * The type stops accidental writes at compile time; WP01A also freezes the values at run time.
+ * The type stops accidental writes at compile time; at run time the values are frozen copies.
  */
 export type DeepReadonly<T> = T extends (...args: never[]) => unknown
   ? T
@@ -110,9 +110,13 @@ export type DeepReadonly<T> = T extends (...args: never[]) => unknown
       : T;
 
 /**
- * What guards and reactions read: a snapshot of the Change Set, not a live view (CQ-27). Each accessor
- * returns the snapshot as it is when called; changing a snapshot never reaches the Change Set or
- * another hook. The records are deeply readonly; WP01A makes them detached, frozen copies at run time.
+ * What hooks read: snapshots of the Change Set, never the records it will save (CQ-27). Every record,
+ * change and list is a detached, deeply frozen copy, so changing one throws (in strict code) and never
+ * reaches the Change Set or another hook. A transform's or replacement's accessors return the snapshot
+ * as it is when called, so its own later writes show. Guards share one snapshot, taken when the
+ * Change Set is sealed after the transforms. Reactions share one snapshot of the saved Change Set.
+ * `before` is always the stored record; changing a copy of it cannot change what is deleted or moved.
+ * This guards against accidental changes; it is not a sandbox (ADR-0020 §6).
  */
 export interface ChangeSetView {
   /** Every change, in the order it was first made. */
@@ -149,7 +153,7 @@ export type FileScope = 'dataRoot' | { board: Slug } | { story: StoryKey };
 
 /**
  * A guard's view of the Change Set (stage `guard`): the snapshot, plus the pending text of the
- * Plugin's own files. It has no writers. Run-time rejection of writes from a guard is added by WP01A.
+ * Plugin's own files. It has no writer methods, at compile time or at run time.
  */
 export interface PluginChangeSetView extends ChangeSetView {
   /** The text of one of the Plugin's files: its pending version, else the stored one; `null` when none. */
@@ -159,8 +163,13 @@ export interface PluginChangeSetView extends ChangeSetView {
 /**
  * The Change Set a Plugin writes to (stages `body`, `replacement`, `transform`, `doctor-fix`). A file
  * name is a path inside the Plugin's folder, such as `auth.json` or `notes/a.md`. Update callbacks
- * get a copy of the record. Rejecting a writer used after its stage ended is enforced at run time by
- * WP01A.
+ * get a copy of the record: a callback that changes its copy and then throws changes nothing. Writers
+ * return frozen copies.
+ *
+ * A writer lives as long as the stage it was given to. Used after that stage ended (from a guard, a
+ * reaction, a timer or a promise left running), after the Change Set was sealed for guards, or from
+ * code running in a stage without writers, every method throws a `PluginError` and changes nothing.
+ * Await every write before the hook returns.
  */
 export interface PluginChangeSet extends PluginChangeSetView {
   /** Creates or replaces a Story. */
@@ -283,6 +292,7 @@ type ResultOf<K> = K extends CoreOperationName ? CoreOperations[K]['result'] : u
 interface EventBase<I, S> {
   /** The operation's name, such as `stories.create`. */
   name: string;
+  /** A frozen copy that every hook of the operation shares. */
   input: DeepReadonly<I>;
   /** This Plugin's part of `input.plugins`. */
   pluginInput: unknown;
@@ -303,7 +313,7 @@ export interface ReplacementEvent<I, R, S> extends EventBase<I, S> {
 /**
  * Stage `transform`: changes the Change Set before the save, through its writer methods only.
  * `result` is the body or replacement result, before any transform (ARCH-03): for `stories.create`,
- * `result.key` is the created Story. Stage-bound writers are enforced at run time by WP01A.
+ * `result.key` is the created Story. `changes` stops working when the transform returns.
  */
 export interface TransformEvent<I, R, S> extends EventBase<I, S> {
   result: DeepReadonly<R>;
@@ -312,7 +322,7 @@ export interface TransformEvent<I, R, S> extends EventBase<I, S> {
 
 /**
  * Stage `guard`: sees the Change Set after every transform and may reject the operation. `result` is
- * as in `TransformEvent`. The view has no writers; run-time rejection of retained writers is WP01A's.
+ * as in `TransformEvent`. The view has no writers; a writer kept from a transform throws here.
  */
 export interface GuardEvent<I, R, S> extends EventBase<I, S> {
   result: DeepReadonly<R>;
@@ -320,8 +330,9 @@ export interface GuardEvent<I, R, S> extends EventBase<I, S> {
 }
 
 /**
- * Stage `reaction`: runs after the save, with the operation's final result and the saved Change Set.
- * It acts only outside Rowbly's data; a failure only warns.
+ * Stage `reaction`: runs after the save, with the operation's final result and the saved Change Set,
+ * one frozen snapshot that every reaction shares. It acts only outside Rowbly's data: starting an
+ * operation throws, even from a timer it leaves running. A failure only warns.
  */
 export interface ReactionEvent<I, R, S> extends EventBase<I, S> {
   result: DeepReadonly<R>;
@@ -444,8 +455,9 @@ export interface PluginReadContext<S = unknown> {
 /**
  * The context of a hook (stages `body`, `replacement`, `transform`, `guard`, `reaction`,
  * `doctor-check`, `doctor-fix`). It has read services only, and no `operation` or `editText`: change
- * data through the Change Set the hook receives. Rejecting nested operations from a hook is enforced
- * at run time by WP01A.
+ * data through the Change Set the hook receives. Starting an operation from a hook, by any route (a
+ * kept command context or services object included), throws a `PluginError` before anything is read
+ * or saved; reads stay allowed. So does starting one from a Plugin operation's body.
  */
 export interface PluginHookContext<S = unknown> extends PluginReadContext<S> {
   services: PluginReadServices;
