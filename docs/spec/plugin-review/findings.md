@@ -96,11 +96,11 @@ Package: [WP09A-doc-corrections.md](packages/WP09A-doc-corrections.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ARCH-15](../../reviews/plugin-architecture/general-architecture.md#arch-15) | WP09 | P2 | Recommended / see scope | Supporting architecture/contracts documentation still describes removed core Comments | Required. | open |
-| [CQ-158](../../reviews/plugin-architecture/code-quality.md#cq-158) | WP09 | P2 | Useful | docs/PLUGINS.md:17 says Plugins work through capabilities including “running git”; src/services/plugins/types.ts:241's PluginContext has no such capability and the Git Plugin is… | Required. | open |
-| [DOC-01](../../reviews/plugin-architecture/other-areas.md#doc-01) | WP09 | P2 | Recommended / see scope | Current architecture/contracts contradict source | Required. | open |
-| [DOC-02](../../reviews/plugin-architecture/other-areas.md#doc-02) | WP09 | P2 | Recommended / see scope | Historical ADR language is presented as current implementation status | Required. | open |
-| [DOC-05](../../reviews/plugin-architecture/other-areas.md#doc-05) | WP09 | P2 | Recommended / see scope | Glossaries omit supported null/no-target cases and precise heading rule | Required. | open |
+| [ARCH-15](../../reviews/plugin-architecture/general-architecture.md#arch-15) | WP09 | P2 | Recommended / see scope | Supporting architecture/contracts documentation still describes removed core Comments | Required. | done — docs/spec/initial-spec/contracts.md (historical header, amendments, no core Comments, PluginOptionCommand), docs/ARCHITECTURE.md (ADR-0018) |
+| [CQ-158](../../reviews/plugin-architecture/code-quality.md#cq-158) | WP09 | P2 | Useful | docs/PLUGINS.md:17 says Plugins work through capabilities including “running git”; src/services/plugins/types.ts:241's PluginContext has no such capability and the Git Plugin is… | Required. | done — docs/PLUGINS.md capabilities list; `git` marked planned (ADR-0016) |
+| [DOC-01](../../reviews/plugin-architecture/other-areas.md#doc-01) | WP09 | P2 | Recommended / see scope | Current architecture/contracts contradict source | Required. | done — docs/ARCHITECTURE.md, docs/spec/initial-spec/contracts.md; README/docs swept |
+| [DOC-02](../../reviews/plugin-architecture/other-areas.md#doc-02) | WP09 | P2 | Recommended / see scope | Historical ADR language is presented as current implementation status | Required. | done — status notes on ADR-0012/0013/0016 linking ADR-0019/0020; PLUGINS.md built vs planned |
+| [DOC-05](../../reviews/plugin-architecture/other-areas.md#doc-05) | WP09 | P2 | Recommended / see scope | Glossaries omit supported null/no-target cases and precise heading rule | Required. | done — docs/agents/CONTEXT.md, CONTEXT-MAP.md, comments and specs CONTEXT.md; language test passes |
 
 ## WP04A
 

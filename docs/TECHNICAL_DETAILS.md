@@ -8,3 +8,5 @@
 - Use `ink` for terminal UI
 - Use `picocolors` for colors.
 - Use `cli-table3` for any table displays.
+
+The architecture and its layers are in [`ARCHITECTURE.md`](ARCHITECTURE.md); the Plugin API is in [`PLUGINS.md`](PLUGINS.md).

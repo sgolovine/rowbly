@@ -87,5 +87,5 @@ The values a Plugin keeps under its own name on the Data Root, a Board, Story, T
 _Avoid_: custom data, extension data
 
 **Action**:
-A key, with a matching button, that a Plugin adds to the TUI wherever the Board, Story or Task it acts on is in focus.
+A key, with a matching button, that a Plugin adds to the TUI wherever the Board, Story or Task it acts on is in focus; an Action that acts on no particular record shows on every screen.
 _Avoid_: button, shortcut, hotkey
