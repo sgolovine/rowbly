@@ -1,7 +1,20 @@
 // The filesystem calls that the commit engine, atomic writes and the lock make, gathered in one
 // object so that tests can inject failures (for example `vi.spyOn(io, 'rename')`) without chmod,
 // which does not stop root. Production code calls these through `io.<name>` and never caches them.
-import { lstat, mkdir, open, readdir, readFile, realpath, rename, rm, rmdir, stat, unlink } from 'node:fs/promises';
+import {
+  link,
+  lstat,
+  mkdir,
+  open,
+  readdir,
+  readFile,
+  realpath,
+  rename,
+  rm,
+  rmdir,
+  stat,
+  unlink,
+} from 'node:fs/promises';
 
 export const io = {
   readFile: (path: string): Promise<string> => readFile(path, 'utf8'),
@@ -11,6 +24,7 @@ export const io = {
   realpath: (path: string): Promise<string> => realpath(path),
   mkdir: (path: string): Promise<string | undefined> => mkdir(path, { recursive: true }),
   rename,
+  link,
   unlink,
   rmdir,
   rm: (path: string): Promise<void> => rm(path, { recursive: true, force: true }),

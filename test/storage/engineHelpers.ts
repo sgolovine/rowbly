@@ -1,6 +1,6 @@
 // Helpers for the storage commit engine tests: subprocess runs, tree snapshots and fault injection
 // through the `io` seam (no chmod, so the tests also work as root).
-import { spawn } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { lstat, readdir, readFile, readlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,7 +70,7 @@ export async function snapshotTree(dir: string, skip: readonly string[] = ['.txn
 }
 
 /** The `io` methods that change the filesystem. */
-export const MUTATING = ['writeFile', 'rename', 'mkdir', 'unlink', 'rmdir', 'rm', 'syncDir'] as const;
+export const MUTATING = ['writeFile', 'rename', 'link', 'mkdir', 'unlink', 'rmdir', 'rm', 'syncDir'] as const;
 type Mutating = (typeof MUTATING)[number];
 
 export interface Faults {
@@ -119,5 +119,43 @@ export function injectFaults(): Faults {
     restore() {
       for (const spy of spies) spy.mockRestore();
     },
+  };
+}
+
+/** A running script, for tests that talk to it while it runs. */
+export interface RunningScript {
+  child: ChildProcessWithoutNullStreams;
+  /** Resolves once stdout has printed `line`. */
+  printed(line: string): Promise<void>;
+  /** Resolves when the process exits. */
+  exited: Promise<ScriptResult>;
+}
+
+/** Starts a TypeScript script like `runScript`, without waiting for it. */
+export function startScript(script: string, args: string[]): RunningScript {
+  const child = spawn(process.execPath, ['--import', 'tsx', script, ...args], { cwd: REPO });
+  let stdout = '';
+  let stderr = '';
+  const waiting: { line: string; resolve: () => void }[] = [];
+  child.stdout.on('data', (chunk) => {
+    stdout += chunk;
+    for (const w of waiting) if (stdout.split('\n').includes(w.line)) w.resolve();
+  });
+  child.stderr.on('data', (chunk) => {
+    stderr += chunk;
+  });
+  const exited = new Promise<ScriptResult>((resolve, reject) => {
+    child.on('error', reject);
+    child.on('close', (code, signal) => resolve({ code, signal, stdout, stderr }));
+  });
+  return {
+    child,
+    exited,
+    printed: (line) =>
+      new Promise<void>((resolve, reject) => {
+        if (stdout.split('\n').includes(line)) return resolve();
+        waiting.push({ line, resolve });
+        void exited.then((r) => reject(new Error(`script exited before printing "${line}": ${r.stderr}`)));
+      }),
   };
 }
