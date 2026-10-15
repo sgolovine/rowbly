@@ -44,9 +44,10 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
         ...plugins.flatMap((plugin) =>
-          (plugin.tui.settings ?? []).map((link) => {
+          // The ID is the section's place in the Plugin's list, not its label (ARCH-40).
+          (plugin.tui.settings ?? []).map((link, i) => {
             const route = pluginRoute(plugin.id, link.screen, link.params);
-            return { id: `plugin:${plugin.id}:${link.label}`, label: link.label, ...route };
+            return { id: `plugin:${plugin.id}:${i}`, label: link.label, ...route };
           }),
         ),
       ],

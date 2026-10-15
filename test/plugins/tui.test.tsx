@@ -280,6 +280,8 @@ describe('Plugin UI identity (ARCH-40)', () => {
   it('two Home entries with the same label open their own destinations', async () => {
     const twin = withTui('twin', { home: [{ label: 'Stories', screen: 'mine' }] });
     const t = await seed({ notes: true, twin: true });
+    // With a second Board, the root screen is Home rather than the only Board.
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     const { app } = await openPluginApp(t, [notes, twin], { screen: 'home', params: {} });
     await waitForFrame(app, 'Notes');
     await focusListItem(app, 'Notes');
@@ -332,6 +334,7 @@ describe('Plugin UI identity (ARCH-40)', () => {
   ])('$what fails that Plugin to load, and only it', async ({ tui, reason }) => {
     const odd = withTui('odd', tui as PluginTui<unknown>);
     const t = await seed({ notes: true, odd: true });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     const { app, host, warnings } = await openPluginApp(t, [notes, odd], { screen: 'home', params: {} });
     expect(host.failures()).toMatchObject([{ id: 'odd', reason: `its TUI part is invalid: ${reason}` }]);
     expect(warnings).toHaveLength(1);

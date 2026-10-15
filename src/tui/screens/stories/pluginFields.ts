@@ -98,6 +98,9 @@ async function collectPluginFields(
       own = await invokePlugin(invocation(plugin.id, 'field'), async () => {
         const fields = await load(plugin);
         if (fields !== undefined && !Array.isArray(fields)) throw new Error('its fields are not a list');
+        const names = (fields ?? []).map((field) => field.name);
+        const twice = names.find((name, i) => names.indexOf(name) !== i);
+        if (twice !== undefined) throw new Error(`it names two fields "${twice}"`);
         return fields;
       });
     } catch (err) {

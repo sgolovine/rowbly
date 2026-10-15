@@ -40,11 +40,43 @@ export async function loadTuiPlugins(
 }
 
 async function importTui(definition: ActivePlugin['definition']): Promise<PluginTui<unknown>> {
+  let tui: PluginTui<unknown>;
   try {
-    return definition.tui ? await definition.tui() : {};
+    tui = definition.tui ? await definition.tui() : {};
   } catch (err) {
     throw new Error(`its TUI part failed: ${err instanceof Error ? err.message : String(err)}`);
   }
+  const problem = tuiProblem(tui);
+  if (problem) throw new Error(`its TUI part is invalid: ${problem}`);
+  return tui;
+}
+
+/**
+ * What is wrong with a TUI part's declarations, if anything (ARCH-40): a Home entry or settings
+ * section that opens a screen the Plugin does not have, or two settings sections or tabs of one
+ * kind with the same label. Field names are checked when the fields load.
+ */
+function tuiProblem(tui: PluginTui<unknown>): string | undefined {
+  const screens = tui.screens ?? {};
+  const links = [
+    ...(tui.home ?? []).map((link) => ({ kind: 'Home entry', ...link })),
+    ...(tui.settings ?? []).map((link) => ({ kind: 'settings section', ...link })),
+  ];
+  for (const link of links) {
+    if (!Object.hasOwn(screens, link.screen)) {
+      return `its ${link.kind} "${link.label}" opens screen "${link.screen}", which it does not have`;
+    }
+  }
+  const labelled = [
+    { kind: 'settings sections', labels: (tui.settings ?? []).map((link) => link.label) },
+    { kind: 'Story tabs', labels: (tui.storyTabs ?? []).map((tab) => tab.label) },
+    { kind: 'Task tabs', labels: (tui.taskTabs ?? []).map((tab) => tab.label) },
+  ];
+  for (const { kind, labels } of labelled) {
+    const twice = labels.find((label, i) => labels.indexOf(label) !== i);
+    if (twice !== undefined) return `it has two ${kind} labelled "${twice}"`;
+  }
+  return undefined;
 }
 
 /**
