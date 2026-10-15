@@ -1,7 +1,11 @@
 // RES-01, ARCH-41 (`r03-partial-save`), in-process part: a Change Set is validated as a whole before
 // anything live changes, and is committed through the recoverable transaction engine. A failure at
 // any write, move or delete leaves the complete old state or, after recovery, the complete new state.
-// WP02C adds the subprocess-kill variant.
+// The last part kills a real CLI process during the save (WP02C).
+import { spawn } from 'node:child_process';
+import { readdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { DataIntegrityError, ValidationError } from '../../src/core';
 import { definePlugin } from '../../src/plugin-api';
@@ -10,10 +14,10 @@ import { createEpic, deleteEpic } from '../../src/plugins/epics/service';
 import { specs } from '../../src/plugins/specs';
 import { deleteSpec, saveSpec } from '../../src/plugins/specs/specs';
 import { CoreChangeSet } from '../../src/services/plugins/changeSet';
-import { createRepositories, recoverTransactions } from '../../src/storage';
+import { createRepositories, pathExists, recoverTransactions } from '../../src/storage';
 import { makeStory, type TempRoot } from '../helpers';
 import { injectFaults, snapshotTree } from '../storage/engineHelpers';
-import { pluginRoot, withPlugins } from './helpers';
+import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
 interface Scenario {
   name: string;
@@ -205,4 +209,74 @@ describe('final-plan validation (r03 case A)', () => {
     faults.restore();
     expect(reacted).toBe(0);
   });
+});
+
+describe('a CLI process killed during the save (WP02C)', () => {
+  const REPO = fileURLToPath(new URL('../..', import.meta.url));
+  const BARRIER_CLI = fileURLToPath(new URL('./scripts/barrierCli.ts', import.meta.url));
+
+  function rowbly(t: TempRoot, args: string[], env: NodeJS.ProcessEnv = {}) {
+    const child = spawn(process.execPath, ['--import', 'tsx', BARRIER_CLI, ...args], {
+      cwd: REPO,
+      env: { PATH: process.env.PATH, HOME: t.path, NO_COLOR: '1', ROWBLY_ROOT: t.path, ...env },
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.stdin.end();
+    return new Promise<{ code: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string }>(
+      (resolve, reject) => {
+        child.on('error', reject);
+        child.on('close', (code, signal) => resolve({ code, signal, stdout, stderr }));
+      },
+    );
+  }
+
+  async function bobRoot() {
+    const t = await pluginRoot({}, { assignees: ASSIGNEES });
+    for (const n of [1, 2, 3]) {
+      await makeStory(t.path, { boardId: 'web', key: `WEB-${n}`, rank: `a${n}`, assignees: ['bob'] });
+    }
+    return t;
+  }
+
+  /** 'old' or 'new' when the Data Root holds one of the two complete states, else what it holds. */
+  async function stateOf(t: TempRoot): Promise<string> {
+    const roster = ((await readJsonFile(t, 'rowbly.config.json')).assignees as { handle: string }[]).map(
+      (a) => a.handle,
+    );
+    const assigned = await Promise.all(
+      [1, 2, 3].map(async (n) => (await readJsonFile(t, storyFile(`WEB-${n}`))).assignees as string[]),
+    );
+    const withBob = [roster, ...assigned].map((list) => list.includes('bob'));
+    if (withBob.every(Boolean)) return 'old';
+    if (!withBob.some(Boolean)) return 'new';
+    return `partial: ${JSON.stringify(withBob)}`;
+  }
+
+  it('recovers to the complete old or new state when the next command opens the Data Root', async () => {
+    const clean = await bobRoot();
+    const counted = await rowbly(clean, ['assignees', 'remove', 'bob'], { COUNT_CALLS: '1' });
+    expect(counted.code, counted.stderr).toBe(0);
+    const calls = counted.stderr.split('\n').filter((line) => line.startsWith('io '));
+    // After staging, at the commit point, and at every step of the commit.
+    const points = calls.flatMap((line, i) => (/\.txn/.test(line) ? [i + 1] : []));
+    expect(points.length).toBeGreaterThan(5);
+
+    for (const n of points) {
+      const t = await bobRoot();
+      const killed = await rowbly(t, ['assignees', 'remove', 'bob'], { KILL_AT: String(n) });
+      expect(killed.signal, `call ${n}: ${calls[n - 1]}`).toBe('SIGKILL');
+      const reopened = await rowbly(t, ['stories', 'list', '--board', 'web', '--json']);
+      expect(reopened.code, reopened.stderr).toBe(0);
+      expect(['old', 'new'], `call ${n}: ${calls[n - 1]}`).toContain(await stateOf(t));
+      expect((await pathExists(join(t.path, '.txn'))) ? await readdir(join(t.path, '.txn')) : []).toEqual([]);
+      await t.cleanup();
+    }
+  }, 240_000);
 });
