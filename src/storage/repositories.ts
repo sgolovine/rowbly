@@ -42,7 +42,7 @@ export interface StoryRepository {
   findByKey(key: string): Promise<Story>;
   put(story: Story): Promise<void>;
   delete(board: Slug, key: StoryKey): Promise<void>;
-  /** Highest Story Key number on the Board, or 0. */
+  /** Highest Story Key number on the Board, or 0, counting Story folders without a story.json too. */
   maxNumber(board: Slug): Promise<number>;
 }
 
@@ -82,10 +82,25 @@ export function createRepositories(root: DataRoot): Repositories {
       prefixIndex = null;
     },
     async findByPrefix(prefix) {
-      const id = (await getPrefixIndex()).get(prefix.toUpperCase());
-      return id ? boards.get(id) : null;
+      return boardWithPrefix(prefix.toUpperCase());
     },
   };
+
+  /**
+   * The Board whose key prefix is `prefix` now. Another process may have created, deleted or
+   * re-prefixed Boards since the index was built (RES-19), so a hit is checked against the Board's
+   * stored config, and a miss or a stale hit rebuilds the index once.
+   */
+  async function boardWithPrefix(prefix: KeyPrefix): Promise<BoardConfig | null> {
+    const cached = (await getPrefixIndex()).get(prefix);
+    if (cached) {
+      const board = await orNull(boards.get(cached));
+      if (board?.keyPrefix === prefix) return board;
+    }
+    prefixIndex = null;
+    const id = (await getPrefixIndex()).get(prefix);
+    return id ? boards.get(id) : null;
+  }
 
   function getPrefixIndex(): Promise<Map<KeyPrefix, Slug>> {
     prefixIndex ??= buildPrefixIndex().catch((err) => {
@@ -127,9 +142,9 @@ export function createRepositories(root: DataRoot): Repositories {
     },
     async findByKey(input) {
       const { key, prefix } = parseStoryKey(input);
-      const board = (await getPrefixIndex()).get(prefix);
+      const board = await boardWithPrefix(prefix);
       if (!board) throw storyNotFound(key, `no Board has key prefix "${prefix}"`);
-      return readStory(board, key);
+      return readStory(board.id, key);
     },
     async put(story) {
       await writeJson(p.story(story.boardId, story.key), StorySchema, story);
@@ -140,7 +155,10 @@ export function createRepositories(root: DataRoot): Repositories {
     },
     async maxNumber(board) {
       const { keyPrefix } = await boards.get(board);
-      const numbers = (await storyKeysInBoard(board))
+      // Every Story Key folder counts, with or without its story.json: an orphan folder keeps its
+      // Plugin files, so its key is never given to a new Story (RES-07).
+      const folders = (await listEntries(p.storiesDir(board), 'directory')).filter((key) => STORY_KEY_RE.test(key));
+      const numbers = folders
         .map((key) => parseStoryKey(key))
         .filter((parts) => parts.prefix === keyPrefix)
         .map((parts) => parts.n);

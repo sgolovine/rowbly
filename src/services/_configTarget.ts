@@ -3,6 +3,7 @@
 import { toTimestamp } from '../core';
 import { type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Slug, type Stage } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
+import { coordinated } from './coordination';
 import type { ChangeSet } from './plugins/types';
 import type { ConfigTarget, RowblyContext } from './types';
 
@@ -66,13 +67,16 @@ export async function readLevel<K extends ConfigListKey>(
   target: ConfigTarget,
   key: K,
 ): Promise<{ items: ItemOf<K>[]; source: ConfigLevel }> {
-  const { items, source } = await openLevel(ctx, createRepositories(ctx.root), target, key);
+  const { items, source } = await coordinated(ctx.root, 'config.read', () =>
+    openLevel(ctx, createRepositories(ctx.root), target, key),
+  );
   return { items, source };
 }
 
 /** The Boards a change to the `key` list at `target` applies to (contracts §3). */
 export async function affectedBoards(ctx: RowblyContext, target: ConfigTarget, key: ConfigListKey): Promise<Slug[]> {
-  return (await openLevel(ctx, createRepositories(ctx.root), target, key)).affected;
+  return (await coordinated(ctx.root, 'config.read', () => openLevel(ctx, createRepositories(ctx.root), target, key)))
+    .affected;
 }
 
 /** Index to insert at for `position`; `before`/`after` must name an existing key. */

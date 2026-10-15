@@ -22,6 +22,7 @@ import {
 } from '../schemas';
 import { createRepositories, type Repositories, resolveCascade } from '../storage';
 import { validateFieldValues } from './_customFieldValues';
+import { coordinated } from './coordination';
 import type { CoreChangeSet } from './plugins/changeSet';
 import { invokePluginSync } from './plugins/invoke';
 import { latestStory, type OperationRunner } from './plugins/runtime';
@@ -292,11 +293,13 @@ export interface StoryChoices extends EffectiveBoardConfig {
 
 export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<StoryChoices> {
   const repos = createRepositories(ctx.root);
-  const [config, root, labels] = await Promise.all([
-    resolveCascade(ctx.root, boardId),
-    repos.rootConfig.get(),
-    repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
-  ]);
+  const [config, root, labels] = await coordinated(ctx.root, 'stories.choices', () =>
+    Promise.all([
+      resolveCascade(ctx.root, boardId),
+      repos.rootConfig.get(),
+      repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
+    ]),
+  );
   return { ...config, assignees: root.assignees, labels };
 }
 
