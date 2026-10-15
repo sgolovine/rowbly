@@ -134,9 +134,9 @@ Package: [WP02B-storage-commit-engine.md](packages/WP02B-storage-commit-engine.m
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [RES-03](../../reviews/plugin-architecture/resiliency.md#res-03) | WP02 | P0 | Recommended / see scope | A failed text write destroys the original plugin file | Required. | open |
-| [RES-04](../../reviews/plugin-architecture/resiliency.md#res-04) | WP02 | P0 | Recommended / see scope | Folder staging failures make Stories inaccessible | Required. | open |
-| [RES-21](../../reviews/plugin-architecture/resiliency.md#res-21) | WP02 | P3 / containment policy | Policy decision; before confinement claims | Valid plugin paths follow symlinks outside their scope | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [RES-03](../../reviews/plugin-architecture/resiliency.md#res-03) | WP02 | P0 | Recommended / see scope | A failed text write destroys the original plugin file | Required. | done — atomic `writeTextFile`/`writeJson` via `writeFileAtomic` (`test/storage/textAtomicity.test.ts`, incl. `ulimit -f` subprocess) |
+| [RES-04](../../reviews/plugin-architecture/resiliency.md#res-04) | WP02 | P0 | Recommended / see scope | Folder staging failures make Stories inaccessible | Required. | done — engine part: `preflightMoves`, rollback in `moveFolders`, journaled moves (`test/plugins/moveRecovery.test.ts`, `test/storage/transaction.test.ts`); Change Set integration in WP02A, `.moving` diagnosis in WP03 |
+| [RES-21](../../reviews/plugin-architecture/resiliency.md#res-21) | WP02 | P3 / containment policy | Policy decision; before confinement claims | Valid plugin paths follow symlinks outside their scope | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | done — W5 policy in `src/storage/pathPolicy.ts` (`test/plugins/filePaths.test.ts`); Change Set routes through it in WP02A |
 
 ## WP01A
 
