@@ -47,12 +47,21 @@ export async function readJson<T>(path: string, schema: ZodType<T>): Promise<T> 
  * trailing newline.
  */
 export async function writeJson<T>(path: string, schema: ZodType<T>, value: T): Promise<void> {
+  const text = serializeJson(path, schema, value);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFileAtomic(path, text);
+}
+
+/**
+ * The text `writeJson` writes for `value`: validated, then serialized in schema key order with a
+ * 2-space indent and a trailing newline. An invalid value throws `ValidationError` naming `path`.
+ */
+export function serializeJson<T>(path: string, schema: ZodType<T>, value: T): string {
   const result = schema.safeParse(value);
   if (!result.success) {
     throw new ValidationError(`invalid data for ${path}`, { details: { path, issues: result.error.issues } });
   }
-  await mkdir(dirname(path), { recursive: true });
-  await writeFileAtomic(path, `${JSON.stringify(result.data, null, 2)}\n`);
+  return `${JSON.stringify(result.data, null, 2)}\n`;
 }
 
 /** Entry names in `dir` of the given kind; a missing directory has none. */

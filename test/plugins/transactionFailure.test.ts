@@ -109,12 +109,13 @@ describe.each(scenarios)('$name', (scenario) => {
         (err: unknown) => err,
       );
       faults.restore();
-      expect(error, `call ${n}`).toBeInstanceOf(Error);
       // Never "nothing saved" once the commit point has passed: the error names what is pending.
       if (error instanceof DataIntegrityError) expect(error.details?.pending, `call ${n}`).toBeDefined();
       await recoverTransactions(t.path);
       const recovered = await snapshotTree(t.path);
-      expect([clean.before, clean.after], `call ${n}`).toContainEqual(recovered);
+      // A crash while only cleanup is left still reports success: every step was applied.
+      if (error === undefined) expect(recovered, `call ${n}`).toEqual(clean.after);
+      else expect([clean.before, clean.after], `call ${n}`).toContainEqual(recovered);
       await recoverTransactions(t.path);
       expect(await snapshotTree(t.path), `call ${n}, recovered again`).toEqual(recovered);
     }
