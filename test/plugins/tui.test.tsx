@@ -441,3 +441,28 @@ describe('Plugin navigation (ARCH-07, DX-24, CQ-58)', () => {
     app.unmount();
   });
 });
+
+describe('Turning a Plugin off in the TUI', () => {
+  it('leaves no stale Action, tab, row or form field behind', async () => {
+    const t = await seed();
+    const { app } = await open(t, 'story', { key: 'WEB-1' });
+    let frame = await waitForFrame(app, 'Z Note');
+    expect(frame).toMatch(/Note\s+note: hello/);
+    await app.press(',');
+    await waitForFrame(app, 'Plugins');
+    await focusListItem(app, 'Plugins');
+    await app.press(KEYS.tab);
+    await waitForFrame(app, '● Notes');
+    await app.press(KEYS.enter);
+    await waitForFrame(app, '○ Notes');
+    await app.press(KEYS.escape);
+    frame = await waitForFrame(app, (f) => f.includes('Login') && !f.includes('Settings'));
+    await waitForFrame(app, (f) => !f.includes('Z Note') && !/Note\s+note: hello/.test(f));
+    // "Note" alone: the toast still says "Turned off Plugin Notes".
+    expect(app.lastFrame()).not.toMatch(/\bNote\b/);
+    await app.press('e');
+    frame = await waitForFrame(app, (f) => f.includes('Edit WEB-1') && f.includes('Labels'));
+    expect(frame).not.toMatch(/\bNote\b/);
+    app.unmount();
+  });
+});
