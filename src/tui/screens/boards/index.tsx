@@ -24,7 +24,19 @@ type Mode =
   | { kind: 'create' }
   | { kind: 'edit'; board: BoardConfig }
   | { kind: 'confirm-delete'; board: BoardConfig }
-  | { kind: 'confirm-force'; board: BoardConfig; stories: number };
+  | { kind: 'confirm-force'; board: BoardConfig; reason: string };
+
+/**
+ * Why `--force` would delete `board` after `err`, or `undefined` when it would not: the Board still
+ * has Stories, or a Plugin guard that `--force` gets past (`details.canForce`, UI-01) refused it.
+ * Any other refusal is final, so it never offers force.
+ */
+function forceReason(err: unknown, board: BoardConfig): string | undefined {
+  if (!(err instanceof ConflictError)) return undefined;
+  if (typeof err.details.stories === 'number') return `${board.name} has ${err.details.stories} Stories.`;
+  if (err.details.canForce === true) return `${err.message}.`;
+  return undefined;
+}
 
 /**
  * Every Board: create, edit, delete, open a Board's detail, Stages or Fields, and view its board
@@ -54,8 +66,9 @@ function BoardsScreen() {
       await services.boards.remove(board.id, { force });
       done(`Deleted ${board.name}`);
     } catch (err) {
-      if (err instanceof ConflictError && typeof err.details.stories === 'number') {
-        setMode({ kind: 'confirm-force', board, stories: err.details.stories });
+      const reason = force ? undefined : forceReason(err, board);
+      if (reason) {
+        setMode({ kind: 'confirm-force', board, reason });
       } else {
         toast.error(err);
         setMode({ kind: 'list' });
@@ -166,7 +179,7 @@ function BoardsScreen() {
       )}
       {mode.kind === 'confirm-force' && (
         <ConfirmDialog
-          message={`${mode.board.name} has ${mode.stories} Stories. Delete the Board and all of them?`}
+          message={`${mode.reason} Delete the Board with all its Stories and Plugin files?`}
           confirmLabel="Delete all"
           cancelLabel="Cancel"
           destructive
