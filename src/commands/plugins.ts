@@ -1,6 +1,14 @@
 import { Command, Option } from 'commander';
 import { colors, printResult, renderTable } from '../output';
-import { onOff, type PluginCli, type PluginHost, type PluginOptionCommand, type PluginStatus } from '../services';
+import {
+  onOff,
+  type PluginCli,
+  type PluginHost,
+  type PluginOptionCommand,
+  type PluginStatus,
+  pluginServices,
+} from '../services';
+import { editTextInEditor } from '../storage';
 import {
   boardFlag,
   collect,
@@ -125,12 +133,13 @@ function pluginCli(id: string): PluginCli<unknown> {
       withContext(cmd, ({ services, globals }) =>
         action({
           plugin: services.plugins.context(id),
-          services,
+          services: pluginServices(services),
           json: globals.json,
           print: (data, human) => printResult(data, { json: globals.json, human }),
           confirm: (message) => confirmDestructive(message, globals),
           prompt: (value, spec) => promptIfMissing(value, globals, spec),
           readText: (flags, opts) => readLongText(flags, opts),
+          editText: (initial) => editTextInEditor(initial),
           resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
         }),
       ),

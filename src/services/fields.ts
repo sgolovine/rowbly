@@ -31,13 +31,15 @@ export function createFieldsService(ctx: RowblyContext, repos: Repositories, ops
 
     async update(target, key, patch) {
       const { plugins: _plugins, ...fields } = patch;
-      const { next, stripped } = await ops.run('fields.update', { target, key, ...patch }, async (changes) => {
+      // The count of stripped values is for the warning only; the operation's result is the fields (ARCH-14).
+      let stripped = 0;
+      const next = await ops.run('fields.update', { target, key, ...patch }, async (changes) => {
         const level = await open(target);
         const updated = parseField(applyPatch(findField(level.items, key), fields));
         const next = level.items.map((f) => (f.key === key ? updated : f));
         await level.save(changes, next);
-        const stripped = await stripValues(changes, level.affected, key, (value) => fitValue(updated, value));
-        return { next, stripped };
+        stripped = await stripValues(changes, level.affected, key, (value) => fitValue(updated, value));
+        return next;
       });
       if (stripped > 0) {
         ctx.warn(`stripped ${plural(stripped)} of "${key}" that no longer fit the Custom Field`);

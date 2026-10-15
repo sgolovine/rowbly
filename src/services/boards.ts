@@ -1,5 +1,5 @@
 import { ConflictError, NotFoundError, toTimestamp, ValidationError } from '../core';
-import { type BoardConfig, BoardConfigSchema, type Slug } from '../schemas';
+import { type BoardConfig, BoardConfigSchema, type LocalState, type Slug } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
 import type { OperationRunner } from './plugins/runtime';
 import type { BoardsService, RowblyContext } from './types';
@@ -60,7 +60,9 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
 
     async remove(id, opts) {
       const board = await repos.boards.get(id);
-      const local = await ops.run('boards.remove', { ...opts, id: board.id }, async (changes) => {
+      // The Local State left after the deletion refreshes the context; the operation's result is `undefined` (ARCH-14).
+      let local: LocalState | null = null;
+      await ops.run('boards.remove', { ...opts, id: board.id }, async (changes) => {
         if (!opts.force) {
           const stories = await repos.stories.allInBoard(board.id);
           if (stories.length > 0) {
@@ -72,8 +74,8 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
         }
         // Its folder goes with it: Stories and Plugin files too (ADR-0013).
         await changes.deleteBoard(board.id);
-        if (ctx.local.board !== board.id) return null;
-        return changes.updateLocalState(({ board: _current, ...rest }) => rest);
+        if (ctx.local.board === board.id)
+          local = await changes.updateLocalState(({ board: _current, ...rest }) => rest);
       });
       if (local) ctx.local = local;
     },

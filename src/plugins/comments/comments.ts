@@ -86,7 +86,7 @@ export function deleteComment(plugin: PluginContext, target: string, id: string)
 /** `story` with the Thread of `owner` changed by `update`; an empty Thread removes the bag. */
 function updateThread(plugin: PluginContext, story: Story, owner: Owner, update: (comments: Comment[]) => Comment[]) {
   const updatedAt = toTimestamp(plugin.now());
-  const write = <R extends Bagged>(record: R): R => {
+  const write = <R extends Bagged>(record: R): Omit<R, 'plugins'> & Bagged => {
     const comments = update(commentsOn(plugin, record));
     return plugin.writeBag(record, comments.length ? { comments } : undefined);
   };
