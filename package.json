@@ -20,6 +20,7 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
     "test:watch": "vitest"
   },
   "dependencies": {

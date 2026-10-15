@@ -1,18 +1,34 @@
 import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { TestProject } from 'vitest/node';
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    /** The CLIs this run built, for `runCli`; only the `cli` project has them. */
+    cliBuilds: { cli: string; fixtureCli: string };
+  }
+}
 
 /**
- * Builds dist/cli.js once before the suite, so runCli() always exercises the current source, and
- * the fixture CLI (the same program with the fixture Plugins as its registry) into .test-dist/.
+ * Builds the CLI and the fixture CLI (the same program with the fixture Plugins of
+ * test/plugins/fixtures as its registry) from the current source, before the CLI suites run. Each
+ * run builds into a folder of its own under `.test-dist/`, so runs in parallel never clean each
+ * other's CLIs, and removes only that folder afterwards. The folder is inside the repository so the
+ * bundles resolve their dependencies from `node_modules`.
  */
-export default function setup(): void {
+export default function setup(project: TestProject): () => void {
   const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+  const parent = join(repoRoot, '.test-dist');
+  mkdirSync(parent, { recursive: true });
+  const outDir = mkdtempSync(join(parent, 'run-'));
   const tsup = 'node_modules/tsup/dist/cli-default.js';
-  execFileSync(process.execPath, [tsup, '--silent'], { cwd: repoRoot, stdio: 'inherit' });
-  execFileSync(
-    process.execPath,
-    [
-      tsup,
+  const build = (args: string[]) =>
+    execFileSync(process.execPath, [tsup, ...args, '--silent'], { cwd: repoRoot, stdio: 'inherit' });
+  try {
+    build(['--out-dir', join(outDir, 'main')]);
+    build([
       'test/plugins/fixtures/cli.ts',
       '--no-config',
       '--format',
@@ -22,9 +38,12 @@ export default function setup(): void {
       '--target',
       'node22',
       '--out-dir',
-      '.test-dist',
-      '--silent',
-    ],
-    { cwd: repoRoot, stdio: 'inherit' },
-  );
+      join(outDir, 'fixture'),
+    ]);
+  } catch (err) {
+    rmSync(outDir, { recursive: true, force: true });
+    throw err;
+  }
+  project.provide('cliBuilds', { cli: join(outDir, 'main/cli.js'), fixtureCli: join(outDir, 'fixture/cli.js') });
+  return () => rmSync(outDir, { recursive: true, force: true });
 }
