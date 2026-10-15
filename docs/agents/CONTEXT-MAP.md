@@ -3,9 +3,9 @@
 ## Contexts
 
 - [Rowbly](./CONTEXT.md) — the core: the Data Root, Boards, Stories, Tasks, Stages, Assignees and Plugins
-- [Epics](./src/plugins/epics/CONTEXT.md) — a Built-in Plugin that groups Stories from any Boards
-- [Specs](./src/plugins/specs/CONTEXT.md) — a Built-in Plugin that keeps Spec documents with the Stories and Boards they describe
-- [Comments](./src/plugins/comments/CONTEXT.md) — a Built-in Plugin that keeps Comments on Stories and Tasks
+- [Epics](../../src/plugins/epics/CONTEXT.md) — a Built-in Plugin that groups Stories from any Boards
+- [Specs](../../src/plugins/specs/CONTEXT.md) — a Built-in Plugin that keeps Spec documents with the Stories and Boards they describe
+- [Comments](../../src/plugins/comments/CONTEXT.md) — a Built-in Plugin that keeps Comments on Stories and Tasks
 
 ## Relationships
 

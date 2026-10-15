@@ -40,7 +40,7 @@ rowbly                               # open the board in the TUI
 
 ## Concepts
 
-The exact meaning of each term is in [`CONTEXT.md`](CONTEXT.md). In short:
+The exact meaning of each term is in [`CONTEXT.md`](docs/agents/CONTEXT.md). In short:
 
 - A **Data Root** (`.rowbly/`) holds everything: **Boards** and one **Assignee** roster.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
@@ -405,7 +405,7 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm test` | Build once, then run vitest |
 | `pnpm test:watch` | vitest in watch mode |
 
-The build specification lives in [`docs/spec/`](docs/spec/README.md) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](CONTEXT.md).
+The build specification lives in [`docs/spec/`](docs/spec/README.md) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
 
 - `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
 - `test/tui/helpers.tsx` provides `renderTui()` with a `press(...keys)` helper and `waitForFrame(app, text | RegExp | predicate)`, which polls the screen. Wait for what a screen shows rather than sleeping a fixed time.

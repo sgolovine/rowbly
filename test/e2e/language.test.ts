@@ -6,7 +6,7 @@ import { makeRootConfig, runCli, tempRoot } from '../helpers';
 import { userText } from './sourceText';
 
 /**
- * `_Avoid_` words from CONTEXT.md that must never reach a user. Words that are also ordinary English
+ * `_Avoid_` words from docs/agents/CONTEXT.md that must never reach a user. Words that are also ordinary English
  * in another sense (`order`, `position`, `category`, `note`) are left out.
  */
 const AVOID =
@@ -24,7 +24,7 @@ const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
 const SRC = fileURLToPath(new URL('../../src/', import.meta.url));
 
 /**
- * Each Plugin's `_Avoid_` words, from the CONTEXT.md in its folder (listed in CONTEXT-MAP.md). They
+ * Each Plugin's `_Avoid_` words, from the CONTEXT.md in its folder (listed in docs/agents/CONTEXT-MAP.md). They
  * apply to the Plugin's own source and help pages; core never uses a Plugin's terms at all.
  */
 async function pluginAvoidWords(): Promise<Map<string, RegExp>> {

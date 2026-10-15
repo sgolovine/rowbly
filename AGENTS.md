@@ -1,6 +1,6 @@
 # Agent guide
 
-See `CONTEXT-MAP.md` for domain language (core terms in `CONTEXT.md`, each Plugin's terms in its own `CONTEXT.md`) and `docs/` for architecture.
+See `docs/agents/CONTEXT-MAP.md` for domain language (core terms in `docs/agents/CONTEXT.md`, each Plugin's terms in its own `CONTEXT.md`) and `docs/` for architecture.
 
 ## TUI code organization (`src/tui/`)
 
