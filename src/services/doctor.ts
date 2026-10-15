@@ -2,8 +2,8 @@ import type { ZodType } from 'zod';
 import {
   formatStoryKey,
   formatTaskId,
+  isRowblyError,
   isSlug,
-  PluginError,
   parseTaskId,
   ranksBetween,
   STORY_KEY_RE,
@@ -19,10 +19,20 @@ import {
   type Story,
   StorySchema,
 } from '../schemas';
-import { CONFLICT_MARKER_RE, cascade, listDataRootFiles, type Repositories, readDataRootFile } from '../storage';
+import {
+  CONFLICT_MARKER_RE,
+  cascade,
+  listDataRootFiles,
+  type Repositories,
+  readDataRootFile,
+  recoverTransactions,
+  removeDataRootFile,
+  writeTextFile,
+} from '../storage';
 import { fieldValueError } from './_customFieldValues';
+import { type RecoveryOutcome, withMutation, withRecovery } from './coordination';
 import type { CoreChangeSet } from './plugins/changeSet';
-import { inStage } from './plugins/executionScope';
+import { invokePlugin } from './plugins/invoke';
 import { deepMerge, type OperationRunner } from './plugins/runtime';
 import type { DoctorData } from './plugins/types';
 import type {
@@ -54,7 +64,26 @@ const SEVERITY: Record<CoreDoctorCode, DoctorSeverity> = {
   PLUGIN_FAILED: 'error',
   PLUGIN_DATA_INVALID: 'warning',
   PLUGIN_DATA_UNCHECKED: 'info',
+  TRANSACTION_PENDING: 'error',
+  TRANSACTION_LEFTOVER: 'warning',
+  TEMP_FILE_LEFTOVER: 'warning',
+  GITIGNORE_INCOMPLETE: 'info',
+  ORPHAN_FOLDER: 'warning',
+  LEGACY_DATA: 'warning',
 };
+
+/** Repairs that change which file or key a Story has; they run as a pass of their own (RES-09). */
+const STRUCTURAL: ReadonlySet<CoreDoctorCode> = new Set(['DUPLICATE_KEY', 'STORY_KEY_CONFLICT']);
+
+/** What the Data Root's .gitignore lists (ADR-0019 §2). */
+const GITIGNORE_LINES = ['local.json', '.lock', '.lock.break', '.txn/'];
+
+/** A Plugin's local finding code: uppercase words joined by `_`. */
+const LOCAL_CODE_RE = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/;
+
+/** A temporary file of an atomic write (`.<name>.<8 hex>.tmp`), and a folder of the old move code. */
+const TEMP_FILE_RE = /^\.[^/]+\.[0-9a-f]{8}\.tmp$/;
+const MOVING_RE = /^\.[0-9a-f]{8}\.moving$/;
 
 /** Fixes can uncover new findings (e.g. two renumbered Stories sharing a Rank), so `fix()` repeats. */
 const MAX_FIX_PASSES = 5;
@@ -66,6 +95,10 @@ const MAX_FIX_PASSES = 5;
 interface Finding extends DoctorFinding {
   apply?: () => string;
   pluginFix?: (changes: CoreChangeSet) => Promise<string>;
+  /** A fix outside the records, such as removing a leftover file; it runs after its pass saved. */
+  cleanup?: () => Promise<string>;
+  /** The Plugin that reported the finding: its exact id, never parsed back from the code (CQ-70). */
+  pluginId?: string;
 }
 
 /**
@@ -77,6 +110,8 @@ interface StoryEntry {
   original: Story | null;
   file: string;
   dirty: boolean;
+  /** The file holds data of an older Rowbly, which saving would drop: doctor never saves it. */
+  legacy: boolean;
 }
 
 interface BoardEntry {
@@ -102,21 +137,30 @@ type PluginDataSeen = Map<string, { first: string; records: number; files: numbe
 export function createDoctorService(ctx: RowblyContext, _repos: Repositories, ops: OperationRunner): DoctorService {
   const now = () => toTimestamp(ctx.now());
 
-  async function analyze(): Promise<Model> {
+  async function analyze(recovery: RecoveryOutcome): Promise<Model> {
     const findings: Finding[] = [];
     const add = (code: CoreDoctorCode, path: string, message: string, extra: Partial<Finding> = {}) => {
-      const { apply, details } = extra;
+      const { apply, cleanup, details } = extra;
       findings.push({
         code,
         severity: SEVERITY[code],
         path,
         message,
-        fixable: apply !== undefined,
+        fixable: apply !== undefined || cleanup !== undefined,
         ...(details ? { details } : {}),
         ...(apply ? { apply } : {}),
+        ...(cleanup ? { cleanup } : {}),
       });
     };
+    const local = { state: { version: 1 } as LocalState, dirty: false };
+    // A transaction that recovery cannot finish is the one thing doctor reports (ADR-0019 §2).
+    if (recovery.failure !== undefined) {
+      add('TRANSACTION_PENDING', ...pendingTransaction(recovery.failure));
+      return { findings, boards: [], local };
+    }
     const pluginData: PluginDataSeen = new Map();
+    /** Story files that hold data of an older Rowbly: doctor never saves them (VER-03). */
+    const legacyFiles = new Set<string>();
     const seen = (id: string, where: string, kind: 'records' | 'files') => {
       const entry = pluginData.get(id) ?? { first: where, records: 0, files: 0 };
       entry[kind] += 1;
@@ -152,9 +196,69 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       return entry;
     };
 
+    // 0. Rowbly's own leftovers: transaction folders recovery could not remove, temporary files of
+    // atomic writes, and folders of the old move code (ADR-0019 §9). None of them is a layout file.
+    const leftovers = new Set<string>();
+    const moving = new Map<string, string[]>();
+    for (const file of files) {
+      const parts = file.split('/');
+      if (parts[0] === '.txn' && parts.length >= 2) {
+        leftovers.add(`.txn/${parts[1]}`);
+        continue;
+      }
+      const at = parts.findIndex((part) => MOVING_RE.test(part));
+      if (at >= 0) {
+        const folder = parts.slice(0, at + 1).join('/');
+        moving.set(folder, [...(moving.get(folder) ?? []), parts.slice(at + 1).join('/')]);
+        continue;
+      }
+      if (TEMP_FILE_RE.test(parts.at(-1) ?? '')) {
+        add('TEMP_FILE_LEFTOVER', file, 'temporary file of an interrupted write; the file beside it is intact', {
+          cleanup: async () => {
+            await removeDataRootFile(ctx.root, file);
+            return `removed ${file}`;
+          },
+        });
+      }
+    }
+    for (const folder of leftovers) {
+      add('TRANSACTION_LEFTOVER', folder, 'folder of a finished or abandoned commit that could not be removed', {
+        cleanup: async () => {
+          await recoverTransactions(ctx.root.path);
+          return `removed ${folder}`;
+        },
+      });
+    }
+    for (const [folder, inside] of moving) {
+      const key = inside.includes('story.json') ? await movingStoryKey(`${folder}/story.json`) : null;
+      const home = folder.slice(0, folder.lastIndexOf('/'));
+      add(
+        'TEMP_FILE_LEFTOVER',
+        folder,
+        key
+          ? `holds Story ${key} from an interrupted move; Rowbly does not list it. Move it back to ${home}/${key} if that folder is free, then run \`rowbly doctor\``
+          : 'holds files from an interrupted move and no Story; check them, then delete the folder',
+        { details: { files: inside.length, ...(key ? { key } : {}) } },
+      );
+    }
+    const layoutFiles = files.filter(
+      (file) =>
+        !file.startsWith('.txn/') &&
+        !file.split('/').some((part) => MOVING_RE.test(part)) &&
+        !TEMP_FILE_RE.test(file.split('/').at(-1) ?? ''),
+    );
+
     // 1. Sort every file into the layout (contracts §1); anything else is unknown. Plugin files are
     // in `plugins/<id>/` folders of the Data Root, a Board or a Story (ADR-0013).
-    for (const file of files) {
+    /** Story folders with any file, and Board folders with any file, to find folders without a record. */
+    const storyFolders = new Map<string, Set<string>>();
+    const boardFolders = new Map<string, Set<string>>();
+    const holding = (folders: Map<string, Set<string>>, folder: string, plugin: string | null) => {
+      const ids = folders.get(folder) ?? new Set<string>();
+      if (plugin) ids.add(plugin);
+      folders.set(folder, ids);
+    };
+    for (const file of layoutFiles) {
       const parts = file.split('/');
       const [top, id = '', sub, key = '', name, plugin = ''] = parts;
       if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore'].includes(file)) continue;
@@ -162,7 +266,17 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
         seen(id, file, 'files');
         continue;
       }
+      if (top === 'epics' && parts.length === 2 && file.endsWith('.json')) {
+        add('LEGACY_DATA', file, 'Epic file from a Rowbly before ADR-0008; Rowbly no longer reads it', {
+          details: { hint: 'the Epics Plugin keeps Epics in plugins/epics/; nothing is imported (ADR-0014)' },
+        });
+        continue;
+      }
       if (top === 'boards' && isSlug(id)) {
+        holding(boardFolders, `boards/${id}`, sub === 'plugins' && isSlug(key) ? key : null);
+        if (sub === 'stories' && STORY_KEY_RE.test(key) && parts.length >= 5) {
+          holding(storyFolders, `boards/${id}/stories/${key}`, name === 'plugins' && isSlug(plugin) ? plugin : null);
+        }
         if (parts.length >= 5 && sub === 'plugins' && isSlug(key)) {
           seen(key, file, 'files');
           continue;
@@ -213,6 +327,35 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       return true;
     }
 
+    // Folders that hold files but no record: never adopted, never removed (RES-07).
+    const plugins = (ids: Set<string>) =>
+      ids.size > 0 ? `files of Plugin${ids.size === 1 ? '' : 's'} ${[...ids].sort().join(', ')}` : 'files';
+    for (const [folder, ids] of boardFolders) {
+      const hasStories = [...fileSet].some((f) => f.startsWith(`${folder}/stories/`) && f.endsWith('/story.json'));
+      if (fileSet.has(`${folder}/board.config.json`) || hasStories) continue;
+      add('ORPHAN_FOLDER', folder, `holds ${plugins(ids)} but no board.config.json; Rowbly ignores it`, {
+        details: {
+          plugins: [...ids].sort(),
+          hint: 'restore board.config.json from Git or a backup, or delete the folder',
+        },
+      });
+    }
+    for (const [folder, ids] of storyFolders) {
+      if (
+        fileSet.has(`${folder}/story.json`) ||
+        !fileSet.has(`${folder.split('/').slice(0, 2).join('/')}/board.config.json`)
+      )
+        continue;
+      add(
+        'ORPHAN_FOLDER',
+        folder,
+        `holds ${plugins(ids)} but no story.json; its Story Key stays reserved and no new Story gets these files`,
+        {
+          details: { plugins: [...ids].sort(), hint: 'restore story.json from Git or a backup, or delete the folder' },
+        },
+      );
+    }
+
     // 3. Duplicate key prefixes.
     const byPrefix = groupBy(
       [...boards.values()].filter((b) => b.config),
@@ -234,8 +377,28 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     for (const board of boards.values()) {
       const config = board.config;
       for (const file of board.storyFiles) board.used.add(numberOf(fileKey(file)));
+      // An orphan Story folder keeps its key too: renumbering never moves a Story into it (RES-07).
+      for (const folder of storyFolders.keys()) {
+        if (folder.startsWith(`${board.dir}/stories/`))
+          board.used.add(numberOf(folder.slice(folder.lastIndexOf('/') + 1)));
+      }
       for (const file of board.storyFiles) {
         const text = await readDataRootFile(ctx.root, file);
+        const legacy = legacyFields(text);
+        if (legacy.length > 0) {
+          legacyFiles.add(file);
+          add(
+            'LEGACY_DATA',
+            file,
+            `holds ${legacy.join(', ')} from an older Rowbly; Rowbly drops them the next time it saves this Story`,
+            {
+              details: {
+                fields: legacy,
+                hint: 'back up the file before changing the Story; Comments and Epics are Plugins now and nothing is imported',
+              },
+            },
+          );
+        }
         if (CONFLICT_MARKER_RE.test(text)) {
           const sides = config ? storyConflictSides(text, file, board) : null;
           if (sides) {
@@ -261,7 +424,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
           continue;
         }
         board.used.add(numberOf(story.key));
-        board.stories.push({ story, original: story, file, dirty: false });
+        board.stories.push({ story, original: story, file, dirty: false, legacy: legacyFiles.has(file) });
       }
       if (!config) {
         board.stories = [];
@@ -390,8 +553,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
               while (ordered[end]?.story.rank === rank) end++;
               const ranks = ranksBetween(rank, ordered[end]?.story.rank ?? null, end - i - 1);
               ordered.slice(i + 1, end).forEach((entry, k) => {
-                touch(entry, { rank: ranks[k] ?? entry.story.rank });
-                moved.push(entry.story.key);
+                if (touch(entry, { rank: ranks[k] ?? entry.story.rank })) moved.push(entry.story.key);
               });
               i = end;
             }
@@ -402,7 +564,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     }
 
     // 6. Local State.
-    const local = { state: { version: 1 } as LocalState, dirty: false };
     if (fileSet.has('local.json')) {
       const state = parse('local.json', await readDataRootFile(ctx.root, 'local.json'), LocalStateSchema);
       if (state) {
@@ -426,10 +587,13 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     }
 
     // 7. Plugins: failed loads, the checks of Plugins that are on, and the data of the others.
+    const entries = [...boards.values()].flatMap((b) => b.stories);
     const valid = {
       config: global,
       boards: [...boards.values()].flatMap((b) => (b.config ? [b.config] : [])),
-      stories: [...boards.values()].flatMap((b) => b.stories.map((e) => e.story)),
+      // Plugin checks see only Stories stored at their key's path. A duplicate is checked after the
+      // structural pass renumbers it, so a key-addressed fix never reaches another Story (RES-09).
+      stories: entries.filter((e) => e.file === storyPath(e.story)).map((e) => e.story),
       local: local.state,
     };
     if (global) {
@@ -439,13 +603,37 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       for (const assignee of global.assignees) bagsSeen(assignee, 'rowbly.config.json');
     }
     for (const board of valid.boards) bagsSeen(board, `boards/${board.id}/board.config.json`);
-    for (const story of valid.stories) {
-      const file = storyPath(story);
+    for (const { story, file } of entries) {
       bagsSeen(story, file);
       for (const task of story.tasks) bagsSeen(task, file);
     }
     bagsSeen(local.state, 'local.json');
-    findings.push(...(await pluginFindings(valid, local.state, pluginData)));
+    findings.push(...(await pluginFindings(valid, entries, local.state, pluginData)));
+
+    // 8. The .gitignore of a Data Root under Git lists the lock and the journal (ADR-0019 §2).
+    if (fileSet.has('.gitignore')) {
+      const text = await readDataRootFile(ctx.root, '.gitignore');
+      const lines = new Set(text.split(/\r?\n/).map((line) => line.trim()));
+      const missing = GITIGNORE_LINES.filter((line) => !lines.has(line));
+      if (missing.length > 0) {
+        add('GITIGNORE_INCOMPLETE', '.gitignore', `does not list ${missing.join(', ')}, which are never Git data`, {
+          details: { missing },
+          cleanup: async () => {
+            const current = await readDataRootFile(ctx.root, '.gitignore');
+            const base = current === '' || current.endsWith('\n') ? current : `${current}\n`;
+            await writeTextFile(`${ctx.root.path}/.gitignore`, `${base}${missing.join('\n')}\n`);
+            return `added ${missing.join(', ')} to .gitignore`;
+          },
+        });
+      }
+    }
+
+    // Saving a file with legacy data would drop that data, so its record fixes are left to a person.
+    for (const finding of findings) {
+      if (!finding.apply || !legacyFiles.has(finding.path)) continue;
+      delete finding.apply;
+      finding.fixable = false;
+    }
 
     return { findings, boards: [...boards.values()], local };
 
@@ -468,10 +656,20 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     function splitConflict(board: BoardEntry, file: string, first: Story, second: Story): string {
       const renumbered = renumber(board, second);
       board.stories.push(
-        { story: first, original: null, file, dirty: true },
-        { story: renumbered, original: null, file, dirty: true },
+        { story: first, original: null, file, dirty: true, legacy: false },
+        { story: renumbered, original: null, file, dirty: true, legacy: false },
       );
       return `kept ${first.key} ("${first.name}") and renumbered "${second.name}" to ${renumbered.key}`;
+    }
+  }
+
+  /** The Story Key in a `.moving` folder's story.json, or `null` when it cannot be read. */
+  async function movingStoryKey(file: string): Promise<string | null> {
+    try {
+      const key = (JSON.parse(await readDataRootFile(ctx.root, file)) as { key?: unknown }).key;
+      return typeof key === 'string' && STORY_KEY_RE.test(key) ? key : null;
+    } catch {
+      return null;
     }
   }
 
@@ -484,16 +682,24 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     return { ...story, key, tasks, updatedAt: now() };
   }
 
-  function touch(entry: StoryEntry, patch: Partial<Story>): void {
+  /** Changes a Story in memory; returns false for one doctor never saves (legacy data). */
+  function touch(entry: StoryEntry, patch: Partial<Story>): boolean {
+    if (entry.legacy) return false;
     entry.story = { ...entry.story, ...patch, updatedAt: now() };
     entry.dirty = true;
+    return true;
   }
 
   /**
    * `PLUGIN_FAILED` for each Plugin that failed to load; for each Plugin that is on, its bags checked
    * against its schemas and its own checks; and one info finding for each other Plugin with data.
    */
-  async function pluginFindings(data: DoctorData, local: LocalState, seen: PluginDataSeen): Promise<Finding[]> {
+  async function pluginFindings(
+    data: DoctorData,
+    entries: readonly StoryEntry[],
+    local: LocalState,
+    seen: PluginDataSeen,
+  ): Promise<Finding[]> {
     const findings: Finding[] = [];
     const host = ctx.plugins;
     for (const status of host?.failures() ?? []) {
@@ -526,8 +732,8 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
         check(bags.assignee, assignee.plugins?.[id], 'rowbly.config.json', `Assignee ${assignee.handle}`);
       }
       check(bags.local, local.plugins?.[id], 'local.json', 'Local State');
-      for (const story of data.stories) {
-        const file = storyPath(story);
+      // Every Story's bags, at the file it was read from: a duplicate's path is its own folder.
+      for (const { story, file } of entries) {
         check(bags.story, story.plugins?.[id], file, story.key);
         for (const task of story.tasks) check(bags.task, task.plugins?.[id], file, task.id);
       }
@@ -535,19 +741,34 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       const context = ops.hookContext(id);
       const prefix = `${id.toUpperCase().replaceAll('-', '_')}_`;
       try {
-        const found = await inStage(id, 'doctor-check', () => doctor.check({ data, plugin: context }), 'doctor.check');
+        const found = await invokePlugin({ plugin: id, stage: 'doctor-check', operation: 'doctor.check' }, () =>
+          doctor.check({ data, plugin: context }),
+        );
         for (const finding of found) {
+          const code = `${prefix}${finding.code}`;
+          const refused = refusedCode(id, finding.code, code);
+          if (refused) {
+            findings.push(
+              coreFinding('PLUGIN_FAILED', 'rowbly.config.json', refused, { plugin: id, code: finding.code }),
+            );
+            continue;
+          }
           const { fix } = finding;
           findings.push({
-            code: `${prefix}${finding.code}`,
+            code,
             severity: finding.severity,
             path: finding.path,
             message: finding.message,
             fixable: fix !== undefined,
+            // The framework's attribution wins over what the Plugin put in its details (ARCH-09).
+            details: { ...finding.details, plugin: id },
+            pluginId: id,
             ...(fix
               ? {
                   pluginFix: (changes: CoreChangeSet) =>
-                    inStage(id, 'doctor-fix', (scope) => fix(changes.forPlugin(id, scope))),
+                    invokePlugin({ plugin: id, stage: 'doctor-fix', operation: 'doctor.fix' }, (scope) =>
+                      fix(changes.forPlugin(id, scope)),
+                    ),
                 }
               : {}),
           });
@@ -590,38 +811,82 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
 
   /** Puts the fixed Stories (each moving its whole folder to its key's folder) and Local State into the Change Set. */
   async function flush(model: Model, changes: CoreChangeSet): Promise<void> {
-    for (const entry of model.boards.flatMap((b) => b.stories).filter((e) => e.dirty)) {
+    for (const entry of model.boards.flatMap((b) => b.stories).filter((e) => e.dirty && !e.legacy)) {
       changes.recordStory(entry.original, entry.story, entry.file.slice(0, entry.file.lastIndexOf('/')));
     }
     if (model.local.dirty) await changes.updateLocalState(() => model.local.state);
   }
 
+  /**
+   * One `--fix` pass, planned and saved under the Data Root lock (RES-02): structural key repairs
+   * alone when there are any, else every other fix. Returns what it fixed, or `null` when nothing is
+   * left to fix (with the final findings in `last`).
+   */
+  async function fixPass(last: { model?: Model }): Promise<DoctorFix[] | null> {
+    const outcome = await withRecovery(ctx.root, 'doctor.fix', async (recovery) => {
+      const finished: DoctorFix[] = (recovery.report?.finished ?? []).map(({ id, operation }) => ({
+        code: 'TRANSACTION_PENDING',
+        path: `.txn/${id}`,
+        message: `finished ${operation} (transaction ${id})`,
+      }));
+      for (const id of recovery.report?.removed ?? []) {
+        finished.push({ code: 'TRANSACTION_LEFTOVER', path: `.txn/${id}`, message: `removed .txn/${id}` });
+      }
+      const model = await analyze(recovery);
+      last.model = model;
+      const fixable = model.findings.filter((f) => f.apply || f.pluginFix || f.cleanup);
+      const structural = fixable.filter((f) => STRUCTURAL.has(f.code as CoreDoctorCode));
+      // Renumbering first, as its own operation; the next pass analyzes the renumbered Stories (RES-09).
+      const chosen = structural.length > 0 ? structural : fixable;
+      if (chosen.length === 0) return { fixed: finished, more: false };
+      // Each pass is one operation, so Plugins can guard, transform and react to fixes too.
+      const done = await ops.run('doctor.fix', { findings: report(chosen, []).findings }, async (changes) => {
+        const pass: DoctorFix[] = [];
+        for (const finding of chosen) {
+          if (finding.apply) pass.push({ code: finding.code, path: finding.path, message: finding.apply() });
+        }
+        await flush(model, changes);
+        for (const finding of chosen) {
+          if (!finding.pluginFix) continue;
+          pass.push({ code: finding.code, path: finding.path, message: await finding.pluginFix(changes) });
+        }
+        return pass;
+      });
+      // Leftover files go once the guarded pass has saved.
+      const cleaned = await withMutation(ctx.root, 'doctor.fix', async () => {
+        const out: DoctorFix[] = [];
+        for (const finding of chosen) {
+          if (finding.cleanup) out.push({ code: finding.code, path: finding.path, message: await finding.cleanup() });
+        }
+        return out;
+      });
+      return { fixed: [...finished, ...done, ...cleaned], more: true };
+    });
+    return outcome.more || outcome.fixed.length > 0 ? outcome.fixed : null;
+  }
+
   return {
-    async check() {
-      return report((await analyze()).findings, []);
-    },
+    check: () =>
+      withRecovery(ctx.root, 'doctor.check', async (recovery) => report((await analyze(recovery)).findings, [])),
+
     async fix() {
       const fixed: DoctorFix[] = [];
-      for (let pass = 0; pass < MAX_FIX_PASSES; pass++) {
-        const model = await analyze();
-        const fixable = model.findings.filter((f) => f.apply || f.pluginFix);
-        if (fixable.length === 0) return report(model.findings, fixed);
-        // Each pass is one operation, so Plugins can guard, transform and react to fixes too.
-        const done = await ops.run('doctor.fix', { findings: report(fixable, []).findings }, async (changes) => {
-          const pass: DoctorFix[] = [];
-          for (const finding of fixable) {
-            if (finding.apply) pass.push({ code: finding.code, path: finding.path, message: finding.apply() });
-          }
-          await flush(model, changes);
-          for (const finding of fixable) {
-            if (!finding.pluginFix) continue;
-            pass.push({ code: finding.code, path: finding.path, message: await pluginFix(finding, changes) });
-          }
-          return pass;
-        });
-        fixed.push(...done);
+      const last: { model?: Model } = {};
+      try {
+        // Bounded: after MAX_FIX_PASSES the remaining findings are reported, fixable or not.
+        for (let pass = 0; pass < MAX_FIX_PASSES; pass++) {
+          const done = await fixPass(last);
+          if (done === null) break;
+          fixed.push(...done);
+          if (last.model?.findings.some((f) => f.code === 'TRANSACTION_PENDING')) break;
+        }
+      } catch (err) {
+        // The failed pass saved nothing; the passes before it did, and the error says which.
+        if (isRowblyError(err)) Object.assign(err.details, { committed: fixed });
+        throw err;
       }
-      return report((await analyze()).findings, fixed);
+      const final = await withRecovery(ctx.root, 'doctor.check', analyze);
+      return report(final.findings, fixed);
     },
   };
 }
@@ -630,18 +895,58 @@ function coreFinding(code: CoreDoctorCode, path: string, message: string, detail
   return { code, severity: SEVERITY[code], path, message, fixable: false, details };
 }
 
-/** Runs a Plugin's fix; a throw fails `doctor --fix` like any Plugin handler (ADR-0012). */
-async function pluginFix(finding: Finding, changes: CoreChangeSet): Promise<string> {
-  try {
-    return (await finding.pluginFix?.(changes)) ?? '';
-  } catch (err) {
-    const id = finding.code.split('_')[0]?.toLowerCase() ?? '';
-    throw new PluginError(`Plugin fix for ${finding.code} failed: ${messageOf(err)}`, {
-      details: { plugin: id, code: finding.code },
-      hint: `turn the Plugin off with \`rowbly plugins disable ${id}\``,
-      cause: err,
-    });
+/**
+ * Why a Plugin's finding code is refused, or `undefined`: a local code is uppercase words joined
+ * by `_`, and the prefixed code must not read as a core code (ARCH-09).
+ */
+function refusedCode(id: string, local: string, code: string): string | undefined {
+  if (!LOCAL_CODE_RE.test(local)) {
+    return `Plugin "${id}" reported a finding with code "${local}": codes are uppercase words joined by "_"`;
   }
+  if (code in SEVERITY)
+    return `Plugin "${id}" reported a finding with code "${local}", which would read as core code ${code}`;
+  return undefined;
+}
+
+/** The finding for a transaction recovery could not finish, from the recovery error. */
+function pendingTransaction(failure: unknown): [path: string, message: string, extra: Partial<Finding>] {
+  const details = isRowblyError(failure) ? failure.details : {};
+  const id = typeof details.transaction === 'string' ? details.transaction : 'unknown';
+  const operation = typeof details.operation === 'string' ? details.operation : 'an operation';
+  const pending = Array.isArray(details.pending) ? (details.pending as string[]) : [];
+  const cause = typeof details.cause === 'string' ? details.cause : messageOf(failure);
+  return [
+    `.txn/${id}`,
+    `${operation} (transaction ${id}) was saved only in part and recovery could not finish it: ${cause}. Pending: ${pending.join(', ') || 'none'}`,
+    {
+      details: {
+        transaction: id,
+        operation,
+        pending,
+        cause,
+        hint: 'fix the cause (for example file permissions), then run `rowbly doctor --fix`',
+      },
+    },
+  ];
+}
+
+/** The fields of an older Rowbly in a Story file's raw JSON, before the schema drops them (VER-03). */
+function legacyFields(text: string): string[] {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  if (typeof raw !== 'object' || raw === null) return [];
+  const story = raw as { comments?: unknown; epicId?: unknown; tasks?: unknown };
+  const fields: string[] = [];
+  if (story.comments !== undefined) fields.push('comments');
+  if (story.epicId !== undefined) fields.push('epicId');
+  if (Array.isArray(story.tasks) && story.tasks.some((t) => typeof t === 'object' && t !== null && 'comments' in t)) {
+    fields.push('Task comments');
+  }
+  return fields;
 }
 
 function messageOf(err: unknown): string {
@@ -659,7 +964,7 @@ function plural(n: number, noun: string): string {
 function report(findings: readonly Finding[], fixed: DoctorFix[]): DoctorReport {
   const order: DoctorSeverity[] = ['error', 'warning', 'info'];
   const sorted = findings
-    .map(({ apply: _apply, pluginFix: _pluginFix, ...finding }) => finding)
+    .map(({ apply: _apply, pluginFix: _pluginFix, cleanup: _cleanup, pluginId: _pluginId, ...finding }) => finding)
     .sort((a, b) => order.indexOf(a.severity) - order.indexOf(b.severity) || compare(a.path, b.path));
   const count = (severity: DoctorSeverity) => sorted.filter((f) => f.severity === severity).length;
   return {

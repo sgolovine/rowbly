@@ -294,14 +294,14 @@ Package: [WP03-doctor.md](packages/WP03-doctor.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ARCH-09](../../reviews/plugin-architecture/general-architecture.md#arch-09) | WP03 | P1 | Recommended / see scope | Doctor reconstructs a plugin ID lossily from its code | Required. | open |
-| [ARCH-21](../../reviews/plugin-architecture/general-architecture.md#arch-21) | WP03 | P2 | Recommended / see scope | Custom doctor checks cannot inspect Local State through DoctorData | Required. | open |
-| [CQ-70](../../reviews/plugin-architecture/code-quality.md#cq-70) | WP03 | P1 | Recommended | Plugin attribution cannot be reconstructed from a finding code. | Required. | open |
+| [ARCH-09](../../reviews/plugin-architecture/general-architecture.md#arch-09) | WP03 | P1 | Recommended / see scope | Doctor reconstructs a plugin ID lossily from its code | Required. | done — `test/plugins/doctor.test.ts` › doctor attribution |
+| [ARCH-21](../../reviews/plugin-architecture/general-architecture.md#arch-21) | WP03 | P2 | Recommended / see scope | Custom doctor checks cannot inspect Local State through DoctorData | Required. | done (fixed by WP04A: `DoctorData.local`); fix-path test in `test/plugins/doctor.test.ts` › DoctorData.local |
+| [CQ-70](../../reviews/plugin-architecture/code-quality.md#cq-70) | WP03 | P1 | Recommended | Plugin attribution cannot be reconstructed from a finding code. | Required. | done — private `pluginId` on findings, stripped from the report |
 | [CQ-71](../../reviews/plugin-architecture/code-quality.md#cq-71) | WP03 | See linked finding | Merged |  | None separately — resolved by CQ-35, CQ-01, CQ-70. | merged → CQ-35, CQ-01, CQ-70 |
-| [DX-29](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-29) | WP03 | Optional | Optional / bounded | Doctor checks spell storage paths and need contextual literal types | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
-| [RES-09](../../reviews/plugin-architecture/resiliency.md#res-09) | WP03 | P0 | Recommended / see scope | Doctor's pre-renumber plugin fix edits the keeper instead of the duplicate | Required. | open |
-| [RES-17](../../reviews/plugin-architecture/resiliency.md#res-17) | WP03 | P1 | Recommended / see scope | Doctor reconstructs the wrong ID for multiword plugins | Required. | open |
-| [VER-03](../../reviews/plugin-architecture/other-areas.md#ver-03) | WP03 | P3 / conditional | Conditional / decision | Historical top-level Comments are silently discarded on a later write | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-29](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-29) | WP03 | Optional | Optional / bounded | Doctor checks spell storage paths and need contextual literal types | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | deferred: the storage layout is not a published contract yet; identity-safe targeting is the doctor ordering, not a path helper |
+| [RES-09](../../reviews/plugin-architecture/resiliency.md#res-09) | WP03 | P0 | Recommended / see scope | Doctor's pre-renumber plugin fix edits the keeper instead of the duplicate | Required. | done — `test/plugins/doctorIdentity.test.ts` |
+| [RES-17](../../reviews/plugin-architecture/resiliency.md#res-17) | WP03 | P1 | Recommended / see scope | Doctor reconstructs the wrong ID for multiword plugins | Required. | done — `test/plugins/doctor.test.ts` (`two-words`, `a-b-c`) |
+| [VER-03](../../reviews/plugin-architecture/other-areas.md#ver-03) | WP03 | P3 / conditional | Conditional / decision | Historical top-level Comments are silently discarded on a later write | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | done (U1: no importer) — LEGACY_DATA finding, doctor never saves such files (`test/services/doctorLeftovers.test.ts`) |
 
 ## WP05C
 

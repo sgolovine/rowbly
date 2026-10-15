@@ -16,7 +16,7 @@ import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
 
-export { coordinated, withMutation } from './coordination';
+export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from './coordination';
 export { pluginReadServices, pluginServices } from './plugins/capabilities';
 export {
   type ActivePlugin,
@@ -58,7 +58,8 @@ export function createServices(ctx: RowblyContext): Services {
     fields: each('fields', createFieldsService(ctx, repos, ops)),
     stories: each('stories', createStoriesService(ctx, repos, ops)),
     tasks: each('tasks', createTasksService(ctx, repos, ops)),
-    doctor: each('doctor', createDoctorService(ctx, repos, ops)),
+    // Doctor takes the lock itself, so that it can report a transaction recovery cannot finish.
+    doctor: createDoctorService(ctx, repos, ops),
     // `context(id)` only builds the Plugin's context; its reads and operations coordinate themselves.
     plugins: each('plugins', createPluginsService(ctx, repos, ops), ['context']),
   };

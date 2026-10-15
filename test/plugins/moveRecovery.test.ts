@@ -172,20 +172,22 @@ describe('renumbering through the Change Set', () => {
     return t;
   }
 
-  it('an occupied target fails before any folder moves; every Story stays readable (r04)', async () => {
+  it('renumbering skips a stray folder at the next key, which stays untouched (r04)', async () => {
     const t = await duplicateKeys();
-    // A stray folder at the key doctor picks next: a leftover Spec, no story.json.
+    // A stray folder at the key doctor would pick next: a leftover Spec, no story.json.
     await mkdir(join(t.path, 'boards/web/stories/WEB-8/plugins/specs'), { recursive: true });
     await writeFile(join(t.path, 'boards/web/stories/WEB-8/plugins/specs/spec.md'), '# old');
     const { services } = await withPlugins(t, []);
-    const before = await snapshotTree(t.path);
 
-    await expect(services.doctor.fix()).rejects.toThrow(ConflictError);
-    expect(await snapshotTree(t.path)).toEqual(before);
+    const report = await services.doctor.fix();
+    expect(report.fixed.map((f) => f.message)).toEqual(['renumbered WEB-1 ("Moved") to WEB-9']);
+    expect(report.findings.map((f) => [f.code, f.path])).toContainEqual(['ORPHAN_FOLDER', 'boards/web/stories/WEB-8']);
     expect(hiddenFolders(await snapshotTree(t.path))).toEqual([]);
-    // Both Stories are still where they were: nothing is hidden in a `.moving` folder.
-    expect((await services.stories.get('WEB-1')).name).toBe('Kept');
-    expect((await services.doctor.check()).findings.map((f) => f.code)).toContain('DUPLICATE_KEY');
+    expect((await services.stories.list('web', {})).map((s) => [s.key, s.name])).toEqual([
+      ['WEB-1', 'Kept'],
+      ['WEB-9', 'Moved'],
+    ]);
+    expect((await snapshotTree(t.path))['boards/web/stories/WEB-8/plugins/specs/spec.md']).toBe('# old');
   });
 
   it('a crash at any step of a swap with Plugin files recovers to the old or new state', async () => {

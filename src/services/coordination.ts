@@ -3,7 +3,14 @@
 // before its first read through the save, and gives it up before its reactions.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { DataRoot } from '../schemas';
-import { acquireLock, canonicalDataRoot, type LockHandle, type Repositories, recoverTransactions } from '../storage';
+import {
+  acquireLock,
+  canonicalDataRoot,
+  type LockHandle,
+  type RecoveryReport,
+  type Repositories,
+  recoverTransactions,
+} from '../storage';
 import type { OperationCoordinator } from './plugins/runtime';
 
 /** The lock one coordinated call holds on one Data Root. */
@@ -87,6 +94,49 @@ export async function withMutation<T>(root: DataRoot, operation: string, fn: () 
     return await fn();
   } finally {
     await hold.lock?.release();
+  }
+}
+
+/** What recovery did when `withRecovery` took the lock: its report, or why it failed. */
+export interface RecoveryOutcome {
+  report?: RecoveryReport;
+  failure?: unknown;
+}
+
+/**
+ * For doctor (ADR-0019 §2, "Recovery failure at acquisition"): like `withMutation`, but a recovery
+ * that fails does not fail the acquisition. `fn` runs with the lock held and learns what recovery
+ * did, so it can report a transaction that cannot be finished instead of failing.
+ */
+export async function withRecovery<T>(
+  root: DataRoot,
+  operation: string,
+  fn: (recovery: RecoveryOutcome) => Promise<T>,
+): Promise<T> {
+  const { path, hold } = await currentHold(root);
+  const recover = async (): Promise<RecoveryOutcome> => {
+    try {
+      return { report: await recoverTransactions(path) };
+    } catch (failure) {
+      return { failure };
+    }
+  };
+  if (hold) {
+    // Inside a call that holds the lock, recovery already ran when it was taken.
+    if (hold.lock && !hold.lock.released) return fn({});
+    // An operation of this call gave the lock up: take it again, for as long as the call lasts.
+    hold.lock = await acquireLock(path, { operation });
+    return fn(await recover());
+  }
+  const mine: Hold = { lock: await acquireLock(path, { operation }), open: true, operation };
+  const map = new Map(holds.getStore() ?? []);
+  map.set(path, mine);
+  try {
+    const recovery = await recover();
+    return await holds.run(map, () => fn(recovery));
+  } finally {
+    mine.open = false;
+    await mine.lock?.release();
   }
 }
 
