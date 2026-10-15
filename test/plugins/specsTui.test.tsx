@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { specs } from '../../src/plugins/specs';
-import { saveSpec } from '../../src/plugins/specs/specs';
+import { createSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
 import { makeBoard } from '../helpers';
 import { KEYS, waitForFrame } from '../tui/helpers';
@@ -15,11 +15,10 @@ async function setup(
   const t = await pluginRoot({ specs: true });
   if (screen === 'home') await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
   const seeded = await withPlugins(t, [specs]);
-  await saveSpec(
+  await createSpec(
     seeded.services.plugins.context('specs'),
     { board: 'web', slug: 'auth' },
     '# Auth\n\nBoard requirements',
-    true,
   );
   await seeded.services.stories.create('web', { name: 'Login', plugins: { specs: { specs: ['auth'] } } });
   await seeded.services.stories.create('web', { name: 'Other' });
@@ -52,7 +51,7 @@ describe('Specs TUI', () => {
     await app.press(KEYS.ctrlS);
     await waitForFrame(app, (f) => f.includes('Edited Spec') && !f.includes('enter new line'));
     await app.press('d');
-    await waitForFrame(app, 'Delete Spec?');
+    await waitForFrame(app, 'Delete Spec "api"?');
     await app.press('n');
     expect(await plugin.files.read({ board: 'web' }, 'api.md')).not.toBeNull();
     await app.press('d', 'y');
@@ -98,11 +97,10 @@ describe('Specs TUI', () => {
     Object.defineProperty(app.stdout, 'columns', { value: 100, configurable: true });
     Object.defineProperty(app.stdout, 'rows', { value: 24, configurable: true });
     app.stdout.emit('resize');
-    await saveSpec(
+    await createSpec(
       plugin,
       { board: 'web', story: 'WEB-1' },
       `# Long\n${Array.from({ length: 30 }, (_, i) => `Line ${i}`).join('\n')}`,
-      true,
     );
     await waitForFrame(app, 'Login');
     await app.press(KEYS.tab, KEYS.tab);
