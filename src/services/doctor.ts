@@ -22,8 +22,9 @@ import {
 import { CONFLICT_MARKER_RE, cascade, listDataRootFiles, type Repositories, readDataRootFile } from '../storage';
 import { fieldValueError } from './_customFieldValues';
 import type { CoreChangeSet } from './plugins/changeSet';
+import { inStage } from './plugins/executionScope';
 import { deepMerge, type OperationRunner } from './plugins/runtime';
-import type { DoctorData, PluginChangeSet } from './plugins/types';
+import type { DoctorData } from './plugins/types';
 import type {
   CoreDoctorCode,
   DoctorFinding,
@@ -534,7 +535,8 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       const context = ops.hookContext(id);
       const prefix = `${id.toUpperCase().replaceAll('-', '_')}_`;
       try {
-        for (const finding of await doctor.check({ data, plugin: context })) {
+        const found = await inStage(id, 'doctor-check', () => doctor.check({ data, plugin: context }), 'doctor.check');
+        for (const finding of found) {
           const { fix } = finding;
           findings.push({
             code: `${prefix}${finding.code}`,
@@ -543,7 +545,10 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
             message: finding.message,
             fixable: fix !== undefined,
             ...(fix
-              ? { pluginFix: async (changes: CoreChangeSet) => fix(changes.forPlugin(id) as PluginChangeSet) }
+              ? {
+                  pluginFix: (changes: CoreChangeSet) =>
+                    inStage(id, 'doctor-fix', (scope) => fix(changes.forPlugin(id, scope))),
+                }
               : {}),
           });
         }
