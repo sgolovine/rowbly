@@ -1,4 +1,4 @@
-// RES-10 (`move-file.ts`) and RES-24 (`crosscheck.ts`): a pending Plugin file belongs to its owner,
+// RES-10 (`move-file.ts`) and RES-24 (`crosscheck.ts`): a pending Plugin file belongs to its Story or Board,
 // not to a path. A Story renumbered after its file was queued takes the file with it, and a Board
 // created in the plan can own files in the same operation.
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';

@@ -62,7 +62,7 @@ interface StoryEntry {
   renumbered: boolean;
 }
 
-/** Which `plugins/<id>/` folder a pending file lives in: an owner, never a path (ADR-0019 §4). */
+/** Which `plugins/<id>/` folder a pending file lives in: a record, never a path (ADR-0019 §4). */
 type ScopeRef = { kind: 'dataRoot' } | { kind: 'board'; id: string } | { kind: 'story'; entry: StoryEntry };
 
 interface FileEntry {
@@ -78,7 +78,7 @@ interface FileEntry {
  * Every record a method receives or returns is a copy, so no reference outside reaches the plan.
  *
  * The changes stay in the order they were first made (the save and reaction order). Indexes find a
- * Story by its keys, a Board by its id and a file by its owner and name, without scanning that list.
+ * Story by its keys, a Board by its id and a file by its record and name, without scanning that list.
  */
 export class CoreChangeSet implements ChangeSet {
   private readonly pendingChanges: Change[] = [];
@@ -90,7 +90,7 @@ export class CoreChangeSet implements ChangeSet {
   private readonly boardChanges = new Map<string, BoardChange>();
   private rootConfigChange: RootConfigChange | undefined;
   private localStateChange: LocalStateChange | undefined;
-  /** Pending files by Plugin, owner and name (`fileKey`). */
+  /** Pending files by Plugin, record and name (`fileKey`). */
   private readonly files = new Map<string, FileEntry>();
   private storyEntryCount = 0;
   /** Counts changes to the plan, so a snapshot is copied again only after a change. */
@@ -286,7 +286,7 @@ export class CoreChangeSet implements ChangeSet {
         checkName(name);
         const ref = await this.resolveScope(scope);
         // A Story or Board this plan deletes has no files left.
-        if (this.deletedOwner(ref)) return null;
+        if (this.deletedRecord(ref)) return null;
         const pending = this.files.get(fileKey(id, ref, name));
         return pending ? pending.change.after : this.storedFile(id, ref, name);
       },
@@ -452,9 +452,9 @@ export class CoreChangeSet implements ChangeSet {
   ): Promise<void> {
     checkName(name);
     const ref = await this.resolveScope(scope);
-    const deleted = this.deletedOwner(ref);
+    const deleted = this.deletedRecord(ref);
     if (deleted) {
-      // The owner's folder goes as a whole, so a deletion has nothing left to do.
+      // The record's folder goes as a whole, so a deletion has nothing left to do.
       if (text === null) return check();
       throw deletedScopeError(id, name, deleted);
     }
@@ -478,7 +478,7 @@ export class CoreChangeSet implements ChangeSet {
   }
 
   /**
-   * The owner of a scope: a Board or Story in the plan (present or deleted), else the stored one.
+   * The record a scope belongs to: a Board or Story in the plan (present or deleted), else the stored one.
    * A Board or Story missing from both throws `NotFoundError`.
    */
   private async resolveScope(scope: FileScope): Promise<ScopeRef> {
@@ -497,8 +497,8 @@ export class CoreChangeSet implements ChangeSet {
     return { kind: 'story', entry: now ? (this.storyEntries.get(now) as StoryEntry) : this.storedEntry(stored) };
   }
 
-  /** `Story WEB-1` or `Board web` when the plan deletes the owner of `ref` (or a Story's Board). */
-  private deletedOwner(ref: ScopeRef): string | undefined {
+  /** `Story WEB-1` or `Board web` when the plan deletes the record of `ref` (or a Story's Board). */
+  private deletedRecord(ref: ScopeRef): string | undefined {
     if (ref.kind === 'dataRoot') return undefined;
     if (ref.kind === 'board') return this.boardChanges.get(ref.id)?.after === null ? `Board ${ref.id}` : undefined;
     const { change, key, boardId } = ref.entry;
@@ -519,20 +519,20 @@ export class CoreChangeSet implements ChangeSet {
     return `${source ?? storyFolder({ key, boardId })}/`;
   }
 
-  /** The stored text of a file: read from where its owner is stored now; `null` for a new owner. */
+  /** The stored text of a file: read from where its record is stored now; `null` for a new record. */
   private async storedFile(id: string, ref: ScopeRef, name: string): Promise<string | null> {
     const folder = this.storedFolder(ref);
     return folder === null ? null : storedPluginFile(join(this.root.path, folder), id, name);
   }
 
-  /** Where `ref`'s owner is stored now, relative to the Data Root; `null` when the plan creates it. */
+  /** Where the record of `ref` is stored now, relative to the Data Root; `null` when the plan creates it. */
   private storedFolder(ref: ScopeRef): string | null {
     if (ref.kind === 'dataRoot') return '';
     if (ref.kind === 'board') return this.boardChanges.get(ref.id)?.before === null ? null : `boards/${ref.id}`;
     return ref.entry.source;
   }
 
-  /** Points each pending file's public `path` at its owner's folder as the plan leaves it. */
+  /** Points each pending file's public `path` at its record's folder as the plan leaves it. */
   private placeFiles(): void {
     for (const { change, scope, name } of this.files.values()) {
       change.path = filePath(this.folderOf(scope), change.plugin, name);
@@ -638,9 +638,9 @@ export class CoreChangeSet implements ChangeSet {
     }
 
     for (const { change, scope, name } of this.files.values()) {
-      const deleted = this.deletedOwner(scope);
+      const deleted = this.deletedRecord(scope);
       if (deleted) {
-        // A deletion is done by the cascade; a write would revive the deleted owner.
+        // A deletion is done by the cascade; a write would revive the deleted record.
         if (change.after === null) continue;
         throw deletedScopeError(change.plugin, name, deleted);
       }
@@ -648,7 +648,7 @@ export class CoreChangeSet implements ChangeSet {
         throw new ConflictError(`Board ${scope.id} does not exist`, { details: { board: scope.id } });
       }
       const folder = this.folderOf(scope);
-      // The symlink policy (ADR-0019 §10), checked where the owner's folder is now.
+      // The symlink policy (ADR-0019 §10), checked where the record's folder is now.
       await resolvePluginFile(join(this.root.path, this.storedFolder(scope) ?? folder), change.plugin, name);
       const path = filePath(folder, change.plugin, name);
       out.push(
@@ -702,18 +702,18 @@ function filePath(folder: string, id: string, name: string): string {
   return `${folder}plugins/${id}/${name}`;
 }
 
-/** Identifies a pending file by Plugin, owner and name, whatever the owner's key becomes. */
+/** Identifies a pending file by Plugin, record and name, whatever the record's key becomes. */
 function fileKey(id: string, ref: ScopeRef, name: string): string {
-  const owner = ref.kind === 'dataRoot' ? '' : ref.kind === 'board' ? `board:${ref.id}` : `story:${ref.entry.n}`;
-  return `${id}\u0000${owner}\u0000${name}`;
+  const holder = ref.kind === 'dataRoot' ? '' : ref.kind === 'board' ? `board:${ref.id}` : `story:${ref.entry.n}`;
+  return `${id}\u0000${holder}\u0000${name}`;
 }
 
 function record<T>(path: string, schema: ZodType<T>, value: T): TransactionChange {
   return { kind: 'write', path, text: serializeJson(path, schema, value) };
 }
 
-function deletedScopeError(plugin: string, name: string, owner: string): ConflictError {
-  return new ConflictError(`Plugin "${plugin}" cannot write ${name}: its ${owner} is being deleted`, {
+function deletedScopeError(plugin: string, name: string, record: string): ConflictError {
+  return new ConflictError(`Plugin "${plugin}" cannot write ${name}: its ${record} is being deleted`, {
     details: { plugin, name },
   });
 }

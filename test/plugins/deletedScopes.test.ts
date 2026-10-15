@@ -1,6 +1,6 @@
 // RES-08, ARCH-38 (the `extra.ts` resurrection probe): a Plugin file write can never recreate the
 // folder of a Story or Board that the same operation deletes. Writes to a deleted scope are rejected
-// before anything is saved, reads of it return nothing, and deleting the owner still removes the
+// before anything is saved, reads of it return nothing, and deleting the Story or Board still removes the
 // files of every Plugin, including ones that are off.
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
