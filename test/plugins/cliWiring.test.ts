@@ -14,8 +14,14 @@ let stderr: string[];
 beforeEach(() => {
   stdout = [];
   stderr = [];
-  vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => (stdout.push(String(chunk)), true));
-  vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => (stderr.push(String(chunk)), true));
+  vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+    stdout.push(String(chunk));
+    return true;
+  });
+  vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+    stderr.push(String(chunk));
+    return true;
+  });
 });
 
 afterEach(() => {
@@ -160,7 +166,13 @@ describe('startup (PERF-06, ARCH-28)', () => {
   it('--version skips activation, with globals before or after it', async () => {
     const t = await pluginRoot({ counted: true });
     const { plugin, starts } = counted();
-    for (const argv of [['--version'], ['-V'], ['--root', t.path, '--version'], ['--version', '--json'], ['--json', '-V']]) {
+    for (const argv of [
+      ['--version'],
+      ['-V'],
+      ['--root', t.path, '--version'],
+      ['--version', '--json'],
+      ['--json', '-V'],
+    ]) {
       stdout.length = 0;
       expect(await main(argv, [plugin])).toBe(0);
       expect(stdout.join('')).toBe(`${pkg.version}\n`);

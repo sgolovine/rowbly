@@ -41,8 +41,7 @@ function command(program: Command, path: string): Command | undefined {
 
 const longs = (program: Command, path: string) => (command(program, path)?.options ?? []).map((o) => o.long);
 const groups = (program: Command) => program.commands.map((c) => c.name());
-const attachedIds = (program: Command, path: string) =>
-  (pluginsOf(program)?.options.get(path) ?? []).map((o) => o.id);
+const attachedIds = (program: Command, path: string) => (pluginsOf(program)?.options.get(path) ?? []).map((o) => o.id);
 
 async function load(registry: AnyPluginDefinition[]) {
   const t = await pluginRoot(Object.fromEntries(registry.map((d) => [d.id, true])));
@@ -110,7 +109,7 @@ describe('a Plugin whose CLI fails while it is staged (ARCH-24, RES-22)', () => 
     const t = await pluginRoot({ tasked: true });
     const program = createProgram();
     // A deliberately inconsistent program: the reserved names say `tasks create` takes options.
-    program.commands.splice(
+    (program.commands as Command[]).splice(
       program.commands.findIndex((c) => c.name() === 'tasks'),
       1,
     );

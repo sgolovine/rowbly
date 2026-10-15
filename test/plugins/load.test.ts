@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { NotFoundError, ValidationError } from '../../src/core';
 import { reservedNames } from '../../src/main';
 import { definePlugin, z } from '../../src/plugin-api';
-import { failureWarning, loadPlugins, onOff, validatePluginDefinition } from '../../src/services';
+import {
+  type AnyPluginDefinition,
+  failureWarning,
+  loadPlugins,
+  onOff,
+  validatePluginDefinition,
+} from '../../src/services';
 import { makeBoard } from '../helpers';
 import { boom, clash, notes, rival, stamp, storiesPlugin, strict } from './fixtures';
 import { pluginRoot, readJsonFile, withPlugins } from './helpers';
@@ -135,7 +141,7 @@ describe('loading Plugins (ADR-0010)', () => {
       const { host } = await withPlugins(t, [bad('one', 'doctor', '--deep'), bad('two', 'stories create', '-e, --e')]);
       expect(host.failures().map((f) => f.reason)).toEqual([
         '"rowbly doctor" does not take Plugin options',
-        'option "-e, --e" on "rowbly stories create" must be one long flag',
+        'option "-e, --e" on "rowbly stories create" must be one long lower-kebab-case flag',
       ]);
     });
   });
@@ -163,7 +169,7 @@ describe('loading Plugins (ADR-0010)', () => {
 
   describe('operation names (ARCH-17, DX-36)', () => {
     const named = (id: string, def: Record<string, unknown>) =>
-      definePlugin({ id, name: id, description: '', ...def } as never);
+      definePlugin({ id, name: id, description: '', ...def } as AnyPluginDefinition);
     const noop = { guard: () => undefined };
 
     it('a replacement must name a core operation', async () => {
@@ -302,7 +308,7 @@ describe('plugins service', () => {
       id: 'throwing',
       name: 'Throwing',
       description: '',
-      settings: z.object({}).transform(() => {
+      settings: z.object({}).transform((): Record<string, unknown> => {
         throw 'settings exploded';
       }),
     });
