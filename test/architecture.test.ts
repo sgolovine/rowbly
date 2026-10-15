@@ -54,6 +54,17 @@ function pluginOf(file: string): string | null {
   return parts[0] === 'plugins' && parts.length > 2 ? (parts[1] ?? null) : null;
 }
 
+/**
+ * AGENTS.md: the area of a path below src/tui/ (`components`, `shell`, `hooks`, `router` or
+ * `screens/<area>`), or `null` for an area's folder itself (its barrel) and for the shared files at
+ * the top of src/tui/ and src/tui/screens/.
+ */
+function tuiAreaOf(path: string): string | null {
+  const parts = path.split('/');
+  if (parts[0] === 'screens') return parts.length > 2 ? `screens/${parts[1]}` : null;
+  return parts.length > 1 ? (parts[0] ?? null) : null;
+}
+
 /** README §3: each layer may import only from the layers listed (always including itself). */
 const ALLOWED: Record<string, string[]> = {
   core: ['core'],
@@ -158,11 +169,35 @@ describe('architecture', async () => {
     expect(offenders).toEqual([]);
   });
 
+  // AGENTS.md: the TUI imports another area through its barrel, never a file inside it.
+  it('a TUI area imports other areas only through their barrels', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const path = srcPath(file);
+      if (!path.startsWith('tui/')) continue;
+      const area = tuiAreaOf(path.slice('tui/'.length));
+      for (const spec of specifiers(await readFile(file, 'utf8'))) {
+        if (!spec.startsWith('.')) continue;
+        const target = srcPath(join(file, '..', spec));
+        if (!target.startsWith('tui/')) continue;
+        const targetArea = tuiAreaOf(target.slice('tui/'.length));
+        if (targetArea !== null && targetArea !== area) offenders.push(`${path} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it('the checks above see the rules being broken', () => {
     const plugin = join(SRC, 'plugins', 'demo', 'index.ts');
     expect(pluginOf(plugin)).toBe('demo');
     expect(pluginOf(join(SRC, 'plugins', 'index.ts'))).toBeNull();
     expect(layerOf(join(SRC, 'plugin-api', 'tui.ts'))).toBe('plugin-api-tui');
+    expect(tuiAreaOf('screens/home/HomeScreen.tsx')).toBe('screens/home');
+    expect(tuiAreaOf('components/Modal')).toBe('components');
+    expect(tuiAreaOf('components')).toBeNull();
+    expect(tuiAreaOf('screens/home')).toBeNull();
+    expect(tuiAreaOf('screens/types')).toBeNull();
+    expect(tuiAreaOf('keymap')).toBeNull();
     expect(NODE_BUILTINS.has('node:fs')).toBe(true);
     expect(NODE_BUILTINS.has('child_process')).toBe(true);
     expect(specifiers("import { x } from '../../services';\nconst m = await import('./tui');")).toEqual([
