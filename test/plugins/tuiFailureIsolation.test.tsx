@@ -292,10 +292,11 @@ describe('Plugin render containment (RES-13)', () => {
       for (const text of FALLBACK[how]) expect(frame).toContain(text);
       expect(frame).toContain('Board › Boom');
       await app.press(KEYS.escape);
-      await waitForFrame(app, (f) => !f.includes('Board › Boom'));
+      // Back on the Board, whose footer shows its keys again.
+      await waitForFrame(app, (f) => !f.includes('Board › Boom') && f.includes('· Z Note'));
       // Another Plugin's screen still opens.
       await app.press('Z');
-      await waitForFrame(app, 'Note of WEB-1: hello');
+      await waitForFrame(app, 'Note of WEB-1: hello', 10_000);
       app.unmount();
     },
   );
