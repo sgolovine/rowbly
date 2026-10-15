@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { createRepositories, findDataRoot, gitUserEmail } from '../storage';
 import { createAssigneesService } from './assignees';
 import { createBoardsService } from './boards';
@@ -15,6 +15,12 @@ import { createStagesService } from './stages';
 import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
+
+/**
+ * Generated ids (for example Comment ids) use letters and digits only. nanoid's default alphabet
+ * includes `-` and `_`, and an id starting with `-` is read as a flag on the command line.
+ */
+export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8);
 
 export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from './coordination';
 export { pluginReadServices, pluginServices } from './plugins/capabilities';
@@ -92,7 +98,7 @@ export async function createContext(opts: CreateContextOptions): Promise<RowblyC
     local,
     me: local.me ?? null,
     now: () => new Date(),
-    newId: () => nanoid(8),
+    newId,
     warn: opts.warn,
     ...(opts.plugins ? { plugins: opts.plugins } : {}),
     ...(opts.backgroundReactions ? { backgroundReactions: true } : {}),
