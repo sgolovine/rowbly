@@ -1,0 +1,506 @@
+# Findings ledger
+
+Every finding from the [review's finding index](../../reviews/plugin-architecture/finding-index.md) appears here exactly once, assigned to the package that **closes** it. The index has 306 entries. RES-18 is split into its documented subcases A, B, and C, which gives 308 rows. "Review owner" is the review's original work-package assignment. "Package" (the section heading) is this spec's split of that work.
+
+- **Required outcome** comes from the entry's execution priority and disposition. Its meaning is defined in [contracts.md §2](contracts.md#2-priority-and-disposition-handling).
+- **Status** is updated by the owning package's PR, following [worker.md §5](worker.md#5-finding-status-protocol). Allowed values: `open`, `done — <test/note>`, `done (fixed by WPxx)`, `deferred: <reason>`, `withdrawn`, `merged → <ID>`.
+- Each package edits only its own section. The supervisor verifies the section before merging.
+- Issue text is copied from the index. Some entries are summaries; follow the link for the evidence, the recommended change, and the acceptance criteria.
+
+Row counts by required outcome: required 162, optional 112, conditional 13, withdrawn 14, merged 7.
+
+| Package | Rows |
+| --- | ---: |
+| [WP00](#wp00) | 3 |
+| [WP05O](#wp05o) | 4 |
+| [WP07A](#wp07a) | 26 |
+| [WP09A](#wp09a) | 5 |
+| [WP04A](#wp04a) | 19 |
+| [WP02B](#wp02b) | 3 |
+| [WP01A](#wp01a) | 9 |
+| [WP06](#wp06) | 33 |
+| [WP05A](#wp05a) | 6 |
+| [WP01B](#wp01b) | 14 |
+| [WP02A](#wp02a) | 12 |
+| [WP05B](#wp05b) | 21 |
+| [WP02C](#wp02c) | 6 |
+| [WP03](#wp03) | 8 |
+| [WP05C](#wp05c) | 2 |
+| [WP08A](#wp08a) | 28 |
+| [WP08B](#wp08b) | 29 |
+| [WP08C](#wp08c) | 15 |
+| [WP04B](#wp04b) | 39 |
+| [WP07B](#wp07b) | 3 |
+| [WP09B](#wp09b) | 13 |
+| [WP10A](#wp10a) | 5 |
+| [WP10B](#wp10b) | 5 |
+| **Total** | **308** |
+
+## WP00
+
+Package: [WP00-contracts-and-adrs.md](packages/WP00-contracts-and-adrs.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [CQ-04](../../reviews/plugin-architecture/code-quality.md#cq-04) | WP08 | Optional | Optional | Built-in Plugin naming/layout is inconsistent. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-05](../../reviews/plugin-architecture/code-quality.md#cq-05) | WP08 | Optional | Optional | Internal operation and function verbs vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-06](../../reviews/plugin-architecture/code-quality.md#cq-06) | WP08 | Optional | Optional | Delete result shapes vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+
+## WP05O
+
+Package: [WP05O-tui-organization.md](packages/WP05O-tui-organization.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [CQ-57](../../reviews/plugin-architecture/code-quality.md#cq-57) | WP05 | Optional | Optional | src/tui/screens/plugins/PluginScreen.tsx:7 versus PluginsScreen.tsx:8: singular/plural names obscure that the former hosts arbitrary Plugin screens. Optional rename to PluginScr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-59](../../reviews/plugin-architecture/code-quality.md#cq-59) | WP05 | P2 | Useful | src/tui/components/PluginSlot.tsx:10: plugin: string is an ID whereas render's Plugin is a context. Rename prop/locals to pluginId; update src/tui/screens/boards/BoardDetail.tsx… | Required. | open |
+| [CQ-73](../../reviews/plugin-architecture/code-quality.md#cq-73) | WP05 | P2 | Useful | In-scope screen names violate the supplied TUI organization rule. | Required. | open |
+| [CQ-74](../../reviews/plugin-architecture/code-quality.md#cq-74) | WP05 | P2 | Useful | Cross-area imports bypass required barrels. | Required. | open |
+
+## WP07A
+
+Package: [WP07A-test-infrastructure.md](packages/WP07A-test-infrastructure.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-29](../../reviews/plugin-architecture/general-architecture.md#arch-29) | WP07 | P2 | Recommended / see scope | Simultaneous test runs share build outputs | Required. | open |
+| [CQ-136](../../reviews/plugin-architecture/code-quality.md#cq-136) | WP07 | P2 | Useful | Four TUI setup helpers exercise different integration semantics. | Required. | open |
+| [CQ-137](../../reviews/plugin-architecture/code-quality.md#cq-137) | WP07 | P2 | Useful | Magic navigation counts bind tests to unrelated field order. | Required. | open |
+| [CQ-138](../../reviews/plugin-architecture/code-quality.md#cq-138) | WP07 | Optional | Optional | Guard-only fixtures at test/plugins/epics.test.ts:115, specs.test.ts:82, pipeline.test.ts:222, doctor.test.ts:52, epicsDoctor.test.ts:34 repeat small definitions. Optional rejec… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-139](../../reviews/plugin-architecture/code-quality.md#cq-139) | WP07 | Optional | Optional; original diagnosis withdrawn | Recorder fixtures at test/plugins/pipeline.test.ts:13/:182 and comments.test.ts:77 use Object.fromEntries with structurally compatible common event subsets. Original claim they … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-140](../../reviews/plugin-architecture/code-quality.md#cq-140) | WP07 | P2 | Useful | test/plugins/commentsCli.test.ts:15 and commentsTui.test.tsx:31 read/cast raw thread data. Add readCommentThread(t: TempRoot, key: string, taskIndex?: number): Promise<Comment[]… | Required. | open |
+| [CQ-141](../../reviews/plugin-architecture/code-quality.md#cq-141) | WP07 | P2 | Useful | test/plugins/load.test.ts:54: host.failures()[0] as never suppresses indexed-access uncertainty. Replace with host.failures().map(failureWarning)[0] in the assertion, or explici… | Required. | open |
+| [CQ-142](../../reviews/plugin-architecture/code-quality.md#cq-142) | WP07 | See linked finding | Merged; see local fallback | test/plugins/tui.test.tsx:39: ctx.plugins as NonNullable<RowblyContext['plugins']>. Keep const host = await load(t) and call loadTuiPlugins(host), assigning host to ctx. | None separately — resolved by CQ-136. | merged → CQ-136 |
+| [CQ-143](../../reviews/plugin-architecture/code-quality.md#cq-143) | WP07 | Optional | Optional | test/plugins/helpers.ts:48, tui.test.tsx:18/:47, epicsTui.test.tsx:34 and load.test.ts:10 rebuild static reserved command/key metadata. Optional const reserved = reservedNames()… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-144](../../reviews/plugin-architecture/code-quality.md#cq-144) | WP07 | Optional | Optional | test/plugins/cli.test.ts:6/:9, epicsCli.test.ts:5/:6, specsCli.test.ts:7/:9, commentsCli.test.ts:11: tiny CLI/JSON wrappers repeat. Their executable/cwd options differ. Share on… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-145](../../reviews/plugin-architecture/code-quality.md#cq-145) | WP07 | P2 | Useful | test/plugins/cli.test.ts:11 async root only awaits/returns pluginRoot; replace calls directly. :55/:58 dynamically imports fs for ordinary test helpers; import mkdir/readFile on… | Required. | open |
+| [CQ-146](../../reviews/plugin-architecture/code-quality.md#cq-146) | WP07 | Optional | Optional / useful | test/plugins/pipeline.test.ts:303–:314: late helper declarations are legal, not a control-flow bug. Local pathExists suppresses all I/O errors; replace it with src/storage expor… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-147](../../reviews/plugin-architecture/code-quality.md#cq-147) | WP07 | Optional | Optional | test/plugins/specsCli.test.ts:95: one test sits outside the file's describe; :7 uses Parameters<typeof runCli>[1]. Optional move into describe('rowbly specs') and import existin… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-148](../../reviews/plugin-architecture/code-quality.md#cq-148) | WP07 | Optional | Optional / useful | test/plugins/specsTui.test.tsx:135 loop-generated tests could use it.each; test/plugins/comments.test.ts:36 combines null/stranger author cases inside one test. Parameterize Com… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-149](../../reviews/plugin-architecture/code-quality.md#cq-149) | WP07 | Optional | Optional / useful | test/plugins/specsTui.test.tsx:51/:77/:129 lists characters; Comments spreads a string; Epics passes words. A whole string to app.press produces one input event, unlike characte… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-150](../../reviews/plugin-architecture/code-quality.md#cq-150) | WP07 | Optional | Optional | test/plugins/epics.test.ts:41: ctx.now = ... differs from fixedClock().advance in Comments. Optional inject a retained fixedClock in setup and advance it. Mutating the test cloc… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-151](../../reviews/plugin-architecture/code-quality.md#cq-151) | WP07 | None | Withdrawn | test/plugins/epicsDoctor.test.ts:1 is separate while specs.test.ts:111 groups Doctor tests. Both are cohesive organizations; no reason to force a merge. | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-152](../../reviews/plugin-architecture/code-quality.md#cq-152) | WP07 | P2 | Useful | test/plugins/commentsTui.test.tsx:91: pure relativeTime cases live in an integration suite. Move unchanged cases to test/plugins/relativeTime.test.ts importing only the helper. | Required. | open |
+| [CQ-153](../../reviews/plugin-architecture/code-quality.md#cq-153) | WP07 | P2 | Useful | test/plugins/pipeline.test.ts:157: 10ms sleep after releasing a reaction. Microtask ordering makes a failure unlikely here; prior “cannot flake” language overclaimed. Use an exp… | Required. | open |
+| [CQ-154](../../reviews/plugin-architecture/code-quality.md#cq-154) | WP07 | P2 | Useful / optional | test/plugins/fixtures/others.ts:86: “like Specs will” is stale now that Specs exists; change to “like Specs”. Exported order state is intentionally reset at pipeline.test.ts:42;… | Required (optional sub-parts per entry). | open |
+| [CQ-155](../../reviews/plugin-architecture/code-quality.md#cq-155) | WP07 | P2 | Useful | test/plugins/fixtures/notes.ts:32: if (!parsed.success \/\/ !key) return silently ignores supplied malformed input; docs docs/PLUGINS.md:306 points authors to fixtures. Preserve… | Required. | open |
+| [CQ-156](../../reviews/plugin-architecture/code-quality.md#cq-156) | WP07 | P2 | Useful | test/plugins/doctor.test.ts:11: join(root, path, '..') works but dirname(join(root, path)) makes parent intent explicit. test/plugins/bags.test.ts:78 casts story.tasks; parse wi… | Required. | open |
+| [CQ-157](../../reviews/plugin-architecture/code-quality.md#cq-157) | WP07 | Optional | Optional | test/architecture.test.ts:1 enforces layers/imports, not AGENTS.md component naming/barrels. After CQ-73/CQ-74, optionally add a focused cross-area import rule using the test's … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [TEST-02](../../reviews/plugin-architecture/other-areas.md#test-02) | WP07 | P2 | Recommended / see scope | Repeated TUI setup wires warning delivery differently | Required. | open |
+| [TEST-03](../../reviews/plugin-architecture/other-areas.md#test-03) | WP07 | Optional | Optional / bounded | Single in-process test runs build both CLI bundles | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [TEST-04](../../reviews/plugin-architecture/other-areas.md#test-04) | WP07 | P2 | Recommended / see scope | No explicit checklist ties each mutation to both surfaces | Required. | open |
+
+## WP09A
+
+Package: [WP09A-doc-corrections.md](packages/WP09A-doc-corrections.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-15](../../reviews/plugin-architecture/general-architecture.md#arch-15) | WP09 | P2 | Recommended / see scope | Supporting architecture/contracts documentation still describes removed core Comments | Required. | open |
+| [CQ-158](../../reviews/plugin-architecture/code-quality.md#cq-158) | WP09 | P2 | Useful | docs/PLUGINS.md:17 says Plugins work through capabilities including “running git”; src/services/plugins/types.ts:241's PluginContext has no such capability and the Git Plugin is… | Required. | open |
+| [DOC-01](../../reviews/plugin-architecture/other-areas.md#doc-01) | WP09 | P2 | Recommended / see scope | Current architecture/contracts contradict source | Required. | open |
+| [DOC-02](../../reviews/plugin-architecture/other-areas.md#doc-02) | WP09 | P2 | Recommended / see scope | Historical ADR language is presented as current implementation status | Required. | open |
+| [DOC-05](../../reviews/plugin-architecture/other-areas.md#doc-05) | WP09 | P2 | Recommended / see scope | Glossaries omit supported null/no-target cases and precise heading rule | Required. | open |
+
+## WP04A
+
+Package: [WP04A-api-safety-contracts.md](packages/WP04A-api-safety-contracts.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-03](../../reviews/plugin-architecture/general-architecture.md#arch-03) | WP04 | P2 | Recommended / see scope | Pre-save hooks cannot identify the operation's returned entity directly | Required. | open |
+| [ARCH-05](../../reviews/plugin-architecture/general-architecture.md#arch-05) | WP04 | P2 | Recommended / see scope | The plugin capability object exposes other plugins' contexts | Required. | open |
+| [ARCH-08](../../reviews/plugin-architecture/general-architecture.md#arch-08) | WP04 | P1 | Recommended / see scope | writeBag can overwrite the root's reserved enablement bit | Required. | open |
+| [ARCH-11](../../reviews/plugin-architecture/general-architecture.md#arch-11) | WP04 | P2 | Recommended / see scope | The generic context exposes a command-only editor capability | Required. | open |
+| [ARCH-14](../../reviews/plugin-architecture/general-architecture.md#arch-14) | WP04 | P1 | Recommended / see scope | Core operation types do not describe all actual runner results | Required. | open |
+| [ARCH-33](../../reviews/plugin-architecture/general-architecture.md#arch-33) | WP04 | Optional | Optional / bounded | Guard's return type redundantly includes undefined | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-36](../../reviews/plugin-architecture/general-architecture.md#arch-36) | WP04 | P0 | Recommended / see scope | Invalid bags look absent and can be overwritten by ordinary mutations | Required. | open |
+| [CQ-02](../../reviews/plugin-architecture/code-quality.md#cq-02) | WP04 | Optional | Optional | Repeated discovery of a newly created Story. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-22](../../reviews/plugin-architecture/code-quality.md#cq-22) | WP04 | P2 | Useful | src/services/plugins/types.ts:158/:159: field: unknown, result: unknown[] despite CustomFieldInput/CustomFieldDef schemas/service contracts. Use field: CustomFieldInput, both re… | Required. | open |
+| [CQ-23](../../reviews/plugin-architecture/code-quality.md#cq-23) | WP04 | P2 | Useful | src/services/plugins/types.ts:173/:174: Plugin enable/disable result: unknown, though src/services/types.ts:346/:348 specifies { id: string; enabled: boolean }. Use that result … | Required. | open |
+| [CQ-24](../../reviews/plugin-architecture/code-quality.md#cq-24) | WP04 | P2 | Useful | src/services/plugins/types.ts:202/:206: GuardResult already includes undefined; use GuardResult \/ Promise<GuardResult>. Remove redundant \/ undefined from the verdict annotatio… | Required. | open |
+| [CQ-25](../../reviews/plugin-architecture/code-quality.md#cq-25) | WP04 | P2 | Useful | src/services/plugins/types.ts:250, src/services/plugins/runtime.ts:191/:193: bag: object admits arrays/classes while persisted bags are Record<string, unknown>; implementation c… | Required. | open |
+| [CQ-165](../../reviews/plugin-architecture/code-quality.md#cq-165) | WP04 | P2 | Recommended | writeBag promises a generic subtype it does not preserve. | Required. | open |
+| [DX-08](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-08) | WP04 | P2 | Recommended / see scope | New Story lookup is repetitive and has an implicit subject assumption | Required. | open |
+| [DX-18](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-18) | WP04 | P2 | External milestone | Production context exposes the entire service layer without phase guidance | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-21](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-21) | WP04 | P2 | Recommended / see scope | Editor launch is visible in TUI and hook contexts despite being CLI-only | Required. | open |
+| [DX-37](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-37) | WP04 | P2 | Recommended / see scope | Generic bag writing on root settings can drop activation | Required. | open |
+| [SEC-03](../../reviews/plugin-architecture/other-areas.md#sec-03) | WP04 | P2 | Recommended / see scope | Command-only editor restriction is unenforced at runtime | Required. | open |
+| [VER-02](../../reviews/plugin-architecture/other-areas.md#ver-02) | WP04 | Optional | Optional / bounded | Invalid bags can be mistaken for absent data; migration policy is undefined | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+
+## WP02B
+
+Package: [WP02B-storage-commit-engine.md](packages/WP02B-storage-commit-engine.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [RES-03](../../reviews/plugin-architecture/resiliency.md#res-03) | WP02 | P0 | Recommended / see scope | A failed text write destroys the original plugin file | Required. | open |
+| [RES-04](../../reviews/plugin-architecture/resiliency.md#res-04) | WP02 | P0 | Recommended / see scope | Folder staging failures make Stories inaccessible | Required. | open |
+| [RES-21](../../reviews/plugin-architecture/resiliency.md#res-21) | WP02 | P3 / containment policy | Policy decision; before confinement claims | Valid plugin paths follow symlinks outside their scope | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+
+## WP01A
+
+Package: [WP01A-execution-scopes.md](packages/WP01A-execution-scopes.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-06](../../reviews/plugin-architecture/general-architecture.md#arch-06) | WP01 | P0 | Recommended / see scope | Hooks can start independent nested operations | Required. | open |
+| [ARCH-23](../../reviews/plugin-architecture/general-architecture.md#arch-23) | WP01 | P0 | Recommended / see scope | Reactions receive a live, shallow-readonly Change Set | Required. | open |
+| [ARCH-39](../../reviews/plugin-architecture/general-architecture.md#arch-39) | WP01 | P0 | Recommended / see scope | Guards get writer methods and can modify the supposedly final Change Set | Required. | open |
+| [CQ-27](../../reviews/plugin-architecture/code-quality.md#cq-27) | WP01 | P0 dependency | Superseded by RES-06 / ARCH-39 | Document the final immutable view contract; do not preserve live-mutability guidance. | Required. | open |
+| [CQ-35](../../reviews/plugin-architecture/code-quality.md#cq-35) | WP01 | P2 | Useful | src/services/plugins/runtime.ts:206, src/services/doctor.ts:545: changes.forPlugin(id) as PluginChangeSet is redundant; method already returns that type. Delete both casts and u… | Required. | open |
+| [CQ-36](../../reviews/plugin-architecture/code-quality.md#cq-36) | WP01 | None | Withdrawn | src/services/plugins/runtime.ts:68: rebuilding event objects per phase is small and unmeasured. A memoized map adds state and lets a transform's event-object mutation leak into … | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [DX-17](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-17) | WP01 | P0 | Recommended / see scope | Hook types expose nested writes and guards expose mutable Change Sets | Required. | open |
+| [RES-05](../../reviews/plugin-architecture/resiliency.md#res-05) | WP01 | P0 | Recommended / see scope | Reentrant handler mutations save independently and overwrite each other | Required. | open |
+| [RES-06](../../reviews/plugin-architecture/resiliency.md#res-06) | WP01 | P0 | Recommended / see scope | Change Set views expose mutable internal state and source identities | Required. | open |
+
+## WP06
+
+Package: [WP06-host-and-cli-registration.md](packages/WP06-host-and-cli-registration.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-16](../../reviews/plugin-architecture/general-architecture.md#arch-16) | WP06 | P2 | Recommended / see scope | The option-capable command set has two manually maintained definitions | Required. | open |
+| [ARCH-17](../../reviews/plugin-architecture/general-architecture.md#arch-17) | WP04 | P2 | Recommended / see scope | Replacement key runtime validation is looser than its type | Required. | open |
+| [ARCH-24](../../reviews/plugin-architecture/general-architecture.md#arch-24) | WP06 | P1 | Recommended / see scope | Late surface failures are not fully reconciled with load-time claims | Required. | open |
+| [ARCH-28](../../reviews/plugin-architecture/general-architecture.md#arch-28) | WP06 | Optional | Optional / bounded | Startup constructs core Commander declarations twice and activates plugins for version queries | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-34](../../reviews/plugin-architecture/general-architecture.md#arch-34) | WP06 | Optional | Optional / bounded | Core invokes generic plugin definitions in several service modules | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-10](../../reviews/plugin-architecture/code-quality.md#cq-10) | WP06 | Optional | Optional | Unknown-Plugin wording differs across surfaces. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-15](../../reviews/plugin-architecture/code-quality.md#cq-15) | WP06 | Optional | Optional | Plugin rows are converted at CLI call sites. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-28](../../reviews/plugin-architecture/code-quality.md#cq-28) | WP06 | Optional | Optional | src/services/plugins/host.ts:118 guards loaded state; src/services/plugins/host.ts:121 uses splice(findIndex(...), 1). A -1 would remove the last element, but no invariant-break… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-29](../../reviews/plugin-architecture/code-quality.md#cq-29) | WP06 | P2 | Useful | src/services/plugins/host.ts:113 copies statuses; src/services/plugins/host.ts:114 returns the live active array; src/services/plugins/host.ts:115 returns original status object… | Required. | open |
+| [CQ-30](../../reviews/plugin-architecture/code-quality.md#cq-30) | WP06 | Optional | Optional | src/services/plugins/host.ts:207: keys.indexOf(key) !== keys.lastIndexOf(key) repeats scans. Optional local seen Set during the existing loop. No measured performance problem fo… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-31](../../reviews/plugin-architecture/code-quality.md#cq-31) | WP06 | P2 | Useful | src/services/plugins/host.ts:34/:38: entry is called “raw entry” but enabled has already been removed at :85. Clarify “raw settings, without enabled; Board settings merge over t… | Required. | open |
+| [CQ-32](../../reviews/plugin-architecture/code-quality.md#cq-32) | WP06 | Optional | Optional | src/services/plugins/host.ts:178: FLAG_RE allows one long flag with optional <required>/[optional] value. Add example comment (--epic <id>, --no-epic, --spec [slug]) if useful. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-46](../../reviews/plugin-architecture/code-quality.md#cq-46) | WP06 | P2 | Useful | src/services/plugins/service.ts:12 and src/services/plugins/service.ts:50: if (!entry) definition(id) calls for validation/throw. Rename helper requireDefinition, annotate its i… | Required. | open |
+| [CQ-47](../../reviews/plugin-architecture/code-quality.md#cq-47) | WP06 | None | Withdrawn | src/services/plugins/service.ts:31: validation inside the root-config updater is appropriate; pure functions can throw. Moving it to a separate read adds I/O and can validate st… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-48](../../reviews/plugin-architecture/code-quality.md#cq-48) | WP06 | Optional | Optional | src/services/plugins/service.ts:69–:94: Plugin row collection is in the Plugin service module but not on PluginsService. Optional move to src/services/plugins/rows.ts, update sr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-49](../../reviews/plugin-architecture/code-quality.md#cq-49) | WP06 | P2 | Useful | src/services/plugins/service.ts:36: (err as Error).message assumes what a custom schema throws. Replace locally with err instanceof Error ? err.message : String(err) or CQ-08 he… | Required. | open |
+| [CQ-63](../../reviews/plugin-architecture/code-quality.md#cq-63) | WP06 | Optional | Optional | src/commands/plugins.ts:118: commandPath(at) === path repeats what a successful walk from a root program establishes. Exported attachment could receive a parented command, so un… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-64](../../reviews/plugin-architecture/code-quality.md#cq-64) | WP06 | P2 | Useful | src/commands/plugins.ts:159: settings?: Record<string, unknown> weakens PluginsService.get's required settings (src/services/types.ts:344); :166 adds ?? {}. Make it required and… | Required. | open |
+| [CQ-65](../../reviews/plugin-architecture/code-quality.md#cq-65) | WP06 | Optional | Optional / useful | src/commands/_shared.ts:42: inline attached-options element type. Optional private AttachedPluginOptions interface with existing id, attributes, input members. The original extr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-66](../../reviews/plugin-architecture/code-quality.md#cq-66) | WP06 | Optional | Optional | src/commands/_shared.ts:81: pluginOptions returns operation input options, distinct from CLI declarations. Optional rename pluginInputOptions, updating callers in Story/Task/Boa… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-67](../../reviews/plugin-architecture/code-quality.md#cq-67) | WP06 | Optional | Optional | src/commands/boards.ts:73 and src/commands/tasks.ts:76: const plugins = pluginOptions(cmd) leads to plugins.plugins. Rename local to operationOptions, independent of CQ-66. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-68](../../reviews/plugin-architecture/code-quality.md#cq-68) | WP06 | Optional | Optional | src/commands/stories.ts:295 and src/commands/tasks.ts:128 duplicate stageBadge; Story :347's labelled is repeated in Task :151. If touching both renderers, extract stageBadge(st… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-10](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-10) | WP06 | P1 | Recommended / see scope | A lone negated core option supplies input even when the user gives no flag | Required. | open |
+| [DX-13](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-13) | WP06 | None | Withdrawn | Lazy component loading is useful; export-unwrapping is small boilerplate | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [DX-32](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-32) | WP06 | Optional | Optional / bounded | Reserved names are checked, but authors lack a preflight/reference | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-36](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-36) | WP06 | P2 | Recommended / see scope | Misspelled operation names are accepted and silently never run | Required. | open |
+| [OBS-03](../../reviews/plugin-architecture/other-areas.md#obs-03) | WP06 | Optional | Optional / bounded | Listing shows raw settings/status, not effective configuration/contributions | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [PERF-05](../../reviews/plugin-architecture/other-areas.md#perf-05) | WP06 | Optional | Optional / bounded | Disabled definitions still evaluate their non-TUI modules | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [PERF-06](../../reviews/plugin-architecture/other-areas.md#perf-06) | WP06 | P2 | Recommended / see scope | Startup constructs the core command tree twice | Required. | open |
+| [RES-14](../../reviews/plugin-architecture/resiliency.md#res-14) | WP06 | P1 | Recommended / see scope | Duplicate option declarations pass loading and abort program construction | Required. | open |
+| [RES-18A](../../reviews/plugin-architecture/resiliency.md#res-18) | WP06 | P1 | Recommended / see scope | Static plugin module evaluation happens before host startup: add CLI build/startup smoke tests for all built-ins; lazy descriptors only if containment is required | Required. | open |
+| [RES-22](../../reviews/plugin-architecture/resiliency.md#res-22) | WP06 | P1 | Recommended / see scope | A late load failure still blocks later plugins' name claims | Required. | open |
+| [RES-25](../../reviews/plugin-architecture/resiliency.md#res-25) | WP06 | P1 | Recommended / see scope | Global negated options are not normalized for clash detection | Required. | open |
+
+## WP05A
+
+Package: [WP05A-form-preservation.md](packages/WP05A-form-preservation.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [CQ-61](../../reviews/plugin-architecture/code-quality.md#cq-61) | WP05 | Optional | Optional | src/tui/screens/stories/pluginFields.ts:26/:84: private collect/gather are generic. Optional rename to collectPluginFields/gatherPluginInput. They do not actually collide with t… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-79](../../reviews/plugin-architecture/code-quality.md#cq-79) | WP05 | P2 | Useful | src/tui/screens/stories/form.tsx:44/:45: casts (values.assignees as string[] \/ null) ?? [] and optional(values.priority) as Priority \/ null trust a broad form union. Narrow As… | Required. | open |
+| [DX-09](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-09) | WP05 | P0 | Recommended / see scope | Empty TUI values must mean clear on edit, not “no input” | Required. | open |
+| [DX-20](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-20) | WP05 | Optional | Optional / bounded | Nullable selects require plugin-defined string sentinels | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-31](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-31) | WP05 | P1 | Recommended / see scope | A failing field provider blocks the core form; skipping it must not send clear input | Required. | open |
+| [RES-11](../../reviews/plugin-architecture/resiliency.md#res-11) | WP05 | P0 | Recommended / see scope | Invalid bags are overwritten as if they were empty | Required. | open |
+
+## WP01B
+
+Package: [WP01B-callbacks-errors-reactions.md](packages/WP01B-callbacks-errors-reactions.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-04](../../reviews/plugin-architecture/general-architecture.md#arch-04) | WP01 | P1 | Selected contract change | Expected plugin input errors become INTERNAL failures | Required. | open |
+| [ARCH-42](../../reviews/plugin-architecture/general-architecture.md#arch-42) | WP01 | P1 | Recommended / see scope | Final result refresh is opt-in and incomplete | Required. | open |
+| [CQ-08](../../reviews/plugin-architecture/code-quality.md#cq-08) | WP01 | P2 | Useful | Repeated error-to-string conversion includes one unsafe variant. | Required. | open |
+| [CQ-33](../../reviews/plugin-architecture/code-quality.md#cq-33) | WP01 | P2 | Useful | Replacement lookup buries the necessary heterogeneous-type boundary. | Required. | open |
+| [CQ-34](../../reviews/plugin-architecture/code-quality.md#cq-34) | WP01 | P2 | Useful | src/services/plugins/runtime.ts:139: stage: string is used only as replacement, transform, guard. Use private HandlerStage union. Do not change general PluginError.details into … | Required. | open |
+| [CQ-37](../../reviews/plugin-architecture/code-quality.md#cq-37) | WP01 | Optional | Optional | src/services/plugins/runtime.ts:141: optional passThrough WeakSet could be named coreErrors, matching its sole caller fromCore at :86. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-38](../../reviews/plugin-architecture/code-quality.md#cq-38) | WP01 | See linked finding | Merged | src/services/plugins/runtime.ts:196: rest as R is not merely a TS rest-typing limitation; the promised subtype is false. | None separately — resolved by CQ-165. | merged → CQ-165 |
+| [CQ-39](../../reviews/plugin-architecture/code-quality.md#cq-39) | WP01 | Optional | Optional | src/services/plugins/runtime.ts:44 caches contexts; src/services/plugins/runtime.ts:48 checks active membership before retrieving them. No cache-lifetime bug shown. Optional com… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-19](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-19) | WP01 | P2 | Useful advanced reference; relocation optional | Replacements are advanced and should be taught as such | Required (optional sub-parts per entry). | open |
+| [DX-39](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-39) | WP01 | P1 | Recommended / see scope | Non-hook callbacks lack uniform plugin/stage error attribution | Required. | open |
+| [OBS-02](../../reviews/plugin-architecture/other-areas.md#obs-02) | WP01 | P1 | Recommended / see scope | Attribution is incomplete outside protected pipeline hooks | Required. | open |
+| [RES-15](../../reviews/plugin-architecture/resiliency.md#res-15) | WP01 | P1 | Recommended / see scope | An unresolved reaction prevents completion and blocks later reactions | Required. | open |
+| [RES-16](../../reviews/plugin-architecture/resiliency.md#res-16) | WP01 | P1 | Recommended / see scope | Command, filter, and option conversion errors omit plugin identity | Required. | open |
+| [RES-18B](../../reviews/plugin-architecture/resiliency.md#res-18) | WP06 | P1 | Recommended / see scope | Detached promises/timers escape returned-promise catches: document the limit and add supported/unsupported subprocess fixtures | Required. | open |
+
+## WP02A
+
+Package: [WP02A-change-set-plan.md](packages/WP02A-change-set-plan.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-38](../../reviews/plugin-architecture/general-architecture.md#arch-38) | WP02 | P0 | Recommended / see scope | Plugin file scopes ignore pending Board creation and fall back through pending deletions | Required. | open |
+| [CQ-40](../../reviews/plugin-architecture/code-quality.md#cq-40) | WP02 | P2 | Useful | src/services/plugins/changeSet.ts:243: return \${await scopeFolder(...)}plugins/${id}/${checkName(name)}\ mixes resolution and assembly. Use const recordFolder = await scopeFold… | Required. | open |
+| [CQ-41](../../reviews/plugin-architecture/code-quality.md#cq-41) | WP02 | Optional | Optional | src/services/plugins/changeSet.ts:238: prune boundary reconstructed via path.slice(0, path.indexOf(...)). This depends on generated path structure; no reachable bad boundary was… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-42](../../reviews/plugin-architecture/code-quality.md#cq-42) | WP02 | P2 | Useful | src/services/plugins/changeSet.ts:56 versus src/services/plugins/changeSet.ts:210: public story() matches before/after keys, private current() matches latest key (or before when… | Required. | open |
+| [CQ-43](../../reviews/plugin-architecture/code-quality.md#cq-43) | WP02 | Optional | Optional | src/services/plugins/changeSet.ts:76/:103: null latest here means deletion earlier in this Change Set; repository misses throw before this line. Add that comment if editing thes… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-44](../../reviews/plugin-architecture/code-quality.md#cq-44) | WP02 | Optional | Optional | src/services/plugins/changeSet.ts:43 uses list; src/services/plugins/changeSet.ts:166 uses p for paths. Rename to pendingChanges and dirs if touching the file broadly. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-45](../../reviews/plugin-architecture/code-quality.md#cq-45) | WP02 | P2 | Useful | src/services/plugins/changeSet.ts:86/:107: recordStory/deleteBoard are core-only methods absent from the Plugin interface. Add “Core only” to these comments. | Required. | open |
+| [PERF-03](../../reviews/plugin-architecture/other-areas.md#perf-03) | WP02 | P2 | Recommended / see scope | Pending Change Set searches have quadratic aggregate cost | Required. | open |
+| [PERF-04](../../reviews/plugin-architecture/other-areas.md#perf-04) | WP02 | P2 | Recommended / see scope | First updateStory rereads its before-record | Required. | open |
+| [RES-08](../../reviews/plugin-architecture/resiliency.md#res-08) | WP02 | P0 | Recommended / see scope | A file write can recreate the folder of a deleted owner | Required. | open |
+| [RES-10](../../reviews/plugin-architecture/resiliency.md#res-10) | WP02 | P0 | Recommended / see scope | Already-queued plugin file paths remain under an old Story key | Required. | open |
+| [RES-24](../../reviews/plugin-architecture/resiliency.md#res-24) | WP02 | P0 | Recommended / see scope | A Board created in the pending Change Set cannot own a plugin file yet | Required. | open |
+
+## WP05B
+
+Package: [WP05B-tui-containment.md](packages/WP05B-tui-containment.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-13](../../reviews/plugin-architecture/general-architecture.md#arch-13) | WP05 | P2 | Recommended / see scope | Core Action-key reservations can drift from input handlers | Required. | open |
+| [ARCH-26](../../reviews/plugin-architecture/general-architecture.md#arch-26) | WP05 | Optional | Optional / bounded | Plugins reload on both deactivation and return, and repeat local confirmations | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-40](../../reviews/plugin-architecture/general-architecture.md#arch-40) | WP05 | P1 | Recommended / see scope | Namespacing does not make every declared UI name or option unique | Required. | open |
+| [CQ-55](../../reviews/plugin-architecture/code-quality.md#cq-55) | WP05 | P2 | Useful | src/tui/loadPlugins.ts:25 nests parentheticals and implies all branches enable background reactions and warn. In fact :33 returns early without doing :35/:37. Rewrite: “With a l… | Required. | open |
+| [CQ-56](../../reviews/plugin-architecture/code-quality.md#cq-56) | WP05 | See linked finding | Merged | src/tui/loadPlugins.ts:13: [...host.active()] protects iteration when loading marks a Plugin failed. | None separately — resolved by CQ-29. | merged → CQ-29 |
+| [CQ-58](../../reviews/plugin-architecture/code-quality.md#cq-58) | WP05 | P2 | Useful | src/tui/screens/plugins/PluginScreen.tsx:11, :14, :19, :21: repeated String(id)/String(screen) turns absent/malformed params into strings such as undefined or [object Object]. N… | Required. | open |
+| [CQ-60](../../reviews/plugin-architecture/code-quality.md#cq-60) | WP05 | Optional | Optional | src/tui/hooks/plugins.ts:33: default title capitalizes internal screen names (form→Form). Correction: built-ins do not always pass a title; Specs opens a form at src/plugins/spe… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-62](../../reviews/plugin-architecture/code-quality.md#cq-62) | WP05 | Optional | Optional | src/tui/screens/plugins/PluginsScreen.tsx:26 toasts the display name; CLI src/commands/plugins.ts:67/:77 uses the ID. This is reasonable UI versus command syntax, not a bug. If … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-75](../../reviews/plugin-architecture/code-quality.md#cq-75) | WP05 | Optional | Optional | src/tui/screens/stories/detail.tsx:48/:133 and src/tui/screens/tasks/TaskDetailScreen.tsx:47/:133 repeat Plugin-tab indexing/render plumbing. Distinct Story/Task props make a ge… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-76](../../reviews/plugin-architecture/code-quality.md#cq-76) | WP05 | Optional | Optional | src/tui/keymap.ts:29: CORE_KEYS = [...'?,/[] 123456789', ...'qaABcdefhHjJkKlLmnNorsTvy'] hides the reservation rationale. Add grouped comments/readable lists if retaining it. De… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-77](../../reviews/plugin-architecture/code-quality.md#cq-77) | WP05 | Optional | Optional | src/tui/shell/Shell.tsx:66: Promise.resolve().then(() => action.run(...)).catch(...) deliberately funnels synchronous throws and rejected promises into a toast. Add that explana… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-78](../../reviews/plugin-architecture/code-quality.md#cq-78) | WP05 | P2 | Useful | src/tui/app.tsx:69: activate({ ...current.ctx }). Original explanation “so setCurrent sees a new object” is inaccurate: activation already returns a new enclosing object. The co… | Required. | open |
+| [DX-24](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-24) | WP05 | Optional | Optional / bounded | Screen params are untyped and reserve routing/breadcrumb keys | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-25](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-25) | WP05 | Optional | Optional / bounded | Returning from a child screen requires an undocumented reload idiom | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-26](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-26) | WP05 | Optional | Optional / bounded | Async confirmation flows repeat, but are not identical | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-27](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-27) | WP05 | Optional | Optional / bounded | Async load/error presentation is repetitive and sometimes misleading | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-28](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-28) | WP05 | Optional | Optional / bounded | Hints and key handlers must be kept in sync, with correct active state | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [RES-13](../../reviews/plugin-architecture/resiliency.md#res-13) | WP05 | P1 | Recommended / see scope | Screen error handling intentionally rethrows ordinary plugin errors | Required. | open |
+| [RES-18C](../../reviews/plugin-architecture/resiliency.md#res-18) | WP06 | P1 | Recommended / see scope | Synchronous useAsync callbacks throw before the rejection handler exists: invoke via Promise.resolve().then(fn) | Required. | open |
+| [RES-20](../../reviews/plugin-architecture/resiliency.md#res-20) | WP05 | P2 | Recommended / see scope | TUI reload repeats the promised once-per-run load warning | Required. | open |
+| [RES-23](../../reviews/plugin-architecture/resiliency.md#res-23) | WP05 | P2 | Recommended / see scope | The no-loader TUI path skips reaction mode and load notifications | Required. | open |
+
+## WP02C
+
+Package: [WP02C-coordinated-operations.md](packages/WP02C-coordinated-operations.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-37](../../reviews/plugin-architecture/general-architecture.md#arch-37) | WP02 | P0 | Recommended / see scope | Local State plugin writes are later clobbered by stale in-memory state | Required. | open |
+| [ARCH-41](../../reviews/plugin-architecture/general-architecture.md#arch-41) | WP02 | P0 | Selected recoverable-commit guarantee | One save phase does not mean a filesystem transaction | Required. | open |
+| [RES-01](../../reviews/plugin-architecture/resiliency.md#res-01) | WP02 | P0 | Recommended / see scope | A Change Set can commit only part of an operation | Required. | open |
+| [RES-02](../../reviews/plugin-architecture/resiliency.md#res-02) | WP02 | P0 | Recommended / see scope | Independent operations can both succeed while one is lost | Required. | open |
+| [RES-07](../../reviews/plugin-architecture/resiliency.md#res-07) | WP02 | P0 | Recommended / see scope | Orphan folders donate plugin files to newly created Stories | Required. | open |
+| [RES-19](../../reviews/plugin-architecture/resiliency.md#res-19) | WP02 | P1 | Recommended / see scope | The prefix cache disagrees with externally changed Boards | Required. | open |
+
+## WP03
+
+Package: [WP03-doctor.md](packages/WP03-doctor.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-09](../../reviews/plugin-architecture/general-architecture.md#arch-09) | WP03 | P1 | Recommended / see scope | Doctor reconstructs a plugin ID lossily from its code | Required. | open |
+| [ARCH-21](../../reviews/plugin-architecture/general-architecture.md#arch-21) | WP03 | P2 | Recommended / see scope | Custom doctor checks cannot inspect Local State through DoctorData | Required. | open |
+| [CQ-70](../../reviews/plugin-architecture/code-quality.md#cq-70) | WP03 | P1 | Recommended | Plugin attribution cannot be reconstructed from a finding code. | Required. | open |
+| [CQ-71](../../reviews/plugin-architecture/code-quality.md#cq-71) | WP03 | See linked finding | Merged |  | None separately — resolved by CQ-35, CQ-01, CQ-70. | merged → CQ-35, CQ-01, CQ-70 |
+| [DX-29](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-29) | WP03 | Optional | Optional / bounded | Doctor checks spell storage paths and need contextual literal types | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [RES-09](../../reviews/plugin-architecture/resiliency.md#res-09) | WP03 | P0 | Recommended / see scope | Doctor's pre-renumber plugin fix edits the keeper instead of the duplicate | Required. | open |
+| [RES-17](../../reviews/plugin-architecture/resiliency.md#res-17) | WP03 | P1 | Recommended / see scope | Doctor reconstructs the wrong ID for multiword plugins | Required. | open |
+| [VER-03](../../reviews/plugin-architecture/other-areas.md#ver-03) | WP03 | P3 / conditional | Conditional / decision | Historical top-level Comments are silently discarded on a later write | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+
+## WP05C
+
+Package: [WP05C-combined-edit.md](packages/WP05C-combined-edit.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-43](../../reviews/plugin-architecture/general-architecture.md#arch-43) | WP05 | P0 | Recommended / see scope | One TUI edit submission can commit twice and partially succeed | Required. | open |
+| [CQ-69](../../reviews/plugin-architecture/code-quality.md#cq-69) | WP04 | Optional | Optional | src/services/stories.ts:352 and src/services/tasks.ts:105: identical checkStage(config, stageId) validation. Optional extract with unchanged signature into src/services/stageVal… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+
+## WP08A
+
+Package: [WP08A-epics.md](packages/WP08A-epics.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-07](../../reviews/plugin-architecture/general-architecture.md#arch-07) | WP05 | P2 | Recommended / see scope | Plugin screens cannot navigate to core records | Required. | open |
+| [ARCH-30](../../reviews/plugin-architecture/general-architecture.md#arch-30) | WP08 | P2 | Recommended / see scope | Epic link guards read stored files rather than pending files | Required. | open |
+| [CQ-16](../../reviews/plugin-architecture/code-quality.md#cq-16) | WP08 | See linked finding | Merged | Nested ternary inventory. | None separately — resolved by CQ-97, CQ-100, CQ-103, CQ-122, CQ-128. | merged → CQ-97, CQ-100, CQ-103, CQ-122, CQ-128 |
+| [CQ-80](../../reviews/plugin-architecture/code-quality.md#cq-80) | WP08 | Optional | Optional; original diagnosis withdrawn | src/plugins/epics/index.ts:6/:12 parses EpicInput in transform and guard. Parsing once via caching is unsafe: guards validate the post-transform result/input contract and hooks … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-81](../../reviews/plugin-architecture/code-quality.md#cq-81) | WP08 | P2 | Useful | src/plugins/epics/index.ts:48: epicOptions.slice(0, 1) depends on an implicit first-option invariant. Declare linkEpicOption and clearEpicOption and assemble lists by name. | Required. | open |
+| [CQ-82](../../reviews/plugin-architecture/code-quality.md#cq-82) | WP08 | P2 | Useful | src/plugins/epics/index.ts:57: filter equality accepts unknown; malformed objects return no Stories instead of an invalid-filter error. Add a local/schema EpicFilter = z.union([… | Required. | open |
+| [CQ-83](../../reviews/plugin-architecture/code-quality.md#cq-83) | WP08 | Optional | Optional | src/plugins/epics/index.ts:29: settings: z.object({}) differs from Specs/Comments' absent schema. Removing it is not behavior-neutral: an empty schema strips unknown settings; a… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-84](../../reviews/plugin-architecture/code-quality.md#cq-84) | WP08 | Optional | Optional | src/plugins/epics/index.ts:64: severity: 'warning' as const provides legitimate literal narrowing through flatMap. Optionally annotate its callback (story): PluginFinding[] => .… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-85](../../reviews/plugin-architecture/code-quality.md#cq-85) | WP08 | P2 | Useful | src/plugins/epics/model.ts:25: new ValidationError('Invalid Epic data', ...) lacks a field-level summary and labels Story input/patch errors as general Epic data. Include format… | Required. | open |
+| [CQ-86](../../reviews/plugin-architecture/code-quality.md#cq-86) | WP08 | Optional | Optional | src/plugins/epics/service.ts:13, :35, :40, :52, :60, :82 and src/plugins/epics/index.ts:15/:66/:73 repeat ${id}.json; three writes repeat JSON serialization/newline. Optional pr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-87](../../reviews/plugin-architecture/code-quality.md#cq-87) | WP08 | Optional | Optional | src/plugins/epics/service.ts:50/:58: edit and close/reopen repeat get/patch/stamp/write. writeEpic under CQ-86 may be enough. Only if still useful, private changeEpic(plugin, op… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-88](../../reviews/plugin-architecture/code-quality.md#cq-88) | WP08 | Optional | Optional | src/plugins/epics/service.ts:93/:98: mutable done accumulates inside Promise.all. This is not a JS race: each increment after await executes synchronously. Optional return each … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-89](../../reviews/plugin-architecture/code-quality.md#cq-89) | WP08 | P2 | Useful | src/plugins/epics/EpicList.tsx:18 calls showEpic per result; src/plugins/epics/service.ts:90 rereads Epic, :91 calls epicStories, whose :70 lists all Stories each time; per-Epic… | Required. | open |
+| [CQ-90](../../reviews/plugin-architecture/code-quality.md#cq-90) | WP08 | Optional | Optional | src/plugins/epics/service.ts:28 and src/plugins/specs/specs.ts:83: suffix removal uses slice(0, -5)/-3. Optional EPIC_FILE_EXTENSION = '.json' and local SPEC_FILE_EXTENSION = '.… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-91](../../reviews/plugin-architecture/code-quality.md#cq-91) | WP08 | None | Withdrawn | src/plugins/epics/service.ts:22: validates ID then compares to the original ID. The schema has no trim/case transform, so the claimed normalized-versus-original mismatch does no… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-92](../../reviews/plugin-architecture/code-quality.md#cq-92) | WP08 | P2 | Useful | src/plugins/epics/service.ts:89: exported showEpic infers a substantial nested result. Name EpicProgress = { done: number; total: number; percent: number } and EpicSummary with … | Required. | open |
+| [CQ-93](../../reviews/plugin-architecture/code-quality.md#cq-93) | WP08 | Optional | Optional | src/plugins/epics/commands.ts:4: DescriptionOptions includes name; rename EpicWriteOptions. Repeated setup at :29/:71 may use local withEpicWriteOptions(cmd: Command): Command a… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-94](../../reviews/plugin-architecture/code-quality.md#cq-94) | WP08 | P2 | Useful | src/plugins/epics/commands.ts:77 reads Epic before checking “nothing to update” at :82. Correction: absence of flags does not open an editor. Move a raw presence check for name,… | Required. | open |
+| [CQ-95](../../reviews/plugin-architecture/code-quality.md#cq-95) | WP08 | Optional | Optional | src/plugins/epics/commands.ts:87: two-command close/reopen registration loop is small/cohesive. Explicit registration is optional for discoverability; a higher-order registratio… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-96](../../reviews/plugin-architecture/code-quality.md#cq-96) | WP08 | Optional | Optional | src/plugins/epics/tui.ts:21/:22/:27/:40/:45/:47: No Epic/All Epics encode selection states. Name private NO_EPIC = 'No Epic'/ALL_EPICS = 'All Epics' constants and use in default… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-97](../../reviews/plugin-architecture/code-quality.md#cq-97) | WP08 | P2 | Useful | src/plugins/epics/tui.ts:26, :44, :46: nested ternaries convert selection to input/filter/summary. Replace with early returns in the same callbacks, retaining undefined for unch… | Required. | open |
+| [CQ-98](../../reviews/plugin-architecture/code-quality.md#cq-98) | WP08 | None | Withdrawn | src/plugins/epics/tui.ts:6 and screens' PluginScreenProps<Record<string, unknown>> repeat a legitimate no-settings generic. An EpicSettings alias with no actual settings obscure… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-99](../../reviews/plugin-architecture/code-quality.md#cq-99) | WP08 | Optional | Optional | src/plugins/epics/EpicList.tsx:16/:18: async dependency on active reloads both leaving and returning; similarly detail. Comment why the mounted tab refreshes on activation. Shar… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-100](../../reviews/plugin-architecture/code-quality.md#cq-100) | WP08 | Optional | Optional | src/plugins/epics/EpicList.tsx:30: ternary cycles open/closed/all. Optional private nextEpicMode(mode: 'open' \/ 'closed' \/ 'all') using a switch. An array/index/cast solution … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-101](../../reviews/plugin-architecture/code-quality.md#cq-101) | WP08 | None | Withdrawn | src/plugins/epics/EpicDetail.tsx:46–:59 and src/plugins/specs/SpecDetailScreen.tsx:24–:35: a finally setter after ui.back() is normal cleanup; no warning/leak or behavioral fail… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-102](../../reviews/plugin-architecture/code-quality.md#cq-102) | WP08 | None | Withdrawn | src/plugins/epics/EpicForm.tsx:17 and src/plugins/specs/SpecFormScreen.tsx:17/:18: kind: 'text' as const preserves the literal type in an array spread; it is not an unsafe asser… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [PERF-01](../../reviews/plugin-architecture/other-areas.md#perf-01) | WP08 | P2 / scale gate | Conditional / decision | TUI Epic list loads all Stories once per Epic | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [RES-12](../../reviews/plugin-architecture/resiliency.md#res-12) | WP08 | P1 | Recommended / see scope | A corrupt Epic blocks core form/filter loading and is invisible to doctor | Required. | open |
+
+## WP08B
+
+Package: [WP08B-specs.md](packages/WP08B-specs.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-25](../../reviews/plugin-architecture/general-architecture.md#arch-25) | WP05 | Optional | Optional / bounded | Specs routes have generic or inherited breadcrumb titles | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-19](../../reviews/plugin-architecture/code-quality.md#cq-19) | WP08 | P2 | Useful | Bag unlinking uses inconsistent modification timestamps. | Required. | open |
+| [CQ-103](../../reviews/plugin-architecture/code-quality.md#cq-103) | WP08 | P1 | Recommended | The target and result types admit states the implementation cannot support. | Required. | open |
+| [CQ-104](../../reviews/plugin-architecture/code-quality.md#cq-104) | WP08 | P2 | Useful | Raw Zod errors are inconsistent validation presentation, but the original exit-code claim was false. | Required. | open |
+| [CQ-105](../../reviews/plugin-architecture/code-quality.md#cq-105) | WP08 | P2 | Useful / optional | src/plugins/specs/index.ts:80 and src/plugins/specs/specs.ts:146 duplicate the incompatible set/add/remove check. CLI checks currently preserve UsageError outside the wrapping b… | Required (optional sub-parts per entry). | open |
+| [CQ-106](../../reviews/plugin-architecture/code-quality.md#cq-106) | WP08 | Optional | Optional | src/plugins/specs/index.ts:36/:56/:100 duplicate ${slug}.md from specs.ts:46; Story filename at :44. Optional local boardSpecFile(slug: string): string and STORY_SPEC_FILE = 'sp… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-107](../../reviews/plugin-architecture/code-quality.md#cq-107) | WP08 | Optional | Optional; original diagnosis withdrawn | src/plugins/specs/index.ts:33 create guard scans every changed Story, while update at :49 checks the named Story and :52 checks requested/new links. Replacing the create loop wi… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-108](../../reviews/plugin-architecture/code-quality.md#cq-108) | WP08 | Optional | Optional | src/plugins/specs/specs.ts:74/:103/:104/:123, commands.ts:46/:49/:65: repeated target.story ?? target.slug. After CQ-103, optionally introduce specTargetName(target: SpecTarget)… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-109](../../reviews/plugin-architecture/code-quality.md#cq-109) | WP08 | P2 | Useful | src/plugins/specs/specs.ts:94: opaque final boolean in saveSpec(..., create), callers at commands.ts:62 and SpecFormScreen.tsx:23. Use an explicit mode 'create' \/ 'edit', or pu… | Required. | open |
+| [CQ-110](../../reviews/plugin-architecture/code-quality.md#cq-110) | WP08 | Optional | Optional; original diagnosis withdrawn | src/plugins/specs/specs.ts:49 takes a narrow resolveBoard callback; this is useful decoupling, not a defect. Original proposal to pass PluginCommandEnv into service is withdrawn… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-111](../../reviews/plugin-architecture/code-quality.md#cq-111) | WP08 | P2 | Useful | src/plugins/specs/specs.ts:120: outer let unlinked is mutated inside the operation. Return the local count from the body: const unlinked = await plugin.operation(..., async chan… | Required. | open |
+| [CQ-112](../../reviews/plugin-architecture/code-quality.md#cq-112) | WP08 | Optional | Optional | src/plugins/specs/specs.ts:40: heading matcher repeated in test/replace; :34 intentionally captures title with a different pattern. Sharing the identical noncapturing regex is o… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-113](../../reviews/plugin-architecture/code-quality.md#cq-113) | WP08 | Optional | Optional | src/plugins/specs/specs.ts:98: parent-resolution comment could explain validation order. Original rationale that body NotFoundError is automatically wrapped is false: src/servic… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-114](../../reviews/plugin-architecture/code-quality.md#cq-114) | WP08 | Optional | Optional | src/plugins/specs/commands.ts:24–:70: four verbs share a branched action loop. Optional explicit show/delete actions and a small shared create/edit setup/read helper; retain coh… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-115](../../reviews/plugin-architecture/code-quality.md#cq-115) | WP08 | P2 | Useful / optional | minor; U/O; C. Long-text glue is repeated, but the original proposed simplification would overwrite an editor's title. | Required (optional sub-parts per entry). | open |
+| [CQ-116](../../reviews/plugin-architecture/code-quality.md#cq-116) | WP08 | Optional | Optional | src/plugins/specs/commands.ts:4: Options→SpecOptions; :29/:32/:33: placeholders <KEY>/<t>/<md> could be <key>/<title>/<text>. Uppercase KEY is not inherently wrong because it il… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-117](../../reviews/plugin-architecture/code-quality.md#cq-117) | WP08 | P2 | Useful | Initial Board resolution and a user-requested chooser share the same undefined state. | Required. | open |
+| [CQ-118](../../reviews/plugin-architecture/code-quality.md#cq-118) | WP08 | P1 | Recommended | Failure states are blank or falsely report absence. | Required. | open |
+| [CQ-119](../../reviews/plugin-architecture/code-quality.md#cq-119) | WP08 | Optional | Optional | src/plugins/specs/SpecDetailScreen.tsx:10 and SpecTab.tsx:8: confirm holds boolean state. Optional rename state/setter confirming/setConfirming, matching Comments. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-120](../../reviews/plugin-architecture/code-quality.md#cq-120) | WP08 | None | Withdrawn | src/plugins/specs/SpecTab.tsx:12: const linked = [] is an evolving array whose element type TypeScript infers from pushes at :14; it is not an escaped unchecked any[]. | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-121](../../reviews/plugin-architecture/code-quality.md#cq-121) | WP08 | Optional | Optional | src/plugins/specs/SpecsScreen.tsx:48, SpecsSection.tsx:10, commands.ts:21: repeated ${s.slug}  ${s.title} within different separators. Optional plugin-local specLine(spec: Board… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-122](../../reviews/plugin-architecture/code-quality.md#cq-122) | WP08 | Optional | Optional | src/plugins/specs/SpecText.tsx:25: - 1 reserves the status row at :38; name STATUS_ROWS = 1 or comment it. :30 duplicates normal j/k/arrow delta from public moveDelta; use it if… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-123](../../reviews/plugin-architecture/code-quality.md#cq-123) | WP08 | P2 | Useful | src/plugins/specs/tui.ts:26: always emits { specs: [] } even for a new Story with no selection; unlike Epic input this needlessly transforms/guards. After dirty-field preservati… | Required. | open |
+| [CQ-166](../../reviews/plugin-architecture/code-quality.md#cq-166) | WP08 | P1 | Recommended / useful | minor; P/U; C/I. A stale linked Spec can be selected but invisible in the form. New cross-check finding. | Required. | open |
+| [DX-38](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-38) | WP08 | P2 | Recommended / see scope | Plugin-owned record updates need an explicit timestamp convention | Required. | open |
+| [PERF-02](../../reviews/plugin-architecture/other-areas.md#perf-02) | WP08 | P2 | Recommended / see scope | Specs doctor reads identical files once per Story link | Required. | open |
+| [PERF-08](../../reviews/plugin-architecture/other-areas.md#perf-08) | WP08 | P2 | Recommended / see scope | Multi-Spec filtering reparses the bag per candidate slug | Required. | open |
+| [PERF-09](../../reviews/plugin-architecture/other-areas.md#perf-09) | WP08 | P2 | Recommended / see scope | Slug-only Specs controls load complete documents | Required. | open |
+| [UI-01](../../reviews/plugin-architecture/other-areas.md#ui-01) | WP08 | P1 | Recommended / see scope | Empty Boards with Specs have no TUI force-delete path | Required. | open |
+
+## WP08C
+
+Package: [WP08C-comments.md](packages/WP08C-comments.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-18](../../reviews/plugin-architecture/general-architecture.md#arch-18) | WP08 | Optional | Optional / bounded | Roster validation of Me is duplicated, but context-lifetime caching would be wrong | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-124](../../reviews/plugin-architecture/code-quality.md#cq-124) | WP08 | Optional | Optional | src/plugins/comments/comments.ts:38/:43/:64/:78: repeats commentsOn(plugin, owner.task ?? owner.story) and three owned lookups. Optional private threadOf(plugin: PluginContext, … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-125](../../reviews/plugin-architecture/code-quality.md#cq-125) | WP08 | P2 | Useful / optional | src/plugins/comments/comments.ts:111: handwritten blank-body issues; model.ts:6's .min(1) accepts whitespace, while direct mutation rejects whitespace. Form/prompt validation do… | Required (optional sub-parts per entry). | open |
+| [CQ-126](../../reviews/plugin-architecture/code-quality.md#cq-126) | WP08 | P2 | Useful | src/plugins/comments/comments.ts:14/:20/:26: Owner, ownerOf, ownerId have only same-module references; model.ts:3 CommentSchema is used only within model. Remove these export mo… | Required. | open |
+| [CQ-127](../../reviews/plugin-architecture/code-quality.md#cq-127) | WP08 | P2 | Useful | src/plugins/comments/comments.ts:87: updateThread lacks a declared Story result; :94 repeats owner.task?.id despite the preceding guard. Annotate : Story, capture const taskId =… | Required. | open |
+| [CQ-128](../../reviews/plugin-architecture/code-quality.md#cq-128) | WP08 | Optional | Optional | src/plugins/comments/comments.ts:120: small code-unit comparator ternary is clear. Use CQ-20 helper only if chosen; localeCompare is not an equivalent substitution. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-129](../../reviews/plugin-architecture/code-quality.md#cq-129) | WP08 | Optional | Optional | src/plugins/comments/commands.ts:71/:72, CommentsTab.tsx:90/:94/:106: repeats author fallback and edited marker. Optional isCommentEdited(comment: Comment): boolean and commentA… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-130](../../reviews/plugin-architecture/code-quality.md#cq-130) | WP08 | P2 | Useful | src/plugins/comments/commands.ts:37: opts.edit ? current.body : undefined repeats the reader's edit-only use of initial text. Pass current.body directly. | Required. | open |
+| [CQ-131](../../reviews/plugin-architecture/code-quality.md#cq-131) | WP08 | P1 | Recommended | src/plugins/comments/CommentsTab.tsx:76: failure renders red “No Comments.” while true empty state at :82 is separate. Change to “Could not load Comments.” useAsync already toas… | Required. | open |
+| [CQ-132](../../reviews/plugin-architecture/code-quality.md#cq-132) | WP08 | P2 | Useful | src/plugins/comments/CommentsTab.tsx:103: unconditional c add · e edit · d delete duplicates footer :35–:48 and advertises edit/delete on an empty thread/while confirming. Delet… | Required. | open |
+| [CQ-133](../../reviews/plugin-architecture/code-quality.md#cq-133) | WP08 | P2 | Useful | src/plugins/comments/CommentsTab.tsx:17: CommentsTabProps has no outside consumer. Remove export; keep component exported. | Required. | open |
+| [CQ-134](../../reviews/plugin-architecture/code-quality.md#cq-134) | WP08 | P2 | Useful | src/plugins/comments/CommentFormScreen.tsx:7/:8: String(params.target ?? '') and params.id as string \/ undefined turn malformed navigation into bad IDs or wrong mode. Validate … | Required. | open |
+| [CQ-135](../../reviews/plugin-architecture/code-quality.md#cq-135) | WP08 | Optional | Optional | src/plugins/comments/relativeTime.ts:2/:3: year/month use fixed 365/30 days. Add “Months and years are approximate elapsed-time units.” No calendar library necessary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-167](../../reviews/plugin-architecture/code-quality.md#cq-167) | WP08 | None | Withdrawn | Unsupported draft reference; withdrawn. No source finding or implementation task. | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [UI-02](../../reviews/plugin-architecture/other-areas.md#ui-02) | WP08 | P2 | Recommended / see scope | TUI Comments trim content that CLI preserves | Required. | open |
+
+## WP04B
+
+Package: [WP04B-inputs-and-author-api.md](packages/WP04B-inputs-and-author-api.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-01](../../reviews/plugin-architecture/general-architecture.md#arch-01) | WP04 | Optional | Optional / bounded | The service-side contract includes CLI and TUI declarations | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-02](../../reviews/plugin-architecture/general-architecture.md#arch-02) | WP04 | Optional | Optional / bounded | Plugin operation names have no explicit implementation catalog | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-10](../../reviews/plugin-architecture/general-architecture.md#arch-10) | WP04 | Optional | Optional / bounded | Domain inputs contain plugin transport metadata | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-12](../../reviews/plugin-architecture/general-architecture.md#arch-12) | WP04 | Optional | Optional / bounded | Plugin JSON files repeat parsing/serialization and use input-validation errors for corrupt files | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-19](../../reviews/plugin-architecture/general-architecture.md#arch-19) | WP04 | Optional | Optional / bounded | Plugin form field/value declarations duplicate core form declarations | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-20](../../reviews/plugin-architecture/general-architecture.md#arch-20) | WP04 | Optional | Optional / bounded | Timestamp conversion is repeated in mutation consumers | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-22](../../reviews/plugin-architecture/general-architecture.md#arch-22) | WP04 | None | Withdrawn | CLI and TUI Board resolution have different, appropriate responsibilities | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [ARCH-31](../../reviews/plugin-architecture/general-architecture.md#arch-31) | WP04 | Optional | Optional / bounded | Commander handlers repeatedly pass their trailing Command to cli.run | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [ARCH-32](../../reviews/plugin-architecture/general-architecture.md#arch-32) | WP04 | P2 | Recommended / see scope | Several extension points are fixture-tested rather than built-in-used | Required. | open |
+| [CQ-01](../../reviews/plugin-architecture/code-quality.md#cq-01) | WP04 | Optional | Optional | Repeated validation plumbing with different semantics. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-03](../../reviews/plugin-architecture/code-quality.md#cq-03) | WP04 | P2 | Useful | Core-command option input cannot use the existing repeatable parser. | Required. | open |
+| [CQ-07](../../reviews/plugin-architecture/code-quality.md#cq-07) | WP04 | Optional | Optional | Long-text flag setup is repeated, but not identical. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-09](../../reviews/plugin-architecture/code-quality.md#cq-09) | WP04 | Optional | Optional | Repeated removal of the reserved enabled setting. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-11](../../reviews/plugin-architecture/code-quality.md#cq-11) | WP04 | Optional | Optional | First-letter capitalization has three copies. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-12](../../reviews/plugin-architecture/code-quality.md#cq-12) | WP04 | Optional | Optional | Missing-record handling has three local copies. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-13](../../reviews/plugin-architecture/code-quality.md#cq-13) | WP04 | Optional | Optional | Repeated Board-result projection. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-14](../../reviews/plugin-architecture/code-quality.md#cq-14) | WP04 | P2 | Useful | Three wrappers for { plugins }. | Required. | open |
+| [CQ-17](../../reviews/plugin-architecture/code-quality.md#cq-17) | WP04 | Optional | Optional | src/services/plugins/types.ts:215, src/services/types.ts:233: (string & {}) keeps known-name completion while allowing other strings. Add a short inline explanation at both loca… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-18](../../reviews/plugin-architecture/code-quality.md#cq-18) | WP04 | P2 | Useful | src/services/plugins/types.ts:394/:400, src/tui/components/Form.tsx:8/:21: both the field-kind union and value union are duplicated. Define PluginFieldKind once in service Plugi… | Required. | open |
+| [CQ-20](../../reviews/plugin-architecture/code-quality.md#cq-20) | WP04 | Optional | Optional | Small comparator/plural duplication. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-21](../../reviews/plugin-architecture/code-quality.md#cq-21) | WP04 | Optional | Optional | src/services/plugins/types.ts:131: OperationInput = OperationOptions. Either document the semantic alias or remove it and use OperationOptions at src/services/plugins/runtime.ts… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-26](../../reviews/plugin-architecture/code-quality.md#cq-26) | WP04 | Optional | Optional | src/services/plugins/types.ts:325, src/services/plugins/types.ts:465/:466: inline option/tab descriptions. Optional PluginOption and PluginTab<P> names can improve reuse, but on… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-50](../../reviews/plugin-architecture/code-quality.md#cq-50) | WP04 | P2 | Useful | src/plugin-api/index.ts:7 does not re-export Command, though commands receive it; src/plugins/comments/commands.ts:54 uses a structural generic to work around the import boundar… | Required. | open |
+| [CQ-51](../../reviews/plugin-architecture/code-quality.md#cq-51) | WP04 | Optional | Optional | src/plugin-api/tui.ts:28 exports useToast alongside ui.toast/ui.error. No builtin/fixture uses the hook, but that alone is not dead code. Optional remove it if the intended publ… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-52](../../reviews/plugin-architecture/code-quality.md#cq-52) | WP04 | None | Withdrawn | src/plugin-api/index.ts:1 and src/plugin-api/tui.ts:1 already explain that these are deliberate API surfaces. Locally unused hooks/types/schemas can be needed by future Built-in… | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [CQ-53](../../reviews/plugin-architecture/code-quality.md#cq-53) | WP04 | P2 | Useful | src/plugin-api/index.ts:97/:98, src/services/plugins/host.ts:144: absent settings schema returns raw settings, while definePlugin defaults to Record<string, unknown>. Add that d… | Required. | open |
+| [CQ-54](../../reviews/plugin-architecture/code-quality.md#cq-54) | WP04 | Optional | Optional | src/services/index.ts:19/:21 exports ActivePlugin/LoadPluginsOptions. No direct external consumers found, but LoadPluginsOptions describes an exported loader. Either keep for AP… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-72](../../reviews/plugin-architecture/code-quality.md#cq-72) | WP04 | P2 | Useful | src/services/types.ts:147, src/services/stories.ts:261: document that a non-undefined filter for an off/unknown Plugin or one lacking filterStories throws UsageError. | Required. | open |
+| [DX-01](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-01) | WP04 | Optional | Optional / bounded | Common Story-field glue merits an optional, bounded helper | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-06](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-06) | WP04 | None | Withdrawn | Standalone TUI types require redundant settings arguments; settings inference itself works | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [DX-07](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-07) | WP04 | P1 | External milestone | Input validation is manual and loses useful diagnostics at hook boundaries | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-11](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-11) | WP04 | Optional | Optional / bounded | Core-option conversion makes authors manage low-level Commander values | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-12](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-12) | WP04 | P2 | Recommended / see scope | input on stories list actually returns filter criteria | Required. | open |
+| [DX-22](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-22) | WP04 | Optional | Optional / bounded | Pending-file reads and stored-file reads look similar; JSON convenience is optional | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-23](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-23) | WP04 | Optional | Optional / bounded | Commander actions repeatedly forward the trailing Command into cli.run | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-30](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-30) | WP04 | P2 | Recommended / see scope | An Action's target does not narrow the focus type | Required. | open |
+| [DX-33](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-33) | WP04 | P2 | Recommended / see scope | A few intentional type/helper exports would reduce deep-import temptation | Required. | open |
+| [DX-34](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-34) | WP04 | None | Withdrawn | Explicit return undefined in guards is not required (withdrawn) | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
+| [DX-35](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-35) | WP04 | P2 | Recommended / see scope | Omitted settings schema is permissive; strictness should be an explicit author choice | Required. | open |
+
+## WP07B
+
+Package: [WP07B-perf-and-harness.md](packages/WP07B-perf-and-harness.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [DX-15](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-15) | WP07 | P2 | Recommended / see scope | Useful repository test helpers are not a public plugin-author harness | Required. | open |
+| [PERF-07](../../reviews/plugin-architecture/other-areas.md#perf-07) | WP07 | P2 | Recommended / see scope | No repeatable scalability/read-budget benchmark | Required. | open |
+| [TEST-01](../../reviews/plugin-architecture/other-areas.md#test-01) | WP07 | Optional | Optional / bounded | Isolation exists, but authors must assemble internal harness wiring | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+
+## WP09B
+
+Package: [WP09B-author-guide-and-tracing.md](packages/WP09B-author-guide-and-tracing.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-35](../../reviews/plugin-architecture/general-architecture.md#arch-35) | WP06 | Optional | Optional / bounded | Plugin settings have no generic in-app write surface | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-159](../../reviews/plugin-architecture/code-quality.md#cq-159) | WP09 | P2 | Useful / optional | docs/PLUGINS.md:284 describes cli.parseRepeatable; it works in Plugin command callbacks but is unavailable to core-attached options.input (types.ts:330). Narrow the explanation … | Required (optional sub-parts per entry). | open |
+| [CQ-160](../../reviews/plugin-architecture/code-quality.md#cq-160) | WP09 | P2 | Useful | docs/PLUGINS.md:229/:231: created-Story search plus pluginInput as object teaches unchecked bag input. Show a concrete schema, skip undefined, safeParse/validate supplied input,… | Required. | open |
+| [CQ-161](../../reviews/plugin-architecture/code-quality.md#cq-161) | WP09 | Optional | Optional / useful | docs/PLUGINS.md:284 already says cli.run prints warnings/errors like core; types.ts:295 explicitly discusses exit codes. The original blanket missing-error-description claim is … | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-162](../../reviews/plugin-architecture/code-quality.md#cq-162) | WP09 | Optional | Optional | docs/PLUGINS.md:172 references CORE_KEYS by source path. Authors reading it is a valid reference strategy. Optional make it a clickable relative link after CQ-76; don't duplicat… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-163](../../reviews/plugin-architecture/code-quality.md#cq-163) | WP09 | See linked finding | Merged | docs/PLUGINS.md:153/:169 accurately list current Comments/Epics operations. Update only after the supervisor's chosen verb contract/CQ-05 lands. | None separately — resolved by CQ-05. | merged → CQ-05 |
+| [CQ-164](../../reviews/plugin-architecture/code-quality.md#cq-164) | WP09 | See linked finding | Merged; see local fallback | docs/PLUGINS.md:134/:136: <t>/<md> placeholders are currently accurate. Update with CQ-116 if that cosmetic choice is adopted. | None separately — resolved by CQ-116. | merged → CQ-116 |
+| [DOC-03](../../reviews/plugin-architecture/other-areas.md#doc-03) | WP09 | P2 | Recommended / see scope | Writing guide lacks a complete executable tutorial/reference | Required. | open |
+| [DOC-04](../../reviews/plugin-architecture/other-areas.md#doc-04) | WP09 | P2 | Recommended / see scope | Public JSDoc leaves lifecycle/ownership contracts underspecified | Required. | open |
+| [DX-03](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-03) | WP09 | P2 | Recommended / see scope | Author instructions begin with architecture rather than a runnable progression | Required. | open |
+| [DX-04](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-04) | WP09 | P2 | Recommended / see scope | The guide needs precise boundary examples, not wholesale replacement | Required. | open |
+| [DX-05](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-05) | WP09 | P2 | Recommended / see scope | There is no minimal complete hello world, and built-in integration needs a checklist | Required. | open |
+| [OBS-01](../../reviews/plugin-architecture/other-areas.md#obs-01) | WP09 | P2 | Recommended / see scope | No opt-in successful-operation/hook trace | Required. | open |
+
+## WP10A
+
+Package: [WP10A-policies.md](packages/WP10A-policies.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [ARCH-27](../../reviews/plugin-architecture/general-architecture.md#arch-27) | WP10 | Optional | Optional / bounded | Persisted plugin format evolution needs a stated policy | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DEP-01](../../reviews/plugin-architecture/other-areas.md#dep-01) | WP10 | P3 / conditional | Conditional / decision | Dependency semantics are not implemented, but current registry can evolve | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [GIT-01](../../reviews/plugin-architecture/other-areas.md#git-01) | WP10 | P3 / conditional | Conditional / decision | ADR-0016 needs narrowly scoped host capabilities | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [SEC-01](../../reviews/plugin-architecture/other-areas.md#sec-01) | WP10 | P3 / conditional | External milestone | Architectural import restrictions do not confine runtime code | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [VER-01](../../reviews/plugin-architecture/other-areas.md#ver-01) | WP10 | P3 / conditional | External milestone | No explicit Plugin API compatibility/version policy | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+
+## WP10B
+
+Package: [WP10B-external-packaging.md](packages/WP10B-external-packaging.md)
+
+| Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| [BUILD-01](../../reviews/plugin-architecture/other-areas.md#build-01) | WP10 | P3 / conditional | External milestone | Public Plugin API is not a distributable package entry | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-02](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-02) | WP10 | P3 | External milestone | There is no supported external SDK package or installed-plugin loader | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-14](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-14) | WP10 | P3 | External milestone | Independently shipped plugins need an explicit compatibility policy | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
+| [DX-16](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-16) | WP10 | Optional | Optional / bounded | A scaffold is convenient after a stable runnable example exists | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [SEC-02](../../reviews/plugin-architecture/other-areas.md#sec-02) | WP10 | P3 / conditional | Conditional / decision | Lexical Plugin filenames do not establish physical filesystem containment | Implement per the package / §9 decision; if the condition does not apply, `deferred: <condition>`. | open |
