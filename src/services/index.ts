@@ -28,6 +28,7 @@ export {
   type ReservedNames,
   validatePluginDefinition,
 } from './plugins/host';
+export { type Invocation, invokePlugin, invokePluginSync } from './plugins/invoke';
 export { pluginStoryRows, pluginTaskRows } from './plugins/service';
 export type * from './plugins/types';
 export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';

@@ -72,6 +72,60 @@ describe('transform (ADR-0012)', () => {
   });
 });
 
+describe('expected errors from hooks keep their meaning (D7, ARCH-04)', () => {
+  function throwing(stage: 'transform' | 'guard', err: unknown) {
+    const reacted: string[] = [];
+    const plugin = definePlugin({
+      id: 'expect',
+      name: 'Expect',
+      description: '',
+      hooks: {
+        'boards.update': {
+          [stage]: () => {
+            throw err;
+          },
+          react: () => void reacted.push('react'),
+        },
+      },
+    });
+    return { plugin, reacted };
+  }
+
+  it.each([
+    ['transform', new ValidationError('bad input', { details: { issues: ['x'] }, hint: 'fix it' }), 'VALIDATION', 2],
+    ['transform', new NotFoundError('no such thing'), 'NOT_FOUND', 3],
+    ['guard', new ConflictError('taken'), 'CONFLICT', 4],
+    ['guard', new ValidationError('bad input', { details: { issues: ['x'] }, hint: 'fix it' }), 'VALIDATION', 2],
+  ] as const)(
+    'a %s that throws %s keeps its code; nothing is saved and nothing reacts',
+    async (stage, thrown, code, exit) => {
+      const { plugin, reacted } = throwing(stage, thrown);
+      const t = await pluginRoot({ expect: true });
+      const { services } = await withPlugins(t, [plugin]);
+      const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(thrown.constructor);
+      expect(err).toMatchObject({
+        code,
+        exitCode: exit,
+        message: thrown.message,
+        hint: thrown.hint,
+        details: { ...thrown.details, plugin: 'expect', operation: 'boards.update', stage },
+        cause: thrown,
+      });
+      expect((await services.boards.get('web')).name).toBe('Website');
+      expect(reacted).toEqual([]);
+    },
+  );
+
+  it('framework attribution wins over details the Plugin supplied', async () => {
+    const { plugin } = throwing('transform', new NotFoundError('gone', { details: { plugin: 'other', stage: 'x' } }));
+    const t = await pluginRoot({ expect: true });
+    const { services } = await withPlugins(t, [plugin]);
+    const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
+    expect(err).toMatchObject({ details: { plugin: 'expect', operation: 'boards.update', stage: 'transform' } });
+  });
+});
+
 describe('guard', () => {
   it('rejects: nothing is saved and the error is a CONFLICT naming the Plugin', async () => {
     const t = await pluginRoot({ notes: { blocked: ['Nope'] } });

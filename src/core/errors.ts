@@ -82,12 +82,17 @@ export class DataIntegrityError extends RowblyError {
 }
 
 /**
- * A Plugin's guard, transform or replacement threw, so the operation failed and nothing was saved
- * (ADR-0012). `details.plugin` names the Plugin.
+ * A Plugin callback failed unexpectedly, or broke a framework rule (ADR-0020 §5). `details.plugin`
+ * names the Plugin, and `details.stage` the callback.
  */
 export class PluginError extends RowblyError {
   readonly code = 'INTERNAL';
   readonly exitCode = ExitCode.internal;
+}
+
+/** A readable message for any thrown value: an `Error`'s message, otherwise the value as text. */
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function isRowblyError(err: unknown): err is RowblyError {

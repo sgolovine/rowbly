@@ -23,6 +23,7 @@ import {
 import { createRepositories, type Repositories, resolveCascade } from '../storage';
 import { validateFieldValues } from './_customFieldValues';
 import type { CoreChangeSet } from './plugins/changeSet';
+import { invokePluginSync } from './plugins/invoke';
 import { latestStory, type OperationRunner } from './plugins/runtime';
 import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
@@ -268,7 +269,8 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
         }
         const match = plugin.definition.filterStories;
         const context = ops.context(id);
-        return (story: Story) => match(story, value, context);
+        // A throwing filter fails the list, attributed; it never reads as "no match" (DX-39).
+        return (story: Story) => invokePluginSync({ plugin: id, stage: 'filter' }, () => match(story, value, context));
       });
     return (story) => checks.every((check) => check(story));
   }

@@ -3,7 +3,8 @@ import { type Stage, StageSchema, type Story } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import { insertIndex, openLevel } from './_configTarget';
 import type { CoreChangeSet } from './plugins/changeSet';
-import type { OperationRunner } from './plugins/runtime';
+import { type Finalizer, type OperationRunner, resultRemoved } from './plugins/runtime';
+import type { RootConfigChange } from './plugins/types';
 import type { ConfigTarget, RowblyContext, StagesService } from './types';
 
 export function createStagesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StagesService {
@@ -16,42 +17,54 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
     },
 
     add: (target, input, position = 'last', opts = {}) =>
-      ops.run('stages.add', { target, stage: input, position, ...opts }, async (changes) => {
-        const stage = parseStage(input);
-        const level = await open(target);
-        if (level.items.some((s) => s.key === stage.key)) {
-          throw new ConflictError(`Stage "${stage.key}" already exists`);
-        }
-        const next = [...level.items];
-        next.splice(insertIndex(keysOf(next), position, stageNotFound), 0, stage);
-        await level.save(changes, next);
-        return next;
-      }),
-
+      ops.run(
+        'stages.add',
+        { target, stage: input, position, ...opts },
+        async (changes) => {
+          const stage = parseStage(input);
+          const level = await open(target);
+          if (level.items.some((s) => s.key === stage.key)) {
+            throw new ConflictError(`Stage "${stage.key}" already exists`);
+          }
+          const next = [...level.items];
+          next.splice(insertIndex(keysOf(next), position, stageNotFound), 0, stage);
+          await level.save(changes, next);
+          return next;
+        },
+        latestStages(target),
+      ),
     update: (target, key, patch) =>
-      ops.run('stages.update', { target, key, ...patch }, async (changes) => {
-        const { plugins: _plugins, ...fields } = patch;
-        const level = await open(target);
-        const current = findStage(level.items, key);
-        const updated = parseStage({ ...current, ...definedOnly(fields) });
-        const next = level.items.map((s) => (s.key === key ? updated : s));
-        await level.save(changes, next);
-        return next;
-      }),
-
+      ops.run(
+        'stages.update',
+        { target, key, ...patch },
+        async (changes) => {
+          const { plugins: _plugins, ...fields } = patch;
+          const level = await open(target);
+          const current = findStage(level.items, key);
+          const updated = parseStage({ ...current, ...definedOnly(fields) });
+          const next = level.items.map((s) => (s.key === key ? updated : s));
+          await level.save(changes, next);
+          return next;
+        },
+        latestStages(target),
+      ),
     move: (target, key, position, opts = {}) =>
-      ops.run('stages.move', { target, key, position, ...opts }, async (changes) => {
-        const level = await open(target);
-        const stage = findStage(level.items, key);
-        if (typeof position === 'object' && ('before' in position ? position.before : position.after) === key) {
-          throw new UsageError(`cannot move Stage "${key}" relative to itself`);
-        }
-        const rest = level.items.filter((s) => s.key !== key);
-        rest.splice(insertIndex(keysOf(rest), position, stageNotFound), 0, stage);
-        await level.save(changes, rest);
-        return rest;
-      }),
-
+      ops.run(
+        'stages.move',
+        { target, key, position, ...opts },
+        async (changes) => {
+          const level = await open(target);
+          const stage = findStage(level.items, key);
+          if (typeof position === 'object' && ('before' in position ? position.before : position.after) === key) {
+            throw new UsageError(`cannot move Stage "${key}" relative to itself`);
+          }
+          const rest = level.items.filter((s) => s.key !== key);
+          rest.splice(insertIndex(keysOf(rest), position, stageNotFound), 0, stage);
+          await level.save(changes, rest);
+          return rest;
+        },
+        latestStages(target),
+      ),
     remove: (target, key, opts) =>
       ops.run('stages.remove', { target, key, ...opts }, async (changes) => {
         const { moveTo } = opts;
@@ -111,6 +124,19 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
     }
     for (const story of changed.values()) await changes.putStory(story);
   }
+}
+
+/** The Stage list at `target` that the operation saves, as the transforms left it (ARCH-42). */
+function latestStages(target: ConfigTarget): Finalizer<Stage[]> {
+  return (changes, stages) => {
+    if (target.level === 'global') {
+      const root = changes.changes.find((c): c is RootConfigChange => c.type === 'rootConfig');
+      return root?.after.stages ?? stages;
+    }
+    const board = changes.board(target.boardId);
+    if (board && board.after === null) resultRemoved(`Board ${target.boardId}`);
+    return board?.after?.stages ?? stages;
+  };
 }
 
 function parseStage(input: unknown): Stage {

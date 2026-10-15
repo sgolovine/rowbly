@@ -41,6 +41,8 @@ export interface RowblyContext {
   plugins?: PluginHost;
   /** Run reactions after the save without waiting for them (the TUI); command mode waits. */
   backgroundReactions?: boolean;
+  /** How long each reaction may run before Rowbly warns and goes on (W7); 5 s when omitted. */
+  reactionTimeoutMs?: number;
 }
 
 /** Plugin input, keyed by Plugin id: `{ epics: { epic: 'auth' } }` (ADR-0012). */

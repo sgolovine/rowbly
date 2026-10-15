@@ -1,4 +1,11 @@
-import { definePlugin, type PluginChangeSet, type PluginReadContext, toTimestamp, z } from '../../plugin-api';
+import {
+  definePlugin,
+  NotFoundError,
+  type PluginChangeSet,
+  type PluginReadContext,
+  toTimestamp,
+  z,
+} from '../../plugin-api';
 import { commands } from './commands';
 import { EpicBag, EpicInput, validate } from './model';
 import { storyEpic } from './service';
@@ -9,11 +16,12 @@ async function applyInput(changes: PluginChangeSet, key: string, input: unknown,
   await changes.updateStory(key, (story) => plugin.writeBag(story, epic === null ? undefined : { epic }));
 }
 
-async function guardLink(input: unknown, plugin: PluginReadContext) {
+/** A missing Epic is NOT_FOUND (exit 3), not a refusal (ARCH-04). */
+async function guardLink(input: unknown, plugin: PluginReadContext): Promise<undefined> {
   if (input === undefined) return;
   const { epic } = validate(EpicInput, input);
   if (epic !== null && (await plugin.files.read('dataRoot', `${epic}.json`)) === null) {
-    return { reject: `Epic "${epic}" not found`, hint: 'create the Epic first' };
+    throw new NotFoundError(`Epic "${epic}" not found`, { hint: 'create the Epic first' });
   }
 }
 

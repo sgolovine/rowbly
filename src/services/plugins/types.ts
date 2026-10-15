@@ -302,8 +302,9 @@ interface EventBase<I, S> {
 
 /**
  * Stage `replacement`: runs instead of the core body and fills the Change Set. There is no `result`
- * yet; `core()` runs the core body against the same Change Set. Calling `core()` once only (W6) is
- * enforced at run time by WP01B.
+ * yet; `core()` runs the core body against the same Change Set, at most once (W6): a second call
+ * fails the operation, and nothing is saved. Errors from `core()` pass through with their core code.
+ * Not calling `core()` is allowed; the replacement's result is then the operation's result.
  */
 export interface ReplacementEvent<I, R, S> extends EventBase<I, S> {
   changes: PluginChangeSet;
@@ -341,8 +342,9 @@ export interface ReactionEvent<I, R, S> extends EventBase<I, S> {
 
 /**
  * A guard returns a rejection to stop the operation: nothing is saved, exit 4 (`CONFLICT`).
- * `canForce` says that `--force` would get past this rejection, so the TUI can offer it (UI-01); it is
- * passed on in the error by WP01B.
+ * `canForce` says that `--force` would get past this rejection, so the TUI can offer it (UI-01); the
+ * error carries it as `details.canForce`. A guard may also throw an expected Rowbly error, such as
+ * `NotFoundError`, which keeps its own code (ADR-0020 §5).
  */
 export type GuardResult = { reject: string; hint?: string; canForce?: boolean } | undefined;
 
@@ -351,7 +353,10 @@ export interface OperationHooks<I, R, S> {
   guard?(event: GuardEvent<I, R, S>): GuardResult | Promise<GuardResult>;
   /** Changes the Change Set before the save. */
   transform?(event: TransformEvent<I, R, S>): void | Promise<void>;
-  /** Runs after the save. It acts only outside Rowbly's data; a failure only warns. */
+  /**
+   * Runs after the save. It acts only outside Rowbly's data; a failure only warns. It has 5 s: then
+   * Rowbly warns and goes on, though work it left running is not stopped. Return or await all work.
+   */
   react?(event: ReactionEvent<I, R, S>): void | Promise<void>;
 }
 
@@ -465,14 +470,28 @@ export interface PluginHookContext<S = unknown> extends PluginReadContext<S> {
   warn(message: string): void;
 }
 
+/** Options of `PluginContext.operation`. */
+export interface PluginOperationOptions<R> {
+  /**
+   * The operation's final result, read from the Change Set after every transform and guard (ARCH-42):
+   * for example the Plugin's own record as other Plugins' transforms left it. `bodyResult` is what
+   * the body returned. It only reads; the Change Set is sealed, so it cannot write.
+   */
+  result?(changes: PluginChangeSetView, bodyResult: R): R | Promise<R>;
+}
+
 /** The context of commands, screens, fields, filters, rows, option input and Actions. */
 export interface PluginContext<S = unknown> extends PluginReadContext<S> {
   services: PluginServices;
-  /** Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. */
+  /**
+   * Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. It
+   * returns `options.result` when given, else what `body` returned; reactions get the same value.
+   */
   operation<I extends object, R>(
     name: string,
     input: I & OperationInput,
     body: (changes: PluginChangeSet) => Promise<R>,
+    options?: PluginOperationOptions<R>,
   ): Promise<R>;
   /** Shown after the command, or as a toast in the TUI. */
   warn(message: string): void;
