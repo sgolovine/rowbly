@@ -22,13 +22,15 @@ export {
   type LoadPluginsOptions,
   loadPlugins,
   onOff,
+  type PluginDiagnostic,
   type PluginHost,
   type PluginStatus,
   type ReservedNames,
+  validatePluginDefinition,
 } from './plugins/host';
 export { pluginStoryRows, pluginTaskRows } from './plugins/service';
 export type * from './plugins/types';
-export { CORE_OPERATION_NAMES } from './plugins/types';
+export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';
 export type * from './types';
 
 /**
