@@ -37,8 +37,9 @@ describe('Epics operations', () => {
     });
     expect(await readJsonFile(t, 'plugins/epics/auth.json')).toEqual(epic);
     await expect(createEpic(plugin, { id: 'auth', name: 'Duplicate' })).rejects.toThrow('already exists');
-    await expect(createEpic(plugin, { id: '../outside', name: 'Bad' })).rejects.toThrow('Invalid Epic data');
-    await expect(createEpic(plugin, { id: 'empty', name: '  ' })).rejects.toThrow('Invalid Epic data');
+    await expect(createEpic(plugin, { id: '../outside', name: 'Bad' })).rejects.toThrow('Invalid Epic: id: ');
+    await expect(createEpic(plugin, { id: 'empty', name: '  ' })).rejects.toThrow('Invalid Epic: name: ');
+    await expect(editEpic(plugin, 'auth', { name: ' ' })).rejects.toThrow('Invalid Epic patch: name: ');
     clock.set('2026-10-13T17:21:07.000Z');
     expect(await editEpic(plugin, 'auth', { description: 'Login', name: undefined })).toMatchObject({
       name: 'Authentication',
@@ -55,7 +56,7 @@ describe('Epics operations', () => {
     await expect(getEpic(plugin, 'missing')).rejects.toThrow('not found');
     await expect(editEpic(plugin, 'missing', { name: 'No' })).rejects.toThrow('not found');
     await writeFile(join(t.path, 'plugins/epics/auth.json'), '{');
-    await expect(getEpic(plugin, 'auth')).rejects.toThrow('invalid JSON');
+    await expect(getEpic(plugin, 'auth')).rejects.toThrow('plugins/epics/auth.json: file is not valid JSON');
   });
 
   it('links and unlinks through Story operations; preserves other Plugin Data and rejects missing Epics without a save', async () => {
@@ -78,6 +79,16 @@ describe('Epics operations', () => {
     expect((await services.stories.list(null, { plugins: { epics: false } })).map((s) => s.key)).toEqual(['WEB-1']);
     await services.stories.update(story.key, { plugins: { epics: { epic: 'auth' } } });
     expect(await services.stories.list(null, { plugins: { epics: 'auth' } })).toHaveLength(1);
+    await expect(services.stories.update(story.key, { plugins: { epics: { epic: 'Not A Slug' } } })).rejects.toThrow(
+      'Invalid Epic input: epic: ',
+    );
+    for (const filter of [{ epic: 'auth' }, 3, 'Not A Slug', true]) {
+      await expect(services.stories.list(null, { plugins: { epics: filter } })).rejects.toMatchObject({
+        code: 'VALIDATION',
+        message: expect.stringContaining('Invalid Epic filter'),
+      });
+    }
+    expect(await services.stories.list(null, { plugins: {} })).toHaveLength(1);
   });
 
   it('derives Epic Progress across Boards using their Stage Categories, including empty and closed Epics', async () => {

@@ -1,7 +1,7 @@
 import { type PluginDefinition, renderTable, UsageError } from '../../plugin-api';
-import { createEpic, deleteEpic, editEpic, getEpic, listEpics, progressText, setEpicClosed, showEpic } from './service';
+import { createEpic, deleteEpic, editEpic, getEpic, progressText, readEpics, setEpicClosed, showEpic } from './service';
 
-type DescriptionOptions = { description?: string; descriptionFile?: string; edit?: boolean; name?: string };
+type EpicWriteOptions = { description?: string; descriptionFile?: string; edit?: boolean; name?: string };
 
 export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) => {
   group
@@ -12,7 +12,9 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
     .action((opts: { closed?: boolean; all?: boolean }, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         if (opts.closed && opts.all) throw new UsageError('Use either --closed or --all');
-        const epics = await listEpics(plugin, opts.all ? 'all' : opts.closed ? 'closed' : 'open');
+        const { epics: stored, unavailable } = await readEpics(plugin);
+        for (const file of unavailable) plugin.warn(`Epic "${file.id}" is unavailable: ${file.path}: ${file.message}`);
+        const epics = stored.filter((epic) => opts.all || epic.closed === Boolean(opts.closed));
         print(epics, (rows) =>
           rows.length
             ? renderTable(
@@ -30,7 +32,7 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
     .option('--description <text>', 'the Epic description')
     .option('--description-file <path>', 'read the description from a file, or - for stdin')
     .option('--edit', 'edit the description in $EDITOR')
-    .action((id: string, opts: DescriptionOptions, cmd) =>
+    .action((id: string, opts: EpicWriteOptions, cmd) =>
       cli.run(cmd, async (env) => {
         const name = await env.prompt(opts.name, { flag: '--name', message: 'Epic name' });
         const description = await env.readText(
@@ -72,15 +74,16 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
     .option('--description <text>', 'the Epic description')
     .option('--description-file <path>', 'read the description from a file, or - for stdin')
     .option('--edit', 'edit the description in $EDITOR')
-    .action((id: string, opts: DescriptionOptions, cmd) =>
+    .action((id: string, opts: EpicWriteOptions, cmd) =>
       cli.run(cmd, async (env) => {
-        const epic = await getEpic(env.plugin, id);
+        // Nothing to update is a usage error before any read, even for a missing Epic (CQ-94).
+        const describing = opts.description !== undefined || opts.descriptionFile !== undefined || opts.edit;
+        if (opts.name === undefined && !describing) throw new UsageError('Provide --name or description flags');
+        const initial = opts.edit ? (await getEpic(env.plugin, id)).description : undefined;
         const description = await env.readText(
           { text: opts.description, file: opts.descriptionFile, edit: opts.edit },
-          { name: 'description', initial: epic.description },
+          { name: 'description', initial },
         );
-        if (opts.name === undefined && description === undefined)
-          throw new UsageError('Provide --name or description flags');
         env.print(await editEpic(env.plugin, id, { name: opts.name, description }), (e) => `Updated Epic ${e.id}`);
       }),
     );
