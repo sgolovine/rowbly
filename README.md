@@ -9,16 +9,22 @@ Rowbly keeps Boards, Stories and Tasks as pretty-printed JSON files in a `.rowbl
 
 ## Install
 
-Requires Node.js 22 or newer and pnpm.
+Requires the Node.js version in [`.nvmrc`](.nvmrc).
 
 ```sh
-git clone <this repository> rowbly
-cd rowbly
-pnpm install && pnpm build && pnpm add -g "$PWD"   # or: npm i -g .
+npm install -g rowbly   # or: pnpm add -g rowbly
 rowbly --version
 ```
 
-`pnpm add -g "$PWD"` installs `rowbly` into pnpm's global bin directory. If that directory is not on your `PATH`, pnpm tells you to run `pnpm setup` once. Rowbly is not published to npm.
+To install from source (needs pnpm):
+
+```sh
+git clone https://github.com/sgolovine/rowbly.git
+cd rowbly
+pnpm install && pnpm build && pnpm add -g "$PWD"   # or: npm i -g .
+```
+
+`pnpm add -g` installs `rowbly` into pnpm's global bin directory. If that directory is not on your `PATH`, pnpm tells you to run `pnpm setup` once.
 
 ## Quick start
 

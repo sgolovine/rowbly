@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "A developer-focused, file-backed Kanban tracker for the terminal.",
   "type": "module",
-  "private": true,
   "license": "MIT",
   "bin": {
     "rowbly": "dist/cli.js"
