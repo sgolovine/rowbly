@@ -182,13 +182,13 @@ describe('doctor attribution (RES-17, ARCH-09, CQ-70)', () => {
     expect(report.findings.map((f) => [f.code, f.details?.plugin, f.message])).toEqual([
       [
         'PLUGIN_FAILED',
-        'lower',
-        'Plugin "lower" reported a finding with code "bad code": codes are uppercase words joined by "_"',
+        'schema',
+        'Plugin "schema" reported a finding with code "INVALID", which would read as core code SCHEMA_INVALID',
       ],
       [
         'PLUGIN_FAILED',
-        'schema',
-        'Plugin "schema" reported a finding with code "INVALID", which would read as core code SCHEMA_INVALID',
+        'lower',
+        'Plugin "lower" reported a finding with code "bad code": codes are uppercase words joined by "_"',
       ],
     ]);
   });

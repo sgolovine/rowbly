@@ -154,6 +154,7 @@ describe('orphan folders (RES-07)', () => {
       boardId: 'web',
       key: 'WEB-1',
       name: 'Moved',
+      rank: 'a1',
       createdAt: '2026-10-13T00:00:00.000Z',
     });
     await writeFixture(join(t.path, storyFile('WEB-7')), StorySchema, later);

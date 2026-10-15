@@ -229,7 +229,13 @@ export type CoreDoctorCode =
   | 'UNKNOWN_FILE'
   | 'PLUGIN_FAILED'
   | 'PLUGIN_DATA_INVALID'
-  | 'PLUGIN_DATA_UNCHECKED';
+  | 'PLUGIN_DATA_UNCHECKED'
+  | 'TRANSACTION_PENDING'
+  | 'TRANSACTION_LEFTOVER'
+  | 'TEMP_FILE_LEFTOVER'
+  | 'GITIGNORE_INCOMPLETE'
+  | 'ORPHAN_FOLDER'
+  | 'LEGACY_DATA';
 
 /** A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. */
 export type DoctorCode = CoreDoctorCode | (string & {});
