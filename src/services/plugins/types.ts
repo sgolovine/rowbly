@@ -621,8 +621,21 @@ export interface ActionFocus {
 
 /** Opens and shows things from a Plugin's screens and Actions. */
 export interface PluginUi {
-  /** Opens one of this Plugin's screens on top of the current one. */
+  /**
+   * Opens one of this Plugin's screens on top of the current one, with `params` as its
+   * `PluginScreenProps.params`. Three params are route metadata (DX-24):
+   * - `title` is the breadcrumb, and is passed on too. Without one, the breadcrumb is `screen`
+   *   with a capital letter (`form` → `Form`), so pass a title that tells screens apart (CQ-60).
+   * - `plugin` and `screen` name the route. Rowbly sets them; a value given here is replaced, and the
+   *   screen does not get them. Use other names for your own data.
+   */
   open(screen: string, params?: Record<string, unknown>): void;
+  /** Opens core Story `key`'s detail on top of the current screen; back returns here (ARCH-07). */
+  openStory(key: string): void;
+  /** Opens core Task `id`'s detail (`WEB-1.2`) on top of the current screen; back returns here. */
+  openTask(id: string): void;
+  /** Opens Board `id`'s detail, with its effective configuration, on top of the current screen. */
+  openBoard(id: string): void;
   back(): void;
   toast(message: string, kind?: 'info' | 'warning' | 'error'): void;
   /** Shows any error as a toast. */
@@ -709,6 +722,11 @@ export interface PluginStoryFilter<S> {
 }
 
 export interface PluginScreenProps<S> {
+  /**
+   * The params `ui.open` gave, with `title` but without the route metadata `plugin` and `screen`.
+   * They are not checked: validate what the screen needs, e.g. with a schema, and show an error for
+   * a missing or malformed value instead of using it.
+   */
   params: Record<string, unknown>;
   plugin: PluginContext<S>;
   ui: PluginUi;

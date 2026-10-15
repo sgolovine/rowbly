@@ -1,17 +1,16 @@
 // The TUI slots that Plugins fill, with the Notes fixture Plugin on.
-
-import { Text } from 'ink';
+import { Text, useInput } from 'ink';
 import { describe, expect, it } from 'vitest';
 import { reservedNames } from '../../src/main';
-import { definePlugin, type PluginTui } from '../../src/plugin-api';
+import { definePlugin, type PluginScreenProps, type PluginTui } from '../../src/plugin-api';
 import type { LocalState } from '../../src/schemas';
 import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
-import { createToastStore, type ToastStore } from '../../src/tui/hooks';
+import { createToastStore, type ToastStore, useIsActive } from '../../src/tui/hooks';
 import { loadTuiPlugins, type PluginLoader, withPlugins } from '../../src/tui/loadPlugins';
 import type { RouteParams } from '../../src/tui/router';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
+import { FIXED_NOW, fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
 import { fixturePlugins, notes, strict } from './fixtures';
 import { type Entries, entries, pluginRoot, readJsonFile, storyFile } from './helpers';
@@ -361,6 +360,84 @@ describe('Plugin UI identity (ARCH-40)', () => {
     const { app } = await openPluginApp(t, [notes, twice], { screen: 'story-form', params: { key: 'WEB-1' } });
     const frame = await waitForFrame(app, 'Plugin "twice" failed in the field stage: it names two fields "x"');
     expect(frame).toContain('Note');
+    app.unmount();
+  });
+});
+
+describe('Plugin navigation (ARCH-07, DX-24, CQ-58)', () => {
+  /** A Plugin screen whose keys `s`, `t` and `b` open core records through `ui`. */
+  function Linker({ ui }: PluginScreenProps<unknown>) {
+    const active = useIsActive();
+    useInput(
+      (input) => {
+        if (input === 's') ui.openStory('WEB-1');
+        else if (input === 't') ui.openTask('WEB-1.1');
+        else if (input === 'b') ui.openBoard('web');
+      },
+      { isActive: active },
+    );
+    return <Text>linker screen</Text>;
+  }
+  const linker = definePlugin({
+    id: 'linker',
+    name: 'Linker',
+    description: '',
+    actions: [{ key: 'X', label: 'Links', target: 'none', run: ({ ui }) => ui.open('links', { title: 'Links' }) }],
+    tui: async (): Promise<PluginTui<unknown>> => ({ screens: { links: Linker } }),
+  });
+
+  it.each([
+    { key: 's', shows: 'Login', crumb: 'Links › WEB-1' },
+    { key: 't', shows: 'Wire it', crumb: 'Links › WEB-1.1' },
+    { key: 'b', shows: 'Website', crumb: 'Links › web' },
+  ])('ui opens a core record ($crumb) and back returns to the Plugin screen', async ({ key, shows, crumb }) => {
+    const t = await pluginRoot({ notes: true, linker: true });
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-1',
+      name: 'Login',
+      nextTaskNumber: 2,
+      tasks: [
+        {
+          id: 'WEB-1.1',
+          name: 'Wire it',
+          description: '',
+          stage: 'backlog',
+          createdAt: FIXED_NOW,
+          updatedAt: FIXED_NOW,
+        },
+      ],
+    });
+    const { app } = await openPluginApp(
+      t,
+      [notes, linker],
+      { screen: 'board', params: {} },
+      { local: { version: 1, board: 'web' } },
+    );
+    await waitForFrame(app, 'X Links');
+    await app.press('X');
+    await waitForFrame(app, 'linker screen');
+    await app.press(key);
+    await waitForFrame(app, (f) => f.includes(crumb) && f.includes(shows));
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('linker screen') && !f.includes(crumb));
+    app.unmount();
+  });
+
+  it.each([
+    { params: {}, shows: 'Invalid route: a Plugin screen was opened without a Plugin.' },
+    { params: { plugin: 42, screen: 'note' }, shows: 'Invalid route: a Plugin screen was opened without a Plugin.' },
+    { params: { plugin: 'notes' }, shows: 'Invalid route: Plugin "notes" opened a screen without a screen name.' },
+    {
+      params: { plugin: 'notes', screen: { x: 1 } },
+      shows: 'Invalid route: Plugin "notes" opened a screen without a screen name.',
+    },
+    { params: { plugin: 'notes', screen: 'constructor' }, shows: 'Plugin "notes" has no screen "constructor".' },
+  ])('a Plugin route with params $params shows an invalid route', async ({ params, shows }) => {
+    const t = await seed();
+    const { app } = await open(t, 'plugin', params);
+    const frame = await waitForFrame(app, shows);
+    expect(frame).not.toMatch(/undefined|\[object Object\]/);
     app.unmount();
   });
 });
