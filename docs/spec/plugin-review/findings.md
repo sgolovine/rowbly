@@ -42,9 +42,9 @@ Package: [WP00-contracts-and-adrs.md](packages/WP00-contracts-and-adrs.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [CQ-04](../../reviews/plugin-architecture/code-quality.md#cq-04) | WP08 | Optional | Optional | Built-in Plugin naming/layout is inconsistent. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
-| [CQ-05](../../reviews/plugin-architecture/code-quality.md#cq-05) | WP08 | Optional | Optional | Internal operation and function verbs vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
-| [CQ-06](../../reviews/plugin-architecture/code-quality.md#cq-06) | WP08 | Optional | Optional | Delete result shapes vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [CQ-04](../../reviews/plugin-architecture/code-quality.md#cq-04) | WP08 | Optional | Optional | Built-in Plugin naming/layout is inconsistent. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | deferred: keep current verbs/layout/result shapes per ADR-0020 (W1) |
+| [CQ-05](../../reviews/plugin-architecture/code-quality.md#cq-05) | WP08 | Optional | Optional | Internal operation and function verbs vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | deferred: keep current verbs/layout/result shapes per ADR-0020 (W1) |
+| [CQ-06](../../reviews/plugin-architecture/code-quality.md#cq-06) | WP08 | Optional | Optional | Delete result shapes vary. | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | deferred: keep current verbs/layout/result shapes per ADR-0020 (W1) |
 
 ## WP05O
 
