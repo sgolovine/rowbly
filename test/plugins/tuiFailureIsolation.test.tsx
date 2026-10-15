@@ -11,6 +11,7 @@ import { type AnyPluginDefinition, definePlugin, type PluginTui } from '../../sr
 import { epics } from '../../src/plugins/epics';
 import { specs } from '../../src/plugins/specs';
 import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
+import { acquireLock, type LockHandle } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { loadTuiPlugins } from '../../src/tui/loadPlugins';
@@ -78,6 +79,7 @@ async function open(
   registry: readonly AnyPluginDefinition[],
   screen: string,
   params: Record<string, unknown> = {},
+  beforeRender?: () => Promise<void>,
 ) {
   const toasts = createToastStore();
   const host = await loadPlugins({ root: t.root, registry, reserved: reservedNames() });
@@ -90,14 +92,10 @@ async function open(
     plugins: host,
     warn: (message) => toasts.push('warning', message),
   };
+  const tuiPlugins = await loadTuiPlugins(host);
+  await beforeRender?.();
   const app = renderTui(
-    <App
-      ctx={ctx}
-      services={createServices(ctx)}
-      initial={{ screen, params }}
-      toasts={toasts}
-      plugins={await loadTuiPlugins(host)}
-    />,
+    <App ctx={ctx} services={createServices(ctx)} initial={{ screen, params }} toasts={toasts} plugins={tuiPlugins} />,
   );
   return { app, toasts };
 }
@@ -423,6 +421,28 @@ describe('Plugin Action failures (DX-39)', () => {
       'Plugin "grumpy" failed in its screen: action bug (turn it off with `rowbly plugins disable grumpy`)',
       'not now (try later)',
     ]);
+    // Z targets a Story: it is offered only once the Board has loaded and focused WEB-1.
+    await waitForFrame(app, '· Z Note');
+    await app.press('Z');
+    await waitForFrame(app, 'Note of WEB-1: hello');
+    app.unmount();
+  });
+
+  it('a Story Action is offered only once the Board has loaded, also while another holder has the lock', async () => {
+    const t = await seed({ notes: true, grumpy: true });
+    // Another holder keeps the Data Root busy, so the Board's reads wait in the lock queue.
+    let lock: LockHandle | undefined;
+    const { app } = await open(t, [notes, grumpy], 'board', {}, async () => {
+      lock = await acquireLock(t.path, { operation: 'test.hold' });
+    });
+    await waitForFrame(app, 'X Throw');
+    await app.press('Z');
+    const waiting = app.lastFrame() ?? '';
+    expect(waiting).not.toContain('Z Note');
+    expect(waiting).not.toContain('Note of WEB-1');
+    await lock?.release();
+    // Once the lock is free the queued reads run at once, and Z works.
+    await waitForFrame(app, '· Z Note');
     await app.press('Z');
     await waitForFrame(app, 'Note of WEB-1: hello');
     app.unmount();

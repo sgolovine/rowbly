@@ -60,6 +60,22 @@ describe('acquireLock', () => {
     expect(order).toEqual(['first releases', 'second', 'third']);
   });
 
+  it('hands the lock to an in-process waiter on release, without polling the lock file', async () => {
+    const t = await tempRoot();
+    const first = await acquireLock(t.path);
+    const link = vi.spyOn(io, 'link');
+    const resolved = vi.spyOn(io, 'realpath');
+    const second = acquireLock(t.path);
+    // Let the waiter get as far as it can while the lock is held.
+    await resolved.mock.results[0]?.value;
+    for (let i = 0; i < 5; i++) await new Promise(setImmediate);
+    expect(link).not.toHaveBeenCalled();
+    await first.release();
+    await (await second).release();
+    // One exclusive create, never an EEXIST retry with backoff.
+    expect(link).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps call order when an earlier caller's realpath resolves later", async () => {
     const t = await tempRoot();
     const canonical = await realpath(t.path);
