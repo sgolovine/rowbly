@@ -144,15 +144,15 @@ Package: [WP01A-execution-scopes.md](packages/WP01A-execution-scopes.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ARCH-06](../../reviews/plugin-architecture/general-architecture.md#arch-06) | WP01 | P0 | Recommended / see scope | Hooks can start independent nested operations | Required. | open |
-| [ARCH-23](../../reviews/plugin-architecture/general-architecture.md#arch-23) | WP01 | P0 | Recommended / see scope | Reactions receive a live, shallow-readonly Change Set | Required. | open |
-| [ARCH-39](../../reviews/plugin-architecture/general-architecture.md#arch-39) | WP01 | P0 | Recommended / see scope | Guards get writer methods and can modify the supposedly final Change Set | Required. | open |
-| [CQ-27](../../reviews/plugin-architecture/code-quality.md#cq-27) | WP01 | P0 dependency | Superseded by RES-06 / ARCH-39 | Document the final immutable view contract; do not preserve live-mutability guidance. | Required. | open |
-| [CQ-35](../../reviews/plugin-architecture/code-quality.md#cq-35) | WP01 | P2 | Useful | src/services/plugins/runtime.ts:206, src/services/doctor.ts:545: changes.forPlugin(id) as PluginChangeSet is redundant; method already returns that type. Delete both casts and u… | Required. | open |
+| [ARCH-06](../../reviews/plugin-architecture/general-architecture.md#arch-06) | WP01 | P0 | Recommended / see scope | Hooks can start independent nested operations | Required. | done — test/plugins/reentrancy.test.ts |
+| [ARCH-23](../../reviews/plugin-architecture/general-architecture.md#arch-23) | WP01 | P0 | Recommended / see scope | Reactions receive a live, shallow-readonly Change Set | Required. | done — test/plugins/changeSetIsolation.test.ts › reactions |
+| [ARCH-39](../../reviews/plugin-architecture/general-architecture.md#arch-39) | WP01 | P0 | Recommended / see scope | Guards get writer methods and can modify the supposedly final Change Set | Required. | done — test/plugins/changeSetIsolation.test.ts › guards, writer lifetime |
+| [CQ-27](../../reviews/plugin-architecture/code-quality.md#cq-27) | WP01 | P0 dependency | Superseded by RES-06 / ARCH-39 | Document the final immutable view contract; do not preserve live-mutability guidance. | Required. | done — JSDoc on ChangeSetView / PluginChangeSet |
+| [CQ-35](../../reviews/plugin-architecture/code-quality.md#cq-35) | WP01 | P2 | Useful | src/services/plugins/runtime.ts:206, src/services/doctor.ts:545: changes.forPlugin(id) as PluginChangeSet is redundant; method already returns that type. Delete both casts and u… | Required. | done — cast removed in doctor.ts (none left in runtime.ts) |
 | [CQ-36](../../reviews/plugin-architecture/code-quality.md#cq-36) | WP01 | None | Withdrawn | src/services/plugins/runtime.ts:68: rebuilding event objects per phase is small and unmeasured. A memoized map adds state and lets a transform's event-object mutation leak into … | None — withdrawn by the review. Do not implement the original prescription; any residual note in the package is optional. | withdrawn |
-| [DX-17](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-17) | WP01 | P0 | Recommended / see scope | Hook types expose nested writes and guards expose mutable Change Sets | Required. | open |
-| [RES-05](../../reviews/plugin-architecture/resiliency.md#res-05) | WP01 | P0 | Recommended / see scope | Reentrant handler mutations save independently and overwrite each other | Required. | open |
-| [RES-06](../../reviews/plugin-architecture/resiliency.md#res-06) | WP01 | P0 | Recommended / see scope | Change Set views expose mutable internal state and source identities | Required. | open |
+| [DX-17](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-17) | WP01 | P0 | Recommended / see scope | Hook types expose nested writes and guards expose mutable Change Sets | Required. | done — reentrancy.test.ts, changeSetIsolation.test.ts (types by WP04A) |
+| [RES-05](../../reviews/plugin-architecture/resiliency.md#res-05) | WP01 | P0 | Recommended / see scope | Reentrant handler mutations save independently and overwrite each other | Required. | done — test/plugins/reentrancy.test.ts |
+| [RES-06](../../reviews/plugin-architecture/resiliency.md#res-06) | WP01 | P0 | Recommended / see scope | Change Set views expose mutable internal state and source identities | Required. | done — test/plugins/changeSetIsolation.test.ts |
 
 ## WP06
 
