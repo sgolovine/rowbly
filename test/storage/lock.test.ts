@@ -11,19 +11,24 @@ import { fixtureScript, runScript, startScript } from './engineHelpers';
 const HOLDER = fixtureScript('holdLock.ts');
 const ELEVEN_MINUTES_AGO = () => new Date(Date.now() - 11 * 60_000);
 
-async function writeLock(root: string, owner: Record<string, unknown>, name = LOCK_FILE): Promise<string> {
+async function writeLock(root: string, holder: Record<string, unknown>, name = LOCK_FILE): Promise<string> {
   const path = join(root, name);
-  await writeFile(path, `${JSON.stringify(owner)}\n`);
+  await writeFile(path, `${JSON.stringify(holder)}\n`);
   return path;
 }
 
 describe('acquireLock', () => {
-  it('writes its owner into the lock file and removes it on release', async () => {
+  it('writes its holder into the lock file and removes it on release', async () => {
     const t = await tempRoot();
     const lock = await acquireLock(t.path, { operation: 'stories.create' });
-    const owner = JSON.parse(await readFile(join(t.path, LOCK_FILE), 'utf8'));
-    expect(owner).toMatchObject({ pid: process.pid, host: hostname(), operation: 'stories.create', token: lock.token });
-    expect(Date.parse(owner.startedAt)).not.toBeNaN();
+    const holder = JSON.parse(await readFile(join(t.path, LOCK_FILE), 'utf8'));
+    expect(holder).toMatchObject({
+      pid: process.pid,
+      host: hostname(),
+      operation: 'stories.create',
+      token: lock.token,
+    });
+    expect(Date.parse(holder.startedAt)).not.toBeNaN();
 
     expect(await lock.release()).toBe(true);
     expect(lock.released).toBe(true);
@@ -94,7 +99,7 @@ describe('acquireLock', () => {
     const t = await tempRoot();
     {
       await using lock = await acquireLock(t.path);
-      expect(lock.owner).toBe(true);
+      expect(lock.owning).toBe(true);
       expect(await pathExists(join(t.path, LOCK_FILE))).toBe(true);
     }
     expect(await pathExists(join(t.path, LOCK_FILE))).toBe(false);
@@ -104,7 +109,7 @@ describe('acquireLock', () => {
     const t = await tempRoot();
     const held = await acquireLock(t.path);
     const inner = await acquireLock(t.path, { held, timeoutMs: 50 });
-    expect(inner).toMatchObject({ owner: false, token: held.token });
+    expect(inner).toMatchObject({ owning: false, token: held.token });
     await inner.release();
     expect(held.released).toBe(false);
     expect(await pathExists(join(t.path, LOCK_FILE))).toBe(true);
@@ -121,7 +126,7 @@ describe('acquireLock', () => {
   });
 
   describe('stale locks', () => {
-    it('breaks a lock whose owner process on this host is gone', async () => {
+    it('breaks a lock whose holder process on this host is gone', async () => {
       const t = await tempRoot();
       const exited = startScript(HOLDER, ['die', t.path]);
       await exited.printed('locked');
@@ -159,7 +164,7 @@ describe('acquireLock', () => {
       const t = await tempRoot();
       const path = join(t.path, LOCK_FILE);
       await writeFile(path, '{"pid": 12');
-      await expect(acquireLock(t.path, { timeoutMs: 100 })).rejects.toThrow(/unknown owner/);
+      await expect(acquireLock(t.path, { timeoutMs: 100 })).rejects.toThrow(/holder unknown/);
       await utimes(path, ELEVEN_MINUTES_AGO(), ELEVEN_MINUTES_AGO());
       await (await acquireLock(t.path, { timeoutMs: 1_000 })).release();
     });

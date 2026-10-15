@@ -17,7 +17,7 @@ export const LOCK_STALE_MS = 10 * 60_000;
 export const LOCK_BREAK_STALE_MS = 30_000;
 
 /** The content of the lock file. */
-export interface LockOwner {
+export interface LockHolder {
   pid: number;
   host: string;
   startedAt: string;
@@ -33,7 +33,7 @@ export interface LockHandle {
   readonly path: string;
   readonly token: string;
   /** False for a handle that reuses one the caller already holds (`AcquireOptions.held`). */
-  readonly owner: boolean;
+  readonly owning: boolean;
   readonly released: boolean;
   /**
    * Removes the lock file if it is still this handle's. Returns false when it was not, because a
@@ -82,7 +82,7 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
     if (queues.get(canonical) === tail) queues.delete(canonical);
   });
 
-  const owner: LockOwner = {
+  const holder: LockHolder = {
     pid: process.pid,
     host: hostname(),
     startedAt: new Date().toISOString(),
@@ -90,8 +90,8 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
     operation: options.operation ?? 'unknown',
   };
   try {
-    if (!(await settlesBefore(previous, deadline))) throw busy(path, (await readLock(path))?.owner);
-    await createLock(canonical, owner, deadline);
+    if (!(await settlesBefore(previous, deadline))) throw busy(path, (await readLock(path))?.holder);
+    await createLock(canonical, holder, deadline);
   } catch (err) {
     leave();
     throw err;
@@ -101,8 +101,8 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
   const handle: LockHandle = {
     root: canonical,
     path,
-    token: owner.token,
-    owner: true,
+    token: holder.token,
+    owning: true,
     get released() {
       return released;
     },
@@ -111,7 +111,7 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
       released = true;
       try {
         const current = await readLock(path);
-        if (current?.owner?.token !== owner.token) return false;
+        if (current?.holder?.token !== holder.token) return false;
         await io.unlink(path);
         return true;
       } finally {
@@ -148,7 +148,7 @@ function reuse(held: LockHandle, canonical: string): LockHandle {
     root: held.root,
     path: held.path,
     token: held.token,
-    owner: false,
+    owning: false,
     get released() {
       return released || held.released;
     },
@@ -163,16 +163,16 @@ function reuse(held: LockHandle, canonical: string): LockHandle {
 }
 
 /** Creates the lock file, waiting for its holder or breaking it when stale, until `deadline`. */
-async function createLock(canonical: string, owner: LockOwner, deadline: number): Promise<void> {
+async function createLock(canonical: string, holder: LockHolder, deadline: number): Promise<void> {
   const path = join(canonical, LOCK_FILE);
   let delay = 25;
   for (;;) {
-    if (await createExclusive(path, owner)) return;
+    if (await createExclusive(path, holder)) return;
     const current = await readLock(path);
     if (!current) continue; // Released meanwhile: try again at once.
     if (isStale(current) && (await breakStale(canonical, current))) continue;
     const left = deadline - Date.now();
-    if (left <= 0) throw busy(path, current.owner);
+    if (left <= 0) throw busy(path, current.holder);
     await new Promise((resolve) => setTimeout(resolve, Math.min(left, delay * (0.5 + Math.random()))));
     delay = Math.min(delay * 2, 250);
   }
@@ -199,7 +199,7 @@ async function createExclusive(path: string, content: object): Promise<boolean> 
 
 interface LockFile {
   /** The parsed content; `undefined` when unreadable. */
-  owner: LockOwner | undefined;
+  holder: LockHolder | undefined;
   raw: string;
   mtimeMs: number;
 }
@@ -209,18 +209,18 @@ async function readLock(path: string): Promise<LockFile | undefined> {
   try {
     const { mtimeMs } = await io.lstat(path);
     const raw = await io.readFile(path);
-    return { owner: parseOwner(raw), raw, mtimeMs };
+    return { holder: parseHolder(raw), raw, mtimeMs };
   } catch (err) {
     if (errorCode(err) === 'ENOENT') return undefined;
     throw err;
   }
 }
 
-function parseOwner(raw: string): LockOwner | undefined {
+function parseHolder(raw: string): LockHolder | undefined {
   try {
-    const value = JSON.parse(raw) as Partial<LockOwner>;
+    const value = JSON.parse(raw) as Partial<LockHolder>;
     if (typeof value.pid === 'number' && typeof value.host === 'string' && typeof value.token === 'string') {
-      return { startedAt: '', operation: 'unknown', ...value } as LockOwner;
+      return { startedAt: '', operation: 'unknown', ...value } as LockHolder;
     }
   } catch {
     // Unreadable: judged by its age only.
@@ -229,13 +229,13 @@ function parseOwner(raw: string): LockOwner | undefined {
 }
 
 /**
- * ADR-0019 §1: stale when its owner is a dead process on this host, or when it is older than
+ * ADR-0019 §1: stale when its holder is a dead process on this host, or when it is older than
  * `LOCK_STALE_MS` (by `startedAt`, or by mtime when the content is unreadable).
  */
 function isStale(lock: LockFile): boolean {
-  const { owner } = lock;
-  if (owner && owner.host === hostname() && !isAlive(owner.pid)) return true;
-  const started = owner ? Date.parse(owner.startedAt) : Number.NaN;
+  const { holder } = lock;
+  if (holder && holder.host === hostname() && !isAlive(holder.pid)) return true;
+  const started = holder ? Date.parse(holder.startedAt) : Number.NaN;
   const since = Number.isNaN(started) ? lock.mtimeMs : started;
   return Date.now() - since > LOCK_STALE_MS;
 }
@@ -275,10 +275,10 @@ async function breakStale(canonical: string, stale: LockFile): Promise<boolean> 
   }
 }
 
-function busy(path: string, owner: LockOwner | undefined): ConflictError {
-  const who = owner ? `pid ${owner.pid} on ${owner.host}, since ${owner.startedAt}` : 'unknown owner';
+function busy(path: string, holder: LockHolder | undefined): ConflictError {
+  const who = holder ? `pid ${holder.pid} on ${holder.host}, since ${holder.startedAt}` : 'holder unknown';
   return new ConflictError(`Data Root is busy: another Rowbly process (${who}) is saving`, {
-    details: { lock: path, pid: owner?.pid, host: owner?.host, startedAt: owner?.startedAt },
+    details: { lock: path, pid: holder?.pid, host: holder?.host, startedAt: holder?.startedAt },
     hint: `try again; if no Rowbly process is running, delete ${path}`,
   });
 }
