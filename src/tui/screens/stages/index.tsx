@@ -4,9 +4,11 @@ import { ConflictError } from '../../../core';
 import { type Stage, type StageCategory, StageCategorySchema } from '../../../schemas';
 import type { Position } from '../../../services';
 import { readLevel } from '../../../services/_configTarget';
-import { ConfirmDialog, Form, Loading, SelectList, StageBadge } from '../../components';
+import { ConfirmDialog, CursorRows, Form, Loading, SelectList, StageBadge } from '../../components';
 import {
   useAsync,
+  useCursor,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
@@ -15,17 +17,7 @@ import {
   useToast,
 } from '../../hooks';
 import type { ScreenProps, ScreenRegistry } from '../types';
-import {
-  type ConfigScope,
-  CursorRows,
-  LevelBar,
-  type LevelName,
-  levelsFor,
-  targetFor,
-  useConfigScope,
-  useCursor,
-  useEscape,
-} from './shared';
+import { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from './shared';
 
 type Mode =
   | { kind: 'list' }
@@ -222,6 +214,8 @@ function parsePosition(option: string): Position {
   if (option.startsWith('before ')) return { before: option.slice('before '.length) };
   return option === 'first' ? 'first' : 'last';
 }
+
+export { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from './shared';
 
 export const stagesScreens: ScreenRegistry = {
   stages: StagesScreen,

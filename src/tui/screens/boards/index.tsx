@@ -2,9 +2,11 @@ import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { ConflictError } from '../../../core';
 import type { BoardConfig } from '../../../schemas';
-import { ConfirmDialog, Form, Loading } from '../../components';
+import { ConfirmDialog, CursorRows, Form, Loading } from '../../components';
 import {
   useAsync,
+  useCursor,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
@@ -13,9 +15,8 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenRegistry } from '../types';
-import { BoardDetailScreen } from './BoardDetail';
+import { BoardDetailScreen } from './BoardDetailScreen';
 import { BoardFormScreen } from './BoardForm';
 
 type Mode =

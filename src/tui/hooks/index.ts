@@ -4,4 +4,7 @@ export * from './plugins';
 export * from './shell';
 export * from './toasts';
 export * from './useAsync';
+export * from './useCursor';
+export * from './useEscape';
+export * from './useReloadOnReturn';
 export * from './useServices';

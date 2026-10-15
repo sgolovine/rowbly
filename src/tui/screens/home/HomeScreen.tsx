@@ -3,10 +3,9 @@ import { SelectList } from '../../components';
 import { pluginRoute, useKeyHints, usePlugins } from '../../hooks';
 import { DESTINATIONS, type Destination } from '../../keymap';
 import { useRouter } from '../../router';
-import type { ScreenRegistry } from '../types';
 
 /** The root menu: every go-to destination, then those the Plugins add. */
-function HomeScreen() {
+export function HomeScreen() {
   const router = useRouter();
   const { plugins } = usePlugins();
   useKeyHints([{ key: 'enter', description: 'open' }]);
@@ -33,7 +32,3 @@ function HomeScreen() {
     </Box>
   );
 }
-
-export const homeScreens: ScreenRegistry = {
-  home: HomeScreen,
-};
