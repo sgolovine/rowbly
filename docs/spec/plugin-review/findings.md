@@ -52,10 +52,10 @@ Package: [WP05O-tui-organization.md](packages/WP05O-tui-organization.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [CQ-57](../../reviews/plugin-architecture/code-quality.md#cq-57) | WP05 | Optional | Optional | src/tui/screens/plugins/PluginScreen.tsx:7 versus PluginsScreen.tsx:8: singular/plural names obscure that the former hosts arbitrary Plugin screens. Optional rename to PluginScr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
-| [CQ-59](../../reviews/plugin-architecture/code-quality.md#cq-59) | WP05 | P2 | Useful | src/tui/components/PluginSlot.tsx:10: plugin: string is an ID whereas render's Plugin is a context. Rename prop/locals to pluginId; update src/tui/screens/boards/BoardDetail.tsx… | Required. | open |
-| [CQ-73](../../reviews/plugin-architecture/code-quality.md#cq-73) | WP05 | P2 | Useful | In-scope screen names violate the supplied TUI organization rule. | Required. | open |
-| [CQ-74](../../reviews/plugin-architecture/code-quality.md#cq-74) | WP05 | P2 | Useful | Cross-area imports bypass required barrels. | Required. | open |
+| [CQ-57](../../reviews/plugin-architecture/code-quality.md#cq-57) | WP05 | Optional | Optional | src/tui/screens/plugins/PluginScreen.tsx:7 versus PluginsScreen.tsx:8: singular/plural names obscure that the former hosts arbitrary Plugin screens. Optional rename to PluginScr… | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | done — `plugins/PluginScreenHost.tsx`; route ID `plugin` unchanged; covered by `test/plugins/tui.test.tsx` |
+| [CQ-59](../../reviews/plugin-architecture/code-quality.md#cq-59) | WP05 | P2 | Useful | src/tui/components/PluginSlot.tsx:10: plugin: string is an ID whereas render's Plugin is a context. Rename prop/locals to pluginId; update src/tui/screens/boards/BoardDetail.tsx… | Required. | done — `PluginSlot` prop `pluginId`; covered by `test/plugins/tui.test.tsx` (Story tab, Board section) |
+| [CQ-73](../../reviews/plugin-architecture/code-quality.md#cq-73) | WP05 | P2 | Useful | In-scope screen names violate the supplied TUI organization rule. | Required. | done — Story/Home/BoardDetail screens renamed after their components; `StoryStage` in `components/StoryStage.tsx`; existing TUI tests unchanged |
+| [CQ-74](../../reviews/plugin-architecture/code-quality.md#cq-74) | WP05 | P2 | Useful | Cross-area imports bypass required barrels. | Required. | done — shared hooks in `hooks/`, `CursorRows`/`StoryStage` in `components/`, other cross-area imports via area barrels; no import cycles |
 
 ## WP07A
 
