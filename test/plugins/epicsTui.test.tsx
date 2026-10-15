@@ -1,3 +1,5 @@
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { epics } from '../../src/plugins/epics';
 import { createEpic } from '../../src/plugins/epics/service';
@@ -154,6 +156,55 @@ describe('Epics TUI', () => {
     );
     await filterByEpic(KEYS.left);
     await waitForFrame(app, (frame) => frame.includes('WEB-1') && frame.includes('WEB-2'));
+    app.unmount();
+  });
+
+  it('opens an Epic Story in core Story detail, and back returns to the Epic (ARCH-07)', async () => {
+    const t = await seed();
+    await makeStory(t.path, {
+      key: 'WEB-3',
+      boardId: 'web',
+      name: 'Logout',
+      rank: 'a2',
+      plugins: { epics: { epic: 'auth' } },
+    });
+    const route = pluginRoute('epics', 'detail');
+    const { app } = await open(t, route.screen, { ...route.params, id: 'auth', title: 'auth' });
+    await waitForFrame(app, 'Epic Progress');
+    await focusListItem(app, 'WEB-3 · Logout');
+    await app.press(KEYS.enter);
+    const story = await waitForFrame(app, 'auth › WEB-3');
+    expect(story).toMatch(/Epic\s+auth/);
+    expect(story).toContain('Logout');
+    await app.press(KEYS.escape);
+    const back = await waitForFrame(app, (frame) => !frame.includes('auth › WEB-3'));
+    expect(back).toContain('Epic Progress');
+    expect(back).toContain('WEB-1 · Login');
+    app.unmount();
+  });
+
+  it('lists a corrupt Epic as unavailable next to the healthy ones (RES-12)', async () => {
+    const t = await seed();
+    await writeFile(join(t.path, 'plugins/epics/bad.json'), '<<<<<<< HEAD\n{}\n=======\n>>>>>>> other\n');
+    const route = pluginRoute('epics', 'list');
+    const { app, toasts } = await open(t, route.screen, route.params);
+    const frame = await waitForFrame(app, 'bad · unavailable');
+    expect(frame).toContain('auth · Authentication');
+    expect(frame).toContain('0/1 Stories done');
+    await focusListItem(app, 'bad · unavailable');
+    await app.press(KEYS.enter);
+    await waitForFrame(app, 'Epic "bad" is unavailable');
+    expect(toasts.list().map((toast) => toast.kind)).toContain('warning');
+    app.unmount();
+  });
+
+  it('creating a Story without choosing an Epic gives it no Epic data', async () => {
+    const t = await seed();
+    const { app } = await open(t, 'story-form', { boardId: 'web' });
+    await waitForFrame(app, 'No Epic');
+    await app.press('Plain', KEYS.ctrlS);
+    await waitForFrame(app, 'Created WEB-3');
+    expect(await readJsonFile(t, 'boards/web/stories/WEB-3/story.json')).not.toHaveProperty('plugins');
     app.unmount();
   });
 });

@@ -8,17 +8,29 @@ import {
   useInput,
   useIsActive,
   useKeyHints,
+  useReloadOnReturn,
   useState,
 } from '../../plugin-api/tui';
-import { listEpics, progressText, showEpic } from './service';
+import type { EpicMode } from './model';
+import { listEpicSummaries, progressText } from './service';
+
+function nextEpicMode(mode: EpicMode): EpicMode {
+  switch (mode) {
+    case 'open':
+      return 'closed';
+    case 'closed':
+      return 'all';
+    case 'all':
+      return 'open';
+  }
+}
 
 export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
   const active = useIsActive();
-  const [mode, setMode] = useState<'open' | 'closed' | 'all'>('open');
-  const data = useAsync(async () => {
-    const epics = await listEpics(plugin, mode);
-    return Promise.all(epics.map((epic) => showEpic(plugin, epic.id)));
-  }, [plugin, mode, active]);
+  const [mode, setMode] = useState<EpicMode>('open');
+  const data = useAsync(() => listEpicSummaries(plugin, mode), [plugin, mode]);
+  // Back from an Epic or its form shows what changed there.
+  useReloadOnReturn(data.reload);
   useKeyHints([
     { key: 'n', description: 'new Epic' },
     { key: 'a', description: 'open/closed/all' },
@@ -27,23 +39,35 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
   useInput(
     (input) => {
       if (input === 'n') ui.open('form', { title: 'New Epic' });
-      else if (input === 'a') setMode((value) => (value === 'open' ? 'closed' : value === 'closed' ? 'all' : 'open'));
+      else if (input === 'a') setMode(nextEpicMode);
     },
     { isActive: active },
   );
   if (!data.data)
     return data.loading ? <Loading label="Loading Epics…" /> : <Text color="red">Could not load Epics.</Text>;
+  const { summaries, unavailable } = data.data;
   return (
     <Box flexDirection="column">
       <Text bold>{`Epics (${mode})`}</Text>
       <SelectList
-        items={data.data.map((epic) => ({
-          value: epic.id,
-          label: `${epic.id} · ${epic.name}`,
-          description: `${epic.closed ? 'closed · ' : ''}${progressText(epic.progress)}`,
-        }))}
+        items={[
+          ...summaries.map((epic) => ({
+            value: epic.id,
+            label: `${epic.id} · ${epic.name}`,
+            description: `${epic.closed ? 'closed · ' : ''}${progressText(epic.progress)}`,
+          })),
+          ...unavailable.map((file) => ({
+            value: file.id,
+            label: `${file.id} · unavailable`,
+            description: `${file.path}: ${file.message}`,
+          })),
+        ]}
         emptyText="No Epics."
-        onSelect={({ value }) => ui.open('detail', { id: value, title: value })}
+        onSelect={({ value }) => {
+          const broken = unavailable.find((file) => file.id === value);
+          if (broken) ui.toast(`Epic "${broken.id}" is unavailable; run \`rowbly doctor\``, 'warning');
+          else ui.open('detail', { id: value, title: value });
+        }}
       />
     </Box>
   );

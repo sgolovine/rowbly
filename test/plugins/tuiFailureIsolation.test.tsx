@@ -187,7 +187,9 @@ describe('Plugin field isolation', () => {
     const registry = [epics, specs];
     const form = await open(t, registry, 'story-form', { key: 'WEB-1' });
     const frame = await waitForFrame(form.app, 'Edit WEB-1');
-    expect(frame).toContain('Plugin "epics" failed in the field stage');
+    // Since WP08A the Epic field itself loads: the Story's own Epic stays selected and kept.
+    expect(frame).toContain('‹ bad ›');
+    expect(frame).not.toContain('failed in the field stage');
     expect(frame).toContain('Specs');
     await form.app.press(KEYS.end, ' again', KEYS.ctrlS);
     await waitForFrame(form.app, 'Updated WEB-1');
@@ -198,8 +200,9 @@ describe('Plugin field isolation', () => {
     const board = await open(t, registry, 'board', { boardId: 'web' });
     await waitForFrame(board.app, 'WEB-1');
     await board.app.press('/');
-    const filter = await waitForFrame(board.app, 'Plugin "epics" failed in the field stage');
+    const filter = await waitForFrame(board.app, /Epic\s+‹/);
     expect(filter).toContain('Spec');
+    expect(filter).not.toContain('failed in the field stage');
     board.app.unmount();
   });
 });
