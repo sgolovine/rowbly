@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { specs } from '../../src/plugins/specs';
 import { createSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
+import { acquireLock } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import { makeBoard, makeStory } from '../helpers';
 import { KEYS, tick, waitForFrame } from '../tui/helpers';
@@ -219,6 +220,30 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     await app.press('e');
     // The edit form names the action, and does not take the detail's title.
     await waitForFrame(app, 'auth › Edit auth');
+    app.unmount();
+  });
+
+  it('the Spec list keeps its keys while it reloads on return, also behind another lock holder', async () => {
+    const { t, app } = await setup('plugin', { plugin: 'specs', screen: 'list', board: 'web', title: 'Specs' });
+    await waitForFrame(app, 'auth  Auth');
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('Specs › New Spec') && f.includes('Slug'));
+    // Another holder keeps the Data Root busy, so the list's reload on return waits in the lock queue.
+    const lock = await acquireLock(t.path, { operation: 'test.hold' });
+    const realpath = io.realpath;
+    let queued!: () => void;
+    const reloading = new Promise<void>((resolve) => {
+      queued = resolve;
+    });
+    vi.spyOn(io, 'realpath').mockImplementation((path) => {
+      queued();
+      return realpath(path);
+    });
+    await app.press(KEYS.escape);
+    await reloading;
+    await app.press(KEYS.enter);
+    await lock.release();
+    await waitForFrame(app, (f) => f.includes('Specs › auth─') && f.includes('Requirements'));
     app.unmount();
   });
 });

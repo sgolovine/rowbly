@@ -70,7 +70,8 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
       </Box>
     );
   }
-  if (specs.loading) return <Loading />;
+  // A reload, e.g. on return from a Spec, keeps the list on screen, so its keys keep working.
+  if (specs.loading && !specs.data?.length) return <Loading />;
   return (
     <Box flexDirection="column">
       <Text bold>{`Board Specs — ${board}`}</Text>

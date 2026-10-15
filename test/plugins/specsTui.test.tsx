@@ -123,6 +123,8 @@ describe('Specs TUI', () => {
     await app.press(' ', KEYS.ctrlS);
     await waitForFrame(app, 'Created WEB-3');
     expect((await services.stories.get('WEB-3')).plugins).toEqual({ specs: { specs: ['auth'] } });
+    // The Story screen ignores `e` until it has loaded WEB-3.
+    await waitForFrame(app, 'WEB-3 New');
     await app.press('e');
     await waitForFrame(app, '[x] auth');
     await focusFormField(app, 'Specs');

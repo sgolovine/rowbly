@@ -55,7 +55,8 @@ export function SpecDetailScreen({ params, plugin, ui }: PluginScreenProps<Recor
       setBusy(false);
     }
   };
-  if (loaded.loading) return <Loading />;
+  // A reload on return from the form keeps the Spec on screen.
+  if (loaded.loading && !data) return <Loading />;
   if (!data) return <Text color="red">Could not load Spec.</Text>;
   if (confirming)
     return (
