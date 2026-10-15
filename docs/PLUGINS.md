@@ -6,15 +6,22 @@ The plugin system is built: the Plugin API, the registry, loading, the operation
 
 ## Scope of the first build
 
+Built:
+
 - The plugin system, with the whole pipeline (guard, transform, replace, react), tested with fixture Plugins.
 - Built-in Plugins: [Epics](#epics), [Specs](#specs) and [Comments](#comments).
-- Not built: the Git Plugin (designed in ADR-0016), third-party Plugins, dependencies between Plugins, and deleting a Plugin's data.
 - Today's core features stay in core, except Comments, which moved out into a Built-in Plugin (ADR-0018).
+
+Planned, not built:
+
+- The Git Plugin and the Plugin API's `git` capability (designed in ADR-0016).
+- The lock, the commit journal and the stage rules that ADR-0019 and ADR-0020 set. The plugin-review remediation (`docs/spec/plugin-review/`) is implementing them.
+- Third-party Plugins, dependencies between Plugins, and deleting a Plugin's data.
 
 ## Where Plugins live (ADR-0009)
 
 - Each Built-in Plugin is a folder `src/plugins/<id>/`, built into the same bundle as core and listed in one static registry. Only the entry point reads the registry.
-- A Plugin imports only the Plugin API. Core never imports a Plugin. A Plugin uses no Node built-in modules; it works outside its own data only through capabilities of the Plugin API (its own `plugins/<id>/` folders, running `git`, opening `$EDITOR`, and others as Plugins need them). The architecture test enforces these rules.
+- A Plugin imports only the Plugin API. Core never imports a Plugin. A Plugin uses no Node built-in modules; it works outside its own data only through capabilities of the Plugin API: today its own `plugins/<id>/` folders (`files`) and opening `$EDITOR` (`editText`, command mode only). Others are added as Plugins need them; a `git` capability is planned for the Git Plugin (ADR-0016) and does not exist yet. The architecture test enforces these rules.
 - A Plugin's TUI part loads only when the TUI starts.
 - Plugins run in registry order.
 
@@ -65,6 +72,8 @@ A Plugin that fails to load (it throws while it starts, its settings are invalid
 - Deleting a Story or a Board deletes its Plugin files. `doctor --fix` moves a Story's whole folder when it renumbers the Story.
 
 ## Operations (ADR-0012)
+
+<!-- WP09B: update this section (error policy, one save, stage rules) once ADR-0019 and ADR-0020 land. -->
 
 Every Service Layer operation, from core or from a Plugin, collects a Change Set (each record created, changed or deleted, with before and after) and saves it once at the end.
 
