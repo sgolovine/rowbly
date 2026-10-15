@@ -13,6 +13,11 @@ afterEach(() => {
 
 const clock = fixedClock(FIXED_NOW);
 
+/** The transaction folders left in `.txn/`. */
+async function journal(root: string): Promise<string[]> {
+  return readdir(join(root, '.txn')).catch(() => []);
+}
+
 /**
  * A Data Root with two Boards: `web` holds WEB-1…WEB-3, each with a Story file and a Spec file of
  * the `specs` Plugin, plus an unknown Plugin's file on WEB-3; `ops` is a Board to delete.
@@ -54,7 +59,7 @@ describe('prepareTransaction', () => {
       { kind: 'write', path: 'boards/web/stories/WEB-1/story.json', staged: 'staged/0', existed: true },
     ]);
     await tx.discard();
-    expect(await readdir(join(root, '.txn'))).toEqual([]);
+    expect(await journal(root)).toEqual([]);
   });
 
   it('orders steps: moves out, deletes, moves in, writes', async () => {
@@ -223,5 +228,116 @@ describe('prepareTransaction', () => {
     ).rejects.toThrow(/injected writeFile failure/);
     faults.restore();
     expect(await snapshotTree(root, [])).toEqual({ ...before, '.txn': '<dir>' });
+  });
+});
+
+/**
+ * One plan that uses every primitive: an Assignee removal across the root config and two Stories,
+ * an Epic file deletion, a Story swap with a Spec written into and deleted from moved folders, and
+ * a whole Board deletion that takes every Plugin's files with it.
+ */
+const BIG_PLAN: TransactionPlan = {
+  operation: 'assignees.remove',
+  changes: [
+    { kind: 'write', path: 'rowbly.config.json', text: '{"version":1,"assignees":[]}\n' },
+    { kind: 'write', path: 'boards/web/stories/WEB-1/story.json', text: '{"key":"WEB-1","from":"WEB-2"}\n' },
+    { kind: 'write', path: 'boards/web/stories/WEB-2/story.json', text: '{"key":"WEB-2","from":"WEB-1"}\n' },
+    { kind: 'write', path: 'boards/web/stories/WEB-3/story.json', text: '{"key":"WEB-3"}\n' },
+    { kind: 'write', path: 'boards/web/stories/WEB-1/plugins/specs/new.md', text: 'new spec\n' },
+    { kind: 'move', from: 'boards/web/stories/WEB-1', to: 'boards/web/stories/WEB-2' },
+    { kind: 'move', from: 'boards/web/stories/WEB-2', to: 'boards/web/stories/WEB-1' },
+    {
+      kind: 'delete',
+      path: 'boards/web/stories/WEB-2/plugins/specs/spec.md',
+      pruneTo: 'boards/web/stories/WEB-2',
+    },
+    { kind: 'delete', path: 'plugins/epics/epics.json', pruneTo: '' },
+    { kind: 'delete', path: 'boards/ops' },
+  ],
+};
+
+async function expectedNewState(): Promise<Record<string, string>> {
+  const root = await fixtureRoot();
+  const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
+  await tx.commit();
+  return snapshotTree(root);
+}
+
+describe('Transaction.commit', () => {
+  it('applies every change and removes its journal', async () => {
+    const root = await fixtureRoot();
+    const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
+    expect(await tx.commit()).toEqual({ id: tx.id, leftover: false });
+
+    const after = await snapshotTree(root);
+    expect(after).toEqual(await expectedNewState());
+    expect(after['rowbly.config.json']).toBe('{"version":1,"assignees":[]}\n');
+    // The swap: WEB-1's old folder (and its Spec) is now WEB-2, minus the deleted Spec.
+    expect(after['boards/web/stories/WEB-2/story.json']).toBe('{"key":"WEB-2","from":"WEB-1"}\n');
+    expect(after['boards/web/stories/WEB-2/plugins']).toBeUndefined();
+    expect(after['boards/web/stories/WEB-1/plugins/specs/spec.md']).toBe('spec of WEB-2\n');
+    expect(after['boards/web/stories/WEB-1/plugins/specs/new.md']).toBe('new spec\n');
+    // The unknown Plugin's file is untouched; the deleted Board takes every Plugin's files.
+    expect(after['boards/web/stories/WEB-3/plugins/unknown/data.bin']).toBe('opaque\n');
+    expect(Object.keys(after).filter((p) => p.startsWith('boards/ops'))).toEqual([]);
+    expect(after.plugins).toBeUndefined();
+    expect(await journal(root)).toEqual([]);
+  });
+
+  it('cannot commit twice', async () => {
+    const root = await fixtureRoot();
+    const tx = await prepareTransaction(root, {
+      operation: 'test',
+      changes: [{ kind: 'write', path: 'a', text: 'a' }],
+    });
+    await tx.commit();
+    await expect(tx.commit()).rejects.toThrow(/already/);
+  });
+
+  it('ends in the complete old or the complete new state when any single step fails once', async () => {
+    const newState = await expectedNewState();
+    const probe = await fixtureRoot();
+    const counting = injectFaults();
+    await (await prepareTransaction(probe, BIG_PLAN, { now: clock.now })).commit();
+    const total = counting.calls;
+    counting.restore();
+
+    for (let n = 1; n <= total; n++) {
+      const root = await fixtureRoot();
+      const oldState = await snapshotTree(root);
+      const faults = injectFaults();
+      faults.failOnce(n);
+      const outcome = await prepareTransaction(root, BIG_PLAN, { now: clock.now })
+        .then((tx) => tx.commit())
+        .catch((err: unknown) => err);
+      faults.restore();
+      const state = await snapshotTree(root);
+      if (outcome instanceof Error) {
+        // Failed before the commit point: nothing live changed and the staging is gone.
+        expect(state, `call ${n}: ${faults.log[n - 1]}: ${outcome.message}`).toEqual(oldState);
+        expect(outcome.message).not.toMatch(/saved only in part/);
+        expect(await journal(root)).toEqual([]);
+      } else {
+        // After the commit point the step is retried, so the operation completes.
+        expect(state, `call ${n}: ${faults.log[n - 1]}`).toEqual(newState);
+      }
+    }
+  });
+
+  it('reports a partial save with the pending paths when the retry fails too', async () => {
+    const root = await fixtureRoot();
+    const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
+    const faults = injectFaults();
+    // Write the manifest (writeFile, rename, syncDir), sync .txn, then the first moveOut fails for good.
+    faults.crashAt(5);
+    const err = await tx.commit().catch((e: unknown) => e);
+    faults.restore();
+    expect(err).toMatchObject({
+      code: 'DATA_INTEGRITY',
+      message: 'assignees.remove was saved only in part; Rowbly finishes it before the next read or change',
+      details: { transaction: tx.id, operation: 'assignees.remove' },
+    });
+    expect((err as { details: { pending: string[] } }).details.pending).toContain('rowbly.config.json');
+    expect((err as Error).message).not.toMatch(/nothing/i);
   });
 });

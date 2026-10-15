@@ -31,7 +31,8 @@ export const io = {
 
   /**
    * Fsyncs a folder so that renames and creations inside it survive a crash. Best effort: skipped on
-   * Windows and wherever the platform refuses to sync a folder handle (ADR-0019 §3).
+   * Windows and wherever the platform refuses to sync a folder handle (ADR-0019 §3). A folder that
+   * is gone (pruned, or moved on) has nothing to sync.
    */
   async syncDir(path: string): Promise<void> {
     if (process.platform === 'win32') return;
@@ -47,7 +48,7 @@ export const io = {
   },
 };
 
-const UNSYNCABLE = new Set(['EISDIR', 'EPERM', 'EINVAL', 'EBADF', 'EACCES', 'ENOTSUP']);
+const UNSYNCABLE = new Set(['ENOENT', 'EISDIR', 'EPERM', 'EINVAL', 'EBADF', 'EACCES', 'ENOTSUP']);
 
 export function errorCode(err: unknown): string | undefined {
   return (err as NodeJS.ErrnoException | undefined)?.code;

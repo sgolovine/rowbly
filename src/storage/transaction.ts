@@ -4,9 +4,10 @@
 import { randomBytes } from 'node:crypto';
 import { hostname } from 'node:os';
 import { dirname, isAbsolute, join, normalize, relative, sep } from 'node:path';
-import { ConflictError, ValidationError } from '../core';
+import { ConflictError, DataIntegrityError, ValidationError } from '../core';
 import { preflightMoves } from './files';
 import { entryExists, errorCode, io } from './io';
+import { writeFileAtomic } from './system';
 
 /** The journal folder at the top of the canonical Data Root. */
 export const TRANSACTIONS_DIR = '.txn';
@@ -302,12 +303,212 @@ async function removeQuietly(path: string): Promise<void> {
   }
 }
 
+/** After every `moveOut` and `delete` is done, before the first `moveIn`; see `runSteps`. */
+const MOVED_OUT = 'moved-out';
+const MANIFEST = 'manifest.json';
+
 async function commitPrepared(
-  _canonical: string,
+  canonical: string,
   txnDir: string,
-  _manifest: TransactionManifest,
-  _options: TransactionOptions,
+  manifest: TransactionManifest,
+  options: TransactionOptions,
 ): Promise<CommitResult> {
-  await removeQuietly(txnDir);
-  throw new Error('not implemented');
+  try {
+    await writeFileAtomic(join(txnDir, MANIFEST), serialize(manifest));
+  } catch (err) {
+    // Not prepared unless the rename landed; then the commit point has passed.
+    let prepared: boolean;
+    try {
+      prepared = await entryExists(join(txnDir, MANIFEST));
+    } catch {
+      throw await partialSave(canonical, txnDir, manifest, err);
+    }
+    if (!prepared) {
+      await removeQuietly(txnDir);
+      throw err;
+    }
+  }
+  try {
+    await io.syncDir(dirname(txnDir));
+    await options.onCheckpoint?.('prepared');
+    await rollForward(canonical, txnDir, manifest, options);
+  } catch {
+    // Retry once, as recovery would, while the lock is still held.
+    try {
+      await rollForward(canonical, txnDir, manifest, {});
+    } catch (err) {
+      throw await partialSave(canonical, txnDir, manifest, err);
+    }
+  }
+  return { id: manifest.id, leftover: !(await finish(txnDir, manifest, options)) };
+}
+
+/** Runs every step that is not done yet, idempotently, then fsyncs the folders it touched. */
+async function rollForward(
+  canonical: string,
+  txnDir: string,
+  manifest: TransactionManifest,
+  options: TransactionOptions,
+): Promise<void> {
+  const ctx = stepContext(canonical, txnDir);
+  const touched = new Set<string>();
+  // Once the marker exists every `moveOut` and `delete` is done. Without it, a swap would look
+  // undone after its `moveIn`s: `from` exists again and `temp` is gone.
+  let movedOut = await entryExists(join(txnDir, MOVED_OUT));
+  for (const [n, step] of manifest.steps.entries()) {
+    if (step.kind === 'moveIn' && !movedOut) {
+      await io.writeFile(join(txnDir, MOVED_OUT), '', 'w');
+      await io.syncDir(txnDir);
+      movedOut = true;
+    }
+    if (movedOut && (step.kind === 'moveOut' || step.kind === 'delete')) continue;
+    await applyStep(ctx, step, touched);
+    await options.onCheckpoint?.(`applied:${n}`);
+  }
+  for (const dir of touched) await io.syncDir(dir);
+}
+
+interface StepContext {
+  /** A manifest path as an absolute path. */
+  at(path: string): string;
+}
+
+function stepContext(canonical: string, txnDir: string): StepContext {
+  return {
+    at: (path) => (/^(staged|moving|trash)(\/|$)/.test(path) ? join(txnDir, path) : join(canonical, path)),
+  };
+}
+
+/** One step, done only if it is not done yet (ADR-0019 §2, "Recovery policy"). */
+async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<string>): Promise<void> {
+  switch (step.kind) {
+    case 'moveOut': {
+      const from = ctx.at(step.from);
+      const temp = ctx.at(step.temp);
+      if (await entryExists(temp)) return;
+      if (!(await entryExists(from))) throw stepError(step, `${step.from} is missing`);
+      await io.rename(from, temp);
+      touched.add(dirname(from));
+      return;
+    }
+    case 'delete': {
+      const path = ctx.at(step.path);
+      const trash = ctx.at(step.trash);
+      if ((await entryExists(path)) && !(await entryExists(trash))) {
+        await io.rename(path, trash);
+        if (!step.path.startsWith('moving/')) touched.add(dirname(path));
+      }
+      if (step.pruneTo !== undefined) await prune(path, ctx.at(step.pruneTo));
+      return;
+    }
+    case 'moveIn': {
+      const temp = ctx.at(step.temp);
+      const to = ctx.at(step.to);
+      if (!(await entryExists(temp))) {
+        if (await entryExists(to)) return;
+        throw stepError(step, `${step.to} and its staged folder are both missing`);
+      }
+      await io.mkdir(dirname(to));
+      await io.rename(temp, to);
+      touched.add(dirname(to));
+      return;
+    }
+    case 'write': {
+      const staged = ctx.at(step.staged);
+      const path = ctx.at(step.path);
+      if (!(await entryExists(staged))) return;
+      await io.mkdir(dirname(path));
+      await io.rename(staged, path);
+      touched.add(dirname(path));
+      return;
+    }
+  }
+}
+
+/** Removes the empty folders above `path`, up to but not including `stopAt`. */
+async function prune(path: string, stopAt: string): Promise<void> {
+  for (let dir = dirname(path); dir !== stopAt && dir.startsWith(`${stopAt}${sep}`); dir = dirname(dir)) {
+    try {
+      await io.rmdir(dir);
+    } catch (err) {
+      const code = errorCode(err);
+      if (code === 'ENOTEMPTY' || code === 'EEXIST') return; // Not empty: keep it and everything above.
+      if (code !== 'ENOENT') throw err; // Already gone (an earlier attempt): carry on upwards.
+    }
+  }
+}
+
+function stepError(step: TransactionStep, message: string): Error {
+  return Object.assign(new Error(`cannot finish ${step.kind}: ${message}`), { step });
+}
+
+/** Marks the transaction complete and removes its folder. Returns whether the folder is gone. */
+async function finish(txnDir: string, manifest: TransactionManifest, options: TransactionOptions): Promise<boolean> {
+  try {
+    await writeFileAtomic(join(txnDir, MANIFEST), serialize({ ...manifest, phase: 'complete' }));
+    await options.onCheckpoint?.('complete');
+  } catch {
+    // Every step is done, so removing a still-prepared folder is safe too.
+  }
+  try {
+    await io.rm(txnDir);
+    await io.syncDir(dirname(txnDir));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The error for a prepared transaction that could not be finished. It never says "nothing saved". */
+async function partialSave(
+  canonical: string,
+  txnDir: string,
+  manifest: TransactionManifest,
+  cause: unknown,
+): Promise<DataIntegrityError> {
+  const pending = await pendingPaths(canonical, txnDir, manifest);
+  return new DataIntegrityError(
+    `${manifest.operation} was saved only in part; Rowbly finishes it before the next read or change`,
+    {
+      details: { transaction: manifest.id, operation: manifest.operation, pending, cause: messageOf(cause) },
+      hint: 'fix the cause (for example file permissions), then run `rowbly doctor`',
+      cause,
+    },
+  );
+}
+
+/** The Data Root paths of the steps that are not done yet. */
+async function pendingPaths(canonical: string, txnDir: string, manifest: TransactionManifest): Promise<string[]> {
+  const ctx = stepContext(canonical, txnDir);
+  const movedOut = await entryExists(join(txnDir, MOVED_OUT)).catch(() => false);
+  const pending: string[] = [];
+  for (const step of manifest.steps) {
+    const done = await stepDone(ctx, step, movedOut).catch(() => false);
+    if (done) continue;
+    if (step.kind === 'moveOut') pending.push(step.from);
+    else if (step.kind === 'moveIn') pending.push(step.to);
+    else if (!/^moving\//.test(step.path)) pending.push(step.path);
+  }
+  return pending;
+}
+
+async function stepDone(ctx: StepContext, step: TransactionStep, movedOut: boolean): Promise<boolean> {
+  switch (step.kind) {
+    case 'moveOut':
+      return movedOut || entryExists(ctx.at(step.temp));
+    case 'delete':
+      return movedOut || !(await entryExists(ctx.at(step.path))) || entryExists(ctx.at(step.trash));
+    case 'moveIn':
+      return !(await entryExists(ctx.at(step.temp)));
+    case 'write':
+      return !(await entryExists(ctx.at(step.staged)));
+  }
+}
+
+function serialize(manifest: TransactionManifest): string {
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+function messageOf(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
