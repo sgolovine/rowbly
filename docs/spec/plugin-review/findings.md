@@ -281,12 +281,12 @@ Package: [WP02C-coordinated-operations.md](packages/WP02C-coordinated-operations
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ARCH-37](../../reviews/plugin-architecture/general-architecture.md#arch-37) | WP02 | P0 | Recommended / see scope | Local State plugin writes are later clobbered by stale in-memory state | Required. | open |
-| [ARCH-41](../../reviews/plugin-architecture/general-architecture.md#arch-41) | WP02 | P0 | Selected recoverable-commit guarantee | One save phase does not mean a filesystem transaction | Required. | open |
-| [RES-01](../../reviews/plugin-architecture/resiliency.md#res-01) | WP02 | P0 | Recommended / see scope | A Change Set can commit only part of an operation | Required. | open |
-| [RES-02](../../reviews/plugin-architecture/resiliency.md#res-02) | WP02 | P0 | Recommended / see scope | Independent operations can both succeed while one is lost | Required. | open |
-| [RES-07](../../reviews/plugin-architecture/resiliency.md#res-07) | WP02 | P0 | Recommended / see scope | Orphan folders donate plugin files to newly created Stories | Required. | open |
-| [RES-19](../../reviews/plugin-architecture/resiliency.md#res-19) | WP02 | P1 | Recommended / see scope | The prefix cache disagrees with externally changed Boards | Required. | open |
+| [ARCH-37](../../reviews/plugin-architecture/general-architecture.md#arch-37) | WP02 | P0 | Recommended / see scope | Local State plugin writes are later clobbered by stale in-memory state | Required. | done — `test/plugins/localStateFreshness.test.ts` |
+| [ARCH-41](../../reviews/plugin-architecture/general-architecture.md#arch-41) | WP02 | P0 | Selected recoverable-commit guarantee | One save phase does not mean a filesystem transaction | Required. | done — journaled commit (WP02A) + recovery on every lock acquisition; `test/plugins/transactionFailure.test.ts` (in-process injection and killed CLI process) |
+| [RES-01](../../reviews/plugin-architecture/resiliency.md#res-01) | WP02 | P0 | Recommended / see scope | A Change Set can commit only part of an operation | Required. | done — `test/plugins/transactionFailure.test.ts`; journal artifacts in doctor are WP03 |
+| [RES-02](../../reviews/plugin-architecture/resiliency.md#res-02) | WP02 | P0 | Recommended / see scope | Independent operations can both succeed while one is lost | Required. | done — `test/plugins/concurrency.test.ts` (real CLI processes with a barrier); doctor planning under the lock is WP03 (`withMutation`) |
+| [RES-07](../../reviews/plugin-architecture/resiliency.md#res-07) | WP02 | P0 | Recommended / see scope | Orphan folders donate plugin files to newly created Stories | Required. | done (allocation) — `test/plugins/orphanFolders.test.ts`; doctor diagnosis is WP03 |
+| [RES-19](../../reviews/plugin-architecture/resiliency.md#res-19) | WP02 | P1 | Recommended / see scope | The prefix cache disagrees with externally changed Boards | Required. | done — `test/storage/repositoryFreshness.test.ts` |
 
 ## WP03
 
