@@ -2,13 +2,18 @@
 import { readFile, realpath, symlink, utimes, writeFile } from 'node:fs/promises';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConflictError } from '../../src/core';
 import { acquireLock, LOCK_BREAK_FILE, LOCK_FILE, pathExists, withLock } from '../../src/storage';
+import { io } from '../../src/storage/io';
 import { tempRoot } from '../helpers';
 import { fixtureScript, runScript, startScript } from './engineHelpers';
 
 const HOLDER = fixtureScript('holdLock.ts');
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 const ELEVEN_MINUTES_AGO = () => new Date(Date.now() - 11 * 60_000);
 
 async function writeLock(root: string, holder: Record<string, unknown>, name = LOCK_FILE): Promise<string> {
@@ -53,6 +58,48 @@ describe('acquireLock', () => {
     await (await second).release();
     await (await third).release();
     expect(order).toEqual(['first releases', 'second', 'third']);
+  });
+
+  it("keeps call order when an earlier caller's realpath resolves later", async () => {
+    const t = await tempRoot();
+    const canonical = await realpath(t.path);
+    const first = await acquireLock(t.path);
+    // The second caller's realpath is slow, as on a loaded machine; the third's is instant. The
+    // second must still queue first, or it waits on the third, which this test releases after it.
+    let openGate!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      openGate = resolve;
+    });
+    let calls = 0;
+    vi.spyOn(io, 'realpath').mockImplementation(async () => {
+      calls += 1;
+      if (calls === 1) await gate;
+      return canonical;
+    });
+    const order: string[] = [];
+    const second = acquireLock(t.path, { timeoutMs: 2_000 }).then((lock) => {
+      order.push('second');
+      return lock;
+    });
+    const third = acquireLock(t.path, { timeoutMs: 2_000 }).then((lock) => {
+      order.push('third');
+      return lock;
+    });
+    // Let the third caller's instant realpath settle before the second's.
+    for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve));
+    openGate();
+
+    await first.release();
+    await (await second).release();
+    await (await third).release();
+    expect(calls).toBe(2);
+    expect(order).toEqual(['second', 'third']);
+  });
+
+  it("queues later callers when an earlier caller's realpath fails", async () => {
+    const t = await tempRoot();
+    await expect(acquireLock(join(t.dir, 'missing'), { timeoutMs: 100 })).rejects.toMatchObject({ code: 'ENOENT' });
+    await (await acquireLock(t.path, { timeoutMs: 1_000 })).release();
   });
 
   it('times out with a CONFLICT naming the holder, and later waiters still get it', async () => {

@@ -58,6 +58,42 @@ export interface AcquireOptions {
 
 /** Waiters in this process, per canonical Data Root, in FIFO order. */
 const queues = new Map<string, Promise<void>>();
+/**
+ * Canonicalizing the root is asynchronous, so queue places are handed out through this chain, in
+ * call order: every realpath starts at once, but a caller takes its place only after every earlier
+ * caller has taken theirs. Otherwise a caller whose realpath resolved later would queue behind one
+ * that called after it, and could wait on a lock that its own code releases only afterwards.
+ */
+let entries: Promise<unknown> = Promise.resolve();
+
+interface QueuePlace {
+  canonical: string;
+  /** Settles when every earlier waiter for the same root has left. */
+  previous: Promise<void>;
+  /** Gives the place up, to the next waiter. */
+  leave: () => void;
+}
+
+/** Takes the next place in the in-process queue for `root`'s canonical path, in call order. */
+function enqueue(root: string): Promise<QueuePlace> {
+  const resolving = io.realpath(root);
+  const place = entries.then(async () => {
+    const canonical = await resolving;
+    const previous = queues.get(canonical) ?? Promise.resolve();
+    let leave!: () => void;
+    const mine = new Promise<void>((resolve) => {
+      leave = resolve;
+    });
+    const tail = previous.then(() => mine);
+    queues.set(canonical, tail);
+    void tail.then(() => {
+      if (queues.get(canonical) === tail) queues.delete(canonical);
+    });
+    return { canonical, previous, leave };
+  });
+  entries = place.catch(() => undefined);
+  return place;
+}
 
 /**
  * Takes the Data Root lock. The root is canonicalized with realpath, so aliases share one lock.
@@ -66,22 +102,11 @@ const queues = new Map<string, Promise<void>>();
  * throws `ConflictError` naming the holder.
  */
 export async function acquireLock(root: string, options: AcquireOptions = {}): Promise<LockHandle> {
-  const canonical = await io.realpath(root);
-  if (options.held) return reuse(options.held, canonical);
+  if (options.held) return reuse(options.held, await io.realpath(root));
 
   const deadline = Date.now() + (options.timeoutMs ?? LOCK_TIMEOUT_MS);
+  const { canonical, previous, leave } = await enqueue(root);
   const path = join(canonical, LOCK_FILE);
-  const previous = queues.get(canonical) ?? Promise.resolve();
-  let leave!: () => void;
-  const mine = new Promise<void>((resolve) => {
-    leave = resolve;
-  });
-  const tail = previous.then(() => mine);
-  queues.set(canonical, tail);
-  void tail.then(() => {
-    if (queues.get(canonical) === tail) queues.delete(canonical);
-  });
-
   const holder: LockHolder = {
     pid: process.pid,
     host: hostname(),
