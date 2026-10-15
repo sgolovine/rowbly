@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { definePlugin } from '../../src/plugin-api';
 import { specs } from '../../src/plugins/specs';
-import { deleteSpec, getSpec, listSpecs, saveSpec, specTitle } from '../../src/plugins/specs/specs';
+import { createSpec, deleteSpec, editSpec, getSpec, listSpecs, specTitle } from '../../src/plugins/specs/specs';
 import { makeBoard, makeStory } from '../helpers';
 import { pluginRoot, withPlugins } from './helpers';
 
@@ -20,26 +20,26 @@ describe('Specs operations', () => {
     const { t, services, plugin } = await setup();
     const story = await services.stories.create('web', { name: 'Login' });
     expect(specTitle('intro\n## Subheading\n# First\n# Second')).toBe('First');
-    await saveSpec(plugin, target, 'intro\n# Auth\n\nBody', true);
-    await saveSpec(plugin, { board: 'web', story: story.key }, '# Login\n\nDetails', true);
+    await createSpec(plugin, target, 'intro\n# Auth\n\nBody');
+    await createSpec(plugin, { board: 'web', story: story.key }, '# Login\n\nDetails');
     expect(await readFile(join(t.path, 'boards/web/plugins/specs/auth.md'), 'utf8')).toContain('# Auth');
     expect(await readFile(join(t.path, 'boards/web/stories/WEB-1/plugins/specs/spec.md'), 'utf8')).toContain('# Login');
     expect(await listSpecs(plugin, 'web')).toMatchObject([{ slug: 'auth', title: 'Auth' }]);
-    await expect(saveSpec(plugin, { board: 'web', story: story.key }, '# Duplicate', true)).rejects.toMatchObject({
+    await expect(createSpec(plugin, { board: 'web', story: story.key }, '# Duplicate')).rejects.toMatchObject({
       code: 'CONFLICT',
     });
-    await saveSpec(plugin, target, '# Changed', false);
+    await editSpec(plugin, target, '# Changed');
     expect((await getSpec(plugin, target)).title).toBe('Changed');
-    await expect(saveSpec(plugin, { board: 'web', slug: '../escape' }, '# Bad', true)).rejects.toMatchObject({
+    await expect(createSpec(plugin, { board: 'web', slug: '../escape' }, '# Bad')).rejects.toMatchObject({
       code: 'USAGE',
     });
-    await expect(saveSpec(plugin, target, 'no heading', false)).rejects.toMatchObject({ code: 'USAGE' });
+    await expect(editSpec(plugin, target, 'no heading')).rejects.toMatchObject({ code: 'USAGE' });
   });
 
   it('sets, adds, removes and filters same-Board links, preserving other Plugin Data', async () => {
     const { services, plugin, t } = await setup();
-    await saveSpec(plugin, target, '# Auth', true);
-    await saveSpec(plugin, { board: 'web', slug: 'api' }, '# API', true);
+    await createSpec(plugin, target, '# Auth');
+    await createSpec(plugin, { board: 'web', slug: 'api' }, '# API');
     const story = await services.stories.create('web', {
       name: 'Login',
       plugins: { specs: { specs: ['auth', 'auth'] } },
@@ -66,8 +66,8 @@ describe('Specs operations', () => {
 
   it('deletes and unlinks in one operation, warning only after success', async () => {
     const { services, plugin, warnings } = await setup();
-    await saveSpec(plugin, target, '# Auth', true);
-    await saveSpec(plugin, { board: 'web', slug: 'api' }, '# API', true);
+    await createSpec(plugin, target, '# Auth');
+    await createSpec(plugin, { board: 'web', slug: 'api' }, '# API');
     await services.stories.create('web', { name: 'A', plugins: { specs: { specs: ['auth', 'api'] } } });
     await services.stories.create('web', { name: 'B', plugins: { specs: { specs: ['auth'] } } });
     expect(await deleteSpec(plugin, target)).toBe(2);
@@ -87,7 +87,7 @@ describe('Specs operations', () => {
     });
     const { services, warnings } = await withPlugins(t, [specs, veto]);
     const plugin = services.plugins.context('specs');
-    await saveSpec(plugin, target, '# Auth', true);
+    await createSpec(plugin, target, '# Auth');
     await services.stories.create('web', { name: 'A', plugins: { specs: { specs: ['auth'] } } });
     await expect(deleteSpec(plugin, target)).rejects.toMatchObject({ code: 'CONFLICT' });
     expect((await getSpec(plugin, target)).title).toBe('Auth');
@@ -97,7 +97,7 @@ describe('Specs operations', () => {
 
   it('guards a Board with Board Specs even without Stories; force removes its files', async () => {
     const { services, plugin } = await setup();
-    await saveSpec(plugin, target, '# Auth', true);
+    await createSpec(plugin, target, '# Auth');
     await expect(services.boards.remove('web', { force: false })).rejects.toMatchObject({
       code: 'CONFLICT',
       details: { plugin: 'specs' },
@@ -111,7 +111,7 @@ describe('Specs operations', () => {
 describe('Specs doctor', () => {
   it('reports missing links and fixes all of them without removing valid links or other bags', async () => {
     const { t, services, plugin } = await setup();
-    await saveSpec(plugin, target, '# Auth', true);
+    await createSpec(plugin, target, '# Auth');
     await makeStory(t.path, {
       key: 'WEB-1',
       boardId: 'web',

@@ -1,32 +1,36 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { Form, Loading, useAsync } from '../../plugin-api/tui';
-import { getSpec, type SpecTarget, saveSpec, titledText } from './specs';
+import { Form, Loading, Text, useAsync } from '../../plugin-api/tui';
+import { createSpec, editSpec, getSpec, parseSpecFormParams, titledText } from './specs';
 
 export function SpecFormScreen({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
-  const target = params as unknown as SpecTarget;
-  const create = params.create === true;
-  const spec = useAsync(
-    async () => (create ? null : getSpec(plugin, target)),
-    [plugin, create, target.board, target.story, target.slug],
-  );
-  if (spec.loading) return <Loading />;
-  if (spec.error) return null;
+  const loaded = useAsync(async () => {
+    const form = parseSpecFormParams(params);
+    return { form, spec: form.create ? null : await getSpec(plugin, form.target) };
+  }, [plugin, params.board, params.story, params.slug, params.create]);
+  if (loaded.loading) return <Loading />;
+  if (!loaded.data) return <Text color="red">Could not load Spec.</Text>;
+  const { form, spec } = loaded.data;
+  const newBoardSpec = form.create && form.story === undefined;
   return (
     <Form
       fields={[
-        ...(create && !target.story ? [{ name: 'slug', label: 'Slug', kind: 'text' as const, required: true }] : []),
-        ...(create ? [{ name: 'title', label: 'Title', kind: 'text' as const, required: true }] : []),
+        ...(newBoardSpec ? [{ name: 'slug', label: 'Slug', kind: 'text' as const, required: true }] : []),
+        ...(form.create ? [{ name: 'title', label: 'Title', kind: 'text' as const, required: true }] : []),
         { name: 'text', label: 'Spec', kind: 'multiline' },
       ]}
-      initialValues={{ text: spec.data?.text ?? '' }}
+      initialValues={{ text: spec?.text ?? '' }}
       onSubmit={async (values) => {
-        await saveSpec(
-          plugin,
-          { ...target, slug: target.story ? undefined : create ? String(values.slug) : target.slug },
-          titledText(String(values.text), create ? String(values.title) : undefined),
-          create,
-        );
-        ui.toast(create ? 'Created Spec' : 'Edited Spec');
+        if (form.create) {
+          const target =
+            form.story === undefined
+              ? { board: form.board, slug: String(values.slug) }
+              : { board: form.board, story: form.story };
+          await createSpec(plugin, target, titledText(String(values.text), String(values.title)));
+          ui.toast('Created Spec');
+        } else {
+          await editSpec(plugin, form.target, String(values.text));
+          ui.toast('Edited Spec');
+        }
         ui.back();
       }}
     />
