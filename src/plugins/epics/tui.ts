@@ -2,6 +2,7 @@ import type { PluginTui } from '../../plugin-api';
 import { EpicDetail } from './EpicDetail';
 import { EpicForm } from './EpicForm';
 import { EpicList } from './EpicList';
+import { EpicBag } from './model';
 import { listEpics, storyEpic } from './service';
 
 export const tui: PluginTui<Record<string, unknown>> = {
@@ -9,6 +10,11 @@ export const tui: PluginTui<Record<string, unknown>> = {
   home: [{ label: 'Epics', screen: 'list' }],
   storyForm: {
     async fields({ story, plugin }) {
+      if (story && plugin.inspectBag(story, EpicBag).kind === 'invalid') {
+        return [
+          { name: 'epic', label: 'Epic', kind: 'select', unavailable: 'stored value is invalid; kept unchanged' },
+        ];
+      }
       const epics = await listEpics(plugin, 'all');
       const linked = story ? storyEpic(plugin, story) : undefined;
       const options = epics.map((epic) => epic.id);
@@ -23,7 +29,7 @@ export const tui: PluginTui<Record<string, unknown>> = {
         },
       ];
     },
-    input: (values, story) =>
+    input: ({ values, story }) =>
       typeof values.epic === 'string' && values.epic !== '' && values.epic !== 'No Epic'
         ? { epic: values.epic }
         : story

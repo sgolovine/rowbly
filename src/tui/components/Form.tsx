@@ -67,6 +67,23 @@ function parse(field: FormField, raw: Raw): { value: FormValue } | { error: stri
   return { value: raw };
 }
 
+/**
+ * `value` as the form submits it for `field` when it is left alone: `''` for empty text, `null` for an
+ * empty number, date or select, `false` for an unset boolean, `[]` for an unset multiselect, and a
+ * number for a number given as text. A value the form could not submit is returned as it is.
+ */
+export function normalizeFormValue(field: Pick<FormField, 'kind'>, value: FormValue | undefined): FormValue {
+  const optional: FormField = { name: '', label: '', kind: field.kind };
+  const result = parse(optional, toRaw(optional, value));
+  return 'error' in result ? (value ?? null) : result.value;
+}
+
+/** Whether two submitted values are the same; the order of a multiselect's choices does not count. */
+export function sameFormValue(a: FormValue, b: FormValue): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  return a === b;
+}
+
 /** Maps `ValidationError.details.issues` (zod issues) to fields by the first path segment. */
 function issuesByField(
   err: ValidationError,

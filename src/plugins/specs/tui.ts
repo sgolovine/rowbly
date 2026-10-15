@@ -4,7 +4,7 @@ import { SpecFormScreen } from './SpecFormScreen';
 import { SpecsScreen } from './SpecsScreen';
 import { SpecsSection } from './SpecsSection';
 import { SpecTab } from './SpecTab';
-import { linkedSpecs, listSpecs } from './specs';
+import { linkedSpecs, listSpecs, SpecsBag } from './specs';
 
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { list: SpecsScreen, detail: SpecDetailScreen, form: SpecFormScreen },
@@ -13,6 +13,16 @@ export const tui: PluginTui<Record<string, unknown>> = {
   boardSections: [SpecsSection],
   storyForm: {
     async fields({ boardId, story, plugin }) {
+      if (story && plugin.inspectBag(story, SpecsBag).kind === 'invalid') {
+        return [
+          {
+            name: 'specs',
+            label: 'Specs',
+            kind: 'multiselect',
+            unavailable: 'stored value is invalid; kept unchanged',
+          },
+        ];
+      }
       return [
         {
           name: 'specs',
@@ -23,7 +33,7 @@ export const tui: PluginTui<Record<string, unknown>> = {
         },
       ];
     },
-    input: (values) => ({ specs: Array.isArray(values.specs) ? values.specs : [] }),
+    input: ({ values }) => ({ specs: Array.isArray(values.specs) ? values.specs : [] }),
   },
   storyFilter: {
     async fields({ boardId, plugin }) {
