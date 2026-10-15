@@ -3,14 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { reservedNames } from '../../src/main';
 import { definePlugin } from '../../src/plugin-api';
 import type { LocalState } from '../../src/schemas';
-import { loadPlugins } from '../../src/services';
+import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import { loadTuiPlugins } from '../../src/tui/loadPlugins';
+import { App } from '../../src/tui/app';
+import { createToastStore, type ToastStore } from '../../src/tui/hooks';
+import { loadTuiPlugins, type PluginLoader, withPlugins } from '../../src/tui/loadPlugins';
 import type { RouteParams } from '../../src/tui/router';
-import { makeBoard, makeStory, type TempRoot } from '../helpers';
-import { KEYS, waitForFrame } from '../tui/helpers';
-import { fixturePlugins, notes } from './fixtures';
-import { type Entries, pluginRoot, readJsonFile, storyFile } from './helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
+import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
+import { fixturePlugins, notes, strict } from './fixtures';
+import { type Entries, entries, pluginRoot, readJsonFile, storyFile } from './helpers';
 import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
 
 async function seed(on: Entries = { notes: true }) {
@@ -152,3 +154,112 @@ describe('Plugin slots in the TUI', () => {
     expect(await createRepositories(t.root).rootConfig.get()).toMatchObject({ plugins: { broken: { enabled: true } } });
   });
 });
+
+describe('TUI activation (RES-20, RES-23)', () => {
+  const broken = definePlugin({
+    id: 'broken',
+    name: 'Broken',
+    description: '',
+    tui: async () => {
+      throw new Error('no TUI');
+    },
+  });
+  const registry = [notes, strict, broken];
+  const on = { notes: true, strict: true, broken: true } as const;
+
+  function contextOf(t: TempRoot, warnings: string[] = []): RowblyContext {
+    return {
+      root: t.root,
+      local: { version: 1, board: 'web' },
+      me: null,
+      now: fixedClock().now,
+      newId: fixedIds(),
+      warn: (message) => warnings.push(message),
+    };
+  }
+
+  const loader: PluginLoader = (root) => loadPlugins({ root, registry, reserved: reservedNames() });
+
+  /** A toast store that also keeps every warning pushed to it, which the shown list caps. */
+  function countingToasts() {
+    const shown = createToastStore();
+    const warnings: string[] = [];
+    const toasts: ToastStore = {
+      ...shown,
+      push(kind, message) {
+        if (kind === 'warning') warnings.push(message);
+        shown.push(kind, message);
+      },
+    };
+    return { toasts, warnings };
+  }
+
+  it.each([
+    { path: 'an injected host without a loader', loaded: true },
+    { path: 'the loader', loaded: false },
+  ])('$path: background reactions, failure toasts and healthy slots', async ({ loaded }) => {
+    const t = await seed(on);
+    const ctx = contextOf(t);
+    if (loaded) ctx.plugins = await loader(t.root);
+    const { toasts, warnings } = countingToasts();
+    const plugins = await withPlugins(ctx, loaded ? undefined : loader, toasts);
+    expect(ctx.backgroundReactions).toBe(true);
+    expect(plugins.map((p) => p.id)).toEqual(['notes']);
+    expect(warnings).toHaveLength(2);
+    expect(warnings[0]).toContain('Plugin "strict" failed to load');
+    expect(warnings[1]).toContain('Plugin "broken" failed to load (its TUI part failed: no TUI)');
+  });
+
+  it('an injected host without a loader runs reactions in the background and keeps Plugin slots', async () => {
+    const t = await seed(on);
+    const toasts = createToastStore();
+    const ctx = { ...contextOf(t), warn: (message: string) => toasts.push('warning', message) };
+    ctx.plugins = await loader(t.root);
+    const plugins = await withPlugins(ctx, undefined, toasts);
+    const app = renderTui(
+      <App
+        ctx={ctx}
+        services={createServices(ctx)}
+        initial={{ screen: 'story-form', params: { boardId: 'web' } }}
+        toasts={toasts}
+        plugins={plugins}
+      />,
+    );
+    await waitForFrame(app, 'Note');
+    await app.press('N', 'e', 'w', KEYS.ctrlS);
+    await waitForFrame(app, 'notes saw WEB-3 created');
+    app.unmount();
+  });
+
+  it('loading again warns once per failure, per Data Root, while the status still shows it', async () => {
+    const t = await seed(on);
+    const other = await seed(on);
+    const { toasts, warnings } = countingToasts();
+    const ctx = contextOf(t);
+    await withPlugins(ctx, loader, toasts);
+    await withPlugins({ ...ctx }, loader, toasts);
+    await withPlugins({ ...ctx }, loader, toasts);
+    expect(warnings).toHaveLength(2);
+    expect(ctx.plugins?.failures().map((f) => f.id)).toEqual(['strict', 'broken']);
+    // Another Data Root's failures warn too.
+    await withPlugins(contextOf(other), loader, toasts);
+    expect(warnings.filter((w) => w.includes('"strict"'))).toHaveLength(2);
+  });
+
+  it('a failure that went away warns again when it comes back', async () => {
+    const t = await seed({ notes: true, strict: true });
+    const { toasts: counting, warnings: pushed } = countingToasts();
+    await withPlugins(contextOf(t), loader, counting);
+    await makeRootConfig(t.path, configWith({ notes: true, strict: { level: 1 } }));
+    await withPlugins(contextOf(t), loader, counting);
+    await makeRootConfig(t.path, configWith({ notes: true, strict: true }));
+    await withPlugins(contextOf(t), loader, counting);
+    await withPlugins(contextOf(t), loader, counting);
+    expect(pushed.filter((w) => w.includes('"strict"'))).toHaveLength(2);
+  });
+});
+
+/** The root config `pluginRoot` writes, with `plugins` as given. */
+function configWith(on: Entries) {
+  return { assignees: [{ handle: 'alice', name: 'Alice' }], plugins: entries(on) };
+}
