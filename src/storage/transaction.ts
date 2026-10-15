@@ -4,6 +4,7 @@
 import { randomBytes } from 'node:crypto';
 import { hostname } from 'node:os';
 import { dirname, isAbsolute, join, normalize, relative, sep } from 'node:path';
+import { z } from 'zod';
 import { ConflictError, DataIntegrityError, ValidationError } from '../core';
 import { preflightMoves } from './files';
 import { entryExists, errorCode, io } from './io';
@@ -303,6 +304,110 @@ async function removeQuietly(path: string): Promise<void> {
   }
 }
 
+export interface RecoveryReport {
+  /** Prepared transactions that were rolled forward. */
+  finished: { id: string; operation: string }[];
+  /** Unprepared or complete transaction folders that were removed. */
+  removed: string[];
+  /** Folders that could not be removed; the next recovery tries again (doctor: `TRANSACTION_LEFTOVER`). */
+  leftovers: { id: string; error: string }[];
+}
+
+const ID_RE = /^\d{8}T\d{9}Z-[0-9a-f]{8}$/;
+
+const ManifestSchema = z.object({
+  version: z.literal(1),
+  id: z.string(),
+  operation: z.string(),
+  createdAt: z.string(),
+  pid: z.number(),
+  host: z.string(),
+  phase: z.enum(['prepared', 'complete']),
+  steps: z.array(
+    z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('moveOut'), from: z.string(), temp: z.string() }),
+      z.object({
+        kind: z.literal('delete'),
+        path: z.string(),
+        entry: z.enum(['file', 'folder']),
+        trash: z.string(),
+        pruneTo: z.string().optional(),
+      }),
+      z.object({ kind: z.literal('moveIn'), temp: z.string(), to: z.string() }),
+      z.object({ kind: z.literal('write'), path: z.string(), staged: z.string(), existed: z.boolean() }),
+    ]),
+  ),
+});
+
+/**
+ * Finishes or removes every transaction left in `.txn/`, in id order (ADR-0019 §2, "Recovery
+ * policy"): a folder without a manifest was never prepared and is removed; a prepared one is rolled
+ * forward and completed; a complete one is removed. Idempotent, and safe to interrupt and run
+ * again. The caller holds the Data Root lock. A prepared transaction that cannot be finished throws
+ * `DataIntegrityError` naming the operation and the pending paths.
+ */
+export async function recoverTransactions(root: string, options: TransactionOptions = {}): Promise<RecoveryReport> {
+  const canonical = await io.realpath(root);
+  const journal = join(canonical, TRANSACTIONS_DIR);
+  const report: RecoveryReport = { finished: [], removed: [], leftovers: [] };
+  let names: string[];
+  try {
+    names = await io.readdir(journal);
+  } catch (err) {
+    if (errorCode(err) === 'ENOENT') return report;
+    throw err;
+  }
+  for (const id of names.filter((name) => ID_RE.test(name)).sort()) {
+    const txnDir = join(journal, id);
+    const manifest = await readManifest(txnDir, id);
+    if (manifest?.phase === 'prepared') {
+      try {
+        await rollForward(canonical, txnDir, manifest, options);
+      } catch (err) {
+        throw await partialSave(canonical, txnDir, manifest, err);
+      }
+      report.finished.push({ id, operation: manifest.operation });
+      if (!(await finish(txnDir, manifest, options))) report.leftovers.push({ id, error: 'could not remove it' });
+      continue;
+    }
+    try {
+      await io.rm(txnDir);
+      report.removed.push(id);
+    } catch (err) {
+      report.leftovers.push({ id, error: messageOf(err) });
+    }
+  }
+  return report;
+}
+
+/** The manifest of a transaction folder, or `undefined` when it was never prepared. */
+async function readManifest(txnDir: string, id: string): Promise<TransactionManifest | undefined> {
+  const path = join(txnDir, MANIFEST);
+  let text: string;
+  try {
+    text = await io.readFile(path);
+  } catch (err) {
+    if (errorCode(err) === 'ENOENT') return undefined;
+    throw err;
+  }
+  let parsed: ReturnType<typeof ManifestSchema.safeParse>;
+  try {
+    parsed = ManifestSchema.safeParse(JSON.parse(text));
+  } catch (err) {
+    throw unreadable(path, id, err);
+  }
+  if (!parsed.success || parsed.data.id !== id) throw unreadable(path, id, parsed.error);
+  return parsed.data;
+}
+
+function unreadable(path: string, id: string, cause: unknown): DataIntegrityError {
+  return new DataIntegrityError(`the journal of transaction ${id} cannot be read`, {
+    details: { transaction: id, path },
+    hint: 'run `rowbly doctor`',
+    cause,
+  });
+}
+
 /** After every `moveOut` and `delete` is done, before the first `moveIn`; see `runSteps`. */
 const MOVED_OUT = 'moved-out';
 const MANIFEST = 'manifest.json';
@@ -499,7 +604,7 @@ async function stepDone(ctx: StepContext, step: TransactionStep, movedOut: boole
     case 'delete':
       return movedOut || !(await entryExists(ctx.at(step.path))) || entryExists(ctx.at(step.trash));
     case 'moveIn':
-      return !(await entryExists(ctx.at(step.temp)));
+      return !(await entryExists(ctx.at(step.temp))) && entryExists(ctx.at(step.to));
     case 'write':
       return !(await entryExists(ctx.at(step.staged)));
   }

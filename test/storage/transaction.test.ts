@@ -3,9 +3,9 @@ import { mkdir, readdir, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConflictError, ValidationError } from '../../src/core';
-import { prepareTransaction, type TransactionPlan } from '../../src/storage';
+import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
 import { FIXED_NOW, fixedClock, tempRoot } from '../helpers';
-import { injectFaults, snapshotTree } from './engineHelpers';
+import { fixtureScript, injectFaults, runScript, snapshotTree } from './engineHelpers';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -267,6 +267,7 @@ describe('Transaction.commit', () => {
   it('applies every change and removes its journal', async () => {
     const root = await fixtureRoot();
     const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
+    expect(tx.manifest.steps).toHaveLength(12);
     expect(await tx.commit()).toEqual({ id: tx.id, leftover: false });
 
     const after = await snapshotTree(root);
@@ -339,5 +340,211 @@ describe('Transaction.commit', () => {
     });
     expect((err as { details: { pending: string[] } }).details.pending).toContain('rowbly.config.json');
     expect((err as Error).message).not.toMatch(/nothing/i);
+  });
+});
+
+/** Runs BIG_PLAN with every mutating call from the `n`-th on failing, like a process that died there. */
+async function crashDuringCommit(root: string, n: number): Promise<{ outcome: unknown; prepared: boolean }> {
+  const faults = injectFaults();
+  faults.crashAt(n);
+  let passed = false;
+  const outcome = await prepareTransaction(root, BIG_PLAN, {
+    now: clock.now,
+    onCheckpoint: (point) => {
+      if (point === 'prepared') passed = true;
+    },
+  })
+    .then((tx) => tx.commit())
+    .catch((err: unknown) => err);
+  faults.restore();
+  // Prepared means the manifest landed (the commit point), even if the crash came before the checkpoint.
+  const [id] = await journal(root);
+  const prepared = passed || (id !== undefined && (await readdir(join(root, '.txn', id))).includes('manifest.json'));
+  return { outcome, prepared };
+}
+
+/** How many mutating calls a clean run of `fn` makes. */
+async function countCalls(fn: () => Promise<unknown>): Promise<number> {
+  const counting = injectFaults();
+  await fn();
+  counting.restore();
+  return counting.calls;
+}
+
+describe('recoverTransactions', () => {
+  it('recovers the complete old or new state after a crash at any step, and again is a no-op', async () => {
+    const newState = await expectedNewState();
+    const probe = await fixtureRoot();
+    const total = await countCalls(async () =>
+      (await prepareTransaction(probe, BIG_PLAN, { now: clock.now })).commit(),
+    );
+
+    for (let n = 1; n <= total; n++) {
+      const root = await fixtureRoot();
+      const oldState = await snapshotTree(root);
+      const { outcome, prepared } = await crashDuringCommit(root, n);
+      // Before the commit point the error is the original one; after it, a partial save, unless
+      // only the cleanup failed, which still succeeds and leaves the folder to recovery.
+      if (!prepared) expect(outcome, `call ${n}`).not.toMatchObject({ code: 'DATA_INTEGRITY' });
+      else if (outcome instanceof Error) expect(outcome, `call ${n}`).toMatchObject({ code: 'DATA_INTEGRITY' });
+      else expect(outcome, `call ${n}`).toMatchObject({ leftover: true });
+
+      await recoverTransactions(root);
+      const recovered = await snapshotTree(root);
+      expect(recovered, `call ${n}`).toEqual(prepared ? newState : oldState);
+      expect(await journal(root)).toEqual([]);
+
+      expect(await recoverTransactions(root)).toEqual({ finished: [], removed: [], leftovers: [] });
+      expect(await snapshotTree(root)).toEqual(recovered);
+    }
+  });
+
+  it('survives a second crash during recovery', { timeout: 120_000 }, async () => {
+    const newState = await expectedNewState();
+    const probe = await fixtureRoot();
+    const total = await countCalls(async () =>
+      (await prepareTransaction(probe, BIG_PLAN, { now: clock.now })).commit(),
+    );
+
+    for (let n = 1; n <= total; n++) {
+      const sample = await fixtureRoot();
+      const oldState = await snapshotTree(sample);
+      const { prepared } = await crashDuringCommit(sample, n);
+      const recoveryCalls = await countCalls(() => recoverTransactions(sample));
+
+      for (let m = 1; m <= recoveryCalls; m++) {
+        const root = await fixtureRoot();
+        await crashDuringCommit(root, n);
+        const faults = injectFaults();
+        faults.crashAt(m);
+        await recoverTransactions(root).catch(() => undefined);
+        faults.restore();
+
+        await recoverTransactions(root);
+        expect(await snapshotTree(root), `commit call ${n}, recovery call ${m}`).toEqual(
+          prepared ? newState : oldState,
+        );
+        expect(await journal(root)).toEqual([]);
+      }
+    }
+  });
+
+  it('removes unprepared and complete folders and ignores names that are not transactions', async () => {
+    const root = await fixtureRoot();
+    const before = await snapshotTree(root);
+    await mkdir(join(root, '.txn/20261012T172107000Z-00000001/staged'), { recursive: true });
+    await mkdir(join(root, '.txn/20261012T172107000Z-00000002'), { recursive: true });
+    await writeFile(
+      join(root, '.txn/20261012T172107000Z-00000002/manifest.json'),
+      JSON.stringify({
+        version: 1,
+        id: '20261012T172107000Z-00000002',
+        operation: 'test',
+        createdAt: FIXED_NOW,
+        pid: 1,
+        host: 'h',
+        phase: 'complete',
+        steps: [],
+      }),
+    );
+    await writeFile(join(root, '.txn/notes.txt'), 'not a transaction\n');
+
+    expect(await recoverTransactions(root)).toEqual({
+      finished: [],
+      removed: ['20261012T172107000Z-00000001', '20261012T172107000Z-00000002'],
+      leftovers: [],
+    });
+    expect(await journal(root)).toEqual(['notes.txt']);
+    expect(await snapshotTree(root)).toEqual(before);
+  });
+
+  it('reports a transaction it cannot finish with its operation and pending paths', async () => {
+    const root = await fixtureRoot();
+    const id = '20261012T172107000Z-0000000a';
+    await mkdir(join(root, '.txn', id, 'moving'), { recursive: true });
+    await writeFile(
+      join(root, '.txn', id, 'manifest.json'),
+      JSON.stringify({
+        version: 1,
+        id,
+        operation: 'doctor.fix',
+        createdAt: FIXED_NOW,
+        pid: 1,
+        host: 'h',
+        phase: 'prepared',
+        steps: [{ kind: 'moveIn', temp: 'moving/0', to: 'boards/web/stories/WEB-9' }],
+      }),
+    );
+    const err = await recoverTransactions(root).catch((e: unknown) => e);
+    expect(err).toMatchObject({
+      code: 'DATA_INTEGRITY',
+      message: 'doctor.fix was saved only in part; Rowbly finishes it before the next read or change',
+      details: { transaction: id, pending: ['boards/web/stories/WEB-9'] },
+    });
+    // Nothing was removed: the journal stays for the next attempt.
+    expect(await journal(root)).toEqual([id]);
+  });
+
+  it('refuses to guess when a manifest cannot be read', async () => {
+    const root = await fixtureRoot();
+    const id = '20261012T172107000Z-0000000b';
+    await mkdir(join(root, '.txn', id), { recursive: true });
+    await writeFile(join(root, '.txn', id, 'manifest.json'), '{"version": 1, "phase": "prep');
+    await expect(recoverTransactions(root)).rejects.toMatchObject({
+      code: 'DATA_INTEGRITY',
+      details: { transaction: id },
+    });
+    expect(await journal(root)).toEqual([id]);
+  });
+
+  it('does nothing when there is no journal', async () => {
+    const root = await fixtureRoot();
+    expect(await recoverTransactions(root)).toEqual({ finished: [], removed: [], leftovers: [] });
+  });
+});
+
+describe('a killed process', () => {
+  async function planFile(root: string): Promise<string> {
+    const path = join(root, '..', 'plan.json');
+    await writeFile(path, JSON.stringify(BIG_PLAN));
+    return path;
+  }
+
+  const lastStep = 'applied:11'; // BIG_PLAN has 12 steps.
+  it.each([
+    ['staged', 'old'],
+    ['prepared', 'new'],
+    ['applied:0', 'new'],
+    ['applied:4', 'new'],
+    ['applied:9', 'new'],
+    [lastStep, 'new'],
+    ['complete', 'new'],
+  ] as const)(
+    'killed at %s recovers to the %s state when the root is reopened',
+    { timeout: 60_000 },
+    async (point, expected) => {
+      const newState = await expectedNewState();
+      const root = await fixtureRoot();
+      const oldState = await snapshotTree(root);
+      const killed = await runScript(fixtureScript('killAt.ts'), ['commit', root, await planFile(root), point]);
+      expect(killed.signal, killed.stderr).toBe('SIGKILL');
+      expect(await journal(root)).toHaveLength(1);
+
+      await recoverTransactions(root);
+      expect(await snapshotTree(root)).toEqual(expected === 'new' ? newState : oldState);
+      expect(await journal(root)).toEqual([]);
+    },
+  );
+
+  it('recovers after the recovery process is killed too', { timeout: 60_000 }, async () => {
+    const newState = await expectedNewState();
+    const root = await fixtureRoot();
+    const plan = await planFile(root);
+    expect((await runScript(fixtureScript('killAt.ts'), ['commit', root, plan, 'applied:2'])).signal).toBe('SIGKILL');
+    expect((await runScript(fixtureScript('killAt.ts'), ['recover', root, plan, 'applied:7'])).signal).toBe('SIGKILL');
+
+    await recoverTransactions(root);
+    expect(await snapshotTree(root)).toEqual(newState);
+    expect(await journal(root)).toEqual([]);
   });
 });

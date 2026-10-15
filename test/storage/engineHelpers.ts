@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { vi } from 'vitest';
 import { io } from '../../src/storage/io';
 
-const TSX = fileURLToPath(new URL('../../node_modules/.bin/tsx', import.meta.url));
+const REPO = fileURLToPath(new URL('../..', import.meta.url));
 
 /** The path of a script in `test/storage/fixtures/`. */
 export function fixtureScript(name: string): string {
@@ -22,13 +22,15 @@ export interface ScriptResult {
 }
 
 /**
- * Runs a TypeScript script through tsx. With `shell`, the command runs as `bash -c "<shell> exec
- * tsx …"` so a prefix such as `ulimit -f 2;` applies to it.
+ * Runs a TypeScript script in one Node process with tsx's loader, so a signal that kills the script
+ * shows as the child's signal. With `shell`, it runs as `bash -c "<shell> exec node …"` so a prefix
+ * such as `ulimit -f 2;` applies to it.
  */
 export function runScript(script: string, args: string[], options: { shell?: string } = {}): Promise<ScriptResult> {
+  const argv = ['--import', 'tsx', script, ...args];
   const child = options.shell
-    ? spawn('bash', ['-c', `${options.shell} exec "$0" "$@"`, TSX, script, ...args])
-    : spawn(TSX, [script, ...args]);
+    ? spawn('bash', ['-c', `${options.shell} exec "$0" "$@"`, process.execPath, ...argv], { cwd: REPO })
+    : spawn(process.execPath, argv, { cwd: REPO });
   let stdout = '';
   let stderr = '';
   child.stdout.on('data', (chunk) => {
