@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { NotFoundError, ValidationError } from '../../src/core';
 import { reservedNames } from '../../src/main';
-import { definePlugin } from '../../src/plugin-api';
-import { failureWarning, loadPlugins, onOff } from '../../src/services';
+import { definePlugin, z } from '../../src/plugin-api';
+import { failureWarning, loadPlugins, onOff, validatePluginDefinition } from '../../src/services';
 import { makeBoard } from '../helpers';
 import { boom, clash, notes, rival, stamp, storiesPlugin, strict } from './fixtures';
 import { pluginRoot, readJsonFile, withPlugins } from './helpers';
@@ -140,6 +140,92 @@ describe('loading Plugins (ADR-0010)', () => {
     });
   });
 
+  it('with either polarity of a global option (RES-25)', async () => {
+    const global = (id: string, flags: string) =>
+      definePlugin({
+        id,
+        name: id,
+        description: '',
+        options: { 'stories list': { options: [{ flags, description: '' }], input: () => undefined } },
+      });
+    const t = await pluginRoot({ one: true, two: true, three: true });
+    const { host } = await withPlugins(t, [
+      global('one', '--prompt <x>'),
+      global('two', '--no-prompt'),
+      global('three', '--no-json'),
+    ]);
+    expect(host.failures().map((f) => f.reason)).toEqual([
+      '--prompt is already an option of "rowbly stories list"',
+      '--no-prompt is already an option of "rowbly stories list"',
+      '--no-json is already an option of "rowbly stories list"',
+    ]);
+  });
+
+  describe('operation names (ARCH-17, DX-36)', () => {
+    const named = (id: string, def: Record<string, unknown>) =>
+      definePlugin({ id, name: id, description: '', ...def } as never);
+    const noop = { guard: () => undefined };
+
+    it('a replacement must name a core operation', async () => {
+      const t = await pluginRoot({ edit: true, local: true });
+      const { host } = await withPlugins(t, [
+        named('edit', { replaces: { 'stories.edit': async () => ({}) } }),
+        named('local', { replaces: { 'notes.add': async () => ({}) } }),
+      ]);
+      expect(host.failures().map((f) => f.reason)).toEqual([
+        'it replaces "stories.edit", which is not a core operation; did you mean "stories.update"?',
+        'it replaces "notes.add", which is not a core operation; only core operations can be replaced',
+      ]);
+    });
+
+    it('a hook in a core namespace must name a core operation; other Plugins’ operations are untyped', async () => {
+      const t = await pluginRoot({ misspelled: true, removed: true, bare: true, custom: true });
+      const { host } = await withPlugins(t, [
+        named('misspelled', { hooks: { 'stories.edit': noop } }),
+        named('removed', { hooks: { 'boards.delete': noop } }),
+        named('bare', { hooks: { create: noop } }),
+        named('custom', { hooks: { 'notes.add': noop, 'stories.update': noop } }),
+      ]);
+      expect(host.failures().map((f) => f.reason)).toEqual([
+        'it hooks "stories.edit", which is not a core operation; did you mean "stories.update"?',
+        'it hooks "boards.delete", which is not a core operation; did you mean "boards.remove"?',
+        'it hooks "create", which is not an operation name (`<namespace>.<name>`)',
+      ]);
+      expect(host.active().map((p) => p.definition.id)).toEqual(['custom']);
+    });
+  });
+
+  it('validatePluginDefinition reports every problem with its path, before anything loads (DX-32)', () => {
+    const plugin = definePlugin({
+      id: 'labels',
+      name: 'Labels',
+      description: '',
+      options: {
+        'stories create': {
+          options: [
+            { flags: '--label <l>', description: '' },
+            { flags: '--x', description: '' },
+            { flags: '--x', description: '' },
+          ],
+          input: () => undefined,
+        },
+      },
+      hooks: { 'stories.delete': {} },
+    });
+    expect(validatePluginDefinition(plugin, reserved)).toEqual([
+      {
+        path: 'options["stories create"].options[0]',
+        message: '--label is already an option of "rowbly stories create"',
+      },
+      { path: 'options["stories create"].options[2]', message: '--x is declared twice on "rowbly stories create"' },
+      {
+        path: 'hooks["stories.delete"]',
+        message: 'it hooks "stories.delete", which is not a core operation; did you mean "stories.remove"?',
+      },
+    ]);
+    expect(validatePluginDefinition(notes, reserved)).toEqual([]);
+  });
+
   it('markFailed skips a loaded Plugin for the rest of the run', async () => {
     const t = await pluginRoot({ notes: true });
     const { host, services } = await withPlugins(t, [notes]);
@@ -147,6 +233,42 @@ describe('loading Plugins (ADR-0010)', () => {
     expect(host.active()).toEqual([]);
     expect(host.failures()[0]).toMatchObject({ id: 'notes', reason: 'its TUI part failed: no' });
     expect(() => services.plugins.context('notes')).toThrow(NotFoundError);
+  });
+
+  it('markFailed of an unknown or already failed Plugin changes no other Plugin (CQ-28)', async () => {
+    const t = await pluginRoot({ notes: true, stamp: true });
+    const { host } = await withPlugins(t, [notes, stamp]);
+    host.markFailed('stamp', 'first');
+    host.markFailed('stamp', 'again');
+    host.markFailed('ghost', 'unknown');
+    expect(host.active().map((p) => p.definition.id)).toEqual(['notes']);
+    expect(host.failures().map((f) => [f.id, f.reason])).toEqual([['stamp', 'first']]);
+  });
+
+  it('returns snapshots: changing them does not change the host (CQ-29)', async () => {
+    const t = await pluginRoot({ notes: true, boom: true });
+    const { host } = await withPlugins(t, [notes, boom]);
+    (host.active() as unknown[]).length = 0;
+    (host.failures()[0] as { reason?: string }).reason = 'changed';
+    host.failures().length = 0;
+    (host.status()[0] as { loaded: boolean }).loaded = false;
+    expect(host.active().map((p) => p.definition.id)).toEqual(['notes']);
+    expect(host.failures().map((f) => [f.id, f.reason])).toEqual([['boom', 'boom at start']]);
+    expect(host.status()[0]).toMatchObject({ id: 'notes', loaded: true });
+  });
+
+  it('a reload never returns the settings of an earlier activation', async () => {
+    const t = await pluginRoot({ notes: { marker: 'old' } });
+    const before = (await withPlugins(t, [notes])).services.plugins.context('notes');
+    const config = await readJsonFile(t, 'rowbly.config.json');
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(
+      `${t.path}/rowbly.config.json`,
+      JSON.stringify({ ...config, plugins: { notes: { enabled: true, marker: 'new' } } }),
+    );
+    const after = (await withPlugins(t, [notes])).services.plugins.context('notes');
+    expect(before.settings).toMatchObject({ marker: 'old' });
+    expect(after.settings).toMatchObject({ marker: 'new' });
   });
 });
 
@@ -170,5 +292,22 @@ describe('plugins service', () => {
     await services.plugins.disable('ghost');
     expect((await readJsonFile(t, 'rowbly.config.json')).plugins).toMatchObject({ ghost: { enabled: false } });
     await expect(services.plugins.disable('nope')).rejects.toThrow(NotFoundError);
+    // A Plugin this version has can be turned off without an entry (CQ-46).
+    await services.plugins.disable('strict');
+    expect((await readJsonFile(t, 'rowbly.config.json')).plugins).toMatchObject({ strict: { enabled: false } });
+  });
+
+  it('a settings schema that throws a non-Error still gives a useful message (CQ-49)', async () => {
+    const throwing = definePlugin({
+      id: 'throwing',
+      name: 'Throwing',
+      description: '',
+      settings: z.object({}).transform(() => {
+        throw 'settings exploded';
+      }),
+    });
+    const t = await pluginRoot({}, { plugins: { throwing: { enabled: false } } });
+    const { services } = await withPlugins(t, [throwing]);
+    await expect(services.plugins.enable('throwing')).rejects.toThrow('Plugin "throwing" has settings exploded');
   });
 });
