@@ -2,8 +2,8 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { makeStory, runCli } from '../helpers';
-import { readCommentThread } from './commentsHelpers';
-import { pluginRoot } from './helpers';
+import { readCommentThread, WHITESPACE_BODIES } from './commentsHelpers';
+import { pluginRoot, readJsonFile, storyFile } from './helpers';
 
 async function setup(on = true) {
   const t = await pluginRoot(on ? { comments: true } : {});
@@ -79,5 +79,37 @@ describe('rowbly comments', () => {
     expect((await cli(['comments', 'add', 'WEB-1', '--body', ''])).exitCode).toBe(2);
     expect((await cli(['comments', 'add', 'WEB-1'])).stderr).toContain('missing required --body');
     expect((await cli(['comments', 'list', 'WEB-1.9'])).exitCode).toBe(3);
+  });
+
+  // UI-02: the TUI must store the same bodies (commentsTui.test.tsx).
+  it('stores bodies on a Story and a Task exactly as given, and refuses a whitespace-only one', async () => {
+    const { cli, thread } = await setup();
+    for (const target of ['WEB-1', 'WEB-1.1']) {
+      for (const body of WHITESPACE_BODIES)
+        expect((await cli(['comments', 'add', target, '--body', body])).exitCode).toBe(0);
+      expect((await cli(['comments', 'add', target, '--body', ' \n  '])).exitCode).toBe(2);
+    }
+    expect((await thread()).map((c) => c.body)).toEqual(WHITESPACE_BODIES);
+    expect((await thread(0)).map((c) => c.body)).toEqual(WHITESPACE_BODIES);
+  });
+
+  it('refuses to list or change an invalid Thread, naming the Plugin and doctor', async () => {
+    const { t, cli } = await setup();
+    await cli(['comments', 'add', 'WEB-1', '--body', 'x']);
+    const story = await readJsonFile(t, storyFile('WEB-1'));
+    const invalid = { ...story, plugins: { comments: { comments: [{ id: 'old', body: 1 }], future: 'keep' } } };
+    await writeFile(join(t.path, storyFile('WEB-1')), JSON.stringify(invalid));
+    const listed = await cli(['comments', 'list', 'WEB-1', '--json']);
+    expect(listed.exitCode).toBe(6);
+    expect(JSON.parse(listed.stderr).error).toMatchObject({
+      code: 'DATA_INTEGRITY',
+      details: { plugin: 'comments', path: 'plugins.comments' },
+    });
+    const added = await cli(['comments', 'add', 'WEB-1', '--body', 'new']);
+    expect(added.exitCode).toBe(6);
+    expect(added.stderr).toContain('Plugin "comments" data on Story WEB-1 is not valid');
+    expect(added.stderr).toContain('hint: run `rowbly doctor`');
+    expect(await readJsonFile(t, storyFile('WEB-1'))).toEqual(invalid);
+    expect((await cli(['stories', 'show', 'WEB-1'])).stdout).toMatch(/Comments:\s+unavailable \(invalid\)/);
   });
 });

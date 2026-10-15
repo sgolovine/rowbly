@@ -34,7 +34,7 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
     (target: string, id: string, opts: BodyOptions, cmd) =>
       cli.run(cmd, async (env) => {
         const current = await getComment(env.plugin, target, id);
-        const body = await readBody(env, opts, opts.edit ? current.body : undefined);
+        const body = await readBody(env, opts, current.body);
         env.print(await editComment(env.plugin, target, id, body), (c) => `Updated Comment ${c.id}`);
       }),
   );
