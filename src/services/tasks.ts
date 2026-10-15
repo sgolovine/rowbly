@@ -1,8 +1,9 @@
 import { formatTaskId, NotFoundError, parseTaskId, toTimestamp, ValidationError } from '../core';
-import { type Stage, type Story, type Task, TaskSchema } from '../schemas';
+import { type Story, type Task, TaskSchema } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import type { CoreChangeSet } from './plugins/changeSet';
 import { latestTask, type OperationRunner } from './plugins/runtime';
+import { checkStage } from './stageValidation';
 import type { RowblyContext, TasksService } from './types';
 
 export function createTasksService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): TasksService {
@@ -64,6 +65,11 @@ export function createTasksService(ctx: RowblyContext, repos: Repositories, ops:
           const next = { ...task };
           if (patch.name !== undefined) next.name = patch.name;
           if (patch.description !== undefined) next.description = patch.description;
+          // A new Stage is the same change `move` makes, in this one operation (ARCH-43).
+          if (patch.stage != null && patch.stage !== task.stage) {
+            checkStage(await stagesOf(story), patch.stage);
+            next.stage = patch.stage;
+          }
           return save(changes, story, next);
         },
         latestTask,
@@ -100,15 +106,6 @@ export async function findTask(repos: Repositories, taskId: string): Promise<{ s
   const task = story.tasks.find((t) => t.id === id);
   if (!task) throw new NotFoundError(`Task ${id} not found`, { hint: `run \`rowbly tasks list ${story.key}\`` });
   return { story, task };
-}
-
-function checkStage(stages: readonly Stage[], key: string): void {
-  if (stages.some((s) => s.key === key)) return;
-  const valid = stages.map((s) => s.key);
-  throw new ValidationError(`unknown Stage "${key}"`, {
-    details: { issues: [{ path: ['stage'], message: `unknown Stage "${key}"` }], validStages: valid },
-    hint: `valid Stages: ${valid.join(', ')}`,
-  });
 }
 
 function parseTask(input: Task): Task {

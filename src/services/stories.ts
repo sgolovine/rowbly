@@ -26,6 +26,7 @@ import { coordinated } from './coordination';
 import type { CoreChangeSet } from './plugins/changeSet';
 import { invokePluginSync } from './plugins/invoke';
 import { latestStory, type OperationRunner } from './plugins/runtime';
+import { checkStage } from './stageValidation';
 import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
 export function createStoriesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StoriesService {
@@ -191,6 +192,11 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
           if (patch.customFields !== undefined || patch.unsetFields !== undefined) {
             next.customFields = await updateFields(story, patch);
           }
+          // A new Stage is the same change `move` makes, in this one operation (ARCH-43); the same Stage keeps the Rank.
+          if (patch.stage != null && patch.stage !== story.stage) {
+            next.stage = patch.stage;
+            next.rank = await destinationRank(story, patch.stage);
+          }
           next.updatedAt = toTimestamp(ctx.now());
           return changes.putStory(parseStory(next));
         },
@@ -203,10 +209,7 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
         { key, stage, ...opts, top: opts.top ?? false },
         async (changes) => {
           const story = await repos.stories.findByKey(key);
-          checkStage((await effective(story)).stages, stage);
-          const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
-          const rank = opts.top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
-          return save(changes, { ...story, stage, rank });
+          return save(changes, { ...story, stage, rank: await destinationRank(story, stage, opts.top) });
         },
         latestStory,
       ),
@@ -254,6 +257,13 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
       return [...new Set(labels)].sort();
     },
   };
+
+  /** Checks `stage` and gives the Story a Rank at the bottom (or `top`) of it, among the Board's other Stories. */
+  async function destinationRank(story: Story, stage: Slug, top = false): Promise<string> {
+    checkStage((await effective(story)).stages, stage);
+    const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
+    return top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
+  }
 
   function save(changes: CoreChangeSet, story: Story): Promise<Story> {
     return changes.putStory({ ...story, updatedAt: toTimestamp(ctx.now()) });
@@ -352,15 +362,6 @@ function orderOf(priority: Priority | null): number {
 function stageIndex(stages: readonly Stage[], key: string): number {
   const index = stages.findIndex((s) => s.key === key);
   return index === -1 ? stages.length : index;
-}
-
-function checkStage(stages: readonly Stage[], key: string): void {
-  if (stages.some((s) => s.key === key)) return;
-  const valid = stages.map((s) => s.key);
-  throw new ValidationError(`unknown Stage "${key}"`, {
-    details: { issues: [{ path: ['stage'], message: `unknown Stage "${key}"` }], validStages: valid },
-    hint: `valid Stages: ${valid.join(', ')}`,
-  });
 }
 
 /** `--assignee`/`--label` replace the list, so they cannot be combined with the add/remove flags. */
