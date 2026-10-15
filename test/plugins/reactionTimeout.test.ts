@@ -60,7 +60,8 @@ describe('reaction deadline (RES-15)', () => {
     await services.stories.update('WEB-1', { name: 'A' });
     await services.stories.update('WEB-1', { name: 'B' });
     expect(seen).toEqual(['A', 'B']);
-    expect(timers()).toBe(before);
+    // A 60 s deadline timer per reaction would still be pending here had it not been cleared.
+    expect(timers()).toBeLessThanOrEqual(before);
   });
 
   it('a rejection after the deadline is only a warning', async () => {

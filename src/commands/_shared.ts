@@ -4,7 +4,7 @@ import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { printWarnings } from '../output';
 import type { PluginHost, PluginInput, RowblyContext, Services } from '../services';
-import { createContext, createServices } from '../services';
+import { createContext, createServices, invokePluginSync } from '../services';
 import { editTextInEditor, readTextFile } from '../storage';
 
 /** Global flags (contracts §5). */
@@ -82,7 +82,7 @@ export function pluginInput(cmd: Command): PluginInput | undefined {
   const input: PluginInput = {};
   for (const { id, attributes, input: toInput } of pluginsOf(cmd)?.options.get(commandPath(cmd)) ?? []) {
     const values = Object.fromEntries(attributes.map((name) => [name, given(name)]));
-    const value = toInput(values);
+    const value = invokePluginSync({ plugin: id, stage: 'option-input' }, () => toInput(values));
     if (value !== undefined) input[id] = value;
   }
   return Object.keys(input).length > 0 ? input : undefined;

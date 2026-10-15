@@ -2,7 +2,7 @@ import { NotFoundError, UsageError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
 import type { CoreChangeSet } from './plugins/changeSet';
-import type { OperationRunner } from './plugins/runtime';
+import { latestLocalState, type OperationRunner } from './plugins/runtime';
 import type { ContextService, RowblyContext } from './types';
 
 export function createContextService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): ContextService {
@@ -33,8 +33,11 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
 
     async use(board, opts = {}) {
       const boardId = (await repos.boards.get(board)).id;
-      ctx.local = await ops.run('context.use', { board, ...opts }, (changes) =>
-        save(changes, (state) => ({ ...state, board: boardId })),
+      ctx.local = await ops.run(
+        'context.use',
+        { board, ...opts },
+        (changes) => save(changes, (state) => ({ ...state, board: boardId })),
+        latestLocalState,
       );
       return ctx.local;
     },
@@ -42,9 +45,18 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
     async clearUse(opts = {}) {
       // The new Local State refreshes the context; the operation's result is `undefined` (ARCH-14).
       let next: LocalState | undefined;
-      await ops.run('context.clearUse', { ...opts }, async (changes) => {
-        next = await save(changes, ({ board: _b, ...rest }) => rest);
-      });
+      await ops.run(
+        'context.clearUse',
+        { ...opts },
+        async (changes) => {
+          next = await save(changes, ({ board: _b, ...rest }) => rest);
+        },
+        // The saved Local State, as the transforms left it (ARCH-42).
+        (changes, result) => {
+          if (next) next = latestLocalState(changes, next);
+          return result;
+        },
+      );
       if (next) ctx.local = next;
     },
 
@@ -57,8 +69,11 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
           });
         }
       }
-      ctx.local = await ops.run('context.setMe', { handle, ...opts }, (changes) =>
-        save(changes, ({ me: _me, ...rest }) => (handle === null ? rest : { ...rest, me: handle })),
+      ctx.local = await ops.run(
+        'context.setMe',
+        { handle, ...opts },
+        (changes) => save(changes, ({ me: _me, ...rest }) => (handle === null ? rest : { ...rest, me: handle })),
+        latestLocalState,
       );
       ctx.me = handle;
       return ctx.local;

@@ -78,7 +78,7 @@ describe('rowbly epics', () => {
     ).toEqual(['WEB-2']);
     expect((await cli(t, ['stories', 'edit', 'WEB-1', '--no-epic'])).exitCode).toBe(0);
     expect((await cli(t, ['stories', 'edit', 'WEB-2', '--epic', 'auth'])).exitCode).toBe(0);
-    expect((await cli(t, ['stories', 'create', '--name', 'Invalid', '--epic', 'missing'])).exitCode).toBe(4);
+    expect((await cli(t, ['stories', 'create', '--name', 'Invalid', '--epic', 'missing'])).exitCode).toBe(3);
     await makeStory(t.path, { key: 'WEB-3', boardId: 'web', rank: 'a2', plugins: { epics: { epic: 'missing' } } });
     const checked = json((await cli(t, ['doctor', '--json'])).stdout);
     expect(checked.findings).toContainEqual(

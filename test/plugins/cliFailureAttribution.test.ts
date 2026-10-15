@@ -3,8 +3,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFoundError, UsageError, ValidationError } from '../../src/core';
 import { main } from '../../src/main';
+import { type AnyPluginDefinition, definePlugin } from '../../src/plugin-api';
 import { builtInPlugins } from '../../src/plugins';
-import { definePlugin } from '../../src/plugin-api';
 import { makeStory } from '../helpers';
 import { pluginRoot, readJsonFile, storyFile } from './helpers';
 
@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 /** The `--json` error the last command printed. */
-function jsonError(): { code: string; message: string; details: Record<string, unknown>; hint?: string } {
+function jsonError(): { code: string; message: string; details: Record<string, unknown> } {
   const line = stderr.join('').trim().split('\n').at(-1) ?? '';
   return JSON.parse(line).error;
 }
@@ -47,7 +47,10 @@ const thrower = definePlugin({
     );
     group.command('invalid').action((_o, c) =>
       cli.run(c, async () => {
-        throw new ValidationError('bad value', { details: { issues: [{ path: ['x'], message: 'no' }] }, hint: 'fix x' });
+        throw new ValidationError('bad value', {
+          details: { issues: [{ path: ['x'], message: 'no' }] },
+          hint: 'fix x',
+        });
       }),
     );
     group.command('string').action((_o, c) =>
@@ -90,7 +93,7 @@ const thrower = definePlugin({
   },
 });
 
-async function run(args: string[], root: string, registry = [thrower]) {
+async function run(args: string[], root: string, registry: readonly AnyPluginDefinition[] = [thrower]) {
   return main(['--root', root, '--json', ...args], registry);
 }
 
@@ -102,7 +105,6 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'INTERNAL',
       message: 'Plugin "thrower" failed in its command: command bug',
       details: { plugin: 'thrower', stage: 'command' },
-      hint: 'turn it off with `rowbly plugins disable thrower`',
     });
   });
 
@@ -113,7 +115,6 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'VALIDATION',
       message: 'bad value',
       details: { issues: [{ path: ['x'], message: 'no' }], plugin: 'thrower', stage: 'command' },
-      hint: 'fix x',
     });
   });
 
@@ -190,7 +191,6 @@ describe('Epics through the CLI (ARCH-04)', () => {
       code: 'NOT_FOUND',
       message: 'Epic "auth" not found',
       details: { plugin: 'epics', operation: 'stories.update', stage: 'guard' },
-      hint: 'create the Epic first',
     });
     expect(await readJsonFile(t, storyFile('WEB-1'))).not.toHaveProperty('plugins');
   });
@@ -215,7 +215,6 @@ describe('guards and replacements (D7)', () => {
       code: 'CONFLICT',
       message: 'Keeper keeps this Board',
       details: { plugin: 'keeper', operation: 'boards.remove', stage: 'guard', canForce: true },
-      hint: 'pass --force',
     });
   });
 

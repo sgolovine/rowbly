@@ -103,12 +103,16 @@ describe('the pipeline in command mode', () => {
     expect((await readJsonFile(t, storyFile('WEB-2'))).plugins).toEqual({ notes: { note: 'later' } });
   });
 
-  it('a guard rejection exits 4; --json errors carry details.plugin', async () => {
+  it('a guard rejection exits 4; --json errors carry the Plugin, operation and stage', async () => {
     const t = await pluginRoot({ notes: { blocked: ['Nope'] }, tracer: true });
     const run = await cli(t, ['stories', 'create', '--name', 'Nope', '--json']);
     expect(run.exitCode).toBe(4);
     expect(json(run.stderr.trim().split('\n').at(-1) ?? '')).toEqual({
-      error: { code: 'CONFLICT', message: 'Notes refuses a Story named "Nope"', details: { plugin: 'notes' } },
+      error: {
+        code: 'CONFLICT',
+        message: 'Notes refuses a Story named "Nope"',
+        details: { plugin: 'notes', operation: 'stories.create', stage: 'guard' },
+      },
     });
     const board = await cli(t, ['boards', 'delete', 'web', '--yes']);
     expect(board.exitCode).toBe(4);

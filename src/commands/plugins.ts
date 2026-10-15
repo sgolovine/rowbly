@@ -1,8 +1,10 @@
 import { Command, Option } from 'commander';
+import { errorMessage as messageOf } from '../core';
 import { colors, printResult, renderTable } from '../output';
 import {
   type ActivePlugin,
   type AnyPluginDefinition,
+  invokePlugin,
   onOff,
   type PluginCli,
   type PluginHost,
@@ -165,26 +167,25 @@ function findCommand(program: Command, path: string): Command | undefined {
   return at;
 }
 
-function messageOf(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
-
 /** What a Plugin's command actions use to run like core commands. */
 function pluginCli(id: string): PluginCli<unknown> {
   return {
     run: (cmd, action) =>
       withContext(cmd, ({ services, globals }) =>
-        action({
-          plugin: services.plugins.context(id),
-          services: pluginServices(services),
-          json: globals.json,
-          print: (data, human) => printResult(data, { json: globals.json, human }),
-          confirm: (message) => confirmDestructive(message, globals),
-          prompt: (value, spec) => promptIfMissing(value, globals, spec),
-          readText: (flags, opts) => readLongText(flags, opts),
-          editText: (initial) => editTextInEditor(initial),
-          resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
-        }),
+        // The action is Plugin code: attributed, with expected errors keeping their codes (D7).
+        invokePlugin({ plugin: id, stage: 'command' }, () =>
+          action({
+            plugin: services.plugins.context(id),
+            services: pluginServices(services),
+            json: globals.json,
+            print: (data, human) => printResult(data, { json: globals.json, human }),
+            confirm: (message) => confirmDestructive(message, globals),
+            prompt: (value, spec) => promptIfMissing(value, globals, spec),
+            readText: (flags, opts) => readLongText(flags, opts),
+            editText: (initial) => editTextInEditor(initial),
+            resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
+          }),
+        ),
       ),
     collect,
     parseRepeatable,

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { makeStory } from '../helpers';
 import { pluginRoot, readJsonFile, storyFile } from './helpers';
 
-const SCRIPT = fileURLToPath(new URL('./fixtures/asyncFailure.ts', import.meta.url));
+const SCRIPT = fileURLToPath(new URL('./asyncFailure.fixture.ts', import.meta.url));
 const TSX = fileURLToPath(new URL('../../node_modules/tsx/dist/loader.mjs', import.meta.url));
 
 function runFixture(mode: 'awaited' | 'detached', root: string) {
@@ -31,7 +31,9 @@ describe('asynchronous Plugin failures (RES-18B)', () => {
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const run = await runFixture('awaited', t.path);
     expect(run.code).toBe(0);
-    expect(run.stdout).toBe('failed INTERNAL: Plugin "async" failed in the transform of stories.update: awaited boom\n');
+    expect(run.stdout).toBe(
+      'failed INTERNAL: Plugin "async" failed in the transform of stories.update: awaited boom\n',
+    );
     expect((await readJsonFile(t, storyFile('WEB-1'))).name).toBe('Story WEB-1');
   });
 

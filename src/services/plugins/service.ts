@@ -1,8 +1,9 @@
-import { NotFoundError, ValidationError } from '../../core';
+import { errorMessage, NotFoundError, PluginError, ValidationError } from '../../core';
 import type { Story, Task } from '../../schemas';
 import type { Repositories } from '../../storage';
 import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
+import { invokePlugin } from './invoke';
 import type { OperationRunner } from './runtime';
 import type { AnyPluginDefinition, PluginContext, PluginRow } from './types';
 
@@ -34,7 +35,7 @@ export function createPluginsService(ctx: RowblyContext, repos: Repositories, op
           try {
             parseSettings(plugin, settings);
           } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
+            const message = errorMessage(err);
             throw new ValidationError(`Plugin "${id}" has ${message}`, {
               details: { plugin: id },
               hint: `fix "plugins.${id}" in rowbly.config.json`,
@@ -86,12 +87,17 @@ async function pluginRows(
 ): Promise<PluginRow[]> {
   const rows: PluginRow[] = [];
   for (const { definition } of ctx.plugins?.active() ?? []) {
+    const { id } = definition;
     try {
-      rows.push(...((await rowsOf(definition, services.plugins.context(definition.id))) ?? []));
-    } catch (err) {
-      ctx.warn(
-        `Plugin "${definition.id}" failed to show its rows: ${err instanceof Error ? err.message : String(err)}`,
+      rows.push(
+        ...((await invokePlugin({ plugin: id, stage: 'row' }, () =>
+          rowsOf(definition, services.plugins.context(id)),
+        )) ?? []),
       );
+    } catch (err) {
+      // Rows only show something, so a failure only warns; the warning keeps the Plugin's own message.
+      const cause = err instanceof PluginError && err.cause !== undefined ? err.cause : err;
+      ctx.warn(`Plugin "${id}" failed to show its rows: ${errorMessage(cause)}`);
     }
   }
   return rows;

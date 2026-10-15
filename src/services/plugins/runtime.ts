@@ -2,28 +2,22 @@ import type { ZodType } from 'zod';
 import {
   ConflictError,
   DataIntegrityError,
-  isRowblyError,
+  errorMessage,
   isTaskId,
   NotFoundError,
   PluginError,
   parseTaskId,
   ValidationError,
 } from '../../core';
-import type { Story, Task } from '../../schemas';
+import type { LocalState, Story, Task } from '../../schemas';
 import type { Repositories } from '../../storage';
 import type { RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, listPluginFiles, readPluginFile } from './changeSet';
-import {
-  assertMayStart,
-  currentScope,
-  type ExecutionScope,
-  inScope,
-  newOperationId,
-  type Stage,
-} from './executionScope';
+import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
+import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
 import {
   type Bagged,
   type BagInspection,
@@ -33,12 +27,16 @@ import {
   type CoreOperations,
   type DeepReadonly,
   type GuardResult,
+  type LocalStateChange,
   type OperationHooks,
   type OperationInput,
+  type PluginChangeSet,
   type PluginContext,
   type PluginHookContext,
+  type PluginOperationOptions,
   type PluginReadContext,
   type Replacement,
+  type ReplacementMap,
 } from './types';
 
 /** Runs Service Layer operations through the Plugin pipeline (ADR-0012). */
@@ -46,20 +44,22 @@ export interface OperationRunner {
   /**
    * Runs `body`, which fills a Change Set, or the replacement a Plugin declared for `name`; then
    * every transform, then every guard; saves the Change Set once; then runs the reactions.
-   * `latest` gives the result as the transforms left it, e.g. the created Story with its bags.
-   * A core operation's input and result are checked against `CoreOperations`.
+   * `latest` gives the final result as the transforms left it, e.g. the created Story with its
+   * bags; callers and reactions get that value. It may throw `resultRemoved` (W11). A core
+   * operation's input and result are checked against `CoreOperations`.
    */
   run<K extends CoreOperationName>(
     name: K,
     input: CoreOperations[K]['input'],
     body: (changes: CoreChangeSet) => Promise<BodyResult<CoreOperations[K]['result']>>,
-    latest?: (changes: ChangeSet, result: CoreOperations[K]['result']) => CoreOperations[K]['result'],
+    latest?: Finalizer<CoreOperations[K]['result']>,
   ): Promise<CoreOperations[K]['result']>;
   /** A Plugin's own operation, named `<plugin id>.<name>`. */
   run<N extends string, I extends object, R>(
     name: N extends CoreOperationName ? never : N,
     input: I & OperationInput,
     body: (changes: CoreChangeSet) => Promise<R>,
+    latest?: Finalizer<R>,
   ): Promise<R>;
   /** The context of a Plugin that is on, for its commands, screens, fields, filters, rows and Actions. */
   context(id: string): PluginContext;
@@ -71,6 +71,25 @@ export interface OperationRunner {
 // biome-ignore lint/suspicious/noConfusingVoidType: an async body that only returns has the result type `void`.
 type BodyResult<R> = undefined extends R ? R | void : R;
 
+/** Reads an operation's final result from its sealed Change Set: a pure read, never a write. */
+export type Finalizer<R> = (changes: CoreChangeSet, result: R) => R | Promise<R>;
+
+/** Thrown by a finalizer when a transform removed the entity the operation returns (W11). */
+class ResultRemoved extends Error {
+  constructor(readonly entity: string) {
+    super(`${entity} was removed`);
+  }
+}
+
+/** For finalizers: the operation's returned `entity` (e.g. `Story WEB-1`) is gone from the Change Set. */
+export function resultRemoved(entity: string): never {
+  throw new ResultRemoved(entity);
+}
+
+/** The default reaction deadline (W7). */
+const REACTION_TIMEOUT_MS = 5_000;
+
+// Hooks are erased to these types: the registry holds Plugins of every settings type.
 type AnyHooks = OperationHooks<OperationInput, unknown, unknown>;
 
 /**
@@ -95,6 +114,8 @@ export function createOperationRunner(
   const contexts = new Map<string, PluginContext>();
   const hookContexts = new WeakMap<ActivePlugin, PluginHookContext>();
   const active = () => ctx.plugins?.active() ?? [];
+  // Background reactions run one operation after another, in the order of the operations (W7).
+  let background: Promise<void> = Promise.resolve();
 
   // Validate membership even for a cached context: a Plugin that failed since is not on.
   function activePlugin(id: string): ActivePlugin {
@@ -131,7 +152,7 @@ export function createOperationRunner(
     name: string,
     input: I & OperationInput,
     body: (changes: CoreChangeSet) => Promise<R>,
-    latest?: (changes: ChangeSet, result: R) => R,
+    latest?: Finalizer<R>,
   ): Promise<R> {
     // Before any read or write: a hook, body or doctor fix cannot start another operation (D4).
     assertMayStart(name);
@@ -143,8 +164,12 @@ export function createOperationRunner(
     // Every hook sees the same frozen input, so no hook can change what another sees.
     const hookInput: DeepReadonly<OperationInput> = frozenCopy<OperationInput>(input);
     const hooksOf = (plugin: ActivePlugin) => plugin.definition.hooks?.[name] as AnyHooks | undefined;
-    const stage = <T>(plugin: string | null, stage: Stage, fn: (scope: ExecutionScope) => T | Promise<T>) =>
-      inScope({ operationId: operation.id, operation: name, plugin, stage }, fn);
+    const at = (plugin: string, stage: Invocation['stage']): Invocation => ({
+      plugin,
+      stage,
+      operation: name,
+      operationId: operation.id,
+    });
     const event = (plugin: ActivePlugin) => ({
       name,
       input: hookInput,
@@ -155,46 +180,53 @@ export function createOperationRunner(
     await coordinator.enter(operation);
     let result: R;
     try {
-      const replacer = plugins.find((p) => p.definition.replaces?.[name as keyof typeof p.definition.replaces]);
-      if (replacer) {
-        const { id } = replacer.definition;
-        const replace = replacer.definition.replaces?.[name as never] as unknown as Replacement<
-          OperationInput,
-          R,
-          unknown
-        >;
+      const replacement = replacementFor<R>(plugins, name);
+      if (replacement) {
+        const { id } = replacement.plugin.definition;
+        const where = at(id, 'replacement');
         // Errors from core itself keep their own code when a replacement calls it.
-        const fromCore = new WeakSet<object>();
-        // `core()` runs the core body against the same plan, inside the replacement's scope.
-        const core = (): Promise<R> =>
-          body(changes).catch((err: unknown) => {
-            if (typeof err === 'object' && err !== null) fromCore.add(err);
+        const coreErrors = new WeakSet<object>();
+        // `core()` runs the core body against the same plan, inside the replacement's scope, once (W6).
+        let calls = 0;
+        const twice = () =>
+          pluginError(where, `Plugin "${id}" called core() twice in its replacement of ${name}`, {
+            hint: "call core() at most once; its result is the core operation's result",
+          });
+        const core = (): Promise<R> => {
+          calls += 1;
+          if (calls > 1) return Promise.reject(twice());
+          return body(changes).catch((err: unknown) => {
+            if (typeof err === 'object' && err !== null) coreErrors.add(err);
             throw err;
           });
-        result = await stage(id, 'replacement', (scope) =>
-          inPlugin(
-            replacer,
-            name,
-            'replacement',
-            () => replace({ ...event(replacer), changes: changes.forPlugin(id, scope), core }),
-            fromCore,
-          ),
+        };
+        result = await invokePlugin({ ...where, coreErrors }, (scope) =>
+          replacement.replace({ ...event(replacement.plugin), changes: changes.forPlugin(id, scope), core }),
+        );
+        // A second call fails the operation even if the replacement caught its error.
+        if (calls > 1) throw twice();
+      } else if (owner === null) {
+        result = await inScope({ operationId: operation.id, operation: name, plugin: null, stage: 'body' }, () =>
+          body(changes),
         );
       } else {
-        result = await stage(owner, 'body', () => body(changes));
+        result = await invokePlugin(at(owner, 'body'), () => body(changes));
       }
 
       // Transforms and guards see the body's or replacement's result, before any transform (ARCH-03).
       const bodyResult = frozenCopy(result);
+      // A core result that is not in the Change Set before the transforms (a replacement that did not
+      // call `core()`) is returned as the replacement gave it.
+      const finalizable = latest !== undefined && (owner !== null || (await present(latest, changes, result)));
       for (const plugin of plugins) {
         const transform = hooksOf(plugin)?.transform;
         if (!transform) continue;
         const { id } = plugin.definition;
-        await stage(id, 'transform', (scope) =>
-          inPlugin(plugin, name, 'transform', () =>
-            transform({ ...event(plugin), changes: changes.forPlugin(id, scope), result: bodyResult }),
-          ),
+        await invokePlugin(at(id, 'transform'), (scope) =>
+          transform({ ...event(plugin), changes: changes.forPlugin(id, scope), result: bodyResult }),
         );
+        // A core result a transform removed fails the operation now, naming that transform (W11).
+        if (latest && finalizable && owner === null) await finalize(latest, changes, result, name, id);
       }
       // Guards and the save see the plan as the transforms left it.
       changes.seal();
@@ -202,21 +234,23 @@ export function createOperationRunner(
         const guard = hooksOf(plugin)?.guard;
         if (!guard) continue;
         const { id } = plugin.definition;
-        const verdict: GuardResult = await stage(id, 'guard', () =>
-          inPlugin(plugin, name, 'guard', () =>
-            guard({ ...event(plugin), changes: changes.pluginView(id), result: bodyResult }),
-          ),
+        const verdict: GuardResult = await invokePlugin(at(id, 'guard'), () =>
+          guard({ ...event(plugin), changes: changes.pluginView(id), result: bodyResult }),
         );
         if (verdict?.reject) {
-          throw new ConflictError(verdict.reject, {
-            details: { plugin: id },
-            hint: verdict.hint ?? `Plugin "${id}" refused ${name}`,
-          });
+          throw attributed(
+            new ConflictError(verdict.reject, {
+              details: { plugin: id, operation: name, stage: 'guard', ...(verdict.canForce ? { canForce: true } : {}) },
+              hint: verdict.hint ?? `Plugin "${id}" refused ${name}`,
+            }),
+          );
         }
       }
 
-      if (latest) result = latest(changes, result);
-      await stage(null, 'commit', () => changes.save());
+      if (latest && finalizable) result = await finalize(latest, changes, result, name, owner);
+      await inScope({ operationId: operation.id, operation: name, plugin: null, stage: 'commit' }, () =>
+        changes.save(),
+      );
     } finally {
       await coordinator.exit(operation);
     }
@@ -229,49 +263,117 @@ export function createOperationRunner(
     const reactions = async () => {
       for (const plugin of reactors) {
         const react = hooksOf(plugin)?.react;
-        if (!react) continue;
-        const { id } = plugin.definition;
-        try {
-          await stage(id, 'reaction', () => react({ ...event(plugin), changes: saved, result: finalResult }));
-        } catch (err) {
-          ctx.warn(`Plugin "${id}" failed to react to ${name}: ${messageOf(err)}`);
+        if (react) {
+          await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
+            react({ ...event(plugin), changes: saved, result: finalResult }),
+          );
         }
       }
     };
-    if (ctx.backgroundReactions) void reactions();
+    if (ctx.backgroundReactions) background = background.then(reactions);
     else await reactions();
     return result;
+  }
+
+  /**
+   * Runs one reaction with its deadline (W7). A failure, a timeout or a late failure only warns;
+   * the data is saved, so nothing is undone. The timer is cleared as soon as the reaction settles.
+   */
+  async function reaction(
+    plugin: ActivePlugin,
+    at: Invocation,
+    fn: (scope: ExecutionScope) => void | Promise<void>,
+  ): Promise<void> {
+    const { id } = plugin.definition;
+    const ms = ctx.reactionTimeoutMs ?? REACTION_TIMEOUT_MS;
+    let scope: ExecutionScope | undefined;
+    let timedOut = false;
+    const failed = (err: unknown) => ctx.warn(`Plugin "${id}" failed to react to ${at.operation}: ${messageOf(err)}`);
+    const running = invokePlugin(at, (entered) => {
+      scope = entered;
+      return fn(entered);
+    }).then(
+      () => undefined,
+      (err: unknown) => failed(errorCause(err)),
+    );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(() => {
+        timedOut = true;
+        resolve();
+      }, ms);
+    });
+    await Promise.race([running, deadline]);
+    clearTimeout(timer);
+    if (timedOut) {
+      // Handles bound to the reaction stop working; its detached work keeps running (D8).
+      if (scope) scope.ended = true;
+      ctx.warn(`Plugin "${id}" did not finish reacting to ${at.operation} within ${duration(ms)}`);
+    }
   }
 
   const runner: OperationRunner = { context, hookContext, run: run as OperationRunner['run'] };
   return runner;
 }
 
-/** Runs a Plugin's handler; anything it throws fails the operation as a `PluginError` (exit 1). */
-async function inPlugin<T>(
-  plugin: ActivePlugin,
+/** The replacement a pinned Plugin declares for `name`, with that Plugin (CQ-33). */
+function replacementFor<R>(
+  plugins: readonly ActivePlugin[],
+  name: string,
+): { plugin: ActivePlugin; replace: Replacement<OperationInput, R, unknown> } | undefined {
+  if (!CORE_NAMES.has(name)) return undefined;
+  for (const plugin of plugins) {
+    const replaces: ReplacementMap<unknown> | undefined = plugin.definition.replaces;
+    const replace = replaces?.[name as CoreOperationName];
+    // The one widening cast: the registry erases each Plugin's input, result and settings types.
+    if (replace) return { plugin, replace: replace as unknown as Replacement<OperationInput, R, unknown> };
+  }
+  return undefined;
+}
+
+/** Runs a finalizer; a removed result fails the operation before the save, naming `plugin` (W11). */
+async function finalize<R>(
+  latest: Finalizer<R>,
+  changes: CoreChangeSet,
+  result: R,
   operation: string,
-  stage: string,
-  fn: () => T | Promise<T>,
-  passThrough?: WeakSet<object>,
-): Promise<T> {
+  plugin: string | null,
+): Promise<R> {
   try {
-    return await fn();
+    return await latest(changes, result);
   } catch (err) {
-    if (passThrough && typeof err === 'object' && err !== null && passThrough.has(err)) throw err;
-    if (err instanceof PluginError) throw err;
-    const { id } = plugin.definition;
-    throw new PluginError(`Plugin "${id}" failed in the ${stage} of ${operation}: ${messageOf(err)}`, {
-      details: { plugin: id, operation, stage, ...(isRowblyError(err) ? { cause: err.code } : {}) },
-      hint: `turn it off with \`rowbly plugins disable ${id}\``,
-      cause: err,
-    });
+    if (!(err instanceof ResultRemoved)) throw err;
+    const who = plugin === null ? 'A Plugin' : `Plugin "${plugin}"`;
+    throw attributed(
+      new ConflictError(`${who} removed ${err.entity} that ${operation} returns`, {
+        details: { plugin, operation, stage: 'transform' },
+        hint: 'a transform may change the record an operation returns, but not delete it',
+      }),
+    );
   }
 }
 
-function messageOf(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+/** Whether `latest` finds the operation's result in the Change Set. */
+async function present<R>(latest: Finalizer<R>, changes: CoreChangeSet, result: R): Promise<boolean> {
+  try {
+    await latest(changes, result);
+    return true;
+  } catch (err) {
+    if (err instanceof ResultRemoved) return false;
+    throw err;
+  }
 }
+
+/** A reaction's own message: what it threw, not the attribution the adapter wrapped around it. */
+function errorCause(err: unknown): unknown {
+  return err instanceof PluginError && err.cause !== undefined ? err.cause : err;
+}
+
+function duration(ms: number): string {
+  return ms % 1000 === 0 ? `${ms / 1000} s` : `${ms} ms`;
+}
+
+const messageOf = errorMessage;
 
 /** The scope of the running operation body, which its writer lives as long as. */
 function bodyScope(): ExecutionScope {
@@ -355,8 +457,20 @@ function pluginContext(
 ): PluginContext {
   const { id } = plugin.definition;
   let projected: PluginContext['services'] | undefined;
-  const operation: PluginContext['operation'] = (name, input, body) =>
-    runner.run(`${id}.${name}`, input, (changes) => body(changes.forPlugin(id, bodyScope())));
+  function operation<I extends object, R>(
+    name: string,
+    input: I & OperationInput,
+    body: (changes: PluginChangeSet) => Promise<R>,
+    { result }: PluginOperationOptions<R> = {},
+  ): Promise<R> {
+    const full = `${id}.${name}`;
+    // The finalizer is Plugin code too: it runs through the adapter, as the body does.
+    const latest: Finalizer<R> | undefined = result
+      ? (changes, bodyResult) =>
+          invokePlugin({ plugin: id, operation: full, stage: 'body' }, () => result(changes.pluginView(id), bodyResult))
+      : undefined;
+    return runner.run(full, input, (changes) => body(changes.forPlugin(id, bodyScope())), latest);
+  }
   return withGetters(readContext(ctx, repos, plugin), {
     get services() {
       projected ??= pluginServices(services());
@@ -424,11 +538,19 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /** The version of a Story that an operation saves: its Change Set's, after every transform. */
 export function latestStory(changes: ChangeSet, story: Story): Story {
-  return changes.story(story.key)?.after ?? story;
+  // The body put the Story, so its change is there unless a transform deleted it: a Story created
+  // and then deleted in one Change Set has neither key left.
+  return changes.story(story.key)?.after ?? resultRemoved(`Story ${story.key}`);
 }
 
 /** The version of a Task that an operation saves. */
 export function latestTask(changes: ChangeSet, task: Task): Task {
-  const story = changes.story(parseTaskId(task.id).storyKey)?.after;
-  return story?.tasks.find((t) => t.id === task.id) ?? task;
+  const { storyKey } = parseTaskId(task.id);
+  const story = changes.story(storyKey)?.after ?? resultRemoved(`Story ${storyKey}`);
+  return story.tasks.find((t) => t.id === task.id) ?? resultRemoved(`Task ${task.id}`);
+}
+
+/** The Local State an operation saves. */
+export function latestLocalState(changes: ChangeSet, state: LocalState): LocalState {
+  return changes.changes.find((c): c is LocalStateChange => c.type === 'localState')?.after ?? state;
 }

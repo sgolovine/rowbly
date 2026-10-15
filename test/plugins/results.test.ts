@@ -27,7 +27,10 @@ describe('final results (ARCH-42)', () => {
     const t = await pluginRoot({ shout: true });
     const { services } = await withPlugins(t, [shout]);
 
-    const stages = await services.stages.add({ level: 'board', boardId: 'web' }, { key: 'qa', name: 'Qa', category: 'in_progress' });
+    const stages = await services.stages.add(
+      { level: 'board', boardId: 'web' },
+      { key: 'qa', name: 'Qa', category: 'in_progress' },
+    );
     const persisted = (await readJsonFile(t, 'boards/web/board.config.json')).stages;
     expect(stages.map((s) => s.name)).toContain('QA');
     expect(stages).toEqual(persisted);
@@ -79,12 +82,11 @@ describe('final results (ARCH-42)', () => {
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [owner, editor]);
 
-    const made = await services.plugins.context('owner').operation(
-      'make',
-      {},
-      async (changes) => changes.updateStory('WEB-1', (s) => ({ ...s, name: 'Made' })),
-      { result: (changes, body) => changes.story(body.key)?.after ?? body },
-    );
+    const made = await services.plugins
+      .context('owner')
+      .operation('make', {}, async (changes) => changes.updateStory('WEB-1', (s) => ({ ...s, name: 'Made' })), {
+        result: (changes, body) => changes.story(body.key)?.after ?? body,
+      });
     const persisted = await readJsonFile(t, storyFile('WEB-1'));
     expect(made).toMatchObject({ name: 'Made', description: 'edited' });
     expect(made).toEqual(persisted);

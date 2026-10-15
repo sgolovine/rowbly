@@ -1,11 +1,12 @@
 // Run in a child process by test/plugins/asyncFailure.test.ts (RES-18B): in `awaited` a transform
 // awaits its failing work, so the operation fails cleanly; in `detached` a reaction leaves a timer
 // that throws after the operation has saved, which no Rowbly catch can see and which ends the process.
-import { createServices, loadPlugins } from '../../../src/services';
-import { definePlugin } from '../../../src/plugin-api';
-import { fixedClock, fixedIds } from '../../helpers/clock';
-import { reservedNames } from '../../../src/main';
-import type { DataRoot } from '../../../src/schemas';
+
+import { reservedNames } from '../../src/main';
+import { definePlugin } from '../../src/plugin-api';
+import type { DataRoot } from '../../src/schemas';
+import { createServices, loadPlugins } from '../../src/services';
+import { fixedClock, fixedIds } from '../helpers/clock';
 
 const [mode, rootPath] = process.argv.slice(2) as ['awaited' | 'detached', string];
 
