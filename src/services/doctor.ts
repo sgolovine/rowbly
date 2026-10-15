@@ -429,6 +429,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       config: global,
       boards: [...boards.values()].flatMap((b) => (b.config ? [b.config] : [])),
       stories: [...boards.values()].flatMap((b) => b.stories.map((e) => e.story)),
+      local: local.state,
     };
     if (global) {
       for (const [id, entry] of Object.entries(global.plugins ?? {})) {
@@ -530,7 +531,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
         for (const task of story.tasks) check(bags.task, task.plugins?.[id], file, task.id);
       }
       if (!doctor) continue;
-      const context = ops.context(id);
+      const context = ops.hookContext(id);
       const prefix = `${id.toUpperCase().replaceAll('-', '_')}_`;
       try {
         for (const finding of await doctor.check({ data, plugin: context })) {

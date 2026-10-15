@@ -1,10 +1,13 @@
 import {
+  type Bagged,
   ConflictError,
   type FileScope,
   isSlug,
   NotFoundError,
   type PluginChangeSet,
   type PluginContext,
+  type PluginHookContext,
+  type PluginReadContext,
   SlugSchema,
   type Story,
   UsageError,
@@ -63,7 +66,7 @@ export async function resolveTarget(
   return target;
 }
 
-export async function readSpec(plugin: PluginContext, target: SpecTarget): Promise<Spec | null> {
+export async function readSpec(plugin: PluginReadContext, target: SpecTarget): Promise<Spec | null> {
   const { scope, name } = location(target);
   const text = await plugin.files.read(scope, name);
   return text === null ? null : { title: specTitle(text), text, ...(target.slug ? { slug: target.slug } : {}) };
@@ -75,7 +78,7 @@ export async function getSpec(plugin: PluginContext, target: SpecTarget): Promis
   return spec;
 }
 
-export async function listSpecs(plugin: PluginContext, board: string): Promise<Spec[]> {
+export async function listSpecs(plugin: PluginHookContext, board: string): Promise<Spec[]> {
   await plugin.services.boards.get(board);
   const names = await plugin.files.list({ board });
   const specs: Spec[] = [];
@@ -107,11 +110,11 @@ export async function saveSpec(
   return getSpec(plugin, target);
 }
 
-export function linkedSpecs(plugin: PluginContext, story: Story): string[] {
+export function linkedSpecs(plugin: PluginReadContext, story: Bagged): string[] {
   return plugin.readBag(story, SpecsBag)?.specs ?? [];
 }
 
-export function setSpecs(plugin: PluginContext, story: Story, specs: string[]): Story {
+export function setSpecs(plugin: PluginReadContext, story: Story, specs: string[]): Story {
   return plugin.writeBag(story, specs.length ? { specs: [...new Set(specs)] } : undefined);
 }
 
@@ -140,7 +143,7 @@ export async function deleteSpec(plugin: PluginContext, target: SpecTarget): Pro
   return unlinked;
 }
 
-export async function applySpecs(changes: PluginChangeSet, key: string, input: unknown, plugin: PluginContext) {
+export async function applySpecs(changes: PluginChangeSet, key: string, input: unknown, plugin: PluginReadContext) {
   if (input === undefined) return;
   const parsed = SpecsInput.parse(input);
   if (parsed.specs && (parsed.addSpecs || parsed.removeSpecs))

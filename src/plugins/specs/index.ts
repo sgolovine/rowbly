@@ -23,10 +23,8 @@ export const specs = definePlugin({
   commands,
   hooks: {
     'stories.create': {
-      async transform({ changes, pluginInput, plugin }) {
-        const created = changes.changes.find((c) => c.type === 'story' && c.before === null);
-        if (created?.type === 'story' && created.after)
-          await applySpecs(changes, created.after.key, pluginInput, plugin);
+      async transform({ changes, result, pluginInput, plugin }) {
+        await applySpecs(changes, result.key, pluginInput, plugin);
       },
       async guard({ changes, pluginInput, plugin }) {
         if (pluginInput === undefined) return undefined;

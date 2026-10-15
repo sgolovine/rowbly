@@ -1,10 +1,12 @@
 // The types of the Plugin API (ADR-0009). Plugins import them through `src/plugin-api`, never from here.
 import type { Command } from 'commander';
 import type { ComponentType } from 'react';
-import type { ZodType } from 'zod';
+import type { ZodType, z } from 'zod';
 import type {
   Assignee,
   BoardConfig,
+  CustomFieldDef,
+  CustomFieldInput,
   LocalState,
   PluginBags,
   RowblyConfig,
@@ -17,23 +19,32 @@ import type {
 import type {
   AssigneeInput,
   AssigneePatch,
+  AssigneesService,
   BoardCreateInput,
   BoardPatch,
+  BoardsService,
+  ConfigService,
   ConfigTarget,
+  ContextService,
   CustomFieldPatch,
   DoctorFinding,
   DoctorFix,
+  DoctorService,
   DoctorSeverity,
+  FieldsService,
   OperationOptions,
   Position,
   RankPosition,
   Services,
   StageInput,
   StagePatch,
+  StagesService,
+  StoriesService,
   StoryCreateInput,
   StoryPatch,
   TaskCreateInput,
   TaskPatch,
+  TasksService,
 } from '../types';
 
 // ── Change Sets (ADR-0012) ──────────────────────────────────────────────────
@@ -86,20 +97,42 @@ export interface FileChange {
   after: string | null;
 }
 
-/** What guards and reactions read. */
+/**
+ * A deeply readonly copy of `T`: what Plugins read from a Change Set. Functions are kept as they are.
+ * The type stops accidental writes at compile time; WP01A also freezes the values at run time.
+ */
+export type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends readonly (infer U)[]
+    ? readonly DeepReadonly<U>[]
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;
+
+/**
+ * What guards and reactions read: a snapshot of the Change Set, not a live view (CQ-27). Each accessor
+ * returns the snapshot as it is when called; changing a snapshot never reaches the Change Set or
+ * another hook. The records are deeply readonly; WP01A makes them detached, frozen copies at run time.
+ */
 export interface ChangeSetView {
+  /** Every change, in the order it was first made. */
+  readonly changes: readonly DeepReadonly<Change>[];
+  /** The change of a Story, found by its key before or after the change. */
+  story(key: string): DeepReadonly<StoryChange> | undefined;
+  board(id: string): DeepReadonly<BoardChange> | undefined;
+}
+
+/**
+ * The records an operation will save, once, at its end, as core operation bodies fill them. Every
+ * method validates the record it is given, and reads the stored record as `before` the first time a
+ * record changes. Plugins get `PluginChangeSet` instead.
+ */
+export interface ChangeSet {
   /** Every change, in the order it was first made. */
   readonly changes: readonly Change[];
   /** The change of a Story, found by its key before or after the change. */
   story(key: string): StoryChange | undefined;
   board(id: string): BoardChange | undefined;
-}
-
-/**
- * The records an operation will save, once, at its end. Every method validates the record it is
- * given, and reads the stored record as `before` the first time a record changes.
- */
-export interface ChangeSet extends ChangeSetView {
   /** Creates or replaces a Story. */
   putStory(story: Story): Promise<Story>;
   /** Applies `update` to the latest version of a Story: the one in this Change Set, else the stored one. */
@@ -115,12 +148,41 @@ export interface ChangeSet extends ChangeSetView {
 export type FileScope = 'dataRoot' | { board: Slug } | { story: StoryKey };
 
 /**
- * The Change Set as a Plugin's handler gets it: it can also write the Plugin's own files. A file name
- * is a path inside the Plugin's folder, such as `auth.json` or `notes/a.md`.
+ * A guard's view of the Change Set (stage `guard`): the snapshot, plus the pending text of the
+ * Plugin's own files. It has no writers. Run-time rejection of writes from a guard is added by WP01A.
  */
-export interface PluginChangeSet extends ChangeSet {
+export interface PluginChangeSetView extends ChangeSetView {
   /** The text of one of the Plugin's files: its pending version, else the stored one; `null` when none. */
   readFile(scope: FileScope, name: string): Promise<string | null>;
+}
+
+/**
+ * The Change Set a Plugin writes to (stages `body`, `replacement`, `transform`, `doctor-fix`). A file
+ * name is a path inside the Plugin's folder, such as `auth.json` or `notes/a.md`. Update callbacks
+ * get a copy of the record. Rejecting a writer used after its stage ended is enforced at run time by
+ * WP01A.
+ */
+export interface PluginChangeSet extends PluginChangeSetView {
+  /** Creates or replaces a Story. */
+  putStory(story: Story): Promise<DeepReadonly<Story>>;
+  /** Applies `update` to the latest version of a Story: the one in this Change Set, else the stored one. */
+  updateStory(key: string, update: (story: Story) => Story): Promise<DeepReadonly<Story>>;
+  deleteStory(key: string): Promise<void>;
+  putBoard(board: BoardConfig): Promise<DeepReadonly<BoardConfig>>;
+  updateBoard(id: string, update: (board: BoardConfig) => BoardConfig): Promise<DeepReadonly<BoardConfig>>;
+  /**
+   * Root settings change only through an explicit merge that keeps `enabled` and other Plugins'
+   * entries (never `writeBag`):
+   *
+   * ```ts
+   * await changes.updateRootConfig((config) => ({
+   *   ...config,
+   *   plugins: { ...config.plugins, [id]: { ...newSettings, enabled: config.plugins?.[id]?.enabled } },
+   * }));
+   * ```
+   */
+  updateRootConfig(update: (config: RowblyConfig) => RowblyConfig): Promise<DeepReadonly<RowblyConfig>>;
+  updateLocalState(update: (state: LocalState) => LocalState): Promise<DeepReadonly<LocalState>>;
   writeFile(scope: FileScope, name: string, text: string): Promise<void>;
   deleteFile(scope: FileScope, name: string): Promise<void>;
 }
@@ -130,9 +192,44 @@ export interface PluginChangeSet extends ChangeSet {
 /** Every operation input may carry Plugin input as `plugins: { <id>: … }`. */
 export type OperationInput = OperationOptions;
 
+/** The name of every core operation, in Service order. `CoreOperationName` is derived from it. */
+export const CORE_OPERATION_NAMES = [
+  'context.use',
+  'context.clearUse',
+  'context.setMe',
+  'assignees.add',
+  'assignees.update',
+  'assignees.remove',
+  'boards.create',
+  'boards.update',
+  'boards.remove',
+  'stages.add',
+  'stages.update',
+  'stages.move',
+  'stages.remove',
+  'fields.add',
+  'fields.update',
+  'fields.remove',
+  'stories.create',
+  'stories.update',
+  'stories.move',
+  'stories.rank',
+  'stories.remove',
+  'tasks.create',
+  'tasks.update',
+  'tasks.move',
+  'tasks.remove',
+  'plugins.enable',
+  'plugins.disable',
+  'doctor.fix',
+] as const;
+
+export type CoreOperationName = (typeof CORE_OPERATION_NAMES)[number];
+
 /**
- * The input and result of each core operation. An operation's input holds the service method's
- * arguments by name, with any Plugin input as `plugins`. A Plugin's own operations are named
+ * The input and public result of each core operation. An operation's input holds the service
+ * method's arguments by name, with any Plugin input as `plugins`. The result is what the service
+ * caller gets; hooks see the same shape (ARCH-14). A Plugin's own operations are named
  * `<plugin id>.<name>`.
  */
 export interface CoreOperations {
@@ -155,8 +252,11 @@ export interface CoreOperations {
     input: { target: ConfigTarget; key: Slug; moveTo?: Slug } & OperationOptions;
     result: { storiesMoved: number; tasksMoved: number };
   };
-  'fields.add': { input: { target: ConfigTarget; field: unknown } & OperationOptions; result: unknown[] };
-  'fields.update': { input: { target: ConfigTarget; key: Slug } & CustomFieldPatch; result: unknown[] };
+  'fields.add': {
+    input: { target: ConfigTarget; field: CustomFieldInput } & OperationOptions;
+    result: CustomFieldDef[];
+  };
+  'fields.update': { input: { target: ConfigTarget; key: Slug } & CustomFieldPatch; result: CustomFieldDef[] };
   'fields.remove': {
     input: { target: ConfigTarget; key: Slug } & OperationOptions;
     result: { valuesStripped: number };
@@ -170,44 +270,78 @@ export interface CoreOperations {
   'tasks.update': { input: { taskId: string } & TaskPatch; result: Task };
   'tasks.move': { input: { taskId: string; stage: Slug } & OperationOptions; result: Task };
   'tasks.remove': { input: { taskId: string } & OperationOptions; result: undefined };
-  'plugins.enable': { input: { id: string } & OperationOptions; result: unknown };
-  'plugins.disable': { input: { id: string } & OperationOptions; result: unknown };
+  'plugins.enable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
+  'plugins.disable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   /** One pass of `doctor --fix`: the findings it fixes. */
   'doctor.fix': { input: { findings: DoctorFinding[] } & OperationOptions; result: DoctorFix[] };
 }
 
-export type CoreOperationName = keyof CoreOperations;
 type InputOf<K> = K extends CoreOperationName ? CoreOperations[K]['input'] : OperationInput;
 type ResultOf<K> = K extends CoreOperationName ? CoreOperations[K]['result'] : unknown;
 
-/** What a guard, transform or replacement of an operation receives. */
-export interface OperationEvent<I, S> {
+/** What every event of an operation carries. */
+interface EventBase<I, S> {
   /** The operation's name, such as `stories.create`. */
   name: string;
-  input: I;
+  input: DeepReadonly<I>;
   /** This Plugin's part of `input.plugins`. */
   pluginInput: unknown;
+  /** The context of the Plugin whose hook runs. */
+  plugin: PluginHookContext<S>;
+}
+
+/**
+ * Stage `replacement`: runs instead of the core body and fills the Change Set. There is no `result`
+ * yet; `core()` runs the core body against the same Change Set. Calling `core()` once only (W6) is
+ * enforced at run time by WP01B.
+ */
+export interface ReplacementEvent<I, R, S> extends EventBase<I, S> {
   changes: PluginChangeSet;
-  /** The context of the Plugin whose handler runs. */
-  plugin: PluginContext<S>;
+  core(): Promise<R>;
 }
 
-/** What a reaction receives: the saved Change Set and the operation's result. */
-export interface ReactEvent<I, R, S> extends Omit<OperationEvent<I, S>, 'changes'> {
+/**
+ * Stage `transform`: changes the Change Set before the save, through its writer methods only.
+ * `result` is the body or replacement result, before any transform (ARCH-03): for `stories.create`,
+ * `result.key` is the created Story. Stage-bound writers are enforced at run time by WP01A.
+ */
+export interface TransformEvent<I, R, S> extends EventBase<I, S> {
+  result: DeepReadonly<R>;
+  changes: PluginChangeSet;
+}
+
+/**
+ * Stage `guard`: sees the Change Set after every transform and may reject the operation. `result` is
+ * as in `TransformEvent`. The view has no writers; run-time rejection of retained writers is WP01A's.
+ */
+export interface GuardEvent<I, R, S> extends EventBase<I, S> {
+  result: DeepReadonly<R>;
+  changes: PluginChangeSetView;
+}
+
+/**
+ * Stage `reaction`: runs after the save, with the operation's final result and the saved Change Set.
+ * It acts only outside Rowbly's data; a failure only warns.
+ */
+export interface ReactionEvent<I, R, S> extends EventBase<I, S> {
+  result: DeepReadonly<R>;
   changes: ChangeSetView;
-  result: R;
 }
 
-/** A guard returns a rejection to stop the operation: nothing is saved, exit 4 (`CONFLICT`). */
-export type GuardResult = { reject: string; hint?: string } | undefined;
+/**
+ * A guard returns a rejection to stop the operation: nothing is saved, exit 4 (`CONFLICT`).
+ * `canForce` says that `--force` would get past this rejection, so the TUI can offer it (UI-01); it is
+ * passed on in the error by WP01B.
+ */
+export type GuardResult = { reject: string; hint?: string; canForce?: boolean } | undefined;
 
 export interface OperationHooks<I, R, S> {
-  /** Sees the final Change Set before the save and may reject the operation. */
-  guard?(event: OperationEvent<I, S>): GuardResult | undefined | Promise<GuardResult | undefined>;
+  /** Sees the final Change Set before the save and may reject the operation. `guard() {}` is fine. */
+  guard?(event: GuardEvent<I, R, S>): GuardResult | Promise<GuardResult>;
   /** Changes the Change Set before the save. */
-  transform?(event: OperationEvent<I, S>): void | Promise<void>;
+  transform?(event: TransformEvent<I, R, S>): void | Promise<void>;
   /** Runs after the save. It acts only outside Rowbly's data; a failure only warns. */
-  react?(event: ReactEvent<I, R, S>): void | Promise<void>;
+  react?(event: ReactionEvent<I, R, S>): void | Promise<void>;
 }
 
 /** Hooks by operation name: core names are typed, other Plugins' operations (`<id>.<name>`) are not. */
@@ -216,18 +350,27 @@ export type OperationHookMap<S> = {
 };
 
 /** Runs instead of the core operation and fills the Change Set; `core()` runs the core operation. */
-export type Replacement<I, R, S> = (event: OperationEvent<I, S> & { core(): Promise<R> }) => Promise<R>;
+export type Replacement<I, R, S> = (event: ReplacementEvent<I, R, S>) => Promise<R>;
 
 export type ReplacementMap<S> = {
   [K in CoreOperationName]?: Replacement<InputOf<K>, ResultOf<K>, S>;
 };
 
-// ── The Plugin's context and capabilities (ADR-0009) ─────────────────────────
+// ── The Plugin's context and capabilities (ADR-0009, ADR-0020) ───────────────
 
 /** A record that can carry bags. */
 export interface Bagged {
   plugins?: PluginBags;
 }
+
+/**
+ * What a Plugin's bag on a record is. `invalid` keeps the raw value and why it does not parse; it is
+ * never the same as `absent` (ADR-0020 §3).
+ */
+export type BagInspection<T> =
+  | { kind: 'absent' }
+  | { kind: 'valid'; value: T }
+  | { kind: 'invalid'; raw: unknown; issues: readonly z.core.$ZodIssue[] };
 
 /** Read access to the Plugin's own `plugins/<id>/` folders; writes go through a Change Set. */
 export interface PluginFiles {
@@ -237,30 +380,60 @@ export interface PluginFiles {
   list(scope: FileScope): Promise<string[]>;
 }
 
-/** What a Plugin gets in every handler, command, screen and Action. */
-export interface PluginContext<S = unknown> {
+/**
+ * The read-only core services (stages `body`, `replacement`, `transform`, `guard`, `reaction`,
+ * `doctor-check`, `doctor-fix`). Reads see stored records; `changes` sees pending ones. Built at run
+ * time with only these methods.
+ */
+export interface PluginReadServices {
+  context: Pick<ContextService, 'resolveBoard'>;
+  config: Pick<ConfigService, 'effective'>;
+  assignees: Pick<AssigneesService, 'list'>;
+  boards: Pick<BoardsService, 'list' | 'get'>;
+  stages: Pick<StagesService, 'list'>;
+  fields: Pick<FieldsService, 'list'>;
+  stories: Pick<StoriesService, 'list' | 'get' | 'labelsInUse'>;
+  tasks: Pick<TasksService, 'list' | 'get'>;
+}
+
+/**
+ * The core services of commands and screens: every service but `plugins` (no other Plugin's context,
+ * no enable or disable), `setup` and doctor fixes (ARCH-05). Built at run time with only these
+ * methods. Each core operation called here saves on its own.
+ */
+export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
+  doctor: Pick<DoctorService, 'check'>;
+};
+
+/** What a Plugin gets in every stage. */
+export interface PluginReadContext<S = unknown> {
   readonly id: string;
   /** The Data Root's settings, checked by the Plugin's `settings` schema when it loaded. */
   readonly settings: S;
   /** A Board's settings: its bag deep-merged over the Data Root's; a list replaces (ADR-0005). */
   boardSettings(boardId: Slug): Promise<S>;
-  /** This Plugin's bag on `record` parsed with `schema`, or `undefined` when it is missing or invalid. */
+  /** Whether this Plugin's bag on `record` is absent, valid or invalid. */
+  inspectBag<T>(record: Bagged, schema: ZodType<T>): BagInspection<T>;
+  /**
+   * This Plugin's bag on `record` parsed with `schema`, or `undefined` when it is absent **or
+   * invalid**. Tolerant: for display only. Changes to existing data use `requireBag`.
+   */
   readBag<T>(record: Bagged, schema: ZodType<T>): T | undefined;
-  /** A copy of `record` with this Plugin's bag set to `bag`, or removed when `bag` is `undefined`. */
-  writeBag<R extends Bagged>(record: R, bag: object | undefined): R;
+  /**
+   * This Plugin's bag on `record` parsed with `schema`, or `undefined` only when it is absent. An
+   * invalid bag throws `DataIntegrityError` (exit 6) with `details: { plugin, path, issues }`, so a
+   * change never overwrites data it could not read.
+   */
+  requireBag<T>(record: Bagged, schema: ZodType<T>): T | undefined;
+  /**
+   * A copy of `record` with this Plugin's bag set to `bag`, or removed when `bag` is `undefined`;
+   * the other Plugins' bags are kept, and `plugins` goes when it is left empty. The result's
+   * `plugins` is only `Bagged`: a narrower type is not kept (CQ-165). Throws `PluginError` for the
+   * root config (`rowbly.config.json`), whose entries are settings with `enabled`: change those with
+   * the merge shown on `PluginChangeSet.updateRootConfig`.
+   */
+  writeBag<R extends Bagged>(record: R, bag: Record<string, unknown> | undefined): Omit<R, 'plugins'> & Bagged;
   files: PluginFiles;
-  /** Core services. Reads are free; each core operation called here saves on its own. */
-  services: Services;
-  /** Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. */
-  operation<I extends object, R>(
-    name: string,
-    input: I & OperationInput,
-    body: (changes: PluginChangeSet) => Promise<R>,
-  ): Promise<R>;
-  /** Opens `$VISUAL`/`$EDITOR` on `initial` and returns the saved text. Command mode only. */
-  editText(initial: string): Promise<string>;
-  /** Shown after the command, or as a toast in the TUI. */
-  warn(message: string): void;
   /** Me, or `null`. */
   readonly me: Slug | null;
   now(): Date;
@@ -268,12 +441,37 @@ export interface PluginContext<S = unknown> {
   newId(): string;
 }
 
+/**
+ * The context of a hook (stages `body`, `replacement`, `transform`, `guard`, `reaction`,
+ * `doctor-check`, `doctor-fix`). It has read services only, and no `operation` or `editText`: change
+ * data through the Change Set the hook receives. Rejecting nested operations from a hook is enforced
+ * at run time by WP01A.
+ */
+export interface PluginHookContext<S = unknown> extends PluginReadContext<S> {
+  services: PluginReadServices;
+  /** Shown after the command, or as a toast in the TUI. */
+  warn(message: string): void;
+}
+
+/** The context of commands, screens, fields, filters, rows, option input and Actions. */
+export interface PluginContext<S = unknown> extends PluginReadContext<S> {
+  services: PluginServices;
+  /** Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. */
+  operation<I extends object, R>(
+    name: string,
+    input: I & OperationInput,
+    body: (changes: PluginChangeSet) => Promise<R>,
+  ): Promise<R>;
+  /** Shown after the command, or as a toast in the TUI. */
+  warn(message: string): void;
+}
+
 // ── Command mode ────────────────────────────────────────────────────────────
 
 /** What a Plugin command's action works with. */
 export interface PluginCommandEnv<S> {
   plugin: PluginContext<S>;
-  services: Services;
+  services: PluginServices;
   /** `--json` was given. */
   json: boolean;
   /** Prints the result: JSON with `--json`, else `human(data)`. */
@@ -287,6 +485,11 @@ export interface PluginCommandEnv<S> {
     flags: { text?: string; file?: string; edit?: boolean },
     opts: { name: string; initial?: string },
   ): Promise<string | undefined>;
+  /**
+   * Opens `$VISUAL`/`$EDITOR` on `initial` and returns the saved text as it is. The only editor in
+   * the Plugin API: the TUI and hooks have none (ARCH-11, SEC-03).
+   */
+  editText(initial: string): Promise<string>;
   /** `--board`, then `ROWBLY_BOARD`, then the context (contracts §4). */
   resolveBoard(flag?: string): Promise<Slug>;
 }
@@ -343,6 +546,8 @@ export interface DoctorData {
   config: RowblyConfig | null;
   boards: BoardConfig[];
   stories: Story[];
+  /** This machine's Local State. */
+  local: LocalState;
 }
 
 export interface PluginFinding {
@@ -352,12 +557,14 @@ export interface PluginFinding {
   /** Relative to the Data Root. */
   path: string;
   message: string;
+  /** Extra data for `--json`; Rowbly adds `plugin`. */
+  details?: Record<string, unknown>;
   /** Repairs the finding in the Change Set of `doctor --fix`; returns what it did. */
   fix?(changes: PluginChangeSet): Promise<string> | string;
 }
 
 export interface PluginDoctor<S> {
-  check(args: { data: DoctorData; plugin: PluginContext<S> }): Promise<PluginFinding[]> | PluginFinding[];
+  check(args: { data: DoctorData; plugin: PluginHookContext<S> }): Promise<PluginFinding[]> | PluginFinding[];
 }
 
 // ── TUI ─────────────────────────────────────────────────────────────────────

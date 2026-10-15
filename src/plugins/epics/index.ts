@@ -1,15 +1,15 @@
-import { definePlugin, type PluginChangeSet, type PluginContext, toTimestamp, z } from '../../plugin-api';
+import { definePlugin, type PluginChangeSet, type PluginReadContext, toTimestamp, z } from '../../plugin-api';
 import { commands } from './commands';
 import { EpicBag, EpicInput, validate } from './model';
 import { storyEpic } from './service';
 
-async function applyInput(changes: PluginChangeSet, key: string, input: unknown, plugin: PluginContext) {
+async function applyInput(changes: PluginChangeSet, key: string, input: unknown, plugin: PluginReadContext) {
   if (input === undefined) return;
   const { epic } = validate(EpicInput, input);
   await changes.updateStory(key, (story) => plugin.writeBag(story, epic === null ? undefined : { epic }));
 }
 
-async function guardLink(input: unknown, plugin: PluginContext) {
+async function guardLink(input: unknown, plugin: PluginReadContext) {
   if (input === undefined) return;
   const { epic } = validate(EpicInput, input);
   if (epic !== null && (await plugin.files.read('dataRoot', `${epic}.json`)) === null) {
@@ -31,11 +31,7 @@ export const epics = definePlugin({
   commands,
   hooks: {
     'stories.create': {
-      async transform({ changes, pluginInput, plugin }) {
-        const created = changes.changes.find((c) => c.type === 'story' && c.before === null);
-        if (created?.type === 'story' && created.after)
-          await applyInput(changes, created.after.key, pluginInput, plugin);
-      },
+      transform: ({ changes, result, pluginInput, plugin }) => applyInput(changes, result.key, pluginInput, plugin),
       guard: ({ pluginInput, plugin }) => guardLink(pluginInput, plugin),
     },
     'stories.update': {

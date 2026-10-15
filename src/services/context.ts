@@ -1,8 +1,9 @@
 import { NotFoundError, UsageError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
+import type { CoreChangeSet } from './plugins/changeSet';
 import type { OperationRunner } from './plugins/runtime';
-import type { ContextService, OperationOptions, RowblyContext } from './types';
+import type { ContextService, RowblyContext } from './types';
 
 export function createContextService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): ContextService {
   /** `flag` (callers pass `--board ?? ROWBLY_BOARD`) → Local State → the only Board. */
@@ -21,16 +22,10 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
     throw new UsageError('board required', { hint: 'pass --board <id> or run `rowbly use <board>`' });
   }
 
-  /** Saves Local State through operation `name` and keeps `ctx.local` in step with it. */
-  async function save<I extends object>(
-    name: string,
-    input: I & OperationOptions,
-    update: (state: LocalState) => LocalState,
-  ): Promise<LocalState> {
+  /** Saves Local State through `changes` and keeps `ctx.local` in step with it once the operation saves. */
+  function save(changes: CoreChangeSet, update: (state: LocalState) => LocalState): Promise<LocalState> {
     // `ctx.local` is the Local State this run started from (and has changed since).
-    const next = await ops.run(name, input, (changes) => changes.updateLocalState(() => update(ctx.local)));
-    ctx.local = next;
-    return next;
+    return changes.updateLocalState(() => update(ctx.local));
   }
 
   return {
@@ -38,11 +33,19 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
 
     async use(board, opts = {}) {
       const boardId = (await repos.boards.get(board)).id;
-      return save('context.use', { board, ...opts }, (state) => ({ ...state, board: boardId }));
+      ctx.local = await ops.run('context.use', { board, ...opts }, (changes) =>
+        save(changes, (state) => ({ ...state, board: boardId })),
+      );
+      return ctx.local;
     },
 
     async clearUse(opts = {}) {
-      await save('context.clearUse', { ...opts }, ({ board: _b, ...rest }) => rest);
+      // The new Local State refreshes the context; the operation's result is `undefined` (ARCH-14).
+      let next: LocalState | undefined;
+      await ops.run('context.clearUse', { ...opts }, async (changes) => {
+        next = await save(changes, ({ board: _b, ...rest }) => rest);
+      });
+      if (next) ctx.local = next;
     },
 
     async setMe(handle, opts = {}) {
@@ -54,11 +57,11 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
           });
         }
       }
-      const next = await save('context.setMe', { handle, ...opts }, ({ me: _me, ...rest }) =>
-        handle === null ? rest : { ...rest, me: handle },
+      ctx.local = await ops.run('context.setMe', { handle, ...opts }, (changes) =>
+        save(changes, ({ me: _me, ...rest }) => (handle === null ? rest : { ...rest, me: handle })),
       );
       ctx.me = handle;
-      return next;
+      return ctx.local;
     },
   };
 }

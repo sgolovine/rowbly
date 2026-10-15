@@ -15,6 +15,7 @@ import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
 
+export { pluginReadServices, pluginServices } from './plugins/capabilities';
 export {
   type ActivePlugin,
   failureWarning,
@@ -27,6 +28,7 @@ export {
 } from './plugins/host';
 export { pluginStoryRows, pluginTaskRows } from './plugins/service';
 export type * from './plugins/types';
+export { CORE_OPERATION_NAMES } from './plugins/types';
 export type * from './types';
 
 /**

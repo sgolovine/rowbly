@@ -2,7 +2,7 @@
 // a reaction, its own commands and files, options on core commands, a filter, `stories show` rows,
 // a doctor check with a fix, an Action and a TUI part. Like a Built-in Plugin, it imports only the
 // Plugin API.
-import { definePlugin, type PluginChangeSet, type PluginContext, type Story, z } from '../../../src/plugin-api';
+import { definePlugin, type PluginChangeSet, type PluginReadContext, type Story, z } from '../../../src/plugin-api';
 
 export const NotesSettings = z.object({
   /** Shown before each note in `stories show`. */
@@ -18,7 +18,7 @@ export const NoteBag = z.object({ note: z.string().min(1) });
 /** Notes input: `{ note: 'text' }` sets the note, `{ note: null }` removes it. */
 const NoteInput = z.object({ note: z.string().nullable() });
 
-function setNote(plugin: PluginContext<NotesSettings>, story: Story, note: string | null): Story {
+function setNote(plugin: PluginReadContext<NotesSettings>, story: Story, note: string | null): Story {
   return plugin.writeBag(story, note === null ? undefined : { note });
 }
 
@@ -27,7 +27,7 @@ async function applyInput(
   changes: PluginChangeSet,
   key: string | undefined,
   input: unknown,
-  plugin: PluginContext<NotesSettings>,
+  plugin: PluginReadContext<NotesSettings>,
 ) {
   const parsed = NoteInput.safeParse(input);
   if (!parsed.success || !key) return;
@@ -42,10 +42,8 @@ export const notes = definePlugin<NotesSettings>({
   bags: { story: NoteBag },
   hooks: {
     'stories.create': {
-      async transform({ changes, pluginInput, plugin }) {
-        const created = changes.changes.find((c) => c.type === 'story' && c.before === null);
-        const key = created?.type === 'story' ? created.after?.key : undefined;
-        await applyInput(changes, key, pluginInput, plugin);
+      async transform({ changes, result, pluginInput, plugin }) {
+        await applyInput(changes, result.key, pluginInput, plugin);
       },
       guard({ input, plugin }) {
         if (plugin.settings.blocked.includes(input.name)) {

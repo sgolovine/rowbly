@@ -1,8 +1,9 @@
 import {
+  type Bagged,
   ConflictError,
   NotFoundError,
   type PluginContext,
-  type Story,
+  type PluginReadContext,
   toTimestamp,
   ValidationError,
 } from '../../plugin-api';
@@ -62,7 +63,7 @@ export async function setEpicClosed(plugin: PluginContext, id: string, closed: b
   });
 }
 
-export function storyEpic(plugin: PluginContext, story: Story): string | undefined {
+export function storyEpic(plugin: PluginReadContext, story: Bagged): string | undefined {
   return plugin.readBag(story, EpicBag)?.epic;
 }
 

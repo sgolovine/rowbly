@@ -2,7 +2,7 @@ import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, PluginError, ValidationError } from '../../src/core';
-import { type Change, definePlugin } from '../../src/plugin-api';
+import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-api';
 import { StorySchema } from '../../src/schemas';
 import { pluginStoryRows } from '../../src/services';
 import { makeStory, writeFixture } from '../helpers';
@@ -12,8 +12,8 @@ import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 /** A Plugin that keeps every Change Set it is shown, by stage. */
 function spy(id = 'spy', ops: string[] = ['stories.move']) {
   const seen: { stage: string; name: string; changes: Change[] }[] = [];
-  const record = (stage: string) => (e: { name: string; changes: { changes: readonly Change[] } }) => {
-    seen.push({ stage, name: e.name, changes: structuredClone([...e.changes.changes]) });
+  const record = (stage: string) => (e: { name: string; changes: { changes: readonly DeepReadonly<Change>[] } }) => {
+    seen.push({ stage, name: e.name, changes: structuredClone([...e.changes.changes]) as Change[] });
     return undefined;
   };
   const hooks = Object.fromEntries(

@@ -54,7 +54,7 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
           const title =
             verb === 'create' ? await env.prompt(opts.title, { flag: '--title', message: 'Spec title' }) : opts.title;
           const text = opts.edit
-            ? await plugin.editText(titledText(initial, title))
+            ? await env.editText(titledText(initial, title))
             : titledText(
                 (await env.readText({ text: opts.text, file: opts.file }, { name: 'text' })) ?? initial,
                 title,
