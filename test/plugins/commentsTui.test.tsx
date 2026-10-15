@@ -69,6 +69,17 @@ describe('Comments TUI', () => {
     await waitForFrame(app, (f) => f.includes('Added Comment'));
     expect(await thread(0)).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
     expect(await thread()).toEqual([]);
+
+    await app.press('e');
+    await waitForFrame(app, (f) => f.includes('Edit Comment on WEB-1.1') && f.includes('Looks good'));
+    await app.press(...' to me', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('Updated Comment') && f.includes('Looks good to me'));
+    expect(await thread(0)).toMatchObject([{ body: 'Looks good to me' }]);
+    await app.press('d');
+    await waitForFrame(app, (f) => f.includes('Delete the Comment by alice?'));
+    await app.press('y');
+    await waitForFrame(app, (f) => f.includes('Deleted Comment') && f.includes('No Comments yet'));
+    expect(await thread(0)).toEqual([]);
     app.unmount();
   });
 });

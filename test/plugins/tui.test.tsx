@@ -127,6 +127,11 @@ describe('Plugin slots in the TUI', () => {
     expect((await readJsonFile(t, 'rowbly.config.json')).plugins).toEqual({ notes: { enabled: false } });
     // Loaded again: the Notes section is gone.
     frame = await waitForFrame(app, (f) => !/Plugins\s.*\n.*Notes/.test(f));
+    // And on again: loaded once more, with its section back.
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('● Notes') && /Plugins\s.*\n.*Notes/.test(f));
+    expect(toasts.list().map((toast) => toast.message)).toContain('Turned on Plugin Notes');
+    expect((await readJsonFile(t, 'rowbly.config.json')).plugins).toEqual({ notes: { enabled: true } });
     app.unmount();
   });
 

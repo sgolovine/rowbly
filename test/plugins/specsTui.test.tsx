@@ -117,7 +117,7 @@ describe('Specs TUI', () => {
     app.unmount();
   });
 
-  it('the Story form multi-choice links Board Specs', async () => {
+  it('the Story form multi-choice links and unlinks Board Specs', async () => {
     const { app, services } = await setup('story-form', { boardId: 'web' });
     await waitForFrame(app, 'Specs');
     await app.press(...'New');
@@ -125,6 +125,12 @@ describe('Specs TUI', () => {
     await app.press(' ', KEYS.ctrlS);
     await waitForFrame(app, 'Created WEB-3');
     expect((await services.stories.get('WEB-3')).plugins).toEqual({ specs: { specs: ['auth'] } });
+    await app.press('e');
+    await waitForFrame(app, '[x] auth');
+    await focusFormField(app, 'Specs');
+    await app.press(' ', KEYS.ctrlS);
+    await waitForFrame(app, 'Updated WEB-3');
+    expect((await services.stories.get('WEB-3')).plugins).toBeUndefined();
     app.unmount();
   });
 
