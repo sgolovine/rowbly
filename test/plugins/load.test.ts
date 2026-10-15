@@ -51,7 +51,7 @@ describe('loading Plugins (ADR-0010)', () => {
     ]);
     expect(host.status().find((s) => s.id === 'later')).toMatchObject({ known: false, enabled: false });
     expect(host.status().find((s) => s.id === 'ghost')).toMatchObject({ known: false, enabled: true });
-    expect(failureWarning(host.failures()[0] as never)).toBe(
+    expect(host.failures().map(failureWarning)[0]).toBe(
       'Plugin "boom" failed to load (boom at start); Rowbly runs without it and keeps its data. ' +
         'Turn it off with `rowbly plugins disable boom`',
     );

@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { reservedNames } from '../../src/main';
 import { epics } from '../../src/plugins/epics';
 import { createEpic } from '../../src/plugins/epics/service';
 import type { LocalState } from '../../src/schemas';
-import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
-import { App } from '../../src/tui/app';
-import { createToastStore, pluginRoute } from '../../src/tui/hooks';
-import { loadTuiPlugins } from '../../src/tui/loadPlugins';
-import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot } from '../helpers';
-import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
+import { pluginRoute } from '../../src/tui/hooks';
+import { makeBoard, makeStory, type TempRoot } from '../helpers';
+import { KEYS, waitForFrame } from '../tui/helpers';
 import { pluginRoot, readJsonFile, withPlugins } from './helpers';
+import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
 
 async function seed() {
   const t = await pluginRoot({ epics: true });
@@ -24,34 +21,13 @@ async function seed() {
   return t;
 }
 
-async function open(
+function open(
   t: TempRoot,
   screen: string,
   params: Record<string, unknown> = {},
   local: LocalState = { version: 1, board: 'web' },
 ) {
-  const toasts = createToastStore();
-  const host = await loadPlugins({ root: t.root, registry: [epics], reserved: reservedNames() });
-  const ctx: RowblyContext = {
-    root: t.root,
-    local,
-    me: null,
-    now: fixedClock().now,
-    newId: fixedIds(),
-    plugins: host,
-    warn: (message) => toasts.push('warning', message),
-  };
-  const services = createServices(ctx);
-  const app = renderTui(
-    <App
-      ctx={ctx}
-      services={services}
-      initial={{ screen, params }}
-      toasts={toasts}
-      plugins={await loadTuiPlugins(host)}
-    />,
-  );
-  return { app, services, toasts };
+  return openPluginApp(t, [epics], { screen, params }, { local });
 }
 
 describe('Epics TUI', () => {
@@ -66,7 +42,8 @@ describe('Epics TUI', () => {
     await makeStory(t.path, { key: 'API-1', boardId: 'api', stage: 'released', plugins: { epics: { epic: 'auth' } } });
     const { app } = await open(t, 'home', {}, { version: 1 });
     await waitForFrame(app, 'Epics');
-    await app.press(...Array(9).fill('j'), KEYS.enter);
+    await focusListItem(app, 'Epics');
+    await app.press(KEYS.enter);
     await waitForFrame(app, 'Epics (open)');
     await waitForFrame(app, '1/2 Stories done (50%)');
     await app.press(KEYS.enter);
@@ -139,38 +116,43 @@ describe('Epics TUI', () => {
     const t = await seed();
     const { app } = await open(t, 'story-form', { boardId: 'web' });
     await waitForFrame(app, 'No Epic');
-    await app.press('New', ...Array(7).fill(KEYS.tab), KEYS.right, KEYS.ctrlS);
+    await app.press('New');
+    await focusFormField(app, 'Epic');
+    await app.press(KEYS.right, KEYS.ctrlS);
     await waitForFrame(app, 'Created WEB-3');
     expect(await readJsonFile(t, 'boards/web/stories/WEB-3/story.json')).toHaveProperty('plugins.epics.epic', 'auth');
     expect(await waitForFrame(app, /Epic\s+auth/)).toContain('WEB-3');
     await app.press('e');
     await waitForFrame(app, '‹ auth ›');
-    await app.press(...Array(7).fill(KEYS.tab), KEYS.left, KEYS.ctrlS);
+    await focusFormField(app, 'Epic');
+    await app.press(KEYS.left, KEYS.ctrlS);
     await waitForFrame(app, 'Updated WEB-3');
     expect(await readJsonFile(t, 'boards/web/stories/WEB-3/story.json')).not.toHaveProperty('plugins');
     await waitForFrame(app, /Epic\s+none/);
     app.unmount();
   });
 
-  it.each([
-    { screen: 'stories', tabs: 9 },
-    { screen: 'board', tabs: 5 },
-  ])('filters $screen by Epic and by no Epic, and clears the filter', async ({ screen, tabs }) => {
+  it.each(['stories', 'board'])('filters %s by Epic and by no Epic, and clears the filter', async (screen) => {
     const t = await seed();
     const { app } = await open(t, screen, { boardId: 'web' });
     await waitForFrame(app, 'WEB-2');
-    await app.press('/', ...Array(tabs).fill(KEYS.tab), KEYS.right, KEYS.right, KEYS.right, KEYS.ctrlS);
+    const filterByEpic = async (...keys: string[]) => {
+      await app.press('/');
+      await focusFormField(app, 'Epic');
+      await app.press(...keys, KEYS.ctrlS);
+    };
+    await filterByEpic(KEYS.right, KEYS.right, KEYS.right);
     const linked = await waitForFrame(
       app,
       (frame) => frame.includes('Epic: auth') && frame.includes('WEB-1') && !frame.includes('WEB-2'),
     );
     expect(linked).toContain('Login');
-    await app.press('/', ...Array(tabs).fill(KEYS.tab), KEYS.left, KEYS.ctrlS);
+    await filterByEpic(KEYS.left);
     await waitForFrame(
       app,
       (frame) => frame.includes('no Epic') && frame.includes('WEB-2') && !frame.includes('WEB-1'),
     );
-    await app.press('/', ...Array(tabs).fill(KEYS.tab), KEYS.left, KEYS.ctrlS);
+    await filterByEpic(KEYS.left);
     await waitForFrame(app, (frame) => frame.includes('WEB-1') && frame.includes('WEB-2'));
     app.unmount();
   });

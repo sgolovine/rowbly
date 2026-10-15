@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { definePlugin } from '../../src/plugin-api';
 import { makeBoard, makeStory } from '../helpers';
@@ -7,7 +7,7 @@ import { boom, notes } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
 
 async function writeText(root: string, path: string, text: string) {
-  await mkdir(join(root, path, '..'), { recursive: true });
+  await mkdir(dirname(join(root, path)), { recursive: true });
   await writeFile(join(root, path), text);
 }
 

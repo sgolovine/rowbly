@@ -12,18 +12,19 @@ import {
   setEpicClosed,
   showEpic,
 } from '../../src/plugins/epics/service';
-import { FIXED_NOW, makeBoard, makeStory } from '../helpers';
+import { FIXED_NOW, fixedClock, makeBoard, makeStory } from '../helpers';
 import { pluginRoot, readJsonFile, withPlugins } from './helpers';
 
 async function setup() {
   const t = await pluginRoot({ epics: true });
-  const loaded = await withPlugins(t, [epics]);
-  return { t, ...loaded, plugin: loaded.services.plugins.context('epics') };
+  const clock = fixedClock();
+  const loaded = await withPlugins(t, [epics], { now: clock.now });
+  return { t, ...loaded, clock, plugin: loaded.services.plugins.context('epics') };
 }
 
 describe('Epics operations', () => {
   it('creates, edits, closes and reopens files with validated data and timestamps', async () => {
-    const { t, plugin, ctx } = await setup();
+    const { t, plugin, clock } = await setup();
     const epic = await createEpic(plugin, { id: 'auth', name: 'Authentication' });
     expect(epic).toEqual({
       version: 1,
@@ -38,7 +39,7 @@ describe('Epics operations', () => {
     await expect(createEpic(plugin, { id: 'auth', name: 'Duplicate' })).rejects.toThrow('already exists');
     await expect(createEpic(plugin, { id: '../outside', name: 'Bad' })).rejects.toThrow('Invalid Epic data');
     await expect(createEpic(plugin, { id: 'empty', name: '  ' })).rejects.toThrow('Invalid Epic data');
-    ctx.now = () => new Date('2026-10-13T17:21:07.000Z');
+    clock.set('2026-10-13T17:21:07.000Z');
     expect(await editEpic(plugin, 'auth', { description: 'Login', name: undefined })).toMatchObject({
       name: 'Authentication',
       description: 'Login',

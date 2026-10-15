@@ -1,8 +1,8 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { createRepositories } from '../../src/storage';
 import { makeStory, runCli } from '../helpers';
+import { readCommentThread } from './commentsHelpers';
 import { pluginRoot } from './helpers';
 
 async function setup(on = true) {
@@ -11,13 +11,8 @@ async function setup(on = true) {
   const cli = (args: string[], env: NodeJS.ProcessEnv = {}) => runCli(args, { root: t.path, cwd: t.dir, env });
   await cli(['tasks', 'create', 'WEB-1', '--name', 'One']);
   await cli(['tasks', 'create', 'WEB-1', '--name', 'Two']);
-  const story = () => createRepositories(t.root).stories.findByKey('WEB-1');
-  const thread = async (task?: number) => {
-    const saved = await story();
-    const record = task === undefined ? saved : saved.tasks[task];
-    return (record?.plugins?.comments?.comments ?? []) as { id: string; body: string; author: string | null }[];
-  };
-  return { t, cli, story, thread };
+  const thread = (task?: number) => readCommentThread(t, 'WEB-1', task);
+  return { t, cli, thread };
 }
 
 describe('rowbly comments', () => {

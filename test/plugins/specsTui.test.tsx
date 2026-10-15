@@ -2,12 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { specs } from '../../src/plugins/specs';
 import { saveSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
-import { App } from '../../src/tui/app';
-import { createToastStore } from '../../src/tui/hooks';
-import { loadTuiPlugins } from '../../src/tui/loadPlugins';
 import { makeBoard } from '../helpers';
-import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
+import { KEYS, waitForFrame } from '../tui/helpers';
 import { pluginRoot, withPlugins } from './helpers';
+import { focusFormField, openPluginApp } from './tuiHelpers';
 
 async function setup(
   screen: string,
@@ -16,21 +14,17 @@ async function setup(
 ) {
   const t = await pluginRoot({ specs: true });
   if (screen === 'home') await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
-  const { services, ctx, host } = await withPlugins(t, [specs], { local });
-  const plugin = services.plugins.context('specs');
-  await saveSpec(plugin, { board: 'web', slug: 'auth' }, '# Auth\n\nBoard requirements', true);
-  await services.stories.create('web', { name: 'Login', plugins: { specs: { specs: ['auth'] } } });
-  await services.stories.create('web', { name: 'Other' });
-  const app = renderTui(
-    <App
-      ctx={ctx}
-      services={services}
-      plugins={await loadTuiPlugins(host)}
-      initial={{ screen, params }}
-      toasts={createToastStore()}
-    />,
+  const seeded = await withPlugins(t, [specs]);
+  await saveSpec(
+    seeded.services.plugins.context('specs'),
+    { board: 'web', slug: 'auth' },
+    '# Auth\n\nBoard requirements',
+    true,
   );
-  return { app, services, plugin };
+  await seeded.services.stories.create('web', { name: 'Login', plugins: { specs: { specs: ['auth'] } } });
+  await seeded.services.stories.create('web', { name: 'Other' });
+  const { app, services } = await openPluginApp(t, [specs], { screen, params }, { local });
+  return { app, services, plugin: services.plugins.context('specs') };
 }
 
 describe('Specs TUI', () => {
@@ -48,7 +42,7 @@ describe('Specs TUI', () => {
     await waitForFrame(app, 'auth  Auth');
     await app.press('n');
     await waitForFrame(app, 'Slug');
-    await app.press('a', 'p', 'i', KEYS.tab, 'A', 'P', 'I', KEYS.tab, 'B', 'o', 'd', 'y', KEYS.ctrlS);
+    await app.press(...'api', KEYS.tab, ...'API', KEYS.tab, ...'Body', KEYS.ctrlS);
     await waitForFrame(app, 'api  API');
     expect(await plugin.files.read({ board: 'web' }, 'api.md')).toBe('# API\n\nBody');
     await app.press(KEYS.enter);
@@ -74,7 +68,7 @@ describe('Specs TUI', () => {
     expect(await waitForFrame(app, 'Board requirements')).toContain('No Story Spec');
     await app.press('e');
     await waitForFrame(app, 'Title');
-    await app.press('O', 'w', 'n', KEYS.tab, 'T', 'e', 'x', 't', KEYS.ctrlS);
+    await app.press(...'Own', KEYS.tab, ...'Text', KEYS.ctrlS);
     const frame = await waitForFrame(
       app,
       (f) => /Story Spec[\s\S]*Own[\s\S]*Text[\s\S]*Board Spec: auth/.test(f) && !f.includes('enter new line'),
@@ -123,25 +117,32 @@ describe('Specs TUI', () => {
     app.unmount();
   });
 
-  it('the Story form multi-choice links Board Specs', async () => {
+  it('the Story form multi-choice links and unlinks Board Specs', async () => {
     const { app, services } = await setup('story-form', { boardId: 'web' });
     await waitForFrame(app, 'Specs');
-    await app.press('N', 'e', 'w', ...Array(7).fill(KEYS.tab), ' ', KEYS.ctrlS);
+    await app.press(...'New');
+    await focusFormField(app, 'Specs');
+    await app.press(' ', KEYS.ctrlS);
     await waitForFrame(app, 'Created WEB-3');
     expect((await services.stories.get('WEB-3')).plugins).toEqual({ specs: { specs: ['auth'] } });
+    await app.press('e');
+    await waitForFrame(app, '[x] auth');
+    await focusFormField(app, 'Specs');
+    await app.press(' ', KEYS.ctrlS);
+    await waitForFrame(app, 'Updated WEB-3');
+    expect((await services.stories.get('WEB-3')).plugins).toBeUndefined();
     app.unmount();
   });
 
-  for (const screen of ['stories', 'board']) {
-    it(`the ${screen} Spec filter limits Stories`, async () => {
-      const { app } = await setup(screen, { boardId: 'web' });
-      await waitForFrame(app, 'WEB-2');
-      await app.press('/');
-      await waitForFrame(app, '[ ] auth');
-      await app.press(...Array(screen === 'board' ? 5 : 9).fill(KEYS.tab), ' ', KEYS.ctrlS);
-      const frame = await waitForFrame(app, (f) => f.includes('Spec: auth') && !f.includes('WEB-2'));
-      expect(frame).toContain('WEB-1');
-      app.unmount();
-    });
-  }
+  it.each(['stories', 'board'])('the %s Spec filter limits Stories', async (screen) => {
+    const { app } = await setup(screen, { boardId: 'web' });
+    await waitForFrame(app, 'WEB-2');
+    await app.press('/');
+    await waitForFrame(app, '[ ] auth');
+    await focusFormField(app, 'Spec');
+    await app.press(' ', KEYS.ctrlS);
+    const frame = await waitForFrame(app, (f) => f.includes('Spec: auth') && !f.includes('WEB-2'));
+    expect(frame).toContain('WEB-1');
+    app.unmount();
+  });
 });

@@ -1,11 +1,10 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { makeBoard, makeStory, runCli, type TempRoot } from '../helpers';
+import { makeBoard, makeStory, type RunCliOptions, runCli, type TempRoot } from '../helpers';
 import { pluginRoot } from './helpers';
 
-const cli = (t: TempRoot, args: string[], opts: Parameters<typeof runCli>[1] = {}) =>
-  runCli(args, { root: t.path, ...opts });
+const cli = (t: TempRoot, args: string[], opts: RunCliOptions = {}) => runCli(args, { root: t.path, ...opts });
 const json = (text: string) => JSON.parse(text);
 
 describe('rowbly specs', () => {
@@ -90,15 +89,15 @@ describe('rowbly specs', () => {
     expect(json(rejected.stderr).error.details.plugin).toBe('specs');
     expect((await cli(t, ['boards', 'delete', 'api', '--force', '--yes'])).exitCode).toBe(0);
   });
-});
 
-it('doctor CLI reports SPECS_MISSING_SPEC and --fix unlinks it', async () => {
-  const t = await pluginRoot({ specs: true });
-  await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { specs: { specs: ['gone'] } } });
-  const report = await cli(t, ['doctor', '--json']);
-  expect(report.exitCode).toBe(0);
-  expect(json(report.stdout).findings).toMatchObject([{ code: 'SPECS_MISSING_SPEC', severity: 'warning' }]);
-  const fixed = await cli(t, ['doctor', '--fix', '--json']);
-  expect(fixed.exitCode).toBe(0);
-  expect(json(fixed.stdout).fixed).toMatchObject([{ code: 'SPECS_MISSING_SPEC' }]);
+  it('doctor CLI reports SPECS_MISSING_SPEC and --fix unlinks it', async () => {
+    const t = await pluginRoot({ specs: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { specs: { specs: ['gone'] } } });
+    const report = await cli(t, ['doctor', '--json']);
+    expect(report.exitCode).toBe(0);
+    expect(json(report.stdout).findings).toMatchObject([{ code: 'SPECS_MISSING_SPEC', severity: 'warning' }]);
+    const fixed = await cli(t, ['doctor', '--fix', '--json']);
+    expect(fixed.exitCode).toBe(0);
+    expect(json(fixed.stdout).fixed).toMatchObject([{ code: 'SPECS_MISSING_SPEC' }]);
+  });
 });

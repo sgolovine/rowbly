@@ -5,7 +5,8 @@ import { ConflictError, NotFoundError, PluginError, ValidationError } from '../.
 import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-api';
 import { StorySchema } from '../../src/schemas';
 import { pluginStoryRows } from '../../src/services';
-import { makeStory, writeFixture } from '../helpers';
+import { pathExists } from '../../src/storage';
+import { FIXED_NOW, makeStory, writeFixture } from '../helpers';
 import { echo, faulty, notes, order, stamp, tracer } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
@@ -35,10 +36,21 @@ describe('transform (ADR-0012)', () => {
     expect(await readJsonFile(t, storyFile('WEB-1'))).not.toHaveProperty('plugins');
   });
 
+  it('invalid Plugin input fails the operation before the save; no input changes nothing', async () => {
+    const t = await pluginRoot({ notes: true });
+    const { services } = await withPlugins(t, [notes]);
+    await expect(services.stories.create('web', { name: 'A', plugins: { notes: { note: 1 } } })).rejects.toThrow(
+      'invalid Notes input',
+    );
+    expect(await services.stories.list('web', {})).toEqual([]);
+    expect((await services.stories.create('web', { name: 'B' })).plugins).toBeUndefined();
+  });
+
   it('runs before guards, which run before the save, which runs before reactions', async () => {
     const t = await pluginRoot({ tracer: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [tracer]);
+    // `order` is shared by the whole file: every test that reads it empties it first.
     order.length = 0;
     await services.stories.move('WEB-1', 'todo');
     expect(order).toEqual(['transform:1', 'guard', 'react:todo']);
@@ -133,7 +145,11 @@ describe('react', () => {
 
   it('the TUI does not wait for reactions', async () => {
     let release = () => {};
+    let reacted = () => {};
     const done: string[] = [];
+    const finished = new Promise<void>((resolve) => {
+      reacted = resolve;
+    });
     const slow = definePlugin({
       id: 'slow',
       name: 'Slow',
@@ -145,6 +161,7 @@ describe('react', () => {
               release = resolve;
             });
             done.push('reacted');
+            reacted();
           },
         },
       },
@@ -154,7 +171,7 @@ describe('react', () => {
     await services.boards.update('web', { name: 'Renamed' });
     expect(done).toEqual([]);
     release();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await finished;
     expect(done).toEqual(['reacted']);
   });
 });
@@ -302,15 +319,8 @@ describe('filters', () => {
 
 const LATER = '2026-10-13T00:00:00.000Z';
 
-async function pathExists(path: string): Promise<boolean> {
-  return (await import('node:fs/promises')).stat(path).then(
-    () => true,
-    () => false,
-  );
-}
-
 function stamps() {
-  return { createdAt: '2026-10-12T17:21:07.000Z', updatedAt: '2026-10-12T17:21:07.000Z' };
+  return { createdAt: FIXED_NOW, updatedAt: FIXED_NOW };
 }
 
 describe('Story rows', () => {
