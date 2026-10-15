@@ -224,6 +224,7 @@ const crashy = definePlugin({
   id: 'crashy',
   name: 'Crashy',
   description: 'Fails while it renders',
+  actions: [{ key: 'X', label: 'Boom', target: 'none', run: ({ ui }) => ui.open('boom') }],
   tui: async (): Promise<PluginTui<unknown>> => ({
     screens: { boom: Boom },
     home: [{ label: 'Crashy', screen: 'boom' }],
@@ -284,19 +285,17 @@ describe('Plugin render containment (RES-13)', () => {
     async (how) => {
       crash = how;
       const t = await seedCrashy();
-      const { app } = await open(t, CRASHY, 'home');
-      await waitForFrame(app, 'Crashy');
-      await focusListItem(app, 'Crashy');
-      await app.press(KEYS.enter);
+      const { app } = await open(t, CRASHY, 'board');
+      await waitForFrame(app, 'X Boom');
+      await app.press('X');
       const frame = await waitForFrame(app, FALLBACK[how][0] as string);
       for (const text of FALLBACK[how]) expect(frame).toContain(text);
-      expect(frame).toContain('Home › Crashy');
+      expect(frame).toContain('Board › Boom');
       await app.press(KEYS.escape);
-      await waitForFrame(app, (f) => !f.includes('Home › Crashy'));
+      await waitForFrame(app, (f) => !f.includes('Board › Boom'));
       // Another Plugin's screen still opens.
-      await focusListItem(app, 'Notes');
-      await app.press(KEYS.enter);
-      await waitForFrame(app, 'All notes');
+      await app.press('Z');
+      await waitForFrame(app, 'Note of WEB-1: hello');
       app.unmount();
     },
   );
@@ -345,6 +344,7 @@ describe('Plugin render containment (RES-13)', () => {
       const t = await seedCrashy();
       const { app } = await open(t, CRASHY, 'board-detail', { boardId: 'web' });
       const frame = await waitForFrame(app, FALLBACK[how][0] as string);
+      for (const text of FALLBACK[how]) expect(frame).toContain(text);
       expect(frame).toContain('Notes marker on web');
       expect(frame).toContain('Website');
       app.unmount();
