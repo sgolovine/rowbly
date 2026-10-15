@@ -23,10 +23,22 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 ];
 
 /**
- * Every key that the shell or a core screen handles. A Plugin's Actions must use other keys
- * (ADR-0017), so a Plugin with an Action on one of these fails to load.
+ * Every key that the shell or a core screen or component handles. A Plugin's Actions must use other
+ * keys (ADR-0017), so a Plugin with an Action on one of these fails to load. Add a key here when core
+ * starts to handle it: `test/tui/keyReservations.test.ts` fails otherwise (ARCH-13).
  */
-export const CORE_KEYS: readonly string[] = [...'?,/[] 123456789', ...'qaABcdefhHjJkKlLmnNorsTvy'];
+export const CORE_KEYS: readonly string[] = [
+  // The shell: help, settings, quit, new Board, previous/next Board and Boards 1–9 in the sidebar.
+  ...'?,qN[]123456789',
+  // Moving: j/k up and down, h/l left and right; with shift, moving a Story or a list entry.
+  ...'jkhlJKHL',
+  // Lists and forms: `/` filters, space toggles; confirmation dialogs: y/n.
+  ...'/ yn',
+  // Screen actions: add, edit, delete, move Stage, top/bottom, filters (clear, all Boards), fix,
+  // open (view Board, Stories, Stages, fields), reload. `a`, `e` and `s` are also `ctrl` bindings
+  // of text inputs and forms.
+  ...'nedmTBcAfvosra',
+];
 
 /** The keys of a `Form`, for screens that show one. */
 export const FORM_KEYS: readonly KeyHint[] = [
