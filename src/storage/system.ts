@@ -1,11 +1,13 @@
 // Small filesystem and process helpers that the Command and TUI layers need but may not
 // implement themselves, because only storage may import `node:fs`.
 import { execFile, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { NotFoundError, UsageError } from '../core';
+import { io } from './io';
 
 /** Reads a UTF-8 text file; a missing file is a `NotFoundError`. */
 export async function readTextFile(path: string): Promise<string> {
@@ -28,10 +30,37 @@ export async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-/** Writes a UTF-8 text file, creating its folder first. */
+/**
+ * Writes a UTF-8 text file, creating its folder first. The text goes to a temporary file beside
+ * the destination, which replaces it only once complete (`writeFileAtomic`), so a failed write
+ * never truncates the original (RES-03).
+ */
 export async function writeTextFile(path: string, text: string): Promise<void> {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, text, 'utf8');
+  await io.mkdir(dirname(path));
+  await writeFileAtomic(path, text);
+}
+
+/**
+ * Replaces `path` with `text` atomically (ADR-0019 §3): writes and fsyncs `.<name>.<8 hex>.tmp` in
+ * the same folder, renames it over `path` and fsyncs the folder. On failure the temporary file is
+ * removed, best effort, and the original error is rethrown; the destination keeps its old bytes.
+ * The folder must exist.
+ */
+export async function writeFileAtomic(path: string, text: string): Promise<void> {
+  const dir = dirname(path);
+  const temp = join(dir, `.${basename(path)}.${randomBytes(4).toString('hex')}.tmp`);
+  try {
+    await io.writeFile(temp, text);
+    await io.rename(temp, path);
+  } catch (err) {
+    try {
+      await io.rm(temp);
+    } catch {
+      // Cleanup is best effort; the original error is the one that matters.
+    }
+    throw err;
+  }
+  await io.syncDir(dir);
 }
 
 /**
