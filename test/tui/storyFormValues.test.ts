@@ -8,7 +8,7 @@ describe('Story form values', () => {
     expect(assigneesValue(['alice', 'bob'])).toEqual(['alice', 'bob']);
     expect(assigneesValue(null)).toEqual([]);
     expect(assigneesValue(undefined)).toEqual([]);
-    expect(priorityValue('high')).toBe('high');
+    expect(priorityValue('P1')).toBe('P1');
     expect(priorityValue('(none)')).toBeNull();
     expect(priorityValue(null)).toBeNull();
   });
@@ -18,7 +18,7 @@ describe('Story form values', () => {
     ['assignees', () => assigneesValue(true)],
     ['priority', () => priorityValue('urgent-ish')],
     ['priority', () => priorityValue(3)],
-    ['priority', () => priorityValue(['high'])],
+    ['priority', () => priorityValue(['P1'])],
   ])('rejects a malformed %s value as a validation error on that field', (field, read) => {
     let error: unknown;
     try {
