@@ -3,3 +3,8 @@ dist/
 coverage/
 .fleet/
 .test-dist/
+# This repository commits its own .rowbly/ Data Root; its lock and journal are never data (ADR-0019 §2).
+.rowbly/.lock
+.rowbly/.lock.break
+.rowbly/.lock.*.tmp
+.rowbly/.txn/
