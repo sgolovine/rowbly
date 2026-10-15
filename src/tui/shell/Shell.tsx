@@ -1,5 +1,6 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { useContext, useMemo, useState } from 'react';
+import { invokePlugin } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
   type BoardSelection,
@@ -63,9 +64,11 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
             label: action.label,
             run: () => {
               const ui = pluginUi(plugin.id, router, toast);
-              Promise.resolve()
-                .then(() => action.run({ focus: focus ?? {}, plugin: services.plugins.context(plugin.id), ui }))
-                .catch((err: unknown) => toast.error(err));
+              // The adapter turns a synchronous throw and a rejection alike into one attributed
+              // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
+              invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
+                action.run({ focus: focus ?? {}, plugin: services.plugins.context(plugin.id), ui }),
+              ).catch((err: unknown) => toast.error(err));
             },
           })),
       )

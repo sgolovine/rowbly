@@ -140,7 +140,7 @@ describe('Plugin field isolation', () => {
     const { app, toasts } = await open(t, [notes, flaky({ input: true })], 'story-form', { key: 'WEB-1' });
     await waitForFrame(app, 'Flaky');
     await app.press(KEYS.end, ' again', ...Array(8).fill(KEYS.tab), 'y', KEYS.ctrlS);
-    await waitForFrame(app, 'Plugin "flaky" failed in the input stage: cannot convert');
+    await waitForFrame(app, 'Plugin "flaky" failed in the field of stories.update: cannot convert');
     const saved = await readJsonFile(t, storyFile('WEB-1'));
     expect(saved.name).toBe('Login');
     expect(toasts.list().filter((toast) => toast.kind === 'error')).toHaveLength(1);
@@ -378,6 +378,49 @@ describe('Plugin render containment (RES-13)', () => {
     await waitForFrame(app, (f) => !f.includes('Keys'));
     expect(app.lastFrame()).toContain(FALLBACK.render[0]);
     expect(toasts.list()).toEqual([]);
+    app.unmount();
+  });
+});
+
+describe('Plugin Action failures (DX-39)', () => {
+  const grumpy = definePlugin({
+    id: 'grumpy',
+    name: 'Grumpy',
+    description: 'Its Actions fail',
+    actions: [
+      {
+        key: 'X',
+        label: 'Throw',
+        target: 'none',
+        run: () => {
+          throw new TypeError('action bug');
+        },
+      },
+      {
+        key: 'Y',
+        label: 'Reject',
+        target: 'none',
+        run: async () => {
+          throw new ValidationError('not now', { hint: 'try later' });
+        },
+      },
+    ],
+  });
+
+  it('a throwing or rejecting Action shows one attributed toast and leaves the TUI usable', async () => {
+    const t = await seed({ notes: true, grumpy: true });
+    const { app, toasts } = await open(t, [notes, grumpy], 'board');
+    await waitForFrame(app, 'X Throw');
+    await app.press('X');
+    await waitForFrame(app, 'action bug');
+    await app.press('Y');
+    await waitForFrame(app, 'not now');
+    expect(toasts.list().map((toast) => toast.message)).toEqual([
+      'Plugin "grumpy" failed in its screen: action bug (turn it off with `rowbly plugins disable grumpy`)',
+      'not now (try later)',
+    ]);
+    await app.press('Z');
+    await waitForFrame(app, 'Note of WEB-1: hello');
     app.unmount();
   });
 });
