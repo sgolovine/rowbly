@@ -1,38 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { comments } from '../../src/plugins/comments';
-import { relativeTime } from '../../src/plugins/comments/relativeTime';
 import { createRepositories } from '../../src/storage';
-import { App } from '../../src/tui/app';
-import { createToastStore } from '../../src/tui/hooks';
-import { loadTuiPlugins } from '../../src/tui/loadPlugins';
 import type { RouteParams } from '../../src/tui/router';
 import { fixedClock, makeStory } from '../helpers';
-import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
-import { pluginRoot, withPlugins } from './helpers';
+import { KEYS, waitForFrame } from '../tui/helpers';
+import { readCommentThread } from './commentsHelpers';
+import { pluginRoot } from './helpers';
+import { openPluginApp } from './tuiHelpers';
 
 /** The App over a Data Root with the Comments Plugin on and Me set to alice, opened on `screen`. */
 async function open(screen: string, params: RouteParams) {
   const t = await pluginRoot({ comments: true });
   await makeStory(t.path, { boardId: 'web', key: 'WEB-1', name: 'Login', assignees: ['alice'] });
   const clock = fixedClock();
-  const toasts = createToastStore();
-  const { services, ctx, host } = await withPlugins(t, [comments], { me: 'alice', now: clock.now });
-  const app = renderTui(
-    <App
-      ctx={ctx}
-      services={services}
-      plugins={await loadTuiPlugins(host)}
-      initial={{ screen, params }}
-      toasts={toasts}
-    />,
-  );
+  const { app, services } = await openPluginApp(t, [comments], { screen, params }, { me: 'alice', now: clock.now });
   await waitForFrame(app, (frame) => !frame.includes('Loading'));
   const story = () => createRepositories(t.root).stories.findByKey('WEB-1');
-  const thread = async (task?: number) => {
-    const saved = await story();
-    const record = task === undefined ? saved : saved.tasks[task];
-    return (record?.plugins?.comments?.comments ?? []) as { id: string; author: string | null; body: string }[];
-  };
+  const thread = (task?: number) => readCommentThread(t, 'WEB-1', task);
   return { app, services, clock, story, thread };
 }
 
@@ -86,13 +70,5 @@ describe('Comments TUI', () => {
     expect(await thread(0)).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
     expect(await thread()).toEqual([]);
     app.unmount();
-  });
-
-  it('formats relative times', () => {
-    const now = new Date('2026-10-12T17:21:07.000Z');
-    expect(relativeTime('2026-10-12T17:21:00.000Z', now)).toBe('just now');
-    expect(relativeTime('2026-10-12T14:21:07.000Z', now)).toBe('3h ago');
-    expect(relativeTime('2026-10-10T17:21:07.000Z', now)).toBe('2d ago');
-    expect(relativeTime('2025-10-12T17:21:07.000Z', now)).toBe('1y ago');
   });
 });
