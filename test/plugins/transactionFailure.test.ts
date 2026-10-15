@@ -86,17 +86,26 @@ const scenarios: Scenario[] = [
   },
 ];
 
+/**
+ * The Data Root without its lock files: a crash injected while the lock is taken or released leaves
+ * them behind, as a killed process would, and the next acquisition breaks them (ADR-0019 §1).
+ */
+async function dataTree(path: string): Promise<Record<string, string>> {
+  const tree = await snapshotTree(path);
+  return Object.fromEntries(Object.entries(tree).filter(([name]) => !/^\.lock/.test(name)));
+}
+
 /** The tree before and after a clean run, and how many mutating `io` calls the run makes. */
 async function cleanRun(scenario: Scenario) {
   const { t, run } = await scenario.setup();
-  const before = await snapshotTree(t.path);
+  const before = await dataTree(t.path);
   const counting = injectFaults();
   try {
     await run();
   } finally {
     counting.restore();
   }
-  return { before, after: await snapshotTree(t.path), calls: counting.calls };
+  return { before, after: await dataTree(t.path), calls: counting.calls };
 }
 
 describe.each(scenarios)('$name', (scenario) => {
@@ -116,12 +125,12 @@ describe.each(scenarios)('$name', (scenario) => {
       // Never "nothing saved" once the commit point has passed: the error names what is pending.
       if (error instanceof DataIntegrityError) expect(error.details?.pending, `call ${n}`).toBeDefined();
       await recoverTransactions(t.path);
-      const recovered = await snapshotTree(t.path);
+      const recovered = await dataTree(t.path);
       // A crash while only cleanup is left still reports success: every step was applied.
       if (error === undefined) expect(recovered, `call ${n}`).toEqual(clean.after);
       else expect([clean.before, clean.after], `call ${n}`).toContainEqual(recovered);
       await recoverTransactions(t.path);
-      expect(await snapshotTree(t.path), `call ${n}, recovered again`).toEqual(recovered);
+      expect(await dataTree(t.path), `call ${n}, recovered again`).toEqual(recovered);
     }
   }, 120_000);
 
@@ -137,7 +146,7 @@ describe.each(scenarios)('$name', (scenario) => {
       );
       faults.restore();
       await recoverTransactions(t.path);
-      const recovered = await snapshotTree(t.path);
+      const recovered = await dataTree(t.path);
       if (ok) expect(recovered, `call ${n}`).toEqual(clean.after);
       else expect([clean.before, clean.after], `call ${n}`).toContainEqual(recovered);
     }

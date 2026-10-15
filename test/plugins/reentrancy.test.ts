@@ -416,8 +416,14 @@ describe('the runner around an operation', () => {
     const t = await pluginRoot({ watcher: true });
     const { ctx, services } = await withPlugins(t, [watcher]);
     const ops = createOperationRunner(ctx, createRepositories(t.root), () => services, {
-      enter: ({ name }) => void order.push(`enter ${name}`),
-      exit: ({ name }) => void order.push(`exit ${name}`),
+      async hold({ name }, fn) {
+        order.push(`enter ${name}`);
+        try {
+          return await fn();
+        } finally {
+          order.push(`exit ${name}`);
+        }
+      },
     });
 
     await ops.run('watcher.op', {}, async () => {

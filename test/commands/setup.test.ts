@@ -39,7 +39,7 @@ describe('rowbly init', () => {
       'local.json',
       'rowbly.config.json',
     ]);
-    expect(await readFile(join(root, '.gitignore'), 'utf8')).toBe('local.json\n');
+    expect(await readFile(join(root, '.gitignore'), 'utf8')).toBe('local.json\n.lock\n.lock.break\n.txn/\n');
     expect(JSON.parse(await readFile(join(root, 'rowbly.config.json'), 'utf8')).stages).toHaveLength(4);
 
     // Context resolves from local.json alone (`stories list` is WP05; these share its resolution).

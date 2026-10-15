@@ -23,7 +23,8 @@ export async function tempRoot(): Promise<TempRoot> {
   const path = join(dir, '.rowbly');
   await mkdir(path);
   await writeFile(join(path, 'rowbly.config.json'), `${JSON.stringify({ version: 1 }, null, 2)}\n`);
-  const cleanup = () => rm(dir, { recursive: true, force: true });
+  // A read still in flight when the test ends may create the Data Root lock file while it is removed.
+  const cleanup = () => rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 20 });
   try {
     onTestFinished(cleanup);
   } catch {

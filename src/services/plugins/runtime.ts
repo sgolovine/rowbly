@@ -11,6 +11,7 @@ import {
 } from '../../core';
 import type { LocalState, Story, Task } from '../../schemas';
 import type { Repositories } from '../../storage';
+import { coordinated } from '../coordination';
 import type { RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, listPluginFiles, readPluginFile } from './changeSet';
@@ -93,15 +94,15 @@ const REACTION_TIMEOUT_MS = 5_000;
 type AnyHooks = OperationHooks<OperationInput, unknown, unknown>;
 
 /**
- * Wraps a whole operation, from before its body's first read through the save, and not its
- * reactions. The default does nothing; the Data Root lock plugs in here (ADR-0019, WP02C).
+ * Runs a whole operation, from before its body's first read through the save, and not its
+ * reactions. Services hold the Data Root lock here (ADR-0019 §1, `withMutation`); the default does
+ * nothing.
  */
 export interface OperationCoordinator {
-  enter(operation: { id: string; name: string }): void | Promise<void>;
-  exit(operation: { id: string; name: string }): void | Promise<void>;
+  hold<T>(operation: { id: string; name: string }, fn: () => Promise<T>): Promise<T>;
 }
 
-const uncoordinated: OperationCoordinator = { enter() {}, exit() {} };
+const uncoordinated: OperationCoordinator = { hold: (_operation, fn) => fn() };
 
 const CORE_NAMES: ReadonlySet<string> = new Set(CORE_OPERATION_NAMES);
 
@@ -177,9 +178,8 @@ export function createOperationRunner(
       plugin: hookContextOf(plugin),
     });
 
-    await coordinator.enter(operation);
-    let result: R;
-    try {
+    const result = await coordinator.hold(operation, async (): Promise<R> => {
+      let result: R;
       const replacement = replacementFor<R>(plugins, name);
       if (replacement) {
         const { id } = replacement.plugin.definition;
@@ -251,9 +251,9 @@ export function createOperationRunner(
       await inScope({ operationId: operation.id, operation: name, plugin: null, stage: 'commit' }, () =>
         changes.save(),
       );
-    } finally {
-      await coordinator.exit(operation);
-    }
+      return result;
+    });
+    syncContext(changes);
 
     const reactors = plugins.filter((plugin) => hooksOf(plugin)?.react);
     if (reactors.length === 0) return result;
@@ -273,6 +273,18 @@ export function createOperationRunner(
     if (ctx.backgroundReactions) background = background.then(reactions);
     else await reactions();
     return result;
+  }
+
+  /**
+   * After a save, before reactions: the saved Local State becomes the context's (ADR-0019 §8). Me
+   * follows it only when the stored Me changed, so a Me inferred from the git email stays. A
+   * rejected or failed operation never gets here.
+   */
+  function syncContext(changes: CoreChangeSet): void {
+    const local = changes.changes.find((c): c is LocalStateChange => c.type === 'localState');
+    if (!local) return;
+    ctx.local = structuredClone(local.after);
+    if (local.before.me !== local.after.me) ctx.me = local.after.me ?? null;
   }
 
   /**
@@ -436,8 +448,10 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       return Object.keys(plugins).length > 0 ? { ...rest, plugins } : rest;
     },
     files: {
-      read: (scope, name) => readPluginFile(ctx.root, repos, id, scope, name),
-      list: (scope) => listPluginFiles(ctx.root, repos, id, scope),
+      // Each read is one participating read, under the Data Root lock (ADR-0019 §5).
+      read: (scope, name) =>
+        coordinated(ctx.root, `${id}.files.read`, () => readPluginFile(ctx.root, repos, id, scope, name)),
+      list: (scope) => coordinated(ctx.root, `${id}.files.list`, () => listPluginFiles(ctx.root, repos, id, scope)),
     },
     get me() {
       return ctx.me;

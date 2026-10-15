@@ -1,7 +1,9 @@
 import { ConflictError, NotFoundError, toTimestamp, ValidationError } from '../core';
-import { type BoardConfig, BoardConfigSchema, type LocalState, type Slug } from '../schemas';
+import { type BoardConfig, BoardConfigSchema, type Slug } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
-import type { OperationRunner } from './plugins/runtime';
+import { coordinated } from './coordination';
+import { type OperationRunner, resultRemoved } from './plugins/runtime';
+import type { ChangeSet } from './plugins/types';
 import type { BoardsService, RowblyContext } from './types';
 
 export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): BoardsService {
@@ -37,7 +39,7 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
           // Stages and Custom Fields are inherited until a level is edited (copy-on-write).
           return changes.putBoard(board);
         },
-        (changes, board) => changes.board(board.id)?.after ?? board,
+        latestBoard,
       ),
 
     update: (id, patch) =>
@@ -55,13 +57,12 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
             }),
           );
         },
-        (changes, board) => changes.board(board.id)?.after ?? board,
+        latestBoard,
       ),
 
     async remove(id, opts) {
       const board = await repos.boards.get(id);
-      // The Local State left after the deletion refreshes the context; the operation's result is `undefined` (ARCH-14).
-      let local: LocalState | null = null;
+      // The operation's result is `undefined` (ARCH-14).
       await ops.run('boards.remove', { ...opts, id: board.id }, async (changes) => {
         if (!opts.force) {
           const stories = await repos.stories.allInBoard(board.id);
@@ -74,10 +75,11 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
         }
         // Its folder goes with it: Stories and Plugin files too (ADR-0013).
         await changes.deleteBoard(board.id);
-        if (ctx.local.board === board.id)
-          local = await changes.updateLocalState(({ board: _current, ...rest }) => rest);
+        // The stored Local State, not the context's copy (ARCH-37); the runner refreshes the context.
+        if ((await repos.localState.get()).board === board.id) {
+          await changes.updateLocalState(({ board: _current, ...rest }) => rest);
+        }
       });
-      if (local) ctx.local = local;
     },
   };
 
@@ -95,10 +97,16 @@ export function createBoardsService(ctx: RowblyContext, repos: Repositories, ops
 /** Story counts per Stage key on a Board, for `boards show` and the TUI (Stage keys with no Stories are omitted). */
 export async function storyCountsByStage(ctx: RowblyContext, boardId: Slug): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};
-  for (const story of await createRepositories(ctx.root).stories.allInBoard(boardId)) {
-    counts[story.stage] = (counts[story.stage] ?? 0) + 1;
-  }
+  const stories = await coordinated(ctx.root, 'boards.storyCounts', () =>
+    createRepositories(ctx.root).stories.allInBoard(boardId),
+  );
+  for (const story of stories) counts[story.stage] = (counts[story.stage] ?? 0) + 1;
   return counts;
+}
+
+/** The Board an operation saves, after every transform; a transform may not delete it (W11). */
+function latestBoard(changes: ChangeSet, board: BoardConfig): BoardConfig {
+  return changes.board(board.id)?.after ?? resultRemoved(`Board ${board.id}`);
 }
 
 function parseBoard(input: unknown): BoardConfig {

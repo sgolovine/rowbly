@@ -74,8 +74,9 @@ describe('context.use / clearUse / setMe', () => {
 
   it('setMe validates the handle against the roster', async () => {
     const t = await twoBoards();
-    const ctx = contextFor(t, { version: 1, board: 'web' });
+    const ctx = contextFor(t);
     const { context } = createServices(ctx);
+    await context.use('web');
     expect(await context.setMe('ana')).toEqual({ version: 1, board: 'web', me: 'ana' });
     expect(ctx.me).toBe('ana');
     await expect(context.setMe('bob')).rejects.toThrow(NotFoundError);

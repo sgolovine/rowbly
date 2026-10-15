@@ -4,7 +4,14 @@ import { readdir, readFile, rm, rmdir } from 'node:fs/promises';
 import { dirname, join, sep } from 'node:path';
 import type { DataRoot } from '../schemas';
 
-/** Every file under the Data Root, as sorted `/`-separated paths relative to it. */
+/**
+ * The Data Root lock of the running process, and of one that is taking it right now (ADR-0019 §1).
+ * Doctor runs under the lock, so it would otherwise always see its own lock file. A stale lock is
+ * not a finding either: the next acquisition breaks it.
+ */
+const LOCK_FILES_RE = /^\.lock(\.break)?$|^\.lock(\.break)?\.[0-9a-f]{8}\.tmp$/;
+
+/** Every file under the Data Root but the lock files, as sorted `/`-separated paths relative to it. */
 export async function listDataRootFiles(root: DataRoot): Promise<string[]> {
   const entries = await readdir(root.path, { recursive: true, withFileTypes: true });
   return entries
@@ -15,6 +22,7 @@ export async function listDataRootFiles(root: DataRoot): Promise<string[]> {
         .split(sep)
         .join('/'),
     )
+    .filter((path) => !LOCK_FILES_RE.test(path))
     .sort();
 }
 
