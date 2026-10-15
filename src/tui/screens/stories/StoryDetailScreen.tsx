@@ -144,7 +144,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
           tab === TABS.length + i && (
             <PluginSlot
               key={`${plugin}:${label}`}
-              plugin={plugin}
+              pluginId={plugin}
               render={(context, ui) => <PluginTab story={story} active={active && viewing} plugin={context} ui={ui} />}
             />
           ),

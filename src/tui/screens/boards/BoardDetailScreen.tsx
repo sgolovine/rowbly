@@ -109,7 +109,7 @@ export function BoardDetailScreen({ params }: ScreenProps) {
           <PluginSlot
             // biome-ignore lint/suspicious/noArrayIndexKey: a Plugin's sections keep their order.
             key={`${p.id}:${i}`}
-            plugin={p.id}
+            pluginId={p.id}
             render={(context, ui) => <Section board={board} plugin={context} ui={ui} />}
           />
         )),
