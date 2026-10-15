@@ -2,7 +2,14 @@
 // a reaction, its own commands and files, options on core commands, a filter, `stories show` rows,
 // a doctor check with a fix, an Action and a TUI part. Like a Built-in Plugin, it imports only the
 // Plugin API.
-import { definePlugin, type PluginChangeSet, type PluginReadContext, type Story, z } from '../../../src/plugin-api';
+import {
+  definePlugin,
+  type PluginChangeSet,
+  type PluginReadContext,
+  type Story,
+  ValidationError,
+  z,
+} from '../../../src/plugin-api';
 
 export const NotesSettings = z.object({
   /** Shown before each note in `stories show`. */
@@ -22,15 +29,21 @@ function setNote(plugin: PluginReadContext<NotesSettings>, story: Story, note: s
   return plugin.writeBag(story, note === null ? undefined : { note });
 }
 
-/** Applies the Notes input of an operation to the Story it saved. */
+/** Applies the Notes input of an operation to the Story it saved; without input it does nothing. */
 async function applyInput(
   changes: PluginChangeSet,
   key: string | undefined,
   input: unknown,
   plugin: PluginReadContext<NotesSettings>,
 ) {
+  if (input === undefined || !key) return;
   const parsed = NoteInput.safeParse(input);
-  if (!parsed.success || !key) return;
+  if (!parsed.success) {
+    throw new ValidationError('invalid Notes input', {
+      hint: 'pass { note: "text" } to set the note or { note: null } to remove it',
+      details: { issues: parsed.error.issues },
+    });
+  }
   await changes.updateStory(key, (story) => setNote(plugin, story, parsed.data.note));
 }
 
