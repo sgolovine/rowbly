@@ -1,3 +1,5 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { makeBoard, makeStory, type RunCliOptions, runCli, type TempRoot } from '../helpers';
 import { pluginRoot, readJsonFile } from './helpers';
@@ -86,5 +88,49 @@ describe('rowbly epics', () => {
     );
     expect((await cli(t, ['doctor', '--fix'])).exitCode).toBe(0);
     expect(await readJsonFile(t, 'boards/web/stories/WEB-3/story.json')).not.toHaveProperty('plugins');
+  });
+
+  it('keeps working next to a corrupt Epic file, which reads as DATA_INTEGRITY with its path (RES-12)', async () => {
+    const t = await pluginRoot({ epics: true });
+    await cli(t, ['epics', 'create', 'good', '--name', 'Good']);
+    const bad = join(t.path, 'plugins/epics/bad.json');
+    const conflict = '<<<<<<< HEAD\n{}\n=======\n>>>>>>> other\n';
+    await mkdir(join(t.path, 'plugins/epics'), { recursive: true });
+    await writeFile(bad, conflict);
+    await makeStory(t.path, { key: 'WEB-1', boardId: 'web', plugins: { epics: { epic: 'bad' } } });
+
+    const listed = await cli(t, ['epics', 'list', '--json']);
+    expect(listed.exitCode).toBe(0);
+    expect(json(listed.stdout).map((e: { id: string }) => e.id)).toEqual(['good']);
+    expect(json(listed.stderr).warning).toContain('Epic "bad" is unavailable: plugins/epics/bad.json');
+
+    for (const args of [
+      ['epics', 'show', 'bad', '--json'],
+      ['epics', 'edit', 'bad', '--name', 'Fixed', '--json'],
+    ]) {
+      const failed = await cli(t, args);
+      expect(failed.exitCode).toBe(6);
+      expect(json(failed.stderr).error).toMatchObject({
+        code: 'DATA_INTEGRITY',
+        details: expect.objectContaining({ path: 'plugins/epics/bad.json', problem: 'conflict-markers' }),
+      });
+    }
+    const checked = json((await cli(t, ['doctor', '--json'])).stdout);
+    expect(checked.findings).toContainEqual(
+      expect.objectContaining({ code: 'EPICS_CONFLICT_MARKERS', path: 'plugins/epics/bad.json' }),
+    );
+    await cli(t, ['doctor', '--fix']);
+    expect(await readJsonFile(t, 'boards/web/stories/WEB-1/story.json')).toHaveProperty('plugins.epics.epic', 'bad');
+    expect(await readFile(bad, 'utf8')).toBe(conflict);
+  });
+
+  it('checks for nothing to update before reading the Epic, and validates the Epic filter once (CQ-94, CQ-82)', async () => {
+    const t = await pluginRoot({ epics: true });
+    expect((await cli(t, ['epics', 'edit', 'missing'])).exitCode).toBe(2);
+    expect((await cli(t, ['epics', 'edit', 'missing', '--name', 'Name'])).exitCode).toBe(3);
+    expect((await cli(t, ['epics', 'edit', 'missing', '--name', ' '])).exitCode).toBe(2);
+    const filtered = await cli(t, ['stories', 'list', '--epic', 'Not A Slug']);
+    expect(filtered.exitCode).toBe(2);
+    expect(filtered.stderr).toContain('--epic needs an Epic ID');
   });
 });
