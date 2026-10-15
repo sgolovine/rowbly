@@ -1,3 +1,4 @@
+// Months and years are approximate elapsed-time units.
 const UNITS: readonly [string, number][] = [
   ['y', 365 * 24 * 3600],
   ['mo', 30 * 24 * 3600],
