@@ -606,20 +606,63 @@ export interface PluginFormField {
   label: string;
   kind: 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
   required?: boolean;
+  /**
+   * Choices for `select` and `multiselect`. A select cycles through these only, so "no value" is an
+   * option of the Plugin's own whose label cannot be a real value (Epics uses `No Epic`, which no Epic
+   * slug can be); a filter keeps "any" (`All Epics`) apart from "without a value" (`No Epic`).
+   */
   options?: readonly string[];
   /** The starting value. */
   value?: PluginFormValue;
+  /**
+   * Set when the stored value cannot be shown for editing, e.g. `'stored value is invalid; kept
+   * unchanged'` for an invalid bag. The form shows this instead of the value and offers only a reset;
+   * the stored value is kept unless the person picks the reset.
+   */
+  unavailable?: string;
 }
 
+/**
+ * The Story form's fields for one Plugin, and its input of `stories.create` / `stories.update`.
+ *
+ * The form calls `input` only when at least one of this Plugin's fields changed, comparing normalized
+ * values (an empty number is `null`, an unset boolean `false`, an unset multiselect `[]`, and a
+ * multiselect's order does not count). An unchanged Plugin, or one whose `fields` failed, contributes
+ * no input, so it never changes stored data.
+ *
+ * | Story | Field | `input` | Result |
+ * | --- | --- | --- | --- |
+ * | new | left empty, or changed back | not called | no bag |
+ * | new | set | called | the Plugin's input |
+ * | existing | unchanged | not called | bag kept as stored, invalid or unknown keys included |
+ * | existing | changed to a value | called | the Plugin's input |
+ * | existing | changed to empty | called | the Plugin's explicit clear, e.g. `{ epic: null }` |
+ * | existing, invalid bag (`unavailable`) | kept | not called | bag kept as stored |
+ * | existing, invalid bag (`unavailable`) | reset | called with the field `null` | the Plugin's explicit clear |
+ * | any | `fields` threw | never called | bag kept as stored |
+ */
 export interface PluginStoryForm<S> {
   fields(args: { boardId: Slug; story: Story | null; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
-  /** This Plugin's input for `stories.create` / `stories.update`, or `undefined` for none. */
-  input(values: Record<string, PluginFormValue>, story: Story | null): unknown;
+  /**
+   * This Plugin's input, or `undefined` for no change. `values` and `initialValues` hold the
+   * Plugin's own fields by name, normalized; an `unavailable` field is in `values` (as `null`) only
+   * when it was reset. Leave the stored data of fields not in `changedFields` as it is. Clearing is
+   * an explicit value the Plugin defines; `undefined` never clears.
+   */
+  input(args: {
+    values: Record<string, PluginFormValue>;
+    initialValues: Record<string, PluginFormValue>;
+    changedFields: readonly string[];
+    story: Story | null;
+  }): unknown;
 }
 
 export interface PluginStoryFilter<S> {
   fields(args: { boardId: Slug; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
-  /** This Plugin's filter (`StoryFilter.plugins.<id>`), or `undefined` for none. */
+  /**
+   * This Plugin's filter (`StoryFilter.plugins.<id>`), or `undefined` for none. Not called when the
+   * Plugin's filter fields failed to load.
+   */
   filter(values: Record<string, PluginFormValue>): unknown;
   /** A short summary of the chosen values for the filter line; `''` for none. */
   describe(values: Record<string, PluginFormValue>): string;
