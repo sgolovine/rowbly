@@ -1,14 +1,16 @@
 import { homedir } from 'node:os';
 import { Command, CommanderError } from 'commander';
 import pkg from '../package.json' with { type: 'json' };
-import { attachPlugins, PLUGIN_OPTION_COMMANDS, registerCommands } from './commands';
+import { attachPlugins, pluginCliStager, registerCommands } from './commands';
 import { ExitCode, exitCodeFor, UsageError } from './core';
 import { printError, printWarnings } from './output';
 import {
   type AnyPluginDefinition,
   type DataRoot,
   failureWarning,
+  type LoadPluginsOptions,
   loadPlugins,
+  PLUGIN_OPTION_COMMANDS,
   type PluginHost,
   type PluginOptionCommand,
   type ReservedNames,
@@ -34,18 +36,36 @@ export function createProgram(host?: PluginHost): Command {
   return program;
 }
 
-/** The command names, options and keys that core uses, so that a Plugin cannot take them. */
-export function reservedNames(): ReservedNames {
-  const program = createProgram();
-  const globals = program.options.map((o) => o.name());
+/**
+ * The command names, options and keys that core uses, so that a Plugin cannot take them. They are
+ * read from `program`, a core program to which no Plugin is attached yet.
+ */
+export function reservedNames(program: Command = createProgram()): ReservedNames {
+  // Both polarities of an option share one name: `--no-prompt` reserves `--prompt` too (RES-25).
+  const base = (options: readonly { name(): string }[]) => options.map((o) => o.name().replace(/^no-/, ''));
+  const globals = base(program.options);
   const options: Partial<Record<PluginOptionCommand, string[]>> = {};
   for (const path of PLUGIN_OPTION_COMMANDS) {
     const [group, verb] = path.split(' ');
     const command = program.commands.find((c) => c.name() === group)?.commands.find((c) => c.name() === verb);
-    const names = (command?.options ?? []).map((o) => o.name().replace(/^no-/, ''));
-    options[path] = [...new Set([...globals, ...names, 'help'])];
+    options[path] = [...new Set([...globals, ...base(command?.options ?? []), 'help'])];
   }
   return { commands: [...program.commands.map((c) => c.name()), 'help'], options, keys: CORE_KEYS };
+}
+
+/**
+ * Builds the core program once, loads the Plugins that `root` turns on with their CLI part staged
+ * against it, and attaches the complete part of each Plugin that loaded (PERF-06, ARCH-24).
+ */
+export async function loadProgram(
+  root: DataRoot | null,
+  registry: readonly AnyPluginDefinition[],
+): Promise<{ program: Command; host: PluginHost }> {
+  const program = createProgram();
+  const cli = pluginCliStager(program);
+  const host = await loadPlugins({ root, registry, reserved: reservedNames(program), stage: cli.stage });
+  cli.attach(host);
+  return { program, host };
 }
 
 /** Prints any error thrown while running a command and returns the exit code (contracts §6). */
@@ -80,6 +100,18 @@ export function globalsOnly(argv: readonly string[]): { root?: string } | null {
   return globals;
 }
 
+/**
+ * Whether `argv` only asks for the version: exactly one `--version` or `-V`, and otherwise only
+ * global options, in any order. Rowbly then answers without loading Plugins (ARCH-28).
+ */
+export function versionOnly(argv: readonly string[]): boolean {
+  const flags = argv.flatMap((arg, i) =>
+    (arg === '--version' || arg === '-V') && argv[i - 1] !== '--root' ? [i] : [],
+  );
+  if (flags.length !== 1) return false;
+  return globalsOnly(argv.filter((_, i) => i !== flags[0])) !== null;
+}
+
 /** `--root <path>` or `--root=<path>` anywhere in `argv`. */
 function rootFlag(argv: readonly string[]): string | undefined {
   for (let i = 0; i < argv.length; i++) {
@@ -98,10 +130,19 @@ function rootFlag(argv: readonly string[]): string | undefined {
  */
 export async function main(argv: string[], registry: readonly AnyPluginDefinition[] = []): Promise<number> {
   const json = argv.includes('--json');
+  if (versionOnly(argv)) {
+    try {
+      await createProgram().parseAsync(argv, { from: 'user' });
+      return ExitCode.ok;
+    } catch (err) {
+      return handleError(err, json);
+    }
+  }
   const globals = globalsOnly(argv);
-  const reserved = reservedNames();
-  const load = (root: DataRoot | null) => loadPlugins({ root, registry, reserved });
   if (globals) {
+    const reserved = reservedNames();
+    const load = (root: DataRoot | null, stage?: LoadPluginsOptions['stage']) =>
+      loadPlugins({ root, registry, reserved, stage });
     if (!(process.stdin.isTTY && process.stdout.isTTY)) {
       createProgram().outputHelp({ error: true });
       return ExitCode.usage;
@@ -122,8 +163,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
       env: process.env,
       home: homedir(),
     }).catch(() => null);
-    const host = await load(root);
-    const program = createProgram(host);
+    const { program, host } = await loadProgram(root, registry);
     printWarnings(host.failures().map(failureWarning), { json });
     await program.parseAsync(argv, { from: 'user' });
     // A command may set its own exit code without throwing (e.g. `doctor` with errors).

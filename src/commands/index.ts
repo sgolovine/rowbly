@@ -22,4 +22,4 @@ export function registerCommands(program: Command): void {
   registerPlugins(program);
 }
 
-export { attachPlugins, PLUGIN_OPTION_COMMANDS } from './plugins';
+export { attachPlugins, type PluginCliStager, pluginCliStager } from './plugins';

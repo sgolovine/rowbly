@@ -73,11 +73,11 @@ export function registerTasks(program: Command): void {
     withContext(cmd, async ({ services, globals }) => {
       const current = opts.edit ? (await services.tasks.get(taskId)).task : undefined;
       const description = await readDescription(opts, current?.description);
-      const plugins = pluginOptions(cmd);
-      if (opts.name === undefined && description === undefined && !plugins.plugins) {
+      const operationOptions = pluginOptions(cmd);
+      if (opts.name === undefined && description === undefined && !operationOptions.plugins) {
         throw new UsageError('nothing to change', { hint: 'see `rowbly tasks edit --help`' });
       }
-      const task = await services.tasks.update(taskId, { name: opts.name, description, ...plugins });
+      const task = await services.tasks.update(taskId, { name: opts.name, description, ...operationOptions });
       printResult(task, { json: globals.json, human: (t) => `Updated ${t.id}` });
     }),
   );

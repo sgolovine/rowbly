@@ -36,10 +36,18 @@ export function boardFlag(opts: ContextFlags, env: NodeJS.ProcessEnv = process.e
   return opts.board || env.ROWBLY_BOARD || undefined;
 }
 
+/** One Plugin's options on one core command. */
+export interface AttachedPluginOptions {
+  id: string;
+  /** The Commander attribute names of its options, e.g. `epic`. */
+  attributes: string[];
+  input(values: Record<string, unknown>): unknown;
+}
+
 /** The Plugins of a program: their host, and which of them add options to each core command. */
 export interface ProgramPlugins {
   host: PluginHost;
-  options: Map<string, { id: string; attributes: string[]; input(values: Record<string, unknown>): unknown }[]>;
+  options: Map<string, AttachedPluginOptions[]>;
 }
 
 const programPlugins = new WeakMap<Command, ProgramPlugins>();
@@ -64,13 +72,16 @@ export function commandPath(cmd: Command): string {
 
 /**
  * The Plugin input that the Plugins' options on `cmd` give (ADR-0012): `{ <id>: … }`, or
- * `undefined` when none was used.
+ * `undefined` when none was used. Only options given on the command line have a value, so a lone
+ * `--no-x` that was not used gives `undefined` rather than Commander's default `true` (DX-10). With
+ * both `--x` and `--no-x`, the last one wins.
  */
 export function pluginInput(cmd: Command): PluginInput | undefined {
   const opts = cmd.opts<Record<string, unknown>>();
+  const given = (name: string) => (cmd.getOptionValueSource(name) === 'cli' ? opts[name] : undefined);
   const input: PluginInput = {};
   for (const { id, attributes, input: toInput } of pluginsOf(cmd)?.options.get(commandPath(cmd)) ?? []) {
-    const values = Object.fromEntries(attributes.map((name) => [name, opts[name]]));
+    const values = Object.fromEntries(attributes.map((name) => [name, given(name)]));
     const value = toInput(values);
     if (value !== undefined) input[id] = value;
   }
