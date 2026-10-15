@@ -1,16 +1,19 @@
 // The TUI slots that Plugins fill, with the Notes fixture Plugin on.
+import { Text, useInput } from 'ink';
 import { describe, expect, it } from 'vitest';
 import { reservedNames } from '../../src/main';
-import { definePlugin } from '../../src/plugin-api';
+import { definePlugin, type PluginScreenProps, type PluginTui } from '../../src/plugin-api';
 import type { LocalState } from '../../src/schemas';
-import { loadPlugins } from '../../src/services';
+import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import { loadTuiPlugins } from '../../src/tui/loadPlugins';
+import { App } from '../../src/tui/app';
+import { createToastStore, type ToastStore, useIsActive } from '../../src/tui/hooks';
+import { loadTuiPlugins, type PluginLoader, withPlugins } from '../../src/tui/loadPlugins';
 import type { RouteParams } from '../../src/tui/router';
-import { makeBoard, makeStory, type TempRoot } from '../helpers';
-import { KEYS, waitForFrame } from '../tui/helpers';
-import { fixturePlugins, notes } from './fixtures';
-import { type Entries, pluginRoot, readJsonFile, storyFile } from './helpers';
+import { FIXED_NOW, fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
+import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
+import { fixturePlugins, notes, strict } from './fixtures';
+import { type Entries, entries, pluginRoot, readJsonFile, storyFile } from './helpers';
 import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
 
 async function seed(on: Entries = { notes: true }) {
@@ -150,5 +153,316 @@ describe('Plugin slots in the TUI', () => {
     expect(loaded.map((p) => p.id)).toEqual(['notes']);
     expect(host.failures()).toMatchObject([{ id: 'broken', reason: 'its TUI part failed: no TUI' }]);
     expect(await createRepositories(t.root).rootConfig.get()).toMatchObject({ plugins: { broken: { enabled: true } } });
+  });
+});
+
+describe('TUI activation (RES-20, RES-23)', () => {
+  const broken = definePlugin({
+    id: 'broken',
+    name: 'Broken',
+    description: '',
+    tui: async () => {
+      throw new Error('no TUI');
+    },
+  });
+  const registry = [notes, strict, broken];
+  const on = { notes: true, strict: true, broken: true } as const;
+
+  function contextOf(t: TempRoot, warnings: string[] = []): RowblyContext {
+    return {
+      root: t.root,
+      local: { version: 1, board: 'web' },
+      me: null,
+      now: fixedClock().now,
+      newId: fixedIds(),
+      warn: (message) => warnings.push(message),
+    };
+  }
+
+  const loader: PluginLoader = (root) => loadPlugins({ root, registry, reserved: reservedNames() });
+
+  /** A toast store that also keeps every warning pushed to it, which the shown list caps. */
+  function countingToasts() {
+    const shown = createToastStore();
+    const warnings: string[] = [];
+    const toasts: ToastStore = {
+      ...shown,
+      push(kind, message) {
+        if (kind === 'warning') warnings.push(message);
+        shown.push(kind, message);
+      },
+    };
+    return { toasts, warnings };
+  }
+
+  it.each([
+    { path: 'an injected host without a loader', loaded: true },
+    { path: 'the loader', loaded: false },
+  ])('$path: background reactions, failure toasts and healthy slots', async ({ loaded }) => {
+    const t = await seed(on);
+    const ctx = contextOf(t);
+    if (loaded) ctx.plugins = await loader(t.root);
+    const { toasts, warnings } = countingToasts();
+    const plugins = await withPlugins(ctx, loaded ? undefined : loader, toasts);
+    expect(ctx.backgroundReactions).toBe(true);
+    expect(plugins.map((p) => p.id)).toEqual(['notes']);
+    expect(warnings).toHaveLength(2);
+    expect(warnings[0]).toContain('Plugin "strict" failed to load');
+    expect(warnings[1]).toContain('Plugin "broken" failed to load (its TUI part failed: no TUI)');
+  });
+
+  it('an injected host without a loader runs reactions in the background and keeps Plugin slots', async () => {
+    const t = await seed(on);
+    const toasts = createToastStore();
+    const ctx = { ...contextOf(t), warn: (message: string) => toasts.push('warning', message) };
+    ctx.plugins = await loader(t.root);
+    const plugins = await withPlugins(ctx, undefined, toasts);
+    const app = renderTui(
+      <App
+        ctx={ctx}
+        services={createServices(ctx)}
+        initial={{ screen: 'story-form', params: { boardId: 'web' } }}
+        toasts={toasts}
+        plugins={plugins}
+      />,
+    );
+    await waitForFrame(app, 'Note');
+    await app.press('N', 'e', 'w', KEYS.ctrlS);
+    await waitForFrame(app, 'notes saw WEB-3 created');
+    app.unmount();
+  });
+
+  it('loading again warns once per failure, per Data Root, while the status still shows it', async () => {
+    const t = await seed(on);
+    const other = await seed(on);
+    const { toasts, warnings } = countingToasts();
+    const ctx = contextOf(t);
+    await withPlugins(ctx, loader, toasts);
+    await withPlugins({ ...ctx }, loader, toasts);
+    await withPlugins({ ...ctx }, loader, toasts);
+    expect(warnings).toHaveLength(2);
+    expect(ctx.plugins?.failures().map((f) => f.id)).toEqual(['strict', 'broken']);
+    // Another Data Root's failures warn too.
+    await withPlugins(contextOf(other), loader, toasts);
+    expect(warnings.filter((w) => w.includes('"strict"'))).toHaveLength(2);
+  });
+
+  it('a failure that went away warns again when it comes back', async () => {
+    const t = await seed({ notes: true, strict: true });
+    const { toasts: counting, warnings: pushed } = countingToasts();
+    await withPlugins(contextOf(t), loader, counting);
+    await makeRootConfig(t.path, configWith({ notes: true, strict: { level: 1 } }));
+    await withPlugins(contextOf(t), loader, counting);
+    await makeRootConfig(t.path, configWith({ notes: true, strict: true }));
+    await withPlugins(contextOf(t), loader, counting);
+    await withPlugins(contextOf(t), loader, counting);
+    expect(pushed.filter((w) => w.includes('"strict"'))).toHaveLength(2);
+  });
+});
+
+/** The root config `pluginRoot` writes, with `plugins` as given. */
+function configWith(on: Entries) {
+  return { assignees: [{ handle: 'alice', name: 'Alice' }], plugins: entries(on) };
+}
+
+describe('Plugin UI identity (ARCH-40)', () => {
+  /** A Plugin with the TUI part `tui`, a screen `mine` and nothing else. */
+  function withTui(id: string, tui: PluginTui<unknown>) {
+    return definePlugin({
+      id,
+      name: id,
+      description: '',
+      tui: async () => ({ screens: { mine: () => <Text>{`${id} screen`}</Text> }, ...tui }),
+    });
+  }
+
+  it('two Home entries with the same label open their own destinations', async () => {
+    const twin = withTui('twin', { home: [{ label: 'Stories', screen: 'mine' }] });
+    const t = await seed({ notes: true, twin: true });
+    // With a second Board, the root screen is Home rather than the only Board.
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
+    const { app } = await openPluginApp(t, [notes, twin], { screen: 'home', params: {} });
+    await waitForFrame(app, 'Notes');
+    await focusListItem(app, 'Notes');
+    await app.press('j', KEYS.enter);
+    await waitForFrame(app, 'twin screen');
+    app.unmount();
+  });
+
+  it.each([
+    {
+      what: 'a Home entry to a missing screen',
+      tui: { home: [{ label: 'Go', screen: 'nope' }] },
+      reason: 'its Home entry "Go" opens screen "nope", which it does not have',
+    },
+    {
+      what: 'a settings section to a missing screen',
+      tui: { settings: [{ label: 'Set', screen: 'nope' }] },
+      reason: 'its settings section "Set" opens screen "nope", which it does not have',
+    },
+    {
+      what: 'two settings sections with one label',
+      tui: {
+        settings: [
+          { label: 'Set', screen: 'mine' },
+          { label: 'Set', screen: 'mine' },
+        ],
+      },
+      reason: 'it has two settings sections labelled "Set"',
+    },
+    {
+      what: 'two Story tabs with one label',
+      tui: {
+        storyTabs: [
+          { label: 'Tab', component: () => null },
+          { label: 'Tab', component: () => null },
+        ],
+      },
+      reason: 'it has two Story tabs labelled "Tab"',
+    },
+    {
+      what: 'two Task tabs with one label',
+      tui: {
+        taskTabs: [
+          { label: 'Tab', component: () => null },
+          { label: 'Tab', component: () => null },
+        ],
+      },
+      reason: 'it has two Task tabs labelled "Tab"',
+    },
+  ])('$what fails that Plugin to load, and only it', async ({ tui, reason }) => {
+    const odd = withTui('odd', tui as PluginTui<unknown>);
+    const t = await seed({ notes: true, odd: true });
+    await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
+    const { app, host, warnings } = await openPluginApp(t, [notes, odd], { screen: 'home', params: {} });
+    expect(host.failures()).toMatchObject([{ id: 'odd', reason: `its TUI part is invalid: ${reason}` }]);
+    expect(warnings).toHaveLength(1);
+    await waitForFrame(app, 'Notes');
+    app.unmount();
+  });
+
+  it('a Plugin that names two of its fields alike fails in the field stage, the form still works', async () => {
+    const twice = definePlugin({
+      id: 'twice',
+      name: 'Twice',
+      description: '',
+      tui: async (): Promise<PluginTui<unknown>> => ({
+        storyForm: {
+          fields: async () => [
+            { name: 'x', label: 'One', kind: 'text' },
+            { name: 'x', label: 'Two', kind: 'text' },
+          ],
+          input: () => undefined,
+        },
+      }),
+    });
+    const t = await seed({ notes: true, twice: true });
+    const { app } = await openPluginApp(t, [notes, twice], { screen: 'story-form', params: { key: 'WEB-1' } });
+    const frame = await waitForFrame(app, 'Plugin "twice" failed in the field stage: it names two fields "x"');
+    expect(frame).toContain('Note');
+    app.unmount();
+  });
+});
+
+describe('Plugin navigation (ARCH-07, DX-24, CQ-58)', () => {
+  /** A Plugin screen whose keys `s`, `t` and `b` open core records through `ui`. */
+  function Linker({ ui }: PluginScreenProps<unknown>) {
+    const active = useIsActive();
+    useInput(
+      (input) => {
+        if (input === 's') ui.openStory('WEB-1');
+        else if (input === 't') ui.openTask('WEB-1.1');
+        else if (input === 'b') ui.openBoard('web');
+      },
+      { isActive: active },
+    );
+    return <Text>linker screen</Text>;
+  }
+  const linker = definePlugin({
+    id: 'linker',
+    name: 'Linker',
+    description: '',
+    actions: [{ key: 'X', label: 'Links', target: 'none', run: ({ ui }) => ui.open('links', { title: 'Links' }) }],
+    tui: async (): Promise<PluginTui<unknown>> => ({ screens: { links: Linker } }),
+  });
+
+  it.each([
+    { key: 's', shows: 'Login', crumb: 'Links › WEB-1' },
+    { key: 't', shows: 'Wire it', crumb: 'Links › WEB-1.1' },
+    { key: 'b', shows: 'Website', crumb: 'Links › web' },
+  ])('ui opens a core record ($crumb) and back returns to the Plugin screen', async ({ key, shows, crumb }) => {
+    const t = await pluginRoot({ notes: true, linker: true });
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-1',
+      name: 'Login',
+      nextTaskNumber: 2,
+      tasks: [
+        {
+          id: 'WEB-1.1',
+          name: 'Wire it',
+          description: '',
+          stage: 'backlog',
+          createdAt: FIXED_NOW,
+          updatedAt: FIXED_NOW,
+        },
+      ],
+    });
+    const { app } = await openPluginApp(
+      t,
+      [notes, linker],
+      { screen: 'board', params: {} },
+      { local: { version: 1, board: 'web' } },
+    );
+    await waitForFrame(app, 'X Links');
+    await app.press('X');
+    await waitForFrame(app, 'linker screen');
+    await app.press(key);
+    await waitForFrame(app, (f) => f.includes(crumb) && f.includes(shows));
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('linker screen') && !f.includes(crumb));
+    app.unmount();
+  });
+
+  it.each([
+    { params: {}, shows: 'Invalid route: a Plugin screen was opened without a Plugin.' },
+    { params: { plugin: 42, screen: 'note' }, shows: 'Invalid route: a Plugin screen was opened without a Plugin.' },
+    { params: { plugin: 'notes' }, shows: 'Invalid route: Plugin "notes" opened a screen without a screen name.' },
+    {
+      params: { plugin: 'notes', screen: { x: 1 } },
+      shows: 'Invalid route: Plugin "notes" opened a screen without a screen name.',
+    },
+    { params: { plugin: 'notes', screen: 'constructor' }, shows: 'Plugin "notes" has no screen "constructor".' },
+  ])('a Plugin route with params $params shows an invalid route', async ({ params, shows }) => {
+    const t = await seed();
+    const { app } = await open(t, 'plugin', params);
+    const frame = await waitForFrame(app, shows);
+    expect(frame).not.toMatch(/undefined|\[object Object\]/);
+    app.unmount();
+  });
+});
+
+describe('Turning a Plugin off in the TUI', () => {
+  it('leaves no stale Action, tab, row or form field behind', async () => {
+    const t = await seed();
+    const { app } = await open(t, 'story', { key: 'WEB-1' });
+    let frame = await waitForFrame(app, 'Z Note');
+    expect(frame).toMatch(/Note\s+note: hello/);
+    await app.press(',');
+    await waitForFrame(app, 'Plugins');
+    await focusListItem(app, 'Plugins');
+    await app.press(KEYS.tab);
+    await waitForFrame(app, '● Notes');
+    await app.press(KEYS.enter);
+    await waitForFrame(app, '○ Notes');
+    await app.press(KEYS.escape);
+    frame = await waitForFrame(app, (f) => f.includes('Login') && !f.includes('Settings'));
+    await waitForFrame(app, (f) => !f.includes('Z Note') && !/Note\s+note: hello/.test(f));
+    // "Note" alone: the toast still says "Turned off Plugin Notes".
+    expect(app.lastFrame()).not.toMatch(/\bNote\b/);
+    await app.press('e');
+    frame = await waitForFrame(app, (f) => f.includes('Edit WEB-1') && f.includes('Labels'));
+    expect(frame).not.toMatch(/\bNote\b/);
+    app.unmount();
   });
 });

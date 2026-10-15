@@ -25,6 +25,7 @@ export {
   useKeyCapture,
   useKeyHints,
   useLayout,
+  useReloadOnReturn,
   useToast,
 } from '../tui/hooks';
 export type { KeyHint } from '../tui/keymap';

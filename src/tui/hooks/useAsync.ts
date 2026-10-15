@@ -11,7 +11,8 @@ export interface AsyncState<T> {
 
 /**
  * Runs `fn` whenever `deps` change and tracks its loading, error and data states. A failure is also
- * shown as a toast, so a service error never crashes the app.
+ * shown as a toast, so a service error never crashes the app, even when `fn` throws before it returns
+ * a promise. A run whose `deps` changed, or whose component unmounted, is ignored when it settles.
  */
 export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncState<T> {
   const toast = useToast();
@@ -26,16 +27,19 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
   useEffect(() => {
     let current = true;
     setState((prev) => ({ ...prev, loading: true, error: undefined }));
-    fn().then(
-      (data) => {
-        if (current) setState({ loading: false, error: undefined, data });
-      },
-      (error: unknown) => {
-        if (!current) return;
-        setState({ loading: false, error, data: undefined });
-        toast.error(error);
-      },
-    );
+    // Called through `then`, so a synchronous throw from `fn` is a rejection like any other (RES-18C).
+    Promise.resolve()
+      .then(fn)
+      .then(
+        (data) => {
+          if (current) setState({ loading: false, error: undefined, data });
+        },
+        (error: unknown) => {
+          if (!current) return;
+          setState({ loading: false, error, data: undefined });
+          toast.error(error);
+        },
+      );
     return () => {
       current = false;
     };

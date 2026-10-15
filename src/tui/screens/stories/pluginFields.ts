@@ -1,10 +1,19 @@
 // The fields that Plugins add to the Story form and the Story filter, and how their values become
-// Plugin input (`plugins: { <id>: … }`, ADR-0012). Each Plugin's callbacks run behind their own
-// boundary that names the Plugin and stage. Only a Plugin whose fields loaded and changed contributes
+// Plugin input (`plugins: { <id>: … }`, ADR-0012). Each Plugin's callbacks run through the shared
+// adapter (`invokePlugin`, ADR-0020 §5), in their stage's scope and attributed to the Plugin. Only a Plugin whose fields loaded and changed contributes
 // form input, so an unchanged or failed one never changes stored data (ADR-0020 §3).
-import { isRowblyError, PluginError, type RowblyError, type RowblyErrorOptions } from '../../../core';
+import { errorMessage, RowblyError } from '../../../core';
 import type { Slug, Story } from '../../../schemas';
-import type { PluginFormField, PluginFormValue, PluginInput, Services, StoryFilter } from '../../../services';
+import {
+  type Invocation,
+  invokePlugin,
+  invokePluginSync,
+  type PluginFormField,
+  type PluginFormValue,
+  type PluginInput,
+  type Services,
+  type StoryFilter,
+} from '../../../services';
 import { type FormField, type FormValues, normalizeFormValue, sameFormValue } from '../../components';
 import type { TuiPlugin } from '../../hooks';
 
@@ -54,26 +63,15 @@ function valuesOf(values: FormValues, id: string): Record<string, PluginFormValu
   );
 }
 
-function messageOf(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+/** Field providers and input conversion run in the `field` stage, the filter callbacks in `filter`. */
+function invocation(plugin: string, stage: PluginFieldStage, operation?: string): Invocation {
+  return { plugin, stage: stage === 'field' || stage === 'input' ? 'field' : 'filter', operation };
 }
 
-/**
- * `err` from Plugin `plugin`'s `stage`, attributed: an expected Rowbly error keeps its class and
- * message, anything else becomes a `PluginError` (ADR-0020 §5).
- */
-function attribute(err: unknown, plugin: string, stage: PluginFieldStage): Error {
-  if (err instanceof PluginError && err.details.plugin !== undefined) return err;
-  const details = { plugin, stage };
-  if (isRowblyError(err) && !(err instanceof PluginError)) {
-    const Expected = err.constructor as new (message: string, options: RowblyErrorOptions) => RowblyError;
-    return new Expected(err.message, { details: { ...err.details, ...details }, hint: err.hint, cause: err });
-  }
-  return new PluginError(failureMessage({ plugin, stage, message: messageOf(err) }), {
-    details,
-    hint: `turn it off with \`rowbly plugins disable ${plugin}\``,
-    cause: err,
-  });
+/** A failed callback, shown with the Plugin's own message: the adapter keeps the original as `cause`. */
+function failure(plugin: string, stage: PluginFieldStage, err: unknown): PluginFieldFailure {
+  const own = err instanceof RowblyError && err.details.plugin === plugin && err.cause !== undefined ? err.cause : err;
+  return { plugin, stage, message: errorMessage(own) };
 }
 
 /** A form field for one of Plugin `id`'s fields, with its starting value. */
@@ -97,10 +95,16 @@ async function collectPluginFields(
   for (const plugin of plugins) {
     let own: PluginFormField[] | undefined;
     try {
-      own = await load(plugin);
-      if (own !== undefined && !Array.isArray(own)) throw new Error('its fields are not a list');
+      own = await invokePlugin(invocation(plugin.id, 'field'), async () => {
+        const fields = await load(plugin);
+        if (fields !== undefined && !Array.isArray(fields)) throw new Error('its fields are not a list');
+        const names = (fields ?? []).map((field) => field.name);
+        const twice = names.find((name, i) => names.indexOf(name) !== i);
+        if (twice !== undefined) throw new Error(`it names two fields "${twice}"`);
+        return fields;
+      });
     } catch (err) {
-      set.failures.push({ plugin: plugin.id, stage: 'field', message: messageOf(err) });
+      set.failures.push(failure(plugin.id, 'field', err));
       continue;
     }
     if (own === undefined) continue;
@@ -163,11 +167,8 @@ export function storyFormInput(
     if (!own || !form) return undefined;
     const changes = changesOf(plugin.id, own, values);
     if (changes.changedFields.length === 0) return undefined;
-    try {
-      return form.input({ ...changes, story });
-    } catch (err) {
-      throw attribute(err, plugin.id, 'input');
-    }
+    const operation = story ? 'stories.update' : 'stories.create';
+    return invokePluginSync(invocation(plugin.id, 'input', operation), () => form.input({ ...changes, story }));
   });
 }
 
@@ -196,9 +197,9 @@ export function withPluginFilters(
     const storyFilter = plugin.tui.storyFilter;
     if (!storyFilter || !set.loaded.has(plugin.id)) return undefined;
     try {
-      return storyFilter.filter(valuesOf(values, plugin.id));
+      return invokePluginSync(invocation(plugin.id, 'filter'), () => storyFilter.filter(valuesOf(values, plugin.id)));
     } catch (err) {
-      failures.push({ plugin: plugin.id, stage: 'filter', message: messageOf(err) });
+      failures.push(failure(plugin.id, 'filter', err));
       return undefined;
     }
   });
@@ -217,9 +218,11 @@ export function describeWithPlugins(
     const storyFilter = plugin.tui.storyFilter;
     if (!storyFilter || !set?.loaded.has(plugin.id)) return '';
     try {
-      return storyFilter.describe(valuesOf(values, plugin.id));
+      return invokePluginSync(invocation(plugin.id, 'filter-summary'), () =>
+        storyFilter.describe(valuesOf(values, plugin.id)),
+      );
     } catch (err) {
-      failures.push({ plugin: plugin.id, stage: 'filter-summary', message: messageOf(err) });
+      failures.push(failure(plugin.id, 'filter-summary', err));
       return '';
     }
   });
