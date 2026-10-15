@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { NotFoundError, PluginError } from '../../src/core';
 import { definePlugin } from '../../src/plugin-api';
 import type { Services } from '../../src/services';
+import { createOperationRunner } from '../../src/services/plugins/runtime';
+import { createRepositories } from '../../src/storage';
 import { makeStory } from '../helpers';
 import { notes } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
@@ -120,12 +122,13 @@ describe('nested operations from hooks (RES-05, ARCH-06)', () => {
   it.each(['guard', 'react'] as const)('a %s cannot start a core mutation', async (hook) => {
     const cap = captured();
     const seen: unknown[] = [];
-    const run = async () => {
+    const run = async (): Promise<undefined> => {
       try {
         await cap.services.stories.update('WEB-2', { name: 'From hook' });
       } catch (err) {
         seen.push(err);
       }
+      return undefined;
     };
     const plugin = definePlugin({
       id: 'hooker',
@@ -321,7 +324,9 @@ describe('doctor fixes run inside their scope (ARCH-06)', () => {
 
     const err = await services.doctor.fix().catch((e: unknown) => e);
     expect(err).toBeInstanceOf(PluginError);
-    expect(String((err as Error).message)).toContain('tried to start stories.update during the doctor-fix of doctor.fix');
+    expect(String((err as Error).message)).toContain(
+      'tried to start stories.update during the doctor-fix of doctor.fix',
+    );
     expect((await readJsonFile(t, storyFile('WEB-2'))).name).toBe('Story WEB-2');
   });
 
@@ -357,5 +362,86 @@ describe('doctor fixes run inside their scope (ARCH-06)', () => {
       'Plugin "fixer" used its Change Set after its doctor-fix of doctor.fix ended',
     );
     expect(await services.plugins.context('fixer').files.read('dataRoot', 'late.txt')).toBeNull();
+  });
+});
+
+describe('the runner around an operation', () => {
+  it('pins the Plugins that are on when an operation starts', async () => {
+    const order: string[] = [];
+    let host: { markFailed(id: string, reason: string): void } | undefined;
+    const first = definePlugin({
+      id: 'first',
+      name: 'First',
+      description: '',
+      hooks: {
+        'stories.update': {
+          transform() {
+            order.push('first');
+            host?.markFailed('second', 'failed meanwhile');
+          },
+        },
+      },
+    });
+    const second = definePlugin({
+      id: 'second',
+      name: 'Second',
+      description: '',
+      hooks: { 'stories.update': { guard: () => void order.push('second') } },
+    });
+    const t = await pluginRoot({ first: true, second: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
+    const setup = await withPlugins(t, [first, second]);
+    host = setup.host;
+
+    await setup.services.stories.update('WEB-1', { name: 'Renamed' });
+    expect(order).toEqual(['first', 'second']);
+    // The next operation runs without it.
+    await setup.services.stories.update('WEB-1', { name: 'Again' });
+    expect(order).toEqual(['first', 'second', 'first']);
+  });
+
+  it('the coordinator wraps the body, hooks and save, on every path, and not the reactions', async () => {
+    const order: string[] = [];
+    const watcher = definePlugin({
+      id: 'watcher',
+      name: 'Watcher',
+      description: '',
+      hooks: {
+        'watcher.op': {
+          transform: () => void order.push('transform'),
+          react: () => void order.push('react'),
+        },
+      },
+    });
+    const t = await pluginRoot({ watcher: true });
+    const { ctx, services } = await withPlugins(t, [watcher]);
+    const ops = createOperationRunner(ctx, createRepositories(t.root), () => services, {
+      enter: ({ name }) => void order.push(`enter ${name}`),
+      exit: ({ name }) => void order.push(`exit ${name}`),
+    });
+
+    await ops.run('watcher.op', {}, async () => {
+      order.push('body');
+      await services.boards.get('web');
+    });
+    expect(order).toEqual(['enter watcher.op', 'body', 'transform', 'exit watcher.op', 'react']);
+
+    order.length = 0;
+    await expect(
+      ops.run('watcher.op', {}, async () => {
+        throw new Error('body failed');
+      }),
+    ).rejects.toThrow('body failed');
+    expect(order).toEqual(['enter watcher.op', 'exit watcher.op']);
+
+    // A nested operation is rejected before it enters, so it never waits for the coordinator.
+    order.length = 0;
+    const err = await ops
+      .run('watcher.op', {}, async () => {
+        await ops.run('watcher.inner', {}, async () => undefined);
+      })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(PluginError);
+    expect(order).toEqual(['enter watcher.op', 'exit watcher.op']);
   });
 });

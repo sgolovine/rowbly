@@ -18,7 +18,7 @@ async function thrown(fn: () => unknown): Promise<unknown> {
 }
 
 describe('snapshots cannot reach the plan (RES-06)', () => {
-  it("changing before.key in a remove transform cannot redirect the deletion (extra.ts)", async () => {
+  it('changing before.key in a remove transform cannot redirect the deletion (extra.ts)', async () => {
     const attempts: unknown[] = [];
     const corrupt = definePlugin({
       id: 'corrupt',
@@ -70,7 +70,9 @@ describe('snapshots cannot reach the plan (RES-06)', () => {
       hooks: {
         'stories.update': {
           transform({ changes }) {
-            seen.push(`${changes.changes.length}:${changes.story('WEB-1')?.after?.name}:${changes.story('WEB-1')?.after?.labels.length}`);
+            seen.push(
+              `${changes.changes.length}:${changes.story('WEB-1')?.after?.name}:${changes.story('WEB-1')?.after?.labels.length}`,
+            );
           },
         },
       },
@@ -137,7 +139,7 @@ describe('snapshots cannot reach the plan (RES-06)', () => {
     expect((await readJsonFile(t, storyFile('WEB-1'))).description).toBe('from keeper');
   });
 
-  it("accessors return the current snapshot, so a transform sees its own later writes; before stays the original", async () => {
+  it('accessors return the current snapshot, so a transform sees its own later writes; before stays the original', async () => {
     const seen: unknown[] = [];
     const writer = definePlugin({
       id: 'writer',
@@ -149,7 +151,12 @@ describe('snapshots cannot reach the plan (RES-06)', () => {
             const first = changes.story('WEB-1');
             await changes.updateStory('WEB-1', (s) => ({ ...s, description: 'later' }));
             const second = changes.story('WEB-1');
-            seen.push(first?.after?.description, second?.after?.description, second?.before?.name, Object.isFrozen(second));
+            seen.push(
+              first?.after?.description,
+              second?.after?.description,
+              second?.before?.name,
+              Object.isFrozen(second),
+            );
           },
         },
       },
@@ -270,8 +277,9 @@ describe('writer lifetime (D3)', () => {
     async (when) => {
       let kept: PluginChangeSet | undefined;
       const errors: unknown[] = [];
-      const use = async () => {
+      const use = async (): Promise<undefined> => {
         errors.push(await thrown(() => kept?.updateStory('WEB-1', (s) => ({ ...s, description: 'retained' }))));
+        return undefined;
       };
       const retainer = definePlugin({
         id: 'retainer',
