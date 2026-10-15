@@ -27,6 +27,7 @@ export async function loadTuiPlugins(
   staged: ReadonlyMap<string, PluginTui<unknown>> = new Map(),
 ): Promise<TuiPlugin[]> {
   const loaded: TuiPlugin[] = [];
+  // `active()` returns a copy, so `markFailed` below cannot disturb this loop (CQ-56).
   for (const { definition } of host.active()) {
     try {
       const tui = staged.get(definition.id) ?? (await importTui(definition));
@@ -47,22 +48,52 @@ async function importTui(definition: ActivePlugin['definition']): Promise<Plugin
 }
 
 /**
- * Loads `ctx`'s Plugins into it (without a loader, it keeps the ones it has) (reactions then run in the background, so the TUI never waits for
- * them), and warns once, as toasts, about each one that failed to load. With a loader, each Plugin's
- * TUI part is imported while it loads, so one that fails keeps no names from later Plugins (RES-22).
+ * The load failures already shown as toasts in each TUI session, keyed by its toast store (one per
+ * `startTui`), as `<Data Root>\0<Plugin ID>\0<reason>`.
+ */
+const warnedBySession = new WeakMap<ToastStore, Set<string>>();
+
+/**
+ * Shows each of `host`'s load failures as a toast once per session (RES-20). Loading again, as after
+ * turning a Plugin on or off, does not repeat a warning. A failure warns again when its reason
+ * changes, or when it went away (the Plugin loaded, or was turned off) and came back. Another Data
+ * Root's failures warn on their own. The Plugins status shows every failure, every time.
+ */
+function warnFailures(root: DataRoot | null, host: PluginHost, toasts: ToastStore): void {
+  const warned = warnedBySession.get(toasts) ?? new Set<string>();
+  warnedBySession.set(toasts, warned);
+  const prefix = `${root?.path ?? ''}\0`;
+  const current = new Set(host.failures().map((failure) => `${prefix}${failure.id}\0${failure.reason ?? ''}`));
+  for (const key of warned) if (key.startsWith(prefix) && !current.has(key)) warned.delete(key);
+  for (const failure of host.failures()) {
+    const key = `${prefix}${failure.id}\0${failure.reason ?? ''}`;
+    if (warned.has(key)) continue;
+    warned.add(key);
+    toasts.push('warning', failureWarning(failure));
+  }
+}
+
+/**
+ * Gets `ctx` ready for the TUI and returns its Plugins with their TUI parts loaded. With a loader, it
+ * loads `ctx`'s Plugins into it anew, importing each Plugin's TUI part while it loads, so one that
+ * fails keeps no names from later Plugins (RES-22). Without one, it loads the TUI parts of the host
+ * `ctx` already has. Either way reactions then run in the background, so the TUI never waits for
+ * them, and each load failure shows as a toast once per session (RES-23).
  */
 export async function withPlugins(
   ctx: RowblyContext,
   load: PluginLoader | undefined,
   toasts: ToastStore,
 ): Promise<TuiPlugin[]> {
-  if (!load) return ctx.plugins ? loadTuiPlugins(ctx.plugins) : [];
   const staged = new Map<string, PluginTui<unknown>>();
-  ctx.plugins = await load(ctx.root, async ({ definition }) => {
-    staged.set(definition.id, await importTui(definition));
-  });
+  if (load) {
+    ctx.plugins = await load(ctx.root, async ({ definition }) => {
+      staged.set(definition.id, await importTui(definition));
+    });
+  }
   ctx.backgroundReactions = true;
+  if (!ctx.plugins) return [];
   const plugins = await loadTuiPlugins(ctx.plugins, staged);
-  for (const failure of ctx.plugins.failures()) toasts.push('warning', failureWarning(failure));
+  warnFailures(ctx.root, ctx.plugins, toasts);
   return plugins;
 }
