@@ -503,24 +503,31 @@ export interface PluginCli<S> {
   parseRepeatable(values: string | readonly string[] | undefined): string[];
 }
 
-/** The core commands that take Plugin options (each passes them to its operation or filter). */
-export type PluginOptionCommand =
-  | 'assignees add'
-  | 'assignees edit'
-  | 'assignees remove'
-  | 'boards create'
-  | 'boards edit'
-  | 'boards delete'
-  | 'stories list'
-  | 'stories create'
-  | 'stories edit'
-  | 'stories move'
-  | 'stories rank'
-  | 'stories delete'
-  | 'tasks create'
-  | 'tasks edit'
-  | 'tasks move'
-  | 'tasks delete';
+/**
+ * The core commands that take Plugin options (each passes them to its operation or filter). The only
+ * list: `PluginOptionCommand` is derived from it, and loading checks declared commands against it.
+ * Stages, fields, context and doctor are hookable but take no Plugin options (ARCH-16).
+ */
+export const PLUGIN_OPTION_COMMANDS = [
+  'assignees add',
+  'assignees edit',
+  'assignees remove',
+  'boards create',
+  'boards edit',
+  'boards delete',
+  'stories list',
+  'stories create',
+  'stories edit',
+  'stories move',
+  'stories rank',
+  'stories delete',
+  'tasks create',
+  'tasks edit',
+  'tasks move',
+  'tasks delete',
+] as const;
+
+export type PluginOptionCommand = (typeof PLUGIN_OPTION_COMMANDS)[number];
 
 /** A Plugin's options on one core command. */
 export interface PluginCommandOptions {
@@ -529,6 +536,8 @@ export interface PluginCommandOptions {
   /**
    * Turns the parsed values of these options (by commander attribute name, e.g. `epic`) into this
    * Plugin's input (`plugins.<id>`), or the filter for `stories list`; `undefined` when none was given.
+   * Only options the user gave have a value: a lone `--no-x` gives `x: false` when used and
+   * `undefined` otherwise, never a default `true`. With both `--x` and `--no-x`, the last one wins.
    */
   input(values: Record<string, unknown>): unknown;
 }

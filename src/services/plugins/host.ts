@@ -1,13 +1,17 @@
+import { Option } from 'commander';
 import { isSlug } from '../../core';
 import type { DataRoot, PluginEntry, RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
-import type { AnyPluginDefinition, PluginOptionCommand } from './types';
+import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
 /** Names that core already uses, so a Plugin that takes one fails to load (ADR-0012). */
 export interface ReservedNames {
   /** Top-level commands. */
   commands: readonly string[];
-  /** The option names (without `--` and `no-`) of each core command that takes Plugin options. */
+  /**
+   * The option names (without `--` and `no-`) of each core command that takes Plugin options,
+   * including the global options.
+   */
   options: Readonly<Partial<Record<PluginOptionCommand, readonly string[]>>>;
   /** Keys that a core TUI screen uses, so an Action cannot. */
   keys: readonly string[];
@@ -35,16 +39,18 @@ export interface PluginStatus {
 export interface ActivePlugin {
   definition: AnyPluginDefinition;
   settings: unknown;
+  /** Its raw Data Root settings, without `enabled`; Board settings merge over these before parsing. */
   entry: Record<string, unknown>;
 }
 
 /** The Plugins of one Data Root for this run. */
 export interface PluginHost {
   readonly registry: readonly AnyPluginDefinition[];
-  /** Built-in Plugins in registry order, then the other Plugins `rowbly.config.json` names. */
+  /** Built-in Plugins in registry order, then the other Plugins `rowbly.config.json` names. A copy. */
   status(): PluginStatus[];
-  /** The Plugins that are on and loaded, in registry order: the order they run in. */
+  /** The Plugins that are on and loaded, in registry order: the order they run in. A copy of the list. */
   active(): readonly ActivePlugin[];
+  /** The Plugins that are enabled but did not load. A copy. */
   failures(): PluginStatus[];
   /** Skips a Plugin for the rest of the run, e.g. when its TUI part throws while it loads. */
   markFailed(id: string, reason: string): void;
@@ -55,14 +61,24 @@ export interface LoadPluginsOptions {
   root: DataRoot | null;
   registry: readonly AnyPluginDefinition[];
   reserved: ReservedNames;
+  /**
+   * Prepares the part of a Plugin that the surface in use needs (its CLI commands and options, or
+   * its TUI part) while it loads, without publishing it. Throwing makes the Plugin fail to load.
+   */
+  stage?(plugin: ActivePlugin): void | Promise<void>;
 }
 
 /**
  * Turns on the Plugins that `rowbly.config.json` enables, in registry order (ADR-0010). A Plugin
- * whose settings are invalid, whose `start` throws, that clashes with a name in use, or that this
- * version does not have, fails to load; the rest run without it.
+ * whose settings are invalid, that clashes with a name in use or declares an invalid one, whose
+ * surface fails to stage, whose `start` throws, or that this version does not have, fails to load
+ * as a whole; the rest run without it.
+ *
+ * Each Plugin's names are claimed only once all of its steps succeeded, so a Plugin that fails
+ * never blocks a later one (ADR-0020 §8). A Plugin rejected for a clash is not retried when the
+ * Plugin it clashed with fails afterwards, through `markFailed`.
  */
-export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptions): Promise<PluginHost> {
+export async function loadPlugins({ root, registry, reserved, stage }: LoadPluginsOptions): Promise<PluginHost> {
   const entries = (root ? await readEntries(root) : null) ?? {};
   const statuses: PluginStatus[] = [];
   const active: ActivePlugin[] = [];
@@ -85,10 +101,12 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
       const { enabled: _enabled, ...raw } = entry;
       const settings = parseSettings(definition, raw);
       const claim = claimNames(definition, claims);
+      const plugin: ActivePlugin = { definition, settings, entry: raw };
+      await stage?.(plugin);
       await definition.start?.({ settings });
       claim();
       status.loaded = true;
-      active.push({ definition, settings, entry: raw });
+      active.push(plugin);
     } catch (err) {
       status.reason = err instanceof Error ? err.message : String(err);
     }
@@ -111,17 +129,15 @@ export async function loadPlugins({ root, registry, reserved }: LoadPluginsOptio
   return {
     registry,
     status: () => statuses.map((s) => ({ ...s })),
-    active: () => active,
-    failures: () => statuses.filter((s) => s.enabled && !s.loaded),
+    active: () => [...active],
+    failures: () => statuses.filter((s) => s.enabled && !s.loaded).map((s) => ({ ...s })),
     markFailed(id, reason) {
       const status = statuses.find((s) => s.id === id);
-      if (!status?.loaded) return;
+      const index = active.findIndex((p) => p.definition.id === id);
+      if (!status?.loaded || index < 0) return;
       status.loaded = false;
       status.reason = reason;
-      active.splice(
-        active.findIndex((p) => p.definition.id === id),
-        1,
-      );
+      active.splice(index, 1);
     },
   };
 }
@@ -159,8 +175,24 @@ async function readEntries(root: DataRoot): Promise<Record<string, PluginEntry> 
   return config.plugins ?? null;
 }
 
+/** A problem with a Plugin definition, found before it loads. */
+export interface PluginDiagnostic {
+  /** Where in the definition, e.g. `options["stories create"].options[1]` or `hooks["stories.edit"]`. */
+  path: string;
+  message: string;
+}
+
+/**
+ * Checks a Plugin definition against the names core reserves, without loading it: its id, its
+ * options, Action keys, replacements and hooks. The same checks run while it loads (DX-32).
+ */
+export function validatePluginDefinition(definition: AnyPluginDefinition, reserved: ReservedNames): PluginDiagnostic[] {
+  return checkNames(definition, newClaims(reserved)).problems;
+}
+
 interface Claims {
   commands: Set<string>;
+  /** By command: the Commander attribute names (`epic`, `addSpec`) its options use. */
   options: Map<string, Set<string>>;
   keys: Set<string>;
   replaced: Set<string>;
@@ -169,55 +201,127 @@ interface Claims {
 function newClaims(reserved: ReservedNames): Claims {
   return {
     commands: new Set(reserved.commands),
-    options: new Map(Object.entries(reserved.options).map(([command, names]) => [command, new Set(names)])),
+    options: new Map(
+      Object.entries(reserved.options).map(([command, names]) => [
+        command,
+        new Set((names ?? []).map((name) => new Option(`--${name}`).attributeName())),
+      ]),
+    ),
     keys: new Set(reserved.keys),
     replaced: new Set(),
   };
 }
 
-const FLAG_RE = /^--([a-z][a-z0-9-]*)(?: <[^>]+>| \[[^\]]+\])?$/;
+/** One long lower-kebab-case flag with an optional value: `--epic <id>`, `--no-epic`, `--spec [slug]`. */
+const FLAG_RE = /^--([a-z][a-z0-9]*(?:-[a-z0-9]+)*)(?: <[^>]+>| \[[^\]]+\])?$/;
+
+const CORE_OPERATIONS: ReadonlySet<string> = new Set(CORE_OPERATION_NAMES);
+const CORE_NAMESPACES: ReadonlySet<string> = new Set(CORE_OPERATION_NAMES.map((name) => name.split('.')[0] as string));
+/** Command verbs that name a different operation verb. */
+const VERB_HINTS: Readonly<Record<string, string>> = { edit: 'update', delete: 'remove', rm: 'remove', new: 'create' };
 
 /**
- * Throws when the Plugin wants a name that core or an earlier Plugin uses: its id as a command, an
- * option on a core command, an Action key, or an operation to replace. Returns a function that
- * claims the names once the Plugin has started.
+ * Throws when the Plugin wants a name that core or an earlier Plugin uses, or declares an invalid
+ * one. Returns a function that claims the names once the Plugin has loaded.
  */
 function claimNames(definition: AnyPluginDefinition, claims: Claims): () => void {
+  const { problems, claim } = checkNames(definition, claims);
+  if (problems[0]) throw new Error(problems[0].message);
+  return claim;
+}
+
+function checkNames(
+  definition: AnyPluginDefinition,
+  claims: Claims,
+): { problems: PluginDiagnostic[]; claim: () => void } {
+  const problems: PluginDiagnostic[] = [];
+  const problem = (path: string, message: string) => void problems.push({ path, message });
   const { id } = definition;
-  if (!isSlug(id)) throw new Error(`its id "${id}" is not a lower-kebab-case slug`);
-  if (claims.commands.has(id)) throw new Error(`"rowbly ${id}" is already a command`);
+  if (!isSlug(id)) problem('id', `its id "${id}" is not a lower-kebab-case slug`);
+  else if (claims.commands.has(id)) problem('id', `"rowbly ${id}" is already a command`);
 
   const options: [string, string[]][] = [];
   for (const [command, spec] of Object.entries(definition.options ?? {})) {
+    const at = `options["${command}"]`;
     const taken = claims.options.get(command);
-    if (!taken) throw new Error(`"rowbly ${command}" does not take Plugin options`);
-    const names = (spec?.options ?? []).map(({ flags }) => {
+    if (!taken) {
+      problem(at, `"rowbly ${command}" does not take Plugin options`);
+      continue;
+    }
+    // By attribute: the positive and the negative flag that have it (`--x` and `--no-x` may pair).
+    const own = new Map<string, { positive?: string; negative?: string }>();
+    for (const [index, { flags }] of (spec?.options ?? []).entries()) {
+      const path = `${at}.options[${index}]`;
       const name = FLAG_RE.exec(flags)?.[1];
-      if (!name) throw new Error(`option "${flags}" on "rowbly ${command}" must be one long flag`);
-      const base = name.replace(/^no-/, '');
-      if (taken.has(base)) throw new Error(`--${name} is already an option of "rowbly ${command}"`);
-      return base;
-    });
-    options.push([command, names]);
+      if (!name) {
+        problem(path, `option "${flags}" on "rowbly ${command}" must be one long lower-kebab-case flag`);
+        continue;
+      }
+      const attribute = new Option(flags).attributeName();
+      const pair = own.get(attribute) ?? {};
+      const polarity = name.startsWith('no-') ? 'negative' : 'positive';
+      const other = pair.positive ?? pair.negative;
+      if (taken.has(attribute)) problem(path, `--${name} is already an option of "rowbly ${command}"`);
+      else if (pair[polarity] === name) problem(path, `--${name} is declared twice on "rowbly ${command}"`);
+      else if (pair[polarity] !== undefined || (other !== undefined && positive(other) !== positive(name))) {
+        problem(path, `--${other} and --${name} on "rowbly ${command}" are the same option (${attribute})`);
+      } else own.set(attribute, { ...pair, [polarity]: name });
+    }
+    options.push([command, [...own.keys()]]);
   }
 
-  const keys = (definition.actions ?? []).map(({ key }) => key);
-  for (const key of keys) {
-    if ([...key].length !== 1) throw new Error(`Action key "${key}" must be one character`);
-    if (claims.keys.has(key) || keys.indexOf(key) !== keys.lastIndexOf(key)) {
-      throw new Error(`the key "${key}" is already in use`);
-    }
+  const keys = new Set<string>();
+  for (const [index, { key }] of (definition.actions ?? []).entries()) {
+    const path = `actions[${index}].key`;
+    if ([...key].length !== 1) problem(path, `Action key "${key}" must be one character`);
+    else if (claims.keys.has(key) || keys.has(key)) problem(path, `the key "${key}" is already in use`);
+    else keys.add(key);
   }
 
   const replaced = Object.keys(definition.replaces ?? {});
   for (const name of replaced) {
-    if (claims.replaced.has(name)) throw new Error(`another Plugin already replaces ${name}`);
+    const path = `replaces["${name}"]`;
+    if (!CORE_OPERATIONS.has(name)) {
+      const hint = suggestion(name) ?? 'only core operations can be replaced';
+      problem(path, `it replaces "${name}", which is not a core operation; ${hint}`);
+    } else if (claims.replaced.has(name)) problem(path, `another Plugin already replaces ${name}`);
   }
 
-  return () => {
-    claims.commands.add(id);
-    for (const [command, names] of options) for (const name of names) claims.options.get(command)?.add(name);
-    for (const key of keys) claims.keys.add(key);
-    for (const name of replaced) claims.replaced.add(name);
+  // Hooks on core operations are checked; another Plugin's operations (`<id>.<name>`) are untyped.
+  for (const name of Object.keys(definition.hooks ?? {})) {
+    const path = `hooks["${name}"]`;
+    const [namespace, verb] = name.split('.');
+    if (!namespace || !verb)
+      problem(path, `it hooks "${name}", which is not an operation name (\`<namespace>.<name>\`)`);
+    else if (CORE_NAMESPACES.has(namespace) && !CORE_OPERATIONS.has(name)) {
+      const hint = suggestion(name) ?? `the ${namespace} operations are ${coreOperationsIn(namespace).join(', ')}`;
+      problem(path, `it hooks "${name}", which is not a core operation; ${hint}`);
+    }
+  }
+
+  return {
+    problems,
+    claim: () => {
+      claims.commands.add(id);
+      for (const [command, attributes] of options) for (const a of attributes) claims.options.get(command)?.add(a);
+      for (const key of keys) claims.keys.add(key);
+      for (const name of replaced) claims.replaced.add(name);
+    },
   };
+}
+
+/** `x` for `no-x`. */
+function positive(name: string): string {
+  return name.replace(/^no-/, '');
+}
+
+/** `did you mean "stories.update"?` for `stories.edit`, when the near name is a core operation. */
+function suggestion(name: string): string | undefined {
+  const [namespace, verb = ''] = name.split('.');
+  const near = `${namespace}.${VERB_HINTS[verb] ?? verb}`;
+  return near !== name && CORE_OPERATIONS.has(near) ? `did you mean "${near}"?` : undefined;
+}
+
+function coreOperationsIn(namespace: string): string[] {
+  return CORE_OPERATION_NAMES.filter((name) => name.startsWith(`${namespace}.`));
 }
