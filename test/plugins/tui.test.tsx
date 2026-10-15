@@ -1,7 +1,9 @@
 // The TUI slots that Plugins fill, with the Notes fixture Plugin on.
+
+import { Text } from 'ink';
 import { describe, expect, it } from 'vitest';
 import { reservedNames } from '../../src/main';
-import { definePlugin } from '../../src/plugin-api';
+import { definePlugin, type PluginTui } from '../../src/plugin-api';
 import type { LocalState } from '../../src/schemas';
 import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
@@ -263,3 +265,99 @@ describe('TUI activation (RES-20, RES-23)', () => {
 function configWith(on: Entries) {
   return { assignees: [{ handle: 'alice', name: 'Alice' }], plugins: entries(on) };
 }
+
+describe('Plugin UI identity (ARCH-40)', () => {
+  /** A Plugin with the TUI part `tui`, a screen `mine` and nothing else. */
+  function withTui(id: string, tui: PluginTui<unknown>) {
+    return definePlugin({
+      id,
+      name: id,
+      description: '',
+      tui: async () => ({ screens: { mine: () => <Text>{`${id} screen`}</Text> }, ...tui }),
+    });
+  }
+
+  it('two Home entries with the same label open their own destinations', async () => {
+    const twin = withTui('twin', { home: [{ label: 'Stories', screen: 'mine' }] });
+    const t = await seed({ notes: true, twin: true });
+    const { app } = await openPluginApp(t, [notes, twin], { screen: 'home', params: {} });
+    await waitForFrame(app, 'Notes');
+    await focusListItem(app, 'Notes');
+    await app.press('j', KEYS.enter);
+    await waitForFrame(app, 'twin screen');
+    app.unmount();
+  });
+
+  it.each([
+    {
+      what: 'a Home entry to a missing screen',
+      tui: { home: [{ label: 'Go', screen: 'nope' }] },
+      reason: 'its Home entry "Go" opens screen "nope", which it does not have',
+    },
+    {
+      what: 'a settings section to a missing screen',
+      tui: { settings: [{ label: 'Set', screen: 'nope' }] },
+      reason: 'its settings section "Set" opens screen "nope", which it does not have',
+    },
+    {
+      what: 'two settings sections with one label',
+      tui: {
+        settings: [
+          { label: 'Set', screen: 'mine' },
+          { label: 'Set', screen: 'mine' },
+        ],
+      },
+      reason: 'it has two settings sections labelled "Set"',
+    },
+    {
+      what: 'two Story tabs with one label',
+      tui: {
+        storyTabs: [
+          { label: 'Tab', component: () => null },
+          { label: 'Tab', component: () => null },
+        ],
+      },
+      reason: 'it has two Story tabs labelled "Tab"',
+    },
+    {
+      what: 'two Task tabs with one label',
+      tui: {
+        taskTabs: [
+          { label: 'Tab', component: () => null },
+          { label: 'Tab', component: () => null },
+        ],
+      },
+      reason: 'it has two Task tabs labelled "Tab"',
+    },
+  ])('$what fails that Plugin to load, and only it', async ({ tui, reason }) => {
+    const odd = withTui('odd', tui as PluginTui<unknown>);
+    const t = await seed({ notes: true, odd: true });
+    const { app, host, warnings } = await openPluginApp(t, [notes, odd], { screen: 'home', params: {} });
+    expect(host.failures()).toMatchObject([{ id: 'odd', reason: `its TUI part is invalid: ${reason}` }]);
+    expect(warnings).toHaveLength(1);
+    await waitForFrame(app, 'Notes');
+    app.unmount();
+  });
+
+  it('a Plugin that names two of its fields alike fails in the field stage, the form still works', async () => {
+    const twice = definePlugin({
+      id: 'twice',
+      name: 'Twice',
+      description: '',
+      tui: async (): Promise<PluginTui<unknown>> => ({
+        storyForm: {
+          fields: async () => [
+            { name: 'x', label: 'One', kind: 'text' },
+            { name: 'x', label: 'Two', kind: 'text' },
+          ],
+          input: () => undefined,
+        },
+      }),
+    });
+    const t = await seed({ notes: true, twice: true });
+    const { app } = await openPluginApp(t, [notes, twice], { screen: 'story-form', params: { key: 'WEB-1' } });
+    const frame = await waitForFrame(app, 'Plugin "twice" failed in the field stage: it names two fields "x"');
+    expect(frame).toContain('Note');
+    app.unmount();
+  });
+});
