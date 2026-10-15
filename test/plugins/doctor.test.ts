@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { definePlugin } from '../../src/plugin-api';
+import { definePlugin, z } from '../../src/plugin-api';
 import { makeBoard, makeStory } from '../helpers';
 import { boom, notes } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
@@ -99,5 +99,144 @@ describe('doctor and Plugins', () => {
       ['PLUGIN_DATA_UNCHECKED', 'Plugin "notes" is off; its data (2 records, 2 files) is kept but not checked'],
       ['UNKNOWN_FILE', 'file is not part of the Data Root layout; Rowbly ignores it'],
     ]);
+  });
+});
+
+describe('doctor attribution (RES-17, ARCH-09, CQ-70)', () => {
+  /** A Plugin `id` with one finding whose fix throws `error`, and whose details say `{ extra: 1 }`. */
+  const throwing = (id: string, error: unknown = new Error('oops')) =>
+    definePlugin({
+      id,
+      name: id,
+      description: '',
+      doctor: {
+        check: () => [
+          {
+            code: 'BROKEN',
+            severity: 'warning',
+            path: 'rowbly.config.json',
+            message: 'broken',
+            details: { extra: 1, plugin: 'spoofed' },
+            fix: async () => {
+              throw error;
+            },
+          },
+        ],
+      },
+    });
+
+  for (const id of ['two-words', 'a-b-c']) {
+    it(`a failed fix of "${id}" names the whole Plugin id in its details and hint`, async () => {
+      const t = await pluginRoot({ [id]: true });
+      const { services } = await withPlugins(t, [throwing(id)]);
+      const err = (await services.doctor.fix().catch((e: unknown) => e)) as {
+        code: string;
+        details: Record<string, unknown>;
+        hint: string;
+      };
+      expect(err.code).toBe('INTERNAL');
+      expect(err.details).toMatchObject({ plugin: id, stage: 'doctor-fix' });
+      expect(err.hint).toContain(`rowbly plugins disable ${id}`);
+    });
+  }
+
+  it('an expected error from a fix keeps its code, attributed', async () => {
+    const { ValidationError } = await import('../../src/core');
+    const t = await pluginRoot({ 'my-plugin': true });
+    const { services } = await withPlugins(t, [throwing('my-plugin', new ValidationError('bad input'))]);
+    const err = (await services.doctor.fix().catch((e: unknown) => e)) as {
+      code: string;
+      details: Record<string, unknown>;
+    };
+    expect(err.code).toBe('VALIDATION');
+    expect(err.details).toMatchObject({ plugin: 'my-plugin', stage: 'doctor-fix' });
+  });
+
+  it('a Plugin finding keeps its details, with the framework plugin id', async () => {
+    const t = await pluginRoot({ 'two-words': true });
+    const { services } = await withPlugins(t, [throwing('two-words')]);
+    const report = await services.doctor.check();
+    expect(report.findings).toEqual([
+      {
+        code: 'TWO_WORDS_BROKEN',
+        severity: 'warning',
+        path: 'rowbly.config.json',
+        message: 'broken',
+        fixable: true,
+        details: { extra: 1, plugin: 'two-words' },
+      },
+    ]);
+  });
+
+  it('a code that is not an uppercase token, or that collides with a core code, fails clearly', async () => {
+    const coded = (id: string, code: string) =>
+      definePlugin({
+        id,
+        name: id,
+        description: '',
+        doctor: { check: () => [{ code, severity: 'warning', path: 'x', message: 'x' }] },
+      });
+    const t = await pluginRoot({ schema: true, lower: true });
+    const { services } = await withPlugins(t, [coded('schema', 'INVALID'), coded('lower', 'bad code')]);
+    const report = await services.doctor.check();
+    expect(report.findings.map((f) => [f.code, f.details?.plugin, f.message])).toEqual([
+      [
+        'PLUGIN_FAILED',
+        'lower',
+        'Plugin "lower" reported a finding with code "bad code": codes are uppercase words joined by "_"',
+      ],
+      [
+        'PLUGIN_FAILED',
+        'schema',
+        'Plugin "schema" reported a finding with code "INVALID", which would read as core code SCHEMA_INVALID',
+      ],
+    ]);
+  });
+});
+
+describe('DoctorData.local (ARCH-21)', () => {
+  it('a custom check reads a Local State preference and its fix changes it', async () => {
+    const Pref = z.object({ theme: z.string() });
+    const prefs = definePlugin({
+      id: 'prefs',
+      name: 'Prefs',
+      description: '',
+      bags: { local: Pref },
+      doctor: {
+        check: ({ data, plugin }) =>
+          plugin.readBag(data.local, Pref)?.theme === 'retired'
+            ? [
+                {
+                  code: 'OLD_THEME',
+                  severity: 'warning',
+                  path: 'local.json',
+                  message: 'the theme is retired',
+                  fix: async (changes) => {
+                    await changes.updateLocalState((s) => plugin.writeBag(s, { theme: 'light' }));
+                    return 'switched to light';
+                  },
+                },
+              ]
+            : [],
+      },
+    });
+    const t = await pluginRoot({ prefs: true });
+    await writeText(
+      t.path,
+      'local.json',
+      JSON.stringify({ version: 1, plugins: { prefs: { theme: 'retired' }, off: { x: 1 } } }),
+    );
+    const { services } = await withPlugins(t, [prefs]);
+    expect((await services.doctor.check()).findings.map((f) => f.code)).toEqual([
+      'PREFS_OLD_THEME',
+      'PLUGIN_DATA_UNCHECKED',
+    ]);
+    const report = await services.doctor.fix();
+    expect(report.fixed.map((f) => f.message)).toEqual(['switched to light']);
+    const { readFile } = await import('node:fs/promises');
+    expect(JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8')).plugins).toEqual({
+      prefs: { theme: 'light' },
+      off: { x: 1 },
+    });
   });
 });
