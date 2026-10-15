@@ -30,7 +30,7 @@ Abbreviations: `CLI` means a test in `test/plugins/<plugin>Cli.test.ts`, and `TU
 | Create, edit and delete a Story Spec (cancel keeps it) | `specs … --story` · CLI "the --story forms use case-insensitive Story Keys …" | Story Spec tab · TUI "the Story Spec tab shows own text then linked Board Specs …" and "long Story Specs scroll …" |
 | Link and unlink Board Specs on a Story | `--spec` (replace), `--add-spec`, `--remove-spec` · CLI "Story flags set/add/remove/filter links; …" | Story form Specs field, which replaces the selection · TUI "the Story form multi-choice links and unlinks Board Specs" |
 | Delete a Board Spec that Stories link to (unlinks them) | `specs delete` · CLI "Story flags set/add/remove/filter links; deletion warns and unlinks" | Specs screens `d` · TUI "the Specs screens create, edit and delete Board Specs …" (no linked Story; see Exceptions) |
-| Delete a Board whose only content is Specs | `boards delete` exits 4, `--force` deletes · CLI "guard rejects deletion of an empty Board with Specs …" | Open: UI-01 |
+| Delete a Board whose only content is Specs | `boards delete` exits 4, `--force` deletes · CLI "guard rejects deletion of an empty Board with Specs …"; `specsBoardDeletion.test.tsx` "the CLI exits 4 without --force …" | Boards `d`, then the force confirmation the guard's `canForce` offers · TUI `specsBoardDeletion.test.tsx` "an empty Board with a Spec offers force …" |
 
 ## Comments
 
@@ -67,5 +67,4 @@ Abbreviations: `CLI` means a test in `test/plugins/<plugin>Cli.test.ts`, and `TU
 
 | Finding | Gap | Owner |
 | --- | --- | --- |
-| UI-01 | The TUI has no force retry for a Board that only a Plugin guard keeps (an empty Board with Specs). | WP08B adds the Board TUI and CLI force tests. |
 | UI-02 | The TUI Comment form trims the body and the CLI keeps it as written. | WP08C adds the CLI and TUI whitespace parity tests. |

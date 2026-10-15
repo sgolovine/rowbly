@@ -12,7 +12,7 @@ import { definePlugin } from '../../src/plugin-api';
 import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic } from '../../src/plugins/epics/service';
 import { specs } from '../../src/plugins/specs';
-import { deleteSpec, saveSpec } from '../../src/plugins/specs/specs';
+import { createSpec, deleteSpec } from '../../src/plugins/specs/specs';
 import { CoreChangeSet } from '../../src/services/plugins/changeSet';
 import { createRepositories, pathExists, recoverTransactions } from '../../src/storage';
 import { makeStory, type TempRoot } from '../helpers';
@@ -80,7 +80,7 @@ const scenarios: Scenario[] = [
       }
       const { services } = await withPlugins(t, [specs]);
       const plugin = services.plugins.context('specs');
-      await saveSpec(plugin, { board: 'web', slug: 'auth' }, '# Auth\n', true);
+      await createSpec(plugin, { board: 'web', slug: 'auth' }, '# Auth\n');
       return { t, run: () => deleteSpec(plugin, { board: 'web', slug: 'auth' }) };
     },
   },

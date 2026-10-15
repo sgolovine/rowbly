@@ -166,7 +166,7 @@ describe('boards screen', () => {
     await waitForFrame(app, (f) => f.includes('API svc api · API'));
 
     await app.press('j', 'd', 'y');
-    await waitForFrame(app, (f) => f.includes('Web has 1 Stories. Delete the Board and all of them?'));
+    await waitForFrame(app, (f) => f.includes('Web has 1 Stories. Delete the Board') && f.includes('Delete all (y)'));
     await app.press('y');
     await waitForFrame(app, (f) => f.includes('Deleted Web'));
     expect((await createRepositories(t.root).boards.list()).map((b) => b.id)).toEqual(['api']);
