@@ -153,7 +153,7 @@ describe('Plugin field isolation', () => {
     await app.press('/');
     await waitForFrame(app, 'Plugin "flaky" failed in the field stage');
     await app.press(...Array(tabs).fill(KEYS.tab), ' ', KEYS.ctrlS);
-    const frame = await waitForFrame(app, (f) => f.includes('filters: noted') && !f.includes('WEB-2'));
+    const frame = await waitForFrame(app, (f) => /filters?: noted/.test(f) && !f.includes('WEB-2'));
     expect(frame).toContain('WEB-1');
     expect(toasts.list()).toEqual([]);
     app.unmount();

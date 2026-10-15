@@ -26,6 +26,7 @@ import {
   describeWithPlugins,
   filterFields,
   filterInitialValues,
+  PluginFailures,
   storyFilterFields,
   toFilter,
   withPluginFilters,
@@ -89,8 +90,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
-    const filter = withPluginFilters(toFilter(filters), plugins, filters);
-    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, filter) };
+    const { filter, failures } = withPluginFilters(toFilter(filters), plugins, scope.data.extra, filters);
+    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, filter), failures };
   }, [services, scope.data, filters, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
@@ -246,7 +247,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = hiddenLeft + hiddenRight > 0;
-  const summary = describeWithPlugins(describeFilters(filters), plugins, filters);
+  const described = describeWithPlugins(describeFilters(filters), plugins, scope.data?.extra, filters);
+  const summary = described.summary;
   const boardId = scope.data?.boardId;
   const inContext = ctx?.local.board === boardId;
 
@@ -280,6 +282,7 @@ export function BoardScreen({ params }: ScreenProps) {
           <Text dimColor>{` ${label.detail}`}</Text>
         </Text>
       )}
+      <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
       {shown?.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
       ) : (
@@ -311,6 +314,7 @@ export function BoardScreen({ params }: ScreenProps) {
       )}
       {mode === 'filter' && (
         <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
+          <PluginFailures failures={extra.failures} note="its filter is unavailable" />
           <Form
             fields={[
               ...filterFields(

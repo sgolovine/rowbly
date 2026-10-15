@@ -3,10 +3,10 @@
 // Includes the `r13-invalid-bag-dropped` reproduction.
 import { describe, expect, it } from 'vitest';
 import { reservedNames } from '../../src/main';
+import type { PluginFormField } from '../../src/plugin-api';
 import { epics } from '../../src/plugins/epics';
 import { createEpic } from '../../src/plugins/epics/service';
 import { specs } from '../../src/plugins/specs';
-import type { PluginFormField } from '../../src/plugin-api';
 import { createServices, loadPlugins, type RowblyContext } from '../../src/services';
 import { App } from '../../src/tui/app';
 import { createToastStore, type TuiPlugin } from '../../src/tui/hooks';
