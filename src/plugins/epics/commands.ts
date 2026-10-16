@@ -1,9 +1,9 @@
-import { type PluginDefinition, renderTable, UsageError } from '../../plugin-api';
+import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
 import { createEpic, deleteEpic, editEpic, getEpic, progressText, readEpics, setEpicClosed, showEpic } from './service';
 
 type EpicWriteOptions = { description?: string; descriptionFile?: string; edit?: boolean; name?: string };
 
-export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) => {
+export const commands: PluginCommands = (group, cli) => {
   group
     .command('list')
     .description('List open Epics')
