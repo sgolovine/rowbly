@@ -1,6 +1,6 @@
 # Plugin API reference
 
-The contracts a Plugin can rely on. The [tutorial](../WRITING-A-PLUGIN.md) builds a Plugin step by step; [`PLUGINS.md`](../PLUGINS.md) explains the architecture and the Built-in Plugins. The JSDoc in `src/services/plugins/types.ts` documents every type member; this page collects the rules that span several of them. The decisions are in ADR-0019 (locking and commits), ADR-0020 (stages, data and errors) and ADR-0021 (data formats).
+The contracts a Plugin can rely on. The [tutorial](../WRITING-A-PLUGIN.md) builds a Plugin step by step; [`PLUGINS.md`](../PLUGINS.md) explains the architecture and the Built-in Plugins. The JSDoc in `src/services/plugins/types.ts` documents each type; this page collects the rules that span several of them. The decisions are in ADR-0019 (locking and commits), ADR-0020 (stages, data and errors) and ADR-0021 (data formats).
 
 Today every Plugin is a Built-in Plugin in this repository ([`TRUST.md`](TRUST.md), [`COMPATIBILITY.md`](COMPATIBILITY.md)). The API is internal and may change with Rowbly.
 
@@ -50,7 +50,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 
 `definePlugin({ … })` declares everything up front. Only `id`, `name` and `description` are required.
 
-| Member | What it is |
+| Key | What it is |
 | --- | --- |
 | `id` | A slug: the Plugin's command (`rowbly <id>`), bag key and folder name. |
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
