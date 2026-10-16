@@ -5,12 +5,11 @@ import { definePlugin } from '../../src/plugin-api';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec, getSpec, listSpecs, specTitle } from '../../src/plugins/specs/specs';
 import { makeBoard, makeStory } from '../helpers';
-import { pluginRoot, withPlugins } from './helpers';
+import { pluginRoot, pluginTestHost, withPlugins } from './helpers';
 
 async function setup() {
-  const t = await pluginRoot({ specs: true });
-  const loaded = await withPlugins(t, [specs]);
-  return { t, ...loaded, plugin: loaded.services.plugins.context('specs') };
+  const loaded = await pluginTestHost({ plugins: [specs] });
+  return { ...loaded, plugin: loaded.context('specs') };
 }
 
 const target = { board: 'web', slug: 'auth' };

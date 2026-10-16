@@ -13,13 +13,12 @@ import {
   showEpic,
 } from '../../src/plugins/epics/service';
 import { FIXED_NOW, fixedClock, makeBoard, makeStory } from '../helpers';
-import { pluginRoot, readJsonFile, withPlugins } from './helpers';
+import { pluginRoot, pluginTestHost, readJsonFile, withPlugins } from './helpers';
 
 async function setup() {
-  const t = await pluginRoot({ epics: true });
   const clock = fixedClock();
-  const loaded = await withPlugins(t, [epics], { now: clock.now });
-  return { t, ...loaded, clock, plugin: loaded.services.plugins.context('epics') };
+  const loaded = await pluginTestHost({ plugins: [epics], now: clock.now });
+  return { ...loaded, clock, plugin: loaded.context('epics') };
 }
 
 describe('Epics operations', () => {

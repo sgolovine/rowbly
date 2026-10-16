@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { onTestFinished } from 'vitest';
 import { reservedNames } from '../../src/main';
+import { createPluginTestHost, type PluginTestHost, type PluginTestHostOptions } from '../../src/plugin-api/testing';
 import type { RowblyConfig } from '../../src/schemas';
 import {
   type AnyPluginDefinition,
@@ -58,6 +60,23 @@ export async function withPlugins(
     ...ctxOverrides,
   };
   return { host, ctx, services: createServices(ctx), warnings };
+}
+
+/**
+ * The Plugin test harness (src/plugin-api/testing.ts) as the repository's Plugin suites use it: by
+ * default with the Assignee and Board of `pluginRoot`, its Data Root as a `TempRoot` for direct
+ * fixtures and assertions, and removed when the test finishes.
+ */
+export async function pluginTestHost(options: PluginTestHostOptions): Promise<PluginTestHost & { t: TempRoot }> {
+  const host = await createPluginTestHost({
+    assignees: [{ handle: 'alice', name: 'Alice' }],
+    boards: [{ id: 'web', name: 'Website', keyPrefix: 'WEB' }],
+    now: fixedClock().now,
+    ...options,
+  });
+  onTestFinished(host.dispose);
+  const t: TempRoot = { dir: dirname(host.root.path), path: host.root.path, root: host.root, cleanup: host.dispose };
+  return { ...host, t };
 }
 
 /** A file in the Data Root, parsed as JSON. */
