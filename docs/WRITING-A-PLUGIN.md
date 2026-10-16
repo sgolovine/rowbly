@@ -495,37 +495,48 @@ A Board can change them in its own `board.config.json` (`"plugins": { "points": 
 
 ## 10. Tests
 
-Test a Plugin through the services, and its commands through the CLI. In this repository the helpers are in `test/helpers` and `test/plugins/helpers.ts`: `pluginRoot(entries)` makes a temporary Data Root with Board `web` and the given Plugins on, and `withPlugins(t, registry)` loads them and builds the services with a fixed clock and fixed ids. These are repository helpers; Plugins outside the repository cannot import them.
+Test a Plugin through the real pipeline and storage with the test harness, `src/plugin-api/testing.ts`. Import `createPluginTestHost` and `validatePluginDefinition` from it in a test file (for example `test/plugins/points.test.ts` imports `'../../src/plugin-api/testing'`). The harness is internal to this repository until Plugin packages exist (WP10B); no Plugin and no production module imports it.
 
 ```ts
 it('sets, keeps and clears points, and keeps zero', async () => {
-  const t = await pluginRoot({ points: true });
-  const { services } = await withPlugins(t, [points]);
-  const story = await services.stories.create('web', { name: 'Login', plugins: { points: { points: 0 } } });
-  expect(story.plugins).toEqual({ points: { points: 0 } });
+  const host = await createPluginTestHost({ plugins: [points] });
+  try {
+    const { services } = host;
+    const story = await services.stories.create('web', { name: 'Login', plugins: { points: { points: 0 } } });
+    expect(story.plugins).toEqual({ points: { points: 0 } });
 
-  // No input for the Plugin: its bag is kept.
-  await services.stories.update(story.key, { name: 'Sign in' });
-  expect((await readJsonFile(t, storyFile(story.key))).plugins).toEqual({ points: { points: 0 } });
+    // No input for the Plugin: its bag is kept.
+    const renamed = await services.stories.update(story.key, { name: 'Sign in' });
+    expect(renamed.plugins).toEqual({ points: { points: 0 } });
 
-  // `null` is the explicit clear.
-  const cleared = await services.stories.update(story.key, { plugins: { points: { points: null } } });
-  expect(cleared.plugins).toBeUndefined();
+    // `null` is the explicit clear.
+    const cleared = await services.stories.update(story.key, { plugins: { points: { points: null } } });
+    expect(cleared.plugins).toBeUndefined();
+  } finally {
+    await host.dispose();
+  }
 });
 
 it('rejects malformed input before anything is saved', async () => {
-  const t = await pluginRoot({ points: true });
-  const { services } = await withPlugins(t, [points]);
-  const create = services.stories.create('web', { name: 'Login', plugins: { points: { points: -1 } } });
-  await expect(create).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'points' } });
-  expect(await services.stories.list('web', {})).toEqual([]);
+  const host = await createPluginTestHost({ plugins: [points] });
+  try {
+    const create = host.services.stories.create('web', { name: 'A', plugins: { points: { points: -1 } } });
+    await expect(create).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'points' } });
+    expect(await host.services.stories.list('web', {})).toEqual([]);
+    expect(validatePluginDefinition(points)).toEqual([]);
+  } finally {
+    await host.dispose();
+  }
 });
 ```
 
-- Run the CLI in the test process with `main(['--root', t.path, …], registry)` from `src/main.ts`, or the built CLI with `runCli`. `test/docs/tutorial.test.ts` does both for Points.
-- For the TUI, `openPluginApp(t, registry, route)` from `test/plugins/tuiHelpers.tsx` renders the app with your Plugins; `focusListItem`, `focusFormField` and `waitForFrame` move around and wait for what a screen shows.
+- `createPluginTestHost({ plugins, settings?, boards?, assignees?, now?, newId?, me? })` makes a Data Root of its own under the system temp folder, with Board `web` (`WEB`) unless you pass `boards`, turns `plugins` on with their `settings`, and loads them as Rowbly does. The clock is fixed at `2026-01-01T00:00:00.000Z` and ids are `id000001`, `id000002`, …. Call `dispose()` when the test finishes.
+- It returns `services`, every core service, **for the test only**: set up data and check results as a person would. `context(id)` is the context that the Plugin's own commands, screens and Actions get. A Plugin that fails to load is in `warnings` and `status()`.
+- `validatePluginDefinition(definition)` lists the problems Rowbly would refuse the Plugin for when it loads (names, options, Action keys, replacements and hooks); empty when it is fine.
+- **TUI.** Render a screen, tab or section with `ink-testing-library`, passing `host.context(id)` and a `PluginUi` whose methods record calls. Wait for what the screen shows once its data has loaded before you press keys: reads are async, and an early key may reach a screen that is still loading. The header of `src/plugin-api/testing.ts` has the recipe. Navigation between screens needs the whole TUI: `openPluginApp` in `test/plugins/tuiHelpers.tsx` renders it with your Plugins.
+- **Commands.** Run the CLI in the test process with `main(['--root', host.root.path, …], [points])` from `src/main.ts`; `test/docs/tutorial.test.ts` does this for every Points command.
 - Test failure paths: malformed input saves nothing, a refusal saves nothing, and invalid stored data is kept.
-- `ROWBLY_DEBUG=trace` prints every Plugin callback with its stage, time and outcome to stderr (see the reference, [Tracing](plugins/API.md#tracing)).
+- `ROWBLY_DEBUG=trace` prints every Plugin callback with its stage, time and outcome to stderr (see [Tracing](plugins/API.md#tracing)).
 
 ## 11. Advanced: replacements
 

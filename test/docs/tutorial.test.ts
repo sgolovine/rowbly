@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { main } from '../../src/main';
+import { createPluginTestHost, validatePluginDefinition } from '../../src/plugin-api/testing';
 import { makeBoard, makeStory } from '../helpers';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from '../plugins/helpers';
 import { focusListItem, openPluginApp } from '../plugins/tuiHelpers';
@@ -126,26 +127,34 @@ describe('step 2: hello world', () => {
 describe('step 4: an editable field', () => {
   // #region test
   it('sets, keeps and clears points, and keeps zero', async () => {
-    const t = await pluginRoot({ points: true });
-    const { services } = await withPlugins(t, [points]);
-    const story = await services.stories.create('web', { name: 'Login', plugins: { points: { points: 0 } } });
-    expect(story.plugins).toEqual({ points: { points: 0 } });
+    const host = await createPluginTestHost({ plugins: [points] });
+    try {
+      const { services } = host;
+      const story = await services.stories.create('web', { name: 'Login', plugins: { points: { points: 0 } } });
+      expect(story.plugins).toEqual({ points: { points: 0 } });
 
-    // No input for the Plugin: its bag is kept.
-    await services.stories.update(story.key, { name: 'Sign in' });
-    expect((await readJsonFile(t, storyFile(story.key))).plugins).toEqual({ points: { points: 0 } });
+      // No input for the Plugin: its bag is kept.
+      const renamed = await services.stories.update(story.key, { name: 'Sign in' });
+      expect(renamed.plugins).toEqual({ points: { points: 0 } });
 
-    // `null` is the explicit clear.
-    const cleared = await services.stories.update(story.key, { plugins: { points: { points: null } } });
-    expect(cleared.plugins).toBeUndefined();
+      // `null` is the explicit clear.
+      const cleared = await services.stories.update(story.key, { plugins: { points: { points: null } } });
+      expect(cleared.plugins).toBeUndefined();
+    } finally {
+      await host.dispose();
+    }
   });
 
   it('rejects malformed input before anything is saved', async () => {
-    const t = await pluginRoot({ points: true });
-    const { services } = await withPlugins(t, [points]);
-    const create = services.stories.create('web', { name: 'Login', plugins: { points: { points: -1 } } });
-    await expect(create).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'points' } });
-    expect(await services.stories.list('web', {})).toEqual([]);
+    const host = await createPluginTestHost({ plugins: [points] });
+    try {
+      const create = host.services.stories.create('web', { name: 'A', plugins: { points: { points: -1 } } });
+      await expect(create).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'points' } });
+      expect(await host.services.stories.list('web', {})).toEqual([]);
+      expect(validatePluginDefinition(points)).toEqual([]);
+    } finally {
+      await host.dispose();
+    }
   });
   // #endregion
 
