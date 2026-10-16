@@ -8,12 +8,16 @@ import {
   type AnyPluginDefinition,
   type DataRoot,
   failureWarning,
+  formatTrace,
   type LoadPluginsOptions,
   loadPlugins,
   PLUGIN_OPTION_COMMANDS,
   type PluginHost,
   type PluginOptionCommand,
   type ReservedNames,
+  setTraceSink,
+  traceBuffer,
+  traceRequested,
 } from './services';
 import { findDataRoot } from './storage';
 import { CORE_KEYS } from './tui/keymap';
@@ -147,6 +151,9 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
       createProgram().outputHelp({ error: true });
       return ExitCode.usage;
     }
+    // Ink owns the terminal: the trace waits in a bounded buffer and goes to stderr on exit (OBS-01).
+    const buffer = traceRequested(process.env) ? traceBuffer() : undefined;
+    setTraceSink(buffer?.sink);
     try {
       // Loaded on demand: Ink and React take most of the start-up time of every other command.
       const { startTui } = await import('./tui');
@@ -154,8 +161,13 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
       return ExitCode.ok;
     } catch (err) {
       return handleError(err, json);
+    } finally {
+      setTraceSink(undefined);
+      for (const line of buffer?.lines() ?? []) process.stderr.write(`${line}\n`);
     }
   }
+  // Each event goes to stderr as it happens, so `--json` output on stdout stays parseable (OBS-01).
+  setTraceSink(traceRequested(process.env) ? (event) => process.stderr.write(`${formatTrace(event)}\n`) : undefined);
   try {
     const root = await findDataRoot({
       cwd: process.cwd(),
@@ -170,5 +182,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
     return Number(process.exitCode ?? ExitCode.ok);
   } catch (err) {
     return handleError(err, json, registry);
+  } finally {
+    setTraceSink(undefined);
   }
 }

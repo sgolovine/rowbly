@@ -127,9 +127,10 @@ export interface ChangeSetView {
 }
 
 /**
- * The records an operation will save, once, at its end, as core operation bodies fill them. Every
- * method validates the record it is given, and reads the stored record as `before` the first time a
- * record changes. Plugins get `PluginChangeSet` instead.
+ * The records an operation will save, once, at its end, as core operation bodies fill them. The
+ * `put…` and `update…` methods check the record they are given (or the updater returns) against its
+ * schema, and every method reads the stored record as `before` the first time a record changes; the
+ * whole plan is checked again before the save. Plugins get `PluginChangeSet` instead.
  */
 export interface ChangeSet {
   /** Every change, in the order it was first made. */
@@ -413,7 +414,12 @@ export type BagInspection<T> =
   | { kind: 'valid'; value: T }
   | { kind: 'invalid'; raw: unknown; issues: readonly z.core.$ZodIssue[] };
 
-/** Read access to the Plugin's own `plugins/<id>/` folders; writes go through a Change Set. */
+/**
+ * Read access to the Plugin's own `plugins/<id>/` folders, as **stored**: a file written by the
+ * running operation is not here until it is saved. A hook reads pending files with
+ * `changes.readFile`. Writes go through a Change Set. A file reached through a symbolic link is
+ * refused.
+ */
 export interface PluginFiles {
   /** The file's text, or `null` when it does not exist. */
   read(scope: FileScope, name: string): Promise<string | null>;
@@ -799,6 +805,7 @@ export interface PluginFormField {
  * | any | `fields` threw | never called | bag kept as stored |
  */
 export interface PluginStoryForm<S = Record<string, unknown>> {
+  /** The Plugin's fields for a new Story (`story: null`) or an existing one, read when the form opens and when the Plugins load again. */
   fields(args: { boardId: Slug; story: Story | null; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**
    * This Plugin's input, or `undefined` for no change. `values` and `initialValues` hold the
@@ -838,7 +845,11 @@ export interface PluginScreenProps<S = Record<string, unknown>> {
 
 export interface PluginStoryTabProps<S = Record<string, unknown>> {
   story: Story;
-  /** Whether the tab gets keys now. */
+  /**
+   * Whether the tab is the selected one. It gets keys only when the screen is active too: use
+   * `useIsActive() && active` for `useInput`, `useKeyHints` and `useKeyCapture`, and pass it to
+   * `useReloadOnReturn(reload, active)`.
+   */
   active: boolean;
   plugin: PluginContext<S>;
   ui: PluginUi;
@@ -847,7 +858,7 @@ export interface PluginStoryTabProps<S = Record<string, unknown>> {
 export interface PluginTaskTabProps<S = Record<string, unknown>> {
   story: Story;
   task: Task;
-  /** Whether the tab gets keys now. */
+  /** Whether the tab is the selected one; as for `PluginStoryTabProps.active`. */
   active: boolean;
   plugin: PluginContext<S>;
   ui: PluginUi;
@@ -912,7 +923,11 @@ export interface PluginDefinition<
    */
   settings?: ZodType<S>;
   bags?: PluginBagSchemas;
-  /** Runs when the Plugin loads; throwing makes it fail to load. */
+  /**
+   * Runs each time the Plugin loads: every command-mode run, and in the TUI at start and again each
+   * time a Plugin is turned on or off. There is no teardown, so it must be safe to run again.
+   * Throwing makes the Plugin fail to load.
+   */
   start?(args: { settings: S }): void | Promise<void>;
   /** Schemas for this Plugin's input of core operations, by operation (`PluginInputSchemas`). */
   inputs?: In;
