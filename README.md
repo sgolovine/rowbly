@@ -67,7 +67,7 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
       plugins/<id>/                  # files of a Plugin, for this Story
 ```
 
-Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
+Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
 - **Story Keys** are the highest number on the Board plus one. There is no shared counter, so two branches can both create `WEB-7`. After such a merge, run `rowbly doctor --fix`: it keeps the earlier Story as `WEB-7` and renumbers the other one (and its Task ids). Update branch names or commit messages that used the renumbered key.
 - **Deleted keys may be reused.** If the highest-numbered Story is deleted, the next new Story gets its number. git history still shows which Story a key meant at any time.
@@ -310,6 +310,12 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `PLUGIN_FAILED` | error | A Plugin that is on failed to load | — (see `rowbly plugins list`) |
 | `PLUGIN_DATA_INVALID` | warning | Plugin Data of a Plugin that is on that does not match its schema | — |
 | `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or that this version does not have, reported once per Plugin | — |
+| `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
+| `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
+| `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |
+| `ORPHAN_FOLDER` | warning | A Board or Story folder with Plugin files but no `board.config.json` / `story.json`; a Story folder still reserves its key | — (restore the file or delete the folder) |
+| `LEGACY_DATA` | warning | Comments, an `epicId` or Epic files from a Rowbly before Plugins; nothing imports them, and the next save of that Story drops them | — (back up first) |
+| `GITIGNORE_INCOMPLETE` | info | A Data Root `.gitignore` that does not list `local.json`, `.lock`, `.lock.break` and `.txn/` | Adds the missing lines |
 | `<PLUGIN>_…` | any | The checks of a Plugin that is on, such as `EPICS_MISSING_EPIC` | As the Plugin says |
 
 Story Keys are allocated as the highest number on the Board + 1 without a shared counter, so two branches can create the same key. After the merge, `rowbly doctor --fix` keeps the earlier Story and renumbers the other one (for example `WEB-4` and `WEB-5`), renaming its Task ids to match and moving its folder with its Plugin files. Then `git add .rowbly` and commit the merge as usual. Renumbering changes a Story Key, so update any branch names or commit messages that used it.
@@ -320,19 +326,20 @@ In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks ag
 <!-- BEGIN plugins -->
 ### Plugins
 
-Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [`docs/PLUGINS.md`](docs/PLUGINS.md).
+Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [`docs/PLUGINS.md`](docs/PLUGINS.md); to write one, follow [`docs/WRITING-A-PLUGIN.md`](docs/WRITING-A-PLUGIN.md) and the [Plugin API reference](docs/plugins/API.md).
 
 ```text
 rowbly plugins list            # every Built-in Plugin, whether it is on, and any that failed to load
-rowbly plugins show <id>       # a Plugin and its settings
+rowbly plugins show <id>       # a Plugin and its stored settings
 rowbly plugins enable <id>
 rowbly plugins disable <id>    # keeps its settings and data
 ```
 
-- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). `rowbly init` turns no Plugins on. A change takes effect the next time Rowbly runs.
+- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). Edit settings by hand and keep `enabled`; a Plugin that needs a setting refuses `plugins enable` until it is there ([Settings](docs/PLUGINS.md#settings)). `rowbly init` turns no Plugins on. Command mode reads the configuration on every run; the TUI when it starts and when you turn a Plugin on or off.
 - A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show` and `tasks show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
-- A Plugin that fails to load (it throws while it starts, its settings are invalid, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning on every run, and `doctor` reports it.
-- A Plugin can refuse a change (exit 4). If a Plugin fails while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, both errors carry `details.plugin`.
+- A Plugin that fails to load (its settings are invalid, it throws while it starts, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning, and `plugins list` and `doctor` report it. Its data is kept.
+- A Plugin can refuse a change (exit 4). An expected error from a Plugin keeps its own code, such as `VALIDATION` (exit 2) for bad input. If a Plugin fails unexpectedly while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, these errors carry `details.plugin` and `details.stage`.
+- `ROWBLY_DEBUG=trace` prints each operation and Plugin step, with its time and outcome, to stderr.
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 
