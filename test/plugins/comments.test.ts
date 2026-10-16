@@ -8,16 +8,15 @@ import { pluginStoryRows, pluginTaskRows } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { FIXED_NOW, fixedClock, makeStory } from '../helpers';
 import { readCommentThread } from './commentsHelpers';
-import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
+import { pluginRoot, pluginTestHost, readJsonFile, storyFile, withPlugins } from './helpers';
 
 async function setup(me: string | null = 'alice') {
-  const t = await pluginRoot({ comments: true });
-  await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
   const clock = fixedClock();
-  const loaded = await withPlugins(t, [comments], { me, now: clock.now });
+  const loaded = await pluginTestHost({ plugins: [comments], me, now: clock.now });
+  await makeStory(loaded.t.path, { boardId: 'web', key: 'WEB-1' });
   await loaded.services.tasks.create('WEB-1', { name: 'Task' });
-  const plugin = loaded.services.plugins.context('comments');
-  return { ...loaded, clock, plugin, story: () => createRepositories(t.root).stories.findByKey('WEB-1') };
+  const plugin = loaded.context('comments');
+  return { ...loaded, clock, plugin, story: () => createRepositories(loaded.root).stories.findByKey('WEB-1') };
 }
 
 describe('Comments operations', () => {
