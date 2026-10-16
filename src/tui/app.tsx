@@ -66,6 +66,8 @@ export function App({
     () => ({
       plugins: current.plugins,
       reload: async () => {
+        // A shallow copy, so loading the Plugins into it (`ctx.plugins`) leaves the context that the
+        // screens use now as it is until the new one replaces it. It shares everything else (CQ-78).
         if (current.ctx) await activate({ ...current.ctx });
       },
     }),

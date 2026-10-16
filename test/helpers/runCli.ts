@@ -2,11 +2,19 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { inject, type ProvidedContext } from 'vitest';
 
-export const CLI_PATH = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
+/**
+ * Stands in for a CLI path in suites that run without the CLI build: vitest.config.ts runs a suite
+ * with the build only when it mentions `runCli` or a CLI path.
+ */
+const NOT_BUILT = '<no CLI build in this Vitest project; see vitest.config.ts>';
+const builds: ProvidedContext['cliBuilds'] | undefined = inject('cliBuilds');
+
+/** The CLI that this test run built from the current source (test/helpers/globalSetup.ts). */
+export const CLI_PATH = builds?.cli ?? NOT_BUILT;
 /** The same program with the fixture Plugins of test/plugins/fixtures as its registry. */
-export const FIXTURE_CLI_PATH = fileURLToPath(new URL('../../.test-dist/cli.js', import.meta.url));
+export const FIXTURE_CLI_PATH = builds?.fixtureCli ?? NOT_BUILT;
 
 export interface RunCliOptions {
   /** Data Root path, passed as `ROWBLY_ROOT`. */
@@ -28,10 +36,12 @@ export interface RunCliResult {
 }
 
 /**
- * Runs the built `dist/cli.js` in a child process. HOME and cwd point at an empty temp directory so
+ * Runs the CLI that this test run built in a child process. HOME and cwd point at an empty temp directory so
  * no real `~/.rowbly` or git config leaks in, and colour is disabled.
  */
 export async function runCli(args: string[], opts: RunCliOptions = {}): Promise<RunCliResult> {
+  const cli = opts.cli ?? CLI_PATH;
+  if (cli === NOT_BUILT) throw new Error(`runCli: ${NOT_BUILT}`);
   const isolated = await mkdtemp(join(tmpdir(), 'rowbly-cli-'));
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
@@ -41,7 +51,7 @@ export async function runCli(args: string[], opts: RunCliOptions = {}): Promise<
     ...opts.env,
   };
   try {
-    return await run(opts.cli ?? CLI_PATH, args, opts.cwd ?? isolated, env, opts.stdin ?? '');
+    return await run(cli, args, opts.cwd ?? isolated, env, opts.stdin ?? '');
   } finally {
     await rm(isolated, { recursive: true, force: true });
   }

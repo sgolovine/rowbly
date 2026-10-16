@@ -1,11 +1,13 @@
 import { Box, type DOMElement, type Key, Text, useInput } from 'ink';
 import { useRef, useState } from 'react';
 import { ValidationError } from '../../core';
+import type { PluginFieldKind, PluginFormValue } from '../../services';
 import { useDirty, useIsActive, useLayout, useMouse, useToast } from '../hooks';
 import { TextArea } from './TextArea';
 import { TextInput } from './TextInput';
 
-export type FieldKind = 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
+/** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
+export type FieldKind = PluginFieldKind;
 
 export interface FormField {
   /** Key in the submitted values; also matched against `ValidationError` issue paths. */
@@ -18,7 +20,7 @@ export interface FormField {
 }
 
 /** text/multiline: string · number: number | null · boolean · date: `YYYY-MM-DD` | null · select: string | null · multiselect: string[] */
-export type FormValue = string | number | boolean | string[] | null;
+export type FormValue = PluginFormValue;
 export type FormValues = Record<string, FormValue>;
 
 export interface FormProps {
@@ -65,6 +67,23 @@ function parse(field: FormField, raw: Raw): { value: FormValue } | { error: stri
     return ok ? { value: raw } : { error: 'must be a date (YYYY-MM-DD)' };
   }
   return { value: raw };
+}
+
+/**
+ * `value` as the form submits it for `field` when it is left alone: `''` for empty text, `null` for an
+ * empty number, date or select, `false` for an unset boolean, `[]` for an unset multiselect, and a
+ * number for a number given as text. A value the form could not submit is returned as it is.
+ */
+export function normalizeFormValue(field: Pick<FormField, 'kind'>, value: FormValue | undefined): FormValue {
+  const optional: FormField = { name: '', label: '', kind: field.kind };
+  const result = parse(optional, toRaw(optional, value));
+  return 'error' in result ? (value ?? null) : result.value;
+}
+
+/** Whether two submitted values are the same; the order of a multiselect's choices does not count. */
+export function sameFormValue(a: FormValue, b: FormValue): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  return a === b;
 }
 
 /** Maps `ValidationError.details.issues` (zod issues) to fields by the first path segment. */

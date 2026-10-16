@@ -1,50 +1,72 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { ConfirmDialog, Loading, useAsync, useInput, useIsActive, useKeyHints, useState } from '../../plugin-api/tui';
+import {
+  ConfirmDialog,
+  Loading,
+  Text,
+  useAsync,
+  useInput,
+  useIsActive,
+  useKeyHints,
+  useReloadOnReturn,
+  useState,
+} from '../../plugin-api/tui';
 import { SpecText } from './SpecText';
-import { deleteSpec, getSpec, type SpecTarget } from './specs';
+import { deleteSpec, getSpec, parseSpecTarget, specTargetName } from './specs';
 
 export function SpecDetailScreen({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
-  const target = params as unknown as SpecTarget;
   const active = useIsActive();
-  const spec = useAsync(() => getSpec(plugin, target), [plugin, target.board, target.story, target.slug, active]);
-  const [confirm, setConfirm] = useState(false);
+  const loaded = useAsync(async () => {
+    const target = parseSpecTarget(params);
+    return { target, spec: await getSpec(plugin, target) };
+  }, [plugin, params.board, params.story, params.slug]);
+  useReloadOnReturn(loaded.reload, active);
+  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  useKeyHints([
-    { key: 'e', description: 'edit Spec' },
-    { key: 'd', description: 'delete Spec' },
-    { key: '↑/↓', description: 'scroll Spec' },
-  ]);
+  const data = loaded.data;
+  useKeyHints(
+    data
+      ? [
+          { key: 'e', description: 'edit Spec' },
+          { key: 'd', description: 'delete Spec' },
+          { key: '↑/↓', description: 'scroll Spec' },
+        ]
+      : [],
+  );
   useInput(
     (input) => {
-      if (input === 'e') ui.open('form', { ...target, create: false });
-      if (input === 'd') setConfirm(true);
+      if (!data) return;
+      if (input === 'e')
+        ui.open('form', { ...data.target, create: false, title: `Edit ${specTargetName(data.target)}` });
+      if (input === 'd') setConfirming(true);
     },
-    { isActive: active && !confirm && !busy },
+    { isActive: active && !confirming && !busy && !!data },
   );
   const remove = async () => {
+    if (!data) return;
     setBusy(true);
     try {
-      await deleteSpec(plugin, target);
+      await deleteSpec(plugin, data.target);
       ui.toast('Deleted Spec');
       ui.back();
     } catch (err) {
       ui.error(err);
-      setConfirm(false);
+      setConfirming(false);
     } finally {
       setBusy(false);
     }
   };
-  if (spec.loading) return <Loading />;
-  if (!spec.data) return null;
-  if (confirm)
+  // A reload on return from the form keeps the Spec on screen.
+  if (loaded.loading && !data) return <Loading />;
+  if (!data) return <Text color="red">Could not load Spec.</Text>;
+  if (confirming)
     return (
       <ConfirmDialog
-        message="Delete Spec? Board Spec links will be removed."
+        message={`Delete Spec "${specTargetName(data.target)}"?${data.target.story ? '' : ' Board Spec links will be removed.'}`}
         destructive
         isActive={active && !busy}
         onConfirm={() => void remove()}
-        onCancel={() => setConfirm(false)}
+        onCancel={() => setConfirming(false)}
       />
     );
-  return <SpecText text={spec.data.text} active={active} />;
+  return <SpecText text={data.spec.text} active={active} />;
 }

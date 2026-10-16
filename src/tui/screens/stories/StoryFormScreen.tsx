@@ -1,20 +1,16 @@
 import { Box, Text } from 'ink';
-import {
-  type CustomFieldDef,
-  type CustomFieldValue,
-  type Priority,
-  PrioritySchema,
-  type Story,
-} from '../../../schemas';
-import type { CustomFieldValuesInput } from '../../../services';
+import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
+import type { CustomFieldValuesInput, PluginInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
 import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
 import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
-import { storyFormFields, storyFormInput } from './pluginFields';
+import { PluginFailures } from './PluginFailures';
+import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
 import { boardIdFor, NONE } from './shared';
+import { assigneesValue, priorityValue } from './storyFormValues';
 
 /** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
 export function StoryFormScreen({ params }: ScreenProps) {
@@ -36,16 +32,22 @@ export function StoryFormScreen({ params }: ScreenProps) {
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
   const { story, boardId, choices, extra } = data.data;
 
-  const submit = async (values: FormValues) => {
+  // A Plugin's invalid input shows on that Plugin's fields (DX-07).
+  const submit = (values: FormValues) =>
+    save(values).catch((err: unknown) => {
+      throw onPluginFields(err, extra);
+    });
+
+  const save = async (values: FormValues) => {
     const fields = customFieldValues(choices.customFields, values);
     const common = {
       name: String(values.name),
       description: String(values.description ?? ''),
-      assignees: (values.assignees as string[] | null) ?? [],
-      priority: optional(values.priority) as Priority | null,
+      assignees: assigneesValue(values.assignees),
+      priority: priorityValue(values.priority),
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
-      ...withPlugins(storyFormInput(plugins, values, story)),
+      ...pluginInputOptions(storyFormInput(plugins, extra, values, story)),
     };
     const stage = String(values.stage);
     if (!story) {
@@ -55,8 +57,8 @@ export function StoryFormScreen({ params }: ScreenProps) {
       return;
     }
     const unsetFields = Object.keys(story.customFields).filter((k) => fields[k] === undefined);
-    await services.stories.update(story.key, { ...common, customFields: fields, unsetFields });
-    if (stage !== story.stage) await services.stories.move(story.key, stage);
+    // One operation, so a rejected Stage change saves none of the edit (ARCH-43).
+    await services.stories.update(story.key, { ...common, stage, customFields: fields, unsetFields });
     toast.push('info', `Updated ${story.key}`);
     router.pop();
   };
@@ -69,6 +71,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
         onSubmit={submit}
       />
+      <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
       {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>
   );
@@ -141,7 +144,8 @@ function customFieldValues(defs: readonly CustomFieldDef[], values: FormValues):
   return result;
 }
 
-function withPlugins(plugins: ReturnType<typeof storyFormInput>) {
+/** `{ plugins }` for the operation, or `{}` when no Plugin gave input (CQ-14). */
+function pluginInputOptions(plugins: PluginInput | undefined): { plugins?: PluginInput } {
   return plugins ? { plugins } : {};
 }
 

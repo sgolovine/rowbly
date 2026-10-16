@@ -1,11 +1,10 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { makeBoard, makeStory, runCli, type TempRoot } from '../helpers';
+import { makeBoard, makeStory, type RunCliOptions, runCli, type TempRoot } from '../helpers';
 import { pluginRoot } from './helpers';
 
-const cli = (t: TempRoot, args: string[], opts: Parameters<typeof runCli>[1] = {}) =>
-  runCli(args, { root: t.path, ...opts });
+const cli = (t: TempRoot, args: string[], opts: RunCliOptions = {}) => runCli(args, { root: t.path, ...opts });
 const json = (text: string) => JSON.parse(text);
 
 describe('rowbly specs', () => {
@@ -90,15 +89,55 @@ describe('rowbly specs', () => {
     expect(json(rejected.stderr).error.details.plugin).toBe('specs');
     expect((await cli(t, ['boards', 'delete', 'api', '--force', '--yes'])).exitCode).toBe(0);
   });
-});
 
-it('doctor CLI reports SPECS_MISSING_SPEC and --fix unlinks it', async () => {
-  const t = await pluginRoot({ specs: true });
-  await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { specs: { specs: ['gone'] } } });
-  const report = await cli(t, ['doctor', '--json']);
-  expect(report.exitCode).toBe(0);
-  expect(json(report.stdout).findings).toMatchObject([{ code: 'SPECS_MISSING_SPEC', severity: 'warning' }]);
-  const fixed = await cli(t, ['doctor', '--fix', '--json']);
-  expect(fixed.exitCode).toBe(0);
-  expect(json(fixed.stdout).fixed).toMatchObject([{ code: 'SPECS_MISSING_SPEC' }]);
+  it('an invalid links bag refuses --add-spec and --spec (exit 6) until --reset-specs replaces it', async () => {
+    const t = await pluginRoot({ specs: true });
+    await cli(t, ['specs', 'create', 'auth', '--title', 'Auth']);
+    const invalid = { specs: { specs: 'auth' }, other: { keep: true } };
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: invalid });
+    for (const flags of [
+      ['--add-spec', 'auth'],
+      ['--remove-spec', 'auth'],
+      ['--spec', 'auth'],
+    ]) {
+      const refused = await cli(t, ['stories', 'edit', 'WEB-1', ...flags, '--json']);
+      expect(refused.exitCode).toBe(6);
+      expect(json(refused.stderr).error).toMatchObject({
+        code: 'DATA_INTEGRITY',
+        details: { plugin: 'specs', path: 'plugins.specs', operation: 'stories.update' },
+      });
+    }
+    expect((await cli(t, ['stories', 'edit', 'WEB-1', '--add-spec', 'auth'])).stderr).toContain('--reset-specs');
+    expect(json((await cli(t, ['stories', 'show', 'WEB-1', '--json'])).stdout).plugins).toEqual(invalid);
+    expect((await cli(t, ['stories', 'edit', 'WEB-1', '--reset-specs', '--add-spec', 'auth'])).exitCode).toBe(2);
+    expect((await cli(t, ['stories', 'edit', 'WEB-1', '--reset-specs', '--spec', 'auth'])).exitCode).toBe(0);
+    expect(json((await cli(t, ['stories', 'show', 'WEB-1', '--json'])).stdout).plugins).toEqual({
+      other: { keep: true },
+      specs: { specs: ['auth'] },
+    });
+  });
+
+  it('--title seeds the editor once; a heading changed in the editor is saved as written', async () => {
+    const t = await pluginRoot({ specs: true });
+    const seen = join(t.dir, 'seen.md');
+    const editor = join(t.dir, 'editor.sh');
+    await writeFile(editor, `#!/bin/sh\ncp "$1" "${seen}"\nprintf "# Mine\\n\\nText\\n" > "$1"\n`, { mode: 0o755 });
+    const created = await cli(t, ['specs', 'create', 'auth', '--title', 'Seed', '--edit', '--json'], {
+      env: { EDITOR: editor },
+    });
+    expect(created.exitCode).toBe(0);
+    expect(await readFile(seen, 'utf8')).toBe('# Seed\n\n');
+    expect(json(created.stdout)).toEqual({ slug: 'auth', title: 'Mine', text: '# Mine\n\nText\n' });
+  });
+
+  it('doctor CLI reports SPECS_MISSING_SPEC and --fix unlinks it', async () => {
+    const t = await pluginRoot({ specs: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { specs: { specs: ['gone'] } } });
+    const report = await cli(t, ['doctor', '--json']);
+    expect(report.exitCode).toBe(0);
+    expect(json(report.stdout).findings).toMatchObject([{ code: 'SPECS_MISSING_SPEC', severity: 'warning' }]);
+    const fixed = await cli(t, ['doctor', '--fix', '--json']);
+    expect(fixed.exitCode).toBe(0);
+    expect(json(fixed.stdout).fixed).toMatchObject([{ code: 'SPECS_MISSING_SPEC' }]);
+  });
 });

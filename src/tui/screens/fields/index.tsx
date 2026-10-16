@@ -4,9 +4,19 @@ import { ValidationError } from '../../../core';
 import { type CustomFieldDef, type CustomFieldType, CustomFieldTypeSchema } from '../../../schemas';
 import type { CustomFieldPatch } from '../../../services';
 import { readLevel } from '../../../services/_configTarget';
-import { ConfirmDialog, Form, type FormField, type FormValues, Loading, SelectList } from '../../components';
+import {
+  ConfirmDialog,
+  CursorRows,
+  Form,
+  type FormField,
+  type FormValues,
+  Loading,
+  SelectList,
+} from '../../components';
 import {
   useAsync,
+  useCursor,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
@@ -14,17 +24,7 @@ import {
   useServices,
   useToast,
 } from '../../hooks';
-import {
-  type ConfigScope,
-  CursorRows,
-  LevelBar,
-  type LevelName,
-  levelsFor,
-  targetFor,
-  useConfigScope,
-  useCursor,
-  useEscape,
-} from '../stages/shared';
+import { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from '../stages';
 import type { ScreenProps, ScreenRegistry } from '../types';
 
 type Mode =

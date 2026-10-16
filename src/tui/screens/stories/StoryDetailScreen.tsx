@@ -1,23 +1,32 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { pluginStoryRows } from '../../../services';
-import { ConfirmDialog, type DetailRow, DetailView, Loading, PluginSlot, SelectList, Tabs } from '../../components';
+import {
+  ConfirmDialog,
+  type DetailRow,
+  DetailView,
+  Loading,
+  PluginSlot,
+  SelectList,
+  StoryStage,
+  Tabs,
+} from '../../components';
 import {
   useActionFocus,
   useAsync,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { useEscape } from '../stages/shared';
-import { StoryTasksTab } from '../tasks/StoryTasksTab';
+import { StoryTasksTab } from '../tasks';
 import type { ScreenProps } from '../types';
-import { StoryStage, useReloadOnReturn } from './shared';
 
 const TABS = ['Details', 'Tasks'] as const;
 type Mode = 'view' | 'move' | 'confirm-delete';
@@ -45,7 +54,10 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story });
   const viewing = mode === 'view';
-  const pluginTabs = plugins.flatMap((p) => (p.tui.storyTabs ?? []).map((t) => ({ plugin: p.id, ...t })));
+  // A tab's ID is its Plugin and its place in that Plugin's list, never its label (ARCH-40).
+  const pluginTabs = plugins.flatMap((p) =>
+    (p.tui.storyTabs ?? []).map((t, i) => ({ id: `${p.id}:${i}`, plugin: p.id, ...t })),
+  );
   const tabs = [...TABS, ...pluginTabs.map((t) => t.label)];
 
   useKeyCapture(active && mode === 'move', { escape: true });
@@ -131,11 +143,11 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       {tab === 0 && <DetailView rows={rows} body={story.description} />}
       {tab === 1 && <StoryTasksTab storyKey={story.key} />}
       {pluginTabs.map(
-        ({ plugin, label, component: PluginTab }, i) =>
+        ({ id, plugin, component: PluginTab }, i) =>
           tab === TABS.length + i && (
             <PluginSlot
-              key={`${plugin}:${label}`}
-              plugin={plugin}
+              key={id}
+              pluginId={plugin}
               render={(context, ui) => <PluginTab story={story} active={active && viewing} plugin={context} ui={ui} />}
             />
           ),

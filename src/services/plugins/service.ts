@@ -1,15 +1,17 @@
-import { NotFoundError, ValidationError } from '../../core';
+import { errorMessage, NotFoundError, PluginError, ValidationError } from '../../core';
 import type { Story, Task } from '../../schemas';
 import type { Repositories } from '../../storage';
 import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
+import { invokePlugin } from './invoke';
 import type { OperationRunner } from './runtime';
 import type { AnyPluginDefinition, PluginContext, PluginRow } from './types';
 
 export function createPluginsService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): PluginsService {
   const statuses = () => ctx.plugins?.status() ?? [];
 
-  function definition(id: string) {
+  /** The definition of a Plugin this version has; throws `NotFoundError` otherwise. */
+  function requireDefinition(id: string): AnyPluginDefinition {
     const found = ctx.plugins?.registry.find((d) => d.id === id);
     if (!found) throw notFound(id);
     return found;
@@ -27,13 +29,14 @@ export function createPluginsService(ctx: RowblyContext, repos: Repositories, op
 
     enable: (id, opts = {}) =>
       ops.run('plugins.enable', { id, ...opts }, async (changes) => {
-        const plugin = definition(id);
+        const plugin = requireDefinition(id);
         await changes.updateRootConfig((config) => {
           const { enabled: _enabled, ...settings } = config.plugins?.[id] ?? {};
           try {
             parseSettings(plugin, settings);
           } catch (err) {
-            throw new ValidationError(`Plugin "${id}" has ${(err as Error).message}`, {
+            const message = errorMessage(err);
+            throw new ValidationError(`Plugin "${id}" has ${message}`, {
               details: { plugin: id },
               hint: `fix "plugins.${id}" in rowbly.config.json`,
             });
@@ -47,7 +50,9 @@ export function createPluginsService(ctx: RowblyContext, repos: Repositories, op
       ops.run('plugins.disable', { id, ...opts }, async (changes) => {
         await changes.updateRootConfig((config) => {
           const entry = config.plugins?.[id];
-          if (!entry) definition(id);
+          // A configured Plugin can be turned off even if this version does not have it; otherwise
+          // the id must be one this version has.
+          if (!entry) requireDefinition(id);
           // Turning a Plugin off keeps its settings and all its data (ADR-0010).
           return { ...config, plugins: { ...config.plugins, [id]: { ...entry, enabled: false } } };
         });
@@ -82,12 +87,17 @@ async function pluginRows(
 ): Promise<PluginRow[]> {
   const rows: PluginRow[] = [];
   for (const { definition } of ctx.plugins?.active() ?? []) {
+    const { id } = definition;
     try {
-      rows.push(...((await rowsOf(definition, services.plugins.context(definition.id))) ?? []));
-    } catch (err) {
-      ctx.warn(
-        `Plugin "${definition.id}" failed to show its rows: ${err instanceof Error ? err.message : String(err)}`,
+      rows.push(
+        ...((await invokePlugin({ plugin: id, stage: 'row' }, () =>
+          rowsOf(definition, services.plugins.context(id)),
+        )) ?? []),
       );
+    } catch (err) {
+      // Rows only show something, so a failure only warns; the warning keeps the Plugin's own message.
+      const cause = err instanceof PluginError && err.cause !== undefined ? err.cause : err;
+      ctx.warn(`Plugin "${id}" failed to show its rows: ${errorMessage(cause)}`);
     }
   }
   return rows;

@@ -31,12 +31,16 @@ export interface PrintOptions {
 }
 
 export interface ErrorPayload {
-  error: { code: string; message: string; details: Record<string, unknown> };
+  /** `hint` is there only when the error has one. */
+  error: { code: string; message: string; details: Record<string, unknown>; hint?: string };
 }
 
 /** The contracts §6 JSON error shape. Anything that is not a `RowblyError` is `INTERNAL`. */
 export function errorPayload(err: unknown): ErrorPayload {
-  if (isRowblyError(err)) return { error: { code: err.code, message: err.message, details: err.details } };
+  if (isRowblyError(err)) {
+    const { code, message, details, hint } = err;
+    return { error: { code, message, details, ...(hint === undefined ? {} : { hint }) } };
+  }
   return { error: { code: 'INTERNAL', message: err instanceof Error ? err.message : String(err), details: {} } };
 }
 

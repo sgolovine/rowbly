@@ -1,15 +1,78 @@
 // The fields that Plugins add to the Story form and the Story filter, and how their values become
-// Plugin input (`plugins: { <id>: … }`, ADR-0012).
+// Plugin input (`plugins: { <id>: … }`, ADR-0012). Each Plugin's callbacks run through the shared
+// adapter (`invokePlugin`, ADR-0020 §5), in their stage's scope and attributed to the Plugin. Only a Plugin whose fields loaded and changed contributes
+// form input, so an unchanged or failed one never changes stored data (ADR-0020 §3).
+import { errorMessage, RowblyError, ValidationError } from '../../../core';
 import type { Slug, Story } from '../../../schemas';
-import type { PluginFormField, PluginFormValue, PluginInput, Services, StoryFilter } from '../../../services';
-import type { FormField, FormValues } from '../../components';
+import {
+  type Invocation,
+  invokePlugin,
+  invokePluginSync,
+  type PluginFormField,
+  type PluginFormValue,
+  type PluginInput,
+  type Services,
+  type StoryFilter,
+} from '../../../services';
+import { type FormField, type FormValues, normalizeFormValue, sameFormValue } from '../../components';
 import type { TuiPlugin } from '../../hooks';
 
 const PREFIX = 'plugin:';
 
+/** The choice that resets an `unavailable` field; the other choice keeps the stored value. */
+export const RESET = 'reset';
+
+/** The TUI stages of a Plugin's form and filter callbacks. */
+export type PluginFieldStage = 'field' | 'input' | 'filter' | 'filter-summary';
+
+/** A Plugin form or filter callback that failed. */
+export interface PluginFieldFailure {
+  plugin: string;
+  stage: PluginFieldStage;
+  message: string;
+}
+
+/** The Plugin fields of a core form. */
+export interface PluginFieldSet {
+  /** Named `plugin:<id>:<name>`. */
+  fields: FormField[];
+  /** Their starting values. */
+  values: FormValues;
+  /** Each Plugin whose fields loaded, with its fields as it gave them. Only these Plugins take part. */
+  loaded: ReadonlyMap<string, readonly PluginFormField[]>;
+  /** The Plugins whose fields failed to load; their fields are left out. */
+  failures: PluginFieldFailure[];
+}
+
+export function failureMessage(failure: PluginFieldFailure): string {
+  return `Plugin "${failure.plugin}" failed in the ${failure.stage} stage: ${failure.message}`;
+}
+
 /** Plugin fields are named `plugin:<id>:<name>` in a core form. */
 function fieldName(id: string, name: string): string {
   return `${PREFIX}${id}:${name}`;
+}
+
+/**
+ * `err` with each issue of a Plugin's input moved onto that Plugin's form field, so the form shows it
+ * inline (DX-07). An attributed `ValidationError` (`details.plugin`) has issue paths relative to the
+ * Plugin's input; an issue whose first segment is one of its field names goes to `plugin:<id>:<name>`.
+ * Other issues of that Plugin stay form-level, prefixed with the Plugin. Any other error is unchanged.
+ */
+export function onPluginFields(err: unknown, set: PluginFieldSet): unknown {
+  if (!(err instanceof ValidationError)) return err;
+  const { plugin, issues } = err.details;
+  const own = typeof plugin === 'string' ? set.loaded.get(plugin) : undefined;
+  if (typeof plugin !== 'string' || !own || !Array.isArray(issues)) return err;
+  const mapped = (issues as { path?: unknown[]; message?: string }[]).map((issue) => {
+    const [first, ...rest] = issue.path ?? [];
+    if (typeof first === 'string' && own.some((field) => field.name === first)) {
+      return { ...issue, path: [fieldName(plugin, first), ...rest] };
+    }
+    const where = issue.path?.length ? `${issue.path.map(String).join('.')}: ` : '';
+    return { ...issue, path: [], message: `Plugin "${plugin}": ${where}${issue.message ?? 'invalid'}` };
+  });
+  return new ValidationError(err.message, { details: { ...err.details, issues: mapped }, hint: err.hint, cause: err });
 }
 
 /** Plugin `id`'s values in a core form, by its own field names. */
@@ -22,68 +85,180 @@ function valuesOf(values: FormValues, id: string): Record<string, PluginFormValu
   );
 }
 
-/** Turns each Plugin's fields into form fields and their starting values. */
-async function collect(
+/** Field providers and input conversion run in the `field` stage, the filter callbacks in `filter`. */
+function invocation(plugin: string, stage: PluginFieldStage, operation?: string): Invocation {
+  return { plugin, stage: stage === 'field' || stage === 'input' ? 'field' : 'filter', operation };
+}
+
+/** A failed callback, shown with the Plugin's own message: the adapter keeps the original as `cause`. */
+function failure(plugin: string, stage: PluginFieldStage, err: unknown): PluginFieldFailure {
+  const own = err instanceof RowblyError && err.details.plugin === plugin && err.cause !== undefined ? err.cause : err;
+  return { plugin, stage, message: errorMessage(own) };
+}
+
+/** A form field for one of Plugin `id`'s fields, with its starting value. */
+function toFormField(id: string, field: PluginFormField): { field: FormField; value: PluginFormValue | undefined } {
+  const name = fieldName(id, field.name);
+  if (field.unavailable !== undefined) {
+    const kept = field.unavailable;
+    return { field: { name, label: field.label, kind: 'select', options: [kept, RESET] }, value: kept };
+  }
+  const { value, unavailable: _unavailable, ...rest } = field;
+  return { field: { ...rest, name }, value };
+}
+
+/** Turns each Plugin's fields into form fields and their starting values, one Plugin at a time. */
+async function collectPluginFields(
   plugins: readonly TuiPlugin[],
   load: (plugin: TuiPlugin) => Promise<PluginFormField[]> | undefined,
-): Promise<{ fields: FormField[]; values: FormValues }> {
-  const fields: FormField[] = [];
-  const values: FormValues = {};
+): Promise<PluginFieldSet> {
+  const loaded = new Map<string, readonly PluginFormField[]>();
+  const set: PluginFieldSet = { fields: [], values: {}, loaded, failures: [] };
   for (const plugin of plugins) {
-    for (const field of (await load(plugin)) ?? []) {
-      const name = fieldName(plugin.id, field.name);
-      fields.push({ ...field, name });
-      if (field.value !== undefined) values[name] = field.value;
+    let own: PluginFormField[] | undefined;
+    try {
+      own = await invokePlugin(invocation(plugin.id, 'field'), async () => {
+        const fields = await load(plugin);
+        if (fields !== undefined && !Array.isArray(fields)) throw new Error('its fields are not a list');
+        const names = (fields ?? []).map((field) => field.name);
+        const twice = names.find((name, i) => names.indexOf(name) !== i);
+        if (twice !== undefined) throw new Error(`it names two fields "${twice}"`);
+        return fields;
+      });
+    } catch (err) {
+      set.failures.push(failure(plugin.id, 'field', err));
+      continue;
+    }
+    if (own === undefined) continue;
+    loaded.set(plugin.id, own);
+    for (const pluginField of own) {
+      const { field, value } = toFormField(plugin.id, pluginField);
+      set.fields.push(field);
+      if (value !== undefined) set.values[field.name] = value;
     }
   }
-  return { fields, values };
+  return set;
 }
 
 export function storyFormFields(
   plugins: readonly TuiPlugin[],
   services: Services,
   args: { boardId: Slug; story: Story | null },
-): Promise<{ fields: FormField[]; values: FormValues }> {
-  return collect(plugins, (p) => p.tui.storyForm?.fields({ ...args, plugin: services.plugins.context(p.id) }));
+): Promise<PluginFieldSet> {
+  return collectPluginFields(plugins, (p) =>
+    p.tui.storyForm?.fields({ ...args, plugin: services.plugins.context(p.id) }),
+  );
 }
 
-/** The Plugin input of a submitted Story form, or `undefined` when no Plugin has any. */
+/** What changed in one Plugin's fields, normalized, as `PluginStoryForm.input` receives it. */
+function changesOf(id: string, own: readonly PluginFormField[], values: FormValues) {
+  const current: Record<string, PluginFormValue> = {};
+  const initialValues: Record<string, PluginFormValue> = {};
+  const changedFields: string[] = [];
+  for (const field of own) {
+    const submitted = values[fieldName(id, field.name)];
+    if (field.unavailable !== undefined) {
+      if (submitted === RESET) {
+        current[field.name] = null;
+        changedFields.push(field.name);
+      }
+      continue;
+    }
+    const before = normalizeFormValue(field, field.value);
+    const after = normalizeFormValue(field, submitted);
+    initialValues[field.name] = before;
+    current[field.name] = after;
+    if (!sameFormValue(before, after)) changedFields.push(field.name);
+  }
+  return { values: current, initialValues, changedFields };
+}
+
+/**
+ * The Plugin input of a submitted Story form, or `undefined` when no Plugin has any. Only Plugins in
+ * `set.loaded` with a changed field are asked. A throwing `input` fails the save, attributed.
+ */
 export function storyFormInput(
   plugins: readonly TuiPlugin[],
+  set: Pick<PluginFieldSet, 'loaded'>,
   values: FormValues,
   story: Story | null,
 ): PluginInput | undefined {
-  return gather(plugins, (p) => p.tui.storyForm?.input(valuesOf(values, p.id), story));
+  return gatherPluginInput(plugins, set, (plugin) => {
+    const own = set.loaded.get(plugin.id);
+    const form = plugin.tui.storyForm;
+    if (!own || !form) return undefined;
+    const changes = changesOf(plugin.id, own, values);
+    if (changes.changedFields.length === 0) return undefined;
+    const operation = story ? 'stories.update' : 'stories.create';
+    return invokePluginSync(invocation(plugin.id, 'input', operation), () => form.input({ ...changes, story }));
+  });
 }
 
 export function storyFilterFields(
   plugins: readonly TuiPlugin[],
   services: Services,
   boardId: Slug,
-): Promise<{ fields: FormField[]; values: FormValues }> {
-  return collect(plugins, (p) => p.tui.storyFilter?.fields({ boardId, plugin: services.plugins.context(p.id) }));
+): Promise<PluginFieldSet> {
+  return collectPluginFields(plugins, (p) =>
+    p.tui.storyFilter?.fields({ boardId, plugin: services.plugins.context(p.id) }),
+  );
 }
 
-/** `StoryFilter.plugins` for the chosen filter values, or `undefined` when no Plugin filters. */
-function storyFilterInput(plugins: readonly TuiPlugin[], values: FormValues): PluginInput | undefined {
-  return gather(plugins, (p) => p.tui.storyFilter?.filter(valuesOf(values, p.id)));
-}
-
-/** `filter` with the Plugin filters chosen in `values`. */
-export function withPluginFilters(filter: StoryFilter, plugins: readonly TuiPlugin[], values: FormValues): StoryFilter {
-  const input = storyFilterInput(plugins, values);
-  return input ? { ...filter, plugins: input } : filter;
+/**
+ * `filter` with the Plugin filters chosen in `values`. Plugins whose filter fields failed are left
+ * out, as is one whose `filter` throws, which is returned in `failures`.
+ */
+export function withPluginFilters(
+  filter: StoryFilter,
+  plugins: readonly TuiPlugin[],
+  set: Pick<PluginFieldSet, 'loaded'>,
+  values: FormValues,
+): { filter: StoryFilter; failures: PluginFieldFailure[] } {
+  const failures: PluginFieldFailure[] = [];
+  const input = gatherPluginInput(plugins, set, (plugin) => {
+    const storyFilter = plugin.tui.storyFilter;
+    if (!storyFilter || !set.loaded.has(plugin.id)) return undefined;
+    try {
+      return invokePluginSync(invocation(plugin.id, 'filter'), () => storyFilter.filter(valuesOf(values, plugin.id)));
+    } catch (err) {
+      failures.push(failure(plugin.id, 'filter', err));
+      return undefined;
+    }
+  });
+  return { filter: input ? { ...filter, plugins: input } : filter, failures };
 }
 
 /** `summary` followed by the Plugins' parts of the one-line filter summary. */
-export function describeWithPlugins(summary: string, plugins: readonly TuiPlugin[], values: FormValues): string {
-  const parts = plugins.map((p) => p.tui.storyFilter?.describe(valuesOf(values, p.id)) ?? '');
-  return [summary, ...parts].filter(Boolean).join(' · ');
+export function describeWithPlugins(
+  summary: string,
+  plugins: readonly TuiPlugin[],
+  set: Pick<PluginFieldSet, 'loaded'> | undefined,
+  values: FormValues,
+): { summary: string; failures: PluginFieldFailure[] } {
+  const failures: PluginFieldFailure[] = [];
+  const parts = plugins.map((plugin) => {
+    const storyFilter = plugin.tui.storyFilter;
+    if (!storyFilter || !set?.loaded.has(plugin.id)) return '';
+    try {
+      return invokePluginSync(invocation(plugin.id, 'filter-summary'), () =>
+        storyFilter.describe(valuesOf(values, plugin.id)),
+      );
+    } catch (err) {
+      failures.push(failure(plugin.id, 'filter-summary', err));
+      return '';
+    }
+  });
+  return { summary: [summary, ...parts].filter(Boolean).join(' · '), failures };
 }
 
-function gather(plugins: readonly TuiPlugin[], pick: (plugin: TuiPlugin) => unknown): PluginInput | undefined {
+function gatherPluginInput(
+  plugins: readonly TuiPlugin[],
+  set: Pick<PluginFieldSet, 'loaded'>,
+  pick: (plugin: TuiPlugin) => unknown,
+): PluginInput | undefined {
   const input: PluginInput = {};
   for (const plugin of plugins) {
+    if (!set.loaded.has(plugin.id)) continue;
     const value = pick(plugin);
     if (value !== undefined) input[plugin.id] = value;
   }

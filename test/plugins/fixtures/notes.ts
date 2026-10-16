@@ -2,7 +2,7 @@
 // a reaction, its own commands and files, options on core commands, a filter, `stories show` rows,
 // a doctor check with a fix, an Action and a TUI part. Like a Built-in Plugin, it imports only the
 // Plugin API.
-import { definePlugin, type PluginChangeSet, type PluginContext, type Story, z } from '../../../src/plugin-api';
+import { definePlugin, type PluginChangeSet, type PluginReadContext, type Story, z } from '../../../src/plugin-api';
 
 export const NotesSettings = z.object({
   /** Shown before each note in `stories show`. */
@@ -18,34 +18,36 @@ export const NoteBag = z.object({ note: z.string().min(1) });
 /** Notes input: `{ note: 'text' }` sets the note, `{ note: null }` removes it. */
 const NoteInput = z.object({ note: z.string().nullable() });
 
-function setNote(plugin: PluginContext<NotesSettings>, story: Story, note: string | null): Story {
+function setNote(plugin: PluginReadContext<NotesSettings>, story: Story, note: string | null): Story {
   return plugin.writeBag(story, note === null ? undefined : { note });
 }
 
-/** Applies the Notes input of an operation to the Story it saved. */
+/**
+ * Applies the Notes input of an operation to the Story it saved; without input it does nothing. The
+ * input is already parsed by `inputs`, so a malformed one never gets here.
+ */
 async function applyInput(
   changes: PluginChangeSet,
   key: string | undefined,
-  input: unknown,
-  plugin: PluginContext<NotesSettings>,
+  input: z.output<typeof NoteInput> | undefined,
+  plugin: PluginReadContext<NotesSettings>,
 ) {
-  const parsed = NoteInput.safeParse(input);
-  if (!parsed.success || !key) return;
-  await changes.updateStory(key, (story) => setNote(plugin, story, parsed.data.note));
+  if (input === undefined || !key) return;
+  await changes.updateStory(key, (story) => setNote(plugin, story, input.note));
 }
 
-export const notes = definePlugin<NotesSettings>({
+export const notes = definePlugin({
   id: 'notes',
   name: 'Notes',
   description: 'Short notes on Stories, for testing the Plugin API',
   settings: NotesSettings,
   bags: { story: NoteBag },
+  inputs: { 'stories.create': NoteInput, 'stories.update': NoteInput },
+  storyFilterSchema: z.boolean(),
   hooks: {
     'stories.create': {
-      async transform({ changes, pluginInput, plugin }) {
-        const created = changes.changes.find((c) => c.type === 'story' && c.before === null);
-        const key = created?.type === 'story' ? created.after?.key : undefined;
-        await applyInput(changes, key, pluginInput, plugin);
+      async transform({ changes, result, pluginInput, plugin }) {
+        await applyInput(changes, result.key, pluginInput, plugin);
       },
       guard({ input, plugin }) {
         if (plugin.settings.blocked.includes(input.name)) {
@@ -73,11 +75,11 @@ export const notes = definePlugin<NotesSettings>({
         { flags: '--note <text>', description: 'set the note' },
         { flags: '--no-note', description: 'remove the note' },
       ],
-      input: ({ note }) => (note === undefined ? undefined : { note: note === false ? null : note }),
+      input: ({ note }) => (note === undefined ? undefined : { note: typeof note === 'string' ? note : null }),
     },
     'stories list': {
       options: [{ flags: '--noted', description: 'only Stories with a note' }],
-      input: ({ noted }) => (noted ? true : undefined),
+      filter: ({ noted }) => (noted ? true : undefined),
     },
   },
   filterStories: (story, filter, plugin) => (plugin.readBag(story, NoteBag) !== undefined) === filter,

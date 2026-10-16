@@ -1,21 +1,17 @@
 // Command mode with the fixture Plugins as the registry, through the built fixture CLI.
+import { mkdir, readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { makeStory, type RunCliOptions, runCli, type TempRoot, tempRoot } from '../helpers';
-import { type Entries, FIXTURE_CLI_PATH, pluginRoot, readJsonFile, storyFile } from './helpers';
+import { FIXTURE_CLI_PATH, pluginRoot, readJsonFile, storyFile } from './helpers';
 
 const cli = (t: TempRoot, args: string[], opts: RunCliOptions = {}) =>
   runCli(args, { root: t.path, cli: FIXTURE_CLI_PATH, ...opts });
 
 const json = (text: string) => JSON.parse(text);
 
-async function root(on: Entries) {
-  const t = await pluginRoot(on);
-  return t;
-}
-
 describe('rowbly plugins', () => {
   it('list, show, enable and disable; disable deletes no data', async () => {
-    const t = await root({ notes: { marker: 'm' } });
+    const t = await pluginRoot({ notes: { marker: 'm' } });
     const list = await cli(t, ['plugins', 'list', '--json']);
     expect(list.exitCode).toBe(0);
     expect(json(list.stdout).slice(0, 2)).toEqual([
@@ -52,17 +48,16 @@ describe('rowbly plugins', () => {
   it('rowbly init turns no Plugins on', async () => {
     const t = await tempRoot();
     const dir = `${t.dir}/fresh`;
-    const { mkdir } = await import('node:fs/promises');
     await mkdir(dir);
     expect((await runCli(['init'], { cli: FIXTURE_CLI_PATH, cwd: dir })).exitCode).toBe(0);
-    const config = json(await (await import('node:fs/promises')).readFile(`${dir}/.rowbly/rowbly.config.json`, 'utf8'));
+    const config = json(await readFile(`${dir}/.rowbly/rowbly.config.json`, 'utf8'));
     expect(config).not.toHaveProperty('plugins');
   });
 });
 
 describe('a Plugin that fails to load', () => {
   it('is skipped with one warning per run, in human and --json mode', async () => {
-    const t = await root({ notes: true, boom: true, strict: { level: 'x' }, clash: true });
+    const t = await pluginRoot({ notes: true, boom: true, strict: { level: 'x' }, clash: true });
     const run = await cli(t, ['stories', 'create', '--name', 'A', '--note', 'n']);
     expect(run.exitCode).toBe(0);
     const warnings = run.stderr.trim().split('\n');
@@ -82,7 +77,7 @@ describe('a Plugin that fails to load', () => {
   });
 
   it('doctor reports it as PLUGIN_FAILED and exits 6', async () => {
-    const t = await root({ boom: true });
+    const t = await pluginRoot({ boom: true });
     const doctor = await cli(t, ['doctor', '--json']);
     expect(doctor.exitCode).toBe(6);
     expect(json(doctor.stdout).findings).toMatchObject([{ code: 'PLUGIN_FAILED', details: { plugin: 'boom' } }]);
@@ -91,7 +86,7 @@ describe('a Plugin that fails to load', () => {
 
 describe('the pipeline in command mode', () => {
   it('Plugin options fill Plugin input; --json prints the bags; show has the rows; list filters', async () => {
-    const t = await root({ notes: { marker: '✎' }, tracer: true });
+    const t = await pluginRoot({ notes: { marker: '✎' }, tracer: true });
     const created = await cli(t, ['stories', 'create', '--name', 'A', '--note', 'hello', '--json']);
     expect(json(created.stdout).plugins).toEqual({ notes: { note: 'hello' } });
     await cli(t, ['stories', 'create', '--name', 'B']);
@@ -108,12 +103,17 @@ describe('the pipeline in command mode', () => {
     expect((await readJsonFile(t, storyFile('WEB-2'))).plugins).toEqual({ notes: { note: 'later' } });
   });
 
-  it('a guard rejection exits 4; --json errors carry details.plugin', async () => {
-    const t = await root({ notes: { blocked: ['Nope'] }, tracer: true });
+  it('a guard rejection exits 4; --json errors carry the Plugin, operation and stage', async () => {
+    const t = await pluginRoot({ notes: { blocked: ['Nope'] }, tracer: true });
     const run = await cli(t, ['stories', 'create', '--name', 'Nope', '--json']);
     expect(run.exitCode).toBe(4);
     expect(json(run.stderr.trim().split('\n').at(-1) ?? '')).toEqual({
-      error: { code: 'CONFLICT', message: 'Notes refuses a Story named "Nope"', details: { plugin: 'notes' } },
+      error: {
+        code: 'CONFLICT',
+        message: 'Notes refuses a Story named "Nope"',
+        details: { plugin: 'notes', operation: 'stories.create', stage: 'guard' },
+        hint: 'pick another name',
+      },
     });
     const board = await cli(t, ['boards', 'delete', 'web', '--yes']);
     expect(board.exitCode).toBe(4);
@@ -121,7 +121,7 @@ describe('the pipeline in command mode', () => {
   });
 
   it('a throwing transform exits 1 and saves nothing; a throwing reaction only warns', async () => {
-    const t = await root({ faulty: true });
+    const t = await pluginRoot({ faulty: true });
     const run = await cli(t, ['boards', 'edit', 'web', '--name', 'X', '--json']);
     expect(run.exitCode).toBe(1);
     expect(json(run.stderr.trim())).toEqual({
@@ -129,13 +129,14 @@ describe('the pipeline in command mode', () => {
         code: 'INTERNAL',
         message: 'Plugin "faulty" failed in the transform of boards.update: kaboom',
         details: { plugin: 'faulty', operation: 'boards.update', stage: 'transform' },
+        hint: 'turn it off with `rowbly plugins disable faulty`',
       },
     });
     expect((await readJsonFile(t, 'boards/web/board.config.json')).name).toBe('Website');
     const human = await cli(t, ['boards', 'edit', 'web', '--name', 'X']);
     expect(human.stderr).toContain('hint: turn it off with `rowbly plugins disable faulty`');
 
-    const t2 = await root({ echo: true });
+    const t2 = await pluginRoot({ echo: true });
     const echoed = await cli(t2, ['boards', 'edit', 'web', '--name', 'X']);
     expect(echoed.exitCode).toBe(0);
     expect(echoed.stderr).toBe('warning: Plugin "echo" failed to react to boards.update: echo failed\n');
@@ -143,7 +144,7 @@ describe('the pipeline in command mode', () => {
   });
 
   it('a replacement runs instead of core', async () => {
-    const t = await root({ stamp: true });
+    const t = await pluginRoot({ stamp: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const run = await cli(t, ['tasks', 'create', 'WEB-1', '--name', 'Test', '--json']);
     expect(json(run.stdout).name).toBe('[stamped] Test');
@@ -152,7 +153,7 @@ describe('the pipeline in command mode', () => {
 
 describe("a Plugin's own commands", () => {
   it('live under `rowbly <id>` and write its files through operations', async () => {
-    const t = await root({ notes: true });
+    const t = await pluginRoot({ notes: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     expect((await cli(t, ['notes', 'add', 'todo', 'milk'])).stdout).toBe('Added note todo\n');
     expect((await cli(t, ['notes', 'attach', 'web-1', 'story note'])).exitCode).toBe(0);

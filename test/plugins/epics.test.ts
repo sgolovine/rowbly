@@ -12,18 +12,18 @@ import {
   setEpicClosed,
   showEpic,
 } from '../../src/plugins/epics/service';
-import { FIXED_NOW, makeBoard, makeStory } from '../helpers';
-import { pluginRoot, readJsonFile, withPlugins } from './helpers';
+import { FIXED_NOW, fixedClock, makeBoard, makeStory } from '../helpers';
+import { pluginRoot, pluginTestHost, readJsonFile, withPlugins } from './helpers';
 
 async function setup() {
-  const t = await pluginRoot({ epics: true });
-  const loaded = await withPlugins(t, [epics]);
-  return { t, ...loaded, plugin: loaded.services.plugins.context('epics') };
+  const clock = fixedClock();
+  const loaded = await pluginTestHost({ plugins: [epics], now: clock.now });
+  return { ...loaded, clock, plugin: loaded.context('epics') };
 }
 
 describe('Epics operations', () => {
   it('creates, edits, closes and reopens files with validated data and timestamps', async () => {
-    const { t, plugin, ctx } = await setup();
+    const { t, plugin, clock } = await setup();
     const epic = await createEpic(plugin, { id: 'auth', name: 'Authentication' });
     expect(epic).toEqual({
       version: 1,
@@ -36,9 +36,10 @@ describe('Epics operations', () => {
     });
     expect(await readJsonFile(t, 'plugins/epics/auth.json')).toEqual(epic);
     await expect(createEpic(plugin, { id: 'auth', name: 'Duplicate' })).rejects.toThrow('already exists');
-    await expect(createEpic(plugin, { id: '../outside', name: 'Bad' })).rejects.toThrow('Invalid Epic data');
-    await expect(createEpic(plugin, { id: 'empty', name: '  ' })).rejects.toThrow('Invalid Epic data');
-    ctx.now = () => new Date('2026-10-13T17:21:07.000Z');
+    await expect(createEpic(plugin, { id: '../outside', name: 'Bad' })).rejects.toThrow('Invalid Epic: id: ');
+    await expect(createEpic(plugin, { id: 'empty', name: '  ' })).rejects.toThrow('Invalid Epic: name: ');
+    await expect(editEpic(plugin, 'auth', { name: ' ' })).rejects.toThrow('Invalid Epic patch: name: ');
+    clock.set('2026-10-13T17:21:07.000Z');
     expect(await editEpic(plugin, 'auth', { description: 'Login', name: undefined })).toMatchObject({
       name: 'Authentication',
       description: 'Login',
@@ -54,7 +55,7 @@ describe('Epics operations', () => {
     await expect(getEpic(plugin, 'missing')).rejects.toThrow('not found');
     await expect(editEpic(plugin, 'missing', { name: 'No' })).rejects.toThrow('not found');
     await writeFile(join(t.path, 'plugins/epics/auth.json'), '{');
-    await expect(getEpic(plugin, 'auth')).rejects.toThrow('invalid JSON');
+    await expect(getEpic(plugin, 'auth')).rejects.toThrow('plugins/epics/auth.json: file is not valid JSON');
   });
 
   it('links and unlinks through Story operations; preserves other Plugin Data and rejects missing Epics without a save', async () => {
@@ -77,6 +78,16 @@ describe('Epics operations', () => {
     expect((await services.stories.list(null, { plugins: { epics: false } })).map((s) => s.key)).toEqual(['WEB-1']);
     await services.stories.update(story.key, { plugins: { epics: { epic: 'auth' } } });
     expect(await services.stories.list(null, { plugins: { epics: 'auth' } })).toHaveLength(1);
+    await expect(services.stories.update(story.key, { plugins: { epics: { epic: 'Not A Slug' } } })).rejects.toThrow(
+      'Plugin "epics" input of stories.update is not valid: epic: ',
+    );
+    for (const filter of [{ epic: 'auth' }, 3, 'Not A Slug', true]) {
+      await expect(services.stories.list(null, { plugins: { epics: filter } })).rejects.toMatchObject({
+        code: 'VALIDATION',
+        message: expect.stringContaining('Plugin "epics" filter is not valid'),
+      });
+    }
+    expect(await services.stories.list(null, { plugins: {} })).toHaveLength(1);
   });
 
   it('derives Epic Progress across Boards using their Stage Categories, including empty and closed Epics', async () => {

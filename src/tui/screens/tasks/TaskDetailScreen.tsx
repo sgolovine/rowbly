@@ -1,21 +1,30 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { pluginTaskRows } from '../../../services';
-import { ConfirmDialog, type DetailRow, DetailView, Loading, PluginSlot, SelectList, Tabs } from '../../components';
+import {
+  ConfirmDialog,
+  type DetailRow,
+  DetailView,
+  Loading,
+  PluginSlot,
+  SelectList,
+  StoryStage,
+  Tabs,
+} from '../../components';
 import {
   useActionFocus,
   useAsync,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { useEscape } from '../stages/shared';
-import { StoryStage, useReloadOnReturn } from '../stories/shared';
 import type { ScreenProps } from '../types';
 
 const TABS = ['Details'] as const;
@@ -44,7 +53,10 @@ export function TaskDetailScreen({ params }: ScreenProps) {
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story, task: data.data?.task });
   const viewing = mode === 'view';
-  const pluginTabs = plugins.flatMap((p) => (p.tui.taskTabs ?? []).map((t) => ({ plugin: p.id, ...t })));
+  // A tab's ID is its Plugin and its place in that Plugin's list, never its label (ARCH-40).
+  const pluginTabs = plugins.flatMap((p) =>
+    (p.tui.taskTabs ?? []).map((t, i) => ({ id: `${p.id}:${i}`, plugin: p.id, ...t })),
+  );
   const tabs = [...TABS, ...pluginTabs.map((t) => t.label)];
 
   useKeyCapture(active && mode === 'move', { escape: true });
@@ -131,11 +143,11 @@ export function TaskDetailScreen({ params }: ScreenProps) {
       {tabs.length > 1 && <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />}
       {tab === 0 && <DetailView rows={rows} body={task.description} />}
       {pluginTabs.map(
-        ({ plugin, label, component: PluginTab }, i) =>
+        ({ id, plugin, component: PluginTab }, i) =>
           tab === TABS.length + i && (
             <PluginSlot
-              key={`${plugin}:${label}`}
-              plugin={plugin}
+              key={id}
+              pluginId={plugin}
               render={(context, ui) => (
                 <PluginTab story={story} task={task} active={active && viewing} plugin={context} ui={ui} />
               )}

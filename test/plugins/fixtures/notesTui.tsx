@@ -39,7 +39,7 @@ export const notesTui: PluginTui<NotesSettings> = {
       const note = story ? plugin.readBag(story, NoteBag)?.note : undefined;
       return [{ name: 'note', label: 'Note', kind: 'text', value: note ?? '' }];
     },
-    input: (values, story) => {
+    input: ({ values, story }) => {
       const note = typeof values.note === 'string' ? values.note : '';
       if (note !== '') return { note };
       return story ? { note: null } : undefined;

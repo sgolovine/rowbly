@@ -11,5 +11,5 @@
 
 - **Epics → Rowbly**: a Story's Epic is Plugin Data on the Story; Epic Progress is derived from the Stage Categories of the Epic's Stories
 - **Specs → Rowbly**: a Story Spec belongs to one Story; a Story's links to Board Specs are Plugin Data on the Story
-- **Comments → Rowbly**: a Story's or Task's Thread is Plugin Data on that Story or Task; a Comment's author is Me
+- **Comments → Rowbly**: a Story's or Task's Thread is Plugin Data on that Story or Task; a Comment's author is Me when Me is in the roster, otherwise no one (`null`)
 - **Rowbly → Plugins**: none. Plugins use core terms; core never uses a Plugin's terms

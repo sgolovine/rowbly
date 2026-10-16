@@ -32,6 +32,24 @@ function specifiers(source: string): string[] {
   return found;
 }
 
+/**
+ * The module specifiers a file loads at run time: every specifier except those of `import type` and
+ * `export type`, which TypeScript erases. `import { type X }` still counts: under
+ * `verbatimModuleSyntax` it is kept as an import of the module.
+ */
+function runtimeSpecifiers(source: string): string[] {
+  const erased = new Set<string>();
+  for (const match of source.matchAll(/\b(?:import|export)\s+type\s[^;]*?\bfrom\s+['"]([^'"]+)['"]/g)) {
+    if (match[1]) erased.add(match[0]);
+  }
+  let rest = source;
+  for (const statement of erased) rest = rest.replace(statement, '');
+  return specifiers(rest);
+}
+
+/** UI and command-line packages, which the Service Layer may only name in types (ARCH-01). */
+const SURFACE_PACKAGES = /^(react|ink|commander)(\/|$)/;
+
 /** A file's path below src/, `/`-separated. */
 function srcPath(file: string): string {
   return relative(SRC, file).split(sep).join('/');
@@ -39,11 +57,13 @@ function srcPath(file: string): string {
 
 /**
  * The layer of a file under src/: its top-level folder, or file name for `cli.ts` and `main.ts`.
- * `plugin-api/tui.ts` is a layer of its own, because only it may import the TUI.
+ * `plugin-api/tui.ts` is a layer of its own, because only it may import the TUI, and so is the test
+ * harness `plugin-api/testing.ts`, which wires core for a Plugin's tests and no Plugin may import.
  */
 function layerOf(file: string): string {
   const path = srcPath(file);
   if (path === 'plugin-api/tui.ts') return 'plugin-api-tui';
+  if (path === 'plugin-api/testing.ts') return 'plugin-api-testing';
   const [first = ''] = path.split('/');
   return first.replace(/\.tsx?$/, '');
 }
@@ -52,6 +72,17 @@ function layerOf(file: string): string {
 function pluginOf(file: string): string | null {
   const parts = srcPath(file).split('/');
   return parts[0] === 'plugins' && parts.length > 2 ? (parts[1] ?? null) : null;
+}
+
+/**
+ * AGENTS.md: the area of a path below src/tui/ (`components`, `shell`, `hooks`, `router` or
+ * `screens/<area>`), or `null` for an area's folder itself (its barrel) and for the shared files at
+ * the top of src/tui/ and src/tui/screens/.
+ */
+function tuiAreaOf(path: string): string | null {
+  const parts = path.split('/');
+  if (parts[0] === 'screens') return parts.length > 2 ? `screens/${parts[1]}` : null;
+  return parts.length > 1 ? (parts[0] ?? null) : null;
 }
 
 /** README §3: each layer may import only from the layers listed (always including itself). */
@@ -65,6 +96,7 @@ const ALLOWED: Record<string, string[]> = {
   tui: ['core', 'schemas', 'storage', 'services', 'output', 'tui'],
   'plugin-api': ['core', 'schemas', 'services', 'output', 'plugin-api'],
   'plugin-api-tui': ['tui', 'plugin-api-tui'],
+  'plugin-api-testing': ['core', 'schemas', 'storage', 'services', 'main', 'plugin-api', 'plugin-api-testing'],
   plugins: ['plugin-api', 'plugin-api-tui', 'plugins'],
   main: ['core', 'storage', 'services', 'commands', 'output', 'tui'],
   cli: ['main', 'plugins'],
@@ -106,6 +138,19 @@ describe('architecture', async () => {
     expect(offenders).toEqual([]);
   });
 
+  // ARCH-01: the Plugin contract in services names Commander, React and Ink types, which are erased;
+  // loading them at run time would pull a surface into every command.
+  it('services load no React, Ink or Commander at run time; type imports are fine', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      if (layerOf(file) !== 'services') continue;
+      for (const spec of runtimeSpecifiers(await readFile(file, 'utf8'))) {
+        if (SURFACE_PACKAGES.test(spec)) offenders.push(`${srcPath(file)} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   // ADR-0009: a Plugin imports only the Plugin API (and its own files), and uses no Node built-ins
   // or packages of its own; everything else reaches it through Plugin API capabilities.
   it('a Plugin imports only the Plugin API and its own files', async () => {
@@ -120,7 +165,8 @@ describe('architecture', async () => {
           continue;
         }
         const target = srcPath(join(file, '..', spec));
-        const api = target === 'plugin-api' || target.startsWith('plugin-api/');
+        // The test harness wires core; a Plugin's tests use it, never the Plugin.
+        const api = (target === 'plugin-api' || target.startsWith('plugin-api/')) && target !== 'plugin-api/testing';
         const own = target === `plugins/${plugin}` || target.startsWith(`plugins/${plugin}/`);
         if (!api && !own) {
           offenders.push(`${srcPath(file)} imports ${spec}`);
@@ -137,7 +183,9 @@ describe('architecture', async () => {
       if (file.endsWith(`${sep}cli.ts`)) continue;
       for (const spec of specifiers(await readFile(file, 'utf8'))) {
         const target = spec.startsWith('.') ? join(file, '..', spec) : '';
-        const api = target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep));
+        const api =
+          (target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep))) &&
+          target !== join(SRC, 'plugin-api', 'testing');
         if (!api && !target.startsWith(FIXTURES)) offenders.push(`${relative(FIXTURES, file)} imports ${spec}`);
       }
     }
@@ -158,16 +206,49 @@ describe('architecture', async () => {
     expect(offenders).toEqual([]);
   });
 
+  // AGENTS.md: the TUI imports another area through its barrel, never a file inside it.
+  it('a TUI area imports other areas only through their barrels', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      const path = srcPath(file);
+      if (!path.startsWith('tui/')) continue;
+      const area = tuiAreaOf(path.slice('tui/'.length));
+      for (const spec of specifiers(await readFile(file, 'utf8'))) {
+        if (!spec.startsWith('.')) continue;
+        const target = srcPath(join(file, '..', spec));
+        if (!target.startsWith('tui/')) continue;
+        const targetArea = tuiAreaOf(target.slice('tui/'.length));
+        if (targetArea !== null && targetArea !== area) offenders.push(`${path} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it('the checks above see the rules being broken', () => {
     const plugin = join(SRC, 'plugins', 'demo', 'index.ts');
     expect(pluginOf(plugin)).toBe('demo');
     expect(pluginOf(join(SRC, 'plugins', 'index.ts'))).toBeNull();
     expect(layerOf(join(SRC, 'plugin-api', 'tui.ts'))).toBe('plugin-api-tui');
+    expect(layerOf(join(SRC, 'plugin-api', 'testing.ts'))).toBe('plugin-api-testing');
+    expect(tuiAreaOf('screens/home/HomeScreen.tsx')).toBe('screens/home');
+    expect(tuiAreaOf('components/Modal')).toBe('components');
+    expect(tuiAreaOf('components')).toBeNull();
+    expect(tuiAreaOf('screens/home')).toBeNull();
+    expect(tuiAreaOf('screens/types')).toBeNull();
+    expect(tuiAreaOf('keymap')).toBeNull();
     expect(NODE_BUILTINS.has('node:fs')).toBe(true);
     expect(NODE_BUILTINS.has('child_process')).toBe(true);
     expect(specifiers("import { x } from '../../services';\nconst m = await import('./tui');")).toEqual([
       '../../services',
       './tui',
+    ]);
+    const typesOnly = "import type { Command } from 'commander';\nexport type {\n  Key,\n} from 'ink';";
+    expect(runtimeSpecifiers(typesOnly)).toEqual([]);
+    const injected = `${typesOnly}\nimport { Box } from 'ink';\nimport { type ReactNode } from 'react';\nawait import('commander');`;
+    expect(runtimeSpecifiers(injected).filter((spec) => SURFACE_PACKAGES.test(spec))).toEqual([
+      'ink',
+      'react',
+      'commander',
     ]);
   });
 });

@@ -1,9 +1,10 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { createRepositories, findDataRoot, gitUserEmail } from '../storage';
 import { createAssigneesService } from './assignees';
 import { createBoardsService } from './boards';
 import { createConfigService } from './config';
 import { createContextService } from './context';
+import { coordinated, coordinatedRepositories, coordinatedServices, mutationCoordinator } from './coordination';
 import { createDoctorService } from './doctor';
 import { createFieldsService } from './fields';
 import type { PluginHost } from './plugins/host';
@@ -15,18 +16,38 @@ import { createStoriesService } from './stories';
 import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
 
+/**
+ * Generated ids (for example Comment ids) use letters and digits only. nanoid's default alphabet
+ * includes `-` and `_`, and an id starting with `-` is read as a flag on the command line.
+ */
+export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8);
+
+export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from './coordination';
+export { pluginReadServices, pluginServices } from './plugins/capabilities';
 export {
   type ActivePlugin,
   failureWarning,
   type LoadPluginsOptions,
   loadPlugins,
   onOff,
+  type PluginDiagnostic,
   type PluginHost,
   type PluginStatus,
   type ReservedNames,
+  validatePluginDefinition,
 } from './plugins/host';
+export { attribute as attributePluginError, type Invocation, invokePlugin, invokePluginSync } from './plugins/invoke';
 export { pluginStoryRows, pluginTaskRows } from './plugins/service';
+export {
+  formatTrace,
+  setTraceSink,
+  type TraceEvent,
+  type TraceSink,
+  traceBuffer,
+  traceRequested,
+} from './plugins/trace';
 export type * from './plugins/types';
+export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';
 export type * from './types';
 
 /**
@@ -34,20 +55,27 @@ export type * from './types';
  * operation runs through the Plugin pipeline of `ctx.plugins` (ADR-0012).
  */
 export function createServices(ctx: RowblyContext): Services {
-  const repos = createRepositories(ctx.root);
-  const ops = createOperationRunner(ctx, repos, () => services);
+  const repos = coordinatedRepositories(ctx.root, createRepositories(ctx.root));
+  const ops = createOperationRunner(ctx, repos, () => services, mutationCoordinator(ctx.root));
+  // Every service call holds the Data Root lock from its first read; an operation inside it reuses
+  // the lock and gives it up before its reactions (ADR-0019 §1, §5).
+  const each = <S extends object>(area: string, service: S, except: readonly string[] = []) =>
+    coordinatedServices(ctx.root, area, service, except);
   const services: Services = {
-    context: createContextService(ctx, repos, ops),
+    context: each('context', createContextService(ctx, repos, ops)),
+    // `init` creates a Data Root that does not exist yet: nothing to coordinate with.
     setup: createSetupService(ctx, repos),
-    config: createConfigService(ctx, repos),
-    assignees: createAssigneesService(ctx, repos, ops),
-    boards: createBoardsService(ctx, repos, ops),
-    stages: createStagesService(ctx, repos, ops),
-    fields: createFieldsService(ctx, repos, ops),
-    stories: createStoriesService(ctx, repos, ops),
-    tasks: createTasksService(ctx, repos, ops),
+    config: each('config', createConfigService(ctx, repos)),
+    assignees: each('assignees', createAssigneesService(ctx, repos, ops)),
+    boards: each('boards', createBoardsService(ctx, repos, ops)),
+    stages: each('stages', createStagesService(ctx, repos, ops)),
+    fields: each('fields', createFieldsService(ctx, repos, ops)),
+    stories: each('stories', createStoriesService(ctx, repos, ops)),
+    tasks: each('tasks', createTasksService(ctx, repos, ops)),
+    // Doctor takes the lock itself, so that it can report a transaction recovery cannot finish.
     doctor: createDoctorService(ctx, repos, ops),
-    plugins: createPluginsService(ctx, repos, ops),
+    // `context(id)` only builds the Plugin's context; its reads and operations coordinate themselves.
+    plugins: each('plugins', createPluginsService(ctx, repos, ops), ['context']),
   };
   return services;
 }
@@ -71,13 +99,14 @@ export interface CreateContextOptions {
  */
 export async function createContext(opts: CreateContextOptions): Promise<RowblyContext> {
   const root = await findDataRoot({ cwd: opts.cwd, flag: opts.root, env: opts.env, home: opts.home });
-  const local = await createRepositories(root).localState.get();
+  // Opening the Data Root finishes any interrupted commit before the first read (ADR-0019 §2).
+  const local = await coordinated(root, 'open', () => createRepositories(root).localState.get());
   const ctx: RowblyContext = {
     root,
     local,
     me: local.me ?? null,
     now: () => new Date(),
-    newId: () => nanoid(8),
+    newId,
     warn: opts.warn,
     ...(opts.plugins ? { plugins: opts.plugins } : {}),
     ...(opts.backgroundReactions ? { backgroundReactions: true } : {}),
@@ -91,7 +120,7 @@ async function meFromGitEmail(ctx: RowblyContext, opts: CreateContextOptions): P
   const email = await gitUserEmail(opts.cwd);
   if (!email) return null;
   try {
-    const { assignees } = await createRepositories(ctx.root).rootConfig.get();
+    const { assignees } = await coordinated(ctx.root, 'open', () => createRepositories(ctx.root).rootConfig.get());
     return assignees.find((a) => a.email?.toLowerCase() === email.toLowerCase())?.handle ?? null;
   } catch {
     // An unreadable root config means no roster to match against.

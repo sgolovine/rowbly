@@ -9,12 +9,13 @@ import {
   useInput,
   useIsActive,
   useKeyHints,
+  useReloadOnReturn,
   useState,
 } from '../../plugin-api/tui';
-import { deleteComment, listComments } from './comments';
+import { deleteComment, readThread } from './comments';
 import { relativeTime } from './relativeTime';
 
-export type CommentsTabProps = PluginStoryTabProps<Record<string, unknown>> & { task?: Task };
+type CommentsTabProps = PluginStoryTabProps<Record<string, unknown>> & { task?: Task };
 
 /**
  * The Thread of a Story, or of a Task on the Task screen, oldest first: `c` add and `e` edit (in the
@@ -26,10 +27,12 @@ export function CommentsTab({ story, task, active, plugin, ui }: CommentsTabProp
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState(0);
-  // `isActive` reloads the Thread when the Comment form closes.
-  const data = useAsync(() => listComments(plugin, target), [plugin, target, isActive]);
+  // `null` is a stored Thread that is invalid: it is shown as unavailable, never as empty (ARCH-36).
+  const data = useAsync(() => readThread(plugin, target), [plugin, target]);
+  // Reloads the Thread when the Comment form closes.
+  useReloadOnReturn(data.reload, isActive);
   const comments = data.data ?? [];
-  const viewing = isActive && !confirming && !busy && data.data !== undefined;
+  const viewing = isActive && !confirming && !busy && Boolean(data.data);
   const cursor = Math.max(0, Math.min(selected, comments.length - 1));
   const comment = comments[cursor];
   useKeyHints(
@@ -73,7 +76,12 @@ export function CommentsTab({ story, task, active, plugin, ui }: CommentsTabProp
     }
   };
 
-  if (!data.data) return data.loading ? <Loading label="Loading Comments…" /> : <Text color="red">No Comments.</Text>;
+  if (data.data === null) {
+    return <Text color="red">Comments unavailable: stored Thread is invalid; run `rowbly doctor`.</Text>;
+  }
+  if (!data.data) {
+    return data.loading ? <Loading label="Loading Comments…" /> : <Text color="red">Could not load Comments.</Text>;
+  }
   const now = plugin.now();
 
   return (
@@ -100,7 +108,6 @@ export function CommentsTab({ story, task, active, plugin, ui }: CommentsTabProp
           ))}
         </Box>
       )}
-      <Text dimColor>c add · e edit · d delete</Text>
       {confirming && comment && (
         <ConfirmDialog
           message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}

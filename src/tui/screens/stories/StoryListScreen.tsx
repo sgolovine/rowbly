@@ -2,23 +2,26 @@ import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import type { Stage } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
-import { Form, type FormValues, Loading } from '../../components';
+import { CursorRows, Form, type FormValues, Loading, StoryStage } from '../../components';
 import {
   useActionFocus,
   useAsync,
+  useCursor,
+  useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { CursorRows, useCursor, useEscape } from '../stages/shared';
 import type { ScreenProps } from '../types';
 import { describeFilters, filterFields, filterInitialValues, toFilter } from './filter';
+import { PluginFailures } from './PluginFailures';
 import { describeWithPlugins, storyFilterFields, withPluginFilters } from './pluginFields';
-import { boardIdFor, StoryStage, useReloadOnReturn } from './shared';
+import { boardIdFor } from './shared';
 
 /**
  * The Stories of a Board (`params.boardId`, default: the Board in context), with filters. `A` toggles
@@ -55,12 +58,12 @@ export function StoryListScreen({ params }: ScreenProps) {
   }, [services, scope.data, allBoards]);
   const list = useAsync(async () => {
     if (!scope.data) return null;
-    const filter = withPluginFilters(toFilter(filters), plugins, filters);
-    return services.stories.list(allBoards ? null : scope.data.boardId, filter);
+    const { filter, failures } = withPluginFilters(toFilter(filters), plugins, scope.data.extra, filters);
+    return { stories: await services.stories.list(allBoards ? null : scope.data.boardId, filter), failures };
   }, [services, scope.data, filters, allBoards, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
-  const stories = list.data ?? [];
+  const stories = list.data?.stories ?? [];
   const [cursor] = useCursor(stories.length, active && !filtering);
   useActionFocus({ story: stories[cursor] });
 
@@ -100,7 +103,8 @@ export function StoryListScreen({ params }: ScreenProps) {
     boards ? boards.map((b) => [b.boardId, b.stages]) : [[boardId, choices.stages]],
   );
   const unique = (values: string[]) => [...new Set(values)];
-  const summary = describeWithPlugins(describeFilters(filters), plugins, filters);
+  const described = describeWithPlugins(describeFilters(filters), plugins, scope.data?.extra, filters);
+  const summary = described.summary;
   const boardWidth = Math.max(0, ...stories.map((s) => s.boardId.length));
 
   return (
@@ -109,6 +113,7 @@ export function StoryListScreen({ params }: ScreenProps) {
         {allBoards ? 'All Boards' : `Board ${boardId}`}
         {summary ? ` · filters: ${summary}` : ''}
       </Text>
+      <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
       {!list.data || (allBoards && !boards) ? (
         <Loading label="Loading Stories…" />
       ) : stories.length === 0 ? (
@@ -132,6 +137,7 @@ export function StoryListScreen({ params }: ScreenProps) {
       {filtering && (
         <Box flexDirection="column">
           <Text bold>Filter Stories</Text>
+          <PluginFailures failures={extra.failures} note="its filter is unavailable" />
           <Form
             fields={[
               ...filterFields({

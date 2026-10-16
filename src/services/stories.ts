@@ -14,6 +14,7 @@ import {
   type Assignee,
   type CustomFieldValue,
   type EffectiveBoardConfig,
+  formatIssues,
   type Priority,
   type Slug,
   type Stage,
@@ -22,8 +23,11 @@ import {
 } from '../schemas';
 import { createRepositories, type Repositories, resolveCascade } from '../storage';
 import { validateFieldValues } from './_customFieldValues';
+import { coordinated } from './coordination';
 import type { CoreChangeSet } from './plugins/changeSet';
+import { invokePluginSync } from './plugins/invoke';
 import { latestStory, type OperationRunner } from './plugins/runtime';
+import { checkStage } from './stageValidation';
 import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
 export function createStoriesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StoriesService {
@@ -189,6 +193,11 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
           if (patch.customFields !== undefined || patch.unsetFields !== undefined) {
             next.customFields = await updateFields(story, patch);
           }
+          // A new Stage is the same change `move` makes, in this one operation (ARCH-43); the same Stage keeps the Rank.
+          if (patch.stage != null && patch.stage !== story.stage) {
+            next.stage = patch.stage;
+            next.rank = await destinationRank(story, patch.stage);
+          }
           next.updatedAt = toTimestamp(ctx.now());
           return changes.putStory(parseStory(next));
         },
@@ -201,10 +210,7 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
         { key, stage, ...opts, top: opts.top ?? false },
         async (changes) => {
           const story = await repos.stories.findByKey(key);
-          checkStage((await effective(story)).stages, stage);
-          const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
-          const rank = opts.top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
-          return save(changes, { ...story, stage, rank });
+          return save(changes, { ...story, stage, rank: await destinationRank(story, stage, opts.top) });
         },
         latestStory,
       ),
@@ -253,11 +259,21 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
     },
   };
 
+  /** Checks `stage` and gives the Story a Rank at the bottom (or `top`) of it, among the Board's other Stories. */
+  async function destinationRank(story: Story, stage: Slug, top = false): Promise<string> {
+    checkStage((await effective(story)).stages, stage);
+    const others = (await repos.stories.allInBoard(story.boardId)).filter((s) => s.key !== story.key);
+    return top ? rankBefore(topRank(others, stage)) : rankAfter(bottomRank(others, stage));
+  }
+
   function save(changes: CoreChangeSet, story: Story): Promise<Story> {
     return changes.putStory({ ...story, updatedAt: toTimestamp(ctx.now()) });
   }
 
-  /** Each Plugin filter in `filter.plugins` must match, through its Plugin's `filterStories`. */
+  /**
+   * Each Plugin filter in `filter.plugins` must match, through its Plugin's `filterStories`. A filter is
+   * parsed by the Plugin's `storyFilterSchema` once here, before any Story is checked (DX-07).
+   */
   function pluginMatcher(filter: StoryFilter): (story: Story) => boolean {
     const checks = Object.entries(filter.plugins ?? {})
       .filter(([, value]) => value !== undefined)
@@ -267,8 +283,19 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
           throw new UsageError(`Plugin "${id}" cannot filter Stories`, { hint: 'is it on? see `rowbly plugins list`' });
         }
         const match = plugin.definition.filterStories;
+        const schema = plugin.definition.storyFilterSchema;
+        const parsed = schema ? schema.safeParse(value) : { success: true as const, data: value };
+        if (!parsed.success) {
+          throw new ValidationError(
+            `Plugin "${id}" filter is not valid: ${formatIssues(parsed.error.issues, 'filter')}`,
+            { details: { plugin: id, stage: 'filter', issues: parsed.error.issues } },
+          );
+        }
+        const criteria = parsed.data;
         const context = ops.context(id);
-        return (story: Story) => match(story, value, context);
+        // A throwing filter fails the list, attributed; it never reads as "no match" (DX-39).
+        return (story: Story) =>
+          invokePluginSync({ plugin: id, stage: 'filter' }, () => match(story, criteria, context));
       });
     return (story) => checks.every((check) => check(story));
   }
@@ -290,11 +317,13 @@ export interface StoryChoices extends EffectiveBoardConfig {
 
 export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<StoryChoices> {
   const repos = createRepositories(ctx.root);
-  const [config, root, labels] = await Promise.all([
-    resolveCascade(ctx.root, boardId),
-    repos.rootConfig.get(),
-    repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
-  ]);
+  const [config, root, labels] = await coordinated(ctx.root, 'stories.choices', () =>
+    Promise.all([
+      resolveCascade(ctx.root, boardId),
+      repos.rootConfig.get(),
+      repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
+    ]),
+  );
   return { ...config, assignees: root.assignees, labels };
 }
 
@@ -347,15 +376,6 @@ function orderOf(priority: Priority | null): number {
 function stageIndex(stages: readonly Stage[], key: string): number {
   const index = stages.findIndex((s) => s.key === key);
   return index === -1 ? stages.length : index;
-}
-
-function checkStage(stages: readonly Stage[], key: string): void {
-  if (stages.some((s) => s.key === key)) return;
-  const valid = stages.map((s) => s.key);
-  throw new ValidationError(`unknown Stage "${key}"`, {
-    details: { issues: [{ path: ['stage'], message: `unknown Stage "${key}"` }], validStages: valid },
-    hint: `valid Stages: ${valid.join(', ')}`,
-  });
 }
 
 /** `--assignee`/`--label` replace the list, so they cannot be combined with the add/remove flags. */

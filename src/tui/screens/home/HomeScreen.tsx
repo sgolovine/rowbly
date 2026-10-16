@@ -3,17 +3,18 @@ import { SelectList } from '../../components';
 import { pluginRoute, useKeyHints, usePlugins } from '../../hooks';
 import { DESTINATIONS, type Destination } from '../../keymap';
 import { useRouter } from '../../router';
-import type { ScreenRegistry } from '../types';
 
 /** The root menu: every go-to destination, then those the Plugins add. */
-function HomeScreen() {
+export function HomeScreen() {
   const router = useRouter();
   const { plugins } = usePlugins();
   useKeyHints([{ key: 'enter', description: 'open' }]);
-  const destinations: Destination[] = [
-    ...DESTINATIONS,
+  // Each destination's value is where it comes from and its place there, never its label (ARCH-40).
+  const destinations: (Destination & { value: string })[] = [
+    ...DESTINATIONS.map((d, i) => ({ ...d, value: `core:${d.screen}:${i}` })),
     ...plugins.flatMap((plugin) =>
-      (plugin.tui.home ?? []).map((link) => ({
+      (plugin.tui.home ?? []).map((link, i) => ({
+        value: `plugin:${plugin.id}:${i}`,
         label: link.label,
         ...pluginRoute(plugin.id, link.screen, { title: link.label, ...link.params }),
       })),
@@ -23,17 +24,13 @@ function HomeScreen() {
     <Box flexDirection="column">
       <Text bold>Go to</Text>
       <SelectList
-        items={destinations.map((d) => ({ value: d.label, label: d.label }))}
+        items={destinations.map((d) => ({ value: d.value, label: d.label }))}
         limit={destinations.length}
         onSelect={(item) => {
-          const destination = destinations.find((d) => d.label === item.value);
+          const destination = destinations.find((d) => d.value === item.value);
           if (destination) router.push(destination.screen, destination.params);
         }}
       />
     </Box>
   );
 }
-
-export const homeScreens: ScreenRegistry = {
-  home: HomeScreen,
-};

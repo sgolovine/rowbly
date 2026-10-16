@@ -57,7 +57,7 @@ describe('rowbly doctor', () => {
 
   it('repairs an add/add Story Key conflict from two merged git branches', async () => {
     const { tmp, cli } = await setup();
-    await writeFile(join(tmp.path, '.gitignore'), 'local.json\n');
+    await writeFile(join(tmp.path, '.gitignore'), 'local.json\n.lock\n.lock.break\n.txn/\n');
     for (let n = 1; n <= 3; n++) expect((await cli('stories', 'create', '--name', `Base ${n}`)).exitCode).toBe(0);
     await git(tmp.dir, 'init', '-q', '-b', 'main');
     await git(tmp.dir, 'add', '-A');

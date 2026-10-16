@@ -70,11 +70,15 @@ export function registerBoards(program: Command): void {
     .option('--description <text>', 'new description')
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const plugins = pluginOptions(cmd);
-        if (opts.name === undefined && opts.description === undefined && !plugins.plugins) {
+        const operationOptions = pluginOptions(cmd);
+        if (opts.name === undefined && opts.description === undefined && !operationOptions.plugins) {
           throw new UsageError('nothing to change', { hint: 'pass --name and/or --description' });
         }
-        const board = await services.boards.update(id, { name: opts.name, description: opts.description, ...plugins });
+        const board = await services.boards.update(id, {
+          name: opts.name,
+          description: opts.description,
+          ...operationOptions,
+        });
         printResult(board, { json: globals.json, human: (b) => `Updated Board ${b.id}` });
       }),
     );

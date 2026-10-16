@@ -41,6 +41,8 @@ export interface RowblyContext {
   plugins?: PluginHost;
   /** Run reactions after the save without waiting for them (the TUI); command mode waits. */
   backgroundReactions?: boolean;
+  /** How long each reaction may run before Rowbly warns and goes on (W7); 5 s when omitted. */
+  reactionTimeoutMs?: number;
 }
 
 /** Plugin input, keyed by Plugin id: `{ epics: { epic: 'auth' } }` (ADR-0012). */
@@ -144,7 +146,12 @@ export interface StoryFilter {
   search?: string;
   /** `--sort`; the default is Stage order, then Rank. */
   sort?: StorySort;
-  /** Plugin filters, keyed by Plugin id; each Plugin's `filterStories` decides what matches. */
+  /**
+   * Plugin filters, keyed by Plugin id; each Plugin's `filterStories` decides what matches. A filter
+   * that is not `undefined` for a Plugin that is off, unknown or has no `filterStories` is a
+   * `UsageError` (exit 2), not "no match" (CQ-72). A filter its `storyFilterSchema` rejects is a
+   * `ValidationError` naming the Plugin.
+   */
   plugins?: PluginInput;
 }
 
@@ -189,6 +196,8 @@ export interface StoryPatch extends OperationOptions {
   customFields?: CustomFieldValuesInput;
   /** `--unset-field`. */
   unsetFields?: Slug[];
+  /** A new Stage moves the Story to the bottom of it, like `move`; the same Stage keeps the Rank. */
+  stage?: Slug;
 }
 
 // ── Tasks ───────────────────────────────────────────────────────────────────
@@ -203,6 +212,8 @@ export interface TaskCreateInput extends OperationOptions {
 export interface TaskPatch extends OperationOptions {
   name?: string;
   description?: string;
+  /** A new Stage, like `move`. */
+  stage?: Slug;
 }
 
 // ── Doctor ──────────────────────────────────────────────────────────────────
@@ -227,9 +238,18 @@ export type CoreDoctorCode =
   | 'UNKNOWN_FILE'
   | 'PLUGIN_FAILED'
   | 'PLUGIN_DATA_INVALID'
-  | 'PLUGIN_DATA_UNCHECKED';
+  | 'PLUGIN_DATA_UNCHECKED'
+  | 'TRANSACTION_PENDING'
+  | 'TRANSACTION_LEFTOVER'
+  | 'TEMP_FILE_LEFTOVER'
+  | 'GITIGNORE_INCOMPLETE'
+  | 'ORPHAN_FOLDER'
+  | 'LEGACY_DATA';
 
-/** A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. */
+/**
+ * A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. `(string & {})`
+ * admits any other string while editors still complete the core codes (CQ-17).
+ */
 export type DoctorCode = CoreDoctorCode | (string & {});
 
 export interface DoctorFinding {

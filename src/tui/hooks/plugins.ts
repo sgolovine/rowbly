@@ -27,6 +27,10 @@ export function usePlugins(): PluginsValue {
 /** The route of a Plugin's screen: one `plugin` screen that shows `params.screen` of `params.plugin`. */
 export const PLUGIN_SCREEN = 'plugin';
 
+/**
+ * The route of Plugin `id`'s `screen`. `params.title` is the breadcrumb, the screen name with a
+ * capital letter by default; `plugin` and `screen` are route metadata that `params` cannot replace.
+ */
 export function pluginRoute(id: string, screen: string, params: Record<string, unknown> = {}) {
   return {
     screen: PLUGIN_SCREEN,
@@ -41,6 +45,10 @@ export function pluginUi(id: string, router: Router, toasts: ToastStore): Plugin
       const route = pluginRoute(id, screen, params);
       router.push(route.screen, route.params);
     },
+    // Core routes stay private: a Plugin names only the record, never the route (ARCH-07).
+    openStory: (key) => router.push('story', { key, title: key }),
+    openTask: (taskId) => router.push('task', { id: taskId, title: taskId }),
+    openBoard: (boardId) => router.push('board-detail', { boardId, title: boardId }),
     back: () => router.pop(),
     toast: (message, kind = 'info') => toasts.push(kind, message),
     error: (err) => toasts.error(err),

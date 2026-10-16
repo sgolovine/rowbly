@@ -24,17 +24,36 @@ const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
 const SRC = fileURLToPath(new URL('../../src/', import.meta.url));
 
 /**
- * Each Plugin's `_Avoid_` words, from the CONTEXT.md in its folder (listed in docs/agents/CONTEXT-MAP.md). They
- * apply to the Plugin's own source and help pages; core never uses a Plugin's terms at all.
+ * The `_Avoid_` words of a glossary as one pattern, or `undefined` when it lists none: an empty
+ * alternation would match everywhere (DX-05).
+ */
+function avoidPattern(context: string): RegExp | undefined {
+  const avoid = [...context.matchAll(/^_Avoid_:\s*(.+)$/gm)].flatMap((m) => (m[1] ?? '').split(','));
+  const escaped = avoid.map((w) => w.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+  return escaped.length > 0 ? new RegExp(`\\b(${escaped.join('|')})\\b`, 'i') : undefined;
+}
+
+/** A Built-in Plugin's glossary, `src/plugins/<id>/CONTEXT.md`, or a precise error when it is missing. */
+async function glossary(id: string): Promise<string> {
+  try {
+    return await readFile(`${SRC}plugins/${id}/CONTEXT.md`, 'utf8');
+  } catch {
+    throw new Error(
+      `Built-in Plugin "${id}" has no src/plugins/${id}/CONTEXT.md; every Built-in Plugin needs a glossary (docs/WRITING-A-PLUGIN.md)`,
+    );
+  }
+}
+
+/**
+ * Each Built-in Plugin's `_Avoid_` words, from the CONTEXT.md in its folder (listed in docs/agents/CONTEXT-MAP.md).
+ * They apply to the Plugin's own source and help pages; core never uses a Plugin's terms at all. Only Plugins in the
+ * registry are read: a folder under src/plugins/ that holds no registered Plugin is not a Plugin and has no glossary.
  */
 async function pluginAvoidWords(): Promise<Map<string, RegExp>> {
   const words = new Map<string, RegExp>();
-  const dirs = (await readdir(`${SRC}plugins`, { withFileTypes: true })).filter((d) => d.isDirectory());
-  for (const { name } of dirs) {
-    const context = await readFile(`${SRC}plugins/${name}/CONTEXT.md`, 'utf8');
-    const avoid = [...context.matchAll(/^_Avoid_:\s*(.+)$/gm)].flatMap((m) => (m[1] ?? '').split(','));
-    const escaped = avoid.map((w) => w.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
-    words.set(name, new RegExp(`\\b(${escaped.join('|')})\\b`, 'i'));
+  for (const { id } of builtInPlugins) {
+    const pattern = avoidPattern(await glossary(id));
+    if (pattern) words.set(id, pattern);
   }
   return words;
 }
@@ -81,6 +100,28 @@ describe('language audit', () => {
       }
     }
     expect(found).toEqual([]);
+  });
+
+  it('every Built-in Plugin has a glossary with _Avoid_ words, linked from CONTEXT-MAP.md (DX-05)', async () => {
+    const map = await readFile(`${SRC}../docs/agents/CONTEXT-MAP.md`, 'utf8');
+    const problems: string[] = [];
+    for (const { id } of builtInPlugins) {
+      if (!avoidPattern(await glossary(id))) problems.push(`src/plugins/${id}/CONTEXT.md lists no _Avoid_ words`);
+      if (!map.includes(`(../../src/plugins/${id}/CONTEXT.md)`)) {
+        problems.push(`docs/agents/CONTEXT-MAP.md does not link src/plugins/${id}/CONTEXT.md`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it('a missing glossary is a precise error, and one without _Avoid_ words gives no pattern', async () => {
+    await expect(glossary('no-such-plugin')).rejects.toThrow(
+      'Built-in Plugin "no-such-plugin" has no src/plugins/no-such-plugin/CONTEXT.md',
+    );
+    expect(avoidPattern('')).toBeUndefined();
+    expect(avoidPattern('# Hello\n\n**Greeting**:\nA word.\n')).toBeUndefined();
+    expect(avoidPattern('_Avoid_: salutation, hi there')?.test('say hi there')).toBe(true);
+    expect(avoidPattern('_Avoid_: salutation')?.test('a greeting')).toBe(false);
   });
 
   it('the audit catches an _Avoid_ word in a string, a template and JSX text', () => {

@@ -55,12 +55,12 @@ export function registerAssignees(program: Command): void {
     .option('--email <email>', 'new email address; an empty value removes it')
     .action((handle: string, opts: AssigneeFlags, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const plugins = pluginOptions(cmd);
-        if (opts.name === undefined && opts.email === undefined && !plugins.plugins) {
+        const operationOptions = pluginOptions(cmd);
+        if (opts.name === undefined && opts.email === undefined && !operationOptions.plugins) {
           throw new UsageError('nothing to change', { hint: 'pass --name or --email' });
         }
         const email = opts.email === undefined ? undefined : opts.email || null;
-        const assignee = await services.assignees.update(handle, { name: opts.name, email, ...plugins });
+        const assignee = await services.assignees.update(handle, { name: opts.name, email, ...operationOptions });
         printResult(assignee, { json: globals.json, human: (a) => `Updated Assignee ${renderAssignee(a)}` });
       }),
     );

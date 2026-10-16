@@ -25,7 +25,9 @@ export {
   useKeyCapture,
   useKeyHints,
   useLayout,
-  useToast,
+  useReloadOnReturn,
 } from '../tui/hooks';
+// Not `useToast`: a Plugin shows messages through `ui.toast` and `ui.error` (`PluginUi`), the one
+// supported way, which also attributes errors (CQ-51).
 export type { KeyHint } from '../tui/keymap';
 export { FORM_KEYS, moveDelta } from '../tui/keymap';

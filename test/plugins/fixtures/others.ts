@@ -83,7 +83,7 @@ export const echo = definePlugin({
   },
 });
 
-/** Records the order its handlers run in, and guards Board deletion like Specs will. */
+/** Records the order its handlers run in, and guards Board deletion like Specs. */
 export const order: string[] = [];
 
 export const tracer = definePlugin({

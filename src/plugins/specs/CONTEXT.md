@@ -5,7 +5,7 @@ A Built-in Plugin that keeps Spec documents with the Stories and Boards they des
 ## Language
 
 **Spec**:
-A markdown document that describes work to be done, titled by its first heading; it is only a document, with no approval or Stage of its own.
+A markdown document that describes work to be done, titled by its first level-one heading (the first line that starts with `# `; an earlier `## ` heading does not count); it is only a document, with no approval or Stage of its own.
 _Avoid_: specification, design doc, PRD
 
 **Story Spec**:

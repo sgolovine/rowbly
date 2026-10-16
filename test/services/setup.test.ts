@@ -40,7 +40,7 @@ describe('setup.init', () => {
       assignees: [],
       stages: [...DEFAULT_STAGES],
     });
-    expect(await readFile(join(root.path, '.gitignore'), 'utf8')).toBe('local.json\n');
+    expect(await readFile(join(root.path, '.gitignore'), 'utf8')).toBe('local.json\n.lock\n.lock.break\n.txn/\n');
   });
 
   it('creates the first Board and makes it the current context', async () => {

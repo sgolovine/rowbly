@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,6 +33,8 @@ function renderApp(
     newId: fixedIds(),
     warn: (message) => toasts.push('warning', message),
   };
+  // The Local State the run read from local.json: changes start from the stored one (ARCH-37).
+  if (local.board || local.me) writeFileSync(join(t.path, 'local.json'), `${JSON.stringify(local)}\n`);
   const app = renderTui(<App ctx={ctx} services={createServices(ctx)} initial={{ screen, params }} toasts={toasts} />);
   return { app, ctx };
 }
@@ -58,7 +61,7 @@ describe('setup screen (first run)', () => {
     const repos = createRepositories({ path: join(cwd, '.rowbly'), kind: 'local' });
     expect(await repos.boards.get('web')).toMatchObject({ name: 'web', keyPrefix: 'WEB' });
     expect(await repos.localState.get()).toEqual({ version: 1, board: 'web' });
-    expect(await readFile(join(cwd, '.rowbly', '.gitignore'), 'utf8')).toBe('local.json\n');
+    expect(await readFile(join(cwd, '.rowbly', '.gitignore'), 'utf8')).toBe('local.json\n.lock\n.lock.break\n.txn/\n');
     app.unmount();
   });
 

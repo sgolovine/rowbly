@@ -1,4 +1,16 @@
-import { Box, markdownToPlain, Text, useInput, useIsActive, useLayout, useState } from '../../plugin-api/tui';
+import {
+  Box,
+  markdownToPlain,
+  moveDelta,
+  Text,
+  useInput,
+  useIsActive,
+  useLayout,
+  useState,
+} from '../../plugin-api/tui';
+
+/** The row under the text that shows the scroll position. */
+const STATUS_ROWS = 1;
 
 /** Keeps every part of a long Spec reachable in the terminal viewport. */
 export function SpecText({
@@ -22,12 +34,12 @@ export function SpecText({
       for (let i = 0; i < chars.length; i += width) wrapped.push(chars.slice(i, i + width).join(''));
       return wrapped.length ? wrapped : [''];
     });
-  const height = layout.height === undefined ? lines.length : Math.max(1, layout.height - reservedRows - 1);
+  const height = layout.height === undefined ? lines.length : Math.max(1, layout.height - reservedRows - STATUS_ROWS);
   const max = Math.max(0, lines.length - height);
   const start = Math.min(offset, max);
   useInput(
     (input, key) => {
-      const delta = key.downArrow || input === 'j' ? 1 : key.upArrow || input === 'k' ? -1 : 0;
+      const delta = moveDelta(input, key);
       if (delta) setOffset(Math.max(0, Math.min(max, start + delta)));
     },
     { isActive },

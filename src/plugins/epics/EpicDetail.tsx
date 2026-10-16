@@ -4,12 +4,14 @@ import {
   ConfirmDialog,
   DetailView,
   Loading,
+  SelectList,
   Text,
   useAsync,
   useInput,
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useReloadOnReturn,
   useState,
 } from '../../plugin-api/tui';
 import { deleteEpic, progressText, setEpicClosed, showEpic } from './service';
@@ -17,7 +19,9 @@ import { deleteEpic, progressText, setEpicClosed, showEpic } from './service';
 export function EpicDetail({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
   const id = String(params.id);
   const active = useIsActive();
-  const data = useAsync(() => showEpic(plugin, id), [plugin, id, active]);
+  const data = useAsync(() => showEpic(plugin, id), [plugin, id]);
+  // Back from the Epic form or a Story shows what changed there.
+  useReloadOnReturn(data.reload);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   useKeyCapture(active && confirming, { escape: true });
@@ -25,6 +29,7 @@ export function EpicDetail({ params, plugin, ui }: PluginScreenProps<Record<stri
     confirming
       ? [{ key: 'y/n', description: 'confirm/cancel' }]
       : [
+          { key: 'enter', description: 'open Story' },
           { key: 'e', description: 'edit' },
           { key: 'c', description: data.data?.closed ? 'reopen' : 'close' },
           { key: 'd', description: 'delete' },
@@ -80,15 +85,18 @@ export function EpicDetail({ params, plugin, ui }: PluginScreenProps<Record<stri
         ]}
         body={epic.description}
       />
-      {epic.boards.length === 0 && <Text dimColor>No Stories.</Text>}
-      {epic.boards.map(({ board, stories }) => (
-        <Box key={board.id} flexDirection="column">
-          <Text bold>{`Board: ${board.name} (${board.id})`}</Text>
-          {stories.map((story) => (
-            <Text key={story.key}>{`${story.key} · ${story.name} · ${story.stage}`}</Text>
-          ))}
-        </Box>
-      ))}
+      <SelectList
+        items={epic.boards.flatMap(({ board, stories }) =>
+          stories.map((story) => ({
+            value: story.key,
+            label: `${story.key} · ${story.name} · ${story.stage}`,
+            description: `Board: ${board.name} (${board.id})`,
+          })),
+        )}
+        emptyText="No Stories."
+        isActive={!confirming && !busy}
+        onSelect={({ value }) => ui.openStory(value)}
+      />
       {confirming && (
         <ConfirmDialog
           destructive

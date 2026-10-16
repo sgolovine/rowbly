@@ -1,8 +1,8 @@
-import { randomBytes } from 'node:crypto';
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import type { ZodType } from 'zod';
 import { DataIntegrityError, NotFoundError, ValidationError } from '../core';
+import { writeFileAtomic } from './system';
 
 /** A line starting with a git conflict marker. */
 export const CONFLICT_MARKER_RE = /^<{7}(?: |$)/m;
@@ -42,24 +42,26 @@ export async function readJson<T>(path: string, schema: ZodType<T>): Promise<T> 
 }
 
 /**
- * Validate → mkdir -p → write a temp file in the same directory → rename over the target.
- * The parsed value is serialized, so keys follow schema order; 2-space indent, trailing newline.
+ * Validate → mkdir -p → `writeFileAtomic` (a fsynced temp file in the same directory, renamed over
+ * the target). The parsed value is serialized, so keys follow schema order; 2-space indent,
+ * trailing newline.
  */
 export async function writeJson<T>(path: string, schema: ZodType<T>, value: T): Promise<void> {
+  const text = serializeJson(path, schema, value);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFileAtomic(path, text);
+}
+
+/**
+ * The text `writeJson` writes for `value`: validated, then serialized in schema key order with a
+ * 2-space indent and a trailing newline. An invalid value throws `ValidationError` naming `path`.
+ */
+export function serializeJson<T>(path: string, schema: ZodType<T>, value: T): string {
   const result = schema.safeParse(value);
   if (!result.success) {
     throw new ValidationError(`invalid data for ${path}`, { details: { path, issues: result.error.issues } });
   }
-  const dir = dirname(path);
-  await mkdir(dir, { recursive: true });
-  const temp = join(dir, `.${basename(path)}.${randomBytes(4).toString('hex')}.tmp`);
-  try {
-    await writeFile(temp, `${JSON.stringify(result.data, null, 2)}\n`, 'utf8');
-    await rename(temp, path);
-  } catch (err) {
-    await rm(temp, { force: true });
-    throw err;
-  }
+  return `${JSON.stringify(result.data, null, 2)}\n`;
 }
 
 /** Entry names in `dir` of the given kind; a missing directory has none. */

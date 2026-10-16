@@ -4,6 +4,7 @@ import { ConflictError, isSlug, toTimestamp, ValidationError } from '../core';
 import { BoardConfigSchema, type DataRoot, DEFAULT_STAGES, type LocalState, type Slug } from '../schemas';
 import { createRepositories, pathExists, type Repositories, writeTextFile } from '../storage';
 import { validInput } from './_validate';
+import { coordinated, coordinatedRepositories, mutationCoordinator } from './coordination';
 import { createServices } from './index';
 import { createOperationRunner } from './plugins/runtime';
 import type { RowblyContext, SetupService } from './types';
@@ -49,16 +50,16 @@ export function meSource(ctx: RowblyContext): MeSource | null {
 export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalState> {
   if (!isSlug(handle))
     throw new ValidationError(`invalid Assignee handle "${handle}": must be a lower-kebab-case slug`);
-  const repos = createRepositories(ctx.root);
-  const { assignees } = await repos.rootConfig.get();
-  if (!assignees.some((a) => a.handle === handle)) ctx.warn(`"${handle}" is not in the roster`);
-  const ops = createOperationRunner(ctx, repos, () => createServices(ctx));
-  const next = await ops.run('context.setMe', { handle }, (changes) =>
-    changes.updateLocalState((state): LocalState => ({ ...state, me: handle })),
-  );
-  ctx.local = next;
-  ctx.me = handle;
-  return next;
+  const repos = coordinatedRepositories(ctx.root, createRepositories(ctx.root));
+  const ops = createOperationRunner(ctx, repos, () => createServices(ctx), mutationCoordinator(ctx.root));
+  // The runner copies the saved Local State, and the new Me, into the context (ARCH-37).
+  return coordinated(ctx.root, 'context.setMe', async () => {
+    const { assignees } = await repos.rootConfig.get();
+    if (!assignees.some((a) => a.handle === handle)) ctx.warn(`"${handle}" is not in the roster`);
+    return ops.run('context.setMe', { handle }, (changes) =>
+      changes.updateLocalState((state): LocalState => ({ ...state, me: handle })),
+    );
+  });
 }
 
 /**
@@ -89,7 +90,8 @@ export function createSetupService(ctx: RowblyContext, _repos: Repositories): Se
         assignees: [],
         stages: DEFAULT_STAGES.map((stage) => ({ ...stage })),
       });
-      await writeTextFile(join(root.path, '.gitignore'), 'local.json\n');
+      // Local State, the lock and the journal are never Git data (ADR-0019 §2).
+      await writeTextFile(join(root.path, '.gitignore'), 'local.json\n.lock\n.lock.break\n.txn/\n');
       if (!board) return { root, board: null };
 
       // Everything below runs against the new Data Root.

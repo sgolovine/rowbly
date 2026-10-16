@@ -26,7 +26,6 @@ import {
   confirmDestructive,
   parseFieldAssignments,
   parseRepeatable,
-  pluginInput,
   pluginOptions,
   promptIfMissing,
   readLongText,
@@ -84,8 +83,7 @@ export function registerStories(program: Command): void {
     .option(...boardOption)
     .action(async (opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const plugins = pluginInput(cmd);
-        const filter = { ...listFilter(opts), ...(plugins ? { plugins } : {}) };
+        const filter = { ...listFilter(opts), ...pluginOptions(cmd) };
         const boardId = opts.allBoards ? null : await services.context.resolveBoard(boardFlag(opts));
         const list = await services.stories.list(boardId, filter);
         if (globals.json) return printResult(list, { json: true, human: () => '' });

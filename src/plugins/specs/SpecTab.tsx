@@ -1,11 +1,21 @@
 import type { PluginStoryTabProps } from '../../plugin-api';
-import { ConfirmDialog, Loading, useAsync, useInput, useIsActive, useKeyHints, useState } from '../../plugin-api/tui';
+import {
+  ConfirmDialog,
+  Loading,
+  Text,
+  useAsync,
+  useInput,
+  useIsActive,
+  useKeyHints,
+  useReloadOnReturn,
+  useState,
+} from '../../plugin-api/tui';
 import { SpecText } from './SpecText';
 import { deleteSpec, linkedSpecs, readSpec } from './specs';
 
 export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Record<string, unknown>>) {
   const isActive = useIsActive() && active;
-  const [confirm, setConfirm] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const documents = useAsync(async () => {
     const own = await readSpec(plugin, { board: story.boardId, story: story.key });
@@ -14,22 +24,31 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
       linked.push({ slug, spec: await readSpec(plugin, { board: story.boardId, slug }) });
     }
     return { own, linked };
-  }, [plugin, story, isActive]);
+  }, [plugin, story]);
+  useReloadOnReturn(documents.reload, isActive);
+  const data = documents.data;
   useKeyHints(
-    isActive
+    isActive && data
       ? [
-          { key: 'e', description: documents.data?.own ? 'edit Story Spec' : 'create Story Spec' },
+          { key: 'e', description: data.own ? 'edit Story Spec' : 'create Story Spec' },
           { key: '↑/↓', description: 'scroll Specs' },
-          ...(documents.data?.own ? [{ key: 'd', description: 'delete Story Spec' }] : []),
+          ...(data.own ? [{ key: 'd', description: 'delete Story Spec' }] : []),
         ]
       : [],
   );
   useInput(
     (input) => {
-      if (input === 'e') ui.open('form', { board: story.boardId, story: story.key, create: !documents.data?.own });
-      if (input === 'd' && documents.data?.own) setConfirm(true);
+      if (!data) return;
+      if (input === 'e')
+        ui.open('form', {
+          board: story.boardId,
+          story: story.key,
+          create: !data.own,
+          title: data.own ? `Edit ${story.key}` : 'New Spec',
+        });
+      if (input === 'd' && data.own) setConfirming(true);
     },
-    { isActive: isActive && !confirm && !busy && !documents.loading },
+    { isActive: isActive && !confirming && !busy && !documents.loading && !!data },
   );
   const remove = async () => {
     setBusy(true);
@@ -41,26 +60,25 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
       ui.error(err);
     } finally {
       setBusy(false);
-      setConfirm(false);
+      setConfirming(false);
     }
   };
   if (documents.loading) return <Loading />;
-  if (confirm)
+  if (!data) return <Text color="red">Could not load Specs.</Text>;
+  if (confirming)
     return (
       <ConfirmDialog
         message="Delete Story Spec?"
         destructive
         isActive={isActive && !busy}
         onConfirm={() => void remove()}
-        onCancel={() => setConfirm(false)}
+        onCancel={() => setConfirming(false)}
       />
     );
 
   const text = [
-    `Story Spec\n${documents.data?.own?.text ?? 'No Story Spec. Press e to create one.'}`,
-    ...(documents.data?.linked ?? []).map(
-      ({ slug, spec }) => `Board Spec: ${slug}\n${spec?.text ?? 'Missing Board Spec'}`,
-    ),
+    `Story Spec\n${data.own?.text ?? 'No Story Spec. Press e to create one.'}`,
+    ...data.linked.map(({ slug, spec }) => `Board Spec: ${slug}\n${spec?.text ?? 'Missing Board Spec'}`),
   ].join('\n\n');
   return <SpecText text={text} active={isActive} reservedRows={4} />;
 }

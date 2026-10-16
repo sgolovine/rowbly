@@ -1,17 +1,24 @@
-import { type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { PluginContext, PluginUi } from '../../services';
-import { usePluginUi, useServices } from '../hooks';
+import { usePlugins } from '../hooks';
+import { PluginBoundary } from './PluginBoundary';
+import { PluginSlotContent } from './PluginSlotContent';
 
-/** Renders what Plugin `plugin` adds to a core screen, giving it its context and UI. */
+/**
+ * Renders what Plugin `pluginId` adds to a core screen, giving it its context and UI. A failure while
+ * it renders stays inside the slot (RES-13); the slot tries again once the Plugin is loaded again.
+ */
 export function PluginSlot({
-  plugin,
+  pluginId,
   render,
 }: {
-  plugin: string;
+  pluginId: string;
   render(context: PluginContext, ui: PluginUi): ReactNode;
 }) {
-  const services = useServices();
-  const ui = usePluginUi(plugin);
-  const context = useMemo(() => services.plugins.context(plugin), [services, plugin]);
-  return <>{render(context, ui)}</>;
+  const loaded = usePlugins().plugins.find((plugin) => plugin.id === pluginId);
+  return (
+    <PluginBoundary pluginId={pluginId} resetKeys={[pluginId, loaded]}>
+      <PluginSlotContent pluginId={pluginId} render={render} />
+    </PluginBoundary>
+  );
 }

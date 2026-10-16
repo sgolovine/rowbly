@@ -20,7 +20,9 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:unit": "vitest run --project unit",
+    "test:watch": "vitest",
+    "bench:plugins": "tsx test/performance/bench.ts"
   },
   "dependencies": {
     "@clack/prompts": "^1.8.1",

@@ -2,18 +2,19 @@ import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, PluginError, ValidationError } from '../../src/core';
-import { type Change, definePlugin } from '../../src/plugin-api';
+import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-api';
 import { StorySchema } from '../../src/schemas';
 import { pluginStoryRows } from '../../src/services';
-import { makeStory, writeFixture } from '../helpers';
+import { pathExists } from '../../src/storage';
+import { FIXED_NOW, makeStory, writeFixture } from '../helpers';
 import { echo, faulty, notes, order, stamp, tracer } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
 /** A Plugin that keeps every Change Set it is shown, by stage. */
 function spy(id = 'spy', ops: string[] = ['stories.move']) {
   const seen: { stage: string; name: string; changes: Change[] }[] = [];
-  const record = (stage: string) => (e: { name: string; changes: { changes: readonly Change[] } }) => {
-    seen.push({ stage, name: e.name, changes: structuredClone([...e.changes.changes]) });
+  const record = (stage: string) => (e: { name: string; changes: { changes: readonly DeepReadonly<Change>[] } }) => {
+    seen.push({ stage, name: e.name, changes: structuredClone([...e.changes.changes]) as Change[] });
     return undefined;
   };
   const hooks = Object.fromEntries(
@@ -35,10 +36,21 @@ describe('transform (ADR-0012)', () => {
     expect(await readJsonFile(t, storyFile('WEB-1'))).not.toHaveProperty('plugins');
   });
 
+  it('invalid Plugin input fails the operation before the save; no input changes nothing', async () => {
+    const t = await pluginRoot({ notes: true });
+    const { services } = await withPlugins(t, [notes]);
+    await expect(services.stories.create('web', { name: 'A', plugins: { notes: { note: 1 } } })).rejects.toThrow(
+      'Plugin "notes" input of stories.create is not valid: note: ',
+    );
+    expect(await services.stories.list('web', {})).toEqual([]);
+    expect((await services.stories.create('web', { name: 'B' })).plugins).toBeUndefined();
+  });
+
   it('runs before guards, which run before the save, which runs before reactions', async () => {
     const t = await pluginRoot({ tracer: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [tracer]);
+    // `order` is shared by the whole file: every test that reads it empties it first.
     order.length = 0;
     await services.stories.move('WEB-1', 'todo');
     expect(order).toEqual(['transform:1', 'guard', 'react:todo']);
@@ -57,6 +69,60 @@ describe('transform (ADR-0012)', () => {
       details: { plugin: 'faulty', operation: 'boards.update', stage: 'transform' },
     });
     expect((await services.boards.get('web')).name).toBe('Website');
+  });
+});
+
+describe('expected errors from hooks keep their meaning (D7, ARCH-04)', () => {
+  function throwing(stage: 'transform' | 'guard', err: unknown) {
+    const reacted: string[] = [];
+    const plugin = definePlugin({
+      id: 'expect',
+      name: 'Expect',
+      description: '',
+      hooks: {
+        'boards.update': {
+          [stage]: () => {
+            throw err;
+          },
+          react: () => void reacted.push('react'),
+        },
+      },
+    });
+    return { plugin, reacted };
+  }
+
+  it.each([
+    ['transform', new ValidationError('bad input', { details: { issues: ['x'] }, hint: 'fix it' }), 'VALIDATION', 2],
+    ['transform', new NotFoundError('no such thing'), 'NOT_FOUND', 3],
+    ['guard', new ConflictError('taken'), 'CONFLICT', 4],
+    ['guard', new ValidationError('bad input', { details: { issues: ['x'] }, hint: 'fix it' }), 'VALIDATION', 2],
+  ] as const)(
+    'a %s that throws %s keeps its code; nothing is saved and nothing reacts',
+    async (stage, thrown, code, exit) => {
+      const { plugin, reacted } = throwing(stage, thrown);
+      const t = await pluginRoot({ expect: true });
+      const { services } = await withPlugins(t, [plugin]);
+      const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(thrown.constructor);
+      expect(err).toMatchObject({
+        code,
+        exitCode: exit,
+        message: thrown.message,
+        hint: thrown.hint,
+        details: { ...thrown.details, plugin: 'expect', operation: 'boards.update', stage },
+        cause: thrown,
+      });
+      expect((await services.boards.get('web')).name).toBe('Website');
+      expect(reacted).toEqual([]);
+    },
+  );
+
+  it('framework attribution wins over details the Plugin supplied', async () => {
+    const { plugin } = throwing('transform', new NotFoundError('gone', { details: { plugin: 'other', stage: 'x' } }));
+    const t = await pluginRoot({ expect: true });
+    const { services } = await withPlugins(t, [plugin]);
+    const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
+    expect(err).toMatchObject({ details: { plugin: 'expect', operation: 'boards.update', stage: 'transform' } });
   });
 });
 
@@ -133,7 +199,11 @@ describe('react', () => {
 
   it('the TUI does not wait for reactions', async () => {
     let release = () => {};
+    let reacted = () => {};
     const done: string[] = [];
+    const finished = new Promise<void>((resolve) => {
+      reacted = resolve;
+    });
     const slow = definePlugin({
       id: 'slow',
       name: 'Slow',
@@ -145,6 +215,7 @@ describe('react', () => {
               release = resolve;
             });
             done.push('reacted');
+            reacted();
           },
         },
       },
@@ -154,7 +225,7 @@ describe('react', () => {
     await services.boards.update('web', { name: 'Renamed' });
     expect(done).toEqual([]);
     release();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await finished;
     expect(done).toEqual(['reacted']);
   });
 });
@@ -302,15 +373,8 @@ describe('filters', () => {
 
 const LATER = '2026-10-13T00:00:00.000Z';
 
-async function pathExists(path: string): Promise<boolean> {
-  return (await import('node:fs/promises')).stat(path).then(
-    () => true,
-    () => false,
-  );
-}
-
 function stamps() {
-  return { createdAt: '2026-10-12T17:21:07.000Z', updatedAt: '2026-10-12T17:21:07.000Z' };
+  return { createdAt: FIXED_NOW, updatedAt: FIXED_NOW };
 }
 
 describe('Story rows', () => {

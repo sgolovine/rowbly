@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { StorySchema } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
 import { FIXED_NOW, makeBoard, makeStory } from '../helpers';
 import { notes } from './fixtures';
@@ -74,7 +75,7 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
       stage: 'todo',
       plugins: { ...GHOST, notes: { note: 'kept while off' } },
     });
-    const [task] = story.tasks as { plugins: unknown }[];
+    const [task] = StorySchema.parse(story).tasks;
     expect(task?.plugins).toEqual(GHOST);
 
     const root = await readJsonFile(t, 'rowbly.config.json');
