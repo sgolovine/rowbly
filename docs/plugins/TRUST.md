@@ -51,5 +51,5 @@ A loader for Plugin code that does not ship with Rowbly (WP10B) is not scheduled
 ## 4. What is not built
 
 - No external loader, package discovery or install command.
-- No approval list or authorization store.
+- No approval list or other record of local authorization.
 - No sandbox, worker or process boundary, and no permission UI.
