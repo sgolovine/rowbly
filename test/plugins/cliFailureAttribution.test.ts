@@ -77,7 +77,7 @@ const thrower = definePlugin({
   options: {
     'stories list': {
       options: [{ flags: '--boom <x>', description: 'boom' }],
-      input: ({ boom }) => boom,
+      filter: ({ boom }) => boom,
     },
     'stories create': {
       options: [{ flags: '--strict-name <x>', description: 'strict' }],
@@ -105,6 +105,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'INTERNAL',
       message: 'Plugin "thrower" failed in its command: command bug',
       details: { plugin: 'thrower', stage: 'command' },
+      hint: 'turn it off with `rowbly plugins disable thrower`',
     });
   });
 
@@ -115,6 +116,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'VALIDATION',
       message: 'bad value',
       details: { issues: [{ path: ['x'], message: 'no' }], plugin: 'thrower', stage: 'command' },
+      hint: 'fix x',
     });
   });
 
@@ -125,6 +127,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'INTERNAL',
       message: 'Plugin "thrower" failed in its command: a string',
       details: { plugin: 'thrower', stage: 'command' },
+      hint: 'turn it off with `rowbly plugins disable thrower`',
     });
   });
 
@@ -183,7 +186,7 @@ describe('Epics through the CLI (ARCH-04)', () => {
     expect(await run(['stories', 'edit', 'WEB-1', '--epic', 'Auth'], t.path, registry)).toBe(2);
     expect(jsonError()).toMatchObject({
       code: 'VALIDATION',
-      details: { plugin: 'epics', operation: 'stories.update', stage: 'transform', issues: expect.any(Array) },
+      details: { plugin: 'epics', operation: 'stories.update', issues: expect.any(Array) },
     });
 
     expect(await run(['stories', 'edit', 'WEB-1', '--epic', 'auth'], t.path, registry)).toBe(3);
@@ -215,6 +218,7 @@ describe('guards and replacements (D7)', () => {
       code: 'CONFLICT',
       message: 'Keeper keeps this Board',
       details: { plugin: 'keeper', operation: 'boards.remove', stage: 'guard', canForce: true },
+      hint: 'pass --force',
     });
   });
 

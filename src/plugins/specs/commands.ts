@@ -1,4 +1,4 @@
-import { type PluginDefinition, UsageError } from '../../plugin-api';
+import { type PluginCommands, UsageError } from '../../plugin-api';
 import {
   createSpec,
   deleteSpec,
@@ -20,7 +20,7 @@ interface SpecOptions {
   edit?: boolean;
 }
 
-export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) => {
+export const commands: PluginCommands = (group, cli) => {
   group
     .command('list')
     .description("List the Board's Board Specs")

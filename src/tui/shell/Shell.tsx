@@ -20,6 +20,7 @@ import {
 import { globalAction, type KeyHint } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
+import { bindAction } from './actionFocus';
 import { boardKey } from './boardKey';
 import { Footer } from './Footer';
 import { Header, type HeaderAction } from './Header';
@@ -57,20 +58,24 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
   const actions: HeaderAction[] = services
     ? plugins.flatMap((plugin) =>
-        plugin.actions
-          .filter((action) => action.target === 'none' || focus?.[action.target])
-          .map((action) => ({
-            key: action.key,
-            label: action.label,
-            run: () => {
-              const ui = pluginUi(plugin.id, router, toast);
-              // The adapter turns a synchronous throw and a rejection alike into one attributed
-              // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
-              invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
-                action.run({ focus: focus ?? {}, plugin: services.plugins.context(plugin.id), ui }),
-              ).catch((err: unknown) => toast.error(err));
+        plugin.actions.flatMap((action) => {
+          const run = bindAction(action, focus);
+          if (!run) return [];
+          return [
+            {
+              key: action.key,
+              label: action.label,
+              run: () => {
+                const ui = pluginUi(plugin.id, router, toast);
+                // The adapter turns a synchronous throw and a rejection alike into one attributed
+                // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
+                invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
+                  run({ plugin: services.plugins.context(plugin.id), ui }),
+                ).catch((err: unknown) => toast.error(err));
+              },
             },
-          })),
+          ];
+        }),
       )
     : [];
   const actionHints: KeyHint[] = actions.map((action) => ({ key: action.key, description: action.label }));

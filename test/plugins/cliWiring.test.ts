@@ -56,18 +56,17 @@ function recorder() {
     name: 'Recorder',
     description: 'Records its Plugin input',
     options: Object.fromEntries(
-      PLUGIN_OPTION_COMMANDS.map((command) => [
-        command,
-        {
-          options: [
-            { flags: '--rec <v>', description: '' },
-            { flags: '--no-rec', description: '' },
-            { flags: '--no-skip', description: 'a lone negation' },
-          ],
-          input: (values: Record<string, unknown>) =>
-            Object.values(values).some((v) => v !== undefined) ? values : undefined,
-        },
-      ]),
+      PLUGIN_OPTION_COMMANDS.map((command) => {
+        const options = [
+          { flags: '--rec <v>', description: '' },
+          { flags: '--no-rec', description: '' },
+          { flags: '--no-skip', description: 'a lone negation' },
+        ];
+        const convert = (values: Record<string, unknown>) =>
+          Object.values(values).some((v) => v !== undefined) ? values : undefined;
+        // `stories list` takes criteria (`filter`); the other commands take operation input (DX-12).
+        return [command, command === 'stories list' ? { options, filter: convert } : { options, input: convert }];
+      }),
     ),
     hooks: Object.fromEntries(
       Object.values(OPERATION_OF)

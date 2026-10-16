@@ -32,6 +32,24 @@ function specifiers(source: string): string[] {
   return found;
 }
 
+/**
+ * The module specifiers a file loads at run time: every specifier except those of `import type` and
+ * `export type`, which TypeScript erases. `import { type X }` still counts: under
+ * `verbatimModuleSyntax` it is kept as an import of the module.
+ */
+function runtimeSpecifiers(source: string): string[] {
+  const erased = new Set<string>();
+  for (const match of source.matchAll(/\b(?:import|export)\s+type\s[^;]*?\bfrom\s+['"]([^'"]+)['"]/g)) {
+    if (match[1]) erased.add(match[0]);
+  }
+  let rest = source;
+  for (const statement of erased) rest = rest.replace(statement, '');
+  return specifiers(rest);
+}
+
+/** UI and command-line packages, which the Service Layer may only name in types (ARCH-01). */
+const SURFACE_PACKAGES = /^(react|ink|commander)(\/|$)/;
+
 /** A file's path below src/, `/`-separated. */
 function srcPath(file: string): string {
   return relative(SRC, file).split(sep).join('/');
@@ -112,6 +130,19 @@ describe('architecture', async () => {
         if (!spec.startsWith('.')) continue;
         const target = layerOf(join(file, '..', spec));
         if (target !== '..' && !allowed.includes(target)) offenders.push(`${srcPath(file)} imports ${spec}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  // ARCH-01: the Plugin contract in services names Commander, React and Ink types, which are erased;
+  // loading them at run time would pull a surface into every command.
+  it('services load no React, Ink or Commander at run time; type imports are fine', async () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      if (layerOf(file) !== 'services') continue;
+      for (const spec of runtimeSpecifiers(await readFile(file, 'utf8'))) {
+        if (SURFACE_PACKAGES.test(spec)) offenders.push(`${srcPath(file)} imports ${spec}`);
       }
     }
     expect(offenders).toEqual([]);
@@ -203,6 +234,14 @@ describe('architecture', async () => {
     expect(specifiers("import { x } from '../../services';\nconst m = await import('./tui');")).toEqual([
       '../../services',
       './tui',
+    ]);
+    const typesOnly = "import type { Command } from 'commander';\nexport type {\n  Key,\n} from 'ink';";
+    expect(runtimeSpecifiers(typesOnly)).toEqual([]);
+    const injected = `${typesOnly}\nimport { Box } from 'ink';\nimport { type ReactNode } from 'react';\nawait import('commander');`;
+    expect(runtimeSpecifiers(injected).filter((spec) => SURFACE_PACKAGES.test(spec))).toEqual([
+      'ink',
+      'react',
+      'commander',
     ]);
   });
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { definePlugin } from '../../src/plugin-api';
+import { type AnyPluginDefinition, definePlugin } from '../../src/plugin-api';
 import { specs } from '../../src/plugins/specs';
 import {
   createSpec,
@@ -19,7 +19,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function setup(on: Record<string, true> = {}, registry = [specs]) {
+async function setup(on: Record<string, true> = {}, registry: readonly AnyPluginDefinition[] = [specs]) {
   const t = await pluginRoot({ specs: true, ...on });
   const clock = fixedClock();
   const loaded = await withPlugins(t, registry, { now: clock.now });

@@ -14,6 +14,7 @@ import {
   type Assignee,
   type CustomFieldValue,
   type EffectiveBoardConfig,
+  formatIssues,
   type Priority,
   type Slug,
   type Stage,
@@ -269,7 +270,10 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
     return changes.putStory({ ...story, updatedAt: toTimestamp(ctx.now()) });
   }
 
-  /** Each Plugin filter in `filter.plugins` must match, through its Plugin's `filterStories`. */
+  /**
+   * Each Plugin filter in `filter.plugins` must match, through its Plugin's `filterStories`. A filter is
+   * parsed by the Plugin's `storyFilterSchema` once here, before any Story is checked (DX-07).
+   */
   function pluginMatcher(filter: StoryFilter): (story: Story) => boolean {
     const checks = Object.entries(filter.plugins ?? {})
       .filter(([, value]) => value !== undefined)
@@ -279,9 +283,19 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
           throw new UsageError(`Plugin "${id}" cannot filter Stories`, { hint: 'is it on? see `rowbly plugins list`' });
         }
         const match = plugin.definition.filterStories;
+        const schema = plugin.definition.storyFilterSchema;
+        const parsed = schema ? schema.safeParse(value) : { success: true as const, data: value };
+        if (!parsed.success) {
+          throw new ValidationError(
+            `Plugin "${id}" filter is not valid: ${formatIssues(parsed.error.issues, 'filter')}`,
+            { details: { plugin: id, stage: 'filter', issues: parsed.error.issues } },
+          );
+        }
+        const criteria = parsed.data;
         const context = ops.context(id);
         // A throwing filter fails the list, attributed; it never reads as "no match" (DX-39).
-        return (story: Story) => invokePluginSync({ plugin: id, stage: 'filter' }, () => match(story, value, context));
+        return (story: Story) =>
+          invokePluginSync({ plugin: id, stage: 'filter' }, () => match(story, criteria, context));
       });
     return (story) => checks.every((check) => check(story));
   }

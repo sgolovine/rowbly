@@ -3,16 +3,17 @@ import {
   ConflictError,
   DataIntegrityError,
   errorMessage,
+  isSlug,
   isTaskId,
   NotFoundError,
   PluginError,
   parseTaskId,
   ValidationError,
 } from '../../core';
-import type { LocalState, Story, Task } from '../../schemas';
+import { formatIssues, type LocalState, type Story, type Task } from '../../schemas';
 import type { Repositories } from '../../storage';
 import { coordinated } from '../coordination';
-import type { RowblyContext, Services } from '../types';
+import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, listPluginFiles, readPluginFile } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
@@ -34,6 +35,7 @@ import {
   type PluginChangeSet,
   type PluginContext,
   type PluginHookContext,
+  type PluginInputSchemas,
   type PluginOperationOptions,
   type PluginReadContext,
   type Replacement,
@@ -162,8 +164,9 @@ export function createOperationRunner(
     // The Plugins that are on now run this operation's hooks, whatever happens to the host meanwhile.
     const plugins = [...active()];
     const changes = new CoreChangeSet(ctx.root, repos);
-    // Every hook sees the same frozen input, so no hook can change what another sees.
-    const hookInput: DeepReadonly<OperationInput> = frozenCopy<OperationInput>(input);
+    // Every hook sees the same frozen input, so no hook can change what another sees. Each Plugin's
+    // input is already parsed by its schema, before anything is read or saved (DX-07).
+    const hookInput: DeepReadonly<OperationInput> = frozenCopy<OperationInput>(parsePluginInputs(plugins, name, input));
     const hooksOf = (plugin: ActivePlugin) => plugin.definition.hooks?.[name] as AnyHooks | undefined;
     const at = (plugin: string, stage: Invocation['stage']): Invocation => ({
       plugin,
@@ -462,6 +465,33 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
 }
 
 /** The context of commands, screens and Actions: core services without `plugins`, `setup` or doctor fixes. */
+/**
+ * `input` with each Plugin's input of operation `name` parsed by that Plugin's `inputs` schema (DX-07).
+ * Only input that was given is parsed. A failure is a `ValidationError` naming the Plugin, with the
+ * issues relative to its input, so the TUI can show them on the Plugin's fields.
+ */
+function parsePluginInputs(plugins: readonly ActivePlugin[], name: string, input: OperationInput): OperationInput {
+  const given = input.plugins;
+  if (!given) return input;
+  let parsed: PluginInput | undefined;
+  for (const plugin of plugins) {
+    const { id } = plugin.definition;
+    const inputs: PluginInputSchemas | undefined = plugin.definition.inputs;
+    const schema = inputs?.[name as CoreOperationName];
+    const value = given[id];
+    if (!schema || value === undefined) continue;
+    const result = schema.safeParse(value);
+    if (!result.success) {
+      throw new ValidationError(
+        `Plugin "${id}" input of ${name} is not valid: ${formatIssues(result.error.issues, 'input')}`,
+        { details: { plugin: id, operation: name, issues: result.error.issues } },
+      );
+    }
+    parsed = { ...(parsed ?? given), [id]: result.data };
+  }
+  return parsed ? { ...input, plugins: parsed } : input;
+}
+
 function pluginContext(
   ctx: RowblyContext,
   repos: Repositories,
@@ -477,6 +507,15 @@ function pluginContext(
     body: (changes: PluginChangeSet) => Promise<R>,
     { result }: PluginOperationOptions<R> = {},
   ): Promise<R> {
+    // A local name is one segment, so `epics.epics.delete` cannot happen by accident (ARCH-02).
+    if (!isSlug(name)) {
+      return Promise.reject(
+        new PluginError(`Plugin "${id}" named an operation "${name}"; use one lower-kebab-case word`, {
+          details: { plugin: id, operation: name },
+          hint: `name its operations like "create", so they run as "${id}.create"`,
+        }),
+      );
+    }
     const full = `${id}.${name}`;
     // The finalizer is Plugin code too: it runs through the adapter, as the body does.
     const latest: Finalizer<R> | undefined = result

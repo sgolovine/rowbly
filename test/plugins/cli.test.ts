@@ -112,6 +112,7 @@ describe('the pipeline in command mode', () => {
         code: 'CONFLICT',
         message: 'Notes refuses a Story named "Nope"',
         details: { plugin: 'notes', operation: 'stories.create', stage: 'guard' },
+        hint: 'pick another name',
       },
     });
     const board = await cli(t, ['boards', 'delete', 'web', '--yes']);
@@ -128,6 +129,7 @@ describe('the pipeline in command mode', () => {
         code: 'INTERNAL',
         message: 'Plugin "faulty" failed in the transform of boards.update: kaboom',
         details: { plugin: 'faulty', operation: 'boards.update', stage: 'transform' },
+        hint: 'turn it off with `rowbly plugins disable faulty`',
       },
     });
     expect((await readJsonFile(t, 'boards/web/board.config.json')).name).toBe('Website');

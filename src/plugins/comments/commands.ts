@@ -1,4 +1,4 @@
-import { colors, type PluginCommandEnv, type PluginDefinition } from '../../plugin-api';
+import { type Command, colors, type PluginCommandEnv, type PluginCommands } from '../../plugin-api';
 import { addComment, deleteComment, editComment, getComment, listComments } from './comments';
 import type { Comment } from './model';
 
@@ -10,7 +10,7 @@ interface BodyOptions {
 
 const TARGET = 'a Story Key (WEB-42) or a Task id (WEB-42.1)';
 
-export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) => {
+export const commands: PluginCommands = (group, cli) => {
   group.addHelpText('after', `\n<target> is ${TARGET}.`);
 
   group
@@ -51,7 +51,7 @@ export const commands: NonNullable<PluginDefinition['commands']> = (group, cli) 
     );
 };
 
-function withBody<C extends { option(flags: string, description: string): C }>(cmd: C): C {
+function withBody(cmd: Command): Command {
   return cmd
     .option('--body <text>', 'Comment body (markdown)')
     .option('--body-file <path>', 'read the body from a file, or - for stdin')

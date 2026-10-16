@@ -2,7 +2,7 @@
 // Plugin input (`plugins: { <id>: … }`, ADR-0012). Each Plugin's callbacks run through the shared
 // adapter (`invokePlugin`, ADR-0020 §5), in their stage's scope and attributed to the Plugin. Only a Plugin whose fields loaded and changed contributes
 // form input, so an unchanged or failed one never changes stored data (ADR-0020 §3).
-import { errorMessage, RowblyError } from '../../../core';
+import { errorMessage, RowblyError, ValidationError } from '../../../core';
 import type { Slug, Story } from '../../../schemas';
 import {
   type Invocation,
@@ -51,6 +51,28 @@ export function failureMessage(failure: PluginFieldFailure): string {
 /** Plugin fields are named `plugin:<id>:<name>` in a core form. */
 function fieldName(id: string, name: string): string {
   return `${PREFIX}${id}:${name}`;
+}
+
+/**
+ * `err` with each issue of a Plugin's input moved onto that Plugin's form field, so the form shows it
+ * inline (DX-07). An attributed `ValidationError` (`details.plugin`) has issue paths relative to the
+ * Plugin's input; an issue whose first segment is one of its field names goes to `plugin:<id>:<name>`.
+ * Other issues of that Plugin stay form-level, prefixed with the Plugin. Any other error is unchanged.
+ */
+export function onPluginFields(err: unknown, set: PluginFieldSet): unknown {
+  if (!(err instanceof ValidationError)) return err;
+  const { plugin, issues } = err.details;
+  const own = typeof plugin === 'string' ? set.loaded.get(plugin) : undefined;
+  if (typeof plugin !== 'string' || !own || !Array.isArray(issues)) return err;
+  const mapped = (issues as { path?: unknown[]; message?: string }[]).map((issue) => {
+    const [first, ...rest] = issue.path ?? [];
+    if (typeof first === 'string' && own.some((field) => field.name === first)) {
+      return { ...issue, path: [fieldName(plugin, first), ...rest] };
+    }
+    const where = issue.path?.length ? `${issue.path.map(String).join('.')}: ` : '';
+    return { ...issue, path: [], message: `Plugin "${plugin}": ${where}${issue.message ?? 'invalid'}` };
+  });
+  return new ValidationError(err.message, { details: { ...err.details, issues: mapped }, hint: err.hint, cause: err });
 }
 
 /** Plugin `id`'s values in a core form, by its own field names. */
