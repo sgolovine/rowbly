@@ -509,10 +509,12 @@ function pluginContext(
   ): Promise<R> {
     // A local name is one segment, so `epics.epics.delete` cannot happen by accident (ARCH-02).
     if (!isSlug(name)) {
-      throw new PluginError(`Plugin "${id}" named an operation "${name}"; use one lower-kebab-case word`, {
-        details: { plugin: id, operation: name },
-        hint: `name its operations like "create", so they run as "${id}.create"`,
-      });
+      return Promise.reject(
+        new PluginError(`Plugin "${id}" named an operation "${name}"; use one lower-kebab-case word`, {
+          details: { plugin: id, operation: name },
+          hint: `name its operations like "create", so they run as "${id}.create"`,
+        }),
+      );
     }
     const full = `${id}.${name}`;
     // The finalizer is Plugin code too: it runs through the adapter, as the body does.
