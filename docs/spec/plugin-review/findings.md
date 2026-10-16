@@ -457,9 +457,9 @@ Package: [WP07B-perf-and-harness.md](packages/WP07B-perf-and-harness.md)
 
 | Finding | Review owner | Priority | Disposition | Issue | Required outcome | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [DX-15](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-15) | WP07 | P2 | Recommended / see scope | Useful repository test helpers are not a public plugin-author harness | Required. | open |
-| [PERF-07](../../reviews/plugin-architecture/other-areas.md#perf-07) | WP07 | P2 | Recommended / see scope | No repeatable scalability/read-budget benchmark | Required. | open |
-| [TEST-01](../../reviews/plugin-architecture/other-areas.md#test-01) | WP07 | Optional | Optional / bounded | Isolation exists, but authors must assemble internal harness wiring | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | open |
+| [DX-15](../../reviews/plugin-architecture/straightforwardness-for-plugin-authors.md#dx-15) | WP07 | P2 | Recommended / see scope | Useful repository test helpers are not a public plugin-author harness | Required. | done — `src/plugin-api/testing.ts` (`createPluginTestHost`, `validatePluginDefinition`; not exported from the package, WP10B); `testingHarness.test.ts`, `testingHarnessTui.test.tsx`, `testingHarnessBuild.test.ts` |
+| [PERF-07](../../reviews/plugin-architecture/other-areas.md#perf-07) | WP07 | P2 | Recommended / see scope | No repeatable scalability/read-budget benchmark | Required. | done — `pnpm bench:plugins` (`test/performance/bench.ts`, opt-in); read budgets for PERF-01/02/03/04/08/09 in `test/performance/readBudgets.test.ts` |
+| [TEST-01](../../reviews/plugin-architecture/other-areas.md#test-01) | WP07 | Optional | Optional / bounded | Isolation exists, but authors must assemble internal harness wiring | Evaluate; implement only if the entry's condition holds, else `deferred: <reason>`. | done — the harness holds the wiring; Epics, Specs and Comments service suites run on it (`pluginTestHost`); `testingHarness.test.ts` covers isolation, determinism, disposal and order |
 
 ## WP09B
 
