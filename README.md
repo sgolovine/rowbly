@@ -409,10 +409,12 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm typecheck` | `tsc --noEmit` (strict) |
 | `pnpm lint` | Biome lint and format check |
 | `pnpm format` | Format with Biome |
-| `pnpm test` | Build once, then run vitest |
+| `pnpm test` | Run every vitest project; the `cli` project builds the CLIs into its own `.test-dist/run-*` folder first |
+| `pnpm test:unit` | Run the suites that need no CLI build (services, storage, TUI) |
 | `pnpm test:watch` | vitest in watch mode |
+| `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
 
-The build specification lives in [`docs/spec/`](docs/spec/README.md) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
+The build specifications live in [`docs/spec/`](docs/spec/) (the v1 build in [`initial-spec/`](docs/spec/initial-spec/README.md), the Plugin remediation in [`plugin-review/`](docs/spec/plugin-review/README.md)) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
 
 - `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
 - `test/tui/helpers.tsx` provides `renderTui()` with a `press(...keys)` helper and `waitForFrame(app, text | RegExp | predicate)`, which polls the screen. Wait for what a screen shows rather than sleeping a fixed time.
