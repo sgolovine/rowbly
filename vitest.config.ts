@@ -14,6 +14,8 @@ const cliSuites = include
 
 export default defineConfig({
   test: {
+    // Frame assertions and snapshots use plain text, regardless of terminal or CI color support.
+    env: { NO_COLOR: '1', FORCE_COLOR: '0' },
     // Room for async TUI and file-heavy tests on a loaded machine.
     testTimeout: 20_000,
     hookTimeout: 20_000,
