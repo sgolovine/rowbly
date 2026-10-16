@@ -11,6 +11,7 @@ import {
   ValidationError,
 } from '../../core';
 import { currentScope, type ExecutionScope, inScope, inScopeSync, newOperationId, type Stage } from './executionScope';
+import { failure, trace, traceClock, tracing } from './trace';
 
 /** Which Plugin callback runs: its Plugin, its stage and, inside an operation, the operation. */
 export interface Invocation {
@@ -36,20 +37,47 @@ const attributedErrors = new WeakSet<object>();
  * work `fn` leaves running (an unawaited promise, a timer) is outside it (D8).
  */
 export async function invokePlugin<T>(at: Invocation, fn: (scope: ExecutionScope) => T | Promise<T>): Promise<T> {
+  const scope = scopeOf(at);
+  const started = tracing() ? traceClock() : undefined;
   try {
-    return await inScope(scopeOf(at), fn);
+    const value = await inScope(scope, fn);
+    if (started !== undefined) traced(scope, started);
+    return value;
   } catch (err) {
-    throw attribute(at, err);
+    const thrown = attribute(at, err);
+    if (started !== undefined) traced(scope, started, thrown);
+    throw thrown;
   }
 }
 
 /** `invokePlugin` for a synchronous callback (stages `filter` and `option-input`). */
 export function invokePluginSync<T>(at: Invocation, fn: (scope: ExecutionScope) => T): T {
+  const scope = scopeOf(at);
+  const started = tracing() ? traceClock() : undefined;
   try {
-    return inScopeSync(scopeOf(at), fn);
+    const value = inScopeSync(scope, fn);
+    if (started !== undefined) traced(scope, started);
+    return value;
   } catch (err) {
-    throw attribute(at, err);
+    const thrown = attribute(at, err);
+    if (started !== undefined) traced(scope, started, thrown);
+    throw thrown;
   }
+}
+
+/** Records one callback in the trace (OBS-01): where it ran, how long it took and how it ended. */
+function traced(scope: Omit<ExecutionScope, 'ended'>, started: number, thrown?: unknown): void {
+  // The callback's own line names its Plugin and stage; `failedAt` is for whole operations.
+  const failed = thrown === undefined ? undefined : failure(thrown);
+  trace({
+    operationId: scope.operationId,
+    operation: scope.operation,
+    plugin: scope.plugin,
+    stage: scope.stage,
+    ms: traceClock() - started,
+    outcome: failed?.outcome ?? 'ok',
+    ...(failed?.code ? { code: failed.code } : {}),
+  });
 }
 
 /**

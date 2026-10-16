@@ -20,6 +20,7 @@ import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperatio
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
+import { countChanges, failure, type TraceEvent, trace, traceClock, tracing } from './trace';
 import {
   type Bagged,
   type BagInspection,
@@ -181,7 +182,15 @@ export function createOperationRunner(
       plugin: hookContextOf(plugin),
     });
 
-    const result = await coordinator.hold(operation, async (): Promise<R> => {
+    // The operation as a whole, in the trace (OBS-01); nothing is measured when the trace is off.
+    const started = tracing() ? traceClock() : undefined;
+    const traceOperation = (outcome: Pick<TraceEvent, 'outcome' | 'code' | 'failedAt'>) => {
+      if (started === undefined) return;
+      const ms = traceClock() - started;
+      trace({ operationId: operation.id, operation: name, plugin: null, stage: 'operation', ms, ...outcome });
+    };
+
+    const held = coordinator.hold(operation, async (): Promise<R> => {
       let result: R;
       const replacement = replacementFor<R>(plugins, name);
       if (replacement) {
@@ -251,11 +260,26 @@ export function createOperationRunner(
       }
 
       if (latest && finalizable) result = await finalize(latest, changes, result, name, owner);
-      await inScope({ operationId: operation.id, operation: name, plugin: null, stage: 'commit' }, () =>
-        changes.save(),
-      );
+      const saving = tracing() ? traceClock() : undefined;
+      try {
+        await inScope({ operationId: operation.id, operation: name, plugin: null, stage: 'commit' }, () =>
+          changes.save(),
+        );
+      } catch (err) {
+        if (saving !== undefined) traceCommit(operation.id, name, saving, changes, failure(err));
+        throw err;
+      }
+      if (saving !== undefined) traceCommit(operation.id, name, saving, changes, { outcome: 'ok' });
       return result;
     });
+    let result: R;
+    try {
+      result = await held;
+    } catch (err) {
+      traceOperation(failure(err));
+      throw err;
+    }
+    traceOperation({ outcome: 'ok' });
     syncContext(changes);
 
     const reactors = plugins.filter((plugin) => hooksOf(plugin)?.react);
@@ -323,12 +347,35 @@ export function createOperationRunner(
     if (timedOut) {
       // Handles bound to the reaction stop working; its detached work keeps running (D8).
       if (scope) scope.ended = true;
+      if (tracing()) {
+        trace({
+          operationId: at.operationId ?? '',
+          operation: at.operation ?? '',
+          plugin: id,
+          stage: 'reaction',
+          ms,
+          outcome: 'timeout',
+        });
+      }
       ctx.warn(`Plugin "${id}" did not finish reacting to ${at.operation} within ${duration(ms)}`);
     }
   }
 
   const runner: OperationRunner = { context, hookContext, run: run as OperationRunner['run'] };
   return runner;
+}
+
+/** Records a commit in the trace: its outcome and how many changes of each type it saved. */
+function traceCommit(
+  operationId: string,
+  operation: string,
+  started: number,
+  changes: CoreChangeSet,
+  outcome: Pick<TraceEvent, 'outcome' | 'code'>,
+): void {
+  const ms = traceClock() - started;
+  const counts = countChanges(changes.changes);
+  trace({ operationId, operation, plugin: null, stage: 'commit', ms, ...outcome, changes: counts });
 }
 
 /** The replacement a pinned Plugin declares for `name`, with that Plugin (CQ-33). */
@@ -464,7 +511,6 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
   };
 }
 
-/** The context of commands, screens and Actions: core services without `plugins`, `setup` or doctor fixes. */
 /**
  * `input` with each Plugin's input of operation `name` parsed by that Plugin's `inputs` schema (DX-07).
  * Only input that was given is parsed. A failure is a `ValidationError` naming the Plugin, with the
@@ -492,6 +538,7 @@ function parsePluginInputs(plugins: readonly ActivePlugin[], name: string, input
   return parsed ? { ...input, plugins: parsed } : input;
 }
 
+/** The context of commands, screens and Actions: core services without `plugins`, `setup` or doctor fixes. */
 function pluginContext(
   ctx: RowblyContext,
   repos: Repositories,

@@ -38,6 +38,14 @@ export {
 } from './plugins/host';
 export { attribute as attributePluginError, type Invocation, invokePlugin, invokePluginSync } from './plugins/invoke';
 export { pluginStoryRows, pluginTaskRows } from './plugins/service';
+export {
+  formatTrace,
+  setTraceSink,
+  type TraceEvent,
+  type TraceSink,
+  traceBuffer,
+  traceRequested,
+} from './plugins/trace';
 export type * from './plugins/types';
 export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';
 export type * from './types';
