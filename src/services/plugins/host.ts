@@ -1,4 +1,3 @@
-import { Option } from 'commander';
 import { isSlug } from '../../core';
 import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
@@ -203,12 +202,21 @@ function newClaims(reserved: ReservedNames): Claims {
     options: new Map(
       Object.entries(reserved.options).map(([command, names]) => [
         command,
-        new Set((names ?? []).map((name) => new Option(`--${name}`).attributeName())),
+        new Set((names ?? []).map((name) => attributeName(name))),
       ]),
     ),
     keys: new Set(reserved.keys),
     replaced: new Set(),
   };
+}
+
+/**
+ * The attribute a long flag's value has in Commander's parsed options, from the flag's name without
+ * `--`: `add-spec` → `addSpec`, and `no-epic` → `epic` (both polarities share it). The same rule as
+ * Commander's `Option.attributeName`, without loading Commander in the Service Layer (ARCH-01).
+ */
+export function attributeName(name: string): string {
+  return name.replace(/^no-/, '').replace(/-([^-])/g, (_dash, next: string) => next.toUpperCase());
 }
 
 /** One long lower-kebab-case flag with an optional value: `--epic <id>`, `--no-epic`, `--spec [slug]`. */
@@ -256,7 +264,7 @@ function checkNames(
         problem(path, `option "${flags}" on "rowbly ${command}" must be one long lower-kebab-case flag`);
         continue;
       }
-      const attribute = new Option(flags).attributeName();
+      const attribute = attributeName(name);
       const pair = own.get(attribute) ?? {};
       const polarity = name.startsWith('no-') ? 'negative' : 'positive';
       const other = pair.positive ?? pair.negative;
