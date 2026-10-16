@@ -14,7 +14,7 @@ const cliSuites = include
 
 export default defineConfig({
   test: {
-    // Command tests spawn the built CLI; give them room on a loaded machine.
+    // Room for async TUI and file-heavy tests on a loaded machine.
     testTimeout: 20_000,
     hookTimeout: 20_000,
     // `pnpm test` runs both projects; `pnpm test:unit` runs every suite that needs no CLI build.
@@ -23,7 +23,15 @@ export default defineConfig({
       {
         extends: true,
         // Builds both CLIs from the current source, once per run, into a folder of the run's own.
-        test: { name: 'cli', include: cliSuites, globalSetup: ['test/helpers/globalSetup.ts'] },
+        test: {
+          name: 'cli',
+          include: cliSuites,
+          globalSetup: ['test/helpers/globalSetup.ts'],
+          // A command test spawns the built CLI many times in a row (one Epics test takes ~7 s on an
+          // idle machine, ~13 s under load); give it room on a loaded machine. A limit, not a budget.
+          testTimeout: 60_000,
+          hookTimeout: 60_000,
+        },
       },
     ],
   },
