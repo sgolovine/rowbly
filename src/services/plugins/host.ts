@@ -1,6 +1,6 @@
 import { Option } from 'commander';
 import { isSlug } from '../../core';
-import type { DataRoot, PluginEntry, RowblyConfig } from '../../schemas';
+import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
@@ -160,8 +160,7 @@ export function parseSettings(definition: AnyPluginDefinition, raw: Record<strin
   if (!definition.settings) return raw;
   const result = definition.settings.safeParse(raw);
   if (result.success) return result.data;
-  const summary = result.error.issues.map((i) => `${i.path.join('.') || 'settings'}: ${i.message}`).join('; ');
-  throw new Error(`invalid settings: ${summary}`);
+  throw new Error(`invalid settings: ${formatIssues(result.error.issues, 'settings')}`);
 }
 
 /** A failure to read the config shows up in every command anyway; Plugins just stay off. */

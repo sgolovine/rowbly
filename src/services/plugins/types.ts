@@ -198,7 +198,11 @@ export interface PluginChangeSet extends PluginChangeSetView {
 
 // ── Operations (ADR-0012) ───────────────────────────────────────────────────
 
-/** Every operation input may carry Plugin input as `plugins: { <id>: … }`. */
+/**
+ * An operation's input, as hooks and `OperationRunner.run` see it: any object that may carry Plugin
+ * input as `plugins: { <id>: … }`. The same type as a service's `OperationOptions`; this name is used
+ * where the whole input is meant, not only a service method's trailing options (CQ-21).
+ */
 export type OperationInput = OperationOptions;
 
 /** The name of every core operation, in Service order. `CoreOperationName` is derived from it. */
@@ -288,14 +292,32 @@ export interface CoreOperations {
 type InputOf<K> = K extends CoreOperationName ? CoreOperations[K]['input'] : OperationInput;
 type ResultOf<K> = K extends CoreOperationName ? CoreOperations[K]['result'] : unknown;
 
+/**
+ * Schemas for this Plugin's input (`plugins.<id>`) of core operations, by operation name (DX-07). Each
+ * is optional: declare only the operations the Plugin takes input for. A payload that was given is
+ * parsed before the operation's body and every hook run; a payload that fails is a `ValidationError`
+ * naming the Plugin, with the issues, and nothing is saved. Hooks then get the parsed value (defaults
+ * and transforms applied). An absent payload (`undefined`) is never parsed.
+ */
+export type PluginInputSchemas = { readonly [K in CoreOperationName]?: ZodType };
+
+/** The parsed type of this Plugin's input of operation `K`, or `unknown` when it declares no schema. */
+export type PluginPayload<In, K> = K extends keyof In ? (In[K] extends ZodType ? z.output<In[K]> : unknown) : unknown;
+
+/** What an input converter returns for operation `K`: the schema's input type, or `unknown` without one. */
+type PayloadInput<In, K> = K extends keyof In ? (In[K] extends ZodType ? z.input<In[K]> : unknown) : unknown;
+
 /** What every event of an operation carries. */
-interface EventBase<I, S> {
+interface EventBase<I, S, P> {
   /** The operation's name, such as `stories.create`. */
   name: string;
   /** A frozen copy that every hook of the operation shares. */
   input: DeepReadonly<I>;
-  /** This Plugin's part of `input.plugins`. */
-  pluginInput: unknown;
+  /**
+   * This Plugin's part of `input.plugins`: parsed by its `inputs` schema for this operation when it
+   * declares one, else as given (`unknown`). `undefined` when no input was given for this Plugin.
+   */
+  pluginInput: DeepReadonly<P> | undefined;
   /** The context of the Plugin whose hook runs. */
   plugin: PluginHookContext<S>;
 }
@@ -306,7 +328,7 @@ interface EventBase<I, S> {
  * fails the operation, and nothing is saved. Errors from `core()` pass through with their core code.
  * Not calling `core()` is allowed; the replacement's result is then the operation's result.
  */
-export interface ReplacementEvent<I, R, S> extends EventBase<I, S> {
+export interface ReplacementEvent<I, R, S, P = unknown> extends EventBase<I, S, P> {
   changes: PluginChangeSet;
   core(): Promise<R>;
 }
@@ -316,7 +338,7 @@ export interface ReplacementEvent<I, R, S> extends EventBase<I, S> {
  * `result` is the body or replacement result, before any transform (ARCH-03): for `stories.create`,
  * `result.key` is the created Story. `changes` stops working when the transform returns.
  */
-export interface TransformEvent<I, R, S> extends EventBase<I, S> {
+export interface TransformEvent<I, R, S, P = unknown> extends EventBase<I, S, P> {
   result: DeepReadonly<R>;
   changes: PluginChangeSet;
 }
@@ -325,7 +347,7 @@ export interface TransformEvent<I, R, S> extends EventBase<I, S> {
  * Stage `guard`: sees the Change Set after every transform and may reject the operation. `result` is
  * as in `TransformEvent`. The view has no writers; a writer kept from a transform throws here.
  */
-export interface GuardEvent<I, R, S> extends EventBase<I, S> {
+export interface GuardEvent<I, R, S, P = unknown> extends EventBase<I, S, P> {
   result: DeepReadonly<R>;
   changes: PluginChangeSetView;
 }
@@ -335,7 +357,7 @@ export interface GuardEvent<I, R, S> extends EventBase<I, S> {
  * one frozen snapshot that every reaction shares. It acts only outside Rowbly's data: starting an
  * operation throws, even from a timer it leaves running. A failure only warns.
  */
-export interface ReactionEvent<I, R, S> extends EventBase<I, S> {
+export interface ReactionEvent<I, R, S, P = unknown> extends EventBase<I, S, P> {
   result: DeepReadonly<R>;
   changes: ChangeSetView;
 }
@@ -348,28 +370,31 @@ export interface ReactionEvent<I, R, S> extends EventBase<I, S> {
  */
 export type GuardResult = { reject: string; hint?: string; canForce?: boolean } | undefined;
 
-export interface OperationHooks<I, R, S> {
+export interface OperationHooks<I, R, S, P = unknown> {
   /** Sees the final Change Set before the save and may reject the operation. `guard() {}` is fine. */
-  guard?(event: GuardEvent<I, R, S>): GuardResult | Promise<GuardResult>;
+  guard?(event: GuardEvent<I, R, S, P>): GuardResult | Promise<GuardResult>;
   /** Changes the Change Set before the save. */
-  transform?(event: TransformEvent<I, R, S>): void | Promise<void>;
+  transform?(event: TransformEvent<I, R, S, P>): void | Promise<void>;
   /**
    * Runs after the save. It acts only outside Rowbly's data; a failure only warns. It has 5 s: then
    * Rowbly warns and goes on, though work it left running is not stopped. Return or await all work.
    */
-  react?(event: ReactionEvent<I, R, S>): void | Promise<void>;
+  react?(event: ReactionEvent<I, R, S, P>): void | Promise<void>;
 }
 
-/** Hooks by operation name: core names are typed, other Plugins' operations (`<id>.<name>`) are not. */
-export type OperationHookMap<S> = {
-  [K in CoreOperationName | (string & {})]?: OperationHooks<InputOf<K>, ResultOf<K>, S>;
+/**
+ * Hooks by operation name: core names are typed, other Plugins' operations (`<id>.<name>`) are not.
+ * `(string & {})` admits any other string while editors still complete the core names (CQ-17).
+ */
+export type OperationHookMap<S, In = Record<never, never>> = {
+  [K in CoreOperationName | (string & {})]?: OperationHooks<InputOf<K>, ResultOf<K>, S, PluginPayload<In, K>>;
 };
 
 /** Runs instead of the core operation and fills the Change Set; `core()` runs the core operation. */
-export type Replacement<I, R, S> = (event: ReplacementEvent<I, R, S>) => Promise<R>;
+export type Replacement<I, R, S, P = unknown> = (event: ReplacementEvent<I, R, S, P>) => Promise<R>;
 
-export type ReplacementMap<S> = {
-  [K in CoreOperationName]?: Replacement<InputOf<K>, ResultOf<K>, S>;
+export type ReplacementMap<S, In = Record<never, never>> = {
+  [K in CoreOperationName]?: Replacement<InputOf<K>, ResultOf<K>, S, PluginPayload<In, K>>;
 };
 
 // ── The Plugin's context and capabilities (ADR-0009, ADR-0020) ───────────────
@@ -560,18 +585,76 @@ export const PLUGIN_OPTION_COMMANDS = [
 
 export type PluginOptionCommand = (typeof PLUGIN_OPTION_COMMANDS)[number];
 
-/** A Plugin's options on one core command. */
-export interface PluginCommandOptions {
-  /** Long flags only, such as `--epic <id>` or `--no-epic`. */
-  options: { flags: string; description: string; repeatable?: boolean }[];
-  /**
-   * Turns the parsed values of these options (by commander attribute name, e.g. `epic`) into this
-   * Plugin's input (`plugins.<id>`), or the filter for `stories list`; `undefined` when none was given.
-   * Only options the user gave have a value: a lone `--no-x` gives `x: false` when used and
-   * `undefined` otherwise, never a default `true`. With both `--x` and `--no-x`, the last one wins.
-   */
-  input(values: Record<string, unknown>): unknown;
+/** The operation each option-taking core command runs; `stories list` runs none (it filters). */
+export interface PluginOptionOperations {
+  'assignees add': 'assignees.add';
+  'assignees edit': 'assignees.update';
+  'assignees remove': 'assignees.remove';
+  'boards create': 'boards.create';
+  'boards edit': 'boards.update';
+  'boards delete': 'boards.remove';
+  'stories create': 'stories.create';
+  'stories edit': 'stories.update';
+  'stories move': 'stories.move';
+  'stories rank': 'stories.rank';
+  'stories delete': 'stories.remove';
+  'tasks create': 'tasks.create';
+  'tasks edit': 'tasks.update';
+  'tasks move': 'tasks.move';
+  'tasks delete': 'tasks.remove';
 }
+
+/** One option a Plugin adds to a core command: one long lower-kebab-case flag, such as `--epic <id>` or `--no-epic`. */
+export interface PluginOption {
+  flags: string;
+  description: string;
+  /** Collect every occurrence into a list (`--spec a --spec b` → `['a', 'b']`); commas stay literal. */
+  repeatable?: boolean;
+}
+
+/**
+ * The raw values of a Plugin's options, keyed by Commander attribute name (`--add-spec` → `addSpec`,
+ * `--no-epic` → `epic`). Only options the user gave have a value, so an omitted option is `undefined`:
+ * - `--x <v>` gives a string, and a repeatable one a list of strings in the order given;
+ * - `--x [v]` gives a string, or `true` without a value;
+ * - `--x` gives `true` and `--no-x` gives `false`; with both, the last one wins.
+ *
+ * Values are not split on commas; a converter that wants `a,b` to mean two values opts in with
+ * `parseRepeatable` (CQ-03). An explicitly empty value (`--x ''`) is `''`, not `undefined`.
+ */
+export type PluginOptionValues = Readonly<Record<string, string | readonly string[] | boolean | undefined>>;
+
+/** A Plugin's options on a core command that runs an operation. */
+export interface PluginInputOptions<I = unknown> {
+  options: PluginOption[];
+  /**
+   * Turns the option values into this Plugin's input of the command's operation (`plugins.<id>`), or
+   * `undefined` for none. The input is parsed by `inputs[<operation>]` when the Plugin declares it.
+   * By convention `undefined` changes nothing, an explicit `null` clears, and a value sets.
+   */
+  input(values: PluginOptionValues): I | undefined;
+}
+
+/** A Plugin's options on `stories list`: criteria, not operation input (DX-12). */
+export interface PluginFilterOptions<F = unknown> {
+  options: PluginOption[];
+  /**
+   * Turns the option values into this Plugin's Story filter (`StoryFilter.plugins.<id>`), or
+   * `undefined` to leave the list unfiltered by this Plugin. It is parsed by `storyFilterSchema` when
+   * the Plugin declares one, once per list, and then given to `filterStories`.
+   */
+  filter(values: PluginOptionValues): F | undefined;
+}
+
+/** A Plugin's options on one core command: `filter` on `stories list`, `input` everywhere else. */
+export type PluginCommandOptions = PluginInputOptions | PluginFilterOptions;
+
+/** A Plugin's options by core command, typed by its `inputs` and `storyFilterSchema`. */
+export type PluginOptionsMap<In = Record<never, never>, FS extends ZodType = ZodType> = {
+  [K in PluginOptionCommand]?: K extends keyof PluginOptionOperations
+    ? PluginInputOptions<PayloadInput<In, PluginOptionOperations[K]>>
+    : PluginFilterOptions<z.input<FS>>;
+};
 
 /** A labelled value shown in `stories show` or `tasks show`, and on the TUI Story or Task screen. */
 export interface PluginRow {
@@ -619,6 +702,18 @@ export interface ActionFocus {
   task?: Task;
 }
 
+/**
+ * The focus an Action of each target is run with. The TUI shows and runs an Action only when its
+ * target is in focus: a Board for `board`, a Story for `story`, and a Task together with its Story for
+ * `task` (the Task screen always has both). `none` runs anywhere, with whatever is in focus.
+ */
+export interface ActionFocusOf {
+  board: ActionFocus & { board: BoardConfig };
+  story: ActionFocus & { story: Story };
+  task: ActionFocus & { story: Story; task: Task };
+  none: ActionFocus;
+}
+
 /** Opens and shows things from a Plugin's screens and Actions. */
 export interface PluginUi {
   /**
@@ -642,22 +737,31 @@ export interface PluginUi {
   error(err: unknown): void;
 }
 
-/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
-export interface PluginAction<S> {
+/** An Action whose target is `T`; its `run` gets that target's focus (DX-30). */
+export interface PluginActionOf<T extends ActionTarget, S = Record<string, unknown>> {
   /** One character that no core screen uses. */
   key: string;
   label: string;
-  target: ActionTarget;
-  run(args: { focus: ActionFocus; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
+  target: T;
+  run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
+/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
+export type PluginAction<S = Record<string, unknown>> = {
+  [T in ActionTarget]: PluginActionOf<T, S>;
+}[ActionTarget];
+
+/** A value of a form field. The TUI's `FormValue` is this type. */
 export type PluginFormValue = string | number | boolean | string[] | null;
+
+/** How a form field is edited. The TUI's `FieldKind` is this type (CQ-18). */
+export type PluginFieldKind = 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
 
 /** A field a Plugin adds to a core form; `name` is unique within the Plugin. */
 export interface PluginFormField {
   name: string;
   label: string;
-  kind: 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
+  kind: PluginFieldKind;
   required?: boolean;
   /**
    * Choices for `select` and `multiselect`. A select cycles through these only, so "no value" is an
@@ -694,7 +798,7 @@ export interface PluginFormField {
  * | existing, invalid bag (`unavailable`) | reset | called with the field `null` | the Plugin's explicit clear |
  * | any | `fields` threw | never called | bag kept as stored |
  */
-export interface PluginStoryForm<S> {
+export interface PluginStoryForm<S = Record<string, unknown>> {
   fields(args: { boardId: Slug; story: Story | null; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**
    * This Plugin's input, or `undefined` for no change. `values` and `initialValues` hold the
@@ -710,7 +814,7 @@ export interface PluginStoryForm<S> {
   }): unknown;
 }
 
-export interface PluginStoryFilter<S> {
+export interface PluginStoryFilter<S = Record<string, unknown>> {
   fields(args: { boardId: Slug; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**
    * This Plugin's filter (`StoryFilter.plugins.<id>`), or `undefined` for none. Not called when the
@@ -721,7 +825,7 @@ export interface PluginStoryFilter<S> {
   describe(values: Record<string, PluginFormValue>): string;
 }
 
-export interface PluginScreenProps<S> {
+export interface PluginScreenProps<S = Record<string, unknown>> {
   /**
    * The params `ui.open` gave, with `title` but without the route metadata `plugin` and `screen`.
    * They are not checked: validate what the screen needs, e.g. with a schema, and show an error for
@@ -732,7 +836,7 @@ export interface PluginScreenProps<S> {
   ui: PluginUi;
 }
 
-export interface PluginStoryTabProps<S> {
+export interface PluginStoryTabProps<S = Record<string, unknown>> {
   story: Story;
   /** Whether the tab gets keys now. */
   active: boolean;
@@ -740,7 +844,7 @@ export interface PluginStoryTabProps<S> {
   ui: PluginUi;
 }
 
-export interface PluginTaskTabProps<S> {
+export interface PluginTaskTabProps<S = Record<string, unknown>> {
   story: Story;
   task: Task;
   /** Whether the tab gets keys now. */
@@ -749,7 +853,7 @@ export interface PluginTaskTabProps<S> {
   ui: PluginUi;
 }
 
-export interface PluginBoardSectionProps<S> {
+export interface PluginBoardSectionProps<S = Record<string, unknown>> {
   board: BoardConfig;
   plugin: PluginContext<S>;
   ui: PluginUi;
@@ -763,7 +867,7 @@ export interface PluginLink {
 }
 
 /** A Plugin's TUI part, loaded only when the TUI starts. */
-export interface PluginTui<S> {
+export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
   screens?: Record<string, ComponentType<PluginScreenProps<S>>>;
   home?: PluginLink[];
@@ -785,26 +889,48 @@ export interface PluginBagSchemas {
   local?: ZodType;
 }
 
-/** A Plugin: everything it adds, declared up front. Only `id`, `name` and `description` are required. */
-export interface PluginDefinition<S = Record<string, unknown>> {
+/**
+ * A Plugin: everything it adds, declared up front. Only `id`, `name` and `description` are required.
+ * `S` is its settings type, `In` its `inputs` schemas and `FS` its `storyFilterSchema`; `definePlugin`
+ * infers all three.
+ */
+export interface PluginDefinition<
+  S = Record<string, unknown>,
+  In extends PluginInputSchemas = Record<never, never>,
+  FS extends ZodType = ZodType,
+> {
   /** A slug; also its command (`rowbly <id> …`), its bag key and its folder name. */
   id: string;
   name: string;
   description: string;
-  /** Checks the Plugin's entry in `rowbly.config.json` (without `enabled`) and each Board bag merged over it. */
+  /**
+   * Checks the Plugin's entry in `rowbly.config.json` (without `enabled`) and each Board bag merged
+   * over it; invalid settings fail the Plugin's load with the reason. Without a schema the settings
+   * are the raw entry, unchecked, typed `Record<string, unknown>` (CQ-53, DX-35). `z.object` drops
+   * unknown keys from the parsed settings; `z.strictObject` rejects them, so a typo fails the load.
+   * Neither changes the stored entry.
+   */
   settings?: ZodType<S>;
   bags?: PluginBagSchemas;
   /** Runs when the Plugin loads; throwing makes it fail to load. */
   start?(args: { settings: S }): void | Promise<void>;
-  hooks?: OperationHookMap<S>;
+  /** Schemas for this Plugin's input of core operations, by operation (`PluginInputSchemas`). */
+  inputs?: In;
+  /**
+   * The schema of this Plugin's Story filter (`StoryFilter.plugins.<id>`), from the CLI, the TUI or a
+   * service caller alike. It is parsed once per list, before any Story is checked; a filter that
+   * fails is a `ValidationError` naming the Plugin, with the issues.
+   */
+  storyFilterSchema?: FS;
+  hooks?: OperationHookMap<S, In>;
   /** Operations this Plugin runs instead of core. Two Plugins cannot replace the same operation. */
-  replaces?: ReplacementMap<S>;
+  replaces?: ReplacementMap<S, In>;
   /** Adds verbs to `rowbly <id>`, which is created for it. */
   commands?(group: Command, cli: PluginCli<S>): void;
-  /** Options on core commands. */
-  options?: { [K in PluginOptionCommand]?: PluginCommandOptions };
-  /** Whether `story` matches this Plugin's filter (`StoryFilter.plugins.<id>`). */
-  filterStories?(story: Story, filter: unknown, plugin: PluginContext<S>): boolean;
+  /** Options on core commands: `input` on commands that run an operation, `filter` on `stories list`. */
+  options?: PluginOptionsMap<In, FS>;
+  /** Whether `story` matches this Plugin's filter, parsed by `storyFilterSchema` when declared. */
+  filterStories?(story: Story, filter: z.output<FS>, plugin: PluginContext<S>): boolean;
   /** Rows for `stories show` and the TUI Story screen. */
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
   /** Rows for `tasks show` and the TUI Task screen. */
@@ -816,5 +942,8 @@ export interface PluginDefinition<S = Record<string, unknown>> {
 }
 
 /** A definition of any settings type, as the registry holds it. */
-// biome-ignore lint/suspicious/noExplicitAny: the registry holds Plugins with different settings types.
-export type AnyPluginDefinition = PluginDefinition<any>;
+// biome-ignore lint/suspicious/noExplicitAny: the registry holds Plugins with different settings, inputs and filters.
+export type AnyPluginDefinition = PluginDefinition<any, any, any>;
+
+/** The type of a Plugin's `commands`, for declaring them in their own module (DX-23). */
+export type PluginCommands<S = Record<string, unknown>> = NonNullable<PluginDefinition<S>['commands']>;

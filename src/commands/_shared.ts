@@ -3,7 +3,7 @@ import { confirm, isCancel, select, text } from '@clack/prompts';
 import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { printWarnings } from '../output';
-import type { PluginHost, PluginInput, RowblyContext, Services } from '../services';
+import type { PluginHost, PluginInput, PluginOptionValues, RowblyContext, Services } from '../services';
 import { createContext, createServices, invokePluginSync } from '../services';
 import { editTextInEditor, readTextFile } from '../storage';
 
@@ -41,7 +41,8 @@ export interface AttachedPluginOptions {
   id: string;
   /** The Commander attribute names of its options, e.g. `epic`. */
   attributes: string[];
-  input(values: Record<string, unknown>): unknown;
+  /** Its `input` (operation input) or, on `stories list`, its `filter` (criteria). */
+  convert(values: PluginOptionValues): unknown;
 }
 
 /** The Plugins of a program: their host, and which of them add options to each core command. */
@@ -77,12 +78,13 @@ export function commandPath(cmd: Command): string {
  * both `--x` and `--no-x`, the last one wins.
  */
 export function pluginInput(cmd: Command): PluginInput | undefined {
-  const opts = cmd.opts<Record<string, unknown>>();
+  // Plugin options are long flags, optionally repeatable, so Commander gives only these value types.
+  const opts = cmd.opts<PluginOptionValues>();
   const given = (name: string) => (cmd.getOptionValueSource(name) === 'cli' ? opts[name] : undefined);
   const input: PluginInput = {};
-  for (const { id, attributes, input: toInput } of pluginsOf(cmd)?.options.get(commandPath(cmd)) ?? []) {
-    const values = Object.fromEntries(attributes.map((name) => [name, given(name)]));
-    const value = invokePluginSync({ plugin: id, stage: 'option-input' }, () => toInput(values));
+  for (const { id, attributes, convert } of pluginsOf(cmd)?.options.get(commandPath(cmd)) ?? []) {
+    const values: PluginOptionValues = Object.fromEntries(attributes.map((name) => [name, given(name)]));
+    const value = invokePluginSync({ plugin: id, stage: 'option-input' }, () => convert(values));
     if (value !== undefined) input[id] = value;
   }
   return Object.keys(input).length > 0 ? input : undefined;
@@ -208,15 +210,7 @@ async function readStream(stream: NodeJS.ReadableStream): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
-/**
- * Flattens a repeatable flag that may also be comma-separated: `['a,b', 'c']` → `['a', 'b', 'c']`.
- * Trims, drops empty entries and duplicates, and keeps first-seen order.
- */
-export function parseRepeatable(values: string | readonly string[] | undefined): string[] {
-  const list = typeof values === 'string' ? [values] : (values ?? []);
-  const items = list.flatMap((value) => value.split(',')).map((item) => item.trim());
-  return [...new Set(items.filter((item) => item !== ''))];
-}
+export { parseRepeatable } from '../core';
 
 /** Commander argument parser that collects every occurrence of a repeatable flag. */
 export function collect(value: string, previous: string[] = []): string[] {

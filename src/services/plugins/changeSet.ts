@@ -5,6 +5,7 @@ import {
   type BoardConfig,
   BoardConfigSchema,
   type DataRoot,
+  formatIssues,
   type LocalState,
   LocalStateSchema,
   type RowblyConfig,
@@ -800,8 +801,9 @@ function checkName(name: string): string {
 function valid<T>(schema: ZodType<T>, what: string, value: T): T {
   const result = schema.safeParse(value);
   if (result.success) return result.data;
-  const summary = result.error.issues.map((i) => `${i.path.join('.') || what}: ${i.message}`).join('; ');
-  throw new ValidationError(`invalid ${what}: ${summary}`, { details: { issues: result.error.issues } });
+  throw new ValidationError(`invalid ${what}: ${formatIssues(result.error.issues, what)}`, {
+    details: { issues: result.error.issues },
+  });
 }
 
 async function orNull<T>(promise: Promise<T>): Promise<T | null> {

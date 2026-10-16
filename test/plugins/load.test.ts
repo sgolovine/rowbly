@@ -152,7 +152,7 @@ describe('loading Plugins (ADR-0010)', () => {
         id,
         name: id,
         description: '',
-        options: { 'stories list': { options: [{ flags, description: '' }], input: () => undefined } },
+        options: { 'stories list': { options: [{ flags, description: '' }], filter: () => undefined } },
       });
     const t = await pluginRoot({ one: true, two: true, three: true });
     const { host } = await withPlugins(t, [

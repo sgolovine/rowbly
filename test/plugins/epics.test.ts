@@ -80,12 +80,12 @@ describe('Epics operations', () => {
     await services.stories.update(story.key, { plugins: { epics: { epic: 'auth' } } });
     expect(await services.stories.list(null, { plugins: { epics: 'auth' } })).toHaveLength(1);
     await expect(services.stories.update(story.key, { plugins: { epics: { epic: 'Not A Slug' } } })).rejects.toThrow(
-      'Invalid Epic input: epic: ',
+      'Plugin "epics" input of stories.update is not valid: epic: ',
     );
     for (const filter of [{ epic: 'auth' }, 3, 'Not A Slug', true]) {
       await expect(services.stories.list(null, { plugins: { epics: filter } })).rejects.toMatchObject({
         code: 'VALIDATION',
-        message: expect.stringContaining('Invalid Epic filter'),
+        message: expect.stringContaining('Plugin "epics" filter is not valid'),
       });
     }
     expect(await services.stories.list(null, { plugins: {} })).toHaveLength(1);

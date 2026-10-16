@@ -1,11 +1,13 @@
 import { Box, type DOMElement, type Key, Text, useInput } from 'ink';
 import { useRef, useState } from 'react';
 import { ValidationError } from '../../core';
+import type { PluginFieldKind, PluginFormValue } from '../../services';
 import { useDirty, useIsActive, useLayout, useMouse, useToast } from '../hooks';
 import { TextArea } from './TextArea';
 import { TextInput } from './TextInput';
 
-export type FieldKind = 'text' | 'multiline' | 'number' | 'boolean' | 'date' | 'select' | 'multiselect';
+/** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
+export type FieldKind = PluginFieldKind;
 
 export interface FormField {
   /** Key in the submitted values; also matched against `ValidationError` issue paths. */
@@ -18,7 +20,7 @@ export interface FormField {
 }
 
 /** text/multiline: string · number: number | null · boolean · date: `YYYY-MM-DD` | null · select: string | null · multiselect: string[] */
-export type FormValue = string | number | boolean | string[] | null;
+export type FormValue = PluginFormValue;
 export type FormValues = Record<string, FormValue>;
 
 export interface FormProps {

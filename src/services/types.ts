@@ -146,7 +146,12 @@ export interface StoryFilter {
   search?: string;
   /** `--sort`; the default is Stage order, then Rank. */
   sort?: StorySort;
-  /** Plugin filters, keyed by Plugin id; each Plugin's `filterStories` decides what matches. */
+  /**
+   * Plugin filters, keyed by Plugin id; each Plugin's `filterStories` decides what matches. A filter
+   * that is not `undefined` for a Plugin that is off, unknown or has no `filterStories` is a
+   * `UsageError` (exit 2), not "no match" (CQ-72). A filter its `storyFilterSchema` rejects is a
+   * `ValidationError` naming the Plugin.
+   */
   plugins?: PluginInput;
 }
 
@@ -241,7 +246,10 @@ export type CoreDoctorCode =
   | 'ORPHAN_FOLDER'
   | 'LEGACY_DATA';
 
-/** A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. */
+/**
+ * A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. `(string & {})`
+ * admits any other string while editors still complete the core codes (CQ-17).
+ */
 export type DoctorCode = CoreDoctorCode | (string & {});
 
 export interface DoctorFinding {

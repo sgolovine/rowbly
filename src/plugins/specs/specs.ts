@@ -19,7 +19,7 @@ import {
 } from '../../plugin-api';
 
 export const SpecsBag = z.object({ specs: z.array(SlugSchema) });
-const SpecsInput = z.object({
+export const SpecsInput = z.object({
   specs: z.array(SlugSchema).optional(),
   addSpecs: z.array(SlugSchema).optional(),
   removeSpecs: z.array(SlugSchema).optional(),

@@ -77,7 +77,7 @@ const thrower = definePlugin({
   options: {
     'stories list': {
       options: [{ flags: '--boom <x>', description: 'boom' }],
-      input: ({ boom }) => boom,
+      filter: ({ boom }) => boom,
     },
     'stories create': {
       options: [{ flags: '--strict-name <x>', description: 'strict' }],
@@ -183,7 +183,7 @@ describe('Epics through the CLI (ARCH-04)', () => {
     expect(await run(['stories', 'edit', 'WEB-1', '--epic', 'Auth'], t.path, registry)).toBe(2);
     expect(jsonError()).toMatchObject({
       code: 'VALIDATION',
-      details: { plugin: 'epics', operation: 'stories.update', stage: 'transform', issues: expect.any(Array) },
+      details: { plugin: 'epics', operation: 'stories.update', issues: expect.any(Array) },
     });
 
     expect(await run(['stories', 'edit', 'WEB-1', '--epic', 'auth'], t.path, registry)).toBe(3);

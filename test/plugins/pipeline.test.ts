@@ -40,7 +40,7 @@ describe('transform (ADR-0012)', () => {
     const t = await pluginRoot({ notes: true });
     const { services } = await withPlugins(t, [notes]);
     await expect(services.stories.create('web', { name: 'A', plugins: { notes: { note: 1 } } })).rejects.toThrow(
-      'invalid Notes input',
+      'Plugin "notes" input of stories.create is not valid: note: ',
     );
     expect(await services.stories.list('web', {})).toEqual([]);
     expect((await services.stories.create('web', { name: 'B' })).plugins).toBeUndefined();

@@ -1,4 +1,12 @@
-import { definePlugin, isSlug, type PluginCommandOptions, type PluginFinding, UsageError } from '../../plugin-api';
+import {
+  definePlugin,
+  isSlug,
+  type PluginFinding,
+  type PluginInputOptions,
+  type PluginOptionValues,
+  parseRepeatable,
+  UsageError,
+} from '../../plugin-api';
 import { commands } from './commands';
 import {
   applySpecs,
@@ -7,18 +15,23 @@ import {
   listSpecSlugs,
   parseSpecsInput,
   SpecsBag,
+  SpecsInput,
   withoutSpecs,
 } from './specs';
 
-function slugs(value: unknown): string[] | undefined {
-  if (value === undefined) return undefined;
-  const values = (Array.isArray(value) ? value : [value]).flatMap((v) => String(v).split(',')).filter(Boolean);
+/**
+ * Board Spec slugs from a repeatable `--spec`-like option, which also takes `a,b` (opting in to
+ * `parseRepeatable`: trimmed, empty entries and duplicates dropped); `undefined` when it was not given.
+ */
+function slugs(value: PluginOptionValues[string]): string[] | undefined {
+  if (value === undefined || typeof value === 'boolean') return undefined;
+  const values = parseRepeatable(value);
   if (values.some((slug) => !isSlug(slug))) throw new UsageError('Board Spec links need lower-kebab-case slugs');
   return values;
 }
 
 const specOption = { flags: '--spec <slug>', description: 'link to a Board Spec (repeatable)', repeatable: true };
-const setOptions: PluginCommandOptions = {
+const setOptions: PluginInputOptions<SpecsInput> = {
   options: [specOption],
   input: ({ spec }) => (spec === undefined ? undefined : { specs: slugs(spec) }),
 };
@@ -28,6 +41,8 @@ export const specs = definePlugin({
   name: 'Specs',
   description: 'Spec documents for Stories and Boards',
   bags: { story: SpecsBag },
+  // Checked before the operation runs: a malformed payload is VALIDATION and nothing is saved (DX-07).
+  inputs: { 'stories.create': SpecsInput, 'stories.update': SpecsInput },
   commands,
   hooks: {
     'stories.create': {
@@ -101,7 +116,7 @@ export const specs = definePlugin({
     },
     'stories list': {
       options: [{ ...specOption, description: 'only Stories linked to any of these Board Specs (repeatable)' }],
-      input: ({ spec }) => slugs(spec),
+      filter: ({ spec }) => slugs(spec),
     },
   },
   // An invalid bag is unknown rather than "no links", so it matches no Spec filter; doctor reports it.

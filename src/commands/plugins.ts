@@ -7,6 +7,7 @@ import {
   invokePlugin,
   onOff,
   type PluginCli,
+  type PluginCommandOptions,
   type PluginHost,
   type PluginStatus,
   pluginServices,
@@ -144,12 +145,20 @@ function stageCli(program: Command, definition: AnyPluginDefinition): StagedCli 
         return option;
       });
       const attributes = [...new Set(built.map((o) => o.attributeName()))];
-      options.push({ path, command, options: built, attached: { id, attributes, input: spec.input } });
+      options.push({ path, command, options: built, attached: { id, attributes, convert: converterOf(path, spec) } });
     }
   } catch (err) {
     throw new Error(`its options failed: ${messageOf(err)}`);
   }
   return { group, options };
+}
+
+/** `filter` on `stories list` (criteria), `input` on commands that run an operation (DX-12). */
+function converterOf(path: string, spec: PluginCommandOptions): AttachedPluginOptions['convert'] {
+  const wanted = path === 'stories list' ? 'filter' : 'input';
+  const convert: unknown = (spec as unknown as Record<string, unknown>)[wanted];
+  if (typeof convert !== 'function') throw new Error(`its options on "rowbly ${path}" need ${wanted}(values)`);
+  return (values) => convert.call(spec, values);
 }
 
 function publish(program: Command, attached: ProgramPlugins, { group, options }: StagedCli): void {
