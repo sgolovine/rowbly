@@ -51,7 +51,10 @@ export async function waitForFrame(
 
 export type Rendered = ReturnType<typeof render> & { press(...keys: string[]): Promise<void> };
 
-/** Renders `node` and returns a `press` helper that types each key and waits for the frame. */
+/**
+ * Renders `node` and returns a `press` helper that paces input for Ink. It does not wait for async
+ * work: use `waitForFrame` for the state needed by the next key before pressing it.
+ */
 export function renderTui(node: ReactElement): Rendered {
   const result = render(node);
   return Object.assign(result, {
