@@ -6,7 +6,7 @@ import { createSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
 import { acquireLock } from '../../src/storage';
 import { io } from '../../src/storage/io';
-import { makeBoard, makeStory } from '../helpers';
+import { deferred, makeBoard, makeStory } from '../helpers';
 import { KEYS, tick, waitForFrame } from '../tui/helpers';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
@@ -231,18 +231,19 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     // Another holder keeps the Data Root busy, so the list's reload on return waits in the lock queue.
     const lock = await acquireLock(t.path, { operation: 'test.hold' });
     const realpath = io.realpath;
-    let queued!: () => void;
-    const reloading = new Promise<void>((resolve) => {
-      queued = resolve;
-    });
-    vi.spyOn(io, 'realpath').mockImplementation((path) => {
-      queued();
+    const reloading = deferred();
+    const reload = vi.spyOn(io, 'realpath').mockImplementation((path) => {
+      reloading.resolve();
       return realpath(path);
     });
-    await app.press(KEYS.escape);
-    await reloading;
-    await app.press(KEYS.enter);
-    await lock.release();
+    try {
+      await app.press(KEYS.escape);
+      await reloading.promise;
+      await app.press(KEYS.enter);
+    } finally {
+      reload.mockRestore();
+      await lock.release();
+    }
     await waitForFrame(app, (f) => f.includes('Specs › auth─') && f.includes('Requirements'));
     app.unmount();
   });

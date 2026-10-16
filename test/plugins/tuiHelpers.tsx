@@ -1,6 +1,7 @@
 // The TUI with Plugins, opened as the entry point opens it, and keyboard helpers that find a field or
 // a list item by what it shows instead of by counting key presses.
 import { stripVTControlCharacters } from 'node:util';
+import { onTestFinished } from 'vitest';
 import { reservedNames } from '../../src/main';
 import {
   type AnyPluginDefinition,
@@ -65,6 +66,7 @@ export async function openPluginApp(
   const app = renderTui(
     <App ctx={ctx} services={services} initial={initial} toasts={toasts} plugins={plugins} loadPlugins={loader} />,
   );
+  onTestFinished(() => app.unmount());
   return { app, ctx, services, host, toasts, warnings };
 }
 

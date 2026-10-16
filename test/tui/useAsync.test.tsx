@@ -5,6 +5,7 @@ import { render } from 'ink-testing-library';
 import { describe, expect, it } from 'vitest';
 import { NotFoundError, ValidationError } from '../../src/core';
 import { createToastStore, ToastContext, type ToastStore, useAsync } from '../../src/tui/hooks';
+import { deferred } from '../helpers';
 import { waitForFrame } from './helpers';
 
 function Probe({ fn, dep = 0 }: { fn: () => Promise<string>; dep?: number }) {
@@ -16,15 +17,6 @@ function Probe({ fn, dep = 0 }: { fn: () => Promise<string>; dep?: number }) {
 
 function mount(node: React.ReactElement, toasts: ToastStore = createToastStore()) {
   return { app: render(<ToastContext.Provider value={toasts}>{node}</ToastContext.Provider>), toasts };
-}
-
-/** A promise that the test settles. */
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((r) => {
-    resolve = r;
-  });
-  return { promise, resolve };
 }
 
 describe('useAsync', () => {
