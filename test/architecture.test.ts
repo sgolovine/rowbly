@@ -57,11 +57,13 @@ function srcPath(file: string): string {
 
 /**
  * The layer of a file under src/: its top-level folder, or file name for `cli.ts` and `main.ts`.
- * `plugin-api/tui.ts` is a layer of its own, because only it may import the TUI.
+ * `plugin-api/tui.ts` is a layer of its own, because only it may import the TUI, and so is the test
+ * harness `plugin-api/testing.ts`, which wires core for a Plugin's tests and no Plugin may import.
  */
 function layerOf(file: string): string {
   const path = srcPath(file);
   if (path === 'plugin-api/tui.ts') return 'plugin-api-tui';
+  if (path === 'plugin-api/testing.ts') return 'plugin-api-testing';
   const [first = ''] = path.split('/');
   return first.replace(/\.tsx?$/, '');
 }
@@ -94,6 +96,7 @@ const ALLOWED: Record<string, string[]> = {
   tui: ['core', 'schemas', 'storage', 'services', 'output', 'tui'],
   'plugin-api': ['core', 'schemas', 'services', 'output', 'plugin-api'],
   'plugin-api-tui': ['tui', 'plugin-api-tui'],
+  'plugin-api-testing': ['core', 'schemas', 'storage', 'services', 'main', 'plugin-api', 'plugin-api-testing'],
   plugins: ['plugin-api', 'plugin-api-tui', 'plugins'],
   main: ['core', 'storage', 'services', 'commands', 'output', 'tui'],
   cli: ['main', 'plugins'],
@@ -162,7 +165,8 @@ describe('architecture', async () => {
           continue;
         }
         const target = srcPath(join(file, '..', spec));
-        const api = target === 'plugin-api' || target.startsWith('plugin-api/');
+        // The test harness wires core; a Plugin's tests use it, never the Plugin.
+        const api = (target === 'plugin-api' || target.startsWith('plugin-api/')) && target !== 'plugin-api/testing';
         const own = target === `plugins/${plugin}` || target.startsWith(`plugins/${plugin}/`);
         if (!api && !own) {
           offenders.push(`${srcPath(file)} imports ${spec}`);
@@ -179,7 +183,9 @@ describe('architecture', async () => {
       if (file.endsWith(`${sep}cli.ts`)) continue;
       for (const spec of specifiers(await readFile(file, 'utf8'))) {
         const target = spec.startsWith('.') ? join(file, '..', spec) : '';
-        const api = target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep));
+        const api =
+          (target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep))) &&
+          target !== join(SRC, 'plugin-api', 'testing');
         if (!api && !target.startsWith(FIXTURES)) offenders.push(`${relative(FIXTURES, file)} imports ${spec}`);
       }
     }
@@ -223,6 +229,7 @@ describe('architecture', async () => {
     expect(pluginOf(plugin)).toBe('demo');
     expect(pluginOf(join(SRC, 'plugins', 'index.ts'))).toBeNull();
     expect(layerOf(join(SRC, 'plugin-api', 'tui.ts'))).toBe('plugin-api-tui');
+    expect(layerOf(join(SRC, 'plugin-api', 'testing.ts'))).toBe('plugin-api-testing');
     expect(tuiAreaOf('screens/home/HomeScreen.tsx')).toBe('screens/home');
     expect(tuiAreaOf('components/Modal')).toBe('components');
     expect(tuiAreaOf('components')).toBeNull();
