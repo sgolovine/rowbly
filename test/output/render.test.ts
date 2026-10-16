@@ -21,6 +21,14 @@ describe('printError', () => {
     );
   });
 
+  it('includes the hint when the error has one (contracts §10)', () => {
+    const { out, streams } = capture();
+    printError(new NotFoundError('no such board', { hint: 'run `rowbly boards list`' }), { json: true, streams });
+    expect(JSON.parse(out.stderr)).toEqual({
+      error: { code: 'NOT_FOUND', message: 'no such board', details: {}, hint: 'run `rowbly boards list`' },
+    });
+  });
+
   it('always includes details and reports unknown errors as INTERNAL', () => {
     const { out, streams } = capture();
     printError(new ValidationError('bad'), { json: true, streams });

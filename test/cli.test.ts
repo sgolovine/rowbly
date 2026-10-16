@@ -72,7 +72,14 @@ describe('rowbly CLI', () => {
     const { stdout, stderr, exitCode } = await runCli(['doctor', '--json']);
     expect(exitCode).toBe(5);
     expect(stdout).toBe('');
-    expect(JSON.parse(stderr)).toEqual({ error: { code: 'NO_DATA_ROOT', message: 'no Data Root found', details: {} } });
+    expect(JSON.parse(stderr)).toEqual({
+      error: {
+        code: 'NO_DATA_ROOT',
+        message: 'no Data Root found',
+        details: {},
+        hint: 'run `rowbly init` to create one',
+      },
+    });
   });
 
   it('exits 2 for an unknown command or option', async () => {

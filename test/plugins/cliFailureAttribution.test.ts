@@ -105,6 +105,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'INTERNAL',
       message: 'Plugin "thrower" failed in its command: command bug',
       details: { plugin: 'thrower', stage: 'command' },
+      hint: 'turn it off with `rowbly plugins disable thrower`',
     });
   });
 
@@ -115,6 +116,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'VALIDATION',
       message: 'bad value',
       details: { issues: [{ path: ['x'], message: 'no' }], plugin: 'thrower', stage: 'command' },
+      hint: 'fix x',
     });
   });
 
@@ -125,6 +127,7 @@ describe('CLI attribution (RES-16, OBS-02)', () => {
       code: 'INTERNAL',
       message: 'Plugin "thrower" failed in its command: a string',
       details: { plugin: 'thrower', stage: 'command' },
+      hint: 'turn it off with `rowbly plugins disable thrower`',
     });
   });
 
@@ -215,6 +218,7 @@ describe('guards and replacements (D7)', () => {
       code: 'CONFLICT',
       message: 'Keeper keeps this Board',
       details: { plugin: 'keeper', operation: 'boards.remove', stage: 'guard', canForce: true },
+      hint: 'pass --force',
     });
   });
 
