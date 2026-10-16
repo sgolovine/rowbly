@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink';
 import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
-import type { CustomFieldValuesInput } from '../../../services';
+import type { CustomFieldValuesInput, PluginInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
 import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
@@ -8,7 +8,7 @@ import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
-import { storyFormFields, storyFormInput } from './pluginFields';
+import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
 import { boardIdFor, NONE } from './shared';
 import { assigneesValue, priorityValue } from './storyFormValues';
 
@@ -32,7 +32,13 @@ export function StoryFormScreen({ params }: ScreenProps) {
   if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
   const { story, boardId, choices, extra } = data.data;
 
-  const submit = async (values: FormValues) => {
+  // A Plugin's invalid input shows on that Plugin's fields (DX-07).
+  const submit = (values: FormValues) =>
+    save(values).catch((err: unknown) => {
+      throw onPluginFields(err, extra);
+    });
+
+  const save = async (values: FormValues) => {
     const fields = customFieldValues(choices.customFields, values);
     const common = {
       name: String(values.name),
@@ -41,7 +47,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
       priority: priorityValue(values.priority),
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
-      ...withPlugins(storyFormInput(plugins, extra, values, story)),
+      ...pluginInputOptions(storyFormInput(plugins, extra, values, story)),
     };
     const stage = String(values.stage);
     if (!story) {
@@ -138,7 +144,8 @@ function customFieldValues(defs: readonly CustomFieldDef[], values: FormValues):
   return result;
 }
 
-function withPlugins(plugins: ReturnType<typeof storyFormInput>) {
+/** `{ plugins }` for the operation, or `{}` when no Plugin gave input (CQ-14). */
+function pluginInputOptions(plugins: PluginInput | undefined): { plugins?: PluginInput } {
   return plugins ? { plugins } : {};
 }
 
