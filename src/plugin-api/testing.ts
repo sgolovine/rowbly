@@ -6,12 +6,15 @@
 // published from the package yet (WP10B).
 //
 // Testing a Plugin's TUI part: render its component with `ink-testing-library`, passing the context
-// from `host.context(id)` and a `PluginUi` whose methods record calls, e.g.
+// from `host.context(id)` and a `PluginUi` whose methods record calls (test/plugins/
+// testingHarnessTui.test.tsx runs this recipe). This covers one screen, tab or section; a test of
+// navigation between screens needs the whole TUI, which is not part of the harness yet. E.g.
 //
 //   const host = await createPluginTestHost({ plugins: [notes] });
 //   const ui = { open: vi.fn(), openStory: vi.fn(), openTask: vi.fn(), openBoard: vi.fn(), back: vi.fn(),
 //     toast: vi.fn(), error: vi.fn() };
-//   const { lastFrame, stdin } = render(<NotesScreen params={{}} plugin={host.context('notes')} ui={ui} />);
+//   const plugin = host.context<NotesSettings>('notes');
+//   const { lastFrame, stdin } = render(<NotesScreen params={{}} plugin={plugin} ui={ui} />);
 //   await vi.waitFor(() => expect(lastFrame()).toContain('Notes'));  // wait for its data before keys
 //   stdin.write('\r');
 //
@@ -75,8 +78,11 @@ export interface PluginTestHost {
   warnings: string[];
   /** Each Plugin's status: on, off or failed to load (with `reason`). */
   status(): PluginStatus[];
-  /** The context Plugin `id` gets in its commands, screens and Actions. */
-  context(id: string): PluginContext;
+  /**
+   * The context Plugin `id` gets in its commands, screens and Actions. `S` is its settings type, as
+   * its own code declares it (`host.context<NotesSettings>('notes')`); it is not checked.
+   */
+  context<S = Record<string, unknown>>(id: string): PluginContext<S>;
   /** Removes the Data Root. Call it when the test finishes. */
   dispose(): Promise<void>;
 }
@@ -126,7 +132,7 @@ export async function createPluginTestHost(options: PluginTestHostOptions): Prom
       services,
       warnings,
       status: () => host.status(),
-      context: (id) => services.plugins.context(id),
+      context: <S>(id: string) => services.plugins.context(id) as PluginContext<S>,
       dispose,
     };
   } catch (err) {
