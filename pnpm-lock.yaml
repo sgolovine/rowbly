@@ -39,6 +39,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.15
         version: 2.5.15
+      '@tanstack/intent':
+        specifier: ^0.5.5
+        version: 0.5.5
       '@types/node':
         specifier: ^22.20.5
         version: 22.20.5
@@ -707,6 +710,11 @@ packages:
     resolution: {integrity: sha512-IhV6ew/DuzUWwHaYmlh7MrPCV3lKFUq/amTEwysi4r/mwNPAEfAMh5dYWeTSPTeMy2pFHGMEWYtPkHzfX3tG5A==}
     cpu: [x64]
     os: [win32]
+
+  '@tanstack/intent@0.5.5':
+    resolution: {integrity: sha512-Ei5RqUWgV96HrezTEyDbScy0wZN+17dNo59Am8/3ncv0YIaIxApkiX5LkM488wxe4a1Imdi09nhjFxblxwLMSQ==}
+    engines: {node: '>=20.12.0'}
+    hasBin: true
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -1867,6 +1875,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.64.5':
     optional: true
+
+  '@tanstack/intent@0.5.5': {}
 
   '@types/chai@5.2.3':
     dependencies:
