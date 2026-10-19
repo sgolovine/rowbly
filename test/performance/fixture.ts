@@ -36,7 +36,6 @@ export async function generateFixture(path: string, shape: FixtureShape): Promis
   await mkdir(path, { recursive: true });
   await writeFixture(join(path, 'rowbly.config.json'), RowblyConfigSchema, {
     version: 1,
-    assignees: [{ handle: 'alice', name: 'Alice' }],
     plugins: Object.fromEntries(FIXTURE_PLUGINS.map((id) => [id, { enabled: plugins }])),
   });
   await writeFixture(join(path, 'boards/web/board.config.json'), BoardConfigSchema, {
@@ -94,7 +93,6 @@ export function fixtureStory(i: number, { epics, specs }: { epics: number; specs
     description: `Description of story ${i}. `.repeat(3),
     stage: STAGES[i % STAGES.length] as string,
     rank: `a${i.toString(36).padStart(5, '0')}`,
-    assignees: i % 3 === 0 ? ['alice'] : [],
     priority: i % 5 === 0 ? 'P1' : null,
     labels: i % 7 === 0 ? ['bug'] : [],
     dueDate: null,

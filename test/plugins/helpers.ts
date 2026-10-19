@@ -26,10 +26,10 @@ export function entries(on: Entries): NonNullable<RowblyConfig['plugins']> {
   );
 }
 
-/** A Data Root with an Assignee, Board `web` (`WEB`) and the given Plugins on. */
+/** A Data Root with Board `web` (`WEB`) and the given Plugins on. */
 export async function pluginRoot(on: Entries = {}, config: Partial<RowblyConfig> = {}): Promise<TempRoot> {
   const t = await tempRoot();
-  await makeRootConfig(t.path, { assignees: [{ handle: 'alice', name: 'Alice' }], plugins: entries(on), ...config });
+  await makeRootConfig(t.path, { plugins: entries(on), ...config });
   await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB' });
   return t;
 }
@@ -64,12 +64,11 @@ export async function withPlugins(
 
 /**
  * The Plugin test harness (src/plugin-api/testing.ts) as the repository's Plugin suites use it: by
- * default with the Assignee and Board of `pluginRoot`, its Data Root as a `TempRoot` for direct
+ * default with the Board of `pluginRoot`, its Data Root as a `TempRoot` for direct
  * fixtures and assertions, and removed when the test finishes.
  */
 export async function pluginTestHost(options: PluginTestHostOptions): Promise<PluginTestHost & { t: TempRoot }> {
   const host = await createPluginTestHost({
-    assignees: [{ handle: 'alice', name: 'Alice' }],
     boards: [{ id: 'web', name: 'Website', keyPrefix: 'WEB' }],
     now: fixedClock().now,
     ...options,
