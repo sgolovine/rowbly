@@ -1750,15 +1750,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "79b92722d0f706e0b212c090fecb4dc7d1c79f30f828ad5e395fd3c38d24f3a7",
+      "fingerprint": "a1d8d9090d58fb51c401e5a04d90a230e5d43821f37560995c297f2875148a78",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "501b24a2b43c900a8a79de4dcff903c300bf4c02b30bb1851a252112bb98ee15"
+        "src/tui/screens/board/BoardScreen.tsx": "c90fa3113e29a5d04bb68e47c4bd98eea43946b2b721f59e4a9d3e01099ca4e4"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1786,15 +1787,16 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "5f99ca9c106c4b032f9499a516c4a7010f740e518cb67904f37acf6417ebc3c1",
+      "fingerprint": "acc94ca477ee77c4528d413af13faceb96ce1d0a321753c23a3abf04cbfc4a76",
       "snapshot": {
-        "test/tui/board.test.tsx": "ef2b3d9d2b5c648f35b162727805078c4abd61e4d4f879a885ea563fab199e56"
+        "test/tui/board.test.tsx": "b1f80de1ccbed66f2ac266f3f60943341b3474ce5eda452876a51cd66f84c354"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -2338,15 +2340,16 @@
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
-      "fingerprint": "ec40d22af3187dad026142bba5cb4baefd89ab70d75c0bce01735c78e178753d",
+      "fingerprint": "c2aa0a737dabd386be5aa0febe3d1be415395c2f537522297ad53e058fe22cad",
       "snapshot": {
-        "src/tui/screens/board/layout.ts": "b6ebdbf1ee8e070ef9f36b7dae1f47021bd13c17be5509011c03928a6083cba9"
+        "src/tui/screens/board/layout.ts": "87bd0edd59c70506473492edc955e4f79b024c400bc46eb7002cf9b45cf46745"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/screens/board/useCardBadges.ts": {
@@ -3718,15 +3721,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "bba9e33faf4adebb270e81b2c8c3c63686dc8fffe5d900b198cc13f198e57506",
+      "fingerprint": "267a9d1d03ea602737e30d646a9e28253257bc508260d9228274484c7328b9b6",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "9c94171bcf6d4f5afc49500018bc852dcf5142fb8494eadc7d8f869c10f510d5"
+        "src/tui/screens/board/BoardListRow.tsx": "eacd15bf5198d5b781f324531abbaaea94abdac1739ca093e7cd1d7d02bce977"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
