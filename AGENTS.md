@@ -32,7 +32,7 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
 | Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui) | `.agents/skills/<name>/SKILL.md`, linked from `.claude/skills/`; not published and not Intent skills |
+| Agent skills for developing Rowbly (screenshots with agentic-tui) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published and not Intent skills |
 
 ## Domain language and decisions
 
