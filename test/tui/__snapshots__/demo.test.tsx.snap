@@ -33,6 +33,7 @@ exports[`demo screen > renders every primitive 1`] = `
 │  The login form loses focus                                                                      │
 │  after submit.                                                                                   │
 │                                                                                                  │
+│  [Full screen]                                                                                   │
 │                                                                                                  │
 │  Form                                                                                            │
 │  › Name*         Fix login focus                                                                 │
@@ -41,6 +42,7 @@ exports[`demo screen > renders every primitive 1`] = `
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │
+│                  [Full screen]                                                                   │
 │    Points                                                                                        │
 │    Blocked       [ ] no                                                                          │
 │    Due date      YYYY-MM-DD                                                                      │

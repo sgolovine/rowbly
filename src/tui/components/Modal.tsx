@@ -1,7 +1,8 @@
 import { Box, Text } from 'ink';
 import type { ReactNode } from 'react';
-import { LayoutContext, useLayout } from '../hooks';
+import { type Layout, LayoutContext, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
+import { CloseButton } from './CloseButton';
 import { Panel } from './Panel';
 
 /** Filled behind the modal so the screen below does not show through. */
@@ -18,7 +19,24 @@ export interface ModalProps {
   size?: 'panel' | 'dialog';
   /** Widest the modal grows, in terminal columns; it never exceeds the room around it. */
   maxWidth?: number;
+  /** Shows a clickable `✕` in the top edge that calls this; the keys that close the modal stay its parent's. */
+  onClose?(): void;
   children: ReactNode;
+}
+
+/**
+ * The size of a modal in `outer`: its width, the most lines it may take (`undefined` when it is not
+ * shown over anything) and the room inside its body, for content that fills it.
+ */
+export function modalSize(
+  outer: Layout,
+  { size = 'panel', maxWidth = 96, footer }: { size?: ModalProps['size']; maxWidth?: number; footer: boolean },
+): { width: number; room?: number; body: Layout } {
+  const width = Math.max(30, Math.min(maxWidth, outer.width - (size === 'panel' ? 4 : 2)));
+  const room = outer.height === undefined ? undefined : Math.max(8, outer.height - 2);
+  // Border (the title sits in it), hint bar with its rule, body padding.
+  const chrome = 2 + (footer ? 2 : 0) + 2;
+  return { width, room, body: { width: width - 6, height: room === undefined ? undefined : room - chrome } };
 }
 
 /**
@@ -26,24 +44,21 @@ export interface ModalProps {
  * Without a fixed height (tests, piped output) there is nothing to cover, so it is shown below the
  * content instead, sized to fit.
  */
-export function Modal({ title, hints, size = 'panel', maxWidth = 96, children }: ModalProps) {
+export function Modal({ title, hints, size = 'panel', maxWidth = 96, onClose, children }: ModalProps) {
   const outer = useLayout();
   const panel = size === 'panel';
-  const width = Math.max(30, Math.min(maxWidth, outer.width - (panel ? 4 : 2)));
   const overlay = outer.height !== undefined;
-  const room = overlay ? Math.max(8, (outer.height ?? 0) - 2) : undefined;
   // A titled modal without hints still says how to close it.
   const footer = hints?.length
     ? hints.map((hint) => `${hint.key} ${hint.description}`).join(' · ')
     : title
       ? 'esc close'
       : undefined;
-  // Border (the title sits in it), hint bar with its rule, body padding.
-  const chrome = 2 + (footer ? 2 : 0) + 2;
-  const body = { width: width - 6, height: room === undefined ? undefined : room - chrome };
+  const { width, room, body } = modalSize(outer, { size, maxWidth, footer: footer !== undefined });
   const frame = (
     <Panel
       title={title}
+      aside={onClose && <CloseButton onClick={onClose} />}
       color="cyan"
       backgroundColor={overlay ? MODAL_BACKGROUND : undefined}
       width={panel ? width : undefined}

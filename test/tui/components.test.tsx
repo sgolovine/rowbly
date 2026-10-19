@@ -1,7 +1,9 @@
+import { EventEmitter } from 'node:events';
 import { Text, useInput } from 'ink';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, ValidationError } from '../../src/core';
+import { App } from '../../src/tui/app';
 import {
   ConfirmDialog,
   DetailView,
@@ -13,9 +15,9 @@ import {
   TextArea,
   TextInput,
 } from '../../src/tui/components';
-import { useIsActive } from '../../src/tui/hooks';
+import { createToastStore, useIsActive } from '../../src/tui/hooks';
 import { useRouter } from '../../src/tui/router';
-import { KEYS, renderApp, renderTui } from './helpers';
+import { KEYS, renderApp, renderTui, tick, waitForFrame } from './helpers';
 
 const ITEMS = [
   { value: 'ada', label: 'ada' },
@@ -258,7 +260,7 @@ describe('TextArea', () => {
     const onLeave = vi.fn();
     function Editor() {
       const [value, setValue] = useState('abcdefgh');
-      return <TextArea value={value} onChange={setValue} width={5} rows={3} onLeave={onLeave} />;
+      return <TextArea value={value} onChange={setValue} width={5} rows={3} onLeave={onLeave} expandable={false} />;
     }
     const ui = renderTui(<Editor />);
     await ui.press();
@@ -268,6 +270,100 @@ describe('TextArea', () => {
     await ui.press(KEYS.up, KEYS.up);
     expect(onLeave).toHaveBeenCalledWith(-1);
     ui.unmount();
+  });
+});
+
+describe('TextArea full screen', () => {
+  function Notes({ onValue }: { onValue?(value: string): void }) {
+    const [value, setValue] = useState('');
+    return (
+      <TextArea
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          onValue?.(next);
+        }}
+        width={30}
+        rows={3}
+        title="Notes"
+      />
+    );
+  }
+
+  it('opens with ctrl+f, edits in a titled modal and keeps the text when closed with esc', async () => {
+    const onValue = vi.fn();
+    const ui = renderTui(<Notes onValue={onValue} />);
+    await waitForFrame(ui, '[Full screen] ctrl+f');
+    await ui.press(KEYS.ctrlF);
+    await waitForFrame(ui, (f) => f.includes('Notes') && f.includes('esc/ctrl+f close') && f.includes('✕'));
+    await ui.press('one', KEYS.enter, 'two');
+    expect(onValue).toHaveBeenLastCalledWith('one\ntwo');
+    await ui.press(KEYS.escape);
+    const frame = await waitForFrame(ui, (f) => !f.includes('esc/ctrl+f close'));
+    expect(frame).toMatch(/one\s*\ntwo/);
+    expect(frame).toContain('[Full screen]');
+    // The text box takes keys again.
+    await ui.press('!');
+    expect(onValue).toHaveBeenLastCalledWith(expect.stringMatching(/!/));
+    ui.unmount();
+  });
+
+  it('covers the screen in the shell, and esc closes it without leaving the screen', async () => {
+    const onSubmit = vi.fn();
+    function Opener() {
+      const router = useRouter();
+      useInput((input) => input === 'n' && router.push('b'), { isActive: useIsActive() });
+      return <Text>Screen A</Text>;
+    }
+    const screens = {
+      a: Opener,
+      b: () => <Form fields={[{ name: 'description', label: 'Description', kind: 'multiline' }]} onSubmit={onSubmit} />,
+    };
+    const app = renderApp(screens);
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('Save') && f.includes('ctrl+f full screen'));
+    await app.press(KEYS.ctrlF);
+    await waitForFrame(app, (f) => f.includes('Description') && f.includes('esc/ctrl+f close') && !f.includes('Save'));
+    // The form below takes no keys: `tab` is not a field move and `ctrl+s` does not save.
+    await app.press('Hello', KEYS.tab, KEYS.ctrlS);
+    expect(onSubmit).not.toHaveBeenCalled();
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('Save') && f.includes('Hello') && !f.includes('esc/ctrl+f close'));
+    await app.press(KEYS.ctrlS);
+    expect(onSubmit).toHaveBeenCalledWith({ description: 'Hello' });
+    app.unmount();
+  });
+
+  it('opens from its button and closes from the ✕ in the border with a click', async () => {
+    const mouse = new EventEmitter();
+    const app = renderTui(
+      <App
+        ctx={null}
+        services={null}
+        initial={{ screen: 'a', params: {} }}
+        screens={{ a: () => <Notes /> }}
+        toasts={createToastStore()}
+        mouse={mouse}
+      />,
+    );
+    const click = async (text: string) => {
+      const lines = (app.lastFrame() ?? '').split('\n');
+      const y = lines.findIndex((line) => line.includes(text));
+      mouse.emit('mouse', { kind: 'press', x: lines[y]?.indexOf(text) ?? -1, y });
+      mouse.emit('mouse', { kind: 'release', x: lines[y]?.indexOf(text) ?? -1, y });
+      await tick();
+    };
+    await waitForFrame(app, '[Full screen]');
+    // Click targets register in effects, which can trail the first frame on a busy machine.
+    await tick(200);
+    await click('[Full screen]');
+    await waitForFrame(app, 'esc/ctrl+f close');
+    await app.press('kept');
+    await tick(200);
+    await click('✕');
+    const frame = await waitForFrame(app, (f) => f.includes('[Full screen]') && !f.includes('esc/ctrl+f close'));
+    expect(frame).toContain('kept');
+    app.unmount();
   });
 });
 

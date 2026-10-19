@@ -21,6 +21,7 @@ export const KEYS = {
   shiftTab: '\u001B[Z',
   backspace: '\u007F',
   ctrlS: '\u0013',
+  ctrlF: '\u0006',
   ctrlN: '\u000E',
   /** As terminals with the kitty keyboard protocol send it. */
   ctrlEnter: '\u001B[13;5u',
