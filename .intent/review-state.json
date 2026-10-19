@@ -109,7 +109,7 @@
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "ae94241fab3ee9ec08187eddab7f9f91efb3099383ef9997f66ac99096f50197",
+      "fingerprint": "fb237de5a25ac9369e7f3d40ee50c4766c9f6cc20966b8dcfb8867b3710c7850",
       "snapshot": {
         "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
@@ -118,7 +118,7 @@
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
-        "skills/_artifacts/skill_spec.md": "47e77577d5c2367aba7a9ab2082134ed2e0daf065c3818b4cb86b7bedb2e763b",
+        "skills/_artifacts/skill_spec.md": "01a8fdf13f8290e55b2d0e770abe87bad457b1e17cc5f020df85efdbddf8998f",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -147,13 +147,11 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Changed: skills/_artifacts/skill_spec.md at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1802,16 +1800,15 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
+      "fingerprint": "ca39937a22b9e9a32d6254c6f2d27417069ef1d9da7762a3ea7f6db344435d74",
       "snapshot": {
-        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
+        "test/tui/board.test.tsx": "5cdd9ae728325b2936ce674ed20c0ff8bcae327e14817db1042e155d9c32be13"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
+      "outcome": "no-change",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Changed: test/tui/board.test.tsx at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
