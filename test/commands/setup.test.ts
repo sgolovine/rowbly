@@ -40,7 +40,7 @@ describe('rowbly init', () => {
       'rowbly.config.json',
     ]);
     expect(await readFile(join(root, '.gitignore'), 'utf8')).toBe('local.json\n.lock\n.lock.break\n.txn/\n');
-    expect(JSON.parse(await readFile(join(root, 'rowbly.config.json'), 'utf8')).stages).toHaveLength(4);
+    expect(JSON.parse(await readFile(join(root, 'rowbly.config.json'), 'utf8')).stages).toHaveLength(2);
 
     // Context resolves from local.json alone (`stories list` is WP05; these share its resolution).
     const show = await runCli(['config', 'show', '--json'], { cwd: dir });
@@ -159,12 +159,12 @@ describe('rowbly config show', () => {
     await makeBoard(t.path, {
       id: 'web',
       keyPrefix: 'WEB',
-      stages: [{ key: 'open', name: 'Open', category: 'todo' }],
+      stages: [{ key: 'open', name: 'Open' }],
     });
     const human = await runCli(['config', 'show'], { root: t.path });
     expect(human.exitCode).toBe(0);
     expect(human.stdout).toContain('Stages (from board)');
-    expect(human.stdout).toMatch(/open\s+Open\s+todo/);
+    expect(human.stdout).toMatch(/open\s+Open\s+board/);
     expect(human.stdout).toContain('Custom Fields (from global)');
     expect(human.stdout).toMatch(/size\s+Size\s+select\s+yes\s+s, m/);
 

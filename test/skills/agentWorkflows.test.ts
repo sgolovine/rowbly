@@ -81,8 +81,6 @@ describe('rowbly-setup', () => {
       'review',
       '--name',
       'Review',
-      '--category',
-      'in_progress',
       '--after',
       'in-progress',
       '--board',
@@ -93,17 +91,7 @@ describe('rowbly-setup', () => {
     expect(await stageKeys('web')).toEqual(['backlog', 'todo', 'in-progress', 'review', 'done']);
     expect(await stageKeys('api')).toEqual(['backlog', 'todo', 'in-progress', 'done']);
 
-    const global = await json(
-      'stages',
-      'add',
-      'blocked',
-      '--name',
-      'Blocked',
-      '--category',
-      'in_progress',
-      '--level',
-      'global',
-    );
+    const global = await json('stages', 'add', 'blocked', '--name', 'Blocked', '--level', 'global');
     expect(global.affectedBoards).toEqual(['api']);
     expect(await stageKeys('api')).toContain('blocked');
     expect(await stageKeys('web')).not.toContain('blocked');
@@ -119,21 +107,8 @@ describe('rowbly-setup', () => {
 describe('rowbly-stories', () => {
   it('picks up and finishes a Story by Stage Category, with Tasks', async () => {
     const { json } = await project();
-    await json(
-      'stages',
-      'add',
-      'doing',
-      '--name',
-      'Doing',
-      '--category',
-      'in_progress',
-      '--board',
-      'web',
-      '--level',
-      'board',
-    );
+    await json('stages', 'add', 'doing', '--name', 'Doing', '--after', 'backlog', '--board', 'web', '--level', 'board');
     await json('stages', 'remove', 'in-progress', '--board', 'web');
-    await json('stages', 'edit', 'done', '--name', 'Shipped', '--board', 'web');
 
     const created = await json(
       'stories',
@@ -155,8 +130,8 @@ describe('rowbly-stories', () => {
 
     const { stages } = await json('config', 'show', '--board', 'web');
     const first = (category: string) => stages.find((s: { category: string }) => s.category === category).key;
-    expect(first('in_progress')).toBe('doing');
-    await json('stories', 'move', created.key, first('in_progress'));
+    expect(first('board')).toBe('doing');
+    await json('stories', 'move', created.key, first('board'));
     await json('tasks', 'move', task.id, first('done'));
     expect((await json('stories', 'show', created.key)).stage).toBe('doing');
     await json('stories', 'move', created.key, first('done'));

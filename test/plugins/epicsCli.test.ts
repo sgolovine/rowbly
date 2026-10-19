@@ -44,9 +44,8 @@ describe('rowbly epics', () => {
       id: 'api',
       name: 'API',
       keyPrefix: 'API',
-      stages: [{ key: 'released', name: 'Released', category: 'done' }],
     });
-    await cli(t, ['stories', 'create', '--board', 'api', '--name', 'Endpoint', '--epic', 'auth']);
+    await cli(t, ['stories', 'create', '--board', 'api', '--name', 'Endpoint', '--stage', 'done', '--epic', 'auth']);
     const detail = await cli(t, ['epics', 'show', 'auth']);
     expect(detail.stdout).toContain('Epic Progress: 1/2 Stories done (50%)');
     expect(detail.stdout).toContain('Board: Website (web)');

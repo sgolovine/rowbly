@@ -86,15 +86,14 @@ export interface BoardPatch extends OperationOptions {
   description?: string;
 }
 
+/** A configured Stage; it is in the `board` Stage Category (ADR-0024). */
 export interface StageInput {
   key: Slug;
   name: string;
-  category: StageCategory;
 }
 
 export interface StagePatch extends OperationOptions {
   name?: string;
-  category?: StageCategory;
 }
 
 /** Editable Custom Field properties. `type` and `key` are immutable; `null` clears an optional property. */

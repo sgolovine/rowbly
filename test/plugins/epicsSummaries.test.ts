@@ -5,7 +5,7 @@ import { makeBoard, makeStory } from '../helpers';
 import { pluginRoot, withPlugins } from './helpers';
 
 /**
- * Two Boards with different Stage keys and categories, open and closed Epics, an empty Epic, Stories
+ * Two Boards with different Stage keys, open and closed Epics, an empty Epic, Stories
  * of each Epic on both Boards, and bags of a disabled (Specs) and an unknown Plugin.
  */
 async function seed() {
@@ -14,11 +14,7 @@ async function seed() {
     id: 'api',
     name: 'API',
     keyPrefix: 'API',
-    stages: [
-      { key: 'waiting', name: 'Waiting', category: 'todo' },
-      { key: 'shipped', name: 'Shipped', category: 'done' },
-      { key: 'done', name: 'Not really done', category: 'in_progress' },
-    ],
+    stages: [{ key: 'waiting', name: 'Waiting' }],
   });
   const { services } = await withPlugins(t, [epics]);
   const plugin = services.plugins.context('epics');
@@ -36,8 +32,8 @@ async function seed() {
     });
   await story('WEB-1', 'web', 'done', 'auth');
   await story('WEB-2', 'web', 'todo', 'auth');
-  await story('API-1', 'api', 'shipped', 'auth');
-  await story('API-2', 'api', 'done', 'billing');
+  await story('API-1', 'api', 'done', 'auth');
+  await story('API-2', 'api', 'waiting', 'billing');
   await story('WEB-3', 'web', 'done', 'billing');
   await story('WEB-4', 'web', 'done', 'old');
   await story('API-3', 'api', 'waiting');

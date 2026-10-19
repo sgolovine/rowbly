@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError } from '../../src/core';
-import type { Stage } from '../../src/schemas';
+import type { StageConfig } from '../../src/schemas';
 import { createServices, type RowblyContext, type Services } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
@@ -15,22 +15,17 @@ import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
 
-const FOUR_STAGES: Stage[] = [
-  { key: 'backlog', name: 'Backlog', category: 'todo' },
-  { key: 'todo', name: 'Todo', category: 'todo' },
-  { key: 'doing', name: 'Doing', category: 'in_progress' },
-  { key: 'done', name: 'Done', category: 'done' },
+/** With the fixed Backlog and Done: four Stages. */
+const FOUR_STAGES: StageConfig[] = [
+  { key: 'todo', name: 'Todo' },
+  { key: 'doing', name: 'Doing' },
 ];
 
-const SIX_STAGES: Stage[] = [
-  ...FOUR_STAGES.slice(0, 3),
-  { key: 'review', name: 'Review', category: 'in_progress' },
-  { key: 'qa', name: 'QA', category: 'in_progress' },
-  FOUR_STAGES[3] as Stage,
-];
+/** With the fixed Backlog and Done: six Stages. */
+const SIX_STAGES: StageConfig[] = [...FOUR_STAGES, { key: 'review', name: 'Review' }, { key: 'qa', name: 'QA' }];
 
 /** A Board with the given Stages and 6 Stories. */
-async function seed(stages: Stage[] = FOUR_STAGES) {
+async function seed(stages: StageConfig[] = FOUR_STAGES) {
   const t = await tempRoot();
   await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB', stages });
   await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
@@ -452,7 +447,7 @@ describe('board layout', () => {
     const c = { key: 'C', stage: 'y' } as never;
     const columns = groupColumns(
       [
-        { key: 'x', name: 'X', category: 'todo' },
+        { key: 'x', name: 'X', category: 'board' },
         { key: 'y', name: 'Y', category: 'done' },
       ],
       [a, b, c],

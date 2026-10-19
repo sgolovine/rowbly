@@ -1,7 +1,7 @@
 // ARCH-42, §6, W6, W11: callers and reactions get the same final, post-transform result.
 import { describe, expect, it } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
-import { definePlugin, type Stage } from '../../src/plugin-api';
+import { definePlugin, type StageConfig, withFixedStages } from '../../src/plugin-api';
 import { makeStory } from '../helpers';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
@@ -17,7 +17,7 @@ describe('final results (ARCH-42)', () => {
           async transform({ changes }) {
             await changes.updateBoard('web', (board) => ({
               ...board,
-              stages: (board.stages ?? []).map((s: Stage) => ({ ...s, name: s.name.toUpperCase() })),
+              stages: (board.stages ?? []).map((s: StageConfig) => ({ ...s, name: s.name.toUpperCase() })),
             }));
           },
           react: ({ result }) => void reacted.push(result),
@@ -27,14 +27,11 @@ describe('final results (ARCH-42)', () => {
     const t = await pluginRoot({ shout: true });
     const { services } = await withPlugins(t, [shout]);
 
-    const stages = await services.stages.add(
-      { level: 'board', boardId: 'web' },
-      { key: 'qa', name: 'Qa', category: 'in_progress' },
-    );
-    const persisted = (await readJsonFile(t, 'boards/web/board.config.json')).stages;
+    const stages = await services.stages.add({ level: 'board', boardId: 'web' }, { key: 'qa', name: 'Qa' });
+    const persisted = (await readJsonFile(t, 'boards/web/board.config.json')).stages as StageConfig[];
     expect(stages.map((s) => s.name)).toContain('QA');
-    expect(stages).toEqual(persisted);
-    expect(reacted).toEqual([persisted]);
+    expect(stages).toEqual(withFixedStages(persisted));
+    expect(reacted).toEqual([withFixedStages(persisted)]);
   });
 
   it('a transform that changes Local State gives caller and reaction the persisted state', async () => {

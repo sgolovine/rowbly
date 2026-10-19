@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { CustomFieldDef, Stage } from '../../src/schemas';
-import { DEFAULT_STAGES } from '../../src/schemas';
+import type { CustomFieldDef, StageConfig } from '../../src/schemas';
+import { DEFAULT_STAGES, withFixedStages } from '../../src/schemas';
 import { createRepositories, resolveCascade } from '../../src/storage';
 import { makeBoard, tempRoot } from '../helpers';
 
-const stage = (key: string): Stage => ({ key, name: key, category: 'todo' });
+const stage = (key: string): StageConfig => ({ key, name: key });
 const field = (key: string): CustomFieldDef => ({ key, name: key, type: 'text', required: false });
 
 type Level = 'board' | 'global' | 'default';
@@ -32,7 +32,9 @@ describe('resolveCascade', () => {
         expect(effective.board.id).toBe('web');
         expect(effective.stagesSource).toBe(stagesFrom);
         expect(effective.customFieldsSource).toBe(fieldsFrom);
-        expect(effective.stages).toEqual(stagesFrom === 'default' ? DEFAULT_STAGES : [stage(`${stagesFrom}-stage`)]);
+        expect(effective.stages).toEqual(
+          withFixedStages(stagesFrom === 'default' ? DEFAULT_STAGES : [stage(`${stagesFrom}-stage`)]),
+        );
         expect(effective.customFields).toEqual(fieldsFrom === 'default' ? [] : [field(`${fieldsFrom}-field`)]);
       });
     }
@@ -41,7 +43,7 @@ describe('resolveCascade', () => {
   it('returns a mutable copy of the default stages', async () => {
     const t = await setup('default', 'default');
     const effective = await resolveCascade(t.root, 'web');
-    effective.stages.push(stage('extra'));
-    expect(DEFAULT_STAGES).toHaveLength(4);
+    effective.stages.push({ ...stage('extra'), category: 'board' });
+    expect(DEFAULT_STAGES).toHaveLength(2);
   });
 });
