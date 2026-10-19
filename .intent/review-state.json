@@ -2770,15 +2770,15 @@
       ]
     },
     "source:test/plugins/tasksTui.test.tsx": {
-      "fingerprint": "600b74b49ad37a81c432792e823a26e8a2f2c0255794b5cedc246b6d9e3f8d0a",
+      "fingerprint": "c83569091e534aa03f86558780675aaf704249c3a3fd386671af1a5c6acce208",
       "snapshot": {
-        "test/plugins/tasksTui.test.tsx": "8632c02f9c04ae239581d3bacb3e394488ebd8f9f5c8fef8b4d395b6c7217f47"
+        "test/plugins/tasksTui.test.tsx": "4832c477c86305f16f42223b33556f0e4a0306e99ddcf538abdd7ff6c7c734e6"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "50c84846dc549876ed95cb9c7632ba211cd81291",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Updated two Tasks TUI readiness assertions after the Assignees extraction retired the core Task row extension: wait for the loaded Task detail Story row and its edit/move/delete controls. CLI skill guidance and all three planning records already describe the combined Plugin behavior and remain accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Changed: test/plugins/tasksTui.test.tsx at 50c84846dc549876ed95cb9c7632ba211cd81291"
       ]
     },
     "source:test/plugins/testingHarnessTui.test.tsx": {

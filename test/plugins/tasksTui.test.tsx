@@ -70,7 +70,7 @@ describe('story detail Tasks tab', () => {
     expect(await bag(t)).toEqual({ nextNumber: 2, tasks: [] });
   });
 
-  it('edits a Task and opens its detail with inherited Assignees', async () => {
+  it('edits a Task and opens its detail with its Story', async () => {
     const t = await setup();
     await seed(t, { name: 'Old' });
     const { app } = await openTasksTab(t, 'WEB-1.1 Old');
@@ -83,7 +83,7 @@ describe('story detail Tasks tab', () => {
     );
 
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
+    await waitForFrame(app, (f) => /Story\s+WEB-1 Login/.test(f) && f.includes('e edit · m move Stage · d delete'));
   });
 
   it('shows an invalid Tasks bag as unavailable', async () => {
@@ -105,7 +105,7 @@ describe('task detail', () => {
     await seed(t, { name: 'Old' });
     const tab = await openTasksTab(t, 'WEB-1.1 Old');
     await tab.app.press(KEYS.enter);
-    await waitForFrame(tab.app, (f) => f.includes('alice (from the Story)'));
+    await waitForFrame(tab.app, (f) => /Story\s+WEB-1 Login/.test(f) && f.includes('e edit · m move Stage · d delete'));
     expect(tab.app.lastFrame()).toContain('e edit · m move Stage · d delete');
 
     await tab.app.press('e');
