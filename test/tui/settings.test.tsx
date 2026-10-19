@@ -87,9 +87,10 @@ describe('settings', () => {
   it('closes on esc', async () => {
     const app = await open();
     await app.press(',');
-    await waitForFrame(app, 'Settings');
+    await waitForFrame(app, '› Settings');
     await app.press(KEYS.escape);
-    await waitForFrame(app, (f) => !f.includes('Settings'));
+    // The header's Settings button stays; the settings modal's title goes.
+    await waitForFrame(app, (f) => !f.includes('› Settings'));
     app.unmount();
   });
 

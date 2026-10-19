@@ -19,7 +19,7 @@ import {
   truncate,
 } from '../../src/tui/screens/board/layout';
 import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
-import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
+import { KEYS, type Rendered, renderTui, resize, tick, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
 
@@ -100,12 +100,6 @@ async function open(
   resize(app, opts.columns ?? 120, opts.rows ?? 40);
   await waitForFrame(app, (frame) => frame.includes('WEB-') && !frame.includes('Loading'));
   return app;
-}
-
-function resize(app: Rendered, columns: number, rows: number) {
-  Object.defineProperty(app.stdout, 'columns', { value: columns, configurable: true });
-  Object.defineProperty(app.stdout, 'rows', { value: rows, configurable: true });
-  app.stdout.emit('resize');
 }
 
 const ctxBoard = async (t: TempRoot) => (await createRepositories(t.root).localState.get()).board;
@@ -312,19 +306,17 @@ describe('board view', () => {
   it('scrolls horizontally at 80 columns with 6 Stages without wrapping cards', async () => {
     const t = await seed(SIX_STAGES);
     const app = await open(t, { columns: 80 });
-    await waitForFrame(app, (f) => f.includes('Stages 1–2 of 6'));
+    // At 80 columns the header buttons cut the header's Stage range, so the board's own counts show
+    // where it has scrolled.
+    await waitForFrame(app, (f) => f.includes('● Todo (1)') && f.includes('4›'));
     let frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Stages 1–2 of 6');
-    expect(frame).toContain('4›');
     expect(frame).not.toContain('Doing');
     for (const line of frame.split('\n')) expect(line.length).toBeLessThanOrEqual(80);
     // The long name stays on one line, cut with an ellipsis.
     expect(frame.split('\n').filter((l) => l.includes('Login page'))).toHaveLength(1);
     await app.press('l', 'l', 'l', 'l');
-    await waitForFrame(app, (f) => f.includes('Stages 4–5 of 6') && f.includes('● QA (0)'));
+    await waitForFrame(app, (f) => f.includes('‹3') && f.includes('● QA (0)'));
     frame = app.lastFrame() ?? '';
-    expect(frame).toContain('Stages 4–5 of 6');
-    expect(frame).toContain('‹3');
     expect(frame).toContain('1›');
     expect(frame).toContain('● QA (0)');
     expect(frame).not.toContain('Backlog');
@@ -568,6 +560,22 @@ describe('list view', () => {
     await waitForFrame(app, '▸ Done (1)');
     await click('Stages');
     await waitForFrame(app, '● Backlog (3)');
+    app.unmount();
+  });
+
+  it('opens the settings with a click on the header, like ,', async () => {
+    const t = await seed();
+    const mouse = new EventEmitter();
+    const app = await open(t, { mouse });
+    // Click targets register in effects, which can trail the first frame on a busy machine.
+    await tick(200);
+    const lines = frameLines(app);
+    const y = lines.findIndex((line) => line.includes('Settings ,'));
+    const x = lines[y]?.indexOf('Settings') ?? -1;
+    mouse.emit('mouse', { kind: 'press', x, y });
+    mouse.emit('mouse', { kind: 'release', x, y });
+    const frame = await waitForFrame(app, 'Website web · WEB (current)');
+    expect(frame).toContain('Board › Settings');
     app.unmount();
   });
 });
