@@ -5,5 +5,4 @@ import { CommentsTab } from './CommentsTab';
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { form: CommentFormScreen },
   storyTabs: [{ label: 'Comments', component: CommentsTab }],
-  taskTabs: [{ label: 'Comments', component: CommentsTab }],
 };

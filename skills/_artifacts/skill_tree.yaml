@@ -74,9 +74,10 @@ skills:
             README.md,
             docs/agents/CONTEXT.md,
             src/commands/stories.ts,
-            src/commands/tasks.ts,
+            src/plugins/tasks/commands.ts,
             src/services/stories.ts,
-            src/services/tasks.ts
+            src/plugins/tasks/tasks.ts,
+            src/plugins/assignees/index.ts
           ],
         requires: [ rowbly-cli ],
         purpose: "Show an agent how to do day-to-day work tracking with the Rowbly CLI:
@@ -90,11 +91,11 @@ skills:
         path: skills/rowbly-plugins/SKILL.md,
         description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
           Plugin settings, or using the Built-in Plugins' commands: Assignees
-          (rowbly assignees, --assignee), Epics (rowbly epics, --epic), Specs
-          (rowbly specs, --spec, Story and Board Specs) and Comments (rowbly
-          comments). Also when a rowbly command is
-          unknown because its Plugin is off, or a Plugin failed to load. Not for
-          writing a new Plugin.",
+          (rowbly assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly
+          epics, --epic), Specs (rowbly specs, --spec, Story and Board Specs)
+          and Comments (rowbly comments). Also when a rowbly command is unknown
+          because its Plugin is off, or a Plugin failed to load. Not for writing
+          a new Plugin.",
         sources:
           [
             README.md,
@@ -102,6 +103,7 @@ skills:
             docs/plugins/built-in.md,
             src/commands/plugins.ts,
             src/plugins/assignees/commands.ts,
+            src/plugins/tasks/commands.ts,
             src/plugins/epics/commands.ts,
             src/plugins/specs/commands.ts,
             src/plugins/comments/commands.ts
@@ -109,7 +111,7 @@ skills:
         requires: [ rowbly-cli ],
         purpose: "Explain how an agent turns Rowbly's Built-in Plugins on and off,
           handles Plugin settings and load failures, and uses the Assignees,
-          Epics, Specs and Comments commands and Story options."
+          Tasks, Epics, Specs and Comments commands and Story options."
       },
     {
         name: rowbly-doctor,

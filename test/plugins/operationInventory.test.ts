@@ -13,6 +13,8 @@ import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic, editEpic, setEpicClosed } from '../../src/plugins/epics/service';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
+import { tasks } from '../../src/plugins/tasks';
+import { createTask, deleteTask, moveTask, updateTask } from '../../src/plugins/tasks/tasks';
 import { makeStory } from '../helpers';
 import { pluginRoot, withPlugins } from './helpers';
 
@@ -55,13 +57,14 @@ describe('the operation inventory (ARCH-02)', () => {
       description: '',
       hooks: Object.fromEntries([...listed.keys()].map((name) => [name, record])),
     });
-    const t = await pluginRoot({ assignees: true, epics: true, specs: true, comments: true, rec: true });
+    const t = await pluginRoot({ assignees: true, tasks: true, epics: true, specs: true, comments: true, rec: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [assignees, epics, specs, comments, recorder]);
+    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, recorder]);
     const assignee = services.plugins.context('assignees');
     const epic = services.plugins.context('epics');
     const spec = services.plugins.context('specs');
     const comment = services.plugins.context('comments');
+    const task = services.plugins.context('tasks');
 
     await addAssignee(assignee, { handle: 'ada', name: 'Ada', email: 'ada@example.com' });
     await editAssignee(assignee, 'ada', { name: 'Ada L', email: null });
@@ -79,6 +82,10 @@ describe('the operation inventory (ARCH-02)', () => {
     const added = await addComment(comment, 'WEB-1', 'Hello');
     await editComment(comment, 'WEB-1', added.id, 'Hello again');
     await deleteComment(comment, 'WEB-1', added.id);
+    const created = await createTask(task, 'WEB-1', { name: 'Form' });
+    await updateTask(task, created.id, { name: 'Sign-in form' });
+    await moveTask(task, created.id, 'done');
+    await deleteTask(task, created.id);
 
     expect(new Set(seen.map((s) => s.name))).toEqual(new Set(listed.keys()));
     for (const { name, keys } of seen) {

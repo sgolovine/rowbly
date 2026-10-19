@@ -135,7 +135,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 | Data Root | The `.rowbly/` folder | workspace, project, database |
 | Board | A Kanban board with a key prefix such as `WEB` | project |
 | Story | The unit of work on a Board, keyed `WEB-42` | issue, ticket, card |
-| Task | A smaller item inside one Story, `WEB-42.1` | subtask, checklist item |
+| Task | A smaller item inside one Story, `WEB-42.1` (the Tasks Plugin) | subtask, checklist item |
 | Stage | A step of a Board's workflow, in a Stage Category `todo`, `in_progress` or `done` | status, column |
 | Rank | A Story's position inside its Stage | order |
 | Me / Assignee | The handle you work as (`rowbly whoami`) / a person in the Assignees Plugin's roster | user, owner |

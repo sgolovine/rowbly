@@ -6,7 +6,7 @@ import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-a
 import { StorySchema } from '../../src/schemas';
 import { pluginStoryRows } from '../../src/services';
 import { pathExists } from '../../src/storage';
-import { FIXED_NOW, makeStory, writeFixture } from '../helpers';
+import { makeStory, writeFixture } from '../helpers';
 import { echo, faulty, notes, order, stamp, tracer } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
@@ -166,18 +166,16 @@ describe('guard', () => {
 describe('replace', () => {
   it('runs instead of core, may call core, and fills the same Change Set', async () => {
     const t = await pluginRoot({ stamp: true });
-    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [stamp]);
-    const task = await services.tasks.create('WEB-1', { name: 'Write tests' });
-    expect(task.name).toBe('[stamped] Write tests');
-    expect((await services.tasks.get('WEB-1.1')).task.name).toBe('[stamped] Write tests');
+    const story = await services.stories.create('web', { name: 'Write tests' });
+    expect(story.name).toBe('[stamped] Write tests');
+    expect((await services.stories.get(story.key)).name).toBe('[stamped] Write tests');
   });
 
   it('errors from core keep their own code when the replacement calls it', async () => {
     const t = await pluginRoot({ stamp: true });
-    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [stamp]);
-    await expect(services.tasks.create('WEB-1', { name: 'x', stage: 'nope' })).rejects.toThrow(ValidationError);
+    await expect(services.stories.create('web', { name: 'x', stage: 'nope' })).rejects.toThrow(ValidationError);
   });
 });
 
@@ -257,7 +255,7 @@ describe('Change Sets', () => {
       name: 'Watch',
       description: '',
       hooks: Object.fromEntries(
-        ['stories.rank', 'tasks.move', 'context.setMe', 'context.use'].map((op) => [
+        ['stories.rank', 'stories.move', 'context.setMe', 'context.use'].map((op) => [
           op,
           {
             transform: ({ name, pluginInput }: { name: string; pluginInput: unknown }) =>
@@ -267,21 +265,16 @@ describe('Change Sets', () => {
       ),
     });
     const t = await pluginRoot({ watch: true });
-    await makeStory(t.path, {
-      boardId: 'web',
-      key: 'WEB-1',
-      tasks: [{ id: 'WEB-1.1', name: 'T', description: '', stage: 'backlog', ...stamps() }],
-      nextTaskNumber: 2,
-    });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     const { services } = await withPlugins(t, [watch]);
     const plugins = { watch: 1 };
     await services.stories.rank('WEB-1', 'top', { plugins });
-    await services.tasks.move('WEB-1.1', 'done', { plugins });
+    await services.stories.move('WEB-1', 'done', { plugins });
     await services.context.setMe('alice', { plugins });
     await services.context.use('web', { plugins });
     expect(inputs).toEqual([
       ['stories.rank', 1],
-      ['tasks.move', 1],
+      ['stories.move', 1],
       ['context.setMe', 1],
       ['context.use', 1],
     ]);
@@ -372,10 +365,6 @@ describe('filters', () => {
 });
 
 const LATER = '2026-10-13T00:00:00.000Z';
-
-function stamps() {
-  return { createdAt: FIXED_NOW, updatedAt: FIXED_NOW };
-}
 
 describe('Story rows', () => {
   it('come from each Plugin in registry order; one that throws only warns', async () => {

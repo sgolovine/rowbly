@@ -201,10 +201,10 @@ export function BoardScreen({ params }: ScreenProps) {
   useKeyHints(
     mode === 'view'
       ? [
-          { key: 'h/l j/k', description: 'select' },
+          { key: '←/→ ↑/↓', description: 'select' },
           { key: 'enter', description: 'open' },
-          { key: 'H/L', description: 'move Stage', secondary: true },
-          { key: 'K/J', description: 'reorder', secondary: true },
+          { key: 'shift+←/→', description: 'move Stage', secondary: true },
+          { key: 'shift+↑/↓', description: 'reorder', secondary: true },
           { key: 'T/B', description: 'to top/bottom', secondary: true },
           { key: 'n', description: 'new' },
           { key: 'e', description: 'edit', secondary: true },
@@ -212,6 +212,9 @@ export function BoardScreen({ params }: ScreenProps) {
           { key: '/', description: 'filter' },
           { key: 'c', description: 'clear filter', secondary: true },
           { key: 'r', description: 'reload', secondary: true },
+          { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
+          { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
+          { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
         ]
       : [{ key: 'esc', description: 'cancel' }],
   );
@@ -221,10 +224,11 @@ export function BoardScreen({ params }: ScreenProps) {
       if (!scope.data || writing.current) return;
       const { boardId } = scope.data;
       const delta = moveDelta(input, key);
-      if (input === 'H') moveTo(col - 1);
-      else if (input === 'L') moveTo(col + 1);
-      else if (input === 'K') reorder(-1);
-      else if (input === 'J') reorder(1);
+      // shift+arrows (or H/L/K/J) move the Story; plain arrows (or h/l/j/k) move the cursor.
+      if (input === 'H' || (key.shift && key.leftArrow)) moveTo(col - 1);
+      else if (input === 'L' || (key.shift && key.rightArrow)) moveTo(col + 1);
+      else if (input === 'K' || (key.shift && key.upArrow)) reorder(-1);
+      else if (input === 'J' || (key.shift && key.downArrow)) reorder(1);
       else if (input === 'T') rankTo('top');
       else if (input === 'B') rankTo('bottom');
       else if (input === 'h' || key.leftArrow) setCursor({ col: Math.max(0, col - 1), row });
@@ -328,7 +332,7 @@ export function BoardScreen({ params }: ScreenProps) {
       {mode === 'confirm-delete' && card && (
         <Modal size="dialog">
           <ConfirmDialog
-            message={`Delete ${card.key} "${card.name}" with its Tasks?`}
+            message={`Delete ${card.key} "${card.name}"?`}
             confirmLabel="Delete"
             cancelLabel="Cancel"
             destructive

@@ -7,7 +7,7 @@ import { ConflictError, DataIntegrityError, NotFoundError, UsageError, Validatio
 import { assignees } from '../../src/plugins/assignees';
 import { listAssignees } from '../../src/plugins/assignees/roster';
 import { addAssignee, editAssignee, removeAssignee } from '../../src/plugins/assignees/service';
-import { pluginStoryRows, pluginTaskRows } from '../../src/services';
+import { pluginStoryRows } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { assigned, fixedClock, makeBoard, makeRoster, makeStory, type TempRoot } from '../helpers';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
@@ -188,22 +188,14 @@ describe('Assignees of Stories', () => {
     await expect(noMe.services.stories.list('web', { plugins: { assignees: ['me'] } })).rejects.toThrow(UsageError);
   });
 
-  it('shows a Story row, and a Task row from the Story', async () => {
+  it('shows a Story row', async () => {
     const { t, ctx, services } = await setup({ roster: ROSTER });
     await makeStory(t.path, { key: 'WEB-1', boardId: 'web', ...assigned('sam', 'ana') });
     await makeStory(t.path, { key: 'WEB-2', boardId: 'web', rank: 'a1' });
-    const task = await services.tasks.create('WEB-2', { name: 'T' });
     expect(await pluginStoryRows(ctx, services, await stored(t, 'WEB-1'))).toEqual([
       { label: 'Assignees', value: 'sam, ana' },
     ]);
     expect(await pluginStoryRows(ctx, services, await stored(t, 'WEB-2'))).toEqual([
-      { label: 'Assignees', value: 'none' },
-    ]);
-    const first = await services.tasks.create('WEB-1', { name: 'T' });
-    expect(await pluginTaskRows(ctx, services, first, await stored(t, 'WEB-1'))).toEqual([
-      { label: 'Assignees', value: 'sam, ana (from the Story)' },
-    ]);
-    expect(await pluginTaskRows(ctx, services, task, await stored(t, 'WEB-2'))).toEqual([
       { label: 'Assignees', value: 'none' },
     ]);
   });

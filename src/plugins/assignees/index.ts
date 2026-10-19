@@ -87,10 +87,6 @@ export const assignees = definePlugin({
   async storyRows(story, plugin) {
     return [{ label: 'Assignees', value: assigneesText(plugin, story) }];
   },
-  async taskRows(_task, story, plugin) {
-    const text = assigneesText(plugin, story);
-    return [{ label: 'Assignees', value: text === 'none' ? text : `${text} (from the Story)` }];
-  },
   doctor: {
     async check({ data, plugin }) {
       const text = await plugin.files.read('dataRoot', ROSTER_FILE);

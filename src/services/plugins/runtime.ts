@@ -4,13 +4,11 @@ import {
   DataIntegrityError,
   errorMessage,
   isSlug,
-  isTaskId,
   NotFoundError,
   PluginError,
-  parseTaskId,
   ValidationError,
 } from '../../core';
-import { formatIssues, type LocalState, type Story, type Task } from '../../schemas';
+import { formatIssues, type LocalState, type Story } from '../../schemas';
 import type { Repositories } from '../../storage';
 import { coordinated } from '../coordination';
 import type { PluginInput, RowblyContext, Services } from '../types';
@@ -608,7 +606,6 @@ function withGetters<A extends object, B extends object>(base: A, extra: B): A &
 function recordName(record: Bagged): string {
   const r = record as Record<string, unknown>;
   if (typeof r.key === 'string' && typeof r.boardId === 'string') return `Story ${r.key}`;
-  if (typeof r.id === 'string' && isTaskId(r.id)) return `Task ${r.id}`;
   if (typeof r.id === 'string' && typeof r.keyPrefix === 'string') return `Board ${r.id}`;
   if ('version' in r) return 'Local State';
   return 'a record';
@@ -633,13 +630,6 @@ export function latestStory(changes: ChangeSet, story: Story): Story {
   // The body put the Story, so its change is there unless a transform deleted it: a Story created
   // and then deleted in one Change Set has neither key left.
   return changes.story(story.key)?.after ?? resultRemoved(`Story ${story.key}`);
-}
-
-/** The version of a Task that an operation saves. */
-export function latestTask(changes: ChangeSet, task: Task): Task {
-  const { storyKey } = parseTaskId(task.id);
-  const story = changes.story(storyKey)?.after ?? resultRemoved(`Story ${storyKey}`);
-  return story.tasks.find((t) => t.id === task.id) ?? resultRemoved(`Task ${task.id}`);
 }
 
 /** The Local State an operation saves. */

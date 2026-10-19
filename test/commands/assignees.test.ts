@@ -163,14 +163,12 @@ describe('Assignees on Stories', () => {
     expect(await keys('--assignee', 'bob,me')).toEqual(['WEB-1', 'WEB-3', 'WEB-2']);
   });
 
-  it('shows the Assignees on stories show and tasks show', async () => {
+  it('shows the Assignees on stories show', async () => {
     const { t, cli } = await setup();
     await makeStory(t.path, { ...web, key: 'WEB-1', ...assigned('alice', 'bob') });
     await makeStory(t.path, { ...web, key: 'WEB-2' });
     expect((await cli('stories', 'show', 'WEB-1')).stdout).toMatch(/Assignees: +alice, bob/);
     expect((await cli('stories', 'show', 'WEB-2')).stdout).toMatch(/Assignees: +none/);
-    await cli('tasks', 'create', 'WEB-1', '--name', 'One');
-    expect((await cli('tasks', 'show', 'WEB-1.1')).stdout).toMatch(/Assignees: +alice, bob \(from the Story\)/);
   });
 
   it('doctor reports and fixes unknown Assignees and a Me outside the roster', async () => {

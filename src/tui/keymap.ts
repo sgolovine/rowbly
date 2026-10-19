@@ -10,7 +10,7 @@ export interface KeyHint {
 
 /** The keys the shell handles on every screen. */
 export const GLOBAL_KEYS: readonly KeyHint[] = [
-  { key: '↑/↓ j/k', description: 'move' },
+  { key: '↑/↓', description: 'move' },
   { key: 'enter', description: 'select' },
   { key: '/', description: 'filter lists' },
   { key: '[/]', description: 'previous/next Board' },
@@ -20,6 +20,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: ',', description: 'settings' },
   { key: '?', description: 'help' },
   { key: 'q', description: 'quit (from the root)' },
+  { key: 'j/k', description: 'move (vim keys)', secondary: true },
 ];
 
 /**
@@ -30,7 +31,8 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 export const CORE_KEYS: readonly string[] = [
   // The shell: help, settings, quit, new Board, previous/next Board and Boards 1–9 in the sidebar.
   ...'?,qN[]123456789',
-  // Moving: j/k up and down, h/l left and right; with shift, moving a Story or a list entry.
+  // Moving, as alternatives to the arrow keys: j/k up and down, h/l left and right; with shift
+  // (like shift+arrows), moving a Story or a list entry.
   ...'jkhlJKHL',
   // Lists and forms: `/` filters, space toggles; confirmation dialogs: y/n.
   ...'/ yn',
@@ -78,8 +80,12 @@ export function globalAction(input: string, key: Key): GlobalAction | null {
   return null;
 }
 
-/** Arrow keys and `j`/`k` both move. Pass `vim: false` where `j`/`k` are typed text. */
+/**
+ * `↑/↓` move, with `j`/`k` as alternatives. Pass `vim: false` where `j`/`k` are typed text.
+ * `shift+↑/↓` is left to screens, where it moves the selected entry (like `K`/`J`).
+ */
 export function moveDelta(input: string, key: Key, vim = true): -1 | 0 | 1 {
+  if (key.shift && (key.upArrow || key.downArrow)) return 0;
   if (key.upArrow || (vim && input === 'k')) return -1;
   if (key.downArrow || (vim && input === 'j')) return 1;
   return 0;

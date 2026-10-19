@@ -17,21 +17,11 @@ import {
   StageSchema,
   StoryKeySchema,
   StorySchema,
-  TaskIdSchema,
-  TaskSchema,
   TimestampSchema,
 } from '../../src/schemas';
 
 const T = '2026-10-12T17:21:07.000Z';
 
-const task = {
-  id: 'WEB-42.1',
-  name: 'Write tests',
-  description: '',
-  stage: 'todo',
-  createdAt: T,
-  updatedAt: T,
-};
 const story = {
   version: 1,
   key: 'WEB-42',
@@ -47,8 +37,6 @@ const story = {
   createdBy: 'sam',
   createdAt: T,
   updatedAt: T,
-  nextTaskNumber: 2,
-  tasks: [task],
 };
 const board = {
   version: 1,
@@ -71,7 +59,6 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   },
   { name: 'KeyPrefix', schema: KeyPrefixSchema, valid: ['WEB', 'A1'], invalid: ['W', 'web', '1WEB', 'ABCDEFGHIJK'] },
   { name: 'StoryKey', schema: StoryKeySchema, valid: ['WEB-1', 'WEB-42'], invalid: ['web-1', 'WEB-0', 'WEB42'] },
-  { name: 'TaskId', schema: TaskIdSchema, valid: ['WEB-42.1'], invalid: ['WEB-42', 'WEB-42.0', 'web-42.1'] },
   { name: 'Label', schema: LabelSchema, valid: ['frontend', 'tech-debt'], invalid: ['Frontend', 'tech debt'] },
   { name: 'Timestamp', schema: TimestampSchema, valid: [T], invalid: ['2026-10-12T17:21:07Z', '2026-10-12'] },
   { name: 'IsoDate', schema: IsoDateSchema, valid: ['2026-10-12'], invalid: ['2026-02-30', '12/10/2026', T] },
@@ -146,16 +133,6 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
     ],
   },
   {
-    name: 'Task',
-    schema: TaskSchema,
-    valid: [task],
-    invalid: [
-      { ...task, id: 'WEB-42' },
-      { ...task, name: 'x'.repeat(201) },
-      { ...task, stage: undefined },
-    ],
-  },
-  {
     name: 'Story',
     schema: StorySchema,
     valid: [story, { ...story, priority: null, dueDate: null, createdBy: null, customFields: {} }],
@@ -164,11 +141,8 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
       { ...story, priority: 'P9' },
       { ...story, labels: ['Not Kebab'] },
       { ...story, dueDate: '2026-13-01' },
-      { ...story, nextTaskNumber: 0 },
-      { ...story, nextTaskNumber: 1.5 },
       { ...story, customFields: { Points: 3 } },
       { ...story, name: '' },
-      { ...story, tasks: undefined },
     ],
   },
   {
@@ -225,7 +199,9 @@ describe('serialization', () => {
     expect(Object.keys(parsed)).toEqual(Object.keys(StorySchema.shape));
     expect(JSON.stringify(parsed)).toBe(JSON.stringify(StorySchema.parse(bagged)));
     // Optional keys that are absent stay absent.
-    expect(Object.keys(parsed.tasks[0] ?? {})).toEqual(Object.keys(TaskSchema.shape).filter((k) => k !== 'plugins'));
+    expect(Object.keys(StorySchema.parse(story))).toEqual(
+      Object.keys(StorySchema.shape).filter((k) => k !== 'plugins'),
+    );
   });
 
   it('keeps every Plugin bag as stored, whatever the Plugin (ADR-0011)', () => {
@@ -233,14 +209,14 @@ describe('serialization', () => {
     const parsed = StorySchema.parse({
       ...story,
       plugins: bags,
-      tasks: story.tasks.map((t) => ({ ...t, plugins: bags })),
     });
     expect(parsed.plugins).toEqual(bags);
-    expect(parsed.tasks[0]?.plugins).toEqual(bags);
   });
 
-  it('drops unknown keys', () => {
-    const parsed = StorySchema.parse({ ...story, extra: true });
+  it('drops unknown keys, including the Tasks of a Rowbly from before the Tasks Plugin', () => {
+    const parsed = StorySchema.parse({ ...story, extra: true, nextTaskNumber: 2, tasks: [{ id: 'WEB-42.1' }] });
     expect(parsed).not.toHaveProperty('extra');
+    expect(parsed).not.toHaveProperty('tasks');
+    expect(parsed).not.toHaveProperty('nextTaskNumber');
   });
 });

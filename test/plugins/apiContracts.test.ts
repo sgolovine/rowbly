@@ -95,8 +95,6 @@ const decoy = definePlugin({
         createdBy: null,
         createdAt: FIXED_NOW,
         updatedAt: FIXED_NOW,
-        nextTaskNumber: 1,
-        tasks: [],
       };
       await changes.putStory(story);
       return core();
@@ -156,7 +154,7 @@ describe('capabilities (ARCH-05, ARCH-11, SEC-03)', () => {
     expect(reachable.setup).toBeUndefined();
     expect(Object.keys(plugin.services.doctor)).toEqual(['check']);
     expect(Object.keys(plugin.services).sort()).toEqual(
-      ['boards', 'config', 'context', 'doctor', 'fields', 'stages', 'stories', 'tasks'].sort(),
+      ['boards', 'config', 'context', 'doctor', 'fields', 'stages', 'stories'].sort(),
     );
     expect('editText' in plugin).toBe(false);
     expect(typeof services.plugins.context).toBe('function');
@@ -192,7 +190,7 @@ describe('capabilities (ARCH-05, ARCH-11, SEC-03)', () => {
       expect(read.setup).toBeUndefined();
       expect(read.doctor).toBeUndefined();
       expect(Object.keys(read.stories ?? {}).sort()).toEqual(['get', 'labelsInUse', 'list']);
-      expect(Object.keys(read.tasks ?? {}).sort()).toEqual(['get', 'list']);
+      expect(read.tasks).toBeUndefined();
       expect(Object.keys(read.boards ?? {}).sort()).toEqual(['get', 'list']);
       expect(Object.keys(read.context ?? {})).toEqual(['resolveBoard']);
     }
@@ -272,8 +270,6 @@ describe('bags (ARCH-36, ARCH-08, CQ-165)', () => {
     expect(plugin.writeBag(story, { n: 2 })).toEqual({ ...story, plugins: { notes: { n: 2 }, other: { x: true } } });
     expect(plugin.writeBag(story, undefined)).toEqual({ ...story, plugins: { other: { x: true } } });
     expect(plugin.writeBag({ key: 'WEB-1', plugins: { notes: { n: 1 } } }, undefined)).toEqual({ key: 'WEB-1' });
-    const task: Bagged & { id: string } = { id: 'WEB-1.1' };
-    expect(plugin.writeBag(task, { n: 1 })).toEqual({ id: 'WEB-1.1', plugins: { notes: { n: 1 } } });
     const assignee: Bagged & { handle: string; name: string } = { handle: 'alice', name: 'A' };
     expect(plugin.writeBag(assignee, { n: 1 })).toMatchObject({ plugins: { notes: { n: 1 } } });
     const local: Bagged & { version: number; board: string } = { version: 1, board: 'web' };

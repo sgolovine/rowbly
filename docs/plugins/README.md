@@ -1,10 +1,10 @@
 # The plugin system
 
-Rowbly keeps its core small and adds features as Plugins. This page explains how the plugin system works. The terms are in the [glossary](../agents/CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in the [context map](../agents/CONTEXT-MAP.md). The decisions are ADR-0009 to ADR-0021 ([index](../agents/adr/README.md)).
+Rowbly keeps its core small and adds features as Plugins. This page explains how the plugin system works. The terms are in the [glossary](../agents/CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in the [context map](../agents/CONTEXT-MAP.md). The decisions are ADR-0009 to ADR-0022 ([index](../agents/adr/README.md)).
 
 | Page | What it covers |
 | --- | --- |
-| [Built-in Plugins](built-in.md) | Epics, Specs and Comments: their data, commands, TUI and doctor checks |
+| [Built-in Plugins](built-in.md) | Tasks, Epics, Specs and Comments: their data, commands, TUI and doctor checks |
 | [Writing a Plugin](writing-a-plugin.md) | Tutorial: from a five-line Plugin to fields, commands, screens, guards, files, doctor and tests |
 | [Plugin API reference](api.md) | Every contract a Plugin can rely on |
 | [Compatibility policy](compatibility.md) | API versions, data formats, migrations and dependencies |
@@ -15,7 +15,7 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 Built:
 
 - The Plugin API, the registry and loading; the operation pipeline (guard, transform, replace, react) with the Data Root lock and commit journal; Plugin Data and Plugin files; the `plugins` commands and the TUI **Plugins** settings section; every slot listed under [Surfaces](#surfaces).
-- The Built-in Plugins [Epics](built-in.md#epics), [Specs](built-in.md#specs) and [Comments](built-in.md#comments).
+- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs) and [Comments](built-in.md#comments).
 
 Planned, not built:
 
@@ -91,7 +91,7 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
     board.config.json       # Board bags (settings that cascade)
     plugins/<id>/…          # Board files of a Plugin, e.g. Board Specs
     stories/<KEY>/
-      story.json            # Story bags, and Task bags inside it, e.g. Comments
+      story.json            # Story bags, e.g. Tasks and Comments
       plugins/<id>/…        # Story files of a Plugin, e.g. the Story Spec
 ```
 
@@ -126,9 +126,9 @@ Clashes are found when the Plugins load. The later Plugin in the registry fails 
 - an option flag that a core command or an earlier Plugin has (by name, ignoring `no-`), or either polarity of a global option (`--root`, `--json`, `--yes`, `--prompt`, `--version`, `--help`);
 - an Action key that a core screen uses ([`CORE_KEYS`](../../src/tui/keymap.ts)) or an earlier Plugin uses;
 - a second replacement of an operation, or a `replaces` key that is not a core operation;
-- a hook key in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) that is not a core operation;
+- a hook key in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `plugins`, `doctor`) that is not a core operation;
 - options on a core command that does not take them (the commands that do are `PluginOptionCommand`);
-- a `home` or `settings` link to a missing screen, or two Story tabs, Task tabs or settings sections of one Plugin with the same label.
+- a `home` or `settings` link to a missing screen, or two Story tabs or settings sections of one Plugin with the same label.
 
 Option flags are long and lower-kebab-case; `--x` and `--no-x` may pair. Plugin screens, form fields, filter fields and doctor codes are named after the Plugin, so they cannot clash. Hooks on another Plugin's operations (`<plugin>.<op>`) are not checked.
 
@@ -136,9 +136,9 @@ Option flags are long and lower-kebab-case; `--x` and `--no-x` may pair. Plugin 
 
 Every data change a Plugin offers works in both the CLI and the TUI.
 
-Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story and Task detail tabs and rows, Board detail sections, `stories show` and `tasks show` rows, and Actions. Board card lines, `stories list` columns and other closed lists open when a Plugin first needs them.
+Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, `stories show` rows, Board detail sections, board card badges, and Actions. `stories list` columns and other closed lists open when a Plugin first needs them.
 
-**Actions** ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, a Task, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A Task Action gets the Task and its Story. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
+**Actions** ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
 
 **Containment in the TUI.** A Plugin screen, tab or section that throws while rendering shows a fallback naming the Plugin; the rest of the TUI keeps working, and the Plugin is tried again when the Plugins load again. A Plugin whose form or filter fields fail contributes nothing to that form or filter, and the screen says so.
 

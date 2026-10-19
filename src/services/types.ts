@@ -18,7 +18,6 @@ import type {
   StageCategory,
   Story,
   StoryKey,
-  Task,
 } from '../schemas';
 import type { PluginHost, PluginStatus } from './plugins/host';
 import type { PluginContext } from './plugins/types';
@@ -175,22 +174,6 @@ export interface StoryPatch extends OperationOptions {
   stage?: Slug;
 }
 
-// ── Tasks ───────────────────────────────────────────────────────────────────
-
-export interface TaskCreateInput extends OperationOptions {
-  name: string;
-  description?: string;
-  /** Defaults to the first effective Stage. */
-  stage?: Slug;
-}
-
-export interface TaskPatch extends OperationOptions {
-  name?: string;
-  description?: string;
-  /** A new Stage, like `move`. */
-  stage?: Slug;
-}
-
 // ── Doctor ──────────────────────────────────────────────────────────────────
 
 export type DoctorSeverity = 'error' | 'warning' | 'info';
@@ -206,7 +189,6 @@ export type CoreDoctorCode =
   | 'UNKNOWN_FIELD'
   | 'INVALID_FIELD_VALUE'
   | 'MISSING_REQUIRED_FIELD'
-  | 'TASK_COUNTER_BEHIND'
   | 'DUPLICATE_RANK'
   | 'STALE_LOCAL_STATE'
   | 'UNKNOWN_FILE'
@@ -286,7 +268,7 @@ export interface StagesService {
     target: ConfigTarget,
     key: Slug,
     opts: { moveTo?: Slug } & OperationOptions,
-  ): Promise<{ storiesMoved: number; tasksMoved: number }>;
+  ): Promise<{ storiesMoved: number }>;
 }
 
 export interface FieldsService {
@@ -307,15 +289,6 @@ export interface StoriesService {
   rank(key: string, position: RankPosition, opts?: OperationOptions): Promise<Story>;
   remove(key: string, opts?: OperationOptions): Promise<void>;
   labelsInUse(boardId: Slug): Promise<string[]>;
-}
-
-export interface TasksService {
-  list(storyKey: string): Promise<Task[]>;
-  get(taskId: string): Promise<{ story: Story; task: Task }>;
-  create(storyKey: string, input: TaskCreateInput): Promise<Task>;
-  update(taskId: string, patch: TaskPatch): Promise<Task>;
-  move(taskId: string, stage: Slug, opts?: OperationOptions): Promise<Task>;
-  remove(taskId: string, opts?: OperationOptions): Promise<void>;
 }
 
 export interface DoctorService {
@@ -345,7 +318,6 @@ export interface Services {
   stages: StagesService;
   fields: FieldsService;
   stories: StoriesService;
-  tasks: TasksService;
   doctor: DoctorService;
   plugins: PluginsService;
 }

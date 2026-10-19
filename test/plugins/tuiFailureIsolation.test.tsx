@@ -15,7 +15,7 @@ import { acquireLock, type LockHandle } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { loadTuiPlugins } from '../../src/tui/loadPlugins';
-import { FIXED_NOW, fixedClock, fixedIds, makeStory, type TempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeStory, type TempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
 import { notes } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile } from './helpers';
@@ -231,43 +231,22 @@ const crashy = definePlugin({
     home: [{ label: 'Crashy', screen: 'boom' }],
     settings: [{ label: 'Crashy', screen: 'boom' }],
     storyTabs: [{ label: 'Crash', component: Boom }],
-    taskTabs: [{ label: 'Crash', component: Boom }],
     boardSections: [Boom],
   }),
 });
 
-/** A healthy Plugin with a Task tab, which Notes lacks. */
-const steady = definePlugin({
-  id: 'steady',
-  name: 'Steady',
-  description: 'Renders fine',
-  tui: async (): Promise<PluginTui<unknown>> => ({
-    taskTabs: [{ label: 'Steady', component: () => <Text>steady tab</Text> }],
-  }),
-});
-
 async function seedCrashy() {
-  const t = await pluginRoot({ notes: true, crashy: true, steady: true });
-  const task = {
-    id: 'WEB-1.1',
-    name: 'Wire it',
-    description: '',
-    stage: 'backlog',
-    createdAt: FIXED_NOW,
-    updatedAt: FIXED_NOW,
-  };
+  const t = await pluginRoot({ notes: true, crashy: true });
   await makeStory(t.path, {
     boardId: 'web',
     key: 'WEB-1',
     name: 'Login',
     plugins: { notes: { note: 'hello' } },
-    tasks: [task],
-    nextTaskNumber: 2,
   });
   return t;
 }
 
-const CRASHY = [notes, crashy, steady];
+const CRASHY = [notes, crashy];
 
 /** The fallback each failure shows: an ordinary error names the Plugin, an expected one keeps its hint. */
 const FALLBACK: Record<Crash, string[]> = {
@@ -309,7 +288,7 @@ describe('Plugin render containment (RES-13)', () => {
       const t = await seedCrashy();
       const { app } = await open(t, CRASHY, 'story', { key: 'WEB-1' });
       await waitForFrame(app, 'Crash');
-      await app.press(KEYS.tab, KEYS.tab);
+      await app.press(KEYS.tab);
       await waitForFrame(app, 'Tab note: hello');
       await app.press(KEYS.tab);
       const frame = await waitForFrame(app, FALLBACK[how][0] as string);
@@ -319,22 +298,6 @@ describe('Plugin render containment (RES-13)', () => {
       await waitForFrame(app, 'Updated');
       await app.press('e');
       await waitForFrame(app, 'Edit WEB-1');
-      app.unmount();
-    },
-  );
-
-  it.each(['render', 'effect'] as const)(
-    'a Task tab that fails (%s) leaves the healthy Plugin tab working',
-    async (how) => {
-      crash = how;
-      const t = await seedCrashy();
-      const { app } = await open(t, CRASHY, 'task', { id: 'WEB-1.1' });
-      await waitForFrame(app, 'Steady');
-      await app.press(KEYS.tab);
-      const frame = await waitForFrame(app, FALLBACK[how][0] as string);
-      expect(frame).toContain('rowbly plugins disable crashy');
-      await app.press(KEYS.tab);
-      await waitForFrame(app, 'steady tab');
       app.unmount();
     },
   );

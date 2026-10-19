@@ -110,44 +110,23 @@ describe('stages.update / move', () => {
 });
 
 describe('stages.remove', () => {
-  it('refuses while Stories use the Stage; --move-to moves them to the bottom of the target, Tasks too', async () => {
+  it('refuses while Stories use the Stage; --move-to moves them to the bottom of the target', async () => {
     const { t, services, repos } = await setup();
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1', stage: 'backlog', rank: 'a0' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-2', stage: 'backlog', rank: 'a5' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-3', stage: 'todo', rank: 'a1' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-4', stage: 'todo', rank: 'a0' });
-    await makeStory(t.path, {
-      boardId: 'web',
-      key: 'WEB-5',
-      stage: 'done',
-      rank: 'a0',
-      nextTaskNumber: 2,
-      tasks: [
-        {
-          id: 'WEB-5.1',
-          name: 'Task',
-          description: '',
-          stage: 'todo',
-          createdAt: '2026-10-12T17:21:07.000Z',
-          updatedAt: '2026-10-12T17:21:07.000Z',
-        },
-      ],
-    });
     const target = { level: 'board' as const, boardId: 'web' };
 
     const refused = await services.stages.remove(target, 'todo', {}).catch((err: unknown) => err);
     expect(refused).toBeInstanceOf(ConflictError);
-    expect((refused as ConflictError).details).toEqual({ stage: 'todo', stories: 2, tasks: 1 });
+    expect((refused as ConflictError).details).toEqual({ stage: 'todo', stories: 2, needsMoveTo: true });
 
-    expect(await services.stages.remove(target, 'todo', { moveTo: 'backlog' })).toEqual({
-      storiesMoved: 2,
-      tasksMoved: 1,
-    });
+    expect(await services.stages.remove(target, 'todo', { moveTo: 'backlog' })).toEqual({ storiesMoved: 2 });
     const stories = await repos.stories.allInBoard('web');
     const backlog = stories.filter((s) => s.stage === 'backlog').sort((a, b) => (a.rank < b.rank ? -1 : 1));
     // Moved Stories keep their relative order and sort after the Stories already in backlog.
     expect(backlog.map((s) => s.key)).toEqual(['WEB-1', 'WEB-2', 'WEB-4', 'WEB-3']);
-    expect(stories.find((s) => s.key === 'WEB-5')?.tasks[0]?.stage).toBe('backlog');
     expect(keys((await repos.boards.get('web')).stages ?? [])).toEqual(['backlog', 'in-progress', 'done']);
   });
 
@@ -157,7 +136,7 @@ describe('stages.remove', () => {
     expect(await affectedBoards(contextFor(t), target, 'stages')).toEqual(['web']);
     // api has its own `todo` with a Story in it, but it does not inherit, so it is not affected.
     await makeStory(t.path, { boardId: 'api', key: 'API-1', stage: 'todo' });
-    expect(await services.stages.remove(target, 'todo', {})).toEqual({ storiesMoved: 0, tasksMoved: 0 });
+    expect(await services.stages.remove(target, 'todo', {})).toEqual({ storiesMoved: 0 });
     expect(keys((await repos.rootConfig.get()).stages ?? [])).toEqual(['backlog', 'in-progress', 'done']);
     expect(keys((await repos.boards.get('api')).stages ?? [])).toEqual(['todo', 'done']);
 

@@ -108,7 +108,7 @@ describe('loading Plugins (ADR-0010)', () => {
       const t = await pluginRoot({ stamp: true, rival: true });
       const { host } = await withPlugins(t, [stamp, rival]);
       expect(host.failures().map((f) => [f.id, f.reason])).toEqual([
-        ['rival', 'another Plugin already replaces tasks.create'],
+        ['rival', 'another Plugin already replaces stories.create'],
       ]);
     });
 

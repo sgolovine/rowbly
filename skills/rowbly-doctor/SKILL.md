@@ -50,8 +50,8 @@ rowbly doctor --fix --json --no-prompt
 ```
 
 `--fix` repairs only what is safe: duplicate Story Keys, stale Local State,
-duplicate Ranks, Task counters, interrupted commits, leftover temporary files, the `.gitignore`, and
-the fixable checks of Plugins that are on (such as unknown Assignees).
+duplicate Ranks, interrupted commits, leftover temporary files, the `.gitignore`, and
+the fixable checks of Plugins that are on (such as unknown Assignees and Task counters).
 It reports in `fixed` what it changed and in `findings` what remains. It never deletes a Story or merges
 text for you. Run `rowbly doctor --json --no-prompt` again afterwards.
 Success: exit 0.
@@ -64,8 +64,9 @@ For each remaining finding, look up its code in [finding codes](references/findi
 - `CONFLICT_MARKERS`: a file still has `<<<<<<<` / `>>>>>>>` from git, often one Story edited on both
   branches. Open the file, merge the two versions into valid JSON (keep both sides' intended changes),
   and run doctor again.
-- `UNKNOWN_STAGE`: a Story or Task is in a Stage that its Board no longer has. Move it with
-  `rowbly stories move <KEY> <stage>` or `rowbly tasks move <TASK-ID> <stage>`.
+- `UNKNOWN_STAGE`: a Story is in a Stage that its Board no longer has. Move it with
+  `rowbly stories move <KEY> <stage>`. `TASKS_UNKNOWN_STAGE` is the same for a Task: use
+  `rowbly tasks move <TASK-ID> <stage>`.
 - `SCHEMA_INVALID` / `ID_PATH_MISMATCH`: a file that does not parse or does not match its path. Compare
   it with git (`git diff`, `git log -p -- <path>`) and restore or correct it.
 - `MISSING_REQUIRED_FIELD` / `INVALID_FIELD_VALUE`: set a valid value with
@@ -88,7 +89,7 @@ git add .rowbly && git commit        # finish the merge as usual
 ```
 
 Doctor keeps the earlier-created Story under the key, and gives the other one the next free key. It
-renames that Story's Task ids and moves its folder with its Plugin files. Then update any branch names,
+moves its folder with its Plugin files; its Task Ids follow the new key. Then update any branch names,
 commit messages or notes that used the renumbered key, and tell the user which key changed.
 
 Resolve conflicts in other files under `.rowbly/` (code files are not Rowbly's concern) before or after

@@ -20,9 +20,9 @@ parse each Plugin's input → take the Data Root lock → body (or a Plugin's re
 | Save | Validates the whole plan, then commits it through the journal ([Storage and commits](storage.md)) | Nothing is saved, or the commit finishes at the next recovery |
 | Reactions | Act only outside Rowbly's data, after the lock is released. 5 s each. The CLI waits for them; the TUI runs them in the background | A warning; the exit code stays 0 |
 
-- A **Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text). `before: null` is a created record, `after: null` a deleted one. Tasks are inside their Story's change. A renumbered Story is one `story` change whose keys differ. Deleting a Board lists a `story` change for each of its Stories, then the `board` change; Plugin files deleted with a folder are not listed.
+- A **Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text). `before: null` is a created record, `after: null` a deleted one. A renumbered Story is one `story` change whose keys differ. Deleting a Board lists a `story` change for each of its Stories, then the `board` change; Plugin files deleted with a folder are not listed.
 - **Results.** Callers and reactions get the final result, read back from the Change Set after the transforms, so `stories create --epic auth --json` prints the bag the Epics transform wrote. Transforms and guards get the body's result before transforms. A transform that deletes the record an operation returns fails the operation with `CONFLICT`.
-- **Stage changes.** `stories.update` and `tasks.update` can change a Stage, like `stories.move` and `tasks.move`. Compare `before.stage` with `after.stage` rather than relying on the operation name.
+- **Stage changes.** `stories.update` can change a Stage, like `stories.move`. Compare `before.stage` with `after.stage` rather than relying on the operation name.
 - **Nesting.** A hook cannot start another operation; it changes data through the Change Set it receives. What each Plugin callback may do is in the [Plugin API reference](../plugins/api.md#stages-and-capabilities).
 - **Not operations:** `rowbly init` (no Plugin can be on before the Data Root exists) and reads.
 
@@ -54,7 +54,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `stages.add` | `{ target, stage, position }` | `Stage[]` |
 | `stages.update` | `{ target, key, name?, category? }` | `Stage[]` |
 | `stages.move` | `{ target, key, position }` | `Stage[]` |
-| `stages.remove` | `{ target, key, moveTo? }` | `{ storiesMoved, tasksMoved }` |
+| `stages.remove` | `{ target, key, moveTo? }` | `{ storiesMoved }` |
 | `fields.add` | `{ target, field }` | `CustomFieldDef[]` |
 | `fields.update` | `{ target, key, …CustomFieldPatch }` | `CustomFieldDef[]` |
 | `fields.remove` | `{ target, key }` | `{ valuesStripped }` |
@@ -63,10 +63,6 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `stories.move` | `{ key, stage, top }` | `Story` |
 | `stories.rank` | `{ key, position }` | `Story` |
 | `stories.remove` | `{ key }` | `undefined` |
-| `tasks.create` | `{ storyKey, …TaskCreateInput }` | `Task` |
-| `tasks.update` | `{ taskId, …TaskPatch }` | `Task` |
-| `tasks.move` | `{ taskId, stage }` | `Task` |
-| `tasks.remove` | `{ taskId }` | `undefined` |
 | `plugins.enable` | `{ id }` | `{ id, enabled }` |
 | `plugins.disable` | `{ id }` | `{ id, enabled }` |
 | `doctor.fix` | `{ findings }` | `DoctorFix[]` |
@@ -75,9 +71,6 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 
 | Operation | Input | Result |
 | --- | --- | --- |
-| `assignees.add` | `{ handle, name, email? }` | `Assignee` |
-| `assignees.update` | `{ handle, name?, email? }` | `Assignee` |
-| `assignees.remove` | `{ handle }` | `{ handle, storiesUpdated }` |
 | `epics.create` | `{ id, name, description }` | `Epic` |
 | `epics.edit` | `{ id, name?, description? }` | `Epic` |
 | `epics.close` | `{ id }` | `Epic` |
@@ -90,7 +83,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `comments.update` | `{ target, id, body }` | `Comment` |
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
 
-A Spec has exactly one of `slug` (a Board Spec) and `story` (a Story Spec). A Comments `target` is a Story key or a Task ID.
+A Spec has exactly one of `slug` (a Board Spec) and `story` (a Story Spec). A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 
 ## Plugin input of core operations
 

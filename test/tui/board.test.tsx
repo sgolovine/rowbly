@@ -9,15 +9,7 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { screens } from '../../src/tui/screens';
-import {
-  columnLayout,
-  follow,
-  groupColumns,
-  moveCard,
-  swapCard,
-  taskSummary,
-  truncate,
-} from '../../src/tui/screens/board/layout';
+import { columnLayout, follow, groupColumns, moveCard, swapCard, truncate } from '../../src/tui/screens/board/layout';
 import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
 
@@ -42,14 +34,6 @@ async function seed(stages: Stage[] = FOUR_STAGES) {
   const t = await tempRoot();
   await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB', stages });
   await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
-  const task = (n: number, stage: string) => ({
-    id: `WEB-1.${n}`,
-    name: `Task ${n}`,
-    description: '',
-    stage,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-  });
   await makeStory(t.path, {
     ...web,
     key: 'WEB-1',
@@ -58,8 +42,6 @@ async function seed(stages: Stage[] = FOUR_STAGES) {
     rank: 'a0',
     priority: 'P1',
     labels: ['ui'],
-    tasks: [task(1, 'done'), task(2, 'todo'), task(3, 'doing')],
-    nextTaskNumber: 4,
   });
   await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Signup form', stage: 'backlog', rank: 'a1' });
   await makeStory(t.path, { ...web, key: 'WEB-3', name: 'Password reset', stage: 'backlog', rank: 'a2' });
@@ -151,10 +133,9 @@ describe('board view', () => {
     const frame = app.lastFrame() ?? '';
     expect(frame).toContain('Website web');
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
-    // key + Priority, truncated name, Task summary (Plugin badges come first; none are on)
+    // key + Priority, truncated name, Plugin badges (none are on here).
     expect(frame).toContain('┃ WEB-1 P1');
     expect(frame).toMatch(/Login page with a.*…/);
-    expect(frame).toMatch(/┃ ✓ 1\/3\s/);
     expect(frame.indexOf('WEB-1')).toBeLessThan(frame.indexOf('WEB-2'));
     expect(frame.indexOf('WEB-2')).toBeLessThan(frame.indexOf('WEB-3'));
     expect(stable(frame)).toMatchSnapshot();
@@ -176,27 +157,42 @@ describe('board view', () => {
     app.unmount();
   });
 
-  it('moves a card to the next Stage with L, at the bottom, and on disk', async () => {
+  it('moves a card to the next Stage with shift+→, at the bottom, and on disk', async () => {
     const t = await seed();
     const app = await open(t);
-    await app.press('l', 'L');
+    await app.press(KEYS.right, KEYS.shiftRight);
     await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
     const lines = frameLines(app).join('\n');
     expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
     expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
-    // The cursor follows the card: H moves it back.
+    // The cursor follows the card: shift+← moves it back.
+    await app.press(KEYS.shiftLeft);
+    await waitForFrame(app, (f) => f.includes('● Todo (1)'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
+    app.unmount();
+  });
+
+  it('keeps h/l and H/L as alternatives to the arrow keys', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press('l', 'L');
+    await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
     await app.press('H');
     await waitForFrame(app, (f) => f.includes('● Todo (1)'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
     app.unmount();
   });
 
-  it('reorders within a column with K, changing only one file', async () => {
+  it.each([
+    ['shift+↑', [KEYS.down, KEYS.down, KEYS.shiftUp]],
+    ['K', ['j', 'j', 'K']],
+  ])('reorders within a column with %s, changing only one file', async (_name, keys) => {
     const t = await seed();
     const before = await storyFiles(t);
     const app = await open(t);
-    await app.press('j', 'j', 'K');
+    await app.press(...keys);
     await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-2'));
     const changed = async () => {
       const after = await storyFiles(t);
@@ -388,10 +384,8 @@ describe('board view', () => {
     await vi.waitFor(async () => expect((await story(t, 'WEB-2')).stage).toBe('done'));
     await click(at('Signup form'));
     await click(at('Signup form'));
-    await waitForFrame(app, ' Tasks ');
+    await waitForFrame(app, ' Details ');
     await tick(200);
-    await click(at(' Tasks '));
-    await waitForFrame(app, 'No Tasks yet');
     await click(at(' Details '));
     await waitForFrame(app, (f) => /Updated\s+20/.test(f));
     app.unmount();
@@ -471,8 +465,7 @@ describe('board layout', () => {
     expect(swapCard(columns, 0, 0, -1)).toBe(columns);
   });
 
-  it('summarises Tasks by Stage Category and truncates text', () => {
-    expect(taskSummary({ tasks: [] }, FOUR_STAGES)).toBeNull();
+  it('truncates text', () => {
     expect(truncate('abcdef', 4)).toBe('abc…');
     expect(truncate('abc', 4)).toBe('abc');
   });

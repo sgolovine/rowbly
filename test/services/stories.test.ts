@@ -34,8 +34,6 @@ describe('stories.create', () => {
       key: 'WEB-1',
       stage: 'backlog',
       createdBy: 'alice',
-      nextTaskNumber: 1,
-      tasks: [],
       customFields: {},
       createdAt: '2026-10-12T17:21:07.000Z',
     });

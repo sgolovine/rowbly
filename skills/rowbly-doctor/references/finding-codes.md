@@ -11,11 +11,10 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `DUPLICATE_KEY` | error | Two Story files with the same `key` | Renumbers the Story created later | — |
 | `CONFLICT_MARKERS` | error | Conflict markers in any other file, including one Story edited on both branches | nothing | Merge the two versions by hand into valid JSON |
 | `DUPLICATE_PREFIX` | error | Two Boards with the same key prefix | nothing | Ask the user which Board keeps the prefix; this needs a manual data change |
-| `UNKNOWN_STAGE` | error | A Story or Task in a Stage that its Board does not have | nothing | `rowbly stories move <KEY> <stage>` / `rowbly tasks move <TASK-ID> <stage>` |
+| `UNKNOWN_STAGE` | error | A Story in a Stage that its Board does not have | nothing | `rowbly stories move <KEY> <stage>` |
 | `UNKNOWN_FIELD` | warning | A Custom Field value with no definition | Strips it | — |
 | `INVALID_FIELD_VALUE` | warning | A Custom Field value that does not fit its definition | nothing | `rowbly stories edit <KEY> --field key=value` |
 | `MISSING_REQUIRED_FIELD` | warning | A required Custom Field without a value | nothing | `rowbly stories edit <KEY> --field key=value` |
-| `TASK_COUNTER_BEHIND` | warning | `nextTaskNumber` at or below the highest Task number | Sets it to the highest + 1 | — |
 | `DUPLICATE_RANK` | warning | Stories in one Stage with the same Rank | Re-ranks them, keeping the current order | — |
 | `STALE_LOCAL_STATE` | warning | `local.json` names a missing Board | Clears it | — |
 | `UNKNOWN_FILE` | info | A file outside the Data Root layout | nothing | Remove it if it does not belong there |
@@ -31,4 +30,4 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `ASSIGNEES_UNKNOWN_ME` | warning | Me is not in the Assignees Plugin's roster | Clears Me | Or add Me: `rowbly assignees add <handle>` |
 | `ASSIGNEES_ROSTER_UNAVAILABLE` | error | `plugins/assignees/roster.json` has conflict markers, is not valid JSON or fails its schema | nothing | Merge or correct the file by hand |
 | `GITIGNORE_INCOMPLETE` | info | `.rowbly/.gitignore` lacks `local.json`, `.lock`, `.lock.break` or `.txn/` | Adds the missing lines | — |
-| `<PLUGIN>_…` (e.g. `EPICS_MISSING_EPIC`, `SPECS_MISSING_SPEC`) | any | Checks of a Plugin that is on | As the Plugin says (`EPICS_MISSING_EPIC` and `SPECS_MISSING_SPEC` unlink the missing target) | Other Epics file errors (`EPICS_INVALID_JSON`, …) need the Epic file corrected by hand |
+| `<PLUGIN>_…` (e.g. `EPICS_MISSING_EPIC`, `SPECS_MISSING_SPEC`, `TASKS_UNKNOWN_STAGE`, `TASKS_COUNTER_BEHIND`) | any | Checks of a Plugin that is on | As the Plugin says (`EPICS_MISSING_EPIC` and `SPECS_MISSING_SPEC` unlink the missing target; `TASKS_COUNTER_BEHIND` raises the Story's next Task number; `TASKS_UNKNOWN_STAGE` needs `rowbly tasks move <TASK-ID> <stage>`) | Other Epics file errors (`EPICS_INVALID_JSON`, …) need the Epic file corrected by hand |

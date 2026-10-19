@@ -1,19 +1,20 @@
 # Built-in Plugins
 
-Rowbly ships four Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships five Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
-| [Assignees](#assignees) | A roster of Assignees, and the Assignees of each Story | [`assignees/CONTEXT.md`](../../src/plugins/assignees/CONTEXT.md) | [ADR-0022](../agents/adr/0022-assignees-are-a-built-in-plugin.md) |
+| [Assignees](#assignees) | A roster of Assignees, and the Assignees of each Story | [`assignees/CONTEXT.md`](../../src/plugins/assignees/CONTEXT.md) | [ADR-0023](../agents/adr/0023-assignees-are-a-built-in-plugin.md) |
+| [Tasks](#tasks) | Tasks inside Stories, each with its own Stage | [`tasks/CONTEXT.md`](../../src/plugins/tasks/CONTEXT.md) | [ADR-0022](../agents/adr/0022-tasks-are-a-built-in-plugin.md) |
 | [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
-| [Comments](#comments) | Comment Threads on Stories and Tasks | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
+| [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
 ## Assignees
 
-An Assignee is a person in the Data Root's roster, identified by a handle (a slug). A Story has zero or more Assignees, and its Tasks share them.
+An Assignee is a person in the Data Root's roster, identified by a handle (a slug). A Story has zero or more Assignees,.
 
 **Data**
 
@@ -40,13 +41,46 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 - Adding to or removing from a Story whose Assignees bag is invalid fails with `DATA_INTEGRITY` (exit 6); `--assignee` replaces it.
 - Removing an Assignee from the roster takes the handle off every Story and stamps each Story's `updatedAt`. Me is not cleared.
 
-**TUI:** an **Assignees** section in the settings (`,`) with the roster, an Assignee's detail (Edit, Remove) and form; an Assignees multi-choice in the Story form; Assignees and "Assigned to me" in the filter of the Stories list and the board; `@handle` on board cards and Story list rows; an Assignees row on the Story screen and on the Task screen ("from the Story").
+**TUI:** an **Assignees** section in the settings (`,`) with the roster, an Assignee's detail (Edit, Remove) and form; an Assignees multi-choice in the Story form; Assignees and "Assigned to me" in the filter of the Stories list and the board; `@handle` on board cards and Story list rows; an Assignees row on the Story screen.
 
 **Doctor**
 
 - `ASSIGNEES_ROSTER_UNAVAILABLE` (error): the roster file has conflict markers, is not valid JSON, is from a newer Rowbly or fails its schema. Never fixed automatically; every roster change fails with `DATA_INTEGRITY` (exit 6) until it is fixed by hand.
 - `ASSIGNEES_UNKNOWN_ASSIGNEE` (warning): a Story has Assignees that are not in the roster; `--fix` removes them and stamps the Story's `updatedAt`.
 - `ASSIGNEES_UNKNOWN_ME` (warning): Me is not in the roster; `--fix` clears Me from Local State.
+
+## Tasks
+
+A Task is a smaller unit of work inside exactly one Story, with its own name, description and Stage. It has no Assignees, Priority or Rank of its own: it belongs to the Story's Assignees. Its Task Id is its Story's Story Key, a dot and a number that is never reused in that Story (`WEB-42.3`).
+
+**Data**
+
+- A Story's Tasks are its bag: `"plugins": { "tasks": { "nextNumber": 4, "tasks": [ … ] } }`. The bag is kept, with `nextNumber`, when the last Task is deleted.
+- Each Task has `number`, `name`, `description`, `stage`, `createdAt` and `updatedAt`. Its Task Id is derived from the Story Key, so a Story that doctor renumbers keeps its Tasks; command output and `--json` add it as `id`.
+- A Task's Stage is one of its Board's effective Stages.
+
+**Commands**
+
+```text
+rowbly tasks list <KEY>                                                   # creation order
+rowbly tasks create <KEY> --name <name> [--stage <key>] [description flags]  # default Stage: the first one
+rowbly tasks show <TASK-ID>
+rowbly tasks edit <TASK-ID> [--name <name>] [description flags]           # at least one, or exit 2
+rowbly tasks move <TASK-ID> <stage>
+rowbly tasks delete <TASK-ID>                                              # confirms; --yes when not interactive
+```
+
+Task Ids are case-insensitive (`web-42.3`). `stories show` has a Tasks row (`2/5 done`, judged by Stage Category).
+
+**Rules**
+
+- Moving every Task to a done Stage does not move the Story.
+- `stages remove` refuses a Stage that Tasks of the affected Boards still use (`CONFLICT`, exit 4, with `details: { tasks, needsMoveTo: true }`). With `--move-to <stage>`, their Tasks move too, with a warning naming how many.
+- A change to the Tasks of a Story whose Tasks bag is invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing. `tasks list` exits 6 for it, `stories show` prints `Tasks: unavailable (invalid)`, and the TUI tab says so.
+
+**TUI:** a **Tasks** tab on the Story screen (`n` new, `enter` open, `m` move Stage, `e` edit, `d` delete), the Task screen and the Task form; a `✓ done/total` badge on the board card of a Story with Tasks.
+
+**Doctor:** `TASKS_UNKNOWN_STAGE` (error): a Task is in a Stage its Board does not have; move it with `rowbly tasks move`. `TASKS_COUNTER_BEHIND` (warning): `nextNumber` is not above the highest Task number; `--fix` raises it.
 
 ## Epics
 
@@ -121,20 +155,20 @@ rowbly stories list … [--spec <slug>…]
 
 ## Comments
 
-A Comment is a note attached to a Story or a Task. The Comments on one Story or one Task, oldest first, are its Thread; a Story's Thread does not include those on its Tasks.
+A Comment is a note attached to a Story. The Comments on one Story, oldest first, are its Thread. Tasks have no Comments ([ADR-0022](../agents/adr/0022-tasks-are-a-built-in-plugin.md)).
 
 **Data**
 
-- A Thread is the bag of its Story or Task: `"plugins": { "comments": { "comments": [ … ] } }`. The bag is removed with the last Comment.
+- A Thread is the bag of its Story: `"plugins": { "comments": { "comments": [ … ] } }`. The bag is removed with the last Comment.
 - Each Comment has `id` (8 random characters), `author` (Me, or `null` when Me is not set), `body`, `createdAt` and `updatedAt`.
 
 **Commands**
 
 ```text
-rowbly comments list <KEY|TASK-ID>
-rowbly comments add <KEY|TASK-ID> [--body <text>|--body-file <path>|--edit]   # --body-file - reads stdin
-rowbly comments edit <KEY|TASK-ID> <comment-id> [body flags]
-rowbly comments delete <KEY|TASK-ID> <comment-id>                            # confirms; --yes when not interactive
+rowbly comments list <KEY>
+rowbly comments add <KEY> [--body <text>|--body-file <path>|--edit]   # --body-file - reads stdin
+rowbly comments edit <KEY> <comment-id> [body flags]
+rowbly comments delete <KEY> <comment-id>                            # confirms; --yes when not interactive
 ```
 
 **Rules**
@@ -142,10 +176,15 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>                            # c
 - A body is stored as given; a body that is empty or only whitespace is refused. `--body` is kept exactly; `--body-file`, stdin and `--edit` lose trailing whitespace, as every long-text flag does.
 - The author is Me when the Comment is added, read on each add.
 - `comments.add` and `comments.update` return the Comment as other Plugins' transforms left it; a transform that removes it fails the operation with `CONFLICT`.
-- A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` and `tasks show` print `Comments: unavailable (invalid)`, and the TUI tab says so.
+- A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
-**TUI:** a **Comments** tab on the Story screen and on the Task screen (`c` add, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show`, `tasks show` and the Details tabs have a Comments row with the count.
+**TUI:** a **Comments** tab on the Story screen (`c` add, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
 
 ## Upgrading from before Plugins
 
-Earlier Rowbly versions kept Epics, Comments and Assignees in core ([ADR-0008](../agents/adr/0008-no-epics.md), [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md), [ADR-0022](../agents/adr/0022-assignees-are-a-built-in-plugin.md)). Rowbly has no importer for that data: top-level `comments` arrays on Stories and Tasks, a Story's `epicId` or `assignees`, Epic files in `epics/*.json`, and the `assignees` roster in `rowbly.config.json`. Doctor reports them as `LEGACY_DATA` (warning), never saves those Story files and never removes the data. Any other change to such a Story drops the old fields, and any change to `rowbly.config.json` (including `rowbly plugins enable`) drops the old roster, so **commit or back up the Data Root first**, then recreate what you need with the Assignees, Epics and Comments Plugins.
+Earlier Rowbly versions kept Epics, Comments, Tasks and Assignees in core ([ADR-0008](../agents/adr/0008-no-epics.md), [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md), [ADR-0022](../agents/adr/0022-tasks-are-a-built-in-plugin.md)). Rowbly has no importer for that data.
+
+- Top-level `comments` arrays on Stories, a Story's `epicId` or `assignees`, the `assignees` roster in `rowbly.config.json`, and Epic files in `epics/*.json`: doctor reports them as `LEGACY_DATA` (warning), never saves those files and never removes the data. Any other change to such a Story drops the old fields; any save of the root config drops the old roster.
+- A Story's top-level `tasks` and `nextTaskNumber`, with any Comments on those Tasks: a hard cut-off. Doctor does not report them, and core drops them the next time it saves the Story.
+
+So **commit or back up the Data Root first**, then recreate what you need with the Assignees, Tasks, Epics and Comments Plugins.

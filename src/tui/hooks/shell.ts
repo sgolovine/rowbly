@@ -167,18 +167,18 @@ export function useScreenLabel(depth: number): HeaderLabel | null {
 }
 
 /**
- * Declares the Board, Story or Task in focus on the current screen, so the Plugin Actions that
+ * Declares the Board or Story in focus on the current screen, so the Plugin Actions that
  * target it show in the footer, the help and the header (ADR-0017).
  */
 export function useActionFocus(focus: ActionFocus): void {
   const shell = useContext(ShellContext);
   const depth = useContext(ScreenDepthContext);
-  const { board, story, task } = focus;
-  const key = [board?.id, board?.updatedAt, story?.key, story?.updatedAt, task?.id, task?.updatedAt].join('|');
+  const { board, story } = focus;
+  const key = [board?.id, board?.updatedAt, story?.key, story?.updatedAt].join('|');
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands in for the focused records.
   useEffect(() => {
     if (depth < 0) return;
-    shell.setFocus(depth, { board, story, task });
+    shell.setFocus(depth, { board, story });
     return () => shell.setFocus(depth, null);
   }, [shell, depth, key]);
 }

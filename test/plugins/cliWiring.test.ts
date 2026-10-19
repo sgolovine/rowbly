@@ -40,10 +40,6 @@ const OPERATION_OF: Record<PluginOptionCommand, string> = {
   'stories move': 'stories.move',
   'stories rank': 'stories.rank',
   'stories delete': 'stories.remove',
-  'tasks create': 'tasks.create',
-  'tasks edit': 'tasks.update',
-  'tasks move': 'tasks.move',
-  'tasks delete': 'tasks.remove',
 };
 
 function recorder() {
@@ -89,7 +85,7 @@ async function setup() {
 }
 
 describe('Plugin options reach their operation (ARCH-16)', () => {
-  it('on every option command, including option-only edits of Boards and Tasks', async () => {
+  it('on every option command, including option-only edits of Boards', async () => {
     const { seen, run } = await setup();
     const cases: [PluginOptionCommand, string[]][] = [
       ['boards create', ['boards', 'create', 'api', '--name', 'API', '--prefix', 'API']],
@@ -98,10 +94,6 @@ describe('Plugin options reach their operation (ARCH-16)', () => {
       ['stories edit', ['stories', 'edit', 'WEB-1']],
       ['stories move', ['stories', 'move', 'WEB-1', 'done']],
       ['stories rank', ['stories', 'rank', 'WEB-1', '--top']],
-      ['tasks create', ['tasks', 'create', 'WEB-1', '--name', 'T']],
-      ['tasks edit', ['tasks', 'edit', 'WEB-1.1']],
-      ['tasks move', ['tasks', 'move', 'WEB-1.1', 'done']],
-      ['tasks delete', ['tasks', 'delete', 'WEB-1.1']],
       ['stories list', ['stories', 'list', '--board', 'web']],
       ['stories delete', ['stories', 'delete', 'WEB-1']],
       ['boards delete', ['boards', 'delete', 'api']],

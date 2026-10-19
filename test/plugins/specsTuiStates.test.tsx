@@ -51,7 +51,7 @@ describe('Specs failure and empty states (CQ-118)', () => {
     const { app } = await setup('story', { key: 'WEB-1' });
     await waitForFrame(app, 'Login');
     failMarkdownReads();
-    await app.press(KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab);
     const frame = await waitForFrame(app, 'Could not load Specs.');
     expect(frame).not.toContain('No Story Spec');
     expect(frame).not.toContain('create Story Spec');
@@ -64,7 +64,7 @@ describe('Specs failure and empty states (CQ-118)', () => {
   it('a successfully loaded absent Story Spec still offers create', async () => {
     const { app } = await setup('story', { key: 'WEB-1' });
     await waitForFrame(app, 'Login');
-    await app.press(KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab);
     await waitForFrame(app, 'No Story Spec. Press e to create one.');
     await app.press('e');
     await waitForFrame(app, 'Title');
@@ -245,6 +245,36 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
       await lock.release();
     }
     await waitForFrame(app, (f) => f.includes('Specs › auth─') && f.includes('Requirements'));
+    app.unmount();
+  });
+
+  it('the Story Spec tab keeps its keys while it reloads on return, also behind another lock holder', async () => {
+    const { t, app, plugin } = await setup('story', { key: 'WEB-1' });
+    await createSpec(plugin, { board: 'web', story: 'WEB-1' }, '# Own\n\nStory text');
+    await waitForFrame(app, 'Login');
+    await app.press(KEYS.tab, KEYS.tab);
+    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('delete Story Spec'));
+    await app.press('e');
+    await waitForFrame(app, 'enter new line');
+    // Another holder keeps the Data Root busy, so the tab's reload on return waits in the lock queue.
+    const lock = await acquireLock(t.path, { operation: 'test.hold' });
+    const realpath = io.realpath;
+    const reloading = deferred();
+    const reload = vi.spyOn(io, 'realpath').mockImplementation((path) => {
+      reloading.resolve();
+      return realpath(path);
+    });
+    try {
+      await app.press(KEYS.escape);
+      await reloading.promise;
+      await app.press('d');
+      await waitForFrame(app, 'Delete Story Spec?');
+    } finally {
+      reload.mockRestore();
+      await lock.release();
+    }
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('delete Story Spec'));
     app.unmount();
   });
 });

@@ -365,8 +365,8 @@ export function PointsScreen({ plugin, ui }: PluginScreenProps<PointsSettings>) 
 ```
 
 - `home` adds an entry to the home menu, and `settings` a section to the settings (`,`). Both name a screen of the Plugin, or the Plugin fails to load.
-- `ui.open(screen, params)` opens another of the Plugin's screens; `params.title` is its breadcrumb. `ui.openStory`, `ui.openTask` and `ui.openBoard` open core screens; back returns here. `ui.toast` and `ui.error` show messages.
-- **Keys and focus.** `useIsActive()` is false while a dialog is open or another screen is on top. Give the same flag to `useInput`, `useKeyHints` and `useKeyCapture`. A Story or Task tab gets an `active` prop as well: use `useIsActive() && active`.
+- `ui.open(screen, params)` opens another of the Plugin's screens; `params.title` is its breadcrumb. `ui.openStory` and `ui.openBoard` open core screens; back returns here. `ui.toast` and `ui.error` show messages.
+- **Keys and focus.** `useIsActive()` is false while a dialog is open or another screen is on top. Give the same flag to `useInput`, `useKeyHints` and `useKeyCapture`. A Story tab gets an `active` prop as well: use `useIsActive() && active`.
 - **Loading.** `useAsync(fn, deps)` runs `fn` again when `deps` change, and shows a failure as a toast. `useReloadOnReturn(reload)` reloads when the screen is on top again, for example after a Story it opened is closed.
 - A screen that throws while rendering shows a fallback naming the Plugin; the rest of the TUI keeps working. Errors in event handlers and detached promises are not caught by it: pass them to `ui.error`.
 
@@ -409,7 +409,7 @@ Rules for every hook:
 - A hook may not start another operation, through `services` or a kept command context: it fails with `PluginError` before anything is read or saved. Reads are fine.
 - An expected error thrown from a hook (`ValidationError`, `NotFoundError`, …) keeps its code; anything else fails the operation as `INTERNAL`. Either way nothing is saved.
 - Hooks are typed for core operations; a hook on another Plugin's operation (`'epics.create'`) is allowed and untyped. A hook on a name in a core namespace that is not a core operation (`'stories.edit'`) fails the load.
-- Do not rely on the operation name alone for Stage changes: `stories.update` and `tasks.update` can change a Stage too. Compare `change.before.stage` and `change.after.stage`.
+- Do not rely on the operation name alone for Stage changes: `stories.update` can change a Stage too. Compare `change.before.stage` and `change.after.stage`.
 
 The operations, their inputs and their results are listed in [Operations](../architecture/operations.md).
 

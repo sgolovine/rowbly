@@ -19,9 +19,9 @@ sources:
   - README.md
   - docs/agents/CONTEXT.md
   - src/commands/stories.ts
-  - src/commands/tasks.ts
+  - src/plugins/tasks/commands.ts
   - src/services/stories.ts
-  - src/services/tasks.ts
+  - src/plugins/tasks/tasks.ts
   - src/plugins/assignees/index.ts
 ---
 
@@ -55,7 +55,7 @@ Pick Stages by **category**, not by name. The Stage to start work is the first S
 rowbly stories list --board web --open --json --no-prompt                      # not in a done Stage
 rowbly stories list --board web --assignee me --sort priority --json --no-prompt
 rowbly stories list --all-boards --label auth --search login --json --no-prompt
-rowbly stories show WEB-42 --json --no-prompt                                  # full Story with its Tasks
+rowbly stories show WEB-42 --json --no-prompt                                  # full Story with its Plugin Data
 ```
 
 - Filters: `--stage <key>`, `--category todo|in_progress|done`, `--open`, `--assignee <handle|me>`
@@ -65,8 +65,10 @@ rowbly stories show WEB-42 --json --no-prompt                                  #
   `P0` first, `updated` newest first, `due` soonest first.
 - Story Keys are case-insensitive (`web-42` is `WEB-42`) and need no `--board`.
 - A Story's JSON has `key`, `name`, `description` (markdown), `stage`, `rank`, `priority` (`"P1"` or
-  `null`), `labels`, `dueDate`, `customFields`, `createdBy` (Me when it was created), `tasks[]`, and
+  `null`), `labels`, `dueDate`, `customFields`, `createdBy` (Me when it was created), and
   Plugin Data in `plugins`: its Assignees are `plugins.assignees.assignees`, absent when it has none.
+  Its Tasks are under `plugins.tasks` (`nextNumber`, and `tasks[]` stored by `number`); read them with
+  `tasks list --json` instead, whose items include each Task's `id`.
 
 ## 3. Create a Story
 
@@ -111,6 +113,10 @@ rowbly stories rank WEB-42 --before WEB-40 --json --no-prompt      # or --after 
 
 ## 6. Work with Tasks
 
+Tasks are a Built-in Plugin, off by default. If `tasks` is an unknown command, turn it on with
+`rowbly plugins enable tasks` (see `rowbly-plugins`), and tell the user, since that changes shared
+configuration.
+
 ```sh
 rowbly tasks create WEB-42 --name "Build the form" --json --no-prompt    # → WEB-42.1, first Stage
 rowbly tasks list WEB-42 --json --no-prompt
@@ -119,14 +125,16 @@ rowbly tasks edit WEB-42.1 --name "Build the sign-in form" --json --no-prompt
 rowbly tasks delete WEB-42.1 --yes --json --no-prompt
 ```
 
-- Tasks live in their Story's file and use the Board's Stages. They have no Priority or Rank and share
-  their Story's Assignees; they are listed in creation order.
+- Tasks live in their Story's file, as Plugin Data, and use the Board's Stages. They have no Assignees, Priority or Rank;
+  they are listed in creation order.
 - Task numbers are never reused: after deleting `WEB-42.3`, the next Task is `WEB-42.4`.
 - Moving every Task to a done Stage does **not** move the Story. Move the Story yourself.
+- Tasks have no Comments; comment on the Story.
 
 ## 7. Pick up and finish a Story as an agent
 
-1. `rowbly stories show <KEY> --json --no-prompt`. Read the description and Tasks; this is the request.
+1. `rowbly stories show <KEY> --json --no-prompt`, and `rowbly tasks list <KEY> --json --no-prompt` when the
+   Tasks Plugin is on. Read the description and Tasks; this is the request.
 2. Start: `rowbly stories move <KEY> <first in_progress Stage> --json --no-prompt`. Add
    `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
    wants it.
@@ -136,7 +144,7 @@ rowbly tasks delete WEB-42.1 --yes --json --no-prompt
    not set.
 3. As each part is done: `rowbly tasks move <KEY>.<n> <done Stage> --json --no-prompt`.
 4. Finish: move the Story to the `done` Stage, or to a review Stage if the Board has one and the user
-   reviews work. Check: `stories show` reports the expected `stage`, and its Tasks are done.
+   reviews work. Check: `stories show` reports the expected `stage`, and `tasks list` shows its Tasks done.
 5. Mention the Story Key in branch names and commit messages (`WEB-42: add login form`). Commit the
    `.rowbly/` changes with the code.
 
@@ -163,4 +171,4 @@ Each change returned the record you expected (exit 0), and `rowbly stories show 
 confirms its final Stage, Assignees and Tasks. If a command exits 6, follow `rowbly-doctor` before you
 try again.
 
-For Epics, Specs and Comments on Stories (`--epic`, `--spec`, `rowbly comments`), see `rowbly-plugins`.
+For turning the Tasks Plugin on, and for Epics, Specs and Comments on Stories (`--epic`, `--spec`, `rowbly comments`), see `rowbly-plugins`.

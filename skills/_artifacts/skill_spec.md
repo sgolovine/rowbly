@@ -1,6 +1,6 @@
 # rowbly skill spec
 
-Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. It keeps Boards, Stories and Tasks as JSON files in a `.rowbly/` Data Root, which is committed with the code, and offers a full-screen TUI plus a command mode for scripts. These skills teach coding agents to operate Rowbly through command mode.
+Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. It keeps Boards, Stories and, with the Tasks Plugin, Tasks as JSON files in a `.rowbly/` Data Root, which is committed with the code, and offers a full-screen TUI plus a command mode for scripts. These skills teach coding agents to operate Rowbly through command mode.
 
 ## Domains
 
@@ -78,13 +78,13 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 - Registered `rowbly-stories` in `.` (domain `work-tracking`). Developer tasks: Find the Stories to work on and read one in full; Create a Story or Task with valid Assignees, Priority, Labels and Custom Field values; Move a Story or Task through Stages and rank it as work progresses.
 
-- Registered `rowbly-plugins` in `.` (domain `plugins`). Developer tasks: Turn a Built-in Plugin on or off and change its settings; Group Stories into Epics and check Epic Progress; Write Specs and link Stories to Board Specs; Comment on Stories and Tasks.
+- Registered `rowbly-plugins` in `.` (domain `plugins`). Developer tasks: Turn a Built-in Plugin on or off and change its settings; Group Stories into Epics and check Epic Progress; Write Specs and link Stories to Board Specs; Comment on Stories.
 
 - Registered `rowbly-doctor` in `.` (domain `data-integrity`). Developer tasks: Check and repair the Data Root after merging branches; Resolve a Story Key conflict from two branches; Recover when a command exits 6 or a commit was interrupted.
 
 ### Batch 1 — operating Rowbly as an agent (2026-10-18, rowbly 0.1.0, base commit 2e488a8)
 
-- **Scope.** The maintainer asked for skills that tell agents how to operate Rowbly, grounded in `docs/`. Assessed: command-mode usage of every core command, the three Built-in Plugins, and doctor. Not assessed: TUI operation, Plugin authoring, development of Rowbly itself (covered by `docs/development/README.md` and `AGENTS.md`).
+- **Scope.** The maintainer asked for skills that tell agents how to operate Rowbly, grounded in `docs/`. Assessed: command-mode usage of every core command, the four Built-in Plugins, and doctor. Not assessed: TUI operation, Plugin authoring, development of Rowbly itself (covered by `docs/development/README.md` and `AGENTS.md`).
 - **Evidence.** README.md (the user guide and command reference), the reorganized docs (`docs/agents/CONTEXT.md`, `docs/architecture/data-model.md`, `storage.md`, `docs/plugins/README.md`, `built-in.md`), the command sources, and the CLI built from the working tree (`pnpm build`), run in scratch Data Roots. The docs reorganization ran in parallel in another agent thread; skill sources were aligned with its final paths.
 - **Decisions.**
   - Agents use command mode only, always with `--no-prompt`, `--json` for read output, and `--yes` only on user-requested deletions (agent shells may be pseudo-terminals, where Rowbly would prompt).
@@ -94,3 +94,9 @@ See `domain_map.yaml` for mechanisms and patterns.
   - The doctor finding-code table is a reference file (`rowbly-doctor/references/finding-codes.md`), mirroring README.md#doctor.
 - **Checks.** `intent validate skills`: passed. Executable task checks: `test/skills/agentWorkflows.test.ts` (10 tests, cli project) run each skill's workflow through the built CLI and assert the warned-about mistakes fail (`--label` replacing, Title Case Labels, missing `--yes`, slug vs `--story`, unknown Stage, `--root` at the project folder, merge conflict blocking with exit 6 until `doctor --fix`). Fresh consumer session (general-purpose Claude subagent, no authoring context, only the five skills copied to a scratch folder and `rowbly` on PATH): task "start the password reset story, comment, add a tests Task, add a needs-docs tag, finish both" on a fixture whose Stages are backlog/todo/doing/shipped. It loaded rowbly-cli, rowbly-stories and rowbly-plugins; the grader (stage shipped, labels kept plus needs-docs, Task shipped, one Comment, other Story untouched, doctor exit 0) passed. One recovered failure: Comments was off. A plausible wrong solution (`--label`, `done`) fails the same grader. Its feedback led to: `boards list` in rowbly-stories, a Comments note in the pick-up workflow, and `--json` on Plugin commands. Single run; not a reliability claim. Consumer exposure was a copied skills folder, not an installed package.
 - **Remaining work.** The gaps above; a discovery evaluation with held-out should/should-not-load prompts was not run.
+
+### Integration — Tasks and Assignees Plugins (2026-10-19)
+
+- Combined PRs #51 and #52: both Tasks and Assignees are optional Plugins. Core retains Me; Comments belong only to Stories. Task screens and commands show their Story, Stage and text; use the Story for its Assignees. The retired core Task row extension is not retained.
+- Both Plugins keep their own storage and doctor findings. Assignees uses ADR-0023; Tasks keeps ADR-0022. CLI skills retain their existing task ownership, with both Plugins enabled explicitly where needed. Board cards combine story badges and card badges.
+- Existing executable workflow checks in test/skills/agentWorkflows.test.ts cover the combined CLI. Fresh consumer validation of this combined revision has not been run.

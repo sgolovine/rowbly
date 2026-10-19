@@ -106,32 +106,32 @@ describe('a Plugin whose CLI fails while it is staged (ARCH-24, RES-22)', () => 
   });
 
   it('a missing core command for its options is a contract error: no group, no option', async () => {
-    const t = await pluginRoot({ tasked: true });
+    const t = await pluginRoot({ boarded: true });
     const program = createProgram();
-    // A deliberately inconsistent program: the reserved names say `tasks create` takes options.
+    // A deliberately inconsistent program: the reserved names say `boards create` takes options.
     (program.commands as Command[]).splice(
-      program.commands.findIndex((c) => c.name() === 'tasks'),
+      program.commands.findIndex((c) => c.name() === 'boards'),
       1,
     );
-    const tasked = definePlugin({
-      id: 'tasked',
-      name: 'Tasked',
+    const boarded = definePlugin({
+      id: 'boarded',
+      name: 'Boarded',
       description: '',
       commands(group) {
         group.command('hello');
       },
       options: {
         'stories create': { options: [{ flags: '--tag <t>', description: '' }], input: () => undefined },
-        'tasks create': { options: [{ flags: '--tag <t>', description: '' }], input: () => undefined },
+        'boards create': { options: [{ flags: '--tag <t>', description: '' }], input: () => undefined },
       },
     });
     const cli = pluginCliStager(program);
-    const host = await loadPlugins({ root: t.root, registry: [tasked], reserved: reservedNames(), stage: cli.stage });
+    const host = await loadPlugins({ root: t.root, registry: [boarded], reserved: reservedNames(), stage: cli.stage });
     cli.attach(host);
     expect(host.failures().map((f) => f.reason)).toEqual([
-      'its options failed: "rowbly tasks create" is not a command of this program',
+      'its options failed: "rowbly boards create" is not a command of this program',
     ]);
-    expect(groups(program)).not.toContain('tasked');
+    expect(groups(program)).not.toContain('boarded');
     expect(longs(program, 'stories create')).not.toContain('--tag');
     expect(pluginsOf(program)?.options.size).toBe(0);
   });

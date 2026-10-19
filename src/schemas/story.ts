@@ -6,7 +6,6 @@ import {
   PluginBagsSchema,
   SlugSchema,
   StoryKeySchema,
-  TaskIdSchema,
   TimestampSchema,
   VersionSchema,
 } from './primitives';
@@ -14,18 +13,7 @@ import {
 export const PrioritySchema = z.enum(['P0', 'P1', 'P2', 'P3', 'P4']);
 export type Priority = z.infer<typeof PrioritySchema>;
 
-export const TaskSchema = z.object({
-  id: TaskIdSchema,
-  name: z.string().min(1).max(200),
-  description: z.string(),
-  stage: SlugSchema,
-  createdAt: TimestampSchema,
-  updatedAt: TimestampSchema,
-  plugins: PluginBagsSchema.optional(),
-});
-export type Task = z.infer<typeof TaskSchema>;
-
-/** `stories/<KEY>/story.json`: one Story with its Tasks embedded. */
+/** `stories/<KEY>/story.json`: one Story. */
 export const StorySchema = z.object({
   version: VersionSchema,
   key: StoryKeySchema,
@@ -41,8 +29,6 @@ export const StorySchema = z.object({
   createdBy: SlugSchema.nullable(),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
-  nextTaskNumber: z.int().min(1),
-  tasks: z.array(TaskSchema),
   plugins: PluginBagsSchema.optional(),
 });
 export type Story = z.infer<typeof StorySchema>;

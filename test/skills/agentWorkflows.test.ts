@@ -148,6 +148,8 @@ describe('rowbly-stories', () => {
       'auth,frontend',
     );
     expect(created).toMatchObject({ key: 'WEB-1', stage: 'backlog', priority: 'P1', labels: ['auth', 'frontend'] });
+    // Tasks are a Built-in Plugin, off until the Data Root turns it on.
+    await json('plugins', 'enable', 'tasks');
     const task = await json('tasks', 'create', created.key, '--name', 'Build the form');
     expect(task.id).toBe('WEB-1.1');
 
@@ -161,7 +163,9 @@ describe('rowbly-stories', () => {
 
     const finished = await json('stories', 'show', created.key);
     expect(finished.stage).toBe('done');
-    expect(finished.tasks).toEqual([expect.objectContaining({ id: 'WEB-1.1', stage: 'done' })]);
+    expect(await json('tasks', 'list', created.key)).toEqual([
+      expect.objectContaining({ id: 'WEB-1.1', stage: 'done' }),
+    ]);
     expect(await json('stories', 'list', '--board', 'web', '--open')).toEqual([]);
   });
 
@@ -209,6 +213,7 @@ describe('rowbly-plugins', () => {
     const plugins = await json('plugins', 'list');
     expect(plugins.map((p: { id: string; enabled: boolean; loaded: boolean }) => [p.id, p.enabled, p.loaded])).toEqual([
       ['assignees', false, false],
+      ['tasks', false, false],
       ['epics', true, true],
       ['specs', true, true],
       ['comments', true, true],

@@ -6,7 +6,6 @@ import { registerPlugins } from './plugins';
 import { registerSetup } from './setup';
 import { registerStages } from './stages';
 import { registerStories } from './stories';
-import { registerTasks } from './tasks';
 
 /** Registers every command area. Each area owns its own file; this registry does not change. */
 export function registerCommands(program: Command): void {
@@ -15,7 +14,6 @@ export function registerCommands(program: Command): void {
   registerStages(program);
   registerFields(program);
   registerStories(program);
-  registerTasks(program);
   registerDoctor(program);
   registerPlugins(program);
 }

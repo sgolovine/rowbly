@@ -79,17 +79,14 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
         const boards = await Promise.all(level.affected.map((boardId) => repos.stories.allInBoard(boardId)));
         const all = boards.flat();
         const storiesUsing = all.filter((story) => story.stage === key).length;
-        const tasksUsing = all.flatMap((story) => story.tasks).filter((task) => task.stage === key).length;
 
         if (moveTo === undefined) {
-          if (storiesUsing + tasksUsing > 0) {
-            throw new ConflictError(
-              `Stage "${key}" is used by ${plural(storiesUsing, 'Story', 'Stories')} and ${plural(tasksUsing, 'Task', 'Tasks')}`,
-              {
-                details: { stage: key, stories: storiesUsing, tasks: tasksUsing },
-                hint: 'pass --move-to <stage> to move them first',
-              },
-            );
+          if (storiesUsing > 0) {
+            // `needsMoveTo` tells the TUI to offer a Stage to move to; Plugins refuse the same way.
+            throw new ConflictError(`Stage "${key}" is used by ${plural(storiesUsing, 'Story', 'Stories')}`, {
+              details: { stage: key, stories: storiesUsing, needsMoveTo: true },
+              hint: 'pass --move-to <stage> to move them first',
+            });
           }
         } else {
           // Move first, so a failure leaves the Stage in place rather than Stories pointing at nothing.
@@ -99,11 +96,11 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
           changes,
           level.items.filter((s) => s.key !== key),
         );
-        return { storiesMoved: storiesUsing, tasksMoved: tasksUsing };
+        return { storiesMoved: storiesUsing };
       }),
   };
 
-  /** Moves a Board's Stories and Tasks from `from` to `to`; moved Stories go to the bottom of `to`. */
+  /** Moves a Board's Stories from `from` to `to`, to the bottom of `to`. */
   async function moveStage(changes: CoreChangeSet, stories: Story[], from: string, to: string): Promise<void> {
     const now = toTimestamp(ctx.now());
     let last = stories
@@ -111,18 +108,10 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
       .map((s) => s.rank)
       .reduce<string | null>((max, rank) => (max === null || rank > max ? rank : max), null);
     const moving = stories.filter((s) => s.stage === from).sort((a, b) => compare(a.rank, b.rank));
-    const changed = new Map<string, Story>();
     for (const story of moving) {
       last = rankAfter(last);
-      changed.set(story.key, { ...story, stage: to, rank: last, updatedAt: now });
+      await changes.putStory({ ...story, stage: to, rank: last, updatedAt: now });
     }
-    for (const story of stories) {
-      if (!story.tasks.some((task) => task.stage === from)) continue;
-      const base = changed.get(story.key) ?? { ...story, updatedAt: now };
-      const tasks = base.tasks.map((task) => (task.stage === from ? { ...task, stage: to, updatedAt: now } : task));
-      changed.set(story.key, { ...base, tasks });
-    }
-    for (const story of changed.values()) await changes.putStory(story);
   }
 }
 

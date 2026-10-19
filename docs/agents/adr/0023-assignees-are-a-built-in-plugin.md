@@ -1,4 +1,4 @@
-# ADR-0022: Assignees are a Built-in Plugin
+# ADR-0023: Assignees are a Built-in Plugin
 
 **Status:** Accepted. Built.
 

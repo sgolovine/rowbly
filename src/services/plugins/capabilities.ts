@@ -6,7 +6,7 @@ import type { PluginReadServices, PluginServices } from './types';
 
 /** The services of commands and screens: no `plugins`, no `setup`, and doctor checks only. */
 export function pluginServices(services: Services): PluginServices {
-  const { context, config, boards, stages, fields, stories, tasks, doctor } = services;
+  const { context, config, boards, stages, fields, stories, doctor } = services;
   return {
     context,
     config,
@@ -14,14 +14,13 @@ export function pluginServices(services: Services): PluginServices {
     stages,
     fields,
     stories,
-    tasks,
     doctor: { check: () => doctor.check() },
   };
 }
 
 /** The read-only services of hooks: list, get, effective-config and Board-resolution methods. */
 export function pluginReadServices(services: Services): PluginReadServices {
-  const { context, config, boards, stages, fields, stories, tasks } = services;
+  const { context, config, boards, stages, fields, stories } = services;
   return {
     context: { resolveBoard: (flag) => context.resolveBoard(flag) },
     config: { effective: (boardId) => config.effective(boardId) },
@@ -33,6 +32,5 @@ export function pluginReadServices(services: Services): PluginReadServices {
       get: (key) => stories.get(key),
       labelsInUse: (boardId) => stories.labelsInUse(boardId),
     },
-    tasks: { list: (storyKey) => tasks.list(storyKey), get: (taskId) => tasks.get(taskId) },
   };
 }

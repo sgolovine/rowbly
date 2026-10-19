@@ -35,7 +35,7 @@ function runInTty(args: string[], cwd: string, ready: string): Promise<{ output:
   });
 }
 
-const COMMAND_GROUPS = ['init', 'use', 'whoami', 'config', 'boards', 'stages', 'fields', 'stories', 'tasks', 'doctor'];
+const COMMAND_GROUPS = ['init', 'use', 'whoami', 'config', 'boards', 'stages', 'fields', 'stories', 'doctor'];
 
 describe('rowbly CLI', () => {
   it('prints its version', async () => {

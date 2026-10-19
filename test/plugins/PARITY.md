@@ -3,7 +3,7 @@
 Every change a Built-in Plugin makes to Rowbly data, with the test that drives it from the command line
 and the test that drives it from the TUI. Both surfaces call the same service operation, so these tests
 check that each surface reaches the operation with the same input. They don't repeat the operation's own
-rules, which the service suites (`epics.test.ts`, `specs.test.ts`, `comments.test.ts`) cover.
+rules, which the service suites (`tasks.test.ts`, `epics.test.ts`, `specs.test.ts`, `comments.test.ts`) cover.
 
 When you add a mutation or a surface, add a row. A blank cell needs a reason under **Exceptions** or an
 owner under **Open**. Read-only differences, for example how the CLI and the TUI format a Spec or a
@@ -32,12 +32,20 @@ Abbreviations: `CLI` means a test in `test/plugins/<plugin>Cli.test.ts`, and `TU
 | Delete a Board Spec that Stories link to (unlinks them) | `specs delete` · CLI "Story flags set/add/remove/filter links; deletion warns and unlinks" | Specs screens `d` · TUI "the Specs screens create, edit and delete Board Specs …" (no linked Story; see Exceptions) |
 | Delete a Board whose only content is Specs | `boards delete` exits 4, `--force` deletes · CLI "guard rejects deletion of an empty Board with Specs …"; `specsBoardDeletion.test.tsx` "the CLI exits 4 without --force …" | Boards `d`, then the force confirmation the guard's `canForce` offers · TUI `specsBoardDeletion.test.tsx` "an empty Board with a Spec offers force …" |
 
+## Tasks
+
+| Mutation | CLI | TUI |
+| --- | --- | --- |
+| Create a Task and delete it (its number is never reused) | `tasks create/delete` · CLI "creates WEB-1.4 after deleting WEB-1.3" | Story Tasks tab `n`, `d` · TUI "adds a Task, moves its Stage and deletes it" |
+| Edit a Task | `tasks edit` · CLI "lists, shows with inherited Assignees, and edits" | Tasks tab or Task screen `e` · TUI "edits a Task and opens its detail with inherited Assignees" |
+| Move a Task to a Stage | `tasks move` · CLI "exits 2 when moving to an unknown Stage" | Tasks tab or Task screen `m` · TUI "edits, moves and deletes the Task with e, m and d, like the Tasks tab" |
+| Remove a Stage that Tasks use | `stages remove` exits 4, `--move-to` moves them · CLI "refuses to remove a Stage that Tasks use, and moves them with --move-to" | Stages `d`, then the move-to picker that `needsMoveTo` offers · Open: no TUI test yet |
+
 ## Comments
 
 | Mutation | CLI | TUI |
 | --- | --- | --- |
 | Add, edit and delete a Comment on a Story | `comments add/edit/delete` · CLI "lists oldest first, edits, …" and "requires --yes to delete when not interactive" | Story Comments tab · TUI "adds, edits and deletes a Comment on the Story screen tab" |
-| Add, edit and delete a Comment on a Task | `comments add WEB-1.2` · CLI "stores a Comment on a Task, not on its Story" | Task Comments tab · TUI "keeps a Task’s Comments on a tab of the Task screen, …" |
 | The same Comment text from both surfaces | — | Open: UI-02 |
 
 ## Plugins and doctor
@@ -49,9 +57,6 @@ Abbreviations: `CLI` means a test in `test/plugins/<plugin>Cli.test.ts`, and `TU
 
 ## Exceptions
 
-- **Task Comments from the CLI.** `comments edit` and `comments delete` take a Story Key or a Task
-  ID through the same target lookup that `comments add WEB-1.2` uses, so the CLI tests edit and delete
-  only on a Story.
 - **Deleting a linked Board Spec from the TUI.** The TUI deletion calls the same Specs operation that
   unlinks Stories. The unlinking itself is covered in `specs.test.ts` and in the CLI test.
 - **Doctor fixes in the TUI.** The Doctor screen runs the same `doctor.fix` service operation as

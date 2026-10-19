@@ -1,6 +1,6 @@
 // A generated Data Root for scaling checks (PERF-07), after the corrected `gen.mjs` of the review's
 // historical evidence: one Board `web`, Stories with one Task each, Epics (every tenth closed), Board
-// Specs plus `common`, two Story Comments and one Task Comment per Story. Every Story links one
+// Specs plus `common`, and two Story Comments per Story. Every Story links one
 // Spec and `common`, and belongs to one Epic. Every record is parsed by its schema before it is
 // written, so the root is valid by construction; doctor must still find nothing before a timing.
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { CommentsBag } from '../../src/plugins/comments/model';
 import { EpicBag, EpicSchema } from '../../src/plugins/epics/model';
 import { SpecsBag } from '../../src/plugins/specs/specs';
+import { TasksBag } from '../../src/plugins/tasks/model';
 import { BoardConfigSchema, RowblyConfigSchema, type Story, StorySchema } from '../../src/schemas';
 import { FIXED_NOW } from '../helpers/clock';
 import { writeFixture } from '../helpers/fixtures';
@@ -23,7 +24,7 @@ export interface FixtureShape {
 }
 
 /** The built-in Plugins the fixture holds data for, in registry order. */
-export const FIXTURE_PLUGINS = ['epics', 'specs', 'comments'] as const;
+export const FIXTURE_PLUGINS = ['tasks', 'epics', 'specs', 'comments'] as const;
 
 const STAGES = ['backlog', 'todo', 'in-progress', 'done'];
 /** Files written at once; enough to keep the disk busy without exhausting file handles. */
@@ -100,19 +101,11 @@ export function fixtureStory(i: number, { epics, specs }: { epics: number; specs
     createdBy: null,
     createdAt: ts,
     updatedAt: ts,
-    nextTaskNumber: 2,
-    tasks: [
-      {
-        id: `${key}.1`,
-        name: 'Task',
-        description: '',
-        stage: 'todo',
-        createdAt: ts,
-        updatedAt: ts,
-        plugins: { comments: CommentsBag.parse({ comments: [comment('c1', 'alice', 'task comment')] }) },
-      },
-    ],
     plugins: {
+      tasks: TasksBag.parse({
+        nextNumber: 2,
+        tasks: [{ number: 1, name: 'Task', description: '', stage: 'todo', createdAt: ts, updatedAt: ts }],
+      }),
       ...(epics > 0 ? { epics: EpicBag.parse({ epic: `epic-${i % epics}` }) } : {}),
       specs: SpecsBag.parse({ specs: linked }),
       comments: CommentsBag.parse({ comments: [comment('a1', 'alice', 'first'), comment('a2', null, 'second')] }),

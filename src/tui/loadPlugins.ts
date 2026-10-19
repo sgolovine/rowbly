@@ -70,7 +70,6 @@ function tuiProblem(tui: PluginTui<unknown>): string | undefined {
   const labelled = [
     { kind: 'settings sections', labels: (tui.settings ?? []).map((link) => link.label) },
     { kind: 'Story tabs', labels: (tui.storyTabs ?? []).map((tab) => tab.label) },
-    { kind: 'Task tabs', labels: (tui.taskTabs ?? []).map((tab) => tab.label) },
   ];
   for (const { kind, labels } of labelled) {
     const twice = labels.find((label, i) => labels.indexOf(label) !== i);

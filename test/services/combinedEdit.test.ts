@@ -2,6 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { ConflictError, ValidationError } from '../../src/core';
 import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-api';
+import { tasks } from '../../src/plugins/tasks';
+import { moveTask, updateTask } from '../../src/plugins/tasks/tasks';
 import { makeStory } from '../helpers';
 import { notes } from '../plugins/fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from '../plugins/helpers';
@@ -9,15 +11,36 @@ import { pluginRoot, readJsonFile, storyFile, withPlugins } from '../plugins/hel
 const web = { boardId: 'web' };
 const OPS = ['stories.update', 'stories.move', 'tasks.update', 'tasks.move'] as const;
 
+/** WEB-1's Tasks bag: one Task, WEB-1.1, in `backlog`. */
+const TASKS = {
+  nextNumber: 2,
+  tasks: [
+    {
+      number: 1,
+      name: 'Task',
+      description: '',
+      stage: 'backlog',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ],
+};
+
 type Changes = { changes: readonly DeepReadonly<Change>[] };
+
+/** The Tasks in a Story's Tasks bag, as the Tasks Plugin stores them. */
+function tasksOf(story: DeepReadonly<{ plugins?: Record<string, unknown> }>) {
+  return (story.plugins?.tasks as { tasks?: { number: number; stage: string }[] } | undefined)?.tasks ?? [];
+}
 
 /** The Story changes whose Stage, or one of whose Tasks' Stage, goes to `done`. */
 function entersDone({ changes }: Changes): boolean {
   return changes.some((c) => {
     if (c.type !== 'story' || !c.before || !c.after) return false;
     if (c.before.stage !== 'done' && c.after.stage === 'done') return true;
-    return c.after.tasks.some(
-      (t) => t.stage === 'done' && c.before?.tasks.find((b) => b.id === t.id)?.stage !== 'done',
+    const before = tasksOf(c.before);
+    return tasksOf(c.after).some(
+      (t) => t.stage === 'done' && before.find((b) => b.number === t.number)?.stage !== 'done',
     );
   });
 }
@@ -49,30 +72,19 @@ function counter() {
 
 /** WEB-1 in `backlog` with a Note, a Task and an unknown Plugin's bag; WEB-2 and WEB-3 already in `todo`. */
 async function setup() {
-  const t = await pluginRoot({ notes: true, gate: true, counter: true });
+  const t = await pluginRoot({ tasks: true, notes: true, gate: true, counter: true });
   await makeStory(t.path, {
     ...web,
     key: 'WEB-1',
     name: 'Old',
     rank: 'a5',
-    nextTaskNumber: 2,
-    tasks: [
-      {
-        id: 'WEB-1.1',
-        name: 'Task',
-        description: '',
-        stage: 'backlog',
-        createdAt: '2026-01-01T00:00:00.000Z',
-        updatedAt: '2026-01-01T00:00:00.000Z',
-      },
-    ],
-    plugins: { notes: { note: 'old' }, ghost: { kept: true, extra: [1] } },
+    plugins: { tasks: TASKS, notes: { note: 'old' }, ghost: { kept: true, extra: [1] } },
   });
   await makeStory(t.path, { ...web, key: 'WEB-2', stage: 'todo', rank: 'a1' });
   await makeStory(t.path, { ...web, key: 'WEB-3', stage: 'todo', rank: 'a3' });
   const count = counter();
-  const setup = await withPlugins(t, [notes, gate, count.plugin]);
-  return { t, ...setup, reacted: count.reacted };
+  const setup = await withPlugins(t, [tasks, notes, gate, count.plugin]);
+  return { t, ...setup, plugin: setup.services.plugins.context('tasks'), reacted: count.reacted };
 }
 
 describe('stories.update with a Stage (ARCH-43)', () => {
@@ -98,11 +110,11 @@ describe('stories.update with a Stage (ARCH-43)', () => {
     expect(saved.rank > 'a3').toBe(true);
     const file = await readJsonFile(t, storyFile('WEB-1'));
     expect(file).toMatchObject({ name: 'New', stage: 'todo', rank: saved.rank });
-    expect(file.plugins).toEqual({ notes: { note: 'new' }, ghost: { kept: true, extra: [1] } });
+    expect(file.plugins).toEqual({ tasks: TASKS, notes: { note: 'new' }, ghost: { kept: true, extra: [1] } });
   });
 
   it('an unchanged Stage keeps the Rank', async () => {
-    const { services } = await setup();
+    const { services, plugin } = await setup();
     expect(await services.stories.update('WEB-1', { name: 'New', stage: 'backlog' })).toMatchObject({
       stage: 'backlog',
       rank: 'a5',
@@ -111,7 +123,7 @@ describe('stories.update with a Stage (ARCH-43)', () => {
     // A JSON caller's `null` is no Stage, as in `create`.
     const unset = { stage: null } as unknown as { stage: string };
     expect(await services.stories.update('WEB-3', unset)).toMatchObject({ stage: 'todo', rank: 'a3' });
-    expect(await services.tasks.update('WEB-1.1', unset)).toMatchObject({ stage: 'backlog' });
+    expect(await updateTask(plugin, 'WEB-1.1', unset)).toMatchObject({ stage: 'backlog' });
   });
 
   it('moving through edit gives the same Stage and Rank as `move`', async () => {
@@ -139,9 +151,9 @@ describe('stories.update with a Stage (ARCH-43)', () => {
 
 describe('tasks.update with a Stage (ARCH-43)', () => {
   it('a rejecting Stage-transition guard keeps the Task name and Stage unchanged', async () => {
-    const { t, services, reacted } = await setup();
+    const { t, plugin, reacted } = await setup();
     const before = await readJsonFile(t, storyFile('WEB-1'));
-    await expect(services.tasks.update('WEB-1.1', { name: 'Renamed', stage: 'done' })).rejects.toThrow(ConflictError);
+    await expect(updateTask(plugin, 'WEB-1.1', { name: 'Renamed', stage: 'done' })).rejects.toThrow(ConflictError);
     expect(await readJsonFile(t, storyFile('WEB-1'))).toEqual(before);
     expect(reacted).toEqual([]);
   });
@@ -149,24 +161,28 @@ describe('tasks.update with a Stage (ARCH-43)', () => {
   it('saves and reacts once, like `move`', async () => {
     const viaEdit = await setup();
     const viaMove = await setup();
-    const edited = await viaEdit.services.tasks.update('WEB-1.1', { name: 'Renamed', stage: 'in-progress' });
+    const edited = await updateTask(viaEdit.plugin, 'WEB-1.1', { name: 'Renamed', stage: 'in-progress' });
     expect(viaEdit.reacted).toEqual(['tasks.update']);
     expect(edited).toMatchObject({ name: 'Renamed', stage: 'in-progress' });
-    await viaMove.services.tasks.update('WEB-1.1', { name: 'Renamed' });
-    await viaMove.services.tasks.move('WEB-1.1', 'in-progress');
+    await updateTask(viaMove.plugin, 'WEB-1.1', { name: 'Renamed' });
+    await moveTask(viaMove.plugin, 'WEB-1.1', 'in-progress');
     expect(await readJsonFile(viaEdit.t, storyFile('WEB-1'))).toEqual(
       await readJsonFile(viaMove.t, storyFile('WEB-1')),
     );
   });
 
   it('rejects an unknown Stage with the same error as `move`', async () => {
-    const { services } = await setup();
-    const viaEdit = await services.tasks.update('WEB-1.1', { stage: 'nope' }).catch((e) => e);
-    const viaMove = await services.tasks.move('WEB-1.1', 'nope').catch((e) => e);
+    const { plugin } = await setup();
+    const viaEdit = await updateTask(plugin, 'WEB-1.1', { stage: 'nope' }).catch((e) => e);
+    const viaMove = await moveTask(plugin, 'WEB-1.1', 'nope').catch((e) => e);
     expect(viaEdit).toBeInstanceOf(ValidationError);
-    expect({ message: viaEdit.message, details: viaEdit.details, hint: viaEdit.hint }).toEqual({
+    // Each names its own operation; everything else is the same.
+    const { operation: editOp, ...editDetails } = viaEdit.details;
+    const { operation: moveOp, ...moveDetails } = viaMove.details;
+    expect([editOp, moveOp]).toEqual(['tasks.update', 'tasks.move']);
+    expect({ message: viaEdit.message, details: editDetails, hint: viaEdit.hint }).toEqual({
       message: viaMove.message,
-      details: viaMove.details,
+      details: moveDetails,
       hint: viaMove.hint,
     });
   });

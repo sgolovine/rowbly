@@ -10,12 +10,11 @@ erDiagram
     DATA_ROOT ||--o| LOCAL_STATE : "local.json (never committed)"
     DATA_ROOT ||--o{ BOARD : "boards/<board>/"
     BOARD ||--o{ STORY : "stories/<KEY>/story.json"
-    STORY ||--o{ TASK : "embedded in story.json"
 ```
 
 - There is no container between the Data Root and a Board ([ADR-0007](../agents/adr/0007-no-workspaces.md)).
 - Stages and Custom Fields are **configuration**, not records: ordered lists in the [Configuration Cascade](#configuration-cascade), with no ids of their own ([ADR-0005](../agents/adr/0005-stages-and-fields-are-configuration.md)).
-- Assignees, Epics, Specs and Comments are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
+- Assignees, Tasks, Epics, Specs and Comments are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
 
 ## Layout
 
@@ -30,7 +29,7 @@ erDiagram
     board.config.json           # the Board record, optional Stages / Custom Fields, Board Plugin settings
     plugins/<id>/…              # Plugin files for this Board (Board Specs)
     stories/<KEY>/
-      story.json                # one Story with its Tasks
+      story.json                # one Story, with its bags (e.g. its Tasks)
       plugins/<id>/…            # Plugin files for this Story (the Story Spec)
 ```
 
@@ -45,14 +44,12 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
 | Local State | `local.json` | optional `board` (the current Board) and `me` (Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
-| Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps, `nextTaskNumber`, `tasks` |
-| Task | inside its Story's `tasks` | `id` (`WEB-42.1`), `name`, `description`, `stage`, timestamps |
+| Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
 
 ### Identity
 
 - **Board:** a lower-kebab-case slug, which is also its folder name. Its `keyPrefix` is unique in the Data Root, so a Story Key alone names its Board.
 - **Story Key:** the Board's key prefix and a number (`WEB-42`), which is also the Story's folder name. A new Story takes the highest number on the Board plus one; there is no counter file, because a shared counter would conflict on every merge. Two branches can therefore create the same key, and `rowbly doctor --fix` renumbers the later Story. A key freed by deleting the highest Story may be reused ([ADR-0003](../agents/adr/0003-story-keys.md)). A Story never moves to another Board.
-- **Task id:** the Story Key, a dot and the Story's `nextTaskNumber` at creation (`WEB-42.1`).
 - **Rank:** a fractional index (a string) that orders Stories inside one Stage.
 - **Me:** `local.json`'s `me`, a slug claimed with `rowbly whoami`.
 
@@ -71,8 +68,8 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 
 ## Plugin Data and Plugin files
 
-- **Plugin Data** is a bag per Plugin on a record: `"plugins": { "<id>": { … } }` on the root config, Local State, a Board, a Story or a Task ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Core never interprets a bag and keeps every bag unchanged when it writes a record, including bags of Plugins that are off or unknown and bags that do not parse.
-- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)). Tasks have no folder, so Plugins keep values for them only as bags.
+- **Plugin Data** is a bag per Plugin on a record: `"plugins": { "<id>": { … } }` on the root config, Local State, a Board or a Story ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Core never interprets a bag and keeps every bag unchanged when it writes a record, including bags of Plugins that are off or unknown and bags that do not parse.
+- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)).
 - Deleting a Story or Board deletes its folder with every Plugin's files. Renumbering a Story moves its whole folder.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused. A symlinked Data Root is fine.
 
