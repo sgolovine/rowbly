@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "fd4aa8db528b7199cd61d8c4490c87462e524974636393efcb39a3d4392a92c1",
+      "fingerprint": "1a0e4baeb2300163a307862aaa13131312f87b1d45b8fac2b12e1cee760df591",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
@@ -14,20 +14,17 @@
         "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2cc8eaf88b928da346eb44e4d137797543de600fc1951a1bb6fd7ffdf2121df0",
+      "fingerprint": "1a58a31bc255c6f25043f666e28e9fad47777a35512db72a0e0ec56699d92452",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
@@ -35,20 +32,17 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "936c0100e51408cbd9bd5fb3237fc87b5896fc3f857bfc3f30515df24a0483cc",
+      "fingerprint": "b5410357e54adc1e0e3ab5dd13ec4a819b760b85b9306f33f328dd7f67a4684d",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
         "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
         "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
@@ -57,20 +51,17 @@
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "3e1db34e580f297284afeb931d4ef45ce0df4e9e7a7626344bbb10ae1ac12b86",
+      "fingerprint": "02ce3e0a2d2f6004796725892c6eff23d366a8acc37d73c242f7cace05c94591",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
         "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
@@ -79,20 +70,17 @@
         "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
         "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "3761d1ffeae059027ea89786d6448a2fac3fb66bd8d6c47cb4dc40060be2d1a4",
+      "fingerprint": "df8acfb8d8fb7ff33897ccd81bcbc5e7d7f8bc2d25a944976938df8deed0cb33",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
         "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
@@ -100,20 +88,17 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "999df835614d80076015cc53fc93105b09faca67e9642560531cf0111074b037",
+      "fingerprint": "e004f67fe2151a047af1777078ffcd4a5da17d10ba274516b4694c47c79ef2a8",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "7df9ea5b4270f6ed19f523b9f37e33e10abcfd3158be38287ee39f6ac0112c46",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -148,14 +133,11 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
       "outcome": "no-change",
-      "reason": "Reviewed skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml: all five skills still cover command-mode operation. The modal layout fix does not change their task inventories, prerequisites, source mappings or recorded decisions. The existing TUI-operation and Plugin-authoring gaps remain open. All three records remain accurate; no rewrite or artificial version bump is needed.",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -543,15 +525,15 @@
       ]
     },
     "source:docs/development/README.md": {
-      "fingerprint": "b6f320b864a9cc3ca7d1a0cb4c1b8a67d4e1fc7c5d99e2efd2807c7b75ce1032",
+      "fingerprint": "d1cb1060b88edfcc1caddd6250bf049d7bd3edf13d6bc5636969a03adafd62bb",
       "snapshot": {
-        "docs/development/README.md": "3e948f16d05eedbd7a5b7982b217a08a623ffce5885051a54a55c7b6a7b56228"
+        "docs/development/README.md": "77ccb1e0cc136adaf529f6e2c647cd269cd03a6235e4c5d06a11c94dc12ee77e"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Changed: docs/development/README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "source:docs/plugins/API.md": {
@@ -1689,6 +1671,162 @@
         "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
         "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
         "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+      ]
+    },
+    "source:.github/workflows/ci.yml": {
+      "fingerprint": "89cd4d348689490a021c982a5aa2fb54084846401eca383058b9f29c2f3b5f4a",
+      "snapshot": {
+        ".github/workflows/ci.yml": "ccdc70c8a6455852275293a0fda9100d6880fe12f94919d7499ec12090b2e0b7"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: .github/workflows/ci.yml at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:src/plugins/specs/SpecTab.tsx": {
+      "fingerprint": "411fdd1b6299a2eb4597745df3b4e95873b64ed3cdae6e26c3435a9b1b08f5c8",
+      "snapshot": {
+        "src/plugins/specs/SpecTab.tsx": "ddc7ea42516bfb62bc8af17607736b8edccb8f012cb19c041be01e647a8e177c"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: src/plugins/specs/SpecTab.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:test/plugins/specsTuiStates.test.tsx": {
+      "fingerprint": "ebb3ded430fa53597251c85568e7b2aee07a882e74c367917fc96f6a8aeee9a8",
+      "snapshot": {
+        "test/plugins/specsTuiStates.test.tsx": "2e2ff2123f85c8594ba834654d06ac77f252bf43cce72788f83bb091c13ca3b6"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: test/plugins/specsTuiStates.test.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:src/tui/components/SelectList.tsx": {
+      "fingerprint": "8e55927e07486aee8063c5c41683c29c3994a45b05f21dcf2b487337c096c032",
+      "snapshot": {
+        "src/tui/components/SelectList.tsx": "013da591157c7600c603188367d1c0e40b935850b39f1442a157ef3979f04c51"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/components/SelectList.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/hooks/useCursor.ts": {
+      "fingerprint": "8f44f7f012927f3bfb0e75717fb76a6bdb0282aad8822bb04d283428104eef03",
+      "snapshot": {
+        "src/tui/hooks/useCursor.ts": "dccaea85c8d78ee213e9d8b24c931429b083cc50a7733ac53a9442fc395e8199"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/hooks/useCursor.ts at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/keymap.ts": {
+      "fingerprint": "be3f3dd070e186b4efa953adc0f4b5f3996ccd15dbb0e3411020a8487a8a6eb2",
+      "snapshot": {
+        "src/tui/keymap.ts": "1e033fbb7ea5ca8c93d6ab4ce4b2cb14029903adbc189b4334953d3321afbd51"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/keymap.ts at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/screens/board/BoardScreen.tsx": {
+      "fingerprint": "33b827c0989b89f407c301359d4162ef13ffc5ef3cc24ab283e53084adebf4de",
+      "snapshot": {
+        "src/tui/screens/board/BoardScreen.tsx": "558c6222a8831a2c260e8768d0f8e3dabfea8cf113ced1ba76f94e7ef987607e"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/screens/board/BoardScreen.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/screens/stages/index.tsx": {
+      "fingerprint": "9aa26eb33ef4664e1bae2ee16280a4356e2a3657e627f4a0e36061d5d6ccdf2c",
+      "snapshot": {
+        "src/tui/screens/stages/index.tsx": "c57d5222c6c033a9bcda2d63855bed77aaff7f647bf1330973c2aae20c7afc3b"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/screens/stages/index.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/__snapshots__/board.test.tsx.snap": {
+      "fingerprint": "889f63b2c87fe98b6136c8d92b6147c534032c4555fc2c71a81f529582027aed",
+      "snapshot": {
+        "test/tui/__snapshots__/board.test.tsx.snap": "88a4a0cbda895960b4c6d385d9c92b59ac91b75e2f70ea4873a6acbe9f27e0e7"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/__snapshots__/board.test.tsx.snap at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/board.test.tsx": {
+      "fingerprint": "b5264416a0abd35f947b1346ea06be520894b410fa845738dc1fd0aab8ab5806",
+      "snapshot": {
+        "test/tui/board.test.tsx": "e5043736d191b7679ed501fde49a16ff5c89e4b7ab1bbda4a479fd90f37345d4"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/board.test.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/boardsStagesFields.test.tsx": {
+      "fingerprint": "2fa390181f5a39788b95b8fe072bff9927a17752db82c917a1795977968681e7",
+      "snapshot": {
+        "test/tui/boardsStagesFields.test.tsx": "354d5936d87e9df75c8de57925b20fb8d95b8c83be76019b7b3b9b74b6b81607"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/boardsStagesFields.test.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/components.test.tsx": {
+      "fingerprint": "ea5e8572b64706db2b9f098e8287470e4bd6627d253fac61cea18cf656509728",
+      "snapshot": {
+        "test/tui/components.test.tsx": "9009dfd596b3fa6ddb7c5abb084fccf1a517465edda6f8c32f97b652bcb2ebbc"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/components.test.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/helpers.tsx": {
+      "fingerprint": "1a38108d93b3cf22d75888657e67f8e35bdac2fb7586272be5b4e60e9f1d9d7d",
+      "snapshot": {
+        "test/tui/helpers.tsx": "75684ca73486ed666f6f1f51e0fc769844a8f27aceff618e16551139115570be"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/helpers.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
       ]
     }
   }
