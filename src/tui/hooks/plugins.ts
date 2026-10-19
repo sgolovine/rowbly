@@ -70,16 +70,23 @@ export function usePluginUi(id: string): PluginUi {
 export function useStoryBadges(): (story: Story) => string[] {
   const { plugins } = usePlugins();
   const services = useServices();
+  // One context per Plugin, not per Story.
+  const badged = useMemo(
+    () =>
+      plugins.flatMap(({ id, tui }) =>
+        tui.storyBadges ? [{ badges: tui.storyBadges, plugin: services.plugins.context(id) }] : [],
+      ),
+    [plugins, services],
+  );
   return useCallback(
     (story) =>
-      plugins.flatMap(({ id, tui }) => {
-        if (!tui.storyBadges) return [];
+      badged.flatMap(({ badges, plugin }) => {
         try {
-          return tui.storyBadges({ story, plugin: services.plugins.context(id) });
+          return badges({ story, plugin });
         } catch {
           return [];
         }
       }),
-    [plugins, services],
+    [badged],
   );
 }

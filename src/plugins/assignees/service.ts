@@ -86,13 +86,12 @@ export async function removeAssignee(plugin: PluginContext, handle: string) {
     );
     let storiesUpdated = 0;
     for (const story of await plugin.services.stories.list(null, {})) {
-      const assignees = storyAssignees(plugin, story);
-      if (!assignees.includes(handle)) continue;
+      if (!storyAssignees(plugin, story).includes(handle)) continue;
       await changes.updateStory(story.key, (s) =>
         setAssignees(
           plugin,
           { ...s, updatedAt: toTimestamp(plugin.now()) },
-          assignees.filter((h) => h !== handle),
+          storyAssignees(plugin, s).filter((h) => h !== handle),
         ),
       );
       storiesUpdated += 1;
