@@ -15,7 +15,7 @@ import type { Repositories } from '../../storage';
 import { coordinated } from '../coordination';
 import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
-import { CoreChangeSet, frozenCopy, listPluginFiles, readPluginFile } from './changeSet';
+import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
@@ -486,7 +486,8 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       });
     },
     writeBag(record, bag) {
-      if (isRootConfig(record)) {
+      // Root settings are entries with `enabled`, not bags (ADR-0010).
+      if (isRootConfigCopy(record)) {
         throw new PluginError(`Plugin "${id}" cannot use writeBag on rowbly.config.json`, {
           details: { plugin: id },
           hint: 'change settings with changes.updateRootConfig and keep "enabled"',
@@ -601,17 +602,6 @@ function pluginHookContext(
 /** `base` with the members of `extra`, keeping getters (such as `me`) live rather than copying their values. */
 function withGetters<A extends object, B extends object>(base: A, extra: B): A & B {
   return Object.defineProperties(base, Object.getOwnPropertyDescriptors(extra)) as A & B;
-}
-
-/**
- * The root config (`rowbly.config.json`): its Plugin entries are settings with `enabled`, not bags.
- * It has `version` and `stages` or `customFields`, like a Board (which has an `id`) or a Story (which
- * has a `key`). A root config with neither looks like Local State, so it is not refused.
- */
-function isRootConfig(record: object): boolean {
-  return (
-    'version' in record && ('stages' in record || 'customFields' in record) && !('id' in record) && !('key' in record)
-  );
 }
 
 /** How an error names the record a bag is on. */

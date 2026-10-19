@@ -271,7 +271,12 @@ export class CoreChangeSet implements ChangeSet {
       updateBoard: (boardId, update) => write(async () => frozenCopy(await this.updateBoard(boardId, update, check))),
       updateRootConfig: (update) =>
         write(async () =>
-          frozenCopy(await this.updateRootConfig((config) => keepEnabled(id, config, update(config)), check)),
+          frozenCopy(
+            await this.updateRootConfig((config) => {
+              rootConfigCopies.add(config);
+              return keepEnabled(id, config, update(config));
+            }, check),
+          ),
         ),
       updateLocalState: (update) => write(async () => frozenCopy(await this.updateLocalState(update, check))),
       writeFile: (scope, name, text) => write(() => this.setFile(id, scope, name, text, check)),
@@ -727,6 +732,14 @@ function changedOnDisk(what: string, path: string, operation: string): ConflictE
 }
 
 /** A Plugin's root config change keeps every Plugin's `enabled` (ADR-0019 §6, check 9). */
+/** The copies of the root config that Plugin updaters get, so `writeBag` can refuse them. */
+const rootConfigCopies = new WeakSet<object>();
+
+/** Whether `record` is the root config (`rowbly.config.json`) that a Plugin's `updateRootConfig` updater got. */
+export function isRootConfigCopy(record: object): boolean {
+  return rootConfigCopies.has(record);
+}
+
 function keepEnabled(id: string, before: RowblyConfig, after: RowblyConfig): RowblyConfig {
   const ids = new Set([...Object.keys(before.plugins ?? {}), ...Object.keys(after.plugins ?? {})]);
   for (const other of ids) {
