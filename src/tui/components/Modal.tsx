@@ -1,5 +1,5 @@
-import { Box, type DOMElement, Text, useBoxMetrics } from 'ink';
-import { type ReactNode, useRef } from 'react';
+import { Box, Text } from 'ink';
+import type { ReactNode } from 'react';
 import { LayoutContext, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { Panel } from './Panel';
@@ -41,13 +41,6 @@ export function Modal({ title, hints, size = 'panel', maxWidth = 96, children }:
   // Border (the title sits in it), hint bar with its rule, body padding.
   const chrome = 2 + (footer ? 2 : 0) + 2;
   const body = { width: width - 6, height: room === undefined ? undefined : room - chrome };
-  // The modal fits its content, measured after the first layout, up to the room there is; longer
-  // content is cut off at the bottom. (Yoga's `maxHeight` would squash the content instead.)
-  const content = useRef<DOMElement>(null);
-  const measured = useBoxMetrics(content);
-  const height =
-    room === undefined ? undefined : Math.min(room, measured.hasMeasured ? measured.height + chrome : room);
-
   const frame = (
     <Panel
       title={title}
@@ -55,10 +48,11 @@ export function Modal({ title, hints, size = 'panel', maxWidth = 96, children }:
       backgroundColor={overlay ? MODAL_BACKGROUND : undefined}
       width={panel ? width : undefined}
       maxWidth={width}
-      height={height}
+      maxHeight={room}
     >
       <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden" paddingX={2} paddingY={1}>
-        <Box ref={content} flexDirection="column" flexShrink={0}>
+        {/* Keep content at its natural height; only the viewport shrinks when the panel is capped. */}
+        <Box flexDirection="column" flexShrink={0}>
           <LayoutContext.Provider value={body}>{children}</LayoutContext.Provider>
         </Box>
       </Box>

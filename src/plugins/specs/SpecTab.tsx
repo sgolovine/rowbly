@@ -48,7 +48,7 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
         });
       if (input === 'd' && data.own) setConfirming(true);
     },
-    { isActive: isActive && !confirming && !busy && !documents.loading && !!data },
+    { isActive: isActive && !confirming && !busy && !!data },
   );
   const remove = async () => {
     setBusy(true);
@@ -63,8 +63,8 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
       setConfirming(false);
     }
   };
-  if (documents.loading) return <Loading />;
-  if (!data) return <Text color="red">Could not load Specs.</Text>;
+  // A reload, e.g. on return from the Spec form, keeps the Specs on screen, so their keys keep working.
+  if (!data) return documents.loading ? <Loading /> : <Text color="red">Could not load Specs.</Text>;
   if (confirming)
     return (
       <ConfirmDialog

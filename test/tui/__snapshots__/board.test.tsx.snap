@@ -27,7 +27,7 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 ││  + New Board N   │││└─────────────────────┘                                                                         │
 │╰──────────────────╯││                                                                                                │
 ╰────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────╯
- h/l j/k select · enter open · n new · / filter · ? help · q quit"
+ ←/→ ↑/↓ select · enter open · n new · / filter · ? help · q quit"
 `;
 
 exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
@@ -42,5 +42,5 @@ exports[`board view > scrolls horizontally at 80 columns with 6 Stages without w
 ││  + New Board N   │││                                                        │
 │╰──────────────────╯││                                                        │
 ╰────────────────────╯╰────────────────────────────────────────────────────────╯
- h/l j/k select · enter open · n new · / filter · ? help · q quit"
+ ←/→ ↑/↓ select · enter open · n new · / filter · ? help · q quit"
 `;

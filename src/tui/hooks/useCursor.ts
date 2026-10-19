@@ -2,7 +2,7 @@ import { useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { moveDelta } from '../keymap';
 
-/** A cursor over `length` rows, moved with `↑/↓`/`j/k` while `active`. */
+/** A cursor over `length` rows, moved with `↑/↓` (or `j/k`) while `active`. */
 export function useCursor(length: number, active: boolean): [number, (index: number) => void] {
   const [cursor, setCursor] = useState(0);
   const clamped = Math.max(0, Math.min(cursor, length - 1));

@@ -56,7 +56,17 @@ export function Panel({ title, color, children, flexDirection = 'column', ...box
 
 // Size and placement go on the whole panel; everything else (padding, gaps, overflow) on its inside.
 // A background fills both.
-const OUTER = new Set(['width', 'height', 'minWidth', 'minHeight', 'maxWidth', 'flexGrow', 'flexShrink', 'flexBasis']);
+const OUTER = new Set([
+  'width',
+  'height',
+  'minWidth',
+  'minHeight',
+  'maxWidth',
+  'maxHeight',
+  'flexGrow',
+  'flexShrink',
+  'flexBasis',
+]);
 
 function pick(box: BoxProps): BoxProps {
   return Object.fromEntries(

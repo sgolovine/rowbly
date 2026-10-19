@@ -58,10 +58,11 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       ? [
           { key: 'n', description: 'add' },
           { key: 'e', description: 'edit' },
-          { key: 'K/J', description: 'move up/down' },
+          { key: 'shift+↑/↓', description: 'move up/down' },
           { key: 'T/B', description: 'move first/last' },
           { key: 'd', description: 'remove' },
           { key: 'l', description: 'switch level' },
+          { key: 'K/J', description: 'move up/down (vim keys)', secondary: true },
         ]
       : [{ key: 'esc', description: 'cancel' }],
   );
@@ -97,7 +98,9 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   };
 
   useInput(
-    (input) => {
+    (input, key) => {
+      const up = input === 'K' || (key.shift && key.upArrow);
+      const down = input === 'J' || (key.shift && key.downArrow);
       if (input === 'l') {
         setLevel(levels[(levels.indexOf(level) + 1) % levels.length] ?? level);
         setCursor(0);
@@ -105,9 +108,9 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       else if (!current) return;
       else if (input === 'e') setMode({ kind: 'edit', stage: current });
       else if (input === 'd') setMode({ kind: 'confirm-remove', stage: current });
-      else if (input === 'K' && cursor > 0) {
+      else if (up && cursor > 0) {
         void move(current, { before: stages[cursor - 1]?.key ?? '' }, cursor - 1);
-      } else if (input === 'J' && cursor < stages.length - 1) {
+      } else if (down && cursor < stages.length - 1) {
         void move(current, { after: stages[cursor + 1]?.key ?? '' }, cursor + 1);
       } else if (input === 'T' && cursor > 0) void move(current, 'first', 0);
       else if (input === 'B' && cursor < stages.length - 1) void move(current, 'last', stages.length - 1);
