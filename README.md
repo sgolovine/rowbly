@@ -377,7 +377,7 @@ Screens and dialogs open in centred modals that fit their content from the first
 | Key | Action |
 | --- | --- |
 | `↑`/`↓` (or `j`/`k`) | move |
-| `enter` | select or open |
+| `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
 | `,` | settings, in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |

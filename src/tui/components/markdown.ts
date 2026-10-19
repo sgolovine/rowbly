@@ -9,7 +9,14 @@ function renderer(width: number): Marked {
   let marked = renderers.get(width);
   if (!marked) {
     // `@types/marked-terminal` types the extension as a renderer class; at run time it is an extension.
-    marked = new Marked(markedTerminal({ width, reflowText: true, tab: 2 }) as unknown as MarkedExtension);
+    marked = new Marked(markedTerminal({ width, reflowText: true, tab: 2 }) as unknown as MarkedExtension, {
+      renderer: {
+        // `marked-terminal` prints a tight list item's text raw; render its inline markdown instead.
+        text(token) {
+          return 'tokens' in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
+        },
+      },
+    });
     renderers.set(width, marked);
   }
   return marked;

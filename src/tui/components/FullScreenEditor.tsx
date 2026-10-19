@@ -29,8 +29,8 @@ export interface FullScreenEditorProps {
 
 /** Rows of text when the editor grows with its content (tests, piped output) rather than filling the terminal. */
 const UNBOUNDED_ROWS = 10;
-/** The row above the text that shows the mode and whether the text is saved. */
-const MODE_ROWS = 1;
+/** The row above the text that shows the mode and whether the text is saved, and a blank row under it. */
+const MODE_ROWS = 2;
 
 type SaveState = { kind: 'idle' | 'saving' | 'saved' } | { kind: 'failed'; message: string };
 
@@ -111,7 +111,7 @@ export function FullScreenEditor({
         />
       ) : (
         <>
-          <Box gap={1} height={MODE_ROWS} flexShrink={0}>
+          <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
             <Text bold={mode === 'view'} inverse={mode === 'view'}>
               {' View '}
             </Text>
@@ -121,13 +121,16 @@ export function FullScreenEditor({
             {saveStatus(save, dirty)}
           </Box>
           {mode === 'view' ? (
-            <MarkdownView
-              text={value}
-              width={body.width}
-              height={rows}
-              active={keys}
-              emptyText="No text yet. Press e to write some."
-            />
+            // As tall as the text box, so switching modes keeps the editor's size.
+            <Box flexDirection="column" height={rows} flexShrink={0}>
+              <MarkdownView
+                text={value}
+                width={body.width}
+                height={rows}
+                active={keys}
+                emptyText="No text yet. Press e to write some."
+              />
+            </Box>
           ) : (
             <TextArea
               value={value}
