@@ -111,16 +111,6 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
   }
   // A reload, e.g. on return from a Spec, keeps the list on screen, so its keys keep working.
   if (specs.loading && !specs.data?.length) return <Loading />;
-  if (deleting)
-    return (
-      <ConfirmDialog
-        message={`Delete Spec "${deleting.slug}"? Board Spec links will be removed.`}
-        destructive
-        isActive={active && !busy}
-        onConfirm={() => void remove(deleting)}
-        onCancel={() => setDeleting(null)}
-      />
-    );
   return (
     <Box flexDirection="column">
       <Text bold>{`Board Specs — ${board}`}</Text>
@@ -136,6 +126,16 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
           }}
           emptyText="No Board Specs. Press n to create one."
           isActive={keys}
+        />
+      )}
+      {/* The list stays under the confirmation, so its highlight is kept when the person cancels. */}
+      {deleting && (
+        <ConfirmDialog
+          message={`Delete Spec "${deleting.slug}"? Board Spec links will be removed.`}
+          destructive
+          isActive={active && !busy}
+          onConfirm={() => void remove(deleting)}
+          onCancel={() => setDeleting(null)}
         />
       )}
       {editor.inline}

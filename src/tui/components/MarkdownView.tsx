@@ -1,8 +1,8 @@
 import { Box, Text, useInput } from 'ink';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useIsActive } from '../hooks';
 import { moveDelta } from '../keymap';
-import { renderMarkdown } from './markdown';
+import { loadMarkdownRenderer, markdownRenderer, plainMarkdownRows } from './markdown';
 
 export interface MarkdownViewProps {
   /** Markdown source. */
@@ -19,7 +19,8 @@ export interface MarkdownViewProps {
 
 /**
  * Markdown rendered for the terminal in a scrolling viewport: `↑/↓` (or `j/k`) scroll, and a row
- * under the text shows the position when it does not all fit.
+ * under the text shows the position when it does not all fit. The first time one is shown, the text
+ * shows without its markdown syntax until the renderer has loaded.
  */
 export function MarkdownView({
   text,
@@ -30,7 +31,16 @@ export function MarkdownView({
 }: MarkdownViewProps) {
   const isActive = useIsActive() && active;
   const [offset, setOffset] = useState(0);
-  const lines = useMemo(() => renderMarkdown(text, width), [text, width]);
+  const [render, setRender] = useState(markdownRenderer);
+  useEffect(() => {
+    if (render) return;
+    let current = true;
+    void loadMarkdownRenderer().then((loaded) => current && setRender(() => loaded));
+    return () => {
+      current = false;
+    };
+  }, [render]);
+  const lines = useMemo(() => (render ?? plainMarkdownRows)(text, width), [render, text, width]);
   const fits = height === undefined || lines.length <= height;
   // One row is kept for the position when the text scrolls.
   const rows = fits ? lines.length : Math.max(1, height - 1);

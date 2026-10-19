@@ -95,18 +95,9 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
   };
   // A reload, e.g. on return from the Spec form, keeps the list on screen, so its keys keep working.
   if (!data) return documents.loading ? <Loading /> : <Text color="red">Could not load Specs.</Text>;
-  if (deleting)
-    return (
-      <ConfirmDialog
-        message={`Delete Story Spec "${deleting.target.slug}"?`}
-        destructive
-        isActive={isActive && !busy}
-        onConfirm={() => void remove(deleting)}
-        onCancel={() => setDeleting(null)}
-      />
-    );
+  // The list stays under the confirmation, so its highlight is kept when the person cancels.
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" gap={1}>
       <SelectList
         items={data.map((d) => ({
           value: d.key,
@@ -121,6 +112,15 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
         emptyText="No Specs. Press n to create a Story Spec."
         isActive={listing}
       />
+      {deleting && (
+        <ConfirmDialog
+          message={`Delete Story Spec "${deleting.target.slug}"?`}
+          destructive
+          isActive={isActive && !busy}
+          onConfirm={() => void remove(deleting)}
+          onCancel={() => setDeleting(null)}
+        />
+      )}
       {editor.inline}
     </Box>
   );

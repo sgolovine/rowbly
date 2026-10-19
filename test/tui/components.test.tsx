@@ -10,8 +10,9 @@ import {
   Form,
   type FormField,
   FullScreenEditor,
+  loadMarkdownRenderer,
   markdownToPlain,
-  renderMarkdown,
+  plainMarkdownRows,
   SelectList,
   StageBadge,
   TextArea,
@@ -616,8 +617,9 @@ describe('DetailView and StageBadge', () => {
   });
 });
 
-describe('renderMarkdown', () => {
-  it('renders markdown as terminal rows that fit the width', () => {
+describe('the markdown renderer', () => {
+  it('renders markdown as terminal rows that fit the width', async () => {
+    const renderMarkdown = await loadMarkdownRenderer();
     const rows = renderMarkdown(`# Title\n\nSome **bold** and \`code\`.\n\n\`\`\`\n${'x'.repeat(30)}\n\`\`\``, 20);
     expect(rows[0]).toBe('# Title');
     expect(rows.join('\n')).toContain('Some bold and code.');
@@ -626,7 +628,12 @@ describe('renderMarkdown', () => {
     expect(rows.join('')).toContain('x'.repeat(16));
   });
 
-  it('renders the inline markdown of list items', () => {
+  it('renders the inline markdown of list items', async () => {
+    const renderMarkdown = await loadMarkdownRenderer();
     expect(renderMarkdown('- one *two* **three** `four`', 40)).toEqual(['  * one two three four']);
+  });
+
+  it('shows the text without markdown syntax, in rows that fit, until the renderer loads', () => {
+    expect(plainMarkdownRows('# Title\n\nSome **bold** words\n\n', 10)).toEqual(['Title', '', 'Some bold ', 'words']);
   });
 });
