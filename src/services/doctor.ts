@@ -1,14 +1,5 @@
 import type { ZodType } from 'zod';
-import {
-  formatStoryKey,
-  formatTaskId,
-  isRowblyError,
-  isSlug,
-  parseTaskId,
-  ranksBetween,
-  STORY_KEY_RE,
-  toTimestamp,
-} from '../core';
+import { formatStoryKey, isRowblyError, isSlug, ranksBetween, STORY_KEY_RE, toTimestamp } from '../core';
 import {
   type BoardConfig,
   BoardConfigSchema,
@@ -57,7 +48,6 @@ const SEVERITY: Record<CoreDoctorCode, DoctorSeverity> = {
   UNKNOWN_FIELD: 'warning',
   INVALID_FIELD_VALUE: 'warning',
   MISSING_REQUIRED_FIELD: 'warning',
-  TASK_COUNTER_BEHIND: 'warning',
   DUPLICATE_RANK: 'warning',
   STALE_LOCAL_STATE: 'warning',
   UNKNOWN_FILE: 'info',
@@ -465,7 +455,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       }
     }
 
-    // 5. References, Custom Fields and task counters, Story by Story.
+    // 5. References and Custom Fields, Story by Story.
     for (const board of boards.values()) {
       if (!global || !board.config) continue;
       const effective = cascade(global, board.config);
@@ -478,13 +468,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
           add('UNKNOWN_STAGE', file, `${story.key} is in unknown Stage "${story.stage}"`, {
             details: { hint: `run \`rowbly stories move ${story.key} <stage>\`` },
           });
-        }
-        for (const task of story.tasks) {
-          if (!stageKeys.has(task.stage)) {
-            add('UNKNOWN_STAGE', file, `${task.id} is in unknown Stage "${task.stage}"`, {
-              details: { hint: `run \`rowbly tasks move ${task.id} <stage>\`` },
-            });
-          }
         }
 
         const unknown = story.assignees.filter((handle) => !roster.has(handle));
@@ -517,21 +500,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
           if (def.required && story.customFields[def.key] === undefined) {
             add('MISSING_REQUIRED_FIELD', file, `${story.key} has no value for required Custom Field "${def.key}"`);
           }
-        }
-
-        const maxTask = Math.max(0, ...story.tasks.map((t) => parseTaskId(t.id).taskNumber));
-        if (story.nextTaskNumber <= maxTask) {
-          add(
-            'TASK_COUNTER_BEHIND',
-            file,
-            `${story.key} nextTaskNumber ${story.nextTaskNumber} ≤ highest Task ${maxTask}`,
-            {
-              apply: () => {
-                touch(entry, { nextTaskNumber: maxTask + 1 });
-                return `set ${entry.story.key} nextTaskNumber to ${maxTask + 1}`;
-              },
-            },
-          );
         }
       }
 
@@ -603,10 +571,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       for (const assignee of global.assignees) bagsSeen(assignee, 'rowbly.config.json');
     }
     for (const board of valid.boards) bagsSeen(board, `boards/${board.id}/board.config.json`);
-    for (const { story, file } of entries) {
-      bagsSeen(story, file);
-      for (const task of story.tasks) bagsSeen(task, file);
-    }
+    for (const { story, file } of entries) bagsSeen(story, file);
     bagsSeen(local.state, 'local.json');
     findings.push(...(await pluginFindings(valid, entries, local.state, pluginData)));
 
@@ -673,13 +638,12 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     }
   }
 
-  /** Gives `story` the next free key on its Board, renaming its Task ids to match. */
+  /** Gives `story` the next free key on its Board. */
   function renumber(board: BoardEntry, story: Story): Story {
     const n = Math.max(0, ...board.used) + 1;
     board.used.add(n);
     const key = formatStoryKey(board.config?.keyPrefix ?? '', n);
-    const tasks = story.tasks.map((task) => ({ ...task, id: formatTaskId(key, parseTaskId(task.id).taskNumber) }));
-    return { ...story, key, tasks, updatedAt: now() };
+    return { ...story, key, updatedAt: now() };
   }
 
   /** Changes a Story in memory; returns false for one doctor never saves (legacy data). */
@@ -733,10 +697,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       }
       check(bags.local, local.plugins?.[id], 'local.json', 'Local State');
       // Every Story's bags, at the file it was read from: a duplicate's path is its own folder.
-      for (const { story, file } of entries) {
-        check(bags.story, story.plugins?.[id], file, story.key);
-        for (const task of story.tasks) check(bags.task, task.plugins?.[id], file, task.id);
-      }
+      for (const { story, file } of entries) check(bags.story, story.plugins?.[id], file, story.key);
       if (!doctor) continue;
       const context = ops.hookContext(id);
       const prefix = `${id.toUpperCase().replaceAll('-', '_')}_`;
@@ -939,13 +900,10 @@ function legacyFields(text: string): string[] {
     return [];
   }
   if (typeof raw !== 'object' || raw === null) return [];
-  const story = raw as { comments?: unknown; epicId?: unknown; tasks?: unknown };
+  const story = raw as { comments?: unknown; epicId?: unknown };
   const fields: string[] = [];
   if (story.comments !== undefined) fields.push('comments');
   if (story.epicId !== undefined) fields.push('epicId');
-  if (Array.isArray(story.tasks) && story.tasks.some((t) => typeof t === 'object' && t !== null && 'comments' in t)) {
-    fields.push('Task comments');
-  }
   return fields;
 }
 

@@ -9,7 +9,7 @@ const CommentSchema = z.object({
 });
 export type Comment = z.infer<typeof CommentSchema>;
 
-/** The bag on a Story or Task: its Thread, in the order the Comments were added. */
+/** The bag on a Story: its Thread, in the order the Comments were added. */
 export const CommentsBag = z.object({ comments: z.array(CommentSchema) });
 
 /**

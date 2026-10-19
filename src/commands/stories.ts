@@ -126,7 +126,7 @@ export function registerStories(program: Command): void {
 
   stories
     .command('show <key>')
-    .description('Show a Story with its Custom Fields, description and Task summary')
+    .description('Show a Story with its Custom Fields and description')
     .action(async (key: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ ctx, services, globals }) => {
         const story = await services.stories.get(key);
@@ -193,7 +193,7 @@ export function registerStories(program: Command): void {
 
   stories
     .command('delete <key>')
-    .description('Delete a Story with its Tasks (its key may be reused)')
+    .description('Delete a Story (its key may be reused)')
     .action(async (key: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const story = await services.stories.get(key);
@@ -337,8 +337,6 @@ function renderStory(
     );
   }
   if (story.description.trim()) lines.push('', colors.bold('Description'), story.description);
-  const done = story.tasks.filter((t) => stages.find((s) => s.key === t.stage)?.category === 'done').length;
-  lines.push('', `Tasks: ${done}/${story.tasks.length} done`);
   return lines.join('\n');
 }
 

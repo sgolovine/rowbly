@@ -154,8 +154,8 @@ export function registerStages(program: Command): void {
   withLevelOptions(
     stages
       .command('remove <key>')
-      .description('Remove a Stage (refused while Stories or Tasks use it, unless --move-to)')
-      .option('--move-to <key>', 'move its Stories (to the bottom) and Tasks to this Stage first'),
+      .description('Remove a Stage (refused while Stories use it, unless --move-to)')
+      .option('--move-to <key>', 'move its Stories (to the bottom) to this Stage first'),
   ).action(async (key: string, opts: StageOptions, cmd: Command) =>
     withContext(cmd, async ({ ctx, services, globals }) => {
       const target = await resolveConfigTarget(services, opts);
@@ -167,10 +167,7 @@ export function registerStages(program: Command): void {
         json: globals.json,
         human: (r) =>
           [
-            `Removed Stage ${key}` +
-              (r.storiesMoved + r.tasksMoved > 0
-                ? `; moved ${r.storiesMoved} Stories and ${r.tasksMoved} Tasks to ${opts.moveTo}`
-                : ''),
+            `Removed Stage ${key}${r.storiesMoved > 0 ? `; moved ${r.storiesMoved} Stories to ${opts.moveTo}` : ''}`,
             affectsLine(target, r.affectedBoards),
           ].join('\n'),
       });

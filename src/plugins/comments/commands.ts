@@ -8,21 +8,19 @@ interface BodyOptions {
   edit?: boolean;
 }
 
-const TARGET = 'a Story Key (WEB-42) or a Task id (WEB-42.1)';
-
 export const commands: PluginCommands = (group, cli) => {
-  group.addHelpText('after', `\n<target> is ${TARGET}.`);
+  group.addHelpText('after', '\n<target> is a Story Key (WEB-42).');
 
   group
     .command('list <target>')
-    .description('List the Comments on a Story or Task, oldest first')
+    .description('List the Comments on a Story, oldest first')
     .action((target: string, _opts: unknown, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await listComments(plugin, target), renderComments);
       }),
     );
 
-  withBody(group.command('add <target>').description('Add a Comment to a Story or Task')).action(
+  withBody(group.command('add <target>').description('Add a Comment to a Story')).action(
     (target: string, opts: BodyOptions, cmd) =>
       cli.run(cmd, async (env) => {
         const comment = await addComment(env.plugin, target, await readBody(env, opts));

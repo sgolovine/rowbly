@@ -14,7 +14,6 @@ import type {
   Stage,
   Story,
   StoryKey,
-  Task,
 } from '../../schemas';
 import type {
   AssigneeInput,
@@ -42,17 +41,13 @@ import type {
   StoriesService,
   StoryCreateInput,
   StoryPatch,
-  TaskCreateInput,
-  TaskPatch,
-  TasksService,
 } from '../types';
 
 // ── Change Sets (ADR-0012) ──────────────────────────────────────────────────
 
 /**
  * One stored record that an operation creates (`before: null`), changes, or deletes (`after: null`).
- * Tasks live in their Story's record and Assignees in the root config, so changes to
- * them are Story or root config changes. A renumbered Story is one Story change whose `before` and
+ * Assignees live in the root config, so changes to them are root config changes. A renumbered Story is one Story change whose `before` and
  * `after` have different keys; saving it moves the whole Story folder, Plugin files included.
  */
 export type Change = RootConfigChange | LocalStateChange | BoardChange | StoryChange | FileChange;
@@ -229,10 +224,6 @@ export const CORE_OPERATION_NAMES = [
   'stories.move',
   'stories.rank',
   'stories.remove',
-  'tasks.create',
-  'tasks.update',
-  'tasks.move',
-  'tasks.remove',
   'plugins.enable',
   'plugins.disable',
   'doctor.fix',
@@ -264,7 +255,7 @@ export interface CoreOperations {
   'stages.move': { input: { target: ConfigTarget; key: Slug; position: Position } & OperationOptions; result: Stage[] };
   'stages.remove': {
     input: { target: ConfigTarget; key: Slug; moveTo?: Slug } & OperationOptions;
-    result: { storiesMoved: number; tasksMoved: number };
+    result: { storiesMoved: number };
   };
   'fields.add': {
     input: { target: ConfigTarget; field: CustomFieldInput } & OperationOptions;
@@ -280,10 +271,6 @@ export interface CoreOperations {
   'stories.move': { input: { key: string; stage: Slug; top: boolean } & OperationOptions; result: Story };
   'stories.rank': { input: { key: string; position: RankPosition } & OperationOptions; result: Story };
   'stories.remove': { input: { key: string } & OperationOptions; result: undefined };
-  'tasks.create': { input: { storyKey: string } & TaskCreateInput; result: Task };
-  'tasks.update': { input: { taskId: string } & TaskPatch; result: Task };
-  'tasks.move': { input: { taskId: string; stage: Slug } & OperationOptions; result: Task };
-  'tasks.remove': { input: { taskId: string } & OperationOptions; result: undefined };
   'plugins.enable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   'plugins.disable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   /** One pass of `doctor --fix`: the findings it fixes. */
@@ -440,7 +427,6 @@ export interface PluginReadServices {
   stages: Pick<StagesService, 'list'>;
   fields: Pick<FieldsService, 'list'>;
   stories: Pick<StoriesService, 'list' | 'get' | 'labelsInUse'>;
-  tasks: Pick<TasksService, 'list' | 'get'>;
 }
 
 /**
@@ -583,10 +569,6 @@ export const PLUGIN_OPTION_COMMANDS = [
   'stories move',
   'stories rank',
   'stories delete',
-  'tasks create',
-  'tasks edit',
-  'tasks move',
-  'tasks delete',
 ] as const;
 
 export type PluginOptionCommand = (typeof PLUGIN_OPTION_COMMANDS)[number];
@@ -604,10 +586,6 @@ export interface PluginOptionOperations {
   'stories move': 'stories.move';
   'stories rank': 'stories.rank';
   'stories delete': 'stories.remove';
-  'tasks create': 'tasks.create';
-  'tasks edit': 'tasks.update';
-  'tasks move': 'tasks.move';
-  'tasks delete': 'tasks.remove';
 }
 
 /** One option a Plugin adds to a core command: one long lower-kebab-case flag, such as `--epic <id>` or `--no-epic`. */
@@ -662,7 +640,7 @@ export type PluginOptionsMap<In = Record<never, never>, FS extends ZodType = Zod
     : PluginFilterOptions<z.input<FS>>;
 };
 
-/** A labelled value shown in `stories show` or `tasks show`, and on the TUI Story or Task screen. */
+/** A labelled value shown in `stories show` and on the TUI Story screen. */
 export interface PluginRow {
   label: string;
   value: string;
@@ -699,24 +677,22 @@ export interface PluginDoctor<S> {
 // ── TUI ─────────────────────────────────────────────────────────────────────
 
 /** What an Action names as its target (ADR-0017); `none` shows on every screen. */
-export type ActionTarget = 'board' | 'story' | 'task' | 'none';
+export type ActionTarget = 'board' | 'story' | 'none';
 
 /** What is in focus on the current screen. */
 export interface ActionFocus {
   board?: BoardConfig;
   story?: Story;
-  task?: Task;
 }
 
 /**
  * The focus an Action of each target is run with. The TUI shows and runs an Action only when its
- * target is in focus: a Board for `board`, a Story for `story`, and a Task together with its Story for
- * `task` (the Task screen always has both). `none` runs anywhere, with whatever is in focus.
+ * target is in focus: a Board for `board` and a Story for `story`. `none` runs anywhere, with whatever
+ * is in focus.
  */
 export interface ActionFocusOf {
   board: ActionFocus & { board: BoardConfig };
   story: ActionFocus & { story: Story };
-  task: ActionFocus & { story: Story; task: Task };
   none: ActionFocus;
 }
 
@@ -733,8 +709,6 @@ export interface PluginUi {
   open(screen: string, params?: Record<string, unknown>): void;
   /** Opens core Story `key`'s detail on top of the current screen; back returns here (ARCH-07). */
   openStory(key: string): void;
-  /** Opens core Task `id`'s detail (`WEB-1.2`) on top of the current screen; back returns here. */
-  openTask(id: string): void;
   /** Opens Board `id`'s detail, with its effective configuration, on top of the current screen. */
   openBoard(id: string): void;
   back(): void;
@@ -855,15 +829,6 @@ export interface PluginStoryTabProps<S = Record<string, unknown>> {
   ui: PluginUi;
 }
 
-export interface PluginTaskTabProps<S = Record<string, unknown>> {
-  story: Story;
-  task: Task;
-  /** Whether the tab is the selected one; as for `PluginStoryTabProps.active`. */
-  active: boolean;
-  plugin: PluginContext<S>;
-  ui: PluginUi;
-}
-
 export interface PluginBoardSectionProps<S = Record<string, unknown>> {
   board: BoardConfig;
   plugin: PluginContext<S>;
@@ -886,8 +851,13 @@ export interface PluginTui<S = Record<string, unknown>> {
   storyForm?: PluginStoryForm<S>;
   storyFilter?: PluginStoryFilter<S>;
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
-  taskTabs?: { label: string; component: ComponentType<PluginTaskTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
+  /**
+   * A short text on a Story's board card, such as `✓ 2/5`, or `null` for none. It runs for every card
+   * each time the board renders, so it must be quick and must not read files: use the Story and the
+   * Board's effective Stages it is given. A Plugin whose badge throws shows none on that card.
+   */
+  cardBadge?(args: { story: Story; stages: readonly Stage[]; plugin: PluginContext<S> }): string | null;
 }
 
 // ── The definition ──────────────────────────────────────────────────────────
@@ -895,7 +865,6 @@ export interface PluginTui<S = Record<string, unknown>> {
 /** Schemas for a Plugin's bags on records other than the Data Root and Boards (whose bags are its settings). */
 export interface PluginBagSchemas {
   story?: ZodType;
-  task?: ZodType;
   assignee?: ZodType;
   local?: ZodType;
 }
@@ -948,8 +917,6 @@ export interface PluginDefinition<
   filterStories?(story: Story, filter: z.output<FS>, plugin: PluginContext<S>): boolean;
   /** Rows for `stories show` and the TUI Story screen. */
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
-  /** Rows for `tasks show` and the TUI Task screen. */
-  taskRows?(task: Task, story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
   doctor?: PluginDoctor<S>;
   actions?: PluginAction<S>[];
   /** Loads the TUI part, e.g. `() => import('./tui').then((m) => m.tui)`. */

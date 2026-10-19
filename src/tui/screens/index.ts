@@ -10,7 +10,6 @@ import { settingsScreens } from './settings';
 import { setupScreens } from './setup';
 import { stagesScreens } from './stages';
 import { storiesScreens } from './stories';
-import { tasksScreens } from './tasks';
 import type { ScreenRegistry } from './types';
 
 export type { ScreenComponent, ScreenProps, ScreenRegistry } from './types';
@@ -24,7 +23,6 @@ export const screens: ScreenRegistry = {
   ...stagesScreens,
   ...fieldsScreens,
   ...storiesScreens,
-  ...tasksScreens,
   ...boardScreens,
   ...doctorScreens,
   ...settingsScreens,

@@ -64,13 +64,6 @@ export function replaceCard(columns: Columns, story: Story): Columns {
   return columns.map((cards) => cards.map((s) => (s.key === story.key ? story : s)));
 }
 
-/** `✓ done/total` over the Story's Tasks, judged by Stage Category; `null` without Tasks. */
-export function taskSummary(story: Pick<Story, 'tasks'>, stages: readonly Stage[]): string | null {
-  if (story.tasks.length === 0) return null;
-  const done = story.tasks.filter((t) => stages.find((s) => s.key === t.stage)?.category === 'done').length;
-  return `✓ ${done}/${story.tasks.length}`;
-}
-
 /** Cuts `text` to `width` characters, ending in `…` when cut. */
 export function truncate(text: string, width: number): string {
   if (width <= 0) return '';

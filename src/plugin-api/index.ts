@@ -22,17 +22,15 @@ export {
   ConflictError,
   DataIntegrityError,
   isSlug,
-  isTaskId,
   NotFoundError,
   parseRepeatable,
   parseStoryKey,
-  parseTaskId,
   RowblyError,
   toTimestamp,
   UsageError,
   ValidationError,
 } from '../core';
-export { colors, renderTable } from '../output';
+export { colorByCategory, colors, renderTable } from '../output';
 export type {
   Assignee,
   BoardConfig,
@@ -49,8 +47,6 @@ export type {
   StageCategory,
   Story,
   StoryKey,
-  Task,
-  TaskId,
   Timestamp,
 } from '../schemas';
 export { SlugSchema, StoryKeySchema, TimestampSchema } from '../schemas';
@@ -118,7 +114,6 @@ export type {
   PluginStoryFilter,
   PluginStoryForm,
   PluginStoryTabProps,
-  PluginTaskTabProps,
   PluginTui,
   PluginUi,
   ReactionEvent,
