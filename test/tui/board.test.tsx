@@ -157,12 +157,27 @@ describe('board view', () => {
     expect(frame).toContain('Website web');
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
     // key + Priority, truncated name, Assignees + Task summary
-    expect(frame).toContain('▌ WEB-1 P1');
+    expect(frame).toContain('┃ WEB-1 P1');
     expect(frame).toMatch(/Login page with a ra.*…/);
     expect(frame).toContain('@alice @bob · ✓ 1/3');
     expect(frame.indexOf('WEB-1')).toBeLessThan(frame.indexOf('WEB-2'));
     expect(frame.indexOf('WEB-2')).toBeLessThan(frame.indexOf('WEB-3'));
     expect(stable(frame)).toMatchSnapshot();
+    app.unmount();
+  });
+
+  it('borders every card thinly and the selected one heavier, without shifting the layout', async () => {
+    const t = await seed();
+    const app = await open(t);
+    const before = app.lastFrame() ?? '';
+    expect(before).toContain('┃ WEB-1 P1');
+    expect(before).toContain('│ WEB-2');
+    expect(before).toContain('│ WEB-4 P3');
+    await app.press('j');
+    await waitForFrame(app, (f) => f.includes('┃ WEB-2') && f.includes('│ WEB-1 P1'));
+    // Only the border glyph changes: the frames match once heavy borders read as thin ones.
+    const thin = (frame: string) => frame.replaceAll('┃', '│');
+    expect(thin(app.lastFrame() ?? '')).toBe(thin(before));
     app.unmount();
   });
 
@@ -274,7 +289,7 @@ describe('board view', () => {
         f.includes('error: the Story changed on disk') &&
         f.includes('● Backlog (3)') &&
         f.includes('● Todo (1)') &&
-        f.includes('▌ WEB-1'),
+        f.includes('┃ WEB-1'),
     );
     expect((await story(t, 'WEB-1')).stage).toBe('backlog');
     app.unmount();
@@ -314,7 +329,7 @@ describe('board view', () => {
     expect(app.lastFrame()).toContain('↓ 1 more');
     expect(app.lastFrame()).not.toContain('WEB-7');
     await app.press('j', 'j', 'j');
-    await waitForFrame(app, (f) => f.includes('↑ 1 more') && f.includes('▌ WEB-7'));
+    await waitForFrame(app, (f) => f.includes('↑ 1 more') && f.includes('┃ WEB-7'));
     expect(app.lastFrame()).not.toContain('WEB-1 ');
     app.unmount();
   });
@@ -375,7 +390,7 @@ describe('board view', () => {
     // Click targets register in effects, which can trail the first frame on a busy machine.
     await tick(200);
     await click(at('Dark mode'));
-    await waitForFrame(app, '▌ Dark mode');
+    await waitForFrame(app, '┃ Dark mode');
     // Drag WEB-2 from Backlog and drop it on the Done column.
     await click(at('Signup form'), at('Release v1'));
     await waitForFrame(app, (f) => f.includes('● Backlog (2)') && f.includes('● Done (2)'));

@@ -8,17 +8,17 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 │  1 API             ││● Backlog (3)           ● Todo (1)              ● Doing (1)             ● Done (1)              │
 │▌ 2 Website         ││━━━━━━━━━━━━━━━━━━━━━━━ ─────────────────────── ─────────────────────── ─────────────────────── │
 │                    ││                                                                                                │
-│                    ││▌ WEB-1 P1                WEB-4 P3                WEB-5 P0                WEB-6                 │
-│                    ││▌ Login page with a ra…   Dark mode               Fix footer              Release v1            │
-│                    ││▌ @alice @bob · ✓ 1/3     @bob                                                                  │
+│                    ││┃ WEB-1 P1              │ WEB-4 P3              │ WEB-5 P0              │ WEB-6                 │
+│                    ││┃ Login page with a ra… │ Dark mode             │ Fix footer            │ Release v1            │
+│                    ││┃ @alice @bob · ✓ 1/3   │ @bob                  │                       │                       │
 │                    ││                                                                                                │
-│                    ││  WEB-2                                                                                         │
-│                    ││  Signup form                                                                                   │
+│                    │││ WEB-2                                                                                         │
+│                    │││ Signup form                                                                                   │
+│                    │││                                                                                               │
 │                    ││                                                                                                │
-│                    ││                                                                                                │
-│                    ││  WEB-3                                                                                         │
-│╭──────────────────╮││  Password reset                                                                                │
-││  + New Board N   │││                                                                                                │
+│                    │││ WEB-3                                                                                         │
+│╭──────────────────╮│││ Password reset                                                                                │
+││  + New Board N   ││││                                                                                               │
 │╰──────────────────╯││                                                                                                │
 ╰────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────╯
  h/l j/k select · enter open · n new · / filter · ? help · q quit"

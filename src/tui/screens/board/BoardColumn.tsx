@@ -70,7 +70,7 @@ export function BoardColumn({
   );
 }
 
-/** Three lines: key and Priority, name, Assignees and Task summary. Never wraps. */
+/** Three lines behind a left border: key and Priority, name, Assignees and Task summary. Never wraps. */
 function Card({
   story,
   stages,
@@ -88,7 +88,8 @@ function Card({
 }) {
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick, drag: story.key }, active);
-  const marker = <Text color={active ? 'cyan' : undefined}>{selected ? '▌ ' : '  '}</Text>;
+  // A left border of the same width either way, so selecting a card changes only its weight and colour.
+  const marker = selected ? <Text color={active ? 'cyan' : undefined}>┃ </Text> : <Text dimColor>│ </Text>;
   const room = width - 2;
   const meta = [story.assignees.map((h) => `@${h}`).join(' '), taskSummary(story, stages)].filter(Boolean).join(' · ');
   const priority = story.priority ? ` ${story.priority}` : '';
