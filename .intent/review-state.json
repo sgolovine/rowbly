@@ -1699,15 +1699,15 @@
       ]
     },
     "source:test/plugins/specsTuiStates.test.tsx": {
-      "fingerprint": "2577d8f9cc4bb7654790790a31b744f17812903c4704ebce57b63101e39ed5ae",
+      "fingerprint": "469178ba4fa90406b2872cc5e25547c49623618036d76befed1d064f5ca1dfaa",
       "snapshot": {
-        "test/plugins/specsTuiStates.test.tsx": "b765513b9ebff5fdc872ae3ce9516a9bbd6b9536267ec9768100411498ee1831"
+        "test/plugins/specsTuiStates.test.tsx": "037f9b5a8fdba744cf650ad4a0bebbe807b7994c57daa0bbb1c949583b914154"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "head": "fe0998d18e39432800b494b91cb67b10498f1ecb",
       "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "reason": "Adjusted the inherited Specs reload regression to select Spec with one Tab: Tasks is now an optional Plugin and this fixture enables only Specs, so the Story has Details and Spec, not a core Tasks tab. No CLI behavior or skill/planning guidance changes.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Changed: test/plugins/specsTuiStates.test.tsx at fe0998d18e39432800b494b91cb67b10498f1ecb"
       ]
     },
     "source:src/tui/components/SelectList.tsx": {

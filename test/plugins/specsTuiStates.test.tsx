@@ -252,7 +252,7 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     const { t, app, plugin } = await setup('story', { key: 'WEB-1' });
     await createSpec(plugin, { board: 'web', story: 'WEB-1' }, '# Own\n\nStory text');
     await waitForFrame(app, 'Login');
-    await app.press(KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('Story text') && f.includes('delete Story Spec'));
     await app.press('e');
     await waitForFrame(app, 'enter new line');
