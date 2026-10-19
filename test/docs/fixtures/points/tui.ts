@@ -1,4 +1,4 @@
-// The tutorial's Points TUI part (docs/WRITING-A-PLUGIN.md, steps 6 and 7). Only the TUI loads it.
+// The tutorial's Points TUI part (docs/plugins/writing-a-plugin.md, steps 6 and 7). Only the TUI loads it.
 // #region tui
 import type { PluginTui } from '../../../../src/plugin-api';
 import { PointsBag, type PointsSettings, storyPoints } from './model';

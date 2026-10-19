@@ -1,4 +1,4 @@
-// The tutorial's first Plugin (docs/WRITING-A-PLUGIN.md, step 2). As a Built-in Plugin it would be
+// The tutorial's first Plugin (docs/plugins/writing-a-plugin.md, step 2). As a Built-in Plugin it would be
 // src/plugins/hello/index.ts; `test/docs/tutorial.test.ts` checks that the guide shows this region.
 // #region hello
 import { definePlugin } from '../../../src/plugin-api';

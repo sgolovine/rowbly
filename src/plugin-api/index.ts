@@ -1,7 +1,7 @@
 // The Plugin API (ADR-0009): the only module a Plugin imports, besides `plugin-api/tui` for its TUI
 // part. It re-exports what Plugins need from core; everything else reaches a Plugin at run time,
 // through the `PluginContext` its handlers, commands, screens and Actions receive. See
-// docs/WRITING-A-PLUGIN.md (the tutorial) and docs/plugins/API.md (the reference).
+// docs/plugins/writing-a-plugin.md (the tutorial) and docs/plugins/api.md (the reference).
 //
 // Export inventory (DX-33). Named types are exported when a public example, a built-in or a fixture
 // annotates with them. Deliberately not exported:

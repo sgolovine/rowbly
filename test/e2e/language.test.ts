@@ -39,7 +39,7 @@ async function glossary(id: string): Promise<string> {
     return await readFile(`${SRC}plugins/${id}/CONTEXT.md`, 'utf8');
   } catch {
     throw new Error(
-      `Built-in Plugin "${id}" has no src/plugins/${id}/CONTEXT.md; every Built-in Plugin needs a glossary (docs/WRITING-A-PLUGIN.md)`,
+      `Built-in Plugin "${id}" has no src/plugins/${id}/CONTEXT.md; every Built-in Plugin needs a glossary (docs/plugins/writing-a-plugin.md)`,
     );
   }
 }

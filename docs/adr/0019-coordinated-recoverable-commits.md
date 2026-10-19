@@ -1,16 +1,12 @@
----
-status: accepted
----
+# ADR-0019: Operations are coordinated per Data Root and committed through a recoverable journal
 
-# Operations are coordinated per Data Root and committed through a recoverable journal
+**Status:** Accepted. Built. [Storage and commits](../architecture/storage.md) and the [Plugin API reference](../plugins/api.md#transactions-and-concurrency) summarize it.
 
-_Implementation status (2026-10-15): built. The lock, the journal, recovery, logical file scopes, final-plan validation, the symlink policy and the doctor findings work as described. [`ARCHITECTURE.md`](../ARCHITECTURE.md#saving-an-operation) and the [Plugin API reference](../plugins/API.md#transactions-and-concurrency) describe them for readers and Plugin authors._
-
-An operation (ADR-0012) used to read the Data Root freely and then save its Change Set file by file. Two processes could plan from the same records and lose one another's changes, or hand out the same Story Key (RES-02). A failure halfway through a save left part of the operation on disk (RES-01). A failed folder move could leave a Story in a hidden `.moving` folder (RES-04), and a failed text write could truncate the original file (RES-03). This ADR sets the contract that fixes these problems. Rowbly keeps its JSON and Markdown files (ADR-0001). Each Data Root gets one lock, and a Change Set is committed through a small on-disk journal that Rowbly recovers before it reads. It covers contracts D1, D2 and D5, the storage-identity half of D3, and the guarantee table in §7 of `docs/spec/plugin-review/contracts.md`. ADR-0020 covers what Plugins see while an operation runs.
+An operation (ADR-0012) used to read the Data Root freely and then save its Change Set file by file. Two processes could plan from the same records and lose one another's changes, or hand out the same Story Key. A failure halfway through a save left part of the operation on disk. A failed folder move could leave a Story in a hidden `.moving` folder, and a failed text write could truncate the original file. This ADR sets the contract that fixes these problems. Rowbly keeps its JSON and Markdown files (ADR-0001). Each Data Root gets one lock, and a Change Set is committed through a small on-disk journal that Rowbly recovers before it reads. ADR-0020 covers what Plugins see while an operation runs.
 
 We rejected these alternatives: SQLite or another database (ADR-0001), a lock held only around `save()`, and in-memory rollback. A lock around `save()` alone cannot prevent duplicate Story Keys, because the plan is already stale when the lock is taken. In-memory rollback does not survive the death of the process. We also rejected a general transaction DSL, a distributed lock service and a transaction manager per Plugin.
 
-## 1. The lock (D1, W2)
+## 1. The lock
 
 **Mechanism.** A lock file, `.lock`, at the top of the Data Root (beside `rowbly.config.json`). It is created with exclusive create (`open(path, 'wx')`). Its content is JSON: `{ "pid": number, "host": string, "startedAt": ISO timestamp, "token": random string, "operation": string }`. The process that created the file holds the lock. Release means that the holder unlinks the file after checking that `token` is still its own.
 
@@ -46,7 +42,7 @@ The lock is taken **before** the operation reads anything that it uses to plan. 
 
 **External tools.** Editors, Git, `cat` and scripts do not take the lock. Rowbly does not claim to protect against them. It detects what it can: conflict markers, schema failures, identity checks at final validation (§6), and leftovers that doctor reports (§9).
 
-## 2. The journal (D2, W3)
+## 2. The journal
 
 **Layout.** Each commit has its own folder, `.txn/<id>/`, at the top of the canonical Data Root:
 
@@ -90,7 +86,7 @@ type TransactionStep =
   | { kind: 'write'; path: string; staged: string; existed: boolean };
 ```
 
-`pruneTo` is the record folder above a Plugin file's `plugins/` folder. After a Plugin file is deleted, its empty folders are removed up to `pruneTo`, as the current code does. The final paths in the manifest are the original, staged and final locations that RES-04 asks for. For each move, `from` is the original, `temp` is the staged location and `to` is the final one.
+`pruneTo` is the record folder above a Plugin file's `plugins/` folder. After a Plugin file is deleted, its empty folders are removed up to `pruneTo`, as the current code does. The final paths in the manifest are the original, staged and final locations that recovery needs. For each move, `from` is the original, `temp` is the staged location and `to` is the final one.
 
 **Commit sequence.** All of it runs under the lock.
 
@@ -139,7 +135,7 @@ local.json
 
 For existing Data Roots, doctor reports `GITIGNORE_INCOMPLETE` and its fix appends the missing lines (§9).
 
-## 3. Durability (W4)
+## 3. Durability
 
 **Covered:** the death of the Rowbly process at any instant. That includes a crash, `kill -9`, an out-of-memory kill and Ctrl-C. After recovery the Data Root holds the complete old state or the complete new state of the operation.
 
@@ -152,11 +148,11 @@ For existing Data Roots, doctor reports `GITIGNORE_INCOMPLETE` and its fix appen
 
 Folder fsync is skipped where the platform does not support it (Windows, and errors such as `EISDIR`/`EPERM` on folder handles). Rowbly does not use `F_FULLFSYNC` on macOS.
 
-**Atomic single-file writes (RES-03).** `writeTextFile`, and every other single-file write outside a transaction (for example `rowbly init`), writes to a unique temporary file in the same folder: `.<name>.<8 hex>.tmp`. It fsyncs that file and renames it over the destination. A failed write removes the temporary file, best effort, and rethrows the *original* error. The destination is never truncated. JSON keeps its current serialization: schema key order, two-space indent, a trailing newline.
+**Atomic single-file writes.** `writeTextFile`, and every other single-file write outside a transaction (for example `rowbly init`), writes to a unique temporary file in the same folder: `.<name>.<8 hex>.tmp`. It fsyncs that file and renames it over the destination. A failed write removes the temporary file, best effort, and rethrows the *original* error. The destination is never truncated. JSON keeps its current serialization: schema key order, two-space indent, a trailing newline.
 
 **One filesystem.** Staging renames files from `.txn/` into place. The whole Data Root must therefore be on one filesystem. Preparation compares the device of `.txn/` with the device of each destination's nearest existing parent folder. On a mismatch it throws `ValidationError` before staging, rather than failing with `EXDEV` halfway through.
 
-## 4. Logical file scopes (D5)
+## 4. Logical file scopes
 
 A pending Plugin file change does not store a physical path. It stores:
 
@@ -196,8 +192,8 @@ Story Keys and Board membership never change through ordinary `updateStory`. A P
 A *participating reader* is any Rowbly code that reads the Data Root through repositories or Plugin file reads. That includes CLI commands, TUI screens, Plugin rows and filters, and doctor.
 
 - **Read scopes.** A top-level read that runs outside an operation takes the lock for the duration of that call, recovers if needed (§2), reads and releases. One service read method is one read scope, for example `stories.list`, `boards.get` or a Plugin `files.read` from a screen. Inside an operation, reads reuse the operation's handle.
-- **Result.** A participating reader never observes a half-applied commit. Each read scope sees one committed state. Two consecutive scopes may see two different committed states. Freshness between scopes (caches, TUI reloads) belongs to WP02C.
-- **Caches** of repository data last at most one operation or one read scope. They are dropped on each acquisition (RES-19).
+- **Result.** A participating reader never observes a half-applied commit. Each read scope sees one committed state. Two consecutive scopes may see two different committed states. Freshness between scopes, such as when a TUI screen reloads, is not part of this contract.
+- **Caches** of repository data last at most one operation or one read scope. They are dropped on each acquisition.
 - **External readers** (editors, Git, `cat`, scripts) can see intermediate files while a commit is applied: staged files inside `.txn/`, and records already renamed while others are not. They can also see files after a crash until the next Rowbly command recovers them. This is documented. Rowbly never describes a commit as instantaneous multi-file atomicity.
 
 ## 6. Final-plan validation
@@ -209,16 +205,16 @@ When the plan is sealed for commit, the engine checks all of the following. It r
 3. **Immutable identity.** For each Story that is not renumbered through doctor's private path, `after.key` and `after.boardId` equal the original. The failure is `ValidationError`.
 4. **Parent lifecycle.** Every pending Story's Board exists in the final state: on disk and not deleted, or created in the plan. No record or file write lies beneath a Board or Story that the plan deletes. A Board or Story is not deleted and then put again. The failure is `ConflictError`.
 5. **Uniqueness.** No two final Stories share a Story Key. No two Story changes resolve to the same folder. No two Boards share an id or a key prefix. The failure is `ConflictError`.
-6. **Moves.** Each source exists. No two moves share a destination. A destination may be occupied only by a folder that the same plan moves away or deletes. An occupied orphan folder (one with no valid `story.json`) is never a free destination or a free key (RES-07). The failure is `ConflictError`.
+6. **Moves.** Each source exists. No two moves share a destination. A destination may be occupied only by a folder that the same plan moves away or deletes. An occupied orphan folder (one with no valid `story.json`) is never a free destination or a free key. The failure is `ConflictError`.
 7. **Path containment.** Every final physical path lies inside the canonical Data Root. Record paths are built only from validated slugs and Story Keys. Plugin file paths are inside their scope's `plugins/<id>/` folder, use checked relative names, and follow the symlink policy (§10). The failure is `ValidationError`.
 8. **Same filesystem** (§3). The failure is `ValidationError`.
-9. **Reserved settings.** A root config change made from a Plugin stage leaves every `plugins.<id>.enabled` value as it was. Enablement changes only through the plugins service. This backs up ADR-0020's runtime `writeBag` rejection (ARCH-08). The failure is `PluginError`, attributed.
+9. **Reserved settings.** A root config change made from a Plugin stage leaves every `plugins.<id>.enabled` value as it was. Enablement changes only through the plugins service. This backs up ADR-0020's runtime `writeBag` rejection. The failure is `PluginError`, attributed.
 
-## 7. Private storage identity (the D3 storage half)
+## 7. Private storage identity
 
 The Change Set keeps one private entry per record. The entry holds the original identity (the physical source folder or path, read when the record first entered the plan), the read-time `before` and the pending `after`. It is never handed to a Plugin. Plugins receive detached snapshots and stage-bound writers (ADR-0020 §1). Commit preparation derives every `delete`, `moveOut`/`moveIn` and `write` step from these entries and from `PendingFileChange` scopes. It never derives them from a snapshot's `before` or `after`. `doctor --fix` gives the physical source folder of a Story it splits or renumbers through `recordStory(before, after, beforeFolder)`, which only core can reach.
 
-## 8. Stale context (ARCH-37)
+## 8. Stale context
 
 The `RowblyContext` caches `local` (Local State) and `me`. An operation must not plan from those caches:
 
@@ -226,7 +222,7 @@ The `RowblyContext` caches `local` (Local State) and `me`. An operation must not
 - After a successful commit, and before reactions, the runner copies the committed Local State into `ctx.local` in one synchronization step. That step serves every operation, including Plugin operations and doctor fixes. It sets `ctx.me` again only if the stored Me selection changed. Otherwise it keeps a Me that was inferred from the git email.
 - A rejected or failed operation does not synchronize.
 
-## 9. Doctor findings for leftovers (consumed by WP03)
+## 9. Doctor findings for leftovers
 
 Doctor treats `.lock`, `.lock.break` and everything under `.txn/` as Rowbly's own files. They never appear as `UNKNOWN_FILE`. It reports:
 
@@ -239,7 +235,7 @@ Doctor treats `.lock`, `.lock.break` and everything under `.txn/` as Rowbly's ow
 
 A stale `.lock` is not a finding. The next acquisition breaks it under the rule in §1.
 
-## 10. Symlink policy (W5: RES-21, SEC-02)
+## 10. Symlink policy
 
 Rowbly assumes a **trusted filesystem**.
 
@@ -258,4 +254,4 @@ Rowbly assumes a **trusted filesystem**.
 | Participating readers | Never see a half-applied commit. |
 | External tools (editors, Git, `cat`) | May see intermediate files. They are outside the lock protocol. Documented. |
 
-This ADR adds coordination and a journal to ADR-0012's single save. It does not change the pipeline order. ADR-0013's statement that renumbering moves only `story.json` is already out of date: the whole Story folder moves, as §4 describes. WP09A adds status notes to ADR-0012 and ADR-0013 that link here.
+This ADR adds coordination and a journal to ADR-0012's single save. It does not change the pipeline order. ADR-0013's statement that renumbering moves only `story.json` no longer holds: the whole Story folder moves, as §4 describes.

@@ -1,10 +1,6 @@
----
-status: accepted
----
+# ADR-0016: Git automation uses reactions, the `git` capability and hook commands
 
-# Git automation uses reactions, the `git` capability and hook commands
-
-_Implementation status (2026-10-15): planned. There is no Git Plugin, and the Plugin API has no `git` capability yet._
+**Status:** Accepted, not built. There is no Git Plugin, and the Plugin API has no `git` capability yet.
 
 Git automation goes both ways. It is designed now and built later, together with a Git Plugin; nothing in this ADR is built yet.
 
@@ -14,9 +10,9 @@ Git automation goes both ways. It is designed now and built later, together with
 
 We rejected committed hooks through `core.hooksPath`, because they would displace other hook tools. We also rejected documentation only, which leaves every developer to connect the hooks by hand.
 
-## Status note (2026-10-15, plugin-review WP10A)
+## What the Git Plugin needs first
 
-This ADR stays **planned**. The design stands, but the Plugin API cannot carry it yet. Ordinary Plugin commands, saved Change Sets, warning-only reactions (awaited in command mode, in the background in the TUI), Local State bag writes through a Change Set, and hook commands that call core services through the pipeline already exist. These host capabilities are missing, and the Git Plugin needs each of them before it is built (GIT-01):
+This ADR stays **planned**. The design stands, but the Plugin API cannot carry it yet. Ordinary Plugin commands, saved Change Sets, warning-only reactions (awaited in command mode, in the background in the TUI), Local State bag writes through a Change Set, and hook commands that call core services through the pipeline already exist. These host capabilities are missing, and the Git Plugin needs each of them before it is built:
 
 - **Repository resolution from the Data Root.** Find the Git repository that holds the Data Root, not the one at the caller's working directory. Cover a Data Root nested in a repository, a Data Root that is the repository top, and no repository at all.
 - **Structured Git execution.** A host-owned `git` capability that takes an argv array (no shell string), runs in the resolved repository, and bounds output size and run time. A Plugin still uses no Node built-in module (ADR-0009).
@@ -27,4 +23,4 @@ This ADR stays **planned**. The design stands, but the Plugin API cannot carry i
 - **Ordering of overlapping effects.** TUI reactions run in the background, in operation order, with no cancellation or drain contract. If automatic Git effects can overlap, define their order (for example one queue per repository), and what happens on exit.
 - **Stage detection by Stage Category.** "Enters an `in_progress` Stage" means a Stage whose Stage Category is `in_progress` in the effective Board configuration, not a hard-coded Stage key.
 
-**Acceptance when scheduled:** nested Data Root, Data Root at the repository top, no Git, a different working directory; a custom `core.hooksPath`; chaining an existing hook; reinstall and ownership; hook arguments and stdin; an executable script; Story transitions with custom Stage keys; two overlapping changes; Git → Rowbly → Git loop prevention. A failed Git side effect never changes the result of the Rowbly operation that is already saved, and the person can diagnose it. The trust model in `docs/plugins/TRUST.md` applies: a host `git` capability is a convenience for trusted code, not a confinement.
+**Acceptance when scheduled:** nested Data Root, Data Root at the repository top, no Git, a different working directory; a custom `core.hooksPath`; chaining an existing hook; reinstall and ownership; hook arguments and stdin; an executable script; Story transitions with custom Stage keys; two overlapping changes; Git → Rowbly → Git loop prevention. A failed Git side effect never changes the result of the Rowbly operation that is already saved, and the person can diagnose it. The [trust model](../plugins/trust.md) applies: a host `git` capability is a convenience for trusted code, not a confinement.

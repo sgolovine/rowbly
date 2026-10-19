@@ -1,6 +1,6 @@
-# Plugin files live in a `plugins/<id>/` folder beside what they belong to
+# ADR-0013: Plugin files live in a `plugins/<id>/` folder beside what they belong to
 
-_Implementation status (2026-10-15): built. Saving a Change Set that renumbers a Story moves the whole Story folder with its Plugin files, so the sentence below that `doctor --fix` moves only `story.json` describes the time of the decision. [ADR-0019](0019-coordinated-recoverable-commits.md) makes these moves recoverable and sets logical file scopes (§4), and [ADR-0020](0020-plugin-execution-and-data-contracts.md) sets what Plugins may do with files during an operation; both are accepted and built. The rationale below is unchanged._
+**Status:** Accepted. Built. Renumbering now moves the whole Story folder with its Plugin files, so the sentence that `doctor --fix` moves only `story.json` describes the time of the decision. [ADR-0019](0019-coordinated-recoverable-commits.md) makes these moves recoverable, and [ADR-0020](0020-plugin-execution-and-data-contracts.md) sets what Plugins may do with files during an operation.
 
 A Plugin keeps its own files in a folder `plugins/<id>/` at the level they belong to: `.rowbly/plugins/<id>/` for the Data Root, `boards/<board>/plugins/<id>/` for a Board, and `boards/<board>/stories/<KEY>/plugins/<id>/` for a Story. For example, Epics are in `.rowbly/plugins/epics/<epic>.json`, and a Story Spec is `stories/WEB-1/plugins/specs/spec.md`. Tasks and Assignees have no folder of their own, so Plugins keep values for them only as Plugin Data (ADR-0011).
 

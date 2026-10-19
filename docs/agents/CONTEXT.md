@@ -72,6 +72,16 @@ _Avoid_: current user, login
 Per-developer, never-committed settings in the Data Root (current Board and Me).
 _Avoid_: session, profile
 
+### Changes
+
+**Operation**:
+One named change to the Data Root (for example `stories.create`), from core or from a Plugin, that fills one Change Set and saves it once; Plugins hook Operations by name.
+_Avoid_: action, event, request
+
+**Change Set**:
+The records and Plugin files an Operation creates, changes or deletes, each with its version before and after, saved together or not at all.
+_Avoid_: diff, batch
+
 ### Plugins
 
 **Plugin**:

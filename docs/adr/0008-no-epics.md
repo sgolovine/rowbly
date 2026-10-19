@@ -1,6 +1,6 @@
-# There are no Epics
+# ADR-0008: There are no Epics
 
-_Partly superseded by ADR-0014: Epics are back as a Built-in Plugin; core still has none._
+**Status:** Partly superseded by [ADR-0014](0014-epics-return-as-a-built-in-plugin.md): Epics are back as a Built-in Plugin; core still has none. Doctor now reports leftover Epic data as `LEGACY_DATA`, not `UNKNOWN_FILE`.
 
 Rowbly used to have Epics: named groupings of Stories that could span any Boards in the Data Root, stored as `.rowbly/epics/<epic-id>.json`, with the link held on the Story as `epicId` (ADR-0004) and a derived Epic Progress. We removed them. There is no `epics/` folder, no Epic schema, and Story files no longer have an `epicId` field.
 

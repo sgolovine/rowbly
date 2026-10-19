@@ -1,5 +1,5 @@
 // The Plugin author guide's examples (DX-03, DX-05, DOC-03): each TypeScript example in
-// docs/WRITING-A-PLUGIN.md and docs/plugins/API.md is a region of a fixture under test/docs/fixtures/,
+// docs/plugins/writing-a-plugin.md and docs/plugins/api.md is a region of a fixture under test/docs/fixtures/,
 // which `pnpm typecheck` compiles and this suite runs, so the guide cannot drift from the API.
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -17,7 +17,7 @@ import { readTally, saveSettings, tally } from './fixtures/reference';
 import { trash } from './fixtures/trash';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
-const GUIDES = ['docs/WRITING-A-PLUGIN.md', 'docs/plugins/API.md'];
+const GUIDES = ['docs/plugins/writing-a-plugin.md', 'docs/plugins/api.md'];
 
 let stdout: string[];
 let stderr: string[];

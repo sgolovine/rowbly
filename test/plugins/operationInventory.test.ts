@@ -1,4 +1,4 @@
-// ARCH-02: docs/OPERATIONS.md is the one operation inventory. A recorder Plugin hooks every operation
+// ARCH-02: docs/architecture/operations.md is the one operation inventory. A recorder Plugin hooks every operation
 // the inventory lists, the built-ins run each of their mutations, and what they emit must match.
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs'
 import { makeStory } from '../helpers';
 import { pluginRoot, withPlugins } from './helpers';
 
-const INVENTORY = fileURLToPath(new URL('../../docs/OPERATIONS.md', import.meta.url));
+const INVENTORY = fileURLToPath(new URL('../../docs/architecture/operations.md', import.meta.url));
 
 /** The rows of the table under `## <heading>`: operation name → its input keys, `?` for optional. */
 async function inventory(heading: string): Promise<Map<string, { required: string[]; optional: string[] }>> {

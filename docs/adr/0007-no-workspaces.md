@@ -1,4 +1,6 @@
-# The Data Root is the only container; there are no Workspaces
+# ADR-0007: The Data Root is the only container; there are no Workspaces
+
+**Status:** Accepted. The Epics mentioned below were later removed from core ([ADR-0008](0008-no-epics.md)) and returned as a Built-in Plugin ([ADR-0014](0014-epics-return-as-a-built-in-plugin.md)).
 
 Rowbly used to have Workspaces: named collections of Boards, Epics and an Assignee roster, stored under `.rowbly/workspaces/<id>/`. We removed them. Boards live in `.rowbly/boards/<board-id>/` and Epics in `.rowbly/epics/<epic-id>.json`, directly in the Data Root. Board, Story and Epic files no longer have a `workspaceId` field, and there is no `workspace.config.json`.
 

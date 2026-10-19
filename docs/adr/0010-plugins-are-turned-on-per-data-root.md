@@ -1,4 +1,6 @@
-# Plugins are turned on per Data Root, and a broken Plugin is skipped
+# ADR-0010: Plugins are turned on per Data Root, and a broken Plugin is skipped
+
+**Status:** Accepted. Built.
 
 A Plugin is off until `rowbly.config.json` turns it on, for example `"plugins": { "epics": { "enabled": true } }`. Setting `enabled` to `false` turns the Plugin off and keeps its settings. The file is committed, so everyone who uses the Data Root has the same Plugins on. This matters because Plugin Data lives in the shared Data Root, and every teammate's Rowbly must read it the same way. We rejected turning Plugins on per developer in `local.json`, turning them on per Board in `board.config.json`, and keeping every Built-in Plugin always on, which would not keep core small.
 

@@ -1,4 +1,6 @@
-# Comments are a Built-in Plugin
+# ADR-0018: Comments are a Built-in Plugin
+
+**Status:** Accepted. Built.
 
 Comments were part of core: a `comments` array on every Story and Task, a Comments service, the `rowbly comments` commands and a Comments tab on the Story and Task screens. Not every team wants a discussion inside its tracker, and Comments did not need anything that a Plugin cannot have, so they move into the Comments Built-in Plugin, like Epics (ADR-0014). Core no longer has a Comment schema, a Comments service or `comments.*` core operations, and no Comment code outside `src/plugins/comments/`.
 

@@ -1,4 +1,4 @@
-// The tutorial's Points screen (docs/WRITING-A-PLUGIN.md, step 7).
+// The tutorial's Points screen (docs/plugins/writing-a-plugin.md, step 7).
 // #region screen
 import type { PluginScreenProps } from '../../../../src/plugin-api';
 import {

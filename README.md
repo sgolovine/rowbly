@@ -326,7 +326,7 @@ In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks ag
 <!-- BEGIN plugins -->
 ### Plugins
 
-Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [`docs/PLUGINS.md`](docs/PLUGINS.md); to write one, follow [`docs/WRITING-A-PLUGIN.md`](docs/WRITING-A-PLUGIN.md) and the [Plugin API reference](docs/plugins/API.md).
+Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [the plugin system](docs/plugins/README.md) and the [Built-in Plugins](docs/plugins/built-in.md) page; to write one, follow [Writing a Plugin](docs/plugins/writing-a-plugin.md) and the [Plugin API reference](docs/plugins/api.md).
 
 ```text
 rowbly plugins list            # every Built-in Plugin, whether it is on, and any that failed to load
@@ -335,7 +335,7 @@ rowbly plugins enable <id>
 rowbly plugins disable <id>    # keeps its settings and data
 ```
 
-- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). Edit settings by hand and keep `enabled`; a Plugin that needs a setting refuses `plugins enable` until it is there ([Settings](docs/PLUGINS.md#settings)). `rowbly init` turns no Plugins on. Command mode reads the configuration on every run; the TUI when it starts and when you turn a Plugin on or off.
+- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). Edit settings by hand and keep `enabled`; a Plugin that needs a setting refuses `plugins enable` until it is there ([Settings](docs/plugins/README.md#settings)). `rowbly init` turns no Plugins on. Command mode reads the configuration on every run; the TUI when it starts and when you turn a Plugin on or off.
 - A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show` and `tasks show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
 - A Plugin that fails to load (its settings are invalid, it throws while it starts, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning, and `plugins list` and `doctor` report it. Its data is kept.
 - A Plugin can refuse a change (exit 4). An expected error from a Plugin keeps its own code, such as `VALIDATION` (exit 2) for bad input. If a Plugin fails unexpectedly while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, these errors carry `details.plugin` and `details.stage`.
@@ -414,9 +414,6 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm test:watch` | vitest in watch mode |
 | `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
 
-The build specifications live in [`docs/spec/`](docs/spec/) (the v1 build in [`initial-spec/`](docs/spec/initial-spec/README.md), the Plugin remediation in [`plugin-review/`](docs/spec/plugin-review/README.md)) and the decisions in [`docs/adr/`](docs/adr/). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
+How Rowbly is built is in [`docs/`](docs/README.md): the [architecture](docs/architecture/overview.md), the [plugin system](docs/plugins/README.md), the [development guide](docs/development/README.md) and the [decisions](docs/adr/README.md). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
 
-- `test/helpers` provides `tempRoot()` (a throwaway `.rowbly/`), `fixedClock()`, `fixedIds()`, fixture builders (`makeBoard`, `makeStory`) and `runCli(args, { root, env, stdin, cwd })`, which runs the built `dist/cli.js` in a child process. `pnpm test` builds `dist/cli.js` first (vitest global setup), so `runCli` always tests the current source.
-- `test/tui/helpers.tsx` provides `renderTui()` with a `press(...keys)` helper and `waitForFrame(app, text | RegExp | predicate)`, which polls the screen. Wait for what a screen shows rather than sleeping a fixed time.
-- `test/plugins` tests the plugin system with fixture Plugins. The test setup also builds `.test-dist/cli.js`, the CLI with the fixture Plugins as its registry; `runCli(args, { cli: FIXTURE_CLI_PATH })` runs it.
-- `test/e2e` runs the whole product through the built CLI, checks every exit code, and fails if a word that `CONTEXT.md` says to avoid reaches a help page or a message.
+The test projects, helpers and rules are in the [development guide](docs/development/README.md#tests).

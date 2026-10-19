@@ -1,0 +1,45 @@
+# Architecture decision records
+
+Each file records one decision: what was decided, why, and what was rejected. Source comments cite them by number and section (`ADR-0019 §2`), so numbers and section numbers never change.
+
+- To change a decision, add a new ADR that supersedes or amends the old one, and update the old one's **Status** line. Do not rewrite an accepted decision.
+- Start a new ADR with `# ADR-NNNN: <the decision as a sentence>` and a `**Status:**` line, then the context, the decision and the rejected alternatives.
+- Use the terms in the [glossary](../agents/CONTEXT.md).
+
+## Index
+
+### Storage and the core model
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| [0001](0001-json-files-not-sqlite.md) | JSON files in a folder tree are the only storage | Accepted; amended by 0015 |
+| [0002](0002-data-root-discovery.md) | The Data Root is discovered like `.git`, with a global fallback | Accepted |
+| [0003](0003-story-keys.md) | Stories are identified by sequential keys | Accepted |
+| [0004](0004-epic-link-on-story.md) | The Story holds the Epic link | Superseded by 0008 |
+| [0005](0005-stages-and-fields-are-configuration.md) | Stages and Custom Fields are configuration; the most specific level replaces the levels above | Accepted |
+| [0006](0006-ink-owns-the-interactive-mode.md) | Ink owns the interactive mode; Clack only prompts in command mode | Accepted |
+| [0007](0007-no-workspaces.md) | The Data Root is the only container; there are no Workspaces | Accepted |
+| [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
+| [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
+
+### Plugins
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| [0009](0009-built-in-plugins-use-only-the-plugin-api.md) | Built-in Plugins live in this repository and use only the Plugin API | Accepted |
+| [0010](0010-plugins-are-turned-on-per-data-root.md) | Plugins are turned on per Data Root, and a broken Plugin is skipped | Accepted |
+| [0011](0011-plugin-data-is-a-bag-per-plugin.md) | Plugin Data is a bag per Plugin, and core keeps it unchanged | Accepted |
+| [0012](0012-plugins-intercept-service-operations.md) | Plugins intercept Service Layer operations through Change Sets | Accepted; amended by 0019 and 0020 |
+| [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted |
+| [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted |
+| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted |
+| [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
+
+### Built-in Plugins
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| [0014](0014-epics-return-as-a-built-in-plugin.md) | Epics return as a Built-in Plugin | Accepted |
+| [0015](0015-specs-are-markdown-files.md) | Specs are Markdown files | Accepted |
+| [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built |
+| [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted |

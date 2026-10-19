@@ -1,4 +1,4 @@
-// The compiled examples of docs/plugins/API.md. `test/docs/tutorial.test.ts` checks that the
+// The compiled examples of docs/plugins/api.md. `test/docs/tutorial.test.ts` checks that the
 // reference shows each region.
 import { DataIntegrityError, definePlugin, type PluginContext, z } from '../../../src/plugin-api';
 

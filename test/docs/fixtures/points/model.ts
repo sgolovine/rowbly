@@ -1,4 +1,4 @@
-// The tutorial's Points Plugin (docs/WRITING-A-PLUGIN.md). As a Built-in Plugin it would be
+// The tutorial's Points Plugin (docs/plugins/writing-a-plugin.md). As a Built-in Plugin it would be
 // src/plugins/points/; the regions are what the guide shows.
 // #region model
 import { type PluginReadContext, type Story, z } from '../../../../src/plugin-api';

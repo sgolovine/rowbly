@@ -1,4 +1,4 @@
-// The tutorial's Points commands (docs/WRITING-A-PLUGIN.md, steps 5 and 9).
+// The tutorial's Points commands (docs/plugins/writing-a-plugin.md, steps 5 and 9).
 // #region commands
 import { type PluginCommands, renderTable } from '../../../../src/plugin-api';
 import { type PointsSettings, storyPoints } from './model';

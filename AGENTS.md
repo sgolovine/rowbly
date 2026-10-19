@@ -12,7 +12,54 @@ Use intent maintainer setup to initialize missing records, maintainer add to reg
 
 # Agent guide
 
-See `docs/agents/CONTEXT-MAP.md` for domain language (core terms in `docs/agents/CONTEXT.md`, each Plugin's terms in its own `CONTEXT.md`) and `docs/` for architecture.
+Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <verb>`) and an Ink TUI
+(`rowbly`) over JSON and Markdown files in a `.rowbly/` Data Root. `README.md` is the user guide;
+`docs/` explains how it is built. Start at `docs/README.md`.
+
+## Documentation map
+
+| Topic | Where |
+| --- | --- |
+| Domain language | `docs/agents/CONTEXT.md` (core), `docs/agents/CONTEXT-MAP.md` (links each Plugin's `src/plugins/<id>/CONTEXT.md`) |
+| Goals, surfaces, technology, source layers | `docs/architecture/overview.md` |
+| Data Root layout, records, Configuration Cascade, doctor | `docs/architecture/data-model.md` |
+| The operation pipeline and every operation's input and result | `docs/architecture/operations.md` |
+| The Data Root lock, commit journal and recovery | `docs/architecture/storage.md` |
+| The plugin system; the Built-in Plugins | `docs/plugins/README.md`; `docs/plugins/built-in.md` |
+| Writing a Plugin; the Plugin API reference | `docs/plugins/writing-a-plugin.md`; `docs/plugins/api.md` |
+| Plugin versions, data formats and migrations; trust model | `docs/plugins/compatibility.md`; `docs/plugins/trust.md` |
+| Commands, test projects, helpers, tracing, CI | `docs/development/README.md` |
+| Decisions | `docs/adr/README.md` (index) and `docs/adr/NNNN-*.md` |
+| Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
+| Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
+
+## Domain language and decisions
+
+- Use the glossary terms exactly, in code, messages, help text and docs. Never use an `_Avoid_` word in
+  user-facing text: `test/e2e/language.test.ts` checks the source and help pages.
+- Core never uses a Plugin's terms; a Plugin uses core terms and its own.
+- Do not reverse an accepted ADR without the user. To change a decision, add a new ADR that supersedes or
+  amends it and update the old one's **Status** line. Source comments cite ADRs by number and section
+  (`ADR-0019 §2`); never renumber an ADR or its sections.
+- Older source comments cite IDs such as `RES-02`, `CQ-155` or `WP09`. They refer to a review that has been
+  removed from `docs/` (it is in git history). Do not add new ones; cite an ADR or a docs page instead.
+
+## Keeping the docs current
+
+Update the page that describes a behavior in the same change as the behavior:
+
+- A new or changed operation, or a change to its input or result: `docs/architecture/operations.md`.
+  `test/plugins/operationInventory.test.ts` parses its tables, so keep their headings and row format.
+- A change to the Plugin API: `docs/plugins/api.md`, and the tutorial if a step changes. Every `ts`/`tsx`
+  block in those two pages must be a `// #region` of a compiled fixture in `test/docs/fixtures/`
+  (`test/docs/tutorial.test.ts`); change the fixture and the page together.
+- A new Built-in Plugin: follow the checklist in `docs/plugins/writing-a-plugin.md` §12 (its
+  `CONTEXT.md` linked from `docs/agents/CONTEXT-MAP.md`, its section in `docs/plugins/built-in.md`, its
+  operations in `docs/architecture/operations.md`).
+- Storage, locking or doctor behavior: `docs/architecture/storage.md` or `data-model.md`.
+- Anything a user sees (commands, flags, TUI keys, doctor codes, exit codes): `README.md`.
+- Describe what is built; mark anything planned as planned. Do not add work plans, specs or review
+  reports to `docs/`.
 
 ## TUI code organization (`src/tui/`)
 

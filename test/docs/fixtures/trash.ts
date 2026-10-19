@@ -1,4 +1,4 @@
-// The tutorial's advanced example (docs/WRITING-A-PLUGIN.md, step 11): a replacement.
+// The tutorial's advanced example (docs/plugins/writing-a-plugin.md, step 11): a replacement.
 // #region replacement
 import { definePlugin } from '../../../src/plugin-api';
 

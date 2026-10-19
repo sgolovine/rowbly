@@ -1,4 +1,6 @@
-# Epics return as a Built-in Plugin
+# ADR-0014: Epics return as a Built-in Plugin
+
+**Status:** Accepted. Built.
 
 ADR-0008 removed Epics from Rowbly. They come back as the Epics Built-in Plugin, with the same model as before: an Epic groups Stories from any Boards in the Data Root and is identified by a slug, a Story belongs to at most one Epic, an Epic has a name, a description and a closed flag, and Epic Progress is derived. Core still has no Epics: no Epic schema, no `epicId` on Stories, and no Epic code outside `src/plugins/epics/`.
 

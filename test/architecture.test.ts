@@ -85,7 +85,7 @@ function tuiAreaOf(path: string): string | null {
   return parts.length > 1 ? (parts[0] ?? null) : null;
 }
 
-/** README §3: each layer may import only from the layers listed (always including itself). */
+/** docs/architecture/overview.md (Source layers): each layer may import only from the layers listed (always including itself). */
 const ALLOWED: Record<string, string[]> = {
   core: ['core'],
   schemas: ['core', 'schemas'],

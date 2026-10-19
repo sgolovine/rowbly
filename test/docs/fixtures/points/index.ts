@@ -1,4 +1,4 @@
-// The tutorial's Points Plugin (docs/WRITING-A-PLUGIN.md): one editable Story field, end to end.
+// The tutorial's Points Plugin (docs/plugins/writing-a-plugin.md): one editable Story field, end to end.
 // #region definition
 import {
   definePlugin,
