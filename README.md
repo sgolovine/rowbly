@@ -414,6 +414,6 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm test:watch` | vitest in watch mode |
 | `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
 
-How Rowbly is built is in [`docs/`](docs/README.md): the [architecture](docs/architecture/overview.md), the [plugin system](docs/plugins/README.md), the [development guide](docs/development/README.md) and the [decisions](docs/adr/README.md). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
+How Rowbly is built is in [`docs/`](docs/README.md): the [architecture](docs/architecture/overview.md), the [plugin system](docs/plugins/README.md), the [development guide](docs/development/README.md) and the [decisions](docs/agents/adr/README.md). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
 
 The test projects, helpers and rules are in the [development guide](docs/development/README.md#tests).

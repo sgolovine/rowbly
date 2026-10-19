@@ -1,6 +1,6 @@
 # ADR-0019: Operations are coordinated per Data Root and committed through a recoverable journal
 
-**Status:** Accepted. Built. [Storage and commits](../architecture/storage.md) and the [Plugin API reference](../plugins/api.md#transactions-and-concurrency) summarize it.
+**Status:** Accepted. Built. [Storage and commits](../../architecture/storage.md) and the [Plugin API reference](../../plugins/api.md#transactions-and-concurrency) summarize it.
 
 An operation (ADR-0012) used to read the Data Root freely and then save its Change Set file by file. Two processes could plan from the same records and lose one another's changes, or hand out the same Story Key. A failure halfway through a save left part of the operation on disk. A failed folder move could leave a Story in a hidden `.moving` folder, and a failed text write could truncate the original file. This ADR sets the contract that fixes these problems. Rowbly keeps its JSON and Markdown files (ADR-0001). Each Data Root gets one lock, and a Change Set is committed through a small on-disk journal that Rowbly recovers before it reads. ADR-0020 covers what Plugins see while an operation runs.
 

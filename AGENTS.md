@@ -29,7 +29,7 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 | Writing a Plugin; the Plugin API reference | `docs/plugins/writing-a-plugin.md`; `docs/plugins/api.md` |
 | Plugin versions, data formats and migrations; trust model | `docs/plugins/compatibility.md`; `docs/plugins/trust.md` |
 | Commands, test projects, helpers, tracing, CI | `docs/development/README.md` |
-| Decisions | `docs/adr/README.md` (index) and `docs/adr/NNNN-*.md` |
+| Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
 | Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
 
@@ -41,6 +41,10 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 - Do not reverse an accepted ADR without the user. To change a decision, add a new ADR that supersedes or
   amends it and update the old one's **Status** line. Source comments cite ADRs by number and section
   (`ADR-0019 §2`); never renumber an ADR or its sections.
+- **ADRs live only in `docs/agents/adr/`.** Any skill or workflow that records an ADR (for example
+  `grill-with-docs`) must save it there, never in `docs/adr/`, the repository root or a skill's own
+  folder. Name it `NNNN-<kebab-case-title>.md` with the next free number, follow the format in
+  `docs/agents/adr/README.md`, and add a row to that index in the same change.
 - Older source comments cite IDs such as `RES-02`, `CQ-155` or `WP09`. They refer to a review that has been
   removed from `docs/` (it is in git history). Do not add new ones; cite an ADR or a docs page instead.
 

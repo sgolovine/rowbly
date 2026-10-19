@@ -1,6 +1,6 @@
 # Storage and commits
 
-How Rowbly reads and saves the Data Root safely when several Rowbly processes share it. The full contract, with every step and recovery rule, is [ADR-0019](../adr/0019-coordinated-recoverable-commits.md); this page summarizes it. The code is in `src/storage/` (`lock.ts`, `transaction.ts`, `io.ts`, `pathPolicy.ts`) and `src/services/coordination.ts`.
+How Rowbly reads and saves the Data Root safely when several Rowbly processes share it. The full contract, with every step and recovery rule, is [ADR-0019](../agents/adr/0019-coordinated-recoverable-commits.md); this page summarizes it. The code is in `src/storage/` (`lock.ts`, `transaction.ts`, `io.ts`, `pathPolicy.ts`) and `src/services/coordination.ts`.
 
 ## Guarantees
 

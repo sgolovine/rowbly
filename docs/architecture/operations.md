@@ -1,6 +1,6 @@
 # Operations
 
-Every change to the Data Root, from core or from a Plugin, is one **operation** that fills one Change Set and saves it once ([ADR-0012](../adr/0012-plugins-intercept-service-operations.md)). Plugins hook operations by name. This page describes the pipeline and lists every operation with its input and result; `test/plugins/operationInventory.test.ts` checks the tables against the code, so change both together.
+Every change to the Data Root, from core or from a Plugin, is one **operation** that fills one Change Set and saves it once ([ADR-0012](../agents/adr/0012-plugins-intercept-service-operations.md)). Plugins hook operations by name. This page describes the pipeline and lists every operation with its input and result; `test/plugins/operationInventory.test.ts` checks the tables against the code, so change both together.
 
 ## The pipeline
 
@@ -30,7 +30,7 @@ parse each Plugin's input → take the Data Root lock → body (or a Plugin's re
 
 - A core operation is `<service>.<verb>`. `CORE_OPERATION_NAMES` and the type `CoreOperationName` list them all.
 - A Plugin's own operation is `<plugin id>.<name>`. The Plugin passes only `<name>` to `plugin.operation`. That name must be one lower-kebab-case word, or the operation fails before it reads or saves anything.
-- The verbs are kept as they were published ([ADR-0020 §7](../adr/0020-plugin-execution-and-data-contracts.md#7-api-restraint)): Comments uses `add`, `update` and `remove` ([ADR-0018](../adr/0018-comments-are-a-built-in-plugin.md)); Epics and Specs use `create`, `edit` and `delete`.
+- The verbs are kept as they were published ([ADR-0020 §7](../agents/adr/0020-plugin-execution-and-data-contracts.md#7-api-restraint)): Comments uses `add`, `update` and `remove` ([ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md)); Epics and Specs use `create`, `edit` and `delete`.
 - CLI verbs are separate from operation names. `rowbly stories edit` runs `stories.update`.
 
 In the tables below:

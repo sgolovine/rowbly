@@ -1,6 +1,6 @@
 # Plugin trust model
 
-This page says which Plugin code Rowbly runs, how much that code is trusted, and what must be true before Rowbly ever runs Plugin code that does not ship with it. It records [ADR-0020 §6](../adr/0020-plugin-execution-and-data-contracts.md#6-trust-model). Nothing here describes a sandbox, because Rowbly has none. Versions and data formats are in [compatibility.md](compatibility.md).
+This page says which Plugin code Rowbly runs, how much that code is trusted, and what must be true before Rowbly ever runs Plugin code that does not ship with it. It records [ADR-0020 §6](../agents/adr/0020-plugin-execution-and-data-contracts.md#6-trust-model). Nothing here describes a sandbox, because Rowbly has none. Versions and data formats are in [compatibility.md](compatibility.md).
 
 ## 1. Today: only Built-in Plugins, and they are trusted
 

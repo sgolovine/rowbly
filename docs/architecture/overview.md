@@ -3,9 +3,9 @@
 ## Goals
 
 - **Developer focused.** Rowbly runs in the terminal, next to the code it tracks.
-- **Files, not a server.** All data is pretty-printed JSON and Markdown in a `.rowbly/` folder (the Data Root), so a small team shares its tracker through git, with no database and no service ([ADR-0001](../adr/0001-json-files-not-sqlite.md), [ADR-0002](../adr/0002-data-root-discovery.md)).
-- **A small core.** Boards, Stories, Tasks, Stages, Custom Fields and Assignees are core. Everything else is a Plugin ([ADR-0009](../adr/0009-built-in-plugins-use-only-the-plugin-api.md)).
-- **Two surfaces, one feature set.** Every data change works in both surfaces below. The only exception is Plugin Actions, which are TUI keys that may only open or show something ([ADR-0017](../adr/0017-actions-are-tui-only.md)).
+- **Files, not a server.** All data is pretty-printed JSON and Markdown in a `.rowbly/` folder (the Data Root), so a small team shares its tracker through git, with no database and no service ([ADR-0001](../agents/adr/0001-json-files-not-sqlite.md), [ADR-0002](../agents/adr/0002-data-root-discovery.md)).
+- **A small core.** Boards, Stories, Tasks, Stages, Custom Fields and Assignees are core. Everything else is a Plugin ([ADR-0009](../agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md)).
+- **Two surfaces, one feature set.** Every data change works in both surfaces below. The only exception is Plugin Actions, which are TUI keys that may only open or show something ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)).
 
 Out of scope: authentication and authorization. Rowbly is for one person or a small team that already shares a repository.
 
@@ -14,7 +14,7 @@ Out of scope: authentication and authorization. Rowbly is for one person or a sm
 | Surface | Started by | Built with |
 | --- | --- | --- |
 | Command mode | `rowbly <noun> <verb> …`, for example `rowbly stories list` | Commander; `@clack/prompts` asks for missing values when stdin and stdout are terminals |
-| Interactive mode (TUI) | `rowbly` with no command | Ink and React: the Kanban board, detail screens and every form ([ADR-0006](../adr/0006-ink-owns-the-interactive-mode.md)) |
+| Interactive mode (TUI) | `rowbly` with no command | Ink and React: the Kanban board, detail screens and every form ([ADR-0006](../agents/adr/0006-ink-owns-the-interactive-mode.md)) |
 
 Clack never runs inside the TUI: both libraries take over stdin and raw mode. Every list and show command has `--json` output, and errors with `--json` are `{"error":{"code","message","details","hint"?}}` on stderr.
 

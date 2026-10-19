@@ -4,9 +4,9 @@ Rowbly ships three Built-in Plugins. Each is off until a Data Root turns it on w
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
-| [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../adr/0014-epics-return-as-a-built-in-plugin.md) |
-| [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../adr/0015-specs-are-markdown-files.md) |
-| [Comments](#comments) | Comment Threads on Stories and Tasks | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../adr/0018-comments-are-a-built-in-plugin.md) |
+| [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
+| [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
+| [Comments](#comments) | Comment Threads on Stories and Tasks | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
@@ -110,4 +110,4 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>                            # c
 
 ## Upgrading from before Plugins
 
-Earlier Rowbly versions kept Epics and Comments in core ([ADR-0008](../adr/0008-no-epics.md), [ADR-0018](../adr/0018-comments-are-a-built-in-plugin.md)). Rowbly has no importer for that data: top-level `comments` arrays on Stories and Tasks, a Story's `epicId`, and Epic files in `epics/*.json`. Doctor reports them as `LEGACY_DATA` (warning), never saves those files and never removes the data. Any other change to such a Story drops the old fields, so **commit or back up the Data Root first**, then recreate what you need with the Epics and Comments Plugins.
+Earlier Rowbly versions kept Epics and Comments in core ([ADR-0008](../agents/adr/0008-no-epics.md), [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md)). Rowbly has no importer for that data: top-level `comments` arrays on Stories and Tasks, a Story's `epicId`, and Epic files in `epics/*.json`. Doctor reports them as `LEGACY_DATA` (warning), never saves those files and never removes the data. Any other change to such a Story drops the old fields, so **commit or back up the Data Root first**, then recreate what you need with the Epics and Comments Plugins.

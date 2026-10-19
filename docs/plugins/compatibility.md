@@ -1,6 +1,6 @@
 # Plugin compatibility policy
 
-This page says how the Plugin API and Plugin Data may change between Rowbly releases, and what an older or newer Rowbly does with data it does not understand. It is policy. Rowbly builds no migration engine, no version-range engine and no dependency graph for it. The decision is recorded in [ADR-0021](../adr/0021-plugin-format-and-compatibility-policy.md). The trust model is in [trust.md](trust.md).
+This page says how the Plugin API and Plugin Data may change between Rowbly releases, and what an older or newer Rowbly does with data it does not understand. It is policy. Rowbly builds no migration engine, no version-range engine and no dependency graph for it. The decision is recorded in [ADR-0021](../agents/adr/0021-plugin-format-and-compatibility-policy.md). The trust model is in [trust.md](trust.md).
 
 The terms are those of [`CONTEXT.md`](../agents/CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Data Root) and of ADR-0020 §3 (the four bag kinds: absent, valid, invalid and unsupported).
 

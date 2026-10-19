@@ -1,6 +1,6 @@
 # The plugin system
 
-Rowbly keeps its core small and adds features as Plugins. This page explains how the plugin system works. The terms are in the [glossary](../agents/CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in the [context map](../agents/CONTEXT-MAP.md). The decisions are ADR-0009 to ADR-0021 ([index](../adr/README.md)).
+Rowbly keeps its core small and adds features as Plugins. This page explains how the plugin system works. The terms are in the [glossary](../agents/CONTEXT.md) (Plugin, Built-in Plugin, Plugin Data, Action), and each Plugin has its own glossary, listed in the [context map](../agents/CONTEXT-MAP.md). The decisions are ADR-0009 to ADR-0021 ([index](../agents/adr/README.md)).
 
 | Page | What it covers |
 | --- | --- |
@@ -19,12 +19,12 @@ Built:
 
 Planned, not built:
 
-- The Git Plugin and the Plugin API's `git` capability ([ADR-0016](../adr/0016-git-automation-design.md)).
+- The Git Plugin and the Plugin API's `git` capability ([ADR-0016](../agents/adr/0016-git-automation-design.md)).
 - Third-party Plugins, dependencies between Plugins, and deleting a Plugin's data. The rules that must hold first are in [compatibility.md](compatibility.md) and [trust.md](trust.md).
 
 ## Where Plugins live
 
-- Each Built-in Plugin is a folder `src/plugins/<id>/`, built into the same bundle as core and listed in one static registry, `builtInPlugins` in `src/plugins/index.ts`. Only the entry point, `src/cli.ts`, reads the registry ([ADR-0009](../adr/0009-built-in-plugins-use-only-the-plugin-api.md)).
+- Each Built-in Plugin is a folder `src/plugins/<id>/`, built into the same bundle as core and listed in one static registry, `builtInPlugins` in `src/plugins/index.ts`. Only the entry point, `src/cli.ts`, reads the registry ([ADR-0009](../agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md)).
 - A Plugin imports only the Plugin API (`src/plugin-api`, and `src/plugin-api/tui` from its TUI part) and its own files. Core never imports a Plugin. A Plugin uses no Node built-in module: it works outside its own data only through capabilities of the Plugin API, today its own `plugins/<id>/` folders (`files`) and `$EDITOR` (`editText`, command mode only). `test/architecture.test.ts` enforces these rules. They are conventions for trusted code, not confinement ([trust.md](trust.md#2-what-the-safeguards-are-and-what-they-are-not)).
 - A Plugin's TUI part loads only when the TUI starts, so command mode never loads Ink or React for it. The registry and every Built-in Plugin's definition module are evaluated on every run, even for Plugins that are off; a throw at the top level of such a module stops Rowbly from starting.
 - Plugins run in registry order.
@@ -42,7 +42,7 @@ Planned, not built:
 }
 ```
 
-- A Plugin is off until its entry in `rowbly.config.json` has `"enabled": true`. The file is committed, so everyone who uses the Data Root has the same Plugins on ([ADR-0010](../adr/0010-plugins-are-turned-on-per-data-root.md)). `rowbly init` turns no Plugins on.
+- A Plugin is off until its entry in `rowbly.config.json` has `"enabled": true`. The file is committed, so everyone who uses the Data Root has the same Plugins on ([ADR-0010](../agents/adr/0010-plugins-are-turned-on-per-data-root.md)). `rowbly init` turns no Plugins on.
 - `enabled` is the only key core reserves. Only the Data Root turns a Plugin on or off; a Board can only change its settings.
 
 ```text
@@ -97,21 +97,21 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
       plugins/<id>/…        # Story files of a Plugin, e.g. the Story Spec
 ```
 
-- A **bag** is `"plugins": { "<id>": { … } }` on a record ([ADR-0011](../adr/0011-plugin-data-is-a-bag-per-plugin.md)). Each Plugin validates its own bag. Core keeps every bag unchanged, including the bags of Plugins that are off or unknown and bags that do not parse, and `--json` prints records as they are stored, with every bag.
+- A **bag** is `"plugins": { "<id>": { … } }` on a record ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Each Plugin validates its own bag. Core keeps every bag unchanged, including the bags of Plugins that are off or unknown and bags that do not parse, and `--json` prints records as they are stored, with every bag.
 - A bag that does not parse is never treated as empty: a Plugin shows it as unavailable, and refuses to change it (`DATA_INTEGRITY`, exit 6) until it is repaired or reset ([bags](api.md#plugin-data-bags)).
-- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to ([ADR-0013](../adr/0013-plugin-files-live-beside-what-they-belong-to.md)). Deleting a Story or Board deletes its Plugin files; renumbering a Story moves them with its folder. A Story folder without `story.json` still reserves its Story Key. A file reached through a symbolic link inside `plugins/<id>/` is refused.
-- Each Plugin owns the shape of its bags and files. Unversioned built-in bags are legacy v1. A format change, and any migration, follows [compatibility.md](compatibility.md) ([ADR-0021](../adr/0021-plugin-format-and-compatibility-policy.md)): never automatic, never inferred from an unreadable bag.
+- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)). Deleting a Story or Board deletes its Plugin files; renumbering a Story moves them with its folder. A Story folder without `story.json` still reserves its Story Key. A file reached through a symbolic link inside `plugins/<id>/` is refused.
+- Each Plugin owns the shape of its bags and files. Unversioned built-in bags are legacy v1. A format change, and any migration, follows [compatibility.md](compatibility.md) ([ADR-0021](../agents/adr/0021-plugin-format-and-compatibility-policy.md)): never automatic, never inferred from an unreadable bag.
 
 ## Operations and hooks
 
-Every Service Layer operation, from core or from a Plugin, collects a Change Set and saves it once ([Operations](../architecture/operations.md), [ADR-0012](../adr/0012-plugins-intercept-service-operations.md)). Plugins take part through hooks:
+Every Service Layer operation, from core or from a Plugin, collects a Change Set and saves it once ([Operations](../architecture/operations.md), [ADR-0012](../agents/adr/0012-plugins-intercept-service-operations.md)). Plugins take part through hooks:
 
 - **Transform**: changes the Change Set before the save, through its writer methods only.
 - **Guard**: sees the final Change Set, read-only, and can refuse the operation: nothing is saved; exit 4 (`CONFLICT`), with `details.canForce` when `--force` would get past it.
 - **Replace**: runs instead of a core operation's body. An advanced capability; no Built-in Plugin uses one.
 - **React**: sees the saved Change Set and acts only outside Rowbly's data. Each reaction has 5 s; then Rowbly warns and goes on, and nothing is undone. A failure warns, and the exit code stays 0.
 
-Rules that hold for every hook ([ADR-0020](../adr/0020-plugin-execution-and-data-contracts.md)):
+Rules that hold for every hook ([ADR-0020](../agents/adr/0020-plugin-execution-and-data-contracts.md)):
 
 - Hooks see frozen copies and change data only through the Change Set they receive; a writer stops working when its hook returns. A hook cannot start another operation.
 - An expected error a Plugin throws (`VALIDATION`, `NOT_FOUND`, `CONFLICT`, `USAGE`, `DATA_INTEGRITY`) keeps its code and exit code; anything else becomes `INTERNAL` (exit 1) with a hint to turn the Plugin off. Both carry `details.plugin`, `details.stage` and, inside an operation, `details.operation`. A failure before the save saves nothing.
@@ -140,7 +140,7 @@ Every data change a Plugin offers works in both the CLI and the TUI.
 
 Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story and Task detail tabs and rows, Board detail sections, `stories show` and `tasks show` rows, and Actions. Board card lines, `stories list` columns and other closed lists open when a Plugin first needs them.
 
-**Actions** ([ADR-0017](../adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, a Task, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A Task Action gets the Task and its Story. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
+**Actions** ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, a Task, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A Task Action gets the Task and its Story. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
 
 **Containment in the TUI.** A Plugin screen, tab or section that throws while rendering shows a fallback naming the Plugin; the rest of the TUI keeps working, and the Plugin is tried again when the Plugins load again. A Plugin whose form or filter fields fail contributes nothing to that form or filter, and the screen says so.
 

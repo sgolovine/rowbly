@@ -4,7 +4,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 
 - To change a decision, add a new ADR that supersedes or amends the old one, and update the old one's **Status** line. Do not rewrite an accepted decision.
 - Start a new ADR with `# ADR-NNNN: <the decision as a sentence>` and a `**Status:**` line, then the context, the decision and the rejected alternatives.
-- Use the terms in the [glossary](../agents/CONTEXT.md).
+- Use the terms in the [glossary](../CONTEXT.md).
 
 ## Index
 

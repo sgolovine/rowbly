@@ -12,7 +12,7 @@ Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. The 
 | Change how something is saved | [Operations](architecture/operations.md), then [Storage and commits](architecture/storage.md) |
 | Write or change a Plugin | [Writing a Plugin](plugins/writing-a-plugin.md), then the [Plugin API reference](plugins/api.md) |
 | Build, test or debug Rowbly | [Development](development/README.md) |
-| Know why something is the way it is | [Architecture decisions](adr/README.md) |
+| Know why something is the way it is | [Architecture decisions](agents/adr/README.md) |
 
 ## Contents
 
@@ -22,6 +22,9 @@ docs/
   agents/
     CONTEXT.md               the core glossary: the only names to use for core concepts
     CONTEXT-MAP.md           the glossaries of each Built-in Plugin, and how they relate to core
+    adr/
+      README.md              index of the architecture decision records
+      0001-…0021-…           one decision per file
   architecture/
     overview.md              goals, surfaces, technology, source layers
     data-model.md            the Data Root, its records and files, the Configuration Cascade, doctor
@@ -36,9 +39,6 @@ docs/
     trust.md                 policy: which Plugin code runs, and what the safeguards are not
   development/
     README.md                commands, tests, tracing and benchmarks
-  adr/
-    README.md                index of the architecture decision records
-    0001-…0021-…             one decision per file
 ```
 
 ## Rules for these docs

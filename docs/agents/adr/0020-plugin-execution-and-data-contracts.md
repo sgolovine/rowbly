@@ -1,6 +1,6 @@
 # ADR-0020: Plugin execution, data preservation and error contracts
 
-**Status:** Accepted. Built. Amends [ADR-0012](0012-plugins-intercept-service-operations.md)'s error policy (§5). The [Plugin API reference](../plugins/api.md) documents these contracts for Plugin authors.
+**Status:** Accepted. Built. Amends [ADR-0012](0012-plugins-intercept-service-operations.md)'s error policy (§5). The [Plugin API reference](../../plugins/api.md) documents these contracts for Plugin authors.
 
 ADR-0012 gives every operation one pipeline: replacement or core, then transforms, guards, save and reactions. It did not say what each stage may do. Before this decision, a transform could start another operation, and a guard could still write. A Plugin can change a snapshot's `before.key` and so redirect a deletion. A retained Change Set can be used after its stage has ended. An invalid bag looks the same as an absent one, so an ordinary edit can overwrite it. Every expected error a Plugin throws turns into `INTERNAL` with "turn it off" advice. This ADR fixes these contracts. ADR-0019 covers locking, the journal and storage identity.
 
@@ -72,7 +72,7 @@ A detached continuation keeps the store of the stage that started it. The rule t
 ## 2. Repeated `core()` and replacements
 
 - **Call once.** A replacement's `core()` runs the core body against the shared plan at most once. A second call throws an attributed `PluginError` (`Plugin "<id>" called core() twice in its replacement of <operation>`), and the operation saves nothing. Not calling `core()` is allowed.
-- **Replacements are advanced.** Replacements stay a supported, tested, *advanced* capability. They move out of the beginner guide into an advanced section ([tutorial §11](../plugins/writing-a-plugin.md#11-advanced-replacements), and the [reference](../plugins/api.md#replacements)). That section covers what the result must be, error pass-through, the shared plan, ordering and not calling `core()` on purpose. No built-in uses a replacement, and they stay covered by fixtures.
+- **Replacements are advanced.** Replacements stay a supported, tested, *advanced* capability. They move out of the beginner guide into an advanced section ([tutorial §11](../../plugins/writing-a-plugin.md#11-advanced-replacements), and the [reference](../../plugins/api.md#replacements)). That section covers what the result must be, error pass-through, the shared plan, ordering and not calling `core()` on purpose. No built-in uses a replacement, and they stay covered by fixtures.
 
 ## 3. Plugin Data: bags, forms and settings
 
@@ -83,7 +83,7 @@ A detached continuation keeps the store of the stage that started it. The rule t
 - **invalid**: it is present but does not parse;
 - **unsupported**: it is present and declares a data version that this Rowbly does not know.
 
-Unsupported is reserved for bags that carry their own version. No bag does that yet. Rowbly adds no universal bag version and no migration engine. Existing built-in bags have no version and are read as legacy v1 ([ADR-0021](0021-plugin-format-and-compatibility-policy.md) and [`docs/plugins/compatibility.md`](../plugins/compatibility.md) set the policy). A parse failure never means "empty".
+Unsupported is reserved for bags that carry their own version. No bag does that yet. Rowbly adds no universal bag version and no migration engine. Existing built-in bags have no version and are read as legacy v1 ([ADR-0021](0021-plugin-format-and-compatibility-policy.md) and [`docs/plugins/compatibility.md`](../../plugins/compatibility.md) set the policy). A parse failure never means "empty".
 
 **Reading.**
 
