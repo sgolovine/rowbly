@@ -149,6 +149,9 @@ const stable = (frame: string) => frame.replace(/rowbly-test-\w{6}/, 'rowbly-tes
 /** The lines of the frame between the board title and the footer. */
 const frameLines = (app: Rendered) => (app.lastFrame() ?? '').split('\n');
 
+/** The single-line box glyph for each bold one. */
+const THIN: Record<string, string> = { '┏': '┌', '┓': '┐', '┗': '└', '┛': '┘', '━': '─', '┃': '│' };
+
 describe('board view', () => {
   it('renders one column per Stage with counts and cards in Rank order', async () => {
     const t = await seed();
@@ -158,7 +161,7 @@ describe('board view', () => {
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
     // key + Priority, truncated name, Assignees + Task summary
     expect(frame).toContain('┃ WEB-1 P1');
-    expect(frame).toMatch(/Login page with a ra.*…/);
+    expect(frame).toMatch(/Login page with a.*…/);
     expect(frame).toContain('@alice @bob · ✓ 1/3');
     expect(frame.indexOf('WEB-1')).toBeLessThan(frame.indexOf('WEB-2'));
     expect(frame.indexOf('WEB-2')).toBeLessThan(frame.indexOf('WEB-3'));
@@ -175,8 +178,8 @@ describe('board view', () => {
     expect(before).toContain('│ WEB-4 P3');
     await app.press('j');
     await waitForFrame(app, (f) => f.includes('┃ WEB-2') && f.includes('│ WEB-1 P1'));
-    // Only the border glyph changes: the frames match once heavy borders read as thin ones.
-    const thin = (frame: string) => frame.replaceAll('┃', '│');
+    // Only the border changes: the frames match once bold borders read as thin ones.
+    const thin = (frame: string) => frame.replace(/[┏┓┗┛━┃]/g, (c) => THIN[c] ?? c);
     expect(thin(app.lastFrame() ?? '')).toBe(thin(before));
     app.unmount();
   });
@@ -321,8 +324,8 @@ describe('board view', () => {
 
   it('scrolls a column vertically when it has more cards than fit', async () => {
     const t = await seed();
-    // 22 rows leave room for 3 cards.
-    const app = await open(t, { rows: 22 });
+    // 28 rows leave room for 3 cards.
+    const app = await open(t, { rows: 28 });
     await makeStory(t.path, { ...web, key: 'WEB-7', name: 'Fourth', stage: 'backlog', rank: 'a3' });
     await app.press('r');
     await waitForFrame(app, (f) => f.includes('● Backlog (4)'));

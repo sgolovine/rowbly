@@ -70,7 +70,7 @@ export function BoardColumn({
   );
 }
 
-/** Three lines behind a left border: key and Priority, name, Assignees and Task summary. Never wraps. */
+/** Three lines in a box: key and Priority, name, Assignees and Task summary. Never wraps. */
 function Card({
   story,
   stages,
@@ -88,28 +88,30 @@ function Card({
 }) {
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick, drag: story.key }, active);
-  // A left border of the same width either way, so selecting a card changes only its weight and colour.
-  const marker = selected ? <Text color={active ? 'cyan' : undefined}>┃ </Text> : <Text dimColor>│ </Text>;
-  const room = width - 2;
+  // Border and padding take two columns on each side.
+  const room = width - 4;
   const meta = [story.assignees.map((h) => `@${h}`).join(' '), taskSummary(story, stages)].filter(Boolean).join(' · ');
   const priority = story.priority ? ` ${story.priority}` : '';
+  // Both border styles are one cell thick, so selecting a card changes only the border's weight and colour.
   return (
-    <Box ref={ref} flexDirection="column" marginBottom={1}>
+    <Box
+      ref={ref}
+      flexDirection="column"
+      width={width}
+      marginBottom={1}
+      paddingX={1}
+      borderStyle={selected ? 'bold' : 'single'}
+      borderColor={selected && active ? 'cyan' : undefined}
+      borderDimColor={!selected}
+    >
       <Text>
-        {marker}
         <Text bold color="cyan">
           {truncate(story.key, room)}
         </Text>
         <Text color="magenta">{truncate(priority, room - story.key.length)}</Text>
       </Text>
-      <Text>
-        {marker}
-        <Text bold={selected}>{truncate(story.name, room)}</Text>
-      </Text>
-      <Text>
-        {marker}
-        <Text dimColor>{truncate(meta, room) || ' '}</Text>
-      </Text>
+      <Text bold={selected}>{truncate(story.name, room)}</Text>
+      <Text dimColor>{truncate(meta, room) || ' '}</Text>
     </Box>
   );
 }
