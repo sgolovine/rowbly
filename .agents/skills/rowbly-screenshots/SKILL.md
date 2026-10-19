@@ -82,5 +82,6 @@ git worktree add --orphan -b pr-assets/<pr-branch> "$out/assets"
 cp "$out"/*.png "$out/assets/" && git -C "$out/assets" add . &&
   git -C "$out/assets" commit -m "docs: screenshots for <pr-branch>" &&
   git -C "$out/assets" push -u origin pr-assets/<pr-branch>
+git worktree remove "$out/assets"
 # ![Board](https://raw.githubusercontent.com/<owner>/<repo>/pr-assets/<pr-branch>/01-board.png)
 ```
