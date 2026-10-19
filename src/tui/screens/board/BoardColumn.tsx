@@ -2,7 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
-import { useMouse } from '../../hooks';
+import { useMouse, useStoryBadges } from '../../hooks';
 import { taskSummary, truncate } from './layout';
 
 export interface BoardColumnProps {
@@ -41,6 +41,7 @@ export function BoardColumn({
   const below = cards.length - first - shown.length;
   const inner = width - 1;
   const ref = useRef<DOMElement>(null);
+  const badges = useStoryBadges();
   useMouse(ref, { onClick: () => onClick?.(-1), onDrop }, active);
   return (
     <Box ref={ref} flexDirection="column" width={width} paddingRight={1} flexShrink={0}>
@@ -57,6 +58,7 @@ export function BoardColumn({
         <Card
           key={story.key}
           story={story}
+          badges={badges(story)}
           stages={stages}
           width={inner}
           selected={selected === first + i}
@@ -70,9 +72,10 @@ export function BoardColumn({
   );
 }
 
-/** Three lines in a box: key and Priority, name, Assignees and Task summary. Never wraps. */
+/** Three lines in a box: key and Priority, name, Plugin badges and Task summary. Never wraps. */
 function Card({
   story,
+  badges,
   stages,
   width,
   selected,
@@ -80,6 +83,7 @@ function Card({
   onClick,
 }: {
   story: Story;
+  badges: readonly string[];
   stages: readonly Stage[];
   width: number;
   selected: boolean;
@@ -90,7 +94,7 @@ function Card({
   useMouse(ref, { onClick, drag: story.key }, active);
   // Border and padding take two columns on each side.
   const room = width - 4;
-  const meta = [story.assignees.map((h) => `@${h}`).join(' '), taskSummary(story, stages)].filter(Boolean).join(' · ');
+  const meta = [badges.join(' '), taskSummary(story, stages)].filter(Boolean).join(' · ');
   const priority = story.priority ? ` ${story.priority}` : '';
   // Both border styles are one cell thick, so selecting a card changes only the border's weight and colour.
   return (

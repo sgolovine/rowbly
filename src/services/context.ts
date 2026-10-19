@@ -1,4 +1,4 @@
-import { NotFoundError, UsageError } from '../core';
+import { isSlug, NotFoundError, UsageError, ValidationError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
 import type { CoreChangeSet } from './plugins/changeSet';
@@ -51,13 +51,8 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
     },
 
     async setMe(handle, opts = {}) {
-      if (handle !== null) {
-        const { assignees } = await repos.rootConfig.get();
-        if (!assignees.some((a) => a.handle === handle)) {
-          throw new NotFoundError(`Assignee "${handle}" not found`, {
-            hint: 'run `rowbly assignees add <handle> --name <name>`',
-          });
-        }
+      if (handle !== null && !isSlug(handle)) {
+        throw new ValidationError(`invalid handle "${handle}": must be a lower-kebab-case slug`);
       }
       return ops.run(
         'context.setMe',

@@ -316,16 +316,7 @@ export function BoardScreen({ params }: ScreenProps) {
         <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
           <PluginFailures failures={extra.failures} note="its filter is unavailable" />
           <Form
-            fields={[
-              ...filterFields(
-                {
-                  assignees: choices.assignees.map((a) => a.handle),
-                  labels: choices.labels,
-                },
-                { board: true },
-              ),
-              ...extra.fields,
-            ]}
+            fields={[...filterFields({ labels: choices.labels }, { board: true }), ...extra.fields]}
             initialValues={{ ...extra.values, ...filterInitialValues(filters) }}
             onSubmit={(values) => {
               setFilters(values);

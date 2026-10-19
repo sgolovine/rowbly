@@ -78,7 +78,8 @@ export function addComment(plugin: PluginContext, target: string, body: string):
       const now = toTimestamp(plugin.now());
       const comment: Comment = {
         id: plugin.newId(),
-        author: await author(plugin),
+        // Me, read on each change and never cached (ARCH-18); no author when Me is unset.
+        author: plugin.me,
         body,
         createdAt: now,
         updatedAt: now,
@@ -162,13 +163,6 @@ function find(comments: readonly Comment[], id: string, owner: string): Comment 
   const comment = comments.find((c) => c.id === id);
   if (comment) return comment;
   throw new NotFoundError(`Comment "${id}" not found on ${owner}`, { hint: `run \`rowbly comments list ${owner}\`` });
-}
-
-/** Me, when Me is in the roster now; otherwise no author. Checked on each change, never cached (ARCH-18). */
-async function author(plugin: PluginContext): Promise<string | null> {
-  if (!plugin.me) return null;
-  const roster = await plugin.services.assignees.list();
-  return roster.some((a) => a.handle === plugin.me) ? plugin.me : null;
 }
 
 /** Throws `ValidationError` for a whitespace-only body; the body itself is kept exactly as given. */

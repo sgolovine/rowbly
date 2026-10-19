@@ -3,7 +3,6 @@ import type { Command } from 'commander';
 import type { ComponentType } from 'react';
 import type { ZodType, z } from 'zod';
 import type {
-  Assignee,
   BoardConfig,
   CustomFieldDef,
   CustomFieldInput,
@@ -17,9 +16,6 @@ import type {
   Task,
 } from '../../schemas';
 import type {
-  AssigneeInput,
-  AssigneePatch,
-  AssigneesService,
   BoardCreateInput,
   BoardPatch,
   BoardsService,
@@ -51,8 +47,7 @@ import type {
 
 /**
  * One stored record that an operation creates (`before: null`), changes, or deletes (`after: null`).
- * Tasks live in their Story's record and Assignees in the root config, so changes to
- * them are Story or root config changes. A renumbered Story is one Story change whose `before` and
+ * Tasks live in their Story's record, so changes to them are Story changes. A renumbered Story is one Story change whose `before` and
  * `after` have different keys; saving it moves the whole Story folder, Plugin files included.
  */
 export type Change = RootConfigChange | LocalStateChange | BoardChange | StoryChange | FileChange;
@@ -211,9 +206,6 @@ export const CORE_OPERATION_NAMES = [
   'context.use',
   'context.clearUse',
   'context.setMe',
-  'assignees.add',
-  'assignees.update',
-  'assignees.remove',
   'boards.create',
   'boards.update',
   'boards.remove',
@@ -250,9 +242,6 @@ export interface CoreOperations {
   'context.use': { input: { board: Slug } & OperationOptions; result: LocalState };
   'context.clearUse': { input: OperationOptions; result: undefined };
   'context.setMe': { input: { handle: Slug | null } & OperationOptions; result: LocalState };
-  'assignees.add': { input: AssigneeInput; result: Assignee };
-  'assignees.update': { input: { handle: Slug } & AssigneePatch; result: Assignee };
-  'assignees.remove': { input: { handle: Slug } & OperationOptions; result: { storiesUpdated: number } };
   'boards.create': { input: BoardCreateInput; result: BoardConfig };
   'boards.update': { input: { id: Slug } & BoardPatch; result: BoardConfig };
   'boards.remove': { input: { id: Slug; force: boolean } & OperationOptions; result: undefined };
@@ -435,7 +424,6 @@ export interface PluginFiles {
 export interface PluginReadServices {
   context: Pick<ContextService, 'resolveBoard'>;
   config: Pick<ConfigService, 'effective'>;
-  assignees: Pick<AssigneesService, 'list'>;
   boards: Pick<BoardsService, 'list' | 'get'>;
   stages: Pick<StagesService, 'list'>;
   fields: Pick<FieldsService, 'list'>;
@@ -571,9 +559,6 @@ export interface PluginCli<S> {
  * Stages, fields, context and doctor are hookable but take no Plugin options (ARCH-16).
  */
 export const PLUGIN_OPTION_COMMANDS = [
-  'assignees add',
-  'assignees edit',
-  'assignees remove',
   'boards create',
   'boards edit',
   'boards delete',
@@ -593,9 +578,6 @@ export type PluginOptionCommand = (typeof PLUGIN_OPTION_COMMANDS)[number];
 
 /** The operation each option-taking core command runs; `stories list` runs none (it filters). */
 export interface PluginOptionOperations {
-  'assignees add': 'assignees.add';
-  'assignees edit': 'assignees.update';
-  'assignees remove': 'assignees.remove';
   'boards create': 'boards.create';
   'boards edit': 'boards.update';
   'boards delete': 'boards.remove';
@@ -885,6 +867,11 @@ export interface PluginTui<S = Record<string, unknown>> {
   settings?: PluginLink[];
   storyForm?: PluginStoryForm<S>;
   storyFilter?: PluginStoryFilter<S>;
+  /**
+   * Short texts about a Story, such as `@ada`, shown on its board card and its Story list row. They
+   * only show something, so a Plugin that throws shows none there.
+   */
+  storyBadges?(args: { story: Story; plugin: PluginContext<S> }): string[];
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
   taskTabs?: { label: string; component: ComponentType<PluginTaskTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
@@ -896,7 +883,6 @@ export interface PluginTui<S = Record<string, unknown>> {
 export interface PluginBagSchemas {
   story?: ZodType;
   task?: ZodType;
-  assignee?: ZodType;
   local?: ZodType;
 }
 

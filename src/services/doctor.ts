@@ -53,7 +53,6 @@ const SEVERITY: Record<CoreDoctorCode, DoctorSeverity> = {
   CONFLICT_MARKERS: 'error',
   DUPLICATE_PREFIX: 'error',
   UNKNOWN_STAGE: 'error',
-  UNKNOWN_ASSIGNEE: 'warning',
   UNKNOWN_FIELD: 'warning',
   INVALID_FIELD_VALUE: 'warning',
   MISSING_REQUIRED_FIELD: 'warning',
@@ -470,7 +469,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       if (!global || !board.config) continue;
       const effective = cascade(global, board.config);
       const stageKeys = new Set(effective.stages.map((s) => s.key));
-      const roster = new Set(global.assignees.map((a) => a.handle));
       for (const entry of board.stories) {
         const { story } = entry;
         const file = entry.file;
@@ -485,16 +483,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
               details: { hint: `run \`rowbly tasks move ${task.id} <stage>\`` },
             });
           }
-        }
-
-        const unknown = story.assignees.filter((handle) => !roster.has(handle));
-        if (unknown.length > 0) {
-          add('UNKNOWN_ASSIGNEE', file, `${story.key} has Assignees not in the roster: ${unknown.join(', ')}`, {
-            apply: () => {
-              touch(entry, { assignees: entry.story.assignees.filter((handle) => roster.has(handle)) });
-              return `removed ${unknown.join(', ')} from ${entry.story.key}`;
-            },
-          });
         }
 
         for (const [key, value] of Object.entries(story.customFields)) {
@@ -568,20 +556,15 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       const state = parse('local.json', await readDataRootFile(ctx.root, 'local.json'), LocalStateSchema);
       if (state) {
         local.state = state;
-        const clear = (field: 'board' | 'me', message: string) =>
-          add('STALE_LOCAL_STATE', 'local.json', message, {
+        if (state.board !== undefined && !fileSet.has(`boards/${state.board}/board.config.json`)) {
+          add('STALE_LOCAL_STATE', 'local.json', `current Board "${state.board}" does not exist`, {
             apply: () => {
-              const { [field]: removed, ...rest } = local.state;
+              const { board: removed, ...rest } = local.state;
               local.state = rest;
               local.dirty = true;
-              return `cleared ${field} "${removed}" from Local State`;
+              return `cleared board "${removed}" from Local State`;
             },
           });
-        if (state.board !== undefined && !fileSet.has(`boards/${state.board}/board.config.json`)) {
-          clear('board', `current Board "${state.board}" does not exist`);
-        }
-        if (state.me !== undefined && global && !global.assignees.some((a) => a.handle === state.me)) {
-          clear('me', `Me "${state.me}" is not in the roster`);
         }
       }
     }
@@ -600,7 +583,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       for (const [id, entry] of Object.entries(global.plugins ?? {})) {
         if (Object.keys(entry).some((k) => k !== 'enabled')) seen(id, 'rowbly.config.json', 'records');
       }
-      for (const assignee of global.assignees) bagsSeen(assignee, 'rowbly.config.json');
     }
     for (const board of valid.boards) bagsSeen(board, `boards/${board.id}/board.config.json`);
     for (const { story, file } of entries) {
@@ -727,9 +709,6 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
         if (Object.keys(bag).length > 0) {
           check(settings, deepMerge(plugin.entry, bag), `boards/${board.id}/board.config.json`, `Board ${board.id}`);
         }
-      }
-      for (const assignee of data.config?.assignees ?? []) {
-        check(bags.assignee, assignee.plugins?.[id], 'rowbly.config.json', `Assignee ${assignee.handle}`);
       }
       check(bags.local, local.plugins?.[id], 'local.json', 'Local State');
       // Every Story's bags, at the file it was read from: a duplicate's path is its own folder.

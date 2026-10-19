@@ -605,10 +605,13 @@ function withGetters<A extends object, B extends object>(base: A, extra: B): A &
 
 /**
  * The root config (`rowbly.config.json`): its Plugin entries are settings with `enabled`, not bags.
- * It has `version` and `assignees`; a Story has both too, but also its `key`.
+ * It has `version` and `stages` or `customFields`, like a Board (which has an `id`) or a Story (which
+ * has a `key`). A root config with neither looks like Local State, so it is not refused.
  */
 function isRootConfig(record: object): boolean {
-  return 'version' in record && 'assignees' in record && !('key' in record);
+  return (
+    'version' in record && ('stages' in record || 'customFields' in record) && !('id' in record) && !('key' in record)
+  );
 }
 
 /** How an error names the record a bag is on. */
@@ -616,7 +619,6 @@ function recordName(record: Bagged): string {
   const r = record as Record<string, unknown>;
   if (typeof r.key === 'string' && typeof r.boardId === 'string') return `Story ${r.key}`;
   if (typeof r.id === 'string' && isTaskId(r.id)) return `Task ${r.id}`;
-  if (typeof r.handle === 'string') return `Assignee ${r.handle}`;
   if (typeof r.id === 'string' && typeof r.keyPrefix === 'string') return `Board ${r.id}`;
   if ('version' in r) return 'Local State';
   return 'a record';

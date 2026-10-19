@@ -50,7 +50,7 @@ export function registerTasks(program: Command): void {
 
   tasks
     .command('show <task-id>')
-    .description("Show a Task with its Stage, description and the Story's Assignees")
+    .description('Show a Task with its Stage and description')
     .action(async (taskId: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ ctx, services, globals }) => {
         const { story, task } = await services.tasks.get(taskId);
@@ -139,11 +139,9 @@ function renderTasks(tasks: readonly Task[], stages: readonly Stage[]): string {
 }
 
 function renderTask(task: Task, story: Story, stages: readonly Stage[], extra: readonly [string, string][]): string {
-  const none = colors.dim('—');
   const rows: [string, string][] = [
     ['Story', `${story.key} ${story.name}`],
     ['Stage', stageBadge(stages, task.stage)],
-    ['Assignees', story.assignees.length ? `${story.assignees.join(', ')} ${colors.dim('(from the Story)')}` : none],
     ...extra,
     ['Created', task.createdAt],
     ['Updated', task.updatedAt],

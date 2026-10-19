@@ -1,6 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import { createRepositories, findDataRoot, gitUserEmail } from '../storage';
-import { createAssigneesService } from './assignees';
+import { createRepositories, findDataRoot } from '../storage';
 import { createBoardsService } from './boards';
 import { createConfigService } from './config';
 import { createContextService } from './context';
@@ -66,7 +65,6 @@ export function createServices(ctx: RowblyContext): Services {
     // `init` creates a Data Root that does not exist yet: nothing to coordinate with.
     setup: createSetupService(ctx, repos),
     config: each('config', createConfigService(ctx, repos)),
-    assignees: each('assignees', createAssigneesService(ctx, repos, ops)),
     boards: each('boards', createBoardsService(ctx, repos, ops)),
     stages: each('stages', createStagesService(ctx, repos, ops)),
     fields: each('fields', createFieldsService(ctx, repos, ops)),
@@ -111,19 +109,5 @@ export async function createContext(opts: CreateContextOptions): Promise<RowblyC
     ...(opts.plugins ? { plugins: opts.plugins } : {}),
     ...(opts.backgroundReactions ? { backgroundReactions: true } : {}),
   };
-  if (ctx.me === null) ctx.me = await meFromGitEmail(ctx, opts);
   return ctx;
-}
-
-/** The handle of the roster entry whose email equals `git config user.email`, if any. */
-async function meFromGitEmail(ctx: RowblyContext, opts: CreateContextOptions): Promise<string | null> {
-  const email = await gitUserEmail(opts.cwd);
-  if (!email) return null;
-  try {
-    const { assignees } = await coordinated(ctx.root, 'open', () => createRepositories(ctx.root).rootConfig.get());
-    return assignees.find((a) => a.email?.toLowerCase() === email.toLowerCase())?.handle ?? null;
-  } catch {
-    // An unreadable root config means no roster to match against.
-    return null;
-  }
 }

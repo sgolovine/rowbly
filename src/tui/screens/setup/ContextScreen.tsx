@@ -2,16 +2,16 @@ import { homedir } from 'node:os';
 import { Box, Text, useInput } from 'ink';
 import { useContext } from 'react';
 import { ConflictError } from '../../../core';
-import { assertInitTarget, initTarget, meSource } from '../../../services/setup';
-import { Loading, SelectList } from '../../components';
+import { assertInitTarget, initTarget } from '../../../services/setup';
+import { Form, Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
 
 /**
- * The context switcher: pick the Board in context. The `whoami` view (`params.view`) picks Me from
- * the roster. While `~/.rowbly` does not exist, it also offers to create it, like `init --global`.
- * `params.home` overrides the home directory (for tests).
+ * The context switcher: pick the Board in context. The `whoami` view (`params.view`) sets Me. While
+ * `~/.rowbly` does not exist, it also offers to create it, like `init --global`. `params.home`
+ * overrides the home directory (for tests).
  */
 export function ContextScreen({ params }: ScreenProps) {
   if (params.view === 'whoami') return <WhoamiPicker />;
@@ -93,52 +93,26 @@ function BoardPicker({ home }: { home: string }) {
   );
 }
 
-const CLEAR = '\u0000clear';
-
+/** Claims Me: a handle, or nothing to clear it. */
 function WhoamiPicker() {
   const services = useServices();
   const ctx = useRowblyContext();
   const router = useRouter();
   const toast = useToast();
-  const roster = useAsync(() => services.assignees.list(), []);
-  useKeyHints([{ key: 'enter', description: 'claim handle' }]);
-
-  const source = ctx ? meSource(ctx) : null;
   const me = ctx?.me ?? null;
   return (
     <Box flexDirection="column" gap={1}>
-      <Text>
-        Me: {me ? <Text bold>{me}</Text> : <Text dimColor>not set</Text>}
-        {source && <Text dimColor> ({source === 'local' ? 'from local.json' : 'matched by git email'})</Text>}
-      </Text>
-      {roster.data ? (
-        <Box flexDirection="column">
-          <Text bold>Roster</Text>
-          <SelectList
-            items={[
-              ...roster.data.map((a) => ({
-                value: a.handle,
-                label: a.handle === me ? `${a.handle} *` : a.handle,
-                description: a.name,
-              })),
-              ...(me ? [{ value: CLEAR, label: 'Clear Me' }] : []),
-            ]}
-            emptyText="The roster is empty. Add Assignees from the Assignees screen."
-            onSelect={async (item) => {
-              try {
-                const handle = item.value === CLEAR ? null : item.value;
-                await services.context.setMe(handle);
-                toast.push('info', handle ? `You are ${handle}` : 'Cleared Me');
-                router.pop();
-              } catch (err) {
-                toast.error(err);
-              }
-            }}
-          />
-        </Box>
-      ) : (
-        roster.loading && <Loading label="Loading roster…" />
-      )}
+      <Text>Me: {me ? <Text bold>{me}</Text> : <Text dimColor>not set</Text>}</Text>
+      <Form
+        fields={[{ name: 'handle', label: 'Handle (empty clears Me)', kind: 'text' }]}
+        initialValues={{ handle: me ?? '' }}
+        onSubmit={async (values) => {
+          const handle = String(values.handle ?? '').trim() || null;
+          await services.context.setMe(handle);
+          toast.push('info', handle ? `You are ${handle}` : 'Cleared Me');
+          router.pop();
+        }}
+      />
     </Box>
   );
 }

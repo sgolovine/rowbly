@@ -1,22 +1,7 @@
 import { z } from 'zod';
 import { CustomFieldListSchema } from './customField';
-import {
-  KeyPrefixSchema,
-  PluginBagsSchema,
-  SlugSchema,
-  TimestampSchema,
-  uniqueKeys,
-  VersionSchema,
-} from './primitives';
+import { KeyPrefixSchema, PluginBagsSchema, SlugSchema, TimestampSchema, VersionSchema } from './primitives';
 import { StageListSchema } from './stage';
-
-export const AssigneeSchema = z.object({
-  handle: SlugSchema,
-  name: z.string().min(1),
-  email: z.email().optional(),
-  plugins: PluginBagsSchema.optional(),
-});
-export type Assignee = z.infer<typeof AssigneeSchema>;
 
 /**
  * A Plugin's entry in `rowbly.config.json`: `enabled` turns it on (ADR-0010) and is the only key core
@@ -25,13 +10,9 @@ export type Assignee = z.infer<typeof AssigneeSchema>;
 export const PluginEntrySchema = z.object({ enabled: z.boolean().optional() }).catchall(z.unknown());
 export type PluginEntry = z.infer<typeof PluginEntrySchema>;
 
-/** `rowbly.config.json`: the Assignee roster and the global level of the Configuration Cascade. */
+/** `rowbly.config.json`: the global level of the Configuration Cascade, and the Plugin entries. */
 export const RowblyConfigSchema = z.object({
   version: VersionSchema,
-  assignees: z
-    .array(AssigneeSchema)
-    .superRefine(uniqueKeys<{ handle: string }>('assignee handle', (a) => a.handle))
-    .default([]),
   stages: StageListSchema.optional(),
   customFields: CustomFieldListSchema.optional(),
   /** The Data Root's Plugin entries, which are also its bags. */

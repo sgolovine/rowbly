@@ -1,4 +1,3 @@
-import { assigneesScreens } from './assignees';
 import { boardScreens, withBoardHome } from './board';
 import { boardsScreens } from './boards';
 import { demoScreens } from './demo';
@@ -19,7 +18,6 @@ export type { ScreenComponent, ScreenProps, ScreenRegistry } from './types';
 export const screens: ScreenRegistry = {
   ...homeScreens,
   ...setupScreens,
-  ...assigneesScreens,
   ...boardsScreens,
   ...stagesScreens,
   ...fieldsScreens,

@@ -119,7 +119,6 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const rows: DetailRow[] = [
     { label: 'Stage', value: <StoryStage stages={config.stages} story={story} /> },
     { label: 'Priority', value: story.priority ?? none },
-    { label: 'Assignees', value: story.assignees.join(', ') || none },
     { label: 'Labels', value: story.labels.join(', ') || none },
     { label: 'Due', value: story.dueDate ?? none },
     ...extraRows,

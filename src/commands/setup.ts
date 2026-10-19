@@ -5,7 +5,7 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, printWarnings, renderTable } from '../output';
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { createServices, type InitOptions, type InitResult, type RowblyContext, type Services } from '../services';
-import { assertInitTarget, claimMe, initTarget, type MeSource, meSource, newContext } from '../services/setup';
+import { assertInitTarget, initTarget, newContext } from '../services/setup';
 import { boardFlag, type ContextFlags, globalOptions, isInteractive, promptIfMissing, withContext } from './_shared';
 
 interface InitFlags {
@@ -56,7 +56,7 @@ export function registerSetup(program: Command): void {
 
   program
     .command('whoami [handle]')
-    .description('Show or set Me, the Assignee handle you work as')
+    .description('Show or set Me, the handle you work as')
     .option('--clear', 'unset Me')
     .action((handle: string | undefined, opts: { clear?: boolean }, cmd: Command) =>
       withContext(cmd, async ({ ctx, services, globals }) => {
@@ -67,11 +67,11 @@ export function registerSetup(program: Command): void {
           return;
         }
         if (handle) {
-          await claimMe(ctx, handle);
+          await services.context.setMe(handle);
           printResult({ me: handle }, { json: globals.json, human: () => `You are ${handle}` });
           return;
         }
-        printResult({ me: ctx.me, source: meSource(ctx) }, { json: globals.json, human: renderMe });
+        printResult({ me: ctx.me }, { json: globals.json, human: renderMe });
       }),
     );
 
@@ -166,11 +166,9 @@ function renderCurrentContext({ board }: CurrentContext): string {
   return `Board  ${board ? `${colors.bold(board.id)}  ${colors.dim(`(${SOURCE_LABELS[board.source]})`)}` : colors.dim('(none)')}`;
 }
 
-const ME_SOURCE_LABELS: Record<MeSource, string> = { local: 'from local.json', git: 'matched by git email' };
-
-function renderMe({ me, source }: { me: string | null; source: MeSource | null }): string {
-  if (me === null || source === null) return 'Me is not set. Claim a handle with `rowbly whoami <handle>`.';
-  return `${colors.bold(me)}  ${colors.dim(`(${ME_SOURCE_LABELS[source]})`)}`;
+function renderMe({ me }: { me: string | null }): string {
+  if (me === null) return 'Me is not set. Claim a handle with `rowbly whoami <handle>`.';
+  return colors.bold(me);
 }
 
 function renderInit(result: InitResult): string {

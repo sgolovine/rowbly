@@ -32,7 +32,7 @@ type Mode = 'view' | 'move' | 'confirm-delete';
 
 /**
  * One Task (`params.id`) with tab Details, then the tabs Plugins add; on Details `e` edits, `m` moves
- * it to a Stage and `d` deletes it. Tasks have no Assignees of their own: the Story's are shown.
+ * it to a Stage and `d` deletes it.
  */
 export function TaskDetailScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -117,16 +117,6 @@ export function TaskDetailScreen({ params }: ScreenProps) {
   const rows: DetailRow[] = [
     { label: 'Story', value: `${story.key} ${story.name}` },
     { label: 'Stage', value: <StoryStage stages={stages} story={task} /> },
-    {
-      label: 'Assignees',
-      value: story.assignees.length ? (
-        <Text>
-          {story.assignees.join(', ')} <Text dimColor>(from the Story)</Text>
-        </Text>
-      ) : (
-        <Text dimColor>—</Text>
-      ),
-    },
     ...extraRows,
     { label: 'Created', value: task.createdAt },
     { label: 'Updated', value: task.updatedAt },
