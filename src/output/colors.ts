@@ -5,12 +5,12 @@ import type { StageCategory } from '../schemas';
 export const colors = pc;
 
 const categoryColors: Record<StageCategory, (text: string) => string> = {
-  todo: pc.dim,
-  in_progress: pc.yellow,
+  backlog: pc.dim,
+  board: pc.yellow,
   done: pc.green,
 };
 
-/** Colours text by Stage Category: todo dim, in_progress yellow, done green. */
+/** Colours text by Stage Category: backlog dim, board yellow, done green. */
 export function colorByCategory(category: StageCategory, text: string): string {
   return categoryColors[category](text);
 }

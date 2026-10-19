@@ -39,9 +39,9 @@ describe('Epics TUI', () => {
       id: 'api',
       name: 'API',
       keyPrefix: 'API',
-      stages: [{ key: 'released', name: 'Released', category: 'done' }],
+      stages: [],
     });
-    await makeStory(t.path, { key: 'API-1', boardId: 'api', stage: 'released', plugins: { epics: { epic: 'auth' } } });
+    await makeStory(t.path, { key: 'API-1', boardId: 'api', stage: 'done', plugins: { epics: { epic: 'auth' } } });
     const { app } = await open(t, 'home', {}, { version: 1 });
     await waitForFrame(app, 'Epics');
     await focusListItem(app, 'Epics');

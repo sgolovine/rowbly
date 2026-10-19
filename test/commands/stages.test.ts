@@ -21,22 +21,12 @@ describe('rowbly stages', () => {
   it('add --after on a Board that inherits global Stages copies them to board.config.json', async () => {
     const { t, cli, read } = await setup();
     const globalBefore = await readFile(join(t.path, 'rowbly.config.json'), 'utf8');
-    const result = await cli(
-      'stages',
-      'add',
-      'qa',
-      '--name',
-      'QA',
-      '--category',
-      'in_progress',
-      '--after',
-      'in-progress',
-    );
+    const result = await cli('stages', 'add', 'qa', '--name', 'QA', '--after', 'in-progress');
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Added Stage qa');
     expect(result.stdout).toContain('board level (web); affects web');
     const board = await read('boards/web/board.config.json');
-    expect(board.stages.map((s: { key: string }) => s.key)).toEqual(['backlog', 'todo', 'in-progress', 'qa', 'done']);
+    expect(board.stages.map((s: { key: string }) => s.key)).toEqual(['todo', 'in-progress', 'qa']);
     expect(await readFile(join(t.path, 'rowbly.config.json'), 'utf8')).toBe(globalBefore);
   });
 
@@ -64,31 +54,38 @@ describe('rowbly stages', () => {
   it('defaults to the global level when no Board is in context, and --level selects one', async () => {
     const { t, cli, read } = await setup();
     await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
-    const added = await cli('stages', 'add', 'qa', '--name', 'QA', '--category', 'in_progress', '--json');
+    const added = await cli('stages', 'add', 'qa', '--name', 'QA', '--json');
     expect(JSON.parse(added.stdout)).toMatchObject({ level: 'global', affectedBoards: ['api', 'web'] });
-    expect((await read('rowbly.config.json')).stages).toHaveLength(5);
+    expect((await read('rowbly.config.json')).stages).toHaveLength(3);
 
     const board = await cli('stages', 'list', '--level', 'board', '--board', 'web', '--json');
     expect(JSON.parse(board.stdout)).toMatchObject({ level: 'board', source: 'global' });
     expect((await cli('stages', 'list', '--level', 'nope')).exitCode).toBe(2);
   });
 
-  it('edit and move', async () => {
+  it('edit and move, between the fixed Backlog and Done', async () => {
     const { cli } = await setup();
-    expect((await cli('stages', 'edit', 'todo', '--category', 'in_progress', '--name', 'Next')).exitCode).toBe(0);
-    const moved = await cli('stages', 'move', 'done', '--first', '--json');
+    expect((await cli('stages', 'edit', 'todo', '--name', 'Next')).exitCode).toBe(0);
+    const moved = await cli('stages', 'move', 'in-progress', '--first', '--json');
     expect(JSON.parse(moved.stdout).items.map((s: { key: string }) => s.key)).toEqual([
-      'done',
       'backlog',
-      'todo',
       'in-progress',
+      'todo',
+      'done',
     ]);
     const list = await cli('stages', 'list');
     expect(list.stdout).toContain('board level (web); from board');
-    expect(list.stdout).toMatch(/3\s+todo\s+Next\s+in_progress/);
-    expect((await cli('stages', 'move', 'done')).exitCode).toBe(2);
+    expect(list.stdout).toMatch(/1\s+backlog\s+Backlog\s+backlog/);
+    expect(list.stdout).toMatch(/3\s+todo\s+Next\s+board/);
+    expect(list.stdout).toMatch(/4\s+done\s+Done\s+done/);
+    expect((await cli('stages', 'move', 'todo')).exitCode).toBe(2);
     expect((await cli('stages', 'edit', 'nope', '--name', 'x')).exitCode).toBe(3);
-    expect((await cli('stages', 'add', 'x', '--name', 'X', '--category', 'later')).exitCode).toBe(2);
+    const fixed = await cli('stages', 'edit', 'done', '--name', 'Shipped');
+    expect(fixed.exitCode).toBe(2);
+    expect(fixed.stderr).toContain('Stage "done" is fixed');
+    expect((await cli('stages', 'move', 'backlog', '--last')).exitCode).toBe(2);
+    expect((await cli('stages', 'remove', 'done')).exitCode).toBe(2);
+    expect((await cli('stages', 'add', 'backlog', '--name', 'Backlog')).exitCode).not.toBe(0);
   });
 
   it('has --help for every verb', async () => {

@@ -29,10 +29,7 @@ async function seed() {
     name: 'Website',
     keyPrefix: 'WEB',
     description: 'The public site',
-    stages: [
-      { key: 'todo', name: 'Todo', category: 'todo' },
-      { key: 'done', name: 'Done', category: 'done' },
-    ],
+    stages: [{ key: 'todo', name: 'Todo' }],
   });
   await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
   await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Login', stage: 'todo', rank: 'a0', priority: 'P1' });
@@ -73,7 +70,7 @@ describe('G1 Board detail (boards show)', () => {
     expect(frame).toMatch(/Key prefix\s+WEB/);
     expect(frame).toContain('The public site');
     expect(frame).toContain('Stages (from board)');
-    expect(frame).toContain('● Todo todo · todo 2 Stories');
+    expect(frame).toContain('● Todo todo · board 2 Stories');
     expect(frame).toContain('● Done done · done 0 Stories');
     expect(frame).toContain('1 Story in unknown Stage "gone" (run Doctor)');
     expect(frame).toContain('Custom Fields (from global)');
@@ -82,7 +79,7 @@ describe('G1 Board detail (boards show)', () => {
 
     // `s` still opens the Board's Stages, as on the list.
     await app.press('s');
-    await waitForFrame(app, (f) => f.includes('Website Stages') && f.includes('1. ● Todo'));
+    await waitForFrame(app, (f) => f.includes('Website Stages') && f.includes('2. ● Todo'));
     app.unmount();
   });
 
@@ -91,7 +88,7 @@ describe('G1 Board detail (boards show)', () => {
     const { app } = open(t, 'board-detail', api);
     const frame = await waitForFrame(app, 'Key prefix');
     expect(frame).toContain('Stages (from default)');
-    expect(frame).toContain('● Backlog backlog · todo 1 Story');
+    expect(frame).toContain('● Backlog backlog · backlog 1 Story');
     expect(frame).not.toContain('unknown Stage');
     app.unmount();
   });
@@ -100,7 +97,7 @@ describe('G1 Board detail (boards show)', () => {
 describe('G2 effective configuration (config show)', () => {
   it('is reachable from the settings and shows the Board in context with each source level', async () => {
     const t = await seed();
-    await makeRootConfig(t.path, { ...ROOT_CONFIG, stages: [{ key: 'idea', name: 'Idea', category: 'todo' }] });
+    await makeRootConfig(t.path, { ...ROOT_CONFIG, stages: [{ key: 'idea', name: 'Idea' }] });
     const { app } = open(t, 'home', {}, { version: 1, board: 'api' });
     await waitForFrame(app, 'API api');
     await app.press(',');
@@ -111,7 +108,7 @@ describe('G2 effective configuration (config show)', () => {
     expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Board\s+api/);
     expect(frame).toContain('Stages (from global)');
-    expect(frame).toContain('● Idea idea · todo 0 Stories');
+    expect(frame).toContain('● Idea idea · board 0 Stories');
     expect(frame).toContain('Custom Fields (from global)');
     app.unmount();
   });

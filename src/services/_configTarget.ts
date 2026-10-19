@@ -1,14 +1,14 @@
 // Reading and writing the Stage and Custom Field lists at one Configuration Cascade level
 // (contracts §3), shared by the stages and fields services.
 import { toTimestamp } from '../core';
-import { type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Slug, type Stage } from '../schemas';
+import { type ConfigLevel, type CustomFieldDef, DEFAULT_STAGES, type Slug, type StageConfig } from '../schemas';
 import { createRepositories, type Repositories } from '../storage';
 import { coordinated } from './coordination';
 import type { ChangeSet } from './plugins/types';
 import type { ConfigTarget, RowblyContext } from './types';
 
 export type ConfigListKey = 'stages' | 'customFields';
-type ItemOf<K extends ConfigListKey> = K extends 'stages' ? Stage : CustomFieldDef;
+type ItemOf<K extends ConfigListKey> = K extends 'stages' ? StageConfig : CustomFieldDef;
 
 export interface LevelList<T> {
   /** The list in effect at the target level: its own, or the inherited one copy-on-write starts from. */

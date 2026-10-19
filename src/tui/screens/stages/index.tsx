@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { ConflictError } from '../../../core';
-import { type Stage, type StageCategory, StageCategorySchema } from '../../../schemas';
+import { isFixedStage, type Stage, withFixedStages } from '../../../schemas';
 import type { Position } from '../../../services';
 import { readLevel } from '../../../services/_configTarget';
 import { ConfirmDialog, CursorRows, Form, Loading, SelectList, StageBadge } from '../../components';
@@ -26,7 +26,10 @@ type Mode =
   | { kind: 'confirm-remove'; stage: Stage }
   | { kind: 'move-to'; stage: Stage; reason: string };
 
-/** Stage management: order, Stage Category badges, add/edit/move/remove, and a level switcher. */
+/**
+ * Stage management: order, Stage Category badges, add/edit/move/remove, and a level switcher. Backlog
+ * and Done are shown but fixed (ADR-0024).
+ */
 function StagesScreen({ params }: ScreenProps) {
   const scope = useConfigScope(params);
   if (!scope.data)
@@ -44,10 +47,13 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const target = targetFor(scope, level);
   const list = useAsync(async () => (ctx ? readLevel(ctx, target, 'stages') : null), [ctx, level, scope]);
-  const stages = list.data?.items ?? [];
+  const stages = withFixedStages(list.data?.items ?? []);
   const listing = mode.kind === 'list';
   const [cursor, setCursor] = useCursor(stages.length, active && listing);
   const current = stages[cursor];
+  // Configured Stages sit between Backlog (first) and Done (last).
+  const firstConfigured = 1;
+  const lastConfigured = stages.length - 2;
 
   useKeyCapture(active && !listing, { escape: true });
   useEscape(active && (mode.kind === 'add' || mode.kind === 'edit' || mode.kind === 'move-to'), () =>
@@ -105,15 +111,15 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
         setLevel(levels[(levels.indexOf(level) + 1) % levels.length] ?? level);
         setCursor(0);
       } else if (input === 'n') setMode({ kind: 'add' });
-      else if (!current) return;
+      else if (!current || isFixedStage(current.key)) return;
       else if (input === 'e') setMode({ kind: 'edit', stage: current });
       else if (input === 'd') setMode({ kind: 'confirm-remove', stage: current });
-      else if (up && cursor > 0) {
+      else if (up && cursor > firstConfigured) {
         void move(current, { before: stages[cursor - 1]?.key ?? '' }, cursor - 1);
-      } else if (down && cursor < stages.length - 1) {
+      } else if (down && cursor < lastConfigured) {
         void move(current, { after: stages[cursor + 1]?.key ?? '' }, cursor + 1);
-      } else if (input === 'T' && cursor > 0) void move(current, 'first', 0);
-      else if (input === 'B' && cursor < stages.length - 1) void move(current, 'last', stages.length - 1);
+      } else if (input === 'T' && cursor > firstConfigured) void move(current, 'first', firstConfigured);
+      else if (input === 'B' && cursor < lastConfigured) void move(current, 'last', lastConfigured);
     },
     { isActive: active && listing && !list.loading },
   );
@@ -130,7 +136,8 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
           rows={stages.map((stage, i) => (
             <Text key={stage.key}>
               {`${i + 1}. `}
-              <StageBadge stage={stage} /> <Text dimColor>{`${stage.key} · ${stage.category}`}</Text>
+              <StageBadge stage={stage} />{' '}
+              <Text dimColor>{`${stage.key} · ${stage.category}${isFixedStage(stage.key) ? ' · fixed' : ''}`}</Text>
             </Text>
           ))}
         />
@@ -142,16 +149,11 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
             fields={[
               { name: 'key', label: 'Key', kind: 'text', required: true },
               { name: 'name', label: 'Name', kind: 'text', required: true },
-              { name: 'category', label: 'Category', kind: 'select', options: StageCategorySchema.options },
               { name: 'position', label: 'Position', kind: 'select', options: positionOptions(current) },
             ]}
-            initialValues={{ category: 'todo', position: positionOptions(current)[0] ?? 'last' }}
+            initialValues={{ position: positionOptions(current)[0] ?? 'last' }}
             onSubmit={async (values) => {
-              const input = {
-                key: String(values.key),
-                name: String(values.name),
-                category: values.category as StageCategory,
-              };
+              const input = { key: String(values.key), name: String(values.name) };
               await services.stages.add(target, input, parsePosition(String(values.position)));
               toast.push('info', `Added ${input.name}`);
               setMode({ kind: 'list' });
@@ -164,16 +166,10 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
         <Box flexDirection="column">
           <Text bold>Edit {mode.stage.key}</Text>
           <Form
-            fields={[
-              { name: 'name', label: 'Name', kind: 'text', required: true },
-              { name: 'category', label: 'Category', kind: 'select', options: StageCategorySchema.options },
-            ]}
-            initialValues={{ name: mode.stage.name, category: mode.stage.category }}
+            fields={[{ name: 'name', label: 'Name', kind: 'text', required: true }]}
+            initialValues={{ name: mode.stage.name }}
             onSubmit={async (values) => {
-              await services.stages.update(target, mode.stage.key, {
-                name: String(values.name),
-                category: values.category as StageCategory,
-              });
+              await services.stages.update(target, mode.stage.key, { name: String(values.name) });
               toast.push('info', `Updated ${mode.stage.key}`);
               setMode({ kind: 'list' });
               list.reload();
@@ -206,9 +202,11 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   );
 }
 
-/** Position choices for a new Stage, relative to the highlighted one. */
+/** Position choices for a new Stage, relative to the highlighted one; nothing goes before Backlog or after Done. */
 function positionOptions(current: Stage | undefined): string[] {
-  return current ? [`after ${current.key}`, `before ${current.key}`, 'first', 'last'] : ['last'];
+  if (!current || current.category === 'done') return ['last', 'first'];
+  if (current.category === 'backlog') return ['first', 'last'];
+  return [`after ${current.key}`, `before ${current.key}`, 'first', 'last'];
 }
 
 function parsePosition(option: string): Position {

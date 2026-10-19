@@ -35,11 +35,11 @@ _Avoid_: tag, category
 ### Board configuration
 
 **Stage**:
-One of the ordered statuses a Story can be in, configured per Board and belonging to exactly one Stage Category; Plugins may give their own records a Stage too.
+One of the ordered statuses a Story can be in, belonging to exactly one Stage Category. Every Board starts with the fixed Backlog Stage and ends with the fixed Done Stage; the Stages between them are configured per Board. Plugins may give their own records a Stage too.
 _Avoid_: status, column, state, lane
 
 **Stage Category**:
-The fixed meaning of a Stage across all Boards: `todo`, `in_progress` or `done`.
+The fixed meaning of a Stage across all Boards: `backlog` (only the Backlog Stage), `board` (every configured Stage) or `done` (only the Done Stage).
 _Avoid_: status type, stage group
 
 **Configuration Cascade**:

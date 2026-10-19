@@ -98,15 +98,12 @@ describe('Epics operations', () => {
       id: 'api',
       name: 'API',
       keyPrefix: 'API',
-      stages: [
-        { key: 'waiting', name: 'Waiting', category: 'todo' },
-        { key: 'released', name: 'Released', category: 'done' },
-      ],
+      stages: [{ key: 'waiting', name: 'Waiting' }],
     });
     await services.stories.create('web', { name: 'Login', plugins: { epics: { epic: 'auth' } } });
     const api = await services.stories.create('api', {
       name: 'Endpoint',
-      stage: 'released',
+      stage: 'done',
       plugins: { epics: { epic: 'auth' } },
     });
     await services.stories.create('api', { name: 'Unlinked' });

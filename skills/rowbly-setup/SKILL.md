@@ -89,9 +89,10 @@ Stages and Custom Fields are configuration, defined at one of two levels:
 1. `global`: `rowbly.config.json`, for every Board that has no list of its own;
 2. `board`: the Board's `board.config.json`.
 
-A Board uses the most specific level that has a list. The lists are **not merged**. With no list
-anywhere, a Board has the built-in Stages `backlog`, `todo`, `in-progress` and `done`, and no Custom
-Fields. See where each list comes from before you change it:
+A Board uses the most specific level that has a list. The lists are **not merged**. Every Board
+starts with the fixed Stage `backlog` and ends with the fixed Stage `done`; a `stages` list holds only
+the Stages between them. With no list anywhere, those are `todo` and `in-progress`, and there are no
+Custom Fields. See where each list comes from before you change it:
 
 ```sh
 rowbly config show --board web --json --no-prompt   # effective Stages and Custom Fields, and their level
@@ -104,19 +105,20 @@ own full copy, and from then on later global changes no longer reach that Board.
 
 ```sh
 # Only on Board web: add a review Stage after in-progress
-rowbly stages add review --name "Review" --category in_progress --after in-progress --board web --level board
-# For every Board that inherits the global list
-rowbly stages add blocked --name "Blocked" --category in_progress --level global
+rowbly stages add review --name "Review" --after in-progress --board web --level board
+# For every Board that inherits the global list (added just before done)
+rowbly stages add blocked --name "Blocked" --level global
 rowbly stages move review --before done --board web
 rowbly stages edit review --name "Code review" --board web
 rowbly stages remove review --move-to in-progress --board web
 ```
 
-- Every Stage has a Stage Category: `todo`, `in_progress` or `done`. Reports and `stories list --open`
-  use the category, not the Stage key.
+- Every Stage has a Stage Category: `backlog` (only `backlog`), `board` (every configured Stage) or
+  `done` (only `done`). There is no `--category` flag; reports and `stories list --open` use the category.
+- `backlog` and `done` are fixed. `stages edit`, `move` and `remove` refuse them (exit 2) and `add`
+  cannot reuse their keys. Place a Stage with `--after backlog` (first) or `--before done` (last).
 - `stages remove` refuses (exit 4) while a Story, or a Task with the Tasks Plugin on, is in the Stage;
-  `--move-to <key>` moves them
-  first. The last Stage cannot be removed.
+  `--move-to <key>` moves them first, and `backlog` or `done` may be the target.
 - With `--json`, stage commands print `{ level, items, affectedBoards }`. Check `affectedBoards` after a
   global change.
 

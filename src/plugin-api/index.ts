@@ -44,11 +44,12 @@ export type {
   Slug,
   Stage,
   StageCategory,
+  StageConfig,
   Story,
   StoryKey,
   Timestamp,
 } from '../schemas';
-export { SlugSchema, StoryKeySchema, TimestampSchema } from '../schemas';
+export { SlugSchema, StoryKeySchema, TimestampSchema, withFixedStages } from '../schemas';
 export type {
   ActionFocus,
   ActionFocusOf,

@@ -45,9 +45,9 @@ Assignees are the Assignees Plugin. While it is off, `--assignee` is an unknown 
 `rowbly assignees` is an unknown command. Do not turn it on to assign one Story: it changes the Data
 Root for everyone, so ask the user first (`rowbly-plugins`).
 
-Pick Stages by **category**, not by name. The Stage to start work is the first Stage whose category is
-`in_progress`, and the Stage to finish is the first whose category is `done`. A Board's Stages might be
-`backlog`, `doing`, `shipped`, with no `in-progress` or `done` key at all.
+Pick Stages by **category**, not by name. Every Board starts with `backlog` (category `backlog`) and
+ends with `done` (category `done`). The Stage to start work is the first Stage whose category is
+`board`; a Board's configured Stages might be `doing`, `review`, with no `todo` or `in-progress` key.
 
 ## 2. Find and read Stories
 
@@ -58,7 +58,7 @@ rowbly stories list --all-boards --label auth --search login --json --no-prompt
 rowbly stories show WEB-42 --json --no-prompt                                  # full Story with its Plugin Data
 ```
 
-- Filters: `--stage <key>`, `--category todo|in_progress|done`, `--open`, `--assignee <handle|me>`
+- Filters: `--stage <key>`, `--category backlog|board|done`, `--open`, `--assignee <handle|me>`
   (Assignees Plugin), `--label`, `--priority P0..P4`, `--search <text>` (name and description, any case). A repeated filter
   matches any of its values.
 - `--sort rank|priority|created|updated|due`. The default is Stage order, then Rank. `priority` puts
@@ -135,14 +135,14 @@ rowbly tasks delete WEB-42.1 --yes --json --no-prompt
 
 1. `rowbly stories show <KEY> --json --no-prompt`, and `rowbly tasks list <KEY> --json --no-prompt` when the
    Tasks Plugin is on. Read the description and Tasks; this is the request.
-2. Start: `rowbly stories move <KEY> <first in_progress Stage> --json --no-prompt`. Add
+2. Start: `rowbly stories move <KEY> <first board Stage> --json --no-prompt`. Add
    `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
    wants it.
    To leave a progress note, use `rowbly comments add <KEY> --body "…"`. Comments is a Plugin and
    is off by default. If `comments` is an unknown command, turn it on as `rowbly-plugins` describes,
    and tell the user, since that changes shared configuration. The author is Me, or `null` when Me is
    not set.
-3. As each part is done: `rowbly tasks move <KEY>.<n> <done Stage> --json --no-prompt`.
+3. As each part is done: `rowbly tasks move <KEY>.<n> done --json --no-prompt`.
 4. Finish: move the Story to the `done` Stage, or to a review Stage if the Board has one and the user
    reviews work. Check: `stories show` reports the expected `stage`, and `tasks list` shows its Tasks done.
 5. Mention the Story Key in branch names and commit messages (`WEB-42: add login form`). Commit the
@@ -158,7 +158,8 @@ highest-numbered Story is deleted, its key goes to the next new Story.
 
 - **HIGH: `--label x` or `--assignee x` on `edit` to add one value.** It replaces the list. Use
   `--add-label` / `--add-assignee`.
-- **HIGH: hard-coding `done` or `in-progress`.** Read the Board's Stages and choose by category.
+- **HIGH: hard-coding `in-progress` or `todo`.** Only `backlog` and `done` exist on every Board. Read the
+  Board's Stages and choose the start Stage by category `board`.
 - **HIGH: Title Case or spaced Labels.** A Label must be lower-kebab-case, or the command exits 2.
 - **MEDIUM: guessing the next key** when creating several Stories. Read `key` from each `create`
   output. Two branches can both create `WEB-7`; `rowbly-doctor` fixes that after the merge.
