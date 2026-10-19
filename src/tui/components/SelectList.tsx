@@ -30,7 +30,7 @@ export interface SelectListProps<T> {
   isActive?: boolean;
 }
 
-/** A keyboard list: `↑/↓`/`j/k` move, `/` filters by label, `esc` clears the filter. */
+/** A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. */
 export function SelectList<T>({
   items,
   onSelect,
