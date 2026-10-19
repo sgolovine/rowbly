@@ -2,7 +2,7 @@ import { type PluginScreenProps, UsageError } from '../../plugin-api';
 import { Box, FORM_KEYS, Form, type FormValues, Loading, Text, useAsync, useKeyHints } from '../../plugin-api/tui';
 import { addComment, editComment, getComment } from './comments';
 
-/** Adds a Comment to a Story or Task (`params.target`), or edits one (`params.id`). */
+/** Adds a Comment to a Story (`params.target`), or edits one (`params.id`). */
 export function CommentFormScreen({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
   // Malformed params fail the load, so a bad route never adds or edits by accident (CQ-134).
   const data = useAsync(async () => {
@@ -47,7 +47,7 @@ export function CommentFormScreen({ params, plugin, ui }: PluginScreenProps<Reco
 function formParams(params: Record<string, unknown>): { target: string; id?: string } {
   const { target, id } = params;
   if (typeof target !== 'string' || target === '') {
-    throw new UsageError('the Comment form needs a Story Key or Task id as its target');
+    throw new UsageError('the Comment form needs a Story Key as its target');
   }
   if (id !== undefined && typeof id !== 'string') throw new UsageError('the Comment id must be a string');
   return { target, id };

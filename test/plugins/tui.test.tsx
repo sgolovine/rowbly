@@ -10,7 +10,7 @@ import { App } from '../../src/tui/app';
 import { createToastStore, type ToastStore, useIsActive } from '../../src/tui/hooks';
 import { loadTuiPlugins, type PluginLoader, withPlugins } from '../../src/tui/loadPlugins';
 import type { RouteParams } from '../../src/tui/router';
-import { FIXED_NOW, fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
 import { fixturePlugins, notes, strict } from './fixtures';
 import { type Entries, entries, pluginRoot, readJsonFile, storyFile } from './helpers';
@@ -51,7 +51,7 @@ describe('Plugin slots in the TUI', () => {
     await app.press('?');
     expect(await waitForFrame(app, 'Keys')).toMatch(/Z\s+Note/);
     await app.press(KEYS.escape);
-    await app.press(KEYS.tab, KEYS.tab);
+    await app.press(KEYS.tab);
     await waitForFrame(app, 'Tab note: hello');
     await app.press('Z');
     frame = await waitForFrame(app, 'Note of WEB-1: hello');
@@ -70,6 +70,38 @@ describe('Plugin slots in the TUI', () => {
     await app.press(KEYS.escape, KEYS.enter);
     const modal = await waitForFrame(app, (f) => f.includes('Board › WEB-1') && f.includes('d delete · Z Note'));
     expect(modal).toContain('Note Z');
+    app.unmount();
+  });
+
+  it("board cards show each Plugin's badge; a badge that throws shows nothing and the board still renders", async () => {
+    const badger = definePlugin({
+      id: 'badger',
+      name: 'Badger',
+      description: '',
+      tui: async (): Promise<PluginTui<unknown>> => ({
+        cardBadge: ({ story, stages }) => (story.key === 'WEB-1' ? `★ ${stages.length} Stages` : null),
+      }),
+    });
+    const broken = definePlugin({
+      id: 'broken',
+      name: 'Broken',
+      description: '',
+      tui: async (): Promise<PluginTui<unknown>> => ({
+        cardBadge: () => {
+          throw new Error('badge bug');
+        },
+      }),
+    });
+    const t = await seed({ notes: true, badger: true, broken: true });
+    const { app } = await openPluginApp(
+      t,
+      [notes, badger, broken],
+      { screen: 'board', params: {} },
+      { local: { version: 1, board: 'web' } },
+    );
+    const frame = await waitForFrame(app, (f) => f.includes('★ 4 Stages') && f.includes('Signup'));
+    expect(frame.match(/★/g)).toHaveLength(1);
+    expect(frame).not.toContain('badge bug');
     app.unmount();
   });
 
@@ -320,16 +352,6 @@ describe('Plugin UI identity (ARCH-40)', () => {
       },
       reason: 'it has two Story tabs labelled "Tab"',
     },
-    {
-      what: 'two Task tabs with one label',
-      tui: {
-        taskTabs: [
-          { label: 'Tab', component: () => null },
-          { label: 'Tab', component: () => null },
-        ],
-      },
-      reason: 'it has two Task tabs labelled "Tab"',
-    },
   ])('$what fails that Plugin to load, and only it', async ({ tui, reason }) => {
     const odd = withTui('odd', tui as PluginTui<unknown>);
     const t = await seed({ notes: true, odd: true });
@@ -365,13 +387,12 @@ describe('Plugin UI identity (ARCH-40)', () => {
 });
 
 describe('Plugin navigation (ARCH-07, DX-24, CQ-58)', () => {
-  /** A Plugin screen whose keys `s`, `t` and `b` open core records through `ui`. */
+  /** A Plugin screen whose keys `s` and `b` open core records through `ui`. */
   function Linker({ ui }: PluginScreenProps<unknown>) {
     const active = useIsActive();
     useInput(
       (input) => {
         if (input === 's') ui.openStory('WEB-1');
-        else if (input === 't') ui.openTask('WEB-1.1');
         else if (input === 'b') ui.openBoard('web');
       },
       { isActive: active },
@@ -388,26 +409,10 @@ describe('Plugin navigation (ARCH-07, DX-24, CQ-58)', () => {
 
   it.each([
     { key: 's', shows: 'Login', crumb: 'Links › WEB-1' },
-    { key: 't', shows: 'Wire it', crumb: 'Links › WEB-1.1' },
     { key: 'b', shows: 'Website', crumb: 'Links › web' },
   ])('ui opens a core record ($crumb) and back returns to the Plugin screen', async ({ key, shows, crumb }) => {
     const t = await pluginRoot({ notes: true, linker: true });
-    await makeStory(t.path, {
-      boardId: 'web',
-      key: 'WEB-1',
-      name: 'Login',
-      nextTaskNumber: 2,
-      tasks: [
-        {
-          id: 'WEB-1.1',
-          name: 'Wire it',
-          description: '',
-          stage: 'backlog',
-          createdAt: FIXED_NOW,
-          updatedAt: FIXED_NOW,
-        },
-      ],
-    });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', name: 'Login' });
     const { app } = await openPluginApp(
       t,
       [notes, linker],

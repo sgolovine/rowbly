@@ -1,15 +1,13 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { StorySchema } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
-import { FIXED_NOW, makeBoard, makeStory } from '../helpers';
+import { makeBoard, makeStory } from '../helpers';
 import { notes } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
 /** The bag of a Plugin that this Rowbly version does not know. */
 const GHOST = { ghost: { deep: { list: [1, 2] }, flag: true } };
-const stamps = { createdAt: FIXED_NOW, updatedAt: FIXED_NOW };
 
 /** Every kind of record, each with a ghost bag; Notes is off. */
 async function bagged() {
@@ -32,17 +30,6 @@ async function bagged() {
     assignees: ['alice', 'bob'],
     customFields: { size: 's' },
     plugins: { ...GHOST, notes: { note: 'kept while off' } },
-    tasks: [
-      {
-        id: 'WEB-1.1',
-        name: 'T',
-        description: '',
-        stage: 'backlog',
-        ...stamps,
-        plugins: GHOST,
-      },
-    ],
-    nextTaskNumber: 2,
   });
   await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1' });
   return t;
@@ -57,9 +44,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     await services.stories.update('WEB-1', { name: 'Renamed', labels: ['x'] });
     await services.stories.move('WEB-1', 'todo');
     await services.stories.rank('WEB-1', 'bottom');
-    await services.tasks.create('WEB-1', { name: 'New' });
-    await services.tasks.update('WEB-1.1', { name: 'T2' });
-    await services.tasks.move('WEB-1.1', 'done');
     await services.boards.update('web', { description: 'Changed' });
     await services.assignees.update('alice', { name: 'Alice A' });
     await services.assignees.remove('bob');
@@ -75,8 +59,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
       stage: 'todo',
       plugins: { ...GHOST, notes: { note: 'kept while off' } },
     });
-    const [task] = StorySchema.parse(story).tasks;
-    expect(task?.plugins).toEqual(GHOST);
 
     const root = await readJsonFile(t, 'rowbly.config.json');
     expect(root.assignees).toEqual([{ handle: 'alice', name: 'Alice A', plugins: GHOST }]);

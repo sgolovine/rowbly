@@ -1,4 +1,4 @@
-import type { PluginStoryTabProps, Task } from '../../plugin-api';
+import type { PluginStoryTabProps } from '../../plugin-api';
 import {
   Box,
   ConfirmDialog,
@@ -15,14 +15,9 @@ import {
 import { deleteComment, readThread } from './comments';
 import { relativeTime } from './relativeTime';
 
-type CommentsTabProps = PluginStoryTabProps<Record<string, unknown>> & { task?: Task };
-
-/**
- * The Thread of a Story, or of a Task on the Task screen, oldest first: `c` add and `e` edit (in the
- * Comment form), `d` delete.
- */
-export function CommentsTab({ story, task, active, plugin, ui }: CommentsTabProps) {
-  const target = task?.id ?? story.key;
+/** The Thread of a Story, oldest first: `c` add and `e` edit (in the Comment form), `d` delete. */
+export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<Record<string, unknown>>) {
+  const target = story.key;
   const isActive = useIsActive() && active;
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);

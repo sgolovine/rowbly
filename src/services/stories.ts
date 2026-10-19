@@ -157,8 +157,6 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
               createdBy: author,
               createdAt: now,
               updatedAt: now,
-              nextTaskNumber: 1,
-              tasks: [],
             }),
           );
         },

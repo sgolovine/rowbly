@@ -113,17 +113,15 @@ describe('story detail', () => {
     app.unmount();
   });
 
-  it('switches tabs and deletes the Story after confirming', async () => {
+  it('deletes the Story after confirming', async () => {
     const t = await setup();
     await makeStory(t.path, { ...web, key: 'WEB-1' });
     const app = await open(t, 'stories');
     await app.press(KEYS.enter);
     await waitForFrame(app, (f) => f.includes('Details'));
     expect(app.lastFrame()).toMatch(/Updated\s+2026-/);
-    await app.press(KEYS.tab);
-    await waitForFrame(app, (f) => f.includes('No Tasks yet'));
-    await app.press(KEYS.tab, 'd');
-    expect(app.lastFrame()).toContain('Delete WEB-1');
+    await app.press('d');
+    await waitForFrame(app, (f) => f.includes('Delete WEB-1'));
     await app.press('y');
     await waitForFrame(app, (f) => f.includes('Deleted WEB-1') && f.includes('No Stories yet'));
     await expect(story(t, 'WEB-1')).rejects.toThrow('not found');

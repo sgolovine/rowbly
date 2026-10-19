@@ -60,8 +60,6 @@ export async function makeStory(
     createdBy: null,
     createdAt: FIXED_NOW,
     updatedAt: FIXED_NOW,
-    nextTaskNumber: 1,
-    tasks: [],
     ...overrides,
   };
   return writeFixture(join(root, 'boards', story.boardId, 'stories', story.key, 'story.json'), StorySchema, story);

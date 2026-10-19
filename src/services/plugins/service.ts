@@ -1,5 +1,5 @@
 import { errorMessage, NotFoundError, PluginError, ValidationError } from '../../core';
-import type { Story, Task } from '../../schemas';
+import type { Story } from '../../schemas';
 import type { Repositories } from '../../storage';
 import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
@@ -73,11 +73,6 @@ function notFound(id: string): NotFoundError {
  */
 export function pluginStoryRows(ctx: RowblyContext, services: Services, story: Story): Promise<PluginRow[]> {
   return pluginRows(ctx, services, (definition, plugin) => definition.storyRows?.(story, plugin));
-}
-
-/** The rows each Plugin that is on adds about a Task (`tasks show`, the TUI Task screen). */
-export function pluginTaskRows(ctx: RowblyContext, services: Services, task: Task, story: Story): Promise<PluginRow[]> {
-  return pluginRows(ctx, services, (definition, plugin) => definition.taskRows?.(task, story, plugin));
 }
 
 async function pluginRows(

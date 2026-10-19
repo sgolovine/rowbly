@@ -24,10 +24,6 @@ _Avoid_: issue, ticket, card
 The permanent, human-typeable identifier of a Story, made of its Board's key prefix and a sequence number (for example `WEB-42`).
 _Avoid_: story id, story slug
 
-**Task**:
-A smaller unit of work inside exactly one Story, with its own title, description and Stage; it has no Assignees of its own and belongs to the Story's Assignees.
-_Avoid_: sub-task, subtask, checklist item
-
 **Priority**:
 A Story's urgency on the fixed scale `P0` (most urgent) to `P4`, or none.
 _Avoid_: severity, importance
@@ -39,7 +35,7 @@ _Avoid_: tag, category
 ### Board configuration
 
 **Stage**:
-One of the ordered statuses a Story or Task can be in, configured per Board and belonging to exactly one Stage Category.
+One of the ordered statuses a Story can be in, configured per Board and belonging to exactly one Stage Category; Plugins may give their own records a Stage too.
 _Avoid_: status, column, state, lane
 
 **Stage Category**:
@@ -93,9 +89,9 @@ A Plugin that ships as part of Rowbly itself.
 _Avoid_: first-party plugin, official plugin, core plugin
 
 **Plugin Data**:
-The values a Plugin keeps under its own name on the Data Root, a Board, Story, Task or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
+The values a Plugin keeps under its own name on the Data Root, a Board, Story or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
 _Avoid_: custom data, extension data
 
 **Action**:
-A key, with a matching button, that a Plugin adds to the TUI wherever the Board, Story or Task it acts on is in focus; an Action that acts on no particular record shows on every screen.
+A key, with a matching button, that a Plugin adds to the TUI wherever the Board or Story it acts on is in focus; an Action that acts on no particular record shows on every screen.
 _Avoid_: button, shortcut, hotkey

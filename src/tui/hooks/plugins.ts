@@ -47,7 +47,6 @@ export function pluginUi(id: string, router: Router, toasts: ToastStore): Plugin
     },
     // Core routes stay private: a Plugin names only the record, never the route (ARCH-07).
     openStory: (key) => router.push('story', { key, title: key }),
-    openTask: (taskId) => router.push('task', { id: taskId, title: taskId }),
     openBoard: (boardId) => router.push('board-detail', { boardId, title: boardId }),
     back: () => router.pop(),
     toast: (message, kind = 'info') => toasts.push(kind, message),

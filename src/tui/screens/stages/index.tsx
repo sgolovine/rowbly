@@ -24,7 +24,7 @@ type Mode =
   | { kind: 'add' }
   | { kind: 'edit'; stage: Stage }
   | { kind: 'confirm-remove'; stage: Stage }
-  | { kind: 'move-to'; stage: Stage; stories: number; tasks: number };
+  | { kind: 'move-to'; stage: Stage; reason: string };
 
 /** Stage management: order, Stage Category badges, add/edit/move/remove, and a level switcher. */
 function StagesScreen({ params }: ScreenProps) {
@@ -82,15 +82,14 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       const moved = await services.stages.remove(target, stage.key, { moveTo });
       toast.push(
         'info',
-        moveTo
-          ? `Removed ${stage.name}; moved ${moved.storiesMoved} Stories and ${moved.tasksMoved} Tasks to ${moveTo}`
-          : `Removed ${stage.name}`,
+        moveTo ? `Removed ${stage.name}; moved ${moved.storiesMoved} Stories to ${moveTo}` : `Removed ${stage.name}`,
       );
       setMode({ kind: 'list' });
       list.reload();
     } catch (err) {
-      if (err instanceof ConflictError && typeof err.details.stories === 'number') {
-        setMode({ kind: 'move-to', stage, stories: err.details.stories, tasks: Number(err.details.tasks ?? 0) });
+      // Core and Plugins mark a Stage still in use with `needsMoveTo`, so the person can pick where to.
+      if (err instanceof ConflictError && err.details.needsMoveTo === true) {
+        setMode({ kind: 'move-to', stage, reason: err.message });
       } else {
         toast.error(err);
         setMode({ kind: 'list' });
@@ -194,7 +193,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       )}
       {mode.kind === 'move-to' && (
         <Box flexDirection="column">
-          <Text>{`${mode.stage.name} is used by ${mode.stories} Stories and ${mode.tasks} Tasks. Move them to:`}</Text>
+          <Text>{`${mode.reason}. Move them to:`}</Text>
           <SelectList
             items={stages
               .filter((s) => s.key !== mode.stage.key)

@@ -1,14 +1,5 @@
 import { z } from 'zod';
-import {
-  isIsoDate,
-  isTimestamp,
-  KEY_PREFIX_RE,
-  LABEL_RE,
-  SLUG_MAX_LENGTH,
-  SLUG_RE,
-  STORY_KEY_RE,
-  TASK_ID_RE,
-} from '../core';
+import { isIsoDate, isTimestamp, KEY_PREFIX_RE, LABEL_RE, SLUG_MAX_LENGTH, SLUG_RE, STORY_KEY_RE } from '../core';
 
 export const SlugSchema = z.string().max(SLUG_MAX_LENGTH).regex(SLUG_RE, 'must be a lower-kebab-case slug');
 export type Slug = z.infer<typeof SlugSchema>;
@@ -20,9 +11,6 @@ export type KeyPrefix = z.infer<typeof KeyPrefixSchema>;
 
 export const StoryKeySchema = z.string().regex(STORY_KEY_RE, 'must be a Story Key such as WEB-42');
 export type StoryKey = z.infer<typeof StoryKeySchema>;
-
-export const TaskIdSchema = z.string().regex(TASK_ID_RE, 'must be a Task id such as WEB-42.1');
-export type TaskId = z.infer<typeof TaskIdSchema>;
 
 export const LabelSchema = z.string().max(SLUG_MAX_LENGTH).regex(LABEL_RE, 'must be lower-kebab-case');
 export type Label = z.infer<typeof LabelSchema>;

@@ -101,26 +101,12 @@ describe('doctor service', () => {
     );
   });
 
-  it('reports unknown Stages on Stories and Tasks', async () => {
+  it('reports unknown Stages on Stories', async () => {
     const { doctor, story } = await setup();
-    await story('WEB-1', {
-      stage: 'gone',
-      nextTaskNumber: 2,
-      tasks: [
-        {
-          id: 'WEB-1.1',
-          name: 'T',
-          description: '',
-          stage: 'nope',
-          createdAt: '2026-10-12T17:21:07.000Z',
-          updatedAt: '2026-10-12T17:21:07.000Z',
-        },
-      ],
-    });
+    await story('WEB-1', { stage: 'gone' });
     const report = await doctor.check();
     expect(report.findings.map((f) => [f.code, f.message, f.fixable])).toEqual([
       ['UNKNOWN_STAGE', 'WEB-1 is in unknown Stage "gone"', false],
-      ['UNKNOWN_STAGE', 'WEB-1.1 is in unknown Stage "nope"', false],
     ]);
     expect(report.findings[0]?.details?.hint).toBe('run `rowbly stories move WEB-1 <stage>`');
   });
@@ -133,8 +119,6 @@ describe('doctor service', () => {
       ...first,
       name: 'Signup',
       createdAt: '2026-10-12T11:00:00.000Z',
-      nextTaskNumber: 2,
-      tasks: [{ ...taskFixture('WEB-4.1') }],
     };
     // `theirs` is the earlier Story here, so the order of the sides must not matter.
     await write(`${BOARD}/stories/WEB-4/story.json`, conflictText(second, first));
@@ -158,7 +142,6 @@ describe('doctor service', () => {
     expect(await read(`${BOARD}/stories/WEB-4/story.json`)).toEqual(first);
     const renumbered = await read(`${BOARD}/stories/WEB-5/story.json`);
     expect(renumbered).toMatchObject({ key: 'WEB-5', name: 'Signup', updatedAt: '2026-10-13T00:00:00.000Z' });
-    expect(renumbered.tasks[0].id).toBe('WEB-5.1');
     expect(renumbered.rank > first.rank).toBe(true);
   });
 
@@ -218,14 +201,6 @@ describe('doctor service', () => {
     const report = await expectFixed(doctor, 'UNKNOWN_FIELD');
     expect(report.findings.map((f) => f.code)).toEqual(['INVALID_FIELD_VALUE', 'MISSING_REQUIRED_FIELD']);
     expect((await read(`${BOARD}/stories/WEB-1/story.json`)).customFields).toEqual({ size: 2.5, team: 'core' });
-  });
-
-  it('moves a task counter that is behind past the highest Task number', async () => {
-    const { doctor, story, read } = await setup();
-    await story('WEB-1', { nextTaskNumber: 2, tasks: [taskFixture('WEB-1.1'), taskFixture('WEB-1.3')] });
-    expect(await codes(doctor)).toEqual(['TASK_COUNTER_BEHIND']);
-    await expectFixed(doctor, 'TASK_COUNTER_BEHIND');
-    expect((await read(`${BOARD}/stories/WEB-1/story.json`)).nextTaskNumber).toBe(4);
   });
 
   it('re-ranks only the Stories that share a Rank, keeping their order', async () => {
@@ -294,18 +269,6 @@ describe('conflictSides', () => {
     expect(conflictSides('<<<<<<< HEAD\nb\n=======\nc')).toBeNull();
   });
 });
-
-function taskFixture(id: string) {
-  return {
-    id,
-    name: `Task ${id}`,
-    description: '',
-    stage: 'backlog',
-    comments: [],
-    createdAt: '2026-10-12T17:21:07.000Z',
-    updatedAt: '2026-10-12T17:21:07.000Z',
-  };
-}
 
 /** A whole-file add/add conflict between two Stories. */
 function conflictText(ours: object, theirs: object): string {

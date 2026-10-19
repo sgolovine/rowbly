@@ -1,6 +1,6 @@
 # rowbly skill spec
 
-Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. It keeps Boards, Stories and Tasks as JSON files in a `.rowbly/` Data Root, which is committed with the code, and offers a full-screen TUI plus a command mode for scripts. These skills teach coding agents to operate Rowbly through command mode.
+Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. It keeps Boards, Stories and, with the Tasks Plugin, Tasks as JSON files in a `.rowbly/` Data Root, which is committed with the code, and offers a full-screen TUI plus a command mode for scripts. These skills teach coding agents to operate Rowbly through command mode.
 
 ## Domains
 
@@ -78,13 +78,13 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 - Registered `rowbly-stories` in `.` (domain `work-tracking`). Developer tasks: Find the Stories to work on and read one in full; Create a Story or Task with valid Assignees, Priority, Labels and Custom Field values; Move a Story or Task through Stages and rank it as work progresses.
 
-- Registered `rowbly-plugins` in `.` (domain `plugins`). Developer tasks: Turn a Built-in Plugin on or off and change its settings; Group Stories into Epics and check Epic Progress; Write Specs and link Stories to Board Specs; Comment on Stories and Tasks.
+- Registered `rowbly-plugins` in `.` (domain `plugins`). Developer tasks: Turn a Built-in Plugin on or off and change its settings; Group Stories into Epics and check Epic Progress; Write Specs and link Stories to Board Specs; Comment on Stories.
 
 - Registered `rowbly-doctor` in `.` (domain `data-integrity`). Developer tasks: Check and repair the Data Root after merging branches; Resolve a Story Key conflict from two branches; Recover when a command exits 6 or a commit was interrupted.
 
 ### Batch 1 — operating Rowbly as an agent (2026-10-18, rowbly 0.1.0, base commit 2e488a8)
 
-- **Scope.** The maintainer asked for skills that tell agents how to operate Rowbly, grounded in `docs/`. Assessed: command-mode usage of every core command, the three Built-in Plugins, and doctor. Not assessed: TUI operation, Plugin authoring, development of Rowbly itself (covered by `docs/development/README.md` and `AGENTS.md`).
+- **Scope.** The maintainer asked for skills that tell agents how to operate Rowbly, grounded in `docs/`. Assessed: command-mode usage of every core command, the four Built-in Plugins, and doctor. Not assessed: TUI operation, Plugin authoring, development of Rowbly itself (covered by `docs/development/README.md` and `AGENTS.md`).
 - **Evidence.** README.md (the user guide and command reference), the reorganized docs (`docs/agents/CONTEXT.md`, `docs/architecture/data-model.md`, `storage.md`, `docs/plugins/README.md`, `built-in.md`), the command sources, and the CLI built from the working tree (`pnpm build`), run in scratch Data Roots. The docs reorganization ran in parallel in another agent thread; skill sources were aligned with its final paths.
 - **Decisions.**
   - Agents use command mode only, always with `--no-prompt`, `--json` for read output, and `--yes` only on user-requested deletions (agent shells may be pseudo-terminals, where Rowbly would prompt).

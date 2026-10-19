@@ -1,15 +1,15 @@
 ---
 name: rowbly-plugins
 description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
-  Plugin settings, or using the Built-in Plugins' commands: Epics (rowbly epics,
-  --epic), Specs (rowbly specs, --spec, Story and Board Specs) and Comments
-  (rowbly comments). Also when a rowbly command is unknown because its Plugin is
+  Plugin settings, or using the Built-in Plugins' commands: Tasks (rowbly tasks),
+  Epics (rowbly epics, --epic), Specs (rowbly specs, --spec, Story and Board
+  Specs) and Comments (rowbly comments). Also when a rowbly command is unknown because its Plugin is
   off, or a Plugin failed to load. Not for writing a new Plugin."
 metadata:
   purpose: >-
     Explain how an agent turns Rowbly's Built-in Plugins on and off, handles
-    Plugin settings and load failures, and uses the Epics, Specs and Comments
-    commands and Story options.
+    Plugin settings and load failures, and uses the Tasks, Epics, Specs and
+    Comments commands and Story options.
   type: sub-skill
   library: rowbly
   library_version: 0.1.0
@@ -20,6 +20,7 @@ sources:
   - docs/plugins/README.md
   - docs/plugins/built-in.md
   - src/commands/plugins.ts
+  - src/plugins/tasks/commands.ts
   - src/plugins/epics/commands.ts
   - src/plugins/specs/commands.ts
   - src/plugins/comments/commands.ts
@@ -29,14 +30,14 @@ sources:
 
 Read `rowbly-cli` first. Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships three Built-in Plugins: **Epics**, **Specs** and
-**Comments**. Each is off until the Data Root turns it on. Turning a Plugin on applies to
+Plugins add optional features. Rowbly ships four Built-in Plugins: **Tasks**, **Epics**, **Specs**
+and **Comments**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
 everyone who uses that Data Root, because the setting is in the committed `rowbly.config.json`.
 
 ## 1. See and change which Plugins are on
 
 ```sh
-rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]
+rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: tasks, epics, specs, comments
 rowbly plugins enable epics --json --no-prompt    # {"id": "epics", "enabled": true}
 rowbly plugins disable epics --json --no-prompt   # keeps its settings and data
 rowbly plugins show epics --json --no-prompt
@@ -63,7 +64,7 @@ JSON by hand. This is the only hand edit the agent rules allow.
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
   ``fix "plugins.<id>" in rowbly.config.json``. Add the setting, then enable it again.
-- Epics, Specs and Comments have no settings today.
+- Tasks, Epics, Specs and Comments have no settings today.
 
 ## 2. Epics: group Stories from any Boards
 
@@ -111,17 +112,17 @@ rowbly specs delete auth-flow --board web --yes --json --no-prompt   # unlinks i
 - If changing links exits 6 because the Story's stored links are invalid, `--reset-specs` (alone or with
   `--spec`) replaces them.
 
-## 4. Comments: notes on Stories and Tasks
+## 4. Comments: notes on Stories
 
 ```sh
 rowbly comments add WEB-42 --body "Blocked on the API token endpoint." --json --no-prompt
-rowbly comments add WEB-42.1 --body-file ./notes.md --json --no-prompt   # on a Task
+rowbly comments add WEB-42 --body-file ./notes.md --json --no-prompt
 rowbly comments list WEB-42 --json --no-prompt                           # oldest first
 rowbly comments edit WEB-42 lcMT5Ekv --body "Unblocked." --json --no-prompt
 rowbly comments delete WEB-42 lcMT5Ekv --yes --json --no-prompt
 ```
 
-- The target is a Story Key or a Task id. A Story's Comments do not include its Tasks' Comments.
+- The target is a Story Key. Tasks have no Comments: comment on their Story.
 - The author is Me when Me is in the roster, otherwise `null`. Comment ids are 8 random characters; get
   them from `list` or `add`.
 - The body comes from exactly one of `--body`, `--body-file <path|->` or `--edit`. An empty body exits 2.

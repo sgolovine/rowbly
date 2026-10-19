@@ -13,7 +13,6 @@ import { createPluginsService } from './plugins/service';
 import { createSetupService } from './setup';
 import { createStagesService } from './stages';
 import { createStoriesService } from './stories';
-import { createTasksService } from './tasks';
 import type { RowblyContext, Services } from './types';
 
 /**
@@ -37,7 +36,7 @@ export {
   validatePluginDefinition,
 } from './plugins/host';
 export { attribute as attributePluginError, type Invocation, invokePlugin, invokePluginSync } from './plugins/invoke';
-export { pluginStoryRows, pluginTaskRows } from './plugins/service';
+export { pluginStoryRows } from './plugins/service';
 export {
   formatTrace,
   setTraceSink,
@@ -71,7 +70,6 @@ export function createServices(ctx: RowblyContext): Services {
     stages: each('stages', createStagesService(ctx, repos, ops)),
     fields: each('fields', createFieldsService(ctx, repos, ops)),
     stories: each('stories', createStoriesService(ctx, repos, ops)),
-    tasks: each('tasks', createTasksService(ctx, repos, ops)),
     // Doctor takes the lock itself, so that it can report a transaction recovery cannot finish.
     doctor: createDoctorService(ctx, repos, ops),
     // `context(id)` only builds the Plugin's context; its reads and operations coordinate themselves.

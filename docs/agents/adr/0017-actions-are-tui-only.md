@@ -1,6 +1,6 @@
 # ADR-0017: Actions are TUI only
 
-**Status:** Accepted. Built.
+**Status:** Accepted. Built. [ADR-0022](0022-tasks-are-a-built-in-plugin.md) removes the Task target: Tasks are a Built-in Plugin.
 
 An Action is a key, with a matching button, that a Plugin adds to the TUI. It names its target, which is a Board, a Story, a Task or nothing, and it shows wherever that target is in focus. For example, a Story Action shows on the board for the selected Story and on the Story screen. It is listed in the footer and the help, and it has a button in the header. A Plugin does not choose screens by name, so it does not depend on core screen names, and new screens show Actions automatically.
 

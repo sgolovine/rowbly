@@ -45,7 +45,6 @@ const COMMAND_GROUPS = [
   'stages',
   'fields',
   'stories',
-  'tasks',
   'doctor',
 ];
 

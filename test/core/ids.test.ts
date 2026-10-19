@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatStoryKey,
-  formatTaskId,
   isSlug,
   KEY_PREFIX_RE,
   keyPrefixFromName,
   parseStoryKey,
-  parseTaskId,
   slugFromName,
   UsageError,
 } from '../../src/core';
@@ -22,26 +20,9 @@ describe('parseStoryKey', () => {
   });
 });
 
-describe('parseTaskId', () => {
-  it('splits a Task id into its Story Key and task number', () => {
-    expect(parseTaskId('web-42.3')).toEqual({
-      id: 'WEB-42.3',
-      storyKey: 'WEB-42',
-      prefix: 'WEB',
-      n: 42,
-      taskNumber: 3,
-    });
-  });
-
-  it.each(['WEB-42', 'WEB-42.0', 'WEB-42.', 'WEB-0.1'])('rejects %j', (input) => {
-    expect(() => parseTaskId(input)).toThrow(UsageError);
-  });
-});
-
 describe('formatters and slugs', () => {
-  it('formats keys and ids', () => {
+  it('formats Story Keys', () => {
     expect(formatStoryKey('WEB', 5)).toBe('WEB-5');
-    expect(formatTaskId('WEB-5', 2)).toBe('WEB-5.2');
   });
 
   it('validates slugs including length', () => {

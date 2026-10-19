@@ -341,7 +341,7 @@ export function BoardScreen({ params }: ScreenProps) {
       {mode === 'confirm-delete' && card && (
         <Modal size="dialog">
           <ConfirmDialog
-            message={`Delete ${card.key} "${card.name}" with its Tasks?`}
+            message={`Delete ${card.key} "${card.name}"?`}
             confirmLabel="Delete"
             cancelLabel="Cancel"
             destructive

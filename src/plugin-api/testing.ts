@@ -11,7 +11,7 @@
 // navigation between screens needs the whole TUI, which is not part of the harness yet. E.g.
 //
 //   const host = await createPluginTestHost({ plugins: [notes] });
-//   const ui = { open: vi.fn(), openStory: vi.fn(), openTask: vi.fn(), openBoard: vi.fn(), back: vi.fn(),
+//   const ui = { open: vi.fn(), openStory: vi.fn(), openBoard: vi.fn(), back: vi.fn(),
 //     toast: vi.fn(), error: vi.fn() };
 //   const plugin = host.context<NotesSettings>('notes');
 //   const { lastFrame, stdin } = render(<NotesScreen params={{}} plugin={plugin} ui={ui} />);

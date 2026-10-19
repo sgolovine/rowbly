@@ -111,7 +111,8 @@ rowbly stages remove review --move-to in-progress --board web
 
 - Every Stage has a Stage Category: `todo`, `in_progress` or `done`. Reports and `stories list --open`
   use the category, not the Stage key.
-- `stages remove` refuses (exit 4) while a Story or Task is in the Stage; `--move-to <key>` moves them
+- `stages remove` refuses (exit 4) while a Story, or a Task with the Tasks Plugin on, is in the Stage;
+  `--move-to <key>` moves them
   first. The last Stage cannot be removed.
 - With `--json`, stage commands print `{ level, items, affectedBoards }`. Check `affectedBoards` after a
   global change.

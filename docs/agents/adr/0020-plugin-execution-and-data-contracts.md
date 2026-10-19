@@ -1,6 +1,6 @@
 # ADR-0020: Plugin execution, data preservation and error contracts
 
-**Status:** Accepted. Built. Amends [ADR-0012](0012-plugins-intercept-service-operations.md)'s error policy (§5). The [Plugin API reference](../../plugins/api.md) documents these contracts for Plugin authors.
+**Status:** Accepted. Built. Amends [ADR-0012](0012-plugins-intercept-service-operations.md)'s error policy (§5). The [Plugin API reference](../../plugins/api.md) documents these contracts for Plugin authors. Since [ADR-0022](0022-tasks-are-a-built-in-plugin.md), `row` covers only `storyRows`.
 
 ADR-0012 gives every operation one pipeline: replacement or core, then transforms, guards, save and reactions. It did not say what each stage may do. Before this decision, a transform could start another operation, and a guard could still write. A Plugin can change a snapshot's `before.key` and so redirect a deletion. A retained Change Set can be used after its stage has ended. An invalid bag looks the same as an absent one, so an ordinary edit can overwrite it. Every expected error a Plugin throws turns into `INTERNAL` with "turn it off" advice. This ADR fixes these contracts. ADR-0019 covers locking, the journal and storage identity.
 
