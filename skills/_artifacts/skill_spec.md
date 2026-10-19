@@ -43,6 +43,7 @@ See `domain_map.yaml` for mechanisms and patterns.
 | rowbly-stories | Predicting the next key | MEDIUM | README.md#stories |
 | rowbly-plugins | Story Spec named by slug | HIGH | docs/plugins/built-in.md#specs |
 | rowbly-plugins | `--spec` replaces links | HIGH | docs/plugins/built-in.md#specs |
+| rowbly-plugins | Second Story Spec without a slug | MEDIUM | docs/plugins/built-in.md#specs |
 | rowbly-plugins | Disabling a Plugin to silence an error | MEDIUM | docs/plugins/README.md |
 | rowbly-doctor | Deleting a Story folder or `.txn/` | CRITICAL | docs/architecture/storage.md |
 | rowbly-doctor | Picking one side of a key conflict | HIGH | README.md#doctor |
@@ -107,3 +108,10 @@ See `domain_map.yaml` for mechanisms and patterns.
 - Updated guidance: rowbly-setup (default Stages, `stages add` examples, the fixed Stages and their placement flags), rowbly-stories (choosing the start Stage by category `board`, `--category backlog|board|done`, finishing in `done`, the hard-coded-key mistake), rowbly-cli (Stage glossary row), rowbly-plugins (Epic Progress counts the `done` Stage). rowbly-doctor needed no change: `SCHEMA_INVALID` and `UNKNOWN_STAGE` still describe old-shape lists and Stories in removed Stages.
 - Superseded decision: "Choose Stages by Stage Category, never by key" from Batch 1 now applies to the configured Stages only. `backlog` and `done` exist on every Board, so moving a Story to `done` by key is correct; the start Stage is still chosen by category (`board`).
 - Checks: `test/skills/agentWorkflows.test.ts` updated (the pick-up workflow adds `doing --after backlog` and expects it as the first `board` Stage). The TUI list view added in the same change is outside the assessed scope (TUI operation is not assessed). Fresh consumer validation of this revision has not been run.
+
+### Behavior change — many Story Specs and the full-screen editor (2026-10-19, ADR-0025)
+
+- A Story can have any number of Story Specs, each `stories/<KEY>/plugins/specs/<slug>.md`. `spec.md` is the Story Spec `spec`, so existing data is read unchanged. `specs list --story <KEY>` lists them; `create|show|edit|delete [slug] --story <KEY>` take an optional slug that defaults to `spec`, and `--story` with `--board` exits 2. Spec results are `{ slug, title, text }` for both kinds (they were `{ title, text }` for a Story Spec).
+- Updated guidance: rowbly-plugins (Story Spec definition, `specs list --story`, named Story Specs, the result shape, a new MEDIUM mistake: a second Story Spec without a slug exits 4). The HIGH "Story Spec named by slug" mistake keeps its correct pattern and adds the slug-after-verb form.
+- No change: rowbly-cli, rowbly-setup, rowbly-stories and rowbly-doctor. Their tracked sources changed only in the TUI section of README.md (the full-screen editor's view and edit modes, list clicks) and the Plugin-folder comment in `docs/architecture/data-model.md`; TUI operation is outside the assessed scope, and they say nothing about Story Specs.
+- Checks: `intent validate skills` passed; `test/skills/agentWorkflows.test.ts` now creates a second, named Story Spec, lists both and asserts the slug-less second create exits 4. The fresh consumer result is recorded in the review evidence for this revision.

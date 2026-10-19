@@ -204,6 +204,8 @@ describe('rowbly-plugins', () => {
       title: 'Login page',
       text: '# Login page\n\nEmail only.',
     });
+    // A second Story Spec needs its own slug: without one, --story means the Story Spec `spec` again.
+    expect((await rowbly('specs', 'create', '--story', story.key, '--title', 'Again', '--json')).exitCode).toBe(4);
     await json('specs', 'create', 'design', '--story', story.key, '--title', 'Design', '--text', 'One form.');
     expect(
       (await json('specs', 'list', '--story', story.key)).map((s: { slug: string; title: string }) => s.slug),
