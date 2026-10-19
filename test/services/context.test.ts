@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { NotFoundError, UsageError } from '../../src/core';
+import { NotFoundError, UsageError, ValidationError } from '../../src/core';
 import type { LocalState } from '../../src/schemas';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, type TempRoot, tempRoot } from '../helpers';
 
 function contextFor(t: TempRoot, local: LocalState = { version: 1 }): RowblyContext {
   return { root: t.root, local, me: null, now: fixedClock().now, newId: fixedIds(), warn: () => {} };
 }
 
-/** Two Boards (web, api) and a roster with ana. */
+/** Two Boards (web, api). */
 async function twoBoards() {
   const t = await tempRoot();
-  await makeRootConfig(t.path, { assignees: [{ handle: 'ana', name: 'Ana' }] });
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
   return t;
@@ -72,14 +71,16 @@ describe('context.use / clearUse / setMe', () => {
     expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'ana' });
   });
 
-  it('setMe validates the handle against the roster', async () => {
+  it('setMe takes any handle, refuses one that is not a slug, and clears with null', async () => {
     const t = await twoBoards();
     const ctx = contextFor(t);
     const { context } = createServices(ctx);
     await context.use('web');
     expect(await context.setMe('ana')).toEqual({ version: 1, board: 'web', me: 'ana' });
     expect(ctx.me).toBe('ana');
-    await expect(context.setMe('bob')).rejects.toThrow(NotFoundError);
+    expect(await context.setMe('bob')).toEqual({ version: 1, board: 'web', me: 'bob' });
+    await expect(context.setMe('Not A Slug')).rejects.toThrow(ValidationError);
+    expect(ctx.me).toBe('bob');
     expect(await context.setMe(null)).toEqual({ version: 1, board: 'web' });
     expect(ctx.me).toBeNull();
   });

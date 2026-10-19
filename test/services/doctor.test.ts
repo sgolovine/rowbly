@@ -3,11 +3,11 @@ import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createServices, type DoctorCode, type RowblyContext } from '../../src/services';
 import { conflictSides } from '../../src/services/doctor';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, tempRoot } from '../helpers';
 
 const BOARD = 'boards/web';
 
-/** Roster: sam; Board `web` (prefix WEB, default stages, one `size` field). */
+/** Board `web` (prefix WEB, default stages, one `size` field). */
 async function setup() {
   const tmp = await tempRoot();
   const clock = fixedClock();
@@ -19,7 +19,6 @@ async function setup() {
     newId: fixedIds(),
     warn: () => {},
   };
-  await makeRootConfig(tmp.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
   await makeBoard(tmp.path, {
     id: 'web',
     keyPrefix: 'WEB',
@@ -54,7 +53,7 @@ async function expectFixed(doctor: Doctor, code: DoctorCode) {
 describe('doctor service', () => {
   it('finds nothing in a healthy Data Root', async () => {
     const { doctor, story } = await setup();
-    await story('WEB-1', { assignees: ['sam'], customFields: { size: 3 } });
+    await story('WEB-1', { labels: ['ui'], customFields: { size: 3 } });
     expect(await doctor.check()).toEqual({ findings: [], fixed: [], summary: { errors: 0, warnings: 0, info: 0 } });
   });
 
@@ -188,16 +187,6 @@ describe('doctor service', () => {
     expect(await read(`${BOARD}/stories/WEB-4/story.json`)).toMatchObject({ key: 'WEB-4', name: 'Late' });
   });
 
-  it('removes unknown Assignees', async () => {
-    const { doctor, story, read } = await setup();
-    await story('WEB-1', { assignees: ['sam', 'bob'] });
-    expect((await doctor.check()).findings).toEqual([
-      expect.objectContaining({ code: 'UNKNOWN_ASSIGNEE', severity: 'warning', fixable: true }),
-    ]);
-    await expectFixed(doctor, 'UNKNOWN_ASSIGNEE');
-    expect((await read(`${BOARD}/stories/WEB-1/story.json`)).assignees).toEqual(['sam']);
-  });
-
   it('strips unknown Custom Fields and only reports invalid or missing values', async () => {
     const { doctor, story, read, tmp } = await setup();
     await makeBoard(tmp.path, {
@@ -252,18 +241,12 @@ describe('doctor service', () => {
 
   it('clears stale Local State entries', async () => {
     const { doctor, read, write } = await setup();
-    await write('local.json', JSON.stringify({ version: 1, board: 'gone', me: 'nobody' }));
+    // A missing Board is cleared; core does not check Me against anything, so it is kept.
+    await write('local.json', JSON.stringify({ version: 1, board: 'gone', me: 'sam' }));
     const report = await doctor.check();
     expect(report.findings.map((f) => [f.code, f.path, f.message])).toEqual([
       ['STALE_LOCAL_STATE', 'local.json', 'current Board "gone" does not exist'],
-      ['STALE_LOCAL_STATE', 'local.json', 'Me "nobody" is not in the roster'],
     ]);
-    await expectFixed(doctor, 'STALE_LOCAL_STATE');
-    expect(await read('local.json')).toEqual({ version: 1 });
-
-    // A missing Board alone is cleared, keeping a valid Me.
-    await write('local.json', JSON.stringify({ version: 1, board: 'gone', me: 'sam' }));
-    expect(await codes(doctor)).toEqual(['STALE_LOCAL_STATE']);
     await expectFixed(doctor, 'STALE_LOCAL_STATE');
     expect(await read('local.json')).toEqual({ version: 1, me: 'sam' });
 

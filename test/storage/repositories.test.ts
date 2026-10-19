@@ -30,16 +30,13 @@ describe('root config and Local State', () => {
   it('reads and writes rowbly.config.json', async () => {
     const t = await tempRoot();
     const repos = createRepositories(t.root);
-    // A config without a roster reads with an empty one.
-    expect(await repos.rootConfig.get()).toEqual({ version: 1, assignees: [] });
+    expect(await repos.rootConfig.get()).toEqual({ version: 1 });
     await repos.rootConfig.put({
       version: 1,
-      assignees: [{ handle: 'sam', name: 'Sam' }],
       customFields: [{ key: 'points', name: 'Points', type: 'number', required: false }],
     });
     const config = await repos.rootConfig.get();
     expect(config.customFields).toHaveLength(1);
-    expect(config.assignees).toEqual([{ handle: 'sam', name: 'Sam' }]);
   });
 });
 

@@ -2,19 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { NotFoundError, UsageError, ValidationError } from '../../src/core';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 
 const web = 'web';
 const api = 'api';
 
 async function setup(opts: { me?: string | null } = {}) {
   const t = await tempRoot();
-  await makeRootConfig(t.path, {
-    assignees: [
-      { handle: 'alice', name: 'Alice' },
-      { handle: 'bob', name: 'Bob' },
-    ],
-  });
   await makeBoard(t.path, {
     id: 'web',
     keyPrefix: 'WEB',
@@ -64,24 +58,11 @@ describe('stories.create', () => {
     expect((await services.stories.list(web, {})).map((s) => s.key)).toEqual(['WEB-1', 'WEB-2']);
   });
 
-  it('sets createdBy to null when Me is not in the roster', async () => {
-    const { t } = await setup();
-    const services = createServices(contextFor(t, 'stranger'));
-    expect((await services.stories.create(web, { name: 'X' })).createdBy).toBeNull();
-  });
-
-  it('rejects unknown Assignees with the valid handles in details', async () => {
-    const { services } = await setup();
-    const err = await services.stories.create(web, { name: 'X', assignees: ['nobody'] }).catch((e) => e);
-    expect(err).toBeInstanceOf(ValidationError);
-    expect(err.details.validHandles).toEqual(['alice', 'bob']);
-  });
-
-  it('resolves "me" in assignees and refuses it when Me is unset', async () => {
+  it('sets createdBy to Me as is, and to null without Me', async () => {
     const { t, services } = await setup();
-    await expect(services.stories.create(web, { name: 'X', assignees: ['me'] })).rejects.toThrow(UsageError);
-    const withMe = createServices(contextFor(t, 'bob'));
-    expect((await withMe.stories.create(web, { name: 'X', assignees: ['me', 'bob'] })).assignees).toEqual(['bob']);
+    expect((await services.stories.create(web, { name: 'X' })).createdBy).toBeNull();
+    const withMe = createServices(contextFor(t, 'stranger'));
+    expect((await withMe.stories.create(web, { name: 'Y' })).createdBy).toBe('stranger');
   });
 
   it('validates the Stage, labels, due date and Custom Fields', async () => {
@@ -122,21 +103,18 @@ describe('stories.create', () => {
 });
 
 describe('stories.update', () => {
-  it('replaces, adds and removes Assignees and Labels and refreshes updatedAt', async () => {
+  it('replaces, adds and removes Labels and refreshes updatedAt', async () => {
     const { t, services, clock } = await setup();
-    await makeStory(t.path, { boardId: web, key: 'WEB-1', assignees: ['alice'], labels: ['ui'] });
+    await makeStory(t.path, { boardId: web, key: 'WEB-1', labels: ['ui'] });
     clock.advance(1000);
-    let story = await services.stories.update('web-1', { addAssignees: ['bob'], addLabels: ['api'] });
-    expect(story).toMatchObject({ assignees: ['alice', 'bob'], labels: ['ui', 'api'] });
+    let story = await services.stories.update('web-1', { addLabels: ['api'] });
+    expect(story).toMatchObject({ labels: ['ui', 'api'] });
     expect(story.updatedAt).toBe('2026-10-12T17:21:08.000Z');
-    story = await services.stories.update('WEB-1', { removeAssignees: ['alice'], removeLabels: ['ui'] });
-    expect(story).toMatchObject({ assignees: ['bob'], labels: ['api'] });
-    story = await services.stories.update('WEB-1', { assignees: [], labels: ['x'] });
-    expect(story).toMatchObject({ assignees: [], labels: ['x'] });
-    await expect(services.stories.update('WEB-1', { assignees: ['bob'], addAssignees: ['alice'] })).rejects.toThrow(
-      UsageError,
-    );
-    await expect(services.stories.update('WEB-1', { addAssignees: ['nobody'] })).rejects.toThrow(ValidationError);
+    story = await services.stories.update('WEB-1', { removeLabels: ['ui'] });
+    expect(story).toMatchObject({ labels: ['api'] });
+    story = await services.stories.update('WEB-1', { labels: ['x'] });
+    expect(story).toMatchObject({ labels: ['x'] });
+    await expect(services.stories.update('WEB-1', { labels: ['y'], addLabels: ['z'] })).rejects.toThrow(UsageError);
   });
 
   it('clears with null and sets/unsets Custom Fields', async () => {
@@ -224,7 +202,6 @@ describe('stories.list', () => {
       key: 'WEB-1',
       name: 'Login page',
       stage: 'todo',
-      assignees: ['alice'],
       labels: ['ui'],
       priority: 'P2',
       dueDate: '2026-11-05',
@@ -238,7 +215,7 @@ describe('stories.list', () => {
       priority: 'P0',
       updatedAt: '2026-10-13T00:00:00.000Z',
     });
-    await makeStory(t.path, { boardId: web, key: 'WEB-3', name: 'Ship', stage: 'done', assignees: ['alice', 'bob'] });
+    await makeStory(t.path, { boardId: web, key: 'WEB-3', name: 'Ship', stage: 'done' });
     await makeStory(t.path, { boardId: api, key: 'API-1', name: 'Endpoint', labels: ['api'], dueDate: '2026-10-20' });
     return env;
   }
@@ -249,8 +226,7 @@ describe('stories.list', () => {
     expect(keys(await services.stories.list(web, {}))).toEqual(['WEB-2', 'WEB-1', 'WEB-3']);
     expect(keys(await services.stories.list(web, { stages: ['todo', 'done'] }))).toEqual(['WEB-1', 'WEB-3']);
     expect(keys(await services.stories.list(web, { category: 'done' }))).toEqual(['WEB-3']);
-    expect(keys(await services.stories.list(web, { open: true, assignees: ['me'] }))).toEqual(['WEB-1']);
-    expect(keys(await services.stories.list(web, { assignees: ['bob'] }))).toEqual(['WEB-3']);
+    expect(keys(await services.stories.list(web, { open: true, labels: ['ui'] }))).toEqual(['WEB-1']);
     expect(keys(await services.stories.list(web, { labels: ['ui'] }))).toEqual(['WEB-1']);
     expect(keys(await services.stories.list(web, { priorities: ['P0', 'P2'] }))).toEqual(['WEB-2', 'WEB-1']);
     expect(keys(await services.stories.list(web, { search: 'session' }))).toEqual(['WEB-2']);
@@ -268,12 +244,6 @@ describe('stories.list', () => {
   it('lists every Board with a null Board', async () => {
     const { services } = await seeded();
     expect(keys(await services.stories.list(null, {}))).toEqual(['API-1', 'WEB-2', 'WEB-1', 'WEB-3']);
-  });
-
-  it('refuses "me" when Me is unset', async () => {
-    const { t } = await seeded();
-    const services = createServices(contextFor(t, null));
-    await expect(services.stories.list(web, { assignees: ['me'] })).rejects.toThrow(UsageError);
   });
 
   it('labelsInUse returns the distinct sorted labels of the Board', async () => {

@@ -9,7 +9,7 @@ const web = 'web';
 async function setup() {
   const t = await tempRoot();
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
-  await makeStory(t.path, { boardId: web, key: 'WEB-1', assignees: [] });
+  await makeStory(t.path, { boardId: web, key: 'WEB-1' });
   const clock = fixedClock();
   const ctx: RowblyContext = {
     root: t.root,

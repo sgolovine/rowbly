@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import {
-  AssigneeSchema,
   BoardConfigSchema,
   CustomFieldDefSchema,
   CustomFieldListSchema,
@@ -41,7 +40,6 @@ const story = {
   description: '# Notes',
   stage: 'todo',
   rank: 'a0',
-  assignees: ['sam'],
   priority: 'P1',
   labels: ['frontend'],
   dueDate: '2026-11-01',
@@ -134,35 +132,8 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   {
     name: 'RowblyConfig',
     schema: RowblyConfigSchema,
-    valid: [
-      { version: 1 },
-      { version: 1, stages: [...DEFAULT_STAGES], customFields: [] },
-      { version: 1, assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }] },
-    ],
-    invalid: [
-      {},
-      { version: 2 },
-      { version: 1, stages: [] },
-      {
-        version: 1,
-        assignees: [
-          { handle: 'sam', name: 'Sam' },
-          { handle: 'sam', name: 'Sam 2' },
-        ],
-      },
-    ],
-  },
-  {
-    name: 'Assignee',
-    schema: AssigneeSchema,
-    valid: [
-      { handle: 'sam', name: 'Sam' },
-      { handle: 'sam', name: 'Sam', email: 'sam@example.com' },
-    ],
-    invalid: [
-      { handle: 'Sam', name: 'Sam' },
-      { handle: 'sam', name: 'Sam', email: 'not-an-email' },
-    ],
+    valid: [{ version: 1 }, { version: 1, stages: [...DEFAULT_STAGES], customFields: [] }],
+    invalid: [{}, { version: 2 }, { version: 1, stages: [] }],
   },
   {
     name: 'BoardConfig',
@@ -230,8 +201,10 @@ describe('schema defaults', () => {
     expect(StorySchema.parse(st).description).toBe('');
   });
 
-  it('defaults the Assignee roster to empty', () => {
-    expect(RowblyConfigSchema.parse({ version: 1 })).toEqual({ version: 1, assignees: [] });
+  it('drops the roster and Story Assignees of an older Rowbly (the Assignees Plugin keeps its own)', () => {
+    const roster = [{ handle: 'sam', name: 'Sam' }];
+    expect(RowblyConfigSchema.parse({ version: 1, assignees: roster })).toEqual({ version: 1 });
+    expect(StorySchema.parse({ ...story, assignees: ['sam'] })).not.toHaveProperty('assignees');
   });
 
   it('defines the built-in default stages', () => {

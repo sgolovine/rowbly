@@ -3,18 +3,12 @@ import { readdir } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { StorySchema } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
-import { makeBoard, makeRootConfig, makeStory, runCli, tempRoot } from '../helpers';
+import { makeBoard, makeStory, runCli, tempRoot } from '../helpers';
 
 const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeRootConfig(t.path, {
-    assignees: [
-      { handle: 'alice', name: 'Alice' },
-      { handle: 'bob', name: 'Bob' },
-    ],
-  });
   await makeBoard(t.path, {
     id: 'web',
     keyPrefix: 'WEB',
@@ -43,8 +37,6 @@ describe('rowbly stories', () => {
       'create',
       '--name',
       'First',
-      '--assignee',
-      'alice,bob',
       '--label',
       'ui',
       '--label',
@@ -63,7 +55,6 @@ describe('rowbly stories', () => {
     expect(JSON.parse(result.stdout)).toMatchObject({
       key: 'WEB-1',
       stage: 'backlog',
-      assignees: ['alice', 'bob'],
       labels: ['ui', 'api'],
       priority: 'P1',
       dueDate: '2026-11-01',
@@ -71,17 +62,6 @@ describe('rowbly stories', () => {
       description: 'Some *markdown*',
     });
     expect(await readdir(`${t.path}/boards/web/stories`)).toEqual(['WEB-1']);
-  });
-
-  it('exits 2 for an unknown Assignee and lists the valid handles in details', async () => {
-    const { cli } = await setup();
-    const result = await cli('stories', 'create', '--name', 'X', '--assignee', 'nobody', '--json');
-    expect(result.exitCode).toBe(2);
-    const { error } = JSON.parse(result.stderr);
-    expect(error.code).toBe('VALIDATION');
-    expect(error.details.validHandles).toEqual(['alice', 'bob']);
-    const human = await cli('stories', 'create', '--name', 'X', '--assignee', 'nobody');
-    expect(human.stderr).toContain('valid handles: alice, bob');
   });
 
   it('exits 2 for an invalid number field or a missing required field', async () => {
@@ -130,16 +110,11 @@ describe('rowbly stories', () => {
     expect((await cli('stories', 'move', 'WEB-9', 'done')).exitCode).toBe(3);
   });
 
-  it('list --open --assignee me works with Me set and exits 2 without it', async () => {
+  it('list --open leaves out Stories in a done Stage', async () => {
     const { t, cli } = await setup();
-    await makeStory(t.path, { ...web, key: 'WEB-1', assignees: ['alice'] });
-    await makeStory(t.path, { ...web, key: 'WEB-2', assignees: ['alice'], stage: 'done' });
-    await makeStory(t.path, { ...web, key: 'WEB-3', assignees: ['bob'] });
-    const without = await cli('stories', 'list', '--open', '--assignee', 'me');
-    expect(without.exitCode).toBe(2);
-    expect(without.stderr).toContain('Me is not set');
-    await createRepositories(t.root).localState.put({ version: 1, me: 'alice' });
-    const result = await cli('stories', 'list', '--open', '--assignee', 'me', '--json');
+    await makeStory(t.path, { ...web, key: 'WEB-1' });
+    await makeStory(t.path, { ...web, key: 'WEB-2', stage: 'done' });
+    const result = await cli('stories', 'list', '--open', '--json');
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-1']);
   });
@@ -152,14 +127,13 @@ describe('rowbly stories', () => {
       name: 'Login',
       stage: 'in-progress',
       priority: 'P1',
-      assignees: ['alice'],
       labels: ['ui'],
       dueDate: '2026-11-01',
     });
     await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Other' });
     const table = await cli('stories', 'list');
     expect(table.stdout).toContain('KEY    NAME   STAGE');
-    expect(table.stdout).toMatch(/WEB-1 +Login +● In Progress +P1 +alice +ui +2026-11-01/);
+    expect(table.stdout).toMatch(/WEB-1 +Login +● In Progress +P1 +ui +2026-11-01/);
     const p1 = await cli('stories', 'list', '--priority', 'p1', '--json');
     expect(JSON.parse(p1.stdout).map((s: { key: string }) => s.key)).toEqual(['WEB-1']);
     expect((await cli('stories', 'list', '--sort', 'weird')).exitCode).toBe(2);
@@ -222,21 +196,20 @@ describe('rowbly stories', () => {
     await makeStory(t.path, {
       ...web,
       key: 'WEB-1',
-      assignees: ['alice'],
       labels: ['ui'],
       priority: 'P2',
       dueDate: '2026-11-01',
       customFields: { estimate: 1 },
     });
     const edit = (...args: string[]) => cli('stories', 'edit', 'WEB-1', ...args, '--json');
-    let story = JSON.parse((await edit('--add-assignee', 'bob', '--remove-label', 'ui', '--add-label', 'x')).stdout);
-    expect(story).toMatchObject({ assignees: ['alice', 'bob'], labels: ['x'] });
+    let story = JSON.parse((await edit('--remove-label', 'ui', '--add-label', 'x')).stdout);
+    expect(story).toMatchObject({ labels: ['x'] });
     story = JSON.parse((await edit('--no-priority', '--no-due', '--unset-field', 'estimate', '--name', 'New')).stdout);
     expect(story).toMatchObject({ name: 'New', priority: null, dueDate: null, customFields: {} });
-    story = JSON.parse((await edit('--assignee', 'bob', '--field', 'estimate=8', '--description-file', '-')).stdout);
-    expect(story).toMatchObject({ assignees: ['bob'], customFields: { estimate: 8 } });
+    story = JSON.parse((await edit('--label', 'y', '--field', 'estimate=8', '--description-file', '-')).stdout);
+    expect(story).toMatchObject({ labels: ['y'], customFields: { estimate: 8 } });
     expect((await cli('stories', 'edit', 'WEB-1')).stderr).toContain('nothing to change');
-    expect((await cli('stories', 'edit', 'WEB-1', '--assignee', 'bob', '--add-assignee', 'alice')).exitCode).toBe(2);
+    expect((await cli('stories', 'edit', 'WEB-1', '--label', 'y', '--add-label', 'z')).exitCode).toBe(2);
     expect((await cli('stories', 'edit', 'WEB-1', '--due', 'tomorrow')).exitCode).toBe(2);
   });
 
