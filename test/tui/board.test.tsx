@@ -9,7 +9,15 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { screens } from '../../src/tui/screens';
-import { columnLayout, follow, groupColumns, moveCard, swapCard, truncate } from '../../src/tui/screens/board/layout';
+import {
+  columnLayout,
+  follow,
+  groupColumns,
+  listRows,
+  moveCard,
+  swapCard,
+  truncate,
+} from '../../src/tui/screens/board/layout';
 import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
 
@@ -405,6 +413,135 @@ describe('board view', () => {
   });
 });
 
+describe('list view', () => {
+  /** The frame's line that holds `text`. */
+  const lineWith = (app: Rendered, text: string) => frameLines(app).find((line) => line.includes(text)) ?? '';
+
+  it('starts with the Stages side by side; v shows Backlog, Board and Done sections with each Story and its Stage', async () => {
+    const t = await seed();
+    const app = await open(t);
+    expect(app.lastFrame()).toContain('● Backlog (3)');
+    expect(lineWith(app, 'Stages │ List')).toContain('v');
+    await app.press('v');
+    const frame = await waitForFrame(app, '▾ Backlog (3)');
+    expect(frame).toContain('▾ Board (2)');
+    expect(frame).toContain('▾ Done (1)');
+    expect(frame).not.toContain('● Backlog (3)');
+    expect(lineWith(app, 'WEB-4 Dark mode')).toContain('● Todo');
+    expect(lineWith(app, 'WEB-5 Fix footer')).toContain('● Doing');
+    expect(lineWith(app, 'WEB-6 Release v1')).toContain('● Done');
+    // Sections in order; inside one, Stage order and then Rank order.
+    const order = ['Backlog (3)', 'WEB-1', 'WEB-2', 'WEB-3', 'Board (2)', 'WEB-4', 'WEB-5', 'Done (1)', 'WEB-6'];
+    const at = order.map((text) => frame.indexOf(text));
+    expect(at).toEqual([...at].sort((a, b) => a - b));
+    expect(frame).toContain('v Stages view');
+    await app.press('v');
+    await waitForFrame(app, '● Backlog (3)');
+    app.unmount();
+  });
+
+  it('folds and unfolds a section with enter on its heading, and with ← and →', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press('v');
+    // The list keeps the highlighted Story; the heading is the line above it.
+    await waitForFrame(app, (f) => /› +WEB-1 Login/.test(f));
+    await app.press('k');
+    await waitForFrame(app, (f) => f.includes('› ▾ Backlog (3)'));
+    await app.press(KEYS.enter);
+    let frame = await waitForFrame(app, '▸ Backlog (3)');
+    expect(frame).not.toContain('WEB-1');
+    // The next line is now the Board heading.
+    await app.press('j', KEYS.left);
+    frame = await waitForFrame(app, '› ▸ Board (2)');
+    expect(frame).not.toContain('WEB-4');
+    expect(frame).toContain('WEB-6');
+    await app.press(KEYS.right, 'k', ' ');
+    frame = await waitForFrame(app, (f) => f.includes('› ▾ Backlog (3)') && f.includes('▾ Board (2)'));
+    expect(frame).toContain('WEB-1');
+    expect(frame).toContain('WEB-4');
+    app.unmount();
+  });
+
+  it('opens, edits and deletes the highlighted Story, and adds to its Stage', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press('v');
+    await waitForFrame(app, (f) => /› +WEB-1 Login/.test(f));
+    // Past the Board heading to its first Story.
+    await app.press(...Array(4).fill('j'));
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f));
+    await app.press(KEYS.enter);
+    await waitForFrame(app, ' Details ');
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f) && f.includes('v Stages view'));
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('New Story on web') && f.includes('‹ todo ›'));
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f) && f.includes('v Stages view'));
+    await app.press('d');
+    await waitForFrame(app, 'Delete WEB-4 "Dark mode"?');
+    await app.press('y');
+    await waitForFrame(app, (f) => f.includes('Deleted WEB-4') && f.includes('▾ Board (1)'));
+    await expect(story(t, 'WEB-4')).rejects.toThrow();
+    app.unmount();
+  });
+
+  it('keeps the highlighted Story when switching views, and the view when switching Boards', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press(KEYS.right);
+    await waitForFrame(app, '┃ WEB-4');
+    await app.press('v');
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f));
+    await app.press('j', 'v');
+    await waitForFrame(app, (f) => f.includes('┃ WEB-5') && f.includes('● Doing (1)'));
+    await app.press('v', ']');
+    await waitForFrame(app, (f) => f.includes('API api') && f.includes('▾ Backlog (0)'));
+    app.unmount();
+  });
+
+  it('scrolls a long list to follow the cursor', async () => {
+    const t = await seed();
+    const app = await open(t, { rows: 10 });
+    await app.press('v');
+    let frame = await waitForFrame(app, (f) => /› +WEB-1 Login/.test(f) && f.includes('more'));
+    expect(frame).not.toContain('Release v1');
+    await app.press(...Array(7).fill('j'));
+    frame = await waitForFrame(app, (f) => /› +WEB-6 Release v1/.test(f));
+    expect(frame).toMatch(/↑ \d+ more/);
+    expect(frame).not.toContain('▾ Backlog');
+    app.unmount();
+  });
+
+  it('switches view with a click on the header, and folds a section with clicks on its heading', async () => {
+    const t = await seed();
+    const mouse = new EventEmitter();
+    const app = await open(t, { mouse });
+    const click = async (text: string) => {
+      const lines = frameLines(app);
+      const y = lines.findIndex((line) => line.includes(text));
+      const x = lines[y]?.indexOf(text) ?? -1;
+      mouse.emit('mouse', { kind: 'press', x, y });
+      mouse.emit('mouse', { kind: 'release', x, y });
+      await tick();
+    };
+    // Click targets register in effects, which can trail the first frame on a busy machine.
+    await tick(200);
+    await click('List');
+    await waitForFrame(app, '▾ Backlog (3)');
+    await tick(200);
+    // The first click selects the heading, the second folds it.
+    await click('Done (1)');
+    await waitForFrame(app, '› ▾ Done (1)');
+    await click('Done (1)');
+    await waitForFrame(app, '▸ Done (1)');
+    await click('Stages');
+    await waitForFrame(app, '● Backlog (3)');
+    app.unmount();
+  });
+});
+
 describe('home', () => {
   it('opens straight to the board view when a Board is in context', async () => {
     const t = await seed();
@@ -458,6 +595,23 @@ describe('board layout', () => {
     ]);
     expect(swapCard(columns, 0, 1, -1).map((col) => col.map((s) => s.key))).toEqual([['B', 'A'], ['C']]);
     expect(swapCard(columns, 0, 0, -1)).toBe(columns);
+  });
+
+  it('lists Stories by section in Stage order, leaving out the Stories of a folded section', () => {
+    const stages = [
+      { key: 'backlog', name: 'Backlog', category: 'backlog' as const },
+      { key: 'b', name: 'B', category: 'board' as const },
+      { key: 'c', name: 'C', category: 'board' as const },
+      { key: 'done', name: 'Done', category: 'done' as const },
+    ];
+    const s = (key: string, stage: string) => ({ key, stage }) as never;
+    const columns = groupColumns(stages, [s('A', 'c'), s('B', 'backlog'), s('C', 'b'), s('D', 'done')]);
+    const text = (folded: string[]) =>
+      listRows(stages, columns, new Set(folded as never[])).map((r) =>
+        r.kind === 'section' ? `${r.title}:${r.count}${r.collapsed ? '+' : ''}` : `${r.story.key}@${r.stage.key}`,
+      );
+    expect(text([])).toEqual(['Backlog:1', 'B@backlog', 'Board:2', 'C@b', 'A@c', 'Done:1', 'D@done']);
+    expect(text(['board'])).toEqual(['Backlog:1', 'B@backlog', 'Board:2+', 'Done:1', 'D@done']);
   });
 
   it('truncates text', () => {

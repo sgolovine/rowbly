@@ -368,6 +368,8 @@ Run `rowbly` with no command in a terminal to open the full-screen app; global f
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
+The header's **Stages | List** switch (or `v` on the board) changes how the board shows its Stories. **Stages** is the view above, and every launch starts with it. **List** shows one line per Story, with its Story Key, name and Stage, in three sections: **Backlog** (the Backlog Stage), **Board** (every Stage between Backlog and Done, in Stage order) and **Done**. Inside a section, Stories are in Stage order, then Rank order. A section folds and unfolds, and a long list scrolls up and down. The choice lasts until you quit and applies to every Board; the highlighted Story stays highlighted when you switch.
+
 Screens and dialogs open in centred modals that fit their content from the first frame, up to the available height. Longer content is clipped while the modal's title and key hints stay visible.
 
 ### Keys on every screen
@@ -390,7 +392,8 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 
 | Screen | Keys |
 | --- | --- |
-| Board | `←`/`→` previous / next Stage, `↑`/`↓` previous / next Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage (bottom), `shift+↑`/`shift+↓` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Labels, Priorities, text and the filters Plugins add (several values per field), `c` clear the filter, `r` reload |
+| Board | `←`/`→` previous / next Stage, `↑`/`↓` previous / next Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage (bottom), `shift+↑`/`shift+↓` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Labels, Priorities, text and the filters Plugins add (several values per field), `c` clear the filter, `v` list view, `r` reload |
+| Board (list view) | `↑`/`↓` previous / next line, `enter` open the Story or fold / unfold the section, `space` fold / unfold, `←`/`→` fold / unfold, `n` new Story in the highlighted Story's Stage (on a section heading: its first Stage), `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` Stages view, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Labels, Priorities, text, Stage Category, open only and the filters Plugins add, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks (Tasks Plugin) | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
@@ -398,7 +401,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Assignees (Plugin) | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
-| Stages | `n` add, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last, `d` remove (asks where to move Stories still in it), `l` switch level |
+| Stages | `n` add, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
 | Fields | `n` add, `e` edit, `d` remove, `l` switch level |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` set Me, `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
