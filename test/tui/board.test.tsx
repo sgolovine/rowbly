@@ -430,6 +430,11 @@ describe('list view', () => {
     expect(lineWith(app, 'WEB-4 Dark mode')).toContain('● Todo');
     expect(lineWith(app, 'WEB-5 Fix footer')).toContain('● Doing');
     expect(lineWith(app, 'WEB-6 Release v1')).toContain('● Done');
+    // A dim rule below each line spaces the list apart.
+    const lines = frameLines(app);
+    const story = lines.findIndex((line) => line.includes('WEB-4 Dark mode'));
+    expect(lines[story + 1]).toMatch(/│─{20,}│$/);
+    expect(lines[story + 2]).toContain('WEB-5 Fix footer');
     // Sections in order; inside one, Stage order and then Rank order.
     const order = ['Backlog (3)', 'WEB-1', 'WEB-2', 'WEB-3', 'Board (2)', 'WEB-4', 'WEB-5', 'Done (1)', 'WEB-6'];
     const at = order.map((text) => frame.indexOf(text));

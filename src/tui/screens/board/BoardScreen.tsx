@@ -43,6 +43,7 @@ import {
   follow,
   GUTTER_WIDTH,
   groupColumns,
+  LIST_ROW_HEIGHT,
   type ListRow,
   listRows,
   moveCard,
@@ -366,7 +367,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const height = (room.height ?? termRows - 3) - (inHeader ? 0 : 2);
   const size = cardsPerColumn(height);
   // The list view's scroll markers take a line above and below it.
-  const listSize = Math.max(1, height - 2);
+  const listSize = Math.max(1, Math.floor((height - 2) / LIST_ROW_HEIGHT));
   firstListRow.current = follow(firstListRow.current, listAt, listSize, rows.length);
 
   return (
