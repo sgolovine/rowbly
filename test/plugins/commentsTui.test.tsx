@@ -28,7 +28,6 @@ async function open(screen: string, params: RouteParams, plugins?: Record<string
     boardId: 'web',
     key: 'WEB-1',
     name: 'Login',
-    assignees: ['alice'],
     nextTaskNumber: 2,
     tasks: [{ ...TASK, plugins }],
     plugins,
@@ -94,7 +93,7 @@ describe('Comments TUI', () => {
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Old'));
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('alice (from the Story)') && /Comments\s+0/.test(f));
+    await waitForFrame(app, (f) => /Story\s+WEB-1 Login/.test(f) && /Comments\s+0/.test(f));
     // Comments are on their own tab, so `e` and `d` on Details act on the Task.
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('No Comments yet. Press c to add one.'));

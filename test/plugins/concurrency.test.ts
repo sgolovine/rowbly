@@ -90,11 +90,10 @@ describe('two CLI processes at once', () => {
 
   it('root config changes keep both changes', async () => {
     const t = await pluginRoot({ barrier: true });
-    await together(t, ['assignees', 'add', 'bob', '--name', 'Bob'], ['assignees', 'add', 'carol', '--name', 'Carol']);
-    const handles = ((await readJsonFile(t, 'rowbly.config.json')).assignees as { handle: string }[]).map(
-      (a) => a.handle,
-    );
-    expect(handles.sort()).toEqual(['alice', 'bob', 'carol']);
+    const add = (key: string) => ['stages', 'add', key, '--level', 'global', '--name', key, '--category', 'todo'];
+    await together(t, add('review'), add('qa'));
+    const keys = ((await readJsonFile(t, 'rowbly.config.json')).stages as { key: string }[]).map((s) => s.key);
+    expect(keys).toEqual(expect.arrayContaining(['review', 'qa']));
   }, 60_000);
 
   it('Plugin file edits keep both changes', async () => {

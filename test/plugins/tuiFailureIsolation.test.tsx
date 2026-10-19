@@ -110,7 +110,7 @@ describe('Plugin field isolation', () => {
     expect(frame).toContain('stored data kept');
     expect(frame).toContain('Note');
     // Change the name and the healthy Plugin's note.
-    await app.press(KEYS.end, ' again', ...Array(7).fill(KEYS.tab), KEYS.end, '!', KEYS.ctrlS);
+    await app.press(KEYS.end, ' again', ...Array(6).fill(KEYS.tab), KEYS.end, '!', KEYS.ctrlS);
     await waitForFrame(app, 'Updated WEB-1');
     const saved = await readJsonFile(t, storyFile('WEB-1'));
     expect(saved.name).toBe('Login again');
@@ -137,7 +137,7 @@ describe('Plugin field isolation', () => {
     const t = await seed({ notes: true, flaky: true });
     const { app, toasts } = await open(t, [notes, flaky({ input: true })], 'story-form', { key: 'WEB-1' });
     await waitForFrame(app, 'Flaky');
-    await app.press(KEYS.end, ' again', ...Array(8).fill(KEYS.tab), 'y', KEYS.ctrlS);
+    await app.press(KEYS.end, ' again', ...Array(7).fill(KEYS.tab), 'y', KEYS.ctrlS);
     await waitForFrame(app, 'Plugin "flaky" failed in the field of stories.update: cannot convert');
     const saved = await readJsonFile(t, storyFile('WEB-1'));
     expect(saved.name).toBe('Login');
@@ -146,8 +146,8 @@ describe('Plugin field isolation', () => {
   });
 
   it.each([
-    { screen: 'stories', tabs: 9 },
-    { screen: 'board', tabs: 5 },
+    { screen: 'stories', tabs: 7 },
+    { screen: 'board', tabs: 3 },
   ])('filters on $screen work without a Plugin whose filter fields fail', async ({ screen, tabs }) => {
     const t = await seed({ notes: true, flaky: true });
     const { app, toasts } = await open(t, [notes, flaky({ fields: true })], screen, { boardId: 'web' });
@@ -169,7 +169,7 @@ describe('Plugin field isolation', () => {
     const { app, toasts } = await open(t, [notes, flaky(how)], 'stories', { boardId: 'web' });
     await waitForFrame(app, 'WEB-2');
     // Notes' "With a note", then Flaky's "Flaky only".
-    await app.press('/', ...Array(9).fill(KEYS.tab), ' ', KEYS.tab, ' ', KEYS.ctrlS);
+    await app.press('/', ...Array(7).fill(KEYS.tab), ' ', KEYS.tab, ' ', KEYS.ctrlS);
     const frame = await waitForFrame(app, `Plugin "flaky" failed in the ${stage} stage: ${message}`);
     expect(frame).toContain('noted');
     await waitForFrame(app, (f) => f.includes('WEB-1') && !f.includes('WEB-2'));

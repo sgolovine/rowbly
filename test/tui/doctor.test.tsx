@@ -42,17 +42,17 @@ describe('doctor screen', () => {
 
   it('lists findings and fixes them with f', async () => {
     const { tmp, render } = await setup();
-    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', assignees: ['bob'] });
+    await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', customFields: { size: 's' } });
     await makeStory(tmp.path, { key: 'WEB-2', boardId: 'web', rank: 'a1', stage: 'gone' });
     const app = render();
     await waitForFrame(app, '1 error, 1 warning, 0 info · 1 fixable, press f');
     const frame = await waitForFrame(app, 'f fix');
     expect(frame).toContain('error   UNKNOWN_STAGE');
-    expect(frame).toContain('warning UNKNOWN_ASSIGNEE');
+    expect(frame).toContain('warning UNKNOWN_FIELD');
 
     await app.press('f');
     const fixed = await waitForFrame(app, 'Fixed (1)');
-    expect(fixed).toContain('removed bob from WEB-1');
+    expect(fixed).toContain('stripped unknown Custom Field "size" from WEB-1');
     expect(fixed).toContain('1 error, 0 warnings, 0 info');
     expect(fixed).not.toContain('press f');
     app.unmount();
@@ -65,8 +65,8 @@ describe('doctor screen', () => {
     await waitForFrame(app, '● Backlog (0)');
     await app.press(',');
     await waitForFrame(app, 'Board: ');
-    // Doctor is the last global section.
-    await app.press(...Array(5).fill('j'), KEYS.enter);
+    // Doctor is the fifth global section.
+    await app.press(...Array(4).fill('j'), KEYS.enter);
     await waitForFrame(app, 'No problems found');
 
     await makeStory(tmp.path, { key: 'WEB-1', boardId: 'web', stage: 'gone' });

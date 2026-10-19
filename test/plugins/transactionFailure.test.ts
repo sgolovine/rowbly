@@ -9,13 +9,15 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { DataIntegrityError, ValidationError } from '../../src/core';
 import { definePlugin } from '../../src/plugin-api';
+import { assignees } from '../../src/plugins/assignees';
+import { removeAssignee } from '../../src/plugins/assignees/service';
 import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic } from '../../src/plugins/epics/service';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec } from '../../src/plugins/specs/specs';
 import { CoreChangeSet } from '../../src/services/plugins/changeSet';
 import { createRepositories, pathExists, recoverTransactions } from '../../src/storage';
-import { makeStory, type TempRoot } from '../helpers';
+import { assigned, makeRoster, makeStory, type TempRoot } from '../helpers';
 import { injectFaults, snapshotTree } from '../storage/engineHelpers';
 import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
@@ -30,22 +32,24 @@ const ASSIGNEES = [
   { handle: 'bob', name: 'Bob' },
 ];
 
+/** A Data Root with the Assignees Plugin and `others` on, and WEB-1…3 assigned to bob. */
+async function bobRoot(others: Record<string, true> = {}, extra: (n: number) => object = () => ({})) {
+  const t = await pluginRoot({ assignees: true, ...others });
+  await makeRoster(t.path, ASSIGNEES);
+  for (const n of [1, 2, 3]) {
+    const bag = assigned('bob').plugins;
+    await makeStory(t.path, { boardId: 'web', key: `WEB-${n}`, rank: `a${n}`, plugins: { ...bag, ...extra(n) } });
+  }
+  return t;
+}
+
 const scenarios: Scenario[] = [
   {
     name: 'assignee removal',
     async setup() {
-      const t = await pluginRoot({}, { assignees: ASSIGNEES });
-      for (const n of [1, 2, 3]) {
-        await makeStory(t.path, {
-          boardId: 'web',
-          key: `WEB-${n}`,
-          rank: `a${n}`,
-          assignees: ['bob'],
-          plugins: { retired: { keep: n } },
-        });
-      }
-      const { services } = await withPlugins(t, []);
-      return { t, run: () => services.assignees.remove('bob') };
+      const t = await bobRoot({}, (n) => ({ retired: { keep: n } }));
+      const { services } = await withPlugins(t, [assignees]);
+      return { t, run: () => removeAssignee(services.plugins.context('assignees'), 'bob') };
     },
   },
   {
@@ -155,14 +159,11 @@ describe.each(scenarios)('$name', (scenario) => {
 
 describe('final-plan validation (r03 case A)', () => {
   it('an invalid record anywhere in the plan writes nothing', async () => {
-    const t = await pluginRoot({}, { assignees: ASSIGNEES });
-    for (const n of [1, 2, 3]) {
-      await makeStory(t.path, { boardId: 'web', key: `WEB-${n}`, rank: `a${n}`, assignees: ['bob'] });
-    }
+    const t = await bobRoot();
     const before = await snapshotTree(t.path);
     const changes = new CoreChangeSet(t.root, createRepositories(t.root));
-    await changes.updateRootConfig((c) => ({ ...c, assignees: c.assignees.filter((a) => a.handle !== 'bob') }));
-    for (const n of [1, 2, 3]) await changes.updateStory(`WEB-${n}`, (s) => ({ ...s, assignees: [] }));
+    await changes.updateRootConfig((c) => ({ ...c, plugins: { ...c.plugins, other: { enabled: false } } }));
+    for (const n of [1, 2, 3]) await changes.updateStory(`WEB-${n}`, ({ plugins: _plugins, ...s }) => s);
     // Core code holds the plan's own records; one that becomes invalid is caught before any write.
     const second = changes.changes[2];
     if (second?.type === 'story' && second.after) second.after.name = '';
@@ -185,13 +186,10 @@ describe('final-plan validation (r03 case A)', () => {
         },
       },
     });
-    const t = await pluginRoot({ mutator: true }, { assignees: ASSIGNEES });
-    for (const n of [1, 2, 3]) {
-      await makeStory(t.path, { boardId: 'web', key: `WEB-${n}`, rank: `a${n}`, assignees: ['bob'] });
-    }
-    const { services } = await withPlugins(t, [mutator]);
+    const t = await bobRoot({ mutator: true });
+    const { services } = await withPlugins(t, [assignees, mutator]);
     const before = await snapshotTree(t.path);
-    await expect(services.assignees.remove('bob')).rejects.toThrow();
+    await expect(removeAssignee(services.plugins.context('assignees'), 'bob')).rejects.toThrow();
     expect(await snapshotTree(t.path)).toEqual(before);
   });
 
@@ -209,12 +207,11 @@ describe('final-plan validation (r03 case A)', () => {
         },
       },
     });
-    const t = await pluginRoot({ watcher: true }, { assignees: ASSIGNEES });
-    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', assignees: ['bob'] });
-    const { services } = await withPlugins(t, [watcher]);
+    const t = await bobRoot({ watcher: true });
+    const { services } = await withPlugins(t, [assignees, watcher]);
     const faults = injectFaults();
     faults.crashAt(1);
-    await expect(services.assignees.remove('bob')).rejects.toThrow();
+    await expect(removeAssignee(services.plugins.context('assignees'), 'bob')).rejects.toThrow();
     faults.restore();
     expect(reacted).toBe(0);
   });
@@ -246,23 +243,20 @@ describe('a CLI process killed during the save (WP02C)', () => {
     );
   }
 
-  async function bobRoot() {
-    const t = await pluginRoot({}, { assignees: ASSIGNEES });
-    for (const n of [1, 2, 3]) {
-      await makeStory(t.path, { boardId: 'web', key: `WEB-${n}`, rank: `a${n}`, assignees: ['bob'] });
-    }
-    return t;
-  }
-
   /** 'old' or 'new' when the Data Root holds one of the two complete states, else what it holds. */
   async function stateOf(t: TempRoot): Promise<string> {
-    const roster = ((await readJsonFile(t, 'rowbly.config.json')).assignees as { handle: string }[]).map(
+    const roster = ((await readJsonFile(t, 'plugins/assignees/roster.json')).assignees as { handle: string }[]).map(
       (a) => a.handle,
     );
-    const assigned = await Promise.all(
-      [1, 2, 3].map(async (n) => (await readJsonFile(t, storyFile(`WEB-${n}`))).assignees as string[]),
+    const stories = await Promise.all(
+      [1, 2, 3].map(async (n) => {
+        const story = (await readJsonFile(t, storyFile(`WEB-${n}`))) as {
+          plugins?: { assignees?: { assignees: string[] } };
+        };
+        return story.plugins?.assignees?.assignees ?? [];
+      }),
     );
-    const withBob = [roster, ...assigned].map((list) => list.includes('bob'));
+    const withBob = [roster, ...stories].map((list) => list.includes('bob'));
     if (withBob.every(Boolean)) return 'old';
     if (!withBob.some(Boolean)) return 'new';
     return `partial: ${JSON.stringify(withBob)}`;

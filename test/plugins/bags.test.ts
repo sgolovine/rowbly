@@ -16,10 +16,6 @@ async function bagged() {
   const t = await pluginRoot(
     {},
     {
-      assignees: [
-        { handle: 'alice', name: 'Alice', plugins: GHOST },
-        { handle: 'bob', name: 'Bob', plugins: GHOST },
-      ],
       customFields: [{ key: 'size', name: 'Size', type: 'text', required: false }],
       plugins: { ghost: { enabled: false, setting: 1 }, notes: { enabled: false, marker: 'm' } },
     },
@@ -29,7 +25,6 @@ async function bagged() {
   await makeStory(t.path, {
     boardId: 'web',
     key: 'WEB-1',
-    assignees: ['alice', 'bob'],
     customFields: { size: 's' },
     plugins: { ...GHOST, notes: { note: 'kept while off' } },
     tasks: [
@@ -61,8 +56,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     await services.tasks.update('WEB-1.1', { name: 'T2' });
     await services.tasks.move('WEB-1.1', 'done');
     await services.boards.update('web', { description: 'Changed' });
-    await services.assignees.update('alice', { name: 'Alice A' });
-    await services.assignees.remove('bob');
     await services.stages.remove({ level: 'global' }, 'backlog', { moveTo: 'todo' });
     await services.fields.remove({ level: 'global' }, 'size');
     await services.context.use('web');
@@ -79,7 +72,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     expect(task?.plugins).toEqual(GHOST);
 
     const root = await readJsonFile(t, 'rowbly.config.json');
-    expect(root.assignees).toEqual([{ handle: 'alice', name: 'Alice A', plugins: GHOST }]);
     expect(root.plugins).toEqual({ ghost: { enabled: false, setting: 1 }, notes: { enabled: false, marker: 'm' } });
     expect((await readJsonFile(t, 'boards/web/board.config.json')).plugins).toEqual(GHOST);
     expect(await readJsonFile(t, 'local.json')).toEqual({ version: 1, board: 'web', me: 'alice', plugins: GHOST });
@@ -89,7 +81,6 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     const t = await bagged();
     const { services } = await withPlugins(t, [notes]);
     expect((await services.stories.get('WEB-1')).plugins).toEqual({ ...GHOST, notes: { note: 'kept while off' } });
-    expect((await services.assignees.list())[0]?.plugins).toEqual(GHOST);
     expect((await services.boards.get('web')).plugins).toEqual(GHOST);
   });
 });

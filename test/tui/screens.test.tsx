@@ -6,7 +6,6 @@ describe('screen registry', () => {
   it('has one entry per area', () => {
     expect(Object.keys(screens).sort()).toEqual(
       [
-        'assignees',
         'board',
         'board-detail',
         'board-form',

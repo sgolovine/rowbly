@@ -257,7 +257,7 @@ describe('Change Sets', () => {
       name: 'Watch',
       description: '',
       hooks: Object.fromEntries(
-        ['stories.rank', 'tasks.move', 'assignees.remove', 'context.use'].map((op) => [
+        ['stories.rank', 'tasks.move', 'context.setMe', 'context.use'].map((op) => [
           op,
           {
             transform: ({ name, pluginInput }: { name: string; pluginInput: unknown }) =>
@@ -277,12 +277,12 @@ describe('Change Sets', () => {
     const plugins = { watch: 1 };
     await services.stories.rank('WEB-1', 'top', { plugins });
     await services.tasks.move('WEB-1.1', 'done', { plugins });
-    await services.assignees.remove('alice', { plugins });
+    await services.context.setMe('alice', { plugins });
     await services.context.use('web', { plugins });
     expect(inputs).toEqual([
       ['stories.rank', 1],
       ['tasks.move', 1],
-      ['assignees.remove', 1],
+      ['context.setMe', 1],
       ['context.use', 1],
     ]);
   });

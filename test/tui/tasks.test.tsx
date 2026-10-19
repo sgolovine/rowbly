@@ -4,16 +4,15 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeRootConfig(t.path, { assignees: [{ handle: 'alice', name: 'Alice' }] });
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
-  await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Login', assignees: ['alice'] });
+  await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Login' });
   return t;
 }
 
@@ -67,7 +66,7 @@ describe('story detail Tasks tab', () => {
     app.unmount();
   });
 
-  it('edits a Task and opens its detail with inherited Assignees', async () => {
+  it('edits a Task and opens its detail', async () => {
     const t = await setup();
     const { app, services } = await open(t, 'story', { key: 'WEB-1' });
     await services.tasks.create('WEB-1', { name: 'Old' });
@@ -79,7 +78,7 @@ describe('story detail Tasks tab', () => {
     await waitForFrame(app, (f) => f.includes('WEB-1.1 New') && f.includes('Updated WEB-1.1'));
 
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
+    await waitForFrame(app, (f) => /Story\s+WEB-1 Login/.test(f) && f.includes('m move Stage'));
     app.unmount();
   });
 });
@@ -92,7 +91,7 @@ describe('task detail', () => {
     await app.press(KEYS.tab);
     await waitForFrame(app, (f) => f.includes('WEB-1.1 Old'));
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('alice (from the Story)'));
+    await waitForFrame(app, (f) => /Story\s+WEB-1 Login/.test(f) && f.includes('m move Stage'));
     expect(app.lastFrame()).toContain('e edit · m move Stage · d delete');
 
     await app.press('e');

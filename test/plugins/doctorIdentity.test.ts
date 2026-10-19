@@ -180,7 +180,7 @@ describe('doctor plans each pass under the Data Root lock (RES-02)', () => {
     };
     let checks = 0;
     const Step = z.object({ step: z.number() });
-    // Its fix leaves an unknown Assignee, which the next pass removes from the Story it analyzed.
+    // Its fix leaves an unknown Custom Field value, which the next pass strips from the Story it analyzed.
     const stepper = definePlugin({
       id: 'stepper',
       name: 'Stepper',
@@ -205,7 +205,7 @@ describe('doctor plans each pass under the Data Root lock (RES-02)', () => {
               async fix(changes: PluginChangeSet) {
                 await changes.updateStory(s.key, (story) => ({
                   ...plugin.writeBag(story, undefined),
-                  assignees: ['ghost'],
+                  customFields: { ghost: 'x' },
                 }));
                 return `stepped ${s.key}`;
               },
@@ -219,7 +219,7 @@ describe('doctor plans each pass under the Data Root lock (RES-02)', () => {
     try {
       await services.doctor.fix();
       expect(await exited, stderr).toBe(0);
-      expect(await readJsonFile(t, storyFile('WEB-1'))).toMatchObject({ name: 'Edited elsewhere', assignees: [] });
+      expect(await readJsonFile(t, storyFile('WEB-1'))).toMatchObject({ name: 'Edited elsewhere', customFields: {} });
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

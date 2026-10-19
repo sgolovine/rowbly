@@ -17,11 +17,10 @@ const api = { boardId: 'api' };
 const CONTEXT: LocalState = { version: 1, board: 'web' };
 
 const ROOT_CONFIG: Partial<RowblyConfig> = {
-  assignees: [{ handle: 'alice', name: 'Alice' }],
   customFields: [{ key: 'size', name: 'Size', type: 'select', options: ['s', 'm'], required: true }],
 };
 
-/** Boards web (own Stages) and api (inherits), a global Custom Field, and an Assignee. */
+/** Boards web (own Stages) and api (inherits), and a global Custom Field. */
 async function seed() {
   const t = await tempRoot();
   await makeRootConfig(t.path, ROOT_CONFIG);
@@ -106,8 +105,8 @@ describe('G2 effective configuration (config show)', () => {
     await waitForFrame(app, 'API api');
     await app.press(',');
     await waitForFrame(app, 'Board: ');
-    // Config is the first section of the Board, after the seven global ones.
-    await app.press(...Array(7).fill('j'));
+    // Config is the first section of the Board, after the six global ones.
+    await app.press(...Array(6).fill('j'));
     const frame = await waitForFrame(app, 'Key prefix');
     expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Board\s+api/);
@@ -136,8 +135,8 @@ describe('G3 all-Boards Stories list (stories list --all-boards)', () => {
     expect(frame).toContain('web  WEB-1 Login ● Todo P1');
     expect(frame).toContain('web  WEB-3 Lost ● gone?');
 
-    // Priorities: P1 across both Boards (stages, assignees, me, labels, priorities).
-    await app.press('/', ...Array(4).fill(KEYS.down), KEYS.right, ' ', KEYS.ctrlEnter);
+    // Priorities: P1 across both Boards (stages, labels, priorities).
+    await app.press('/', ...Array(2).fill(KEYS.down), KEYS.right, ' ', KEYS.ctrlEnter);
     frame = await waitForFrame(app, (f) => f.includes('filters: P1') && !f.includes('WEB-2'));
     expect(frame).toContain('API-1 Tokens');
     expect(frame).toContain('WEB-1 Login');

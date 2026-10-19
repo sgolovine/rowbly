@@ -36,12 +36,14 @@ describe('Comments operations', () => {
     expect(saved.tasks[0]?.plugins).toEqual({ comments: { comments: [onTask] } });
   });
 
-  it.each([
-    { me: null, when: 'Me is unset' },
-    { me: 'stranger', when: 'Me is not in the roster' },
-  ])('has no author when $when', async ({ me }) => {
-    const { plugin } = await setup(me);
+  it('has no author when Me is unset', async () => {
+    const { plugin } = await setup(null);
     expect((await addComment(plugin, 'WEB-1', 'hi')).author).toBeNull();
+  });
+
+  it('is authored by Me as is, with no roster to check against', async () => {
+    const { plugin } = await setup('stranger');
+    expect((await addComment(plugin, 'WEB-1', 'hi')).author).toBe('stranger');
   });
 
   it('rejects an empty body', async () => {
