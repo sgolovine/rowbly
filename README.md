@@ -45,7 +45,8 @@ The exact meaning of each term is in [`CONTEXT.md`](docs/agents/CONTEXT.md). In 
 - A **Data Root** (`.rowbly/`) holds everything: its **Boards**, and the data of its Plugins.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
 - A Story has a name, a markdown description, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, and, with the Tasks Plugin on, **Tasks** (`WEB-42.1`).
-- Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`.
+- Every Board starts with the **Backlog** Stage and ends with the **Done** Stage. Both are fixed: they cannot be edited, moved or removed. The Stages you configure sit between them.
+- Each Stage belongs to a **Stage Category**: `backlog` (Backlog), `board` (every configured Stage) or `done` (Done).
 - **Me** is the handle you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
 - **Plugins** add optional features; a Data Root turns each one on or off for everyone who uses it. See [Plugins](#plugins).
 
@@ -80,7 +81,7 @@ Stages and Custom Fields are configuration, not data. Each list can be defined a
 1. `rowbly.config.json` (global),
 2. `board.config.json` (Board).
 
-A Board uses the most specific level that defines the list; the lists are not merged. With no list anywhere, a Board has the built-in Stages `backlog` (Backlog, todo), `todo` (Todo, todo), `in-progress` (In Progress, in_progress) and `done` (Done, done), and no Custom Fields.
+A Board uses the most specific level that defines the list; the lists are not merged. With no list anywhere, a Board has the built-in Stages `todo` (Todo) and `in-progress` (In Progress) between Backlog and Done, and no Custom Fields. A `stages` list holds only the Stages between Backlog and Done, as `{ "key", "name" }`; it never names `backlog` or `done`.
 
 `stages` and `fields` commands take `--level board|global` (default: `board` when a Board is in context, else `global`). Changing a level that has no list of its own first copies the list it inherits to that level, then applies the change. A change at `global` level applies to every Board that inherits from it. `rowbly config show` prints a Board's effective lists and the level each one comes from.
 
@@ -190,8 +191,8 @@ rowbly boards delete <id> [--force]                  # confirms; pass --yes when
 
 ```text
 rowbly stages list
-rowbly stages add <key> --name <n> --category todo|in_progress|done [--before <key>|--after <key>]
-rowbly stages edit <key> [--name <n>] [--category <c>]
+rowbly stages add <key> --name <n> [--before <key>|--after <key>]
+rowbly stages edit <key> --name <n>
 rowbly stages move <key> (--before <key>|--after <key>|--first|--last)
 rowbly stages remove <key> [--move-to <key>]
 # every verb also takes: [--board <id>] [--level board|global]
@@ -199,8 +200,9 @@ rowbly stages remove <key> [--move-to <key>]
 
 - `--level` picks the Configuration Cascade level to edit. The default is `board`, the Board in context, or `global` when no Board resolves.
 - Editing a level that has no list of its own first copies the list it inherits, then applies the change. An edit at `global` level applies to every Board that inherits from it; the output lists those Boards.
-- `remove` refuses (exit 4) while a Story on an affected Board is in the Stage, and the Tasks Plugin refuses while a Task is. `--move-to` moves them first; moved Stories go to the bottom of the target Stage. The last Stage cannot be removed.
-- `--json` prints `{ level, items, affectedBoards }` (plus `storiesMoved` for `remove`).
+- `remove` refuses (exit 4) while a Story on an affected Board is in the Stage, and the Tasks Plugin refuses while a Task is. `--move-to` moves them first (Backlog and Done are valid targets); moved Stories go to the bottom of the target Stage.
+- `backlog` and `done` are fixed: `edit`, `move` and `remove` refuse them (exit 2), and `add` cannot use their keys. `add` puts a Stage just before Done by default; `--after backlog` puts it first. `move --first` and `--last` mean just after Backlog and just before Done.
+- `--json` prints `{ level, items, affectedBoards }` (plus `storiesMoved` for `remove`). `items` is every Stage of the level, Backlog and Done included, each with its `category`.
 <!-- END stages -->
 
 <!-- BEGIN fields -->
@@ -226,7 +228,7 @@ rowbly fields remove <key>
 ### Stories
 
 ```text
-rowbly stories list [--stage <k>…] [--category todo|in_progress|done] [--open]
+rowbly stories list [--stage <k>…] [--category backlog|board|done] [--open]
                     [--label <l>…] [--priority <P>…] [--search <text>]
                     [--sort rank|priority|created|updated|due] [--board <id>] [--all-boards]
 rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]

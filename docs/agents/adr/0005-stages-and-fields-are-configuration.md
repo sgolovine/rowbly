@@ -1,6 +1,6 @@
 # ADR-0005: Stages and Custom Fields are configuration, and the most specific level replaces the levels above
 
-**Status:** Accepted.
+**Status:** Accepted. Amended by ADR-0024: Backlog and Done are fixed Stages, not part of a configured list.
 
 Stages and Custom Fields are not stored as entity files. They are ordered lists in the Configuration Cascade: `rowbly.config.json`, then `board.config.json` (see ADR-0007). The most specific level that defines `stages` or `customFields` replaces the lists from the levels above it. The lists are not merged by key. Other scalar settings are deep-merged. When you edit a Board's stages or fields and the Board does not yet define its own list, Rowbly first copies the inherited list into `board.config.json` and then applies the change.
 

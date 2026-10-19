@@ -90,8 +90,8 @@ skills:
     failure_modes:
       - mistake: Editing Stages at the wrong Configuration Cascade level
         mechanism: The default level is board when a Board resolves; the first board-level edit copies the list and stops inheriting global changes.
-        wrong_pattern: rowbly stages add blocked --name Blocked --category in_progress
-        correct_pattern: rowbly stages add blocked --name Blocked --category in_progress --level global
+        wrong_pattern: rowbly stages add blocked --name Blocked
+        correct_pattern: rowbly stages add blocked --name Blocked --level global
         source: README.md#configuration-cascade; docs/architecture/data-model.md#configuration-cascade
         priority: HIGH
         status: active
@@ -132,10 +132,10 @@ skills:
         source: README.md#stories; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active
-      - mistake: Hard-coding done or in-progress Stage keys
-        mechanism: Stages are configured per Board; choose by Stage Category.
-        wrong_pattern: rowbly stories move WEB-1 done
-        correct_pattern: read config show .stages and pick the first category done Stage
+      - mistake: Hard-coding in-progress or todo Stage keys
+        mechanism: Only backlog and done are fixed on every Board (ADR-0024); the Stages between them are configured per Board, so choose the start Stage by Stage Category board.
+        wrong_pattern: rowbly stories move WEB-1 in-progress
+        correct_pattern: read config show .stages and pick the first category board Stage
         source: README.md#stages; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active

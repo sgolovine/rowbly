@@ -82,8 +82,8 @@ rowbly epics close auth --no-prompt                             # reopen with: e
 rowbly epics delete auth --no-prompt                            # unlinks its Stories, with a warning
 ```
 
-- Epic Progress is the share of the Epic's Stories in a `done`-category Stage. It is calculated each
-  time and never stored. To finish an Epic, move its Stories to a done Stage, then `epics close` it.
+- Epic Progress is the share of the Epic's Stories in the `done` Stage. It is calculated each
+  time and never stored. To finish an Epic, move its Stories to `done`, then `epics close` it.
 - `epics edit <id>` needs `--name` or a description flag, or it exits 2.
 - An Epic file is `.rowbly/plugins/epics/<id>.json`; a Story's link is `plugins.epics.epic`.
 

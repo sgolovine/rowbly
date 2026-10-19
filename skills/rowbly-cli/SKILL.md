@@ -136,7 +136,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 | Board | A Kanban board with a key prefix such as `WEB` | project |
 | Story | The unit of work on a Board, keyed `WEB-42` | issue, ticket, card |
 | Task | A smaller item inside one Story, `WEB-42.1` (the Tasks Plugin) | subtask, checklist item |
-| Stage | A step of a Board's workflow, in a Stage Category `todo`, `in_progress` or `done` | status, column |
+| Stage | A step of a Board's workflow, in a Stage Category `backlog` (the fixed first Stage), `board` or `done` (the fixed last Stage) | status, column |
 | Rank | A Story's position inside its Stage | order |
 | Me / Assignee | The handle you work as (`rowbly whoami`) / a person in the Assignees Plugin's roster | user, owner |
 | Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag | severity / tag |
