@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "b8c94b686506ba95067d2d0e8f93b5f5272b2dc02b0f3ceb3711c692993f580e",
+      "fingerprint": "45bff5891da76814bdc447c66e9058b1bde8671f70375f694f27494a3db3af2d",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,19 +14,18 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2027254c9f96c1c8c005a4e4a400465e595a3f577f73f53115fe34e669fc0e0b",
+      "fingerprint": "34531ca8218b8eb3a339189a31e0bdddfe3380c0c7aa31eb6379f078705f762b",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -34,19 +33,18 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "97bee4c2b15d312fdf9c958181b8455f78e13430ea6ad4bd2fe63800639110f8",
+      "fingerprint": "dcb6d753ec0998291af26c4491dfcfc055e6254aa4db78480d55bd9e1dd45738",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
@@ -57,19 +55,18 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "860c8a0cf23c9a468bb896f96c74a53588ec59b5c8adf0eaefc92cea7c8dedc9",
+      "fingerprint": "736b2bc094726b802a1f066358dbd460ffebcefe9845c2ec7e215b439cbe0fc1",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -78,19 +75,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "0504e4046c4f65d3be6dd4625bd6ccd4e8134830dd01bcac3639478027d2fa4e",
+      "fingerprint": "9fcee6c9a2477c01866be1b4ba38e93fca1fc1b5aad6e7b7343f90591296d459",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -99,19 +95,18 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "a4a1956343f05bb243a5d340a8d8e49fcd5411557db1e7c2c9d171cd22067ca1",
+      "fingerprint": "a68ac4850c37de4595261f7650a4aeeae82d78593e382929ad3c7f4268a560d3",
       "snapshot": {
-        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
+        "README.md": "8e3da7d4045717030f50d36ebc3d0638816825c61d286929ca08ea70f89c2c22",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -147,13 +142,12 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "README.md changed only the TUI key table's Board (list view) row (shift+↑/↓ move Stage). TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command, flag, doctor code or exit code changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "git diff e7e0860..6eb476a -- README.md touches only the 'Board (list view)' row of the TUI keys table."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1762,15 +1756,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "79b92722d0f706e0b212c090fecb4dc7d1c79f30f828ad5e395fd3c38d24f3a7",
+      "fingerprint": "683d38c18777d3a1db75fb03e1ea9a7e5751b4e6bde087cf5b2ed1c7f6ac3e0f",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "501b24a2b43c900a8a79de4dcff903c300bf4c02b30bb1851a252112bb98ee15"
+        "src/tui/screens/board/BoardScreen.tsx": "16732554b2fc79e5d02886902ee8fee1af4d86352953605681f7858cb2e5340e"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "TUI-only change: shift+↑/↓ (K/J) move the list view's highlighted Story to the previous / next Stage. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "test/tui/board.test.tsx: 'moves the highlighted Story between Stages with shift+↑/↓…' and 'unfolds the section a Story moves into, and reverts a move the service refuses' pass."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1798,15 +1793,16 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "5f99ca9c106c4b032f9499a516c4a7010f740e518cb67904f37acf6417ebc3c1",
+      "fingerprint": "baa072ab4758c741413ca3993b7415f93e7e1ea6090cf72536d79e8166ad6b36",
       "snapshot": {
-        "test/tui/board.test.tsx": "ef2b3d9d2b5c648f35b162727805078c4abd61e4d4f879a885ea563fab199e56"
+        "test/tui/board.test.tsx": "a10bd99b5756b123e2b40a9fa67eca883512f0e8505bb615bf66a5ca7fc9e636"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "6eb476a452de0118eb2aac682e27ba4669b4a566",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "TUI-only change: shift+↑/↓ (K/J) move the list view's highlighted Story to the previous / next Stage. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Checks on 6eb476a: pnpm typecheck and pnpm lint passed; pnpm test:unit 976/976 and pnpm test:cli 156/156 passed.",
+        "test/tui/board.test.tsx: 'moves the highlighted Story between Stages with shift+↑/↓…' and 'unfolds the section a Story moves into, and reverts a move the service refuses' pass."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
