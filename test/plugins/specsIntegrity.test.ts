@@ -8,7 +8,6 @@ import {
   listSpecSlugs,
   listSpecs,
   parseSpecFormParams,
-  parseSpecTarget,
   SpecsBag,
 } from '../../src/plugins/specs/specs';
 import { io } from '../../src/storage/io';
@@ -110,38 +109,10 @@ describe('invalid Specs bags (ARCH-36, VER-02)', () => {
 });
 
 describe('Spec targets (CQ-103)', () => {
-  it('a target names a Board and exactly one of a Story Key and a slug', () => {
-    expect(parseSpecTarget({ board: 'web', slug: 'auth', title: 'auth' })).toEqual({ board: 'web', slug: 'auth' });
-    expect(parseSpecTarget({ board: 'web', story: 'web-1' })).toEqual({ board: 'web', story: 'web-1' });
-    for (const params of [
-      {},
-      { board: 'web' },
-      { board: 'web', story: 'WEB-1', slug: 'auth' },
-      { board: 'web', slug: 3 },
-      { board: 'web', slug: '../x' },
-      { board: 1, slug: 'auth' },
-    ]) {
-      expect(() => parseSpecTarget(params)).toThrow(expect.objectContaining({ code: 'USAGE' }));
-    }
-  });
-
-  it('form params: a Board draft has no slug yet, a Story draft names the Story, edit needs a whole target', () => {
-    expect(parseSpecFormParams({ board: 'web', create: true })).toEqual({ create: true, board: 'web' });
-    expect(parseSpecFormParams({ board: 'web', story: 'WEB-1', create: true })).toEqual({
-      create: true,
-      board: 'web',
-      story: 'WEB-1',
-    });
-    expect(parseSpecFormParams({ board: 'web', slug: 'auth', create: false })).toEqual({
-      create: false,
-      target: { board: 'web', slug: 'auth' },
-    });
-    for (const params of [
-      { board: 'web', create: false },
-      { board: 'web', slug: 'auth' },
-      { board: 'web', slug: 'auth', create: true },
-      { create: true },
-    ]) {
+  it('form params: a new Spec names its Board, and its Story for a Story Spec, but not its slug yet', () => {
+    expect(parseSpecFormParams({ board: 'web', title: 'New Spec' })).toEqual({ board: 'web' });
+    expect(parseSpecFormParams({ board: 'web', story: 'WEB-1' })).toEqual({ board: 'web', story: 'WEB-1' });
+    for (const params of [{}, { board: 1 }, { board: 'web', slug: 'auth' }, { board: 'web', story: '' }]) {
       expect(() => parseSpecFormParams(params)).toThrow(expect.objectContaining({ code: 'USAGE' }));
     }
   });
@@ -167,7 +138,9 @@ describe('Spec targets (CQ-103)', () => {
     const saved = await createSpec(plugin, { board: 'web', slug: 'auth' }, '# Auth\n\nBody');
     expect(saved).toEqual({ slug: 'auth', title: 'Auth', text: '# Auth\n\nBody' });
     expect(seen).toEqual([saved]);
-    expect(await createSpec(plugin, { board: 'web', story: 'WEB-9' }, '# X').catch((e) => e.code)).toBe('NOT_FOUND');
+    expect(await createSpec(plugin, { board: 'web', story: 'WEB-9', slug: 'spec' }, '# X').catch((e) => e.code)).toBe(
+      'NOT_FOUND',
+    );
   });
 });
 

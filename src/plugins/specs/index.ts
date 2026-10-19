@@ -10,12 +10,12 @@ import {
 import { commands } from './commands';
 import {
   applySpecs,
-  boardSpecFile,
   linkedSpecs,
   listSpecSlugs,
   parseSpecsInput,
   SpecsBag,
   SpecsInput,
+  specFile,
   withoutSpecs,
 } from './specs';
 
@@ -54,7 +54,7 @@ export const specs = definePlugin({
         for (const change of changes.changes) {
           if (change.type !== 'story' || !change.after) continue;
           for (const slug of linkedSpecs(plugin, change.after)) {
-            if ((await changes.readFile({ board: change.after.boardId }, boardSpecFile(slug))) === null)
+            if ((await changes.readFile({ board: change.after.boardId }, specFile(slug))) === null)
               return { reject: `Board Spec "${slug}" not found on Board "${change.after.boardId}"` };
           }
         }
@@ -74,7 +74,7 @@ export const specs = definePlugin({
         const before = change.before ? linkedSpecs(plugin, change.before) : [];
         for (const slug of linkedSpecs(plugin, change.after)) {
           if (before.includes(slug)) continue;
-          if ((await changes.readFile({ board: change.after.boardId }, boardSpecFile(slug))) === null)
+          if ((await changes.readFile({ board: change.after.boardId }, specFile(slug))) === null)
             return { reject: `Board Spec "${slug}" not found on Board "${change.after.boardId}"` };
         }
         return undefined;
@@ -134,7 +134,7 @@ export const specs = definePlugin({
         const key = `${board}/${slug}`;
         let read = exists.get(key);
         if (!read) {
-          read = plugin.files.read({ board }, boardSpecFile(slug)).then((text) => text !== null);
+          read = plugin.files.read({ board }, specFile(slug)).then((text) => text !== null);
           exists.set(key, read);
         }
         return read;

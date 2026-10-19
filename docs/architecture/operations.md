@@ -76,14 +76,14 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `epics.close` | `{ id }` | `Epic` |
 | `epics.reopen` | `{ id }` | `Epic` |
 | `epics.delete` | `{ id }` | `{ id, storiesUnlinked }` |
-| `specs.create` | `{ board, slug?, story?, text }` | `Spec` |
-| `specs.edit` | `{ board, slug?, story?, text }` | `Spec` |
-| `specs.delete` | `{ board, slug?, story? }` | the number of Stories unlinked |
+| `specs.create` | `{ board, slug, story?, text }` | `Spec` |
+| `specs.edit` | `{ board, slug, story?, text }` | `Spec` |
+| `specs.delete` | `{ board, slug, story? }` | the number of Stories unlinked |
 | `comments.add` | `{ target, body }` | `Comment` |
 | `comments.update` | `{ target, id, body }` | `Comment` |
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
 
-A Spec has exactly one of `slug` (a Board Spec) and `story` (a Story Spec). A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
+A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 
 ## Plugin input of core operations
 

@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
 import { moveDelta } from '../keymap';
+import { SelectListRow } from './SelectListRow';
 import { TextInput } from './TextInput';
 
 export interface SelectItem<T = string> {
@@ -30,7 +31,10 @@ export interface SelectListProps<T> {
   isActive?: boolean;
 }
 
-/** A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. */
+/**
+ * A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. In single mode
+ * a click on an item picks it, as `enter` does.
+ */
 export function SelectList<T>({
   items,
   onSelect,
@@ -112,13 +116,20 @@ export function SelectList<T>({
       {rows.map((item, i) => {
         const highlighted = start + i === index;
         const checkbox = multi ? (selected.includes(item.value) ? '[x] ' : '[ ] ') : '';
+        // In single mode a click picks the item, as `enter` on it does.
+        const pick =
+          !multi && onSelect
+            ? () => {
+                setCursor(start + i);
+                onSelect(item);
+              }
+            : undefined;
         return (
-          <Text key={String(item.value)} color={highlighted && active ? 'cyan' : undefined}>
-            {highlighted ? '› ' : '  '}
+          <SelectListRow key={String(item.value)} highlighted={highlighted} active={active} onClick={pick}>
             {checkbox}
             {item.label}
             {item.description && <Text dimColor> {item.description}</Text>}
-          </Text>
+          </SelectListRow>
         );
       })}
       {visible.length > rows.length && <Text dimColor>{`  ${index + 1}/${visible.length}`}</Text>}

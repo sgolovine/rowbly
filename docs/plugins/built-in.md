@@ -118,29 +118,31 @@ rowbly stories edit … [--epic <id> | --no-epic]
 
 ## Specs
 
-A Spec is a Markdown document that describes work to be done; it has no approval or Stage of its own. A **Board Spec** belongs to a Board and is named by a slug; a **Story Spec** belongs to one Story. The first `# ` heading of a Spec is its title.
+A Spec is a Markdown document that describes work to be done; it has no approval or Stage of its own. A **Board Spec** belongs to a Board and a **Story Spec** to one Story; each is named by a slug, unique on its Board or Story. The first `# ` heading of a Spec is its title.
 
 **Data**
 
-- A Board Spec is `boards/<board>/plugins/specs/<slug>.md`. A Story Spec is `boards/<board>/stories/<KEY>/plugins/specs/spec.md`.
-- A Story has at most one Story Spec. Its bag links it to any number of Board Specs of its own Board, by slug: `"plugins": { "specs": { "specs": ["auth", "api"] } }`.
+- A Board Spec is `boards/<board>/plugins/specs/<slug>.md`. A Story Spec is `boards/<board>/stories/<KEY>/plugins/specs/<slug>.md`.
+- A Story has any number of Story Specs ([ADR-0025](../agents/adr/0025-a-story-has-many-story-specs.md)). The Story Spec `spec` (`spec.md`) is the one named by its Story alone, and was a Story's only Story Spec before.
+- A Story's bag links it to any number of Board Specs of its own Board, by slug: `"plugins": { "specs": { "specs": ["auth", "api"] } }`.
 
 **Commands**
 
 ```text
 rowbly specs list [--board <id>]                                         # Board Specs
+rowbly specs list --story <KEY>                                          # the Story's Story Specs
 rowbly specs create <slug> --title <title> [--text <text>|--file <path|->|--edit] [--board <id>]
 rowbly specs show <slug> [--board <id>]
 rowbly specs edit <slug> [--title <title>] [--text <text>|--file <path|->|--edit] [--board <id>]
 rowbly specs delete <slug> [--board <id>]                                # confirms; --yes when not interactive
-rowbly specs create|show|edit|delete --story <KEY> …                    # the Story Spec of a Story
+rowbly specs create|show|edit|delete [slug] --story <KEY> …             # a Story Spec; the slug defaults to spec
 rowbly stories create … [--spec <slug>…]
 rowbly stories edit … [--spec <slug>… | --add-spec <slug>… | --remove-spec <slug>…]
 rowbly stories edit … --reset-specs [--spec <slug>…]                      # replaces the stored links, even invalid ones
 rowbly stories list … [--spec <slug>…]
 ```
 
-`--story <KEY>` names a Story Spec, because Story Keys are case-insensitive and `web-1` is also a valid slug.
+`--story <KEY>` names a Story Spec, because Story Keys are case-insensitive and `web-1` is also a valid slug. With `--story`, the slug names one of the Story's Story Specs, and without it the Story Spec `spec`.
 
 **Rules**
 
@@ -149,7 +151,7 @@ rowbly stories list … [--spec <slug>…]
 - Changing the links of a Story whose Specs bag is invalid fails with `DATA_INTEGRITY` (exit 6). `--reset-specs` replaces them, alone or with `--spec`, and cannot be combined with `--add-spec` or `--remove-spec`.
 - The Spec filter matches a Story that links to any selected Board Spec, and never a Story whose Specs bag is invalid.
 
-**TUI:** a **Spec** tab on the Story screen (the Story Spec, then the linked Board Specs); a **Specs** multi-choice in the Story form; a **Specs** entry in the home menu to list, create, edit and delete Board Specs; a list of Board Specs in the Board detail; a Spec filter on the Stories list and the board. Specs are edited in the multi-line text box.
+**TUI:** a **Specs** tab on the Story screen that lists the Story's Story Specs, then the Board Specs it links to; a **Specs** multi-choice in the Story form; a **Specs** entry in the home menu that lists a Board's Board Specs; a list of Board Specs in the Board detail; a Spec filter on the Stories list and the board. In both lists `enter` (or a click) opens a Spec in the full-screen editor, which shows it rendered, and `e` opens it to edit: `tab` switches between the rendered text and the raw markdown, `ctrl+s` saves, and `esc` closes it, asking first when there are unsaved changes. `n` creates a Spec in a form (slug, title and text), and `d` deletes the highlighted Story Spec or Board Spec.
 
 **Doctor:** `SPECS_MISSING_SPEC` (warning): a Story links to Board Specs that do not exist; `--fix` unlinks them and stamps the Story's `updatedAt`.
 

@@ -200,9 +200,15 @@ describe('rowbly-plugins', () => {
 
     await json('specs', 'create', '--story', story.key, '--title', 'Login page', '--text', 'Email only.');
     expect(await json('specs', 'show', '--story', story.key.toLowerCase())).toEqual({
+      slug: 'spec',
       title: 'Login page',
       text: '# Login page\n\nEmail only.',
     });
+    await json('specs', 'create', 'design', '--story', story.key, '--title', 'Design', '--text', 'One form.');
+    expect(
+      (await json('specs', 'list', '--story', story.key)).map((s: { slug: string; title: string }) => s.slug),
+    ).toEqual(['design', 'spec']);
+    expect((await json('specs', 'show', 'design', '--story', story.key)).text).toBe('# Design\n\nOne form.');
     expect((await rowbly('specs', 'show', story.key.toLowerCase(), '--board', 'web', '--json')).exitCode).toBe(3);
     await json('specs', 'create', 'auth-flow', '--board', 'web', '--title', 'Auth flow', '--text', 'Tokens.');
     await json('specs', 'create', 'api', '--board', 'web', '--title', 'API', '--text', 'Routes.');

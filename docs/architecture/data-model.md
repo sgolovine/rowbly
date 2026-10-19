@@ -30,7 +30,7 @@ erDiagram
     plugins/<id>/…              # Plugin files for this Board (Board Specs)
     stories/<KEY>/
       story.json                # one Story, with its bags (e.g. its Tasks)
-      plugins/<id>/…            # Plugin files for this Story (the Story Spec)
+      plugins/<id>/…            # Plugin files for this Story (Story Specs)
 ```
 
 Each Story is its own folder, so most changes touch one small file and merge cleanly. Every record file carries `version: 1`. A record whose `version` is not 1 is not read and not written.

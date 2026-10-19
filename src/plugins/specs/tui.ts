@@ -1,5 +1,4 @@
 import type { PluginTui } from '../../plugin-api';
-import { SpecDetailScreen } from './SpecDetailScreen';
 import { SpecFormScreen } from './SpecFormScreen';
 import { SpecsScreen } from './SpecsScreen';
 import { SpecsSection } from './SpecsSection';
@@ -7,9 +6,9 @@ import { SpecTab } from './SpecTab';
 import { linkedSpecs, listSpecSlugs, SpecsBag } from './specs';
 
 export const tui: PluginTui<Record<string, unknown>> = {
-  screens: { list: SpecsScreen, detail: SpecDetailScreen, form: SpecFormScreen },
+  screens: { list: SpecsScreen, form: SpecFormScreen },
   home: [{ label: 'Specs', screen: 'list' }],
-  storyTabs: [{ label: 'Spec', component: SpecTab }],
+  storyTabs: [{ label: 'Specs', component: SpecTab }],
   boardSections: [SpecsSection],
   storyForm: {
     async fields({ boardId, story, plugin }) {
