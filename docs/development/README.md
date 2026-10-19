@@ -25,6 +25,7 @@ pnpm dev stories list --board web
 | `pnpm format` | Format with Biome |
 | `pnpm test` | Run both Vitest projects, `unit` and `cli` |
 | `pnpm test:unit` | Run the suites that need no CLI build (services, storage, TUI) |
+| `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLIs first |
 | `pnpm test:watch` | Vitest in watch mode |
 | `pnpm bench:plugins` | The opt-in Plugin benchmark ([`test/performance/README.md`](../../test/performance/README.md)) |
 
@@ -80,6 +81,6 @@ Wait for what the next action needs, never for a fixed time. The full rules for 
 
 | Workflow | When | What |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | Pull requests and pushes to `main` | Install with the frozen lockfile, typecheck, lint, build, test, and verify the packed package |
+| `.github/workflows/ci.yml` | Pull requests and pushes to `main` | Three parallel jobs, each installing with the frozen lockfile: **Verify** (typecheck, lint, build, verify the packed package), **Unit tests** (`pnpm test:unit`) and **CLI tests** (`pnpm test:cli`) |
 | `.github/workflows/release.yml` | Run by hand with a version bump | Create a GitHub release from `main`, then publish to npm |
 | `.github/workflows/check-skills.yml` | Pull requests and releases | Validate the Intent skills in `skills/` (see the Library Skill Maintenance section of [`AGENTS.md`](../../AGENTS.md)) |

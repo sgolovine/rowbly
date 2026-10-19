@@ -26,6 +26,7 @@
     "format": "biome format --write .",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
+    "test:cli": "vitest run --project cli",
     "test:watch": "vitest",
     "bench:plugins": "tsx test/performance/bench.ts"
   },
