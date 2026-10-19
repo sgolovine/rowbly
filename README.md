@@ -151,8 +151,8 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 
 - Handles are slugs, unique within the Data Root. An email is optional but must be valid.
 - A Story has zero or more Assignees, kept as Plugin Data on the Story
-  (`"plugins": { "assignees": { "assignees": ["sam"] } }`). Its Tasks share them: `tasks show`
-  lists the Story's Assignees.
+  (`"plugins": { "assignees": { "assignees": ["sam"] } }`). Read them with `stories show`;
+  Tasks link back to their Story.
 - `--assignee` may be repeated or comma-separated, and `me` means Me (exit 2 when Me is not set).
   An Assignee must be in the roster: otherwise the command exits 2 and `--json` lists the valid
   handles in `details.validHandles`.

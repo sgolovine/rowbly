@@ -38,7 +38,7 @@ everyone who uses that Data Root, because the setting is in the committed `rowbl
 ## 1. See and change which Plugins are on
 
 ```sh
-rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: tasks, epics, specs, comments
+rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments
 rowbly plugins enable epics --json --no-prompt    # {"id": "epics", "enabled": true}
 rowbly plugins disable epics --json --no-prompt   # keeps its settings and data
 rowbly plugins show epics --json --no-prompt
