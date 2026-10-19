@@ -240,6 +240,33 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     app.unmount();
   });
 
+  it('the Spec list takes d while it reloads after the editor closes, also behind another lock holder', async () => {
+    const { t, app } = await setup('plugin', { plugin: 'specs', screen: 'list', board: 'web', title: 'Specs' });
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('delete Spec'));
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('Board Spec auth') && f.includes('tab/e edit'));
+    // Another holder keeps the Data Root busy, so the list's reload on return waits in the lock queue.
+    const lock = await acquireLock(t.path, { operation: 'test.hold' });
+    const realpath = io.realpath;
+    const reloading = deferred();
+    const reload = vi.spyOn(io, 'realpath').mockImplementation((path) => {
+      reloading.resolve();
+      return realpath(path);
+    });
+    try {
+      await app.press(KEYS.escape);
+      await reloading.promise;
+      await app.press('d');
+      await waitForFrame(app, 'Delete Spec "auth"?');
+    } finally {
+      reload.mockRestore();
+      await lock.release();
+    }
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('delete Spec'));
+    app.unmount();
+  });
+
   it('the Story Specs tab keeps its keys while it reloads on return, also behind another lock holder', async () => {
     const { t, app, plugin } = await setup('story', { key: 'WEB-1' });
     await createSpec(plugin, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Own\n\nStory text');

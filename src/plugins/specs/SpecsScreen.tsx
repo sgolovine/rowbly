@@ -45,43 +45,48 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
     };
   }, [plugin]);
   const boards = useAsync(() => plugin.services.boards.list(), [plugin]);
-  const specs = useAsync(() => (board ? listSpecs(plugin, board) : Promise.resolve([])), [plugin, board]);
+  // The list names its Board, so a list still on screen while another Board's loads is never acted on.
+  const specs = useAsync(
+    async () => (board ? { board, specs: await listSpecs(plugin, board) } : null),
+    [plugin, board],
+  );
   // Reloads on return from the Spec form and from the editor.
   useReloadOnReturn(specs.reload, active);
-  const listing = typeof board === 'string' && !specs.loading && !specs.error;
-  const current = specs.data?.find((s) => s.slug === highlighted) ?? specs.data?.[0];
+  // A reload keeps the list, and its keys, on screen; another Board's list is not this one.
+  const list = !specs.error && specs.data?.board === board ? specs.data : undefined;
+  const current = list?.specs.find((s) => s.slug === highlighted) ?? list?.specs[0];
   const keys = active && !deleting && !busy && !editor.isOpen;
   useKeyHints(
-    typeof board === 'string' && !deleting
+    typeof board === 'string' && keys
       ? [
-          ...(listing && current
+          ...(list && current
             ? [
                 { key: 'enter', description: 'open Spec' },
                 { key: 'e', description: 'edit Spec' },
                 { key: 'd', description: 'delete Spec' },
               ]
             : []),
-          ...(listing ? [{ key: 'n', description: 'new Spec' }] : []),
+          ...(list ? [{ key: 'n', description: 'new Spec' }] : []),
           { key: 'b', description: 'choose Board' },
         ]
       : [],
   );
   useInput(
     (input) => {
-      if (typeof board !== 'string') return;
-      if (input === 'n' && listing) ui.open('form', { board, title: 'New Spec' });
-      else if (input === 'e' && listing && current)
-        openSpec(editor, plugin, { board, slug: current.slug }, current, 'edit');
-      else if (input === 'd' && listing && current) setDeleting(current);
-      else if (input === 'b') setBoard(null);
+      if (input === 'b' && typeof board === 'string') setBoard(null);
+      if (!list) return;
+      if (input === 'n') ui.open('form', { board: list.board, title: 'New Spec' });
+      else if (input === 'e' && current)
+        openSpec(editor, plugin, { board: list.board, slug: current.slug }, current, 'edit');
+      else if (input === 'd' && current) setDeleting(current);
     },
     { isActive: keys },
   );
   const remove = async (spec: Spec) => {
-    if (typeof board !== 'string') return;
+    if (!list) return;
     setBusy(true);
     try {
-      await deleteSpec(plugin, { board, slug: spec.slug });
+      await deleteSpec(plugin, { board: list.board, slug: spec.slug });
       ui.toast('Deleted Spec');
       specs.reload();
     } catch (err) {
@@ -110,19 +115,19 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
     );
   }
   // A reload, e.g. on return from a Spec, keeps the list on screen, so its keys keep working.
-  if (specs.loading && !specs.data?.length) return <Loading />;
+  if (!list && !specs.error) return <Loading />;
   return (
     <Box flexDirection="column">
       <Text bold>{`Board Specs — ${board}`}</Text>
-      {specs.error ? (
+      {!list ? (
         <Text color="red">Could not load Specs.</Text>
       ) : (
         <SelectList
-          items={(specs.data ?? []).map((s) => ({ value: s.slug, label: specLine(s) }))}
+          items={list.specs.map((s) => ({ value: s.slug, label: specLine(s) }))}
           onHighlight={(item) => setHighlighted(item?.value)}
           onSelect={({ value }) => {
-            const spec = specs.data?.find((s) => s.slug === value);
-            if (spec) openSpec(editor, plugin, { board, slug: spec.slug }, spec, 'view');
+            const spec = list.specs.find((s) => s.slug === value);
+            if (spec) openSpec(editor, plugin, { board: list.board, slug: spec.slug }, spec, 'view');
           }}
           emptyText="No Board Specs. Press n to create one."
           isActive={keys}
