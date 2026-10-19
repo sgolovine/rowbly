@@ -1,9 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`board view > renders one column per Stage with counts and cards in Rank order 1`] = `
-"╭─rowbly-test-XXXXXX─────────────────────────────────────────────────────────────────────╮╭───────────────╮╭───────────╮
-│ Website web                                                                  me: alice ││Stages │ List v││+ New Story│
-╰────────────────────────────────────────────────────────────────────────────────────────╯╰───────────────╯╰───────────╯
+"╭─rowbly-test-XXXXXX─────────────────────────────────────────────────────────╮╭──────────╮╭───────────────╮╭───────────╮
+│ Website web                                                      me: alice ││Settings ,││Stages │ List v││+ New Story│
+╰────────────────────────────────────────────────────────────────────────────╯╰──────────╯╰───────────────╯╰───────────╯
 ╭─Boards─────────────╮╭─Board──────────────────────────────────────────────────────────────────────────────────────────╮
 │  1 API             ││● Backlog (3)           ● Todo (1)              ● Doing (1)             ● Done (1)              │
 │▌ 2 Website         ││━━━━━━━━━━━━━━━━━━━━━━━ ─────────────────────── ─────────────────────── ─────────────────────── │
@@ -31,9 +31,9 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 `;
 
 exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
-"╭─rowbly-test-XXXXXX─────────────────────────────╮╭───────────────╮╭───────────╮
-│ Website web · Stages 4–5 of 6        me: alice ││Stages │ List v││+ New Story│
-╰────────────────────────────────────────────────╯╰───────────────╯╰───────────╯
+"╭─rowbly-test-XXXXXX─────────────────╮╭──────────╮╭───────────────╮╭───────────╮
+│ Website web · Stages 4…  me: alice ││Settings ,││Stages │ List v││+ New Story│
+╰────────────────────────────────────╯╰──────────╯╰───────────────╯╰───────────╯
 ╭─Boards─────────────╮╭─Board──────────────────────────────────────────────────╮
 │  1 API             ││‹3 ● Review (0)             ● QA (0)                 1› │
 │▌ 2 Website         ││   ──────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━━    │
