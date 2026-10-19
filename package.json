@@ -8,7 +8,12 @@
     "rowbly": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "skills/rowbly-cli",
+    "skills/rowbly-setup",
+    "skills/rowbly-stories",
+    "skills/rowbly-plugins",
+    "skills/rowbly-doctor"
   ],
   "engines": {
     "node": ">=22"
@@ -45,5 +50,8 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
-  }
+  },
+  "keywords": [
+    "tanstack-intent"
+  ]
 }

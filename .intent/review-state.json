@@ -1,0 +1,1632 @@
+{
+  "schemaVersion": 1,
+  "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+  "items": {
+    "skill:skills/rowbly-cli/SKILL.md": {
+      "fingerprint": "3deeb974230b9ac46099fe7c9c0a8e159f5e1784af3874eb793218068cad853f",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
+        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
+        "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
+        "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
+        "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
+        "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
+        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "evidence": [
+        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "skill:skills/rowbly-doctor/SKILL.md": {
+      "fingerprint": "2ae74bebeee9c47828fbd30ca6881cda878015a641e07a31288d8ec53a0cf5db",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
+        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
+        "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
+        "skills/rowbly-doctor/references/finding-codes.md": "0346eb86c890ace316d3bea3a8a6d27f4e050606ee74e87b4d19fe5208ba9aef",
+        "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
+        "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "evidence": [
+        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "skill:skills/rowbly-plugins/SKILL.md": {
+      "fingerprint": "573e671b6131498430901f3ffcd519e8cbe3d5b59f35a2235593e0131e890896",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/plugins/README.md": "d6a9cf51b0134b3a7d5322745f1178a3599a4161d6e2e708ec6532db2a4b7277",
+        "docs/plugins/built-in.md": "1b48591a97c5cdf10c0c64e650dd29fe2a23ca050ff8fdadfba1ac9262e687f6",
+        "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
+        "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
+        "src/plugins/comments/commands.ts": "d3861a53ad56b06c0b6871d76c9beaa5d702de34927c80d72dc10f8ed48a68fe",
+        "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
+        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "evidence": [
+        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "skill:skills/rowbly-setup/SKILL.md": {
+      "fingerprint": "a7c3f264f2e19530c2ebb778716207397ccbe477da204eaf76787be493e16ef5",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
+        "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
+        "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
+        "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
+        "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
+        "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
+        "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "evidence": [
+        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "skill:skills/rowbly-stories/SKILL.md": {
+      "fingerprint": "95dfd370d4f9dae0f8804aea210a4d970de5f4b480aaa420ccd4f4821d6a64b0",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
+        "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
+        "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
+        "src/commands/tasks.ts": "e19a43b4f88a33f2f14a159283c1a3df657d60bbc71e77db015b688ad4bd0de4",
+        "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
+        "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "evidence": [
+        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "planning:skills/_artifacts": {
+      "fingerprint": "7b9d36b312d9ddb647623b7b9fffdf8cc35d84af2fbde49f126e98823a4908d5",
+      "snapshot": {
+        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
+        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
+        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
+        "docs/plugins/README.md": "d6a9cf51b0134b3a7d5322745f1178a3599a4161d6e2e708ec6532db2a4b7277",
+        "docs/plugins/built-in.md": "1b48591a97c5cdf10c0c64e650dd29fe2a23ca050ff8fdadfba1ac9262e687f6",
+        "skills/_artifacts/domain_map.yaml": "4ada5b6182c90bd77b4656e5f9f36cdf9af04169ea44f077bd4e337ee0415b27",
+        "skills/_artifacts/skill_spec.md": "7b960e61e85bd5e4a190020151dfe957dc6332e8e878b5d569cd4e9775f59532",
+        "skills/_artifacts/skill_tree.yaml": "d59586ff2b43ecb02ac93f8ba7e03243a83f4469651a0f14f29bf237ffb19b7e",
+        "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
+        "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
+        "skills/rowbly-doctor/references/finding-codes.md": "0346eb86c890ace316d3bea3a8a6d27f4e050606ee74e87b4d19fe5208ba9aef",
+        "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
+        "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
+        "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
+        "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
+        "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
+        "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
+        "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
+        "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
+        "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
+        "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
+        "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
+        "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7",
+        "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
+        "src/commands/tasks.ts": "e19a43b4f88a33f2f14a159283c1a3df657d60bbc71e77db015b688ad4bd0de4",
+        "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
+        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf",
+        "src/plugins/comments/commands.ts": "d3861a53ad56b06c0b6871d76c9beaa5d702de34927c80d72dc10f8ed48a68fe",
+        "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
+        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
+        "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29",
+        "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
+        "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml now record the five domains, the skills with their tasks, failure modes, tensions, gaps, decisions and batch 1 history; the tree lists the doctor reference.",
+      "evidence": [
+        "YAML parsed by intent maintainer sync/validate; intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/ARCHITECTURE.md": {
+      "fingerprint": "5b0188d3cd134ec22805861a0300fecf3019ae053222007702ab7352a2c548e5",
+      "snapshot": {
+        "docs/ARCHITECTURE.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/CORE_CONCEPTS.md": {
+      "fingerprint": "766b430cf6a14f04d173cedc9cc77c69c70b2b3b87c41685b66259a1a614b3e9",
+      "snapshot": {
+        "docs/CORE_CONCEPTS.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/EntityDiagram.png": {
+      "fingerprint": "958a7d07e906933abd505bea49aea1ead01d6b9f3ea57e85c87acb101db66c0d",
+      "snapshot": {
+        "docs/EntityDiagram.png": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/OPERATIONS.md": {
+      "fingerprint": "a2eed2687330c104c6b701033caa494401ecca3d7b7723e08a171178d3117240",
+      "snapshot": {
+        "docs/OPERATIONS.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/PLUGINS.md": {
+      "fingerprint": "77d824b08b3b9d251a79959ff38f9ded370854646ac96d6c03dad3cc2c49632f",
+      "snapshot": {
+        "docs/PLUGINS.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/README.md": {
+      "fingerprint": "05fea754c2a9990e9c592cf50050b9b9be196450f5cfe680d514339b791711bb",
+      "snapshot": {
+        "docs/README.md": "425df8db416807d7b654a216a80b669b714e2811c634f3a749a8bd8b29bb05c1"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/TECHNICAL_DETAILS.md": {
+      "fingerprint": "590089ec79e46c64ab9b179606c76ad87fd6046d11b22718786d77af8be66cdb",
+      "snapshot": {
+        "docs/TECHNICAL_DETAILS.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/WRITING-A-PLUGIN.md": {
+      "fingerprint": "b6b341f5671998df311eb7be91fe16a248f14e8b474322d5ede2eaef2ec5f244",
+      "snapshot": {
+        "docs/WRITING-A-PLUGIN.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0001-json-files-not-sqlite.md": {
+      "fingerprint": "b2088675e8f7749beede3ffba39acc07bc0705b9830cefa96eebae0e58fd95a7",
+      "snapshot": {
+        "docs/adr/0001-json-files-not-sqlite.md": "5d47c11bbd105168f5b2176b78db4de1b769aa3f23097958f8d7884a4b6d8f35"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0002-data-root-discovery.md": {
+      "fingerprint": "00a14d1074d02ff6550a98aabf7d63768ae5997c613f1e527e85945d47da679b",
+      "snapshot": {
+        "docs/adr/0002-data-root-discovery.md": "c03f3d52468bb59d013d0580682432c576d7c840c1ac2ee8d453cb37d64fb53f"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0003-story-keys.md": {
+      "fingerprint": "92a08ec29139147196ea5103b03120b35438b0f075348f121fba738949c6314a",
+      "snapshot": {
+        "docs/adr/0003-story-keys.md": "c5341f14ed957906b8e4e5a861c9d95b4de627c88d89531c4ef9436493b6fe01"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0004-epic-link-on-story.md": {
+      "fingerprint": "1fb68659f66bb055ca505d1436fbfc2495659d98de2e1d8ed6283c71001eb755",
+      "snapshot": {
+        "docs/adr/0004-epic-link-on-story.md": "6ede5fa901a15be9a572182d95a43a42c83c7250d862ee6edde13b170e331caf"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0005-stages-and-fields-are-configuration.md": {
+      "fingerprint": "cf817fbce27334edaa2d82ba31d6dfab2bb9689f813f479043c08e1df90f61b8",
+      "snapshot": {
+        "docs/adr/0005-stages-and-fields-are-configuration.md": "a465ac0a642ac1f33c2b590c83800c4b42217adbf831f454d170d360a34ccb7a"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0006-ink-owns-the-interactive-mode.md": {
+      "fingerprint": "76d9d41bc7aa6f962af89b186782352b0420ff661e1d8ba40b5186e9f0479f2c",
+      "snapshot": {
+        "docs/adr/0006-ink-owns-the-interactive-mode.md": "10cf3bfb6110ef58bc06cddb207a8024014abb50d0314bc02a689f8d7e034245"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0007-no-workspaces.md": {
+      "fingerprint": "d1af3c65476d031dab38c803deaf9a2417047ae092b72fe550dc73dc5dec49fe",
+      "snapshot": {
+        "docs/adr/0007-no-workspaces.md": "a9043c9e18a4633c8c42345b324aaf8d750109bb9351b1c17dcde72c25a13683"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0008-no-epics.md": {
+      "fingerprint": "d61be5c2b309602f01a263e47908b30905c61f4f740e5180bbf7eff55a6fad97",
+      "snapshot": {
+        "docs/adr/0008-no-epics.md": "a289d4477adabb93c433fc29368cc3fc3df390ec0e59e51c9351bddec094739f"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
+      "fingerprint": "b6e295ad00e46b9169e76431097aeebc3a05dd7e31102fa770a62718c9a9a498",
+      "snapshot": {
+        "docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0010-plugins-are-turned-on-per-data-root.md": {
+      "fingerprint": "6cbee3dec29c7eb99e0fc97087c2773c053311cd5b410d6506ffc0373bc62410",
+      "snapshot": {
+        "docs/adr/0010-plugins-are-turned-on-per-data-root.md": "de8efb2c15074373cffa6d7ec5ca927e4b274b7bf9a860f57c205273a51ea7ac"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": {
+      "fingerprint": "c20c17ca8e4662ff06085c4e88d42861ae41487186badcbcbbb70b626502da9b",
+      "snapshot": {
+        "docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": "ab964cb0b5961cbc8051f779e8dcb56fe759cbf77144830159a491005d6d6bd8"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0012-plugins-intercept-service-operations.md": {
+      "fingerprint": "6e0967e1f665b9a237f032ed077c0a3536191ddd52a1e7db7b6e26323e532111",
+      "snapshot": {
+        "docs/adr/0012-plugins-intercept-service-operations.md": "b4f47e2c7820ebb20f526a9f5a2007fab824b42a56861ecd2658a162dfafcbf7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": {
+      "fingerprint": "4c4629f7581d3854d65ec9a518b87369a6e92da079fc3870a4f01e48570c7c2b",
+      "snapshot": {
+        "docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": "eda52f3752d9f63bba4a44ef8ab443e2ad01110540b2642602541c3da16528d7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0014-epics-return-as-a-built-in-plugin.md": {
+      "fingerprint": "dbd8d1cefc584f8251eabdf516a5cba1192b3bf1139210fd26492add61c341a2",
+      "snapshot": {
+        "docs/adr/0014-epics-return-as-a-built-in-plugin.md": "f540fd18128ed0741ba049468ad79eaeed964d1d7476e57e01f1948a76626d07"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0015-specs-are-markdown-files.md": {
+      "fingerprint": "ee89b07989a4a66755c5f0ae5442979703700c1b201d3afaad7753c1c4f913fd",
+      "snapshot": {
+        "docs/adr/0015-specs-are-markdown-files.md": "2864e77eec2f4490093d5e40c2057f9f2b998a6bfa42c4a8727aa65e3b9cca4d"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0016-git-automation-design.md": {
+      "fingerprint": "0b4b2f41e4060b8af4ac09cc4cb3d264f7faa145a4102aacd5af815c7d538a2f",
+      "snapshot": {
+        "docs/adr/0016-git-automation-design.md": "c3830f871e187ad2df9e80d54a695e3400089832bfbd2ce24e7d7c0befd0cde7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0017-actions-are-tui-only.md": {
+      "fingerprint": "244e10d40ecb8d561cbeb1a8653249f07b73b4b32d4ee05e31f5efa7dadeacdb",
+      "snapshot": {
+        "docs/adr/0017-actions-are-tui-only.md": "b40fed05c66ddc2d222270d6b0af7bd0a90c52378da3943c5ea4c52ed7f347ee"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0018-comments-are-a-built-in-plugin.md": {
+      "fingerprint": "8e4e54c4e8421c03ff52a88f9bfc3a1cfab72d0d17500723c6b4997db1f2af4c",
+      "snapshot": {
+        "docs/adr/0018-comments-are-a-built-in-plugin.md": "f1d935a90d2e45556ebc73d0ce2316a972ac822dcafbeeff2f7ebd9af0df35d0"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0019-coordinated-recoverable-commits.md": {
+      "fingerprint": "44e8b61bc3ff688f311c3fb631ac2ef2f04989158a2e86f4576e675ba22cae99",
+      "snapshot": {
+        "docs/adr/0019-coordinated-recoverable-commits.md": "6a4685a897d9c7a4c5368e9bea40861833331dc262c1e035328b1393ab60b8ba"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0020-plugin-execution-and-data-contracts.md": {
+      "fingerprint": "26ac7205115a107b77534773e658842df933182bcacdbc23afdf27c53947b000",
+      "snapshot": {
+        "docs/adr/0020-plugin-execution-and-data-contracts.md": "03acab392100cd3218b84158b3a2b5dbd6948af3f4b65f45c1e3feae4ff77de5"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/0021-plugin-format-and-compatibility-policy.md": {
+      "fingerprint": "f31a97b5b1c6ee418216124315ed8cb9a77b06c91bace5af7bfb3694573b43a7",
+      "snapshot": {
+        "docs/adr/0021-plugin-format-and-compatibility-policy.md": "9424a9b1d751bc8c5851c133aed9bc650d71eeda4815ed0ccfde480e1a0d0577"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/adr/README.md": {
+      "fingerprint": "97f8d52c797aa545e66cb1dbd1e142a5eeb8b73e943952962646827dad029603",
+      "snapshot": {
+        "docs/adr/README.md": "37adbbb93986390c58d4ec5f49cf3b9392342c623acf28d7eb381121ed8bd65c"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/architecture/operations.md": {
+      "fingerprint": "8644f141f196f1dfd57cb1a620b7fc9c7400a88f882b801fa4cd7eb5156136ce",
+      "snapshot": {
+        "docs/architecture/operations.md": "fc458c9ef80e13d7a9d827934d56fd0bf17c6323581b8af12b2dbf20f90744a7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/architecture/overview.md": {
+      "fingerprint": "217bdd3123b22f1ba031737ff007deb574970f054bfa6b0a05d5c3b9cedb273c",
+      "snapshot": {
+        "docs/architecture/overview.md": "6811720cba23f4d8e57038b155736a33722e37284f7006fc83aa4a7cead618f7"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/development/README.md": {
+      "fingerprint": "b6f320b864a9cc3ca7d1a0cb4c1b8a67d4e1fc7c5d99e2efd2807c7b75ce1032",
+      "snapshot": {
+        "docs/development/README.md": "3e948f16d05eedbd7a5b7982b217a08a623ffce5885051a54a55c7b6a7b56228"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/API.md": {
+      "fingerprint": "ab691471a4b6b047f6adf1caa9cf09fda8525a70cd6e06ff8e472bacf9f3447c",
+      "snapshot": {
+        "docs/plugins/API.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/COMPATIBILITY.md": {
+      "fingerprint": "ee80bdc6516e11ca487a7040b5fe2db131cf7e024f7f2263b2bde0f92092962f",
+      "snapshot": {
+        "docs/plugins/COMPATIBILITY.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/TRUST.md": {
+      "fingerprint": "bd9dfe75ffeffe791f2c270a4bf25d2589d568dd9063075e4e1751504ddb40cf",
+      "snapshot": {
+        "docs/plugins/TRUST.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/api.md": {
+      "fingerprint": "6db018a54f6f265168904ea1af600458ca853e43ab0cd33456c6390d73a3a095",
+      "snapshot": {
+        "docs/plugins/api.md": "d557324356ba6f2fc7936e38466b2fa7c0e036bc0215643d62d0c7076937fc24"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/compatibility.md": {
+      "fingerprint": "3bd2e3470aa670a1cb83e3f478f4b066737b2dded7f37c28f9769ff19eec946a",
+      "snapshot": {
+        "docs/plugins/compatibility.md": "40c7d56e06ed70f075911b69e95c49d60c05629139b4435cbb94c42969c02f6d"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/trust.md": {
+      "fingerprint": "5f170ba26eef05e62ac386b4b81b0068201f6cb613e140a41dbedd04ae5d9d1e",
+      "snapshot": {
+        "docs/plugins/trust.md": "2464d9075d0bfb6d392fcc3bac9052b200d309d4accd2b7d9475823e0e11b1f8"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/plugins/writing-a-plugin.md": {
+      "fingerprint": "ec2abfef7908869da826d85efbe1278a5105cea3fd8a3edc750f9b617e2ba18d",
+      "snapshot": {
+        "docs/plugins/writing-a-plugin.md": "c50a1ffe6be8e047644ead00ce5fefac48e0e04fbf719372b50ed4c17ae7afcc"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/README.md": {
+      "fingerprint": "91845fc2bad16ff444d1334730cb0ad9430e08e28b68df9f33cb01f22bb70bd7",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/README.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/code-quality.md": {
+      "fingerprint": "761135e9e52ee1837f0dc594e2096032e5cc4769828a3e8e63a3870a5baa4b42",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/code-quality.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/finding-index.md": {
+      "fingerprint": "91a9f795238d3cd1fe61e4a70d75df18fdaa024f2e485a037f715777e9c746f1",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/finding-index.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/general-architecture.md": {
+      "fingerprint": "cd6ab6e5cb5a78c7be49f9e209c7644ee0bbd87899f91fc525c84612e681a589",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/general-architecture.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/other-areas.md": {
+      "fingerprint": "939b8b086ae457551439e613dcdd748186c56f41396b8ae586b6e9d548d5cef4",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/other-areas.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/README.md": {
+      "fingerprint": "57bc04b409057ffbf40650af4cbb5786b514890634fa798874e2fc1a47259bb7",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/README.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/crosscheck.ts": {
+      "fingerprint": "39dfd784bbf46e44bc7bb964e9cb41fdadb6eda6951f3c10d5a140677c57a2c1",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/crosscheck.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/extra.ts": {
+      "fingerprint": "250b5693d9be3225ba16cb79c7d4a18ae59ffe46669ca7929f85393a4670c3c4",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/extra.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/lib.ts": {
+      "fingerprint": "86c60cd9b520c5b27f44c7a364bc448028f1fc4b52d3ec93ea46efbf6b4faf52",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/lib.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/more.ts": {
+      "fingerprint": "908dd3b8af17c12fcf12c230146c744597c91bfb4c4a68fb4f9b031914e60fd8",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/more.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/move-file.ts": {
+      "fingerprint": "90727aefc9e53fa8000f19c65cae73759b5b2a3dda2ee1df6651370647d0e609",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/move-file.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r01-concurrent-create.ts": {
+      "fingerprint": "3015a319ec7b2b06506fc9f1fe69a173d3866bf2190587c43a1c1641661379a3",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r01-concurrent-create.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r02-reentrancy.ts": {
+      "fingerprint": "31c8d07f7f92cda20630a6b8f040f1137916333792bbdc39c04be7169ab96587",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r02-reentrancy.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r03-partial-save.ts": {
+      "fingerprint": "dbe4de6d7e0f11c365d348af995d9d4bc7d5a4c04367a50cf9df6fcb38b6c945",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r03-partial-save.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r04-renumber-stray-folder.ts": {
+      "fingerprint": "82b3b30f082b338a9c4a6ab08a9ccc2ccfe57eb7eb71c526d71568aa4849450d",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r04-renumber-stray-folder.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r05-orphan-adoption.ts": {
+      "fingerprint": "052f470669918d19cee8dcd4eaf619964ad45af0a33ec4f28bb68cca929acc8b",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r05-orphan-adoption.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r06-doctor-stale-key.ts": {
+      "fingerprint": "d7a5ac60dcfbfd8a1b6d09e1fa7d188825e99dfac5695f13484488abe297d48e",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r06-doctor-stale-key.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r07-corrupt-epic-file.ts": {
+      "fingerprint": "08a5c811dad6e9368d944a6159057ce3a5d540d1977e1f545150b0e3834dbb3d",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r07-corrupt-epic-file.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r10-prefix-cache.ts": {
+      "fingerprint": "da0091edea08d52cc4b59cefbc4a5988811c95db006e6be4436aad12aee1d99f",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r10-prefix-cache.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r12-invalid-bag-shape.ts": {
+      "fingerprint": "370c71b6e66fd861fcea0f73715c0256f2b13cfd2238739bdc3223c3c2200f1c",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r12-invalid-bag-shape.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r13-invalid-bag-dropped.ts": {
+      "fingerprint": "1f61f87331773129c434ce1b92b2c05aaaa1e595dec4cadff48dcbbd932e9afb",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r13-invalid-bag-dropped.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r14-moving-folder.ts": {
+      "fingerprint": "8f598401df34c0635cf43ce16c88dbaf0f3acb2a47ae5a19ba99bcc28bd845a8",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r14-moving-folder.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/r18-hang-and-fix-isolation.ts": {
+      "fingerprint": "2ad99b720e8b7d602de2e6b3454b5e29517f438ad3949bae1da24f01cf71437e",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/r18-hang-and-fix-isolation.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/repros/text-failure.ts": {
+      "fingerprint": "88238622fc72ad04bad5a7d154c7453bac8410582a01e1a2bde17b92576efece",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/repros/text-failure.ts": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/resiliency.md": {
+      "fingerprint": "708839497b757ae8a035c63e5d5a7fd9efb7ad84b613ca74732fa955b4af4129",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/resiliency.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/reviews/plugin-architecture/straightforwardness-for-plugin-authors.md": {
+      "fingerprint": "3226e22ae61a264dc229468e4bbd1c4de282d46cbe24077b9749764d8ad353a2",
+      "snapshot": {
+        "docs/reviews/plugin-architecture/straightforwardness-for-plugin-authors.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/README.md": {
+      "fingerprint": "5112aecdcc4a5879e2bac7cd3aa66b155e1e935eab632536128c826436eb0ba7",
+      "snapshot": {
+        "docs/spec/initial-spec/README.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/contracts.md": {
+      "fingerprint": "44f702829e55f99e9a1c1de202731a6158c0053f38a0c58e911703df0f1007d9",
+      "snapshot": {
+        "docs/spec/initial-spec/contracts.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP00-scaffold-and-contracts.md": {
+      "fingerprint": "be7e088121dea40a5d3962ae7687a41ddc18f83de556fff2087718f478c148ad",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP00-scaffold-and-contracts.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP01-storage-and-config.md": {
+      "fingerprint": "a29bb690cda68c04c73a1c84c5ce78092b4d171f61ff00aa605302871eb2a932",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP01-storage-and-config.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP02-tui-foundation.md": {
+      "fingerprint": "0c997cc5261fbe1f43765f3475e6191725c814c625cb4a101b78981e7aa3b031",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP02-tui-foundation.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP03-workspaces-and-assignees.md": {
+      "fingerprint": "c0b43eac12f99029dc1fe52f639d750c144e42895abffeece54c53840dcf59f2",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP03-workspaces-and-assignees.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP04-boards-stages-fields.md": {
+      "fingerprint": "bdc7363cca376c61992d51d1b4964c3814d03f068190ce4046b86864845ca07a",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP04-boards-stages-fields.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP05-stories.md": {
+      "fingerprint": "8cdfe19d90a942e1823c6a1871de1cd8699776b778c89e1d36ba520d4b15c1c2",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP05-stories.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP06-tasks-and-comments.md": {
+      "fingerprint": "3a3110e2f43e79ef745b9e2a6be193dbb819db92f4935070948fdbae5f8cd275",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP06-tasks-and-comments.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP08-setup-and-context.md": {
+      "fingerprint": "9f7b97e9e13d7be2dea94c42966e9f15e5459a1afb153cfb759184fa7da59994",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP08-setup-and-context.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP09-kanban-board-view.md": {
+      "fingerprint": "ec5f04e8acbb643a1ddcc55f8627565589ea46e9557ef078c59606d485c65def",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP09-kanban-board-view.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP10-doctor.md": {
+      "fingerprint": "ba8d1c2fc45941c231e7897574dc4cbe0dff37fad951bca2ae49d1bf4cace71d",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP10-doctor.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/packages/WP11-hardening-and-docs.md": {
+      "fingerprint": "49b3bcb3dccfec84b20a2a50f8321c92774158dfab95b00da18af67e12eb4f39",
+      "snapshot": {
+        "docs/spec/initial-spec/packages/WP11-hardening-and-docs.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/supervisor.md": {
+      "fingerprint": "b9b09f8a51e6bc22c56120e746f2699f6c3b2714b1addc6c6a0d43e5f57d0ca0",
+      "snapshot": {
+        "docs/spec/initial-spec/supervisor.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/initial-spec/worker.md": {
+      "fingerprint": "39c6eaf24ba9a21845abcc2d9c4e954fd69234007b3f7b6fc45a97ad0873c029",
+      "snapshot": {
+        "docs/spec/initial-spec/worker.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/README.md": {
+      "fingerprint": "91bdc66f45991d892debb0fddec61a8ad4059cda439c038afaa6b2f6a787bc7c",
+      "snapshot": {
+        "docs/spec/plugin-review/README.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/contracts.md": {
+      "fingerprint": "1f597152bfdf726606583bb3279f81aa6843aee5edf65b0a5d69f3b60094b760",
+      "snapshot": {
+        "docs/spec/plugin-review/contracts.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/findings.md": {
+      "fingerprint": "bbd59669d28bba1dabe211ea4b3a607b6fad3753455642bc5f2bd3ba14cac348",
+      "snapshot": {
+        "docs/spec/plugin-review/findings.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP00-contracts-and-adrs.md": {
+      "fingerprint": "c14f91b8db13db22e76887af3a9b735d1f926ba5be390e48733b98ce2723b815",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP00-contracts-and-adrs.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP01A-execution-scopes.md": {
+      "fingerprint": "572d0e6c8d07b64807f076eba26804bec7967d78231bf82a3e71df2d0d5d5fb8",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP01A-execution-scopes.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP01B-callbacks-errors-reactions.md": {
+      "fingerprint": "f2dfea64f7f8020579ba59e81c32bc42bd9aed22393582c07af28b59ae6f2782",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP01B-callbacks-errors-reactions.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP02A-change-set-plan.md": {
+      "fingerprint": "ca4d2ec25b533cfd25e92a3eb49c3e13a0c638aac2d70c225a07616dbfdb3905",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP02A-change-set-plan.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP02B-storage-commit-engine.md": {
+      "fingerprint": "bd169458e712de97b0ef83b69503fcc589e1414bdb02b7923676738b7f1e3478",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP02B-storage-commit-engine.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP02C-coordinated-operations.md": {
+      "fingerprint": "4e9f15bb57950d46359aa10457ee2484052424479fac5b9d9db94a9c8a89ac68",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP02C-coordinated-operations.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP03-doctor.md": {
+      "fingerprint": "b21c89fb047a8a71065315a294424c74558a26b86fa034312231de8913e477dc",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP03-doctor.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP04A-api-safety-contracts.md": {
+      "fingerprint": "00f3d91a24d1417b50507d537539a1333237b3cf3bbba329d2021e89238255c2",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP04A-api-safety-contracts.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP04B-inputs-and-author-api.md": {
+      "fingerprint": "53c6528b741f0aa82390281027c0f90bf82983a71484de5799f867ef83f040c6",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP04B-inputs-and-author-api.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP05A-form-preservation.md": {
+      "fingerprint": "f89eb16adedfff995688ae7c538b747e5f133b1b84a3acb9c500f550ebc6eda8",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP05A-form-preservation.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP05B-tui-containment.md": {
+      "fingerprint": "03d824c83773c6e6fa46eeb04c8bab4b53e0bf4adf24aefcdfc001d6b38a5297",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP05B-tui-containment.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP05C-combined-edit.md": {
+      "fingerprint": "2f59f2c1b5035b8bdda23103eb9ef37cc5bbb98d233435b1eeab420e8c8c5181",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP05C-combined-edit.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP05O-tui-organization.md": {
+      "fingerprint": "365d1fda9b734236df32fbdc69696eff5e10fcb840272621e5be4924c7d60345",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP05O-tui-organization.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP06-host-and-cli-registration.md": {
+      "fingerprint": "74c0d1f350b0c8133ff64084b1618114f9d642c107179d43e08013461014004a",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP06-host-and-cli-registration.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP07A-test-infrastructure.md": {
+      "fingerprint": "eeffc186146069950b852dbcf141a8bb2b4789bd250e135a93b15c4244fecbfb",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP07A-test-infrastructure.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP07B-perf-and-harness.md": {
+      "fingerprint": "a86204b250b09a23ea55876e0696e88d555cf7d666570df32cee201d3dc82d94",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP07B-perf-and-harness.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP08A-epics.md": {
+      "fingerprint": "b51cb31ae7258a34657a6bf225458b6d851a5e4a5ab91bea3692dc5c7d829a8e",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP08A-epics.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP08B-specs.md": {
+      "fingerprint": "972dbbf260da9d1033f783aace89a19e15729a9884bf1474571b4c24557f2da0",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP08B-specs.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP08C-comments.md": {
+      "fingerprint": "bcca3ce7a165df8a05b0439e57f5279c39dd7dcd96db4da0db54fef1337d1787",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP08C-comments.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP09A-doc-corrections.md": {
+      "fingerprint": "cccf54589a57b2ac4c96f78775f80dcc083569133553dd2cd31862dfd05e3ba4",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP09A-doc-corrections.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP09B-author-guide-and-tracing.md": {
+      "fingerprint": "f9c45e6e44ededdd1187e7f72e219c3218a0f4fd097104cb8de5845fff5b3780",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP09B-author-guide-and-tracing.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP10A-policies.md": {
+      "fingerprint": "cd584fbb1010ece7807adb902d83dffa6eb6bd6432370b3fd63326b5a125fa14",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP10A-policies.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/packages/WP10B-external-packaging.md": {
+      "fingerprint": "8b93b2a0eb22f6d28cd1b89825d38054961951ca5adddf36ab81d4adba6baa90",
+      "snapshot": {
+        "docs/spec/plugin-review/packages/WP10B-external-packaging.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/supervisor.md": {
+      "fingerprint": "e7cf83ef2d11dc740c387df0a1e2189d9ce7640bf74461716d3c84aab0fbee93",
+      "snapshot": {
+        "docs/spec/plugin-review/supervisor.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:docs/spec/plugin-review/worker.md": {
+      "fingerprint": "356f682fd4dae156cffb558d0c65e2f74e1d403fc934d86d595a6665f4e2a859",
+      "snapshot": {
+        "docs/spec/plugin-review/worker.md": null
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Deleted or renamed by the docs reorganization (other agent thread); operating guidance now comes from README.md and the final docs paths listed in skill sources. No operating behavior described only here.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:src/plugin-api/index.ts": {
+      "fingerprint": "249fb2d615e58092199b97d0ab05b9b440ddea7d4550283e61b63aafab6f7a01",
+      "snapshot": {
+        "src/plugin-api/index.ts": "2cfdc0ed7b2e90334d7c113ec9580a3bed848de5da42e55db41f08537e43754f"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/architecture.test.ts": {
+      "fingerprint": "91f31f011a08440cdbc169ac3d8d0294a82906a332702a874bfb77f941190ff2",
+      "snapshot": {
+        "test/architecture.test.ts": "1af56486e57fb865dbada868103db2cd4ff3683a536673813b2a63fda3114253"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/hello.ts": {
+      "fingerprint": "7f4b9616d657d4301b7ffb1447a986746bb0389f4a4ab9b9723929b57313cd4d",
+      "snapshot": {
+        "test/docs/fixtures/hello.ts": "6540a3094672f0b6ebd26b50d9df4e0c92cce24f498bc99a70a5eddaa2a0555e"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/points/PointsScreen.tsx": {
+      "fingerprint": "4c268327eed84815c2a72267206c1a5fa8562b282355a4da36d81564eb65d925",
+      "snapshot": {
+        "test/docs/fixtures/points/PointsScreen.tsx": "acaf12d4e5cca5f0eb5c88a4568530265161228a493fa013304dec3949d437c0"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/points/commands.ts": {
+      "fingerprint": "90038da99360fa0fe902a5fe9c06b1523d476281ad74c4e1a0e241fbeef3c834",
+      "snapshot": {
+        "test/docs/fixtures/points/commands.ts": "ac06998347b843bc2758f0f8c958f5ac5d4c1d4c1741c9a054c0b580c495f9b9"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/points/index.ts": {
+      "fingerprint": "a9db95c00a5a70ce6c9e169cfc70dd78d8cd3ca48ffce81ecb8d7e8e57e7d921",
+      "snapshot": {
+        "test/docs/fixtures/points/index.ts": "4c3b21283aac5500958eb386aa77e1540f64eba85b80ec8fea73b5c30404e9d1"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/points/model.ts": {
+      "fingerprint": "e7236b29290555fa5677f3e9301fe7f7540b14946c8a7a38d3484911143527fc",
+      "snapshot": {
+        "test/docs/fixtures/points/model.ts": "bf6a5789355110dd43219001b2d7984490e977beb1d79ef2c7dafc6b49c8a806"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/points/tui.ts": {
+      "fingerprint": "b2a385b2104d76ebe76d38d443b27e88eb2c2a06cb4085ec4c07913f71651c79",
+      "snapshot": {
+        "test/docs/fixtures/points/tui.ts": "b9520863c678ca36ce5e0831c7fff3f2936e1b6bd8a2ba33a68f4005537fbeaf"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/reference.ts": {
+      "fingerprint": "0fdf077e6c5866ca5ad267c7c2c24894ca344edb62a3aca9bd574b9a8052554b",
+      "snapshot": {
+        "test/docs/fixtures/reference.ts": "7b16a3bd326c1426da63c149cec2365edb3368b7d02ddb75eb86440aea9d0744"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/fixtures/trash.ts": {
+      "fingerprint": "6a4203ec99c0a73bf2d23788a1f41ff606532749b0b0396595af7c7aa6045b63",
+      "snapshot": {
+        "test/docs/fixtures/trash.ts": "d49a851afb54b544667b8fe2eb8bc18eee618371b7d5b55afe08e8a95d80fa36"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/docs/tutorial.test.ts": {
+      "fingerprint": "33f69d4b3917bd4bed4e842a1508563f5b816203a7177bc1bf31e6e39d8d23a0",
+      "snapshot": {
+        "test/docs/tutorial.test.ts": "793e67a362b3332819975903c1e62dc7818f6cfa7caa0b2cdd173d7b0ca8e1e5"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/e2e/language.test.ts": {
+      "fingerprint": "6dbd44b10ce68c052472193b19284fa86414d0cab1420875b5803fe331d0404b",
+      "snapshot": {
+        "test/e2e/language.test.ts": "4a14a101e8c743f3539b239ae4073cf3592ab5bb2048094ab6f91cda9a508ba4"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/plugins/operationInventory.test.ts": {
+      "fingerprint": "14e4fddffdf9da909ae1fe3c029a8881a678fc9843eb8d231b5fa8db0abd307e",
+      "snapshot": {
+        "test/plugins/operationInventory.test.ts": "4e1df006d920e9f1e5503997a5952324777990b7db484e05c424da18e68653ed"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "evidence": [
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+      ]
+    },
+    "source:test/skills/agentWorkflows.test.ts": {
+      "fingerprint": "e5cb952b767015bfba05a9045ecf44974167542ab4b0a7c4e833af5d02c508fc",
+      "snapshot": {
+        "test/skills/agentWorkflows.test.ts": "0bcc26ccca7984d84673c5401d2f64b579c5e1319c703e3767dfd99dd98a435d"
+      },
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "updated",
+      "reason": "Executable task checks added for batch 1; they exercise the guidance in all five skills.",
+      "evidence": [
+        "10/10 passed with vitest run test/skills"
+      ]
+    },
+    "source:biome.json": {
+      "fingerprint": "96514180bfb744aaa9a7525d0af009ebac47ad066e4ad68cd826ba6da051a522",
+      "snapshot": {
+        "biome.json": "88ef69d4c7aad0163f887f4a10e6f4cd904b721f7d60e9df8efef790fd1931bf"
+      },
+      "head": "b4f58f8b99f219adc0084a6db49c6169b09120bf",
+      "outcome": "out-of-scope",
+      "reason": "biome.json now excludes Intent's generated .intent/ state from formatting; lint config only, no CLI behavior the skills describe.",
+      "evidence": [
+        "pnpm lint passes (370 files); git diff biome.json is one includes entry."
+      ]
+    }
+  }
+}
