@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "bbaf3262925e9d5ba19327750872d57272c854ca58d12759d42151b05be366ab",
+      "fingerprint": "b8c94b686506ba95067d2d0e8f93b5f5272b2dc02b0f3ceb3711c692993f580e",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,17 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "fea9b367cbb03a0240170bf3e8c490111de4bcf5486e6ec7f386000882aedaee",
+      "fingerprint": "2027254c9f96c1c8c005a4e4a400465e595a3f577f73f53115fe34e669fc0e0b",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -32,17 +34,19 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "rowbly-doctor's findings still match: an old-shape stages list is SCHEMA_INVALID and Stories in a removed Stage are UNKNOWN_STAGE; its changed sources (README.md, data-model.md) changed only Stage and list-view text.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "2117fb3f3ec4176c52469888c21f9eed819fa5b066280a6f6e187168180293ab",
+      "fingerprint": "97bee4c2b15d312fdf9c958181b8455f78e13430ea6ad4bd2fe63800639110f8",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
@@ -53,17 +57,19 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "46b653e6b36247ae72c1e9ab70f362c391e0f085d94ab82153b1e8c0901fda6f",
+      "fingerprint": "860c8a0cf23c9a468bb896f96c74a53588ec59b5c8adf0eaefc92cea7c8dedc9",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -72,17 +78,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "914340e82c79826274f571551a0807a5277d3beb5fe1a13f485d9fd9b9c33434",
+      "fingerprint": "0504e4046c4f65d3be6dd4625bd6ccd4e8134830dd01bcac3639478027d2fa4e",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -91,17 +99,19 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "738a078b0df5a560d939c8fe244bfe33421b35a2600c17fcf28f38cabb1e1630",
+      "fingerprint": "a4a1956343f05bb243a5d340a8d8e49fcd5411557db1e7c2c9d171cd22067ca1",
       "snapshot": {
-        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "README.md": "48dde72069a0dbffb923e957ac7ba931ad96f82c60d05568ced69b30eb60fd0b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -137,11 +147,13 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "Reconciled all three records: skill_spec.md gains a 'fixed Backlog and Done Stages' history entry with the superseded Batch 1 decision; domain_map.yaml failure modes updated (no --category; start Stage by category board); skill_tree.yaml identities, paths and sources unchanged and accurate.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1633,33 +1645,31 @@
       ]
     },
     "source:src/tui/components/Modal.tsx": {
-      "fingerprint": "bf20a3ea14c53e8bdcea3b09af120a062d4e89a4da9176fcc52bc9483b4e2c25",
+      "fingerprint": "e29bd9b878d9151954ff8c3017b349bdc6b4387fb7d47cd9c7e660202fcec4a1",
       "snapshot": {
-        "src/tui/components/Modal.tsx": "e5cd3ccb86acd4af0dbaf07f0917eca3f94f6ac81bbffa239ce01a4f45b80697"
+        "src/tui/components/Modal.tsx": "0bf9d004caf252aebcf5dbbd3549e059d17b825342b537797d79fb8e5ff1df0c"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "This file changes or verifies shared TUI presentation: Modal now uses natural Yoga layout capped on the outer Panel instead of first painting the maximum height and then measuring. Existing published skills explicitly teach CLI operation. TUI development conventions remain in AGENTS.md and docs/development/README.md; this fix does not require a new operational skill.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/components/Panel.tsx": {
-      "fingerprint": "2eabade04a4ac57b5577ab6a960461b8f501a091593938298bdac3c094440e60",
+      "fingerprint": "1379ec67cf0c6bbad4b298f567ffe0141098bf6317a52884aad3930502fb2372",
       "snapshot": {
-        "src/tui/components/Panel.tsx": "569080820e6a27d514ddc546391c1106c4ec6830290ec7f24dc1f1c575d4a3df"
+        "src/tui/components/Panel.tsx": "a2774b1f29634b807223ab3b02c9bb987a05732ded3ad8e589c82ceaac3137af"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "This file changes or verifies shared TUI presentation: Modal now uses natural Yoga layout capped on the outer Panel instead of first painting the maximum height and then measuring. Existing published skills explicitly teach CLI operation. TUI development conventions remain in AGENTS.md and docs/development/README.md; this fix does not require a new operational skill.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:test/tui/modal.test.tsx": {
@@ -1738,15 +1748,17 @@
       ]
     },
     "source:src/tui/keymap.ts": {
-      "fingerprint": "574c17ead35d215d8d33e2db712f73740f87f4a9d711e09ce7704d87da4ad712",
+      "fingerprint": "576e6f1e296d23607956ad32d4fd7dfcb9126cda675aab6b109285d5aff38553",
       "snapshot": {
-        "src/tui/keymap.ts": "5da009b07ce4969f08938ce8d87efd9863006b3c576785969a9d1722eeaadb29"
+        "src/tui/keymap.ts": "fb2baa370cc758d481688a9dc31f2fd02624dc8de1c56c7a9a6f6564e3cea353"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
@@ -1810,27 +1822,31 @@
       ]
     },
     "source:test/tui/components.test.tsx": {
-      "fingerprint": "ea5e8572b64706db2b9f098e8287470e4bd6627d253fac61cea18cf656509728",
+      "fingerprint": "2aeb655b0d390c5055fac9fcba10d420d53e5d47c167276302ff81dfef05ca2d",
       "snapshot": {
-        "test/tui/components.test.tsx": "9009dfd596b3fa6ddb7c5abb084fccf1a517465edda6f8c32f97b652bcb2ebbc"
+        "test/tui/components.test.tsx": "198bab67e168717bcc82bf5d35ac6eddb9ca928c9845f47a69934f73e4cf17c4"
       },
-      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Changed: test/tui/components.test.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:test/tui/helpers.tsx": {
-      "fingerprint": "1a38108d93b3cf22d75888657e67f8e35bdac2fb7586272be5b4e60e9f1d9d7d",
+      "fingerprint": "d3f31357cb5e5ed438f9ceda7babb7f5b7df4a95581c88050d14e8ef6ac66408",
       "snapshot": {
-        "test/tui/helpers.tsx": "75684ca73486ed666f6f1f51e0fc769844a8f27aceff618e16551139115570be"
+        "test/tui/helpers.tsx": "d3712d0048a042865745f01cb00f0e569c51dc5ecc84aa4f7259e2a1fe65ff53"
       },
-      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Changed: test/tui/helpers.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:docs/agents/CONTEXT-MAP.md": {
@@ -2302,15 +2318,17 @@
       ]
     },
     "source:src/tui/hooks/shell.ts": {
-      "fingerprint": "cc0d6d2b59b98fd0de6e3ba813aa5d1e2fc7d33ab269a61a5317ecfda0701b6f",
+      "fingerprint": "b9c850c4bcc42222fdc142e6f13164fc502be080b1d69a3824036fe7035b7837",
       "snapshot": {
-        "src/tui/hooks/shell.ts": "09c65155972bc9ebd329144b1ff8e9119dce94ad388dd2c2a0055475a43fdffd"
+        "src/tui/hooks/shell.ts": "06cb8f4933e3ce9822b57bfac41be8a3ffc8dbee8457d4ac0aa117927d949c7f"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/loadPlugins.ts": {
@@ -3754,15 +3772,17 @@
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "7b3adcbd6a7d956196a5cdb5c715ef486836c11ebad80f93993af47cdcc7fe20",
+      "fingerprint": "0c86a2f2e5070d188036ac3b6118f53058cb1a98b7a6b6b74ffeb0af87543a79",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "5fee9b54c191aea8bf5b17c105ee9d770efa16b986b69ed8a564d228e1c82012"
+        "src/tui/shell/Shell.tsx": "ab96ce44f5e126a5572eb101658571c021dfd8c1eebb0008c85a8f2f0790be9c"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -3859,6 +3879,104 @@
       "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
         "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/components/CloseButton.tsx": {
+      "fingerprint": "6fa15058794a2f4c2db9289910bee2e7b653280558c1db77771f1b843bdb4237",
+      "snapshot": {
+        "src/tui/components/CloseButton.tsx": "9018f06139389d6f61ee1b60e29f4722175f9ac0d21f62a265e59eb1ad73498f"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:src/tui/components/Form.tsx": {
+      "fingerprint": "81e686b81f083ea5ac3d78c221df4b34eeaaa6cf36ea920957d7e0d0ef3748d1",
+      "snapshot": {
+        "src/tui/components/Form.tsx": "ad0983994bec4c0190228beb2d85545f89af1c3d0cd6a313f4d1efd2a2c79a3e"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:src/tui/components/FullScreenButton.tsx": {
+      "fingerprint": "42ad7d22d3b07d01e1acecadaeb0f10cd27c864e9f44dc28d5b9028732ea1652",
+      "snapshot": {
+        "src/tui/components/FullScreenButton.tsx": "5785b11b4b6aca1d0e50575497569e2e974e3566f39d2b70e3a76293e104fe6b"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:src/tui/components/TextArea.tsx": {
+      "fingerprint": "d5a461f8a3af04cc5457c030f953e5034127abb0b0729539be042ffe165b3b47",
+      "snapshot": {
+        "src/tui/components/TextArea.tsx": "dc7f618da38ddc8c7284549d62cc2363bf465be6f841a244bbda60547b839e16"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:src/tui/components/TextAreaModal.tsx": {
+      "fingerprint": "df48fa5bb53278d86ab2237c9297a554e22f850d4e4fe5b9adfb46aa132ce948",
+      "snapshot": {
+        "src/tui/components/TextAreaModal.tsx": "354083b50b7c9dc5d1fff5ec243f2c57a6f15a2241bfaa7565dcb14bfc8f1007"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:src/tui/components/index.ts": {
+      "fingerprint": "d1767ec4caf6bd0bd245a7ad81845635a494715379eebb4c23088c41f834e1eb",
+      "snapshot": {
+        "src/tui/components/index.ts": "2c7b39b33be729e37c2cbd9468e573d61646b646e1bfd0c6c02511884cf53c27"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:test/tui/__snapshots__/demo.test.tsx.snap": {
+      "fingerprint": "fc9b05e994a96ad5e48b5635f051b302473e30c8e89d1ea9fa572ceb9783fda3",
+      "snapshot": {
+        "test/tui/__snapshots__/demo.test.tsx.snap": "31716bbd00357147647a43ea02cc30aba7f25e97711390b1899f969abe1eac46"
+      },
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     }
   }
