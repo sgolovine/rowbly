@@ -487,6 +487,81 @@ describe('list view', () => {
     app.unmount();
   });
 
+  it('moves the highlighted Story between Stages with shift+↑/↓, through Board to Backlog and Done', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press(KEYS.right);
+    await waitForFrame(app, '┃ WEB-4');
+    await app.press('v');
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f));
+    // From the first Stage in Board down to the next, at its bottom; the cursor follows the Story.
+    await app.press(KEYS.shiftDown);
+    let frame = await waitForFrame(
+      app,
+      (f) => /› +WEB-4 Dark mode/.test(f) && lineWith(app, 'WEB-4').includes('● Doing'),
+    );
+    expect(frame.indexOf('WEB-5')).toBeLessThan(frame.indexOf('WEB-4'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
+    // From the last Stage in Board down to Done.
+    await app.press(KEYS.shiftDown);
+    frame = await waitForFrame(app, (f) => f.includes('▾ Done (2)') && /› +WEB-4 Dark mode/.test(f));
+    expect(lineWith(app, 'WEB-4')).toContain('● Done');
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('done'));
+    // Done is the last Stage: nothing happens.
+    await app.press(KEYS.shiftDown);
+    await tick();
+    expect((await story(t, 'WEB-4')).stage).toBe('done');
+    // Back up through Board with K and shift+↑, then from its first Stage up to Backlog.
+    await app.press('K');
+    await waitForFrame(app, (f) => f.includes('▾ Board (2)') && lineWith(app, 'WEB-4').includes('● Doing'));
+    await app.press(KEYS.shiftUp);
+    await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f) && lineWith(app, 'WEB-4').includes('● Todo'));
+    await app.press(KEYS.shiftUp);
+    frame = await waitForFrame(app, (f) => f.includes('▾ Backlog (4)') && /› +WEB-4 Dark mode/.test(f));
+    expect(frame.indexOf('WEB-3')).toBeLessThan(frame.indexOf('WEB-4'));
+    expect(frame.indexOf('WEB-4')).toBeLessThan(frame.indexOf('Board (1)'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('backlog'));
+    app.unmount();
+  });
+
+  it('unfolds the section a Story moves into, and reverts a move the service refuses', async () => {
+    const t = await seed();
+    let release = () => {};
+    const app = await open(t, {
+      patch: (services) => ({
+        ...services,
+        stories: {
+          ...services.stories,
+          move: async () => {
+            await new Promise<void>((resolve) => {
+              release = resolve;
+            });
+            throw new ConflictError('the Story changed on disk');
+          },
+        },
+      }),
+    });
+    await app.press('v');
+    await waitForFrame(app, (f) => /› +WEB-1 Login/.test(f));
+    await app.press(...Array(5).fill('j'));
+    await waitForFrame(app, (f) => /› +WEB-5 Fix footer/.test(f));
+    await app.press(...Array(3).fill('j'));
+    await waitForFrame(app, (f) => /› +WEB-6 Release v1/.test(f));
+    await app.press('k', KEYS.left);
+    await waitForFrame(app, (f) => f.includes('› ▸ Done (1)'));
+    await app.press('k', KEYS.shiftDown);
+    // Shown before the service answers: the move is held until `release()`.
+    await waitForFrame(app, (f) => f.includes('▾ Done (2)') && /› +WEB-5 Fix footer/.test(f));
+    release();
+    await waitForFrame(
+      app,
+      (f) =>
+        f.includes('error: the Story changed on disk') && f.includes('▾ Board (2)') && /› +WEB-5 Fix footer/.test(f),
+    );
+    expect((await story(t, 'WEB-5')).stage).toBe('doing');
+    app.unmount();
+  });
+
   it('keeps the highlighted Story when switching views, and the view when switching Boards', async () => {
     const t = await seed();
     const app = await open(t);
