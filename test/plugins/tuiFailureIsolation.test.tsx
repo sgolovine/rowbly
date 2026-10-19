@@ -16,7 +16,7 @@ import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { loadTuiPlugins } from '../../src/tui/loadPlugins';
 import { fixedClock, fixedIds, makeStory, type TempRoot } from '../helpers';
-import { KEYS, renderTui, waitForFrame } from '../tui/helpers';
+import { KEYS, renderTui, resize, waitForFrame } from '../tui/helpers';
 import { notes } from './fixtures';
 import { pluginRoot, readJsonFile, storyFile } from './helpers';
 import { focusListItem } from './tuiHelpers';
@@ -151,6 +151,8 @@ describe('Plugin field isolation', () => {
   ])('filters on $screen work without a Plugin whose filter fields fail', async ({ screen, tabs }) => {
     const t = await seed({ notes: true, flaky: true });
     const { app, toasts } = await open(t, [notes, flaky({ fields: true })], screen, { boardId: 'web' });
+    // Wide enough for the header to show the whole filter beside its buttons.
+    resize(app, 120, 40);
     await waitForFrame(app, 'WEB-2');
     await app.press('/');
     await waitForFrame(app, 'Plugin "flaky" failed in the field stage');
