@@ -391,6 +391,7 @@ export function BoardScreen({ params }: ScreenProps) {
         <Box marginTop={inHeader ? 0 : 1}>
           <BoardList
             rows={rows}
+            stages={stages}
             width={room.width}
             first={firstListRow.current}
             size={listSize}

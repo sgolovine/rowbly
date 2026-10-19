@@ -164,7 +164,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
   read is `ASSIGNEES_ROSTER_UNAVAILABLE` (error, fixed by hand).
 - In the TUI, an **Assignees** section in the settings (`,`) lists the roster (`enter` open, then
   Edit or Remove; `n` add). The Story form has an Assignees choice, the filter has Assignees and
-  "Assigned to me", and board cards and Story list rows show `@handle`.
+  "Assigned to me", and board cards, the board's list view and Story list rows show `@handle`.
 - Rosters and Story Assignees from a Rowbly before this Plugin are not imported: core drops them the
   next time it saves `rowbly.config.json` or the Story.
 <!-- END assignees -->
@@ -275,7 +275,7 @@ Tasks are a Built-in Plugin: run `rowbly plugins enable tasks` first.
 - Tasks are listed in creation order and have no Rank.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects (the stored fields and `id`): an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
-- `stories show` has a Tasks row (`2/5 done`), and the board card shows `✓ 2/5`.
+- `stories show` has a Tasks row (`2/5 done`), and the board card and the board's list view show `✓ 2/5`.
 - In the TUI, a Story's **Tasks** tab and the Task screen both edit (`e`), move (`m`) and delete (`d`) a Task.
 <!-- END tasks -->
 
@@ -407,7 +407,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards and the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
 <!-- END tui -->
 
 ## Exit codes
