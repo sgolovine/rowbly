@@ -209,19 +209,44 @@ describe('board view', () => {
 
   it('ranks a Story to the top and the bottom of its Stage with T and B', async () => {
     const t = await seed();
-    const app = await open(t);
+    // The rank is on disk before the service call returns; the barrier holds the call open in that window.
+    // Each held call, in order; the test releases one once it has arrived.
+    const held: (() => void)[] = [];
+    const app = await open(t, {
+      patch: (services) => ({
+        ...services,
+        stories: {
+          ...services.stories,
+          rank: async (...args: Parameters<Services['stories']['rank']>) => {
+            const saved = await services.stories.rank(...args);
+            await new Promise<void>((resolve) => held.push(resolve));
+            return saved;
+          },
+        },
+      }),
+    });
     const order = async () => {
       const ranked = await Promise.all(['WEB-1', 'WEB-2', 'WEB-3'].map(async (k) => [(await story(t, k)).rank, k]));
       return ranked.sort(([a], [b]) => ((a ?? '') < (b ?? '') ? -1 : 1)).map(([, k]) => k);
     };
-    await app.press('j', 'j', 'T');
-    await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-1'));
-    await vi.waitFor(async () => expect(await order()).toEqual(['WEB-3', 'WEB-1', 'WEB-2']));
-    // The cursor followed the Story to the top.
-    await app.press('B');
-    await waitForFrame(app, (f) => f.indexOf('WEB-3') > f.indexOf('WEB-2'));
-    await vi.waitFor(async () => expect(await order()).toEqual(['WEB-1', 'WEB-2', 'WEB-3']));
-    app.unmount();
+    try {
+      await app.press('j', 'j', 'T');
+      await vi.waitFor(() => expect(held).toHaveLength(1));
+      expect(await order()).toEqual(['WEB-3', 'WEB-1', 'WEB-2']);
+      // Saved on disk but still writing: the keys are ignored, so their hints are hidden.
+      expect(app.lastFrame()).not.toContain('n new');
+      held[0]?.();
+      await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-1') && f.includes('n new'));
+      // The cursor followed the Story to the top.
+      await app.press('B');
+      await vi.waitFor(() => expect(held).toHaveLength(2));
+      expect(await order()).toEqual(['WEB-1', 'WEB-2', 'WEB-3']);
+      held[1]?.();
+      await waitForFrame(app, (f) => f.indexOf('WEB-3') > f.indexOf('WEB-2') && f.includes('n new'));
+    } finally {
+      for (const release of held) release();
+      app.unmount();
+    }
   });
 
   it('narrows the cards with the filter and clears it', async () => {
