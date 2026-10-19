@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { Story } from '../../src/schemas';
+import { type Story, withFixedStages } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
 import { type RunCliResult, runCli } from '../helpers';
 
@@ -71,17 +71,7 @@ describe('end-to-end scenario', () => {
   });
 
   it('3. adds a board-level Stage and a select Custom Field', async () => {
-    const stages = await json(
-      'stages',
-      'add',
-      'review',
-      '--name',
-      'Review',
-      '--category',
-      'in_progress',
-      '--after',
-      'in-progress',
-    );
+    const stages = await json('stages', 'add', 'review', '--name', 'Review', '--after', 'in-progress');
     expect(stages.level).toBe('board');
     expect(stages.items.map((s: { key: string }) => s.key)).toEqual([
       'backlog',
@@ -234,7 +224,11 @@ describe('end-to-end scenario', () => {
     const roster = JSON.parse(await readFile(join(dir, '.rowbly/plugins/assignees/roster.json'), 'utf8'));
     expect(await json('assignees', 'list')).toEqual(roster.assignees);
     expect(await json('boards', 'list')).toEqual(await r.boards.list());
-    expect(await json('stages', 'list')).toEqual({ level: 'board', source: 'board', stages: webConfig.stages });
+    expect(await json('stages', 'list')).toEqual({
+      level: 'board',
+      source: 'board',
+      stages: withFixedStages(webConfig.stages ?? []),
+    });
     expect(await json('fields', 'list')).toEqual({ level: 'board', source: 'board', fields: webConfig.customFields });
     expect(sortByKey(await json('stories', 'list'))).toEqual(sortByKey(webStories));
     expect(sortByKey(await json('stories', 'list', '--all-boards'))).toEqual(sortByKey(allStories));

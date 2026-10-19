@@ -52,7 +52,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `boards.update` | `{ id, name?, description? }` | `BoardConfig` |
 | `boards.remove` | `{ id, force }` | `undefined` |
 | `stages.add` | `{ target, stage, position }` | `Stage[]` |
-| `stages.update` | `{ target, key, name?, category? }` | `Stage[]` |
+| `stages.update` | `{ target, key, name? }` | `Stage[]` |
 | `stages.move` | `{ target, key, position }` | `Stage[]` |
 | `stages.remove` | `{ target, key, moveTo? }` | `{ storiesMoved }` |
 | `fields.add` | `{ target, field }` | `CustomFieldDef[]` |

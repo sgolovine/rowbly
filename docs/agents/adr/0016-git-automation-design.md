@@ -1,6 +1,6 @@
 # ADR-0016: Git automation uses reactions, the `git` capability and hook commands
 
-**Status:** Accepted, not built. There is no Git Plugin, and the Plugin API has no `git` capability yet.
+**Status:** Accepted, not built. There is no Git Plugin, and the Plugin API has no `git` capability yet. Amended by ADR-0024 §5: the `in_progress` Stage Category is now `board`.
 
 Git automation goes both ways. It is designed now and built later, together with a Git Plugin; nothing in this ADR is built yet.
 

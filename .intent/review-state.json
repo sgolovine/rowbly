@@ -3,49 +3,49 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "c739987fa676de862b5429000e08e54f91df438a7644b226ba17040bfc639142",
+      "fingerprint": "bbaf3262925e9d5ba19327750872d57272c854ca58d12759d42151b05be366ab",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
-        "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
-        "skills/rowbly-cli/SKILL.md": "ef9da4d472999359eafa6f5f66f4a05cd05fb61b346101f28339a76227931480",
+        "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "updated",
-      "reason": "Reviewed the combined Tasks and Assignees extraction. Revised CLI skills cover optional enablement, Plugin Data storage, plugin doctor findings and Story-only Comments. Task commands and screens link to the Story rather than a removed core Task row extension; Assignees are read on the Story.",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "634aa4a0d2f8f382c0ed41a64c6d887c49b72fb48d3f9129def1d05bbad3593a",
+      "fingerprint": "fea9b367cbb03a0240170bf3e8c490111de4bcf5486e6ec7f386000882aedaee",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
-        "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "updated",
-      "reason": "Reviewed the combined Tasks and Assignees extraction. Revised CLI skills cover optional enablement, Plugin Data storage, plugin doctor findings and Story-only Comments. Task commands and screens link to the Story rather than a removed core Task row extension; Assignees are read on the Story.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "rowbly-doctor's findings still match: an old-shape stages list is SCHEMA_INVALID and Stories in a removed Stage are UNKNOWN_STAGE; its changed sources (README.md, data-model.md) changed only Stage and list-view text.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "59c4ecf86ef5f4f6fb9dcd48b7e5cc6e1930dafb59d157c05e96445ec943b4d5",
+      "fingerprint": "2117fb3f3ec4176c52469888c21f9eed819fa5b066280a6f6e187168180293ab",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
-        "skills/rowbly-plugins/SKILL.md": "782f43ae54cddf810828011507d7818f1b4215f334f7979a8fd69bc54add00d7",
+        "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -53,69 +53,69 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "updated",
-      "reason": "Reviewed the combined Tasks and Assignees extraction. Revised CLI skills cover optional enablement, Plugin Data storage, plugin doctor findings and Story-only Comments. Task commands and screens link to the Story rather than a removed core Task row extension; Assignees are read on the Story.",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "933a3cf35dee126abf77f3db5eb98468dec679063b627992151405a0820aa900",
+      "fingerprint": "46b653e6b36247ae72c1e9ab70f362c391e0f085d94ab82153b1e8c0901fda6f",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
-        "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
-        "skills/rowbly-setup/SKILL.md": "7bf693ff1e110c81d3ce3703efc8a491974f74b25acead25a53ce14851be5ba9",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
+        "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
         "src/commands/setup.ts": "0c13f3531752dc561d05358a05a417939d096e9b1150a91ec205803529c7b4f7",
-        "src/commands/stages.ts": "e2cbb81aea3189aeb1ce1ed1156c38f25ac741db97044e7d94e7713a20e79682",
+        "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "updated",
-      "reason": "Reviewed the combined Tasks and Assignees extraction. Revised CLI skills cover optional enablement, Plugin Data storage, plugin doctor findings and Story-only Comments. Task commands and screens link to the Story rather than a removed core Task row extension; Assignees are read on the Story.",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "f156bada086be2599d4802872ea025ac811aa419ddbb9e28951eac991f9bbc67",
+      "fingerprint": "914340e82c79826274f571551a0807a5277d3beb5fe1a13f485d9fd9b9c33434",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
-        "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
-        "skills/rowbly-stories/SKILL.md": "717503b2e704b81086e8a9790f953e02b8752b46b843d3f739fc2d1b16d84dea",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "updated",
-      "reason": "Reviewed the combined Tasks and Assignees extraction. Revised CLI skills cover optional enablement, Plugin Data storage, plugin doctor findings and Story-only Comments. Task commands and screens link to the Story rather than a removed core Task row extension; Assignees are read on the Story.",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "77637a476134f5f4bd9ac5cc5d3b6669503b46b329361ebede4f2245a1a7c27c",
+      "fingerprint": "738a078b0df5a560d939c8fe244bfe33421b35a2600c17fcf28f38cabb1e1630",
       "snapshot": {
-        "README.md": "aa717840eb20e9f2008e9072b4b45e450a46362c6d6f8087705b7b6f5b876162",
-        "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
-        "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
+        "README.md": "fa2c9d82c1131c1cdf65715466a3c631c26dae9abfbb9cd9d17ff5ccf6e06674",
+        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
-        "skills/_artifacts/domain_map.yaml": "81737561fe6c4b3af0d2d6b7b016b72a18a57bb051dea17bc6d9e303f2510b89",
-        "skills/_artifacts/skill_spec.md": "d0ef0c0094176df521df88ab1541faf9adc328f019bdb9899e74eb65ade807be",
+        "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
+        "skills/_artifacts/skill_spec.md": "47e77577d5c2367aba7a9ab2082134ed2e0daf065c3818b4cb86b7bedb2e763b",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
-        "skills/rowbly-cli/SKILL.md": "ef9da4d472999359eafa6f5f66f4a05cd05fb61b346101f28339a76227931480",
+        "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
-        "skills/rowbly-plugins/SKILL.md": "782f43ae54cddf810828011507d7818f1b4215f334f7979a8fd69bc54add00d7",
-        "skills/rowbly-setup/SKILL.md": "7bf693ff1e110c81d3ce3703efc8a491974f74b25acead25a53ce14851be5ba9",
-        "skills/rowbly-stories/SKILL.md": "717503b2e704b81086e8a9790f953e02b8752b46b843d3f739fc2d1b16d84dea",
+        "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
+        "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
+        "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -123,7 +123,7 @@
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/commands/setup.ts": "0c13f3531752dc561d05358a05a417939d096e9b1150a91ec205803529c7b4f7",
-        "src/commands/stages.ts": "e2cbb81aea3189aeb1ce1ed1156c38f25ac741db97044e7d94e7713a20e79682",
+        "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf",
@@ -137,11 +137,11 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "updated",
-      "reason": "Reconciled all three existing planning records with both optional Plugins. Preserved five skill identities and prior batch history, added combined-integration decisions, synchronized source mappings and descriptions. Tasks keeps ADR-0022 and Assignees moves to ADR-0023.",
+      "reason": "Reconciled all three records: skill_spec.md gains a 'fixed Backlog and Done Stages' history entry with the superseded Batch 1 decision; domain_map.yaml failure modes updated (no --category; start Stage by category board); skill_tree.yaml identities, paths and sources unchanged and accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -505,15 +505,15 @@
       ]
     },
     "source:docs/architecture/operations.md": {
-      "fingerprint": "d99964706aedf8c7ae4afd08d8e1e9743dc8c2ccabcce201efd739a88a74b933",
+      "fingerprint": "da22c6e3488d38901b529b6d8b1ba3cfe2b1011e3cc154657d96a9bc035fcfdf",
       "snapshot": {
-        "docs/architecture/operations.md": "b82e8e0e4903eef4d5e5ee93388d971a8dae164cb9b24fc6f4f142df17cab962"
+        "docs/architecture/operations.md": "ec8e8ce7791e25393e775196d97aa78d068f31349e491d0fae065cf57650781b"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/architecture/overview.md": {
@@ -577,15 +577,15 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "2f166d4f156cb7c15a32dc1de070d9e57bc80e514d481cff3c8d3960683de51b",
+      "fingerprint": "67259307de2d587d061d74c3d59f7fdef21c7e6bdacd8ae183479b4efc420ed6",
       "snapshot": {
-        "docs/plugins/api.md": "9dc5abf85b28af79fe1deed76e7e47762981936f5f04450807278033b8d0aad5"
+        "docs/plugins/api.md": "fab546e996ac7f3ef2ff6e424cdfa33b78c3d5cb6eb50027704fffbd7a509c42"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1453,15 +1453,15 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "653433b367aa2c8597cfe6d5656c9e0edce9e28a471f31fe35c230074ab88402",
+      "fingerprint": "61b6806d46b321eb5b84c29714f1b0d9b85a6c871df09d73813789ce99072f0b",
       "snapshot": {
-        "src/plugin-api/index.ts": "8bf63bdb64e40a55468de11a0df1d3a4053a24cea6bdbd339a779669cce13878"
+        "src/plugin-api/index.ts": "17bf2b69a49d948d7e8c0247b7c2e1397d7c2f686f3bc504701d5dba2cd1e9e0"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1609,15 +1609,15 @@
       ]
     },
     "source:test/skills/agentWorkflows.test.ts": {
-      "fingerprint": "1f66ad6deeb3146d6010071f5b08bd09ff7b7c7f280cbe506137ef4159f19311",
+      "fingerprint": "ceda1383ce8342118d648694e290003a5b254962b90bc827c8fe56839aa2569a",
       "snapshot": {
-        "test/skills/agentWorkflows.test.ts": "764d256c3cefd7ee76c32b0277dc98029ad54b30fa603b413f8b4e90e4e4cd25"
+        "test/skills/agentWorkflows.test.ts": "19938385deccb8eb676dac7d10fa2a3ba702e9f71721e29c4b3c0de17c97daa1"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:biome.json": {
@@ -1750,63 +1750,63 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "068729d21a2fd15da9a684c71a0d8a696352e7b19f7fefd947513bd566da7c2d",
+      "fingerprint": "79b92722d0f706e0b212c090fecb4dc7d1c79f30f828ad5e395fd3c38d24f3a7",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "ec700b0e4f58f5e56be5afeacf36b2464c346ad74575e5f271ee3244b583b7c4"
+        "src/tui/screens/board/BoardScreen.tsx": "501b24a2b43c900a8a79de4dcff903c300bf4c02b30bb1851a252112bb98ee15"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
-      "fingerprint": "92308846b7d7e298a03f9f0763bb07f8e59edce69d9b4299c7801d7167082a13",
+      "fingerprint": "1ac30cbf1e2d7b7da3104d764b52d1a147699c359c69a96c4a82fbd4551dab41",
       "snapshot": {
-        "src/tui/screens/stages/index.tsx": "507cf9a4c1cdf4d72b9f47c2702ac19230a4bc4c05475729b94cf82037b8617b"
+        "src/tui/screens/stages/index.tsx": "dc0e9b817d4f2720c1cfb82a8a97659d823de180fd72868a7fc454ee00f92f83"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
-      "fingerprint": "402b4178880ea38135b47cfad377000f0c6fed1851aa9fb3a1219c302664d6f3",
+      "fingerprint": "2179c742483a5a8c17ed3aee7a3b55acea9ee0c2e968e45a1ffee041681f6c67",
       "snapshot": {
-        "test/tui/__snapshots__/board.test.tsx.snap": "9514618c20238cd08518d15ef4b8cc95305525f1b386dcc6d61c1f27ce86c48e"
+        "test/tui/__snapshots__/board.test.tsx.snap": "33c5c58d9a87c8f480eeed5e9f383d7a4f115ae68ff76da71b980c021230aebe"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "40ee0795e7dcf60516abcff26d706da9531c58e529040e33a58da79e0041e047",
+      "fingerprint": "5f99ca9c106c4b032f9499a516c4a7010f740e518cb67904f37acf6417ebc3c1",
       "snapshot": {
-        "test/tui/board.test.tsx": "2640483ac9d1aa51178da6d96a7cf6d98197fc1a40ecd963b2d78986a25c3398"
+        "test/tui/board.test.tsx": "ef2b3d9d2b5c648f35b162727805078c4abd61e4d4f879a885ea563fab199e56"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
-      "fingerprint": "130c852e0962e73ad1b2d57d359e80689a18a21a8e198fd7365288920f14e119",
+      "fingerprint": "42d40db4ed63757cac437b362b3ace9243ab03ee6971d822e87015c719c40786",
       "snapshot": {
-        "test/tui/boardsStagesFields.test.tsx": "27fb95717ceea189c7fd7af561b3998e23b650a7e136b032e0bb75d28abaa31a"
+        "test/tui/boardsStagesFields.test.tsx": "b334fba10b2a5898f90bb7aede13dba02c91eaf752ec50a936389ef79842e118"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/components.test.tsx": {
@@ -1918,15 +1918,15 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "f193c68a86bbd3ed5a46ac710d0669148bf1af7d9cf148d9e435119e707c299e",
+      "fingerprint": "76d31cab7fbbaacbf67d1bc1ed6a537172a24aa4ff552b024d623f9e806b9348",
       "snapshot": {
-        "docs/agents/adr/README.md": "768644aea1ec1e9becb6607f1163fe2e28c598907995c232c06611d905f763ce"
+        "docs/agents/adr/README.md": "e79ab3623173180e6613ac05599f7f91d16f26de1ad2f43bd6ed61f25e75f622"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/commands/index.ts": {
@@ -2134,15 +2134,15 @@
       ]
     },
     "source:src/plugins/tasks/index.ts": {
-      "fingerprint": "e5662b6c0fa5cd1703833ff9b610f203821a622f650dbead22117ea3f997c032",
+      "fingerprint": "bb8743096408c5442744ee7330269d476a7e0f9fecb0e33557f89aca1e313917",
       "snapshot": {
-        "src/plugins/tasks/index.ts": "9804e327075e3ca9a7ff50fa63b059a6f5a9fa95fff678764a033349692c70d9"
+        "src/plugins/tasks/index.ts": "3b5efe3b0d202b8f2898a5d56144d700647f5acacc5f14b5ffeb960748bff2bc"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/plugins/tasks/model.ts": {
@@ -2254,15 +2254,15 @@
       ]
     },
     "source:src/services/stages.ts": {
-      "fingerprint": "a2db07f8443eba00235ffc871f5bfdb25dada305bd679e3d4806cf66c4c925ad",
+      "fingerprint": "62cc7daab136c57d1553a2fae59312046ee5add1fde1e39d7309860d9c46fd07",
       "snapshot": {
-        "src/services/stages.ts": "d6c6eb7957e1c6d5b4d88391e502d9af73436be937ac8bdb4184c185287e425b"
+        "src/services/stages.ts": "c2636994cf6174a0c31eb3e439d5e72f9cbabe27be577d28202b4931831538f4"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/services/tasks.ts": {
@@ -2278,15 +2278,15 @@
       ]
     },
     "source:src/services/types.ts": {
-      "fingerprint": "11dacbea5207e4a845b5d5a6dd30ad7bee91b5ad178770e4c27625aa65c5fa95",
+      "fingerprint": "cc5a7bdd0c0a2ce686d63da9ec8ffff9618e32def2d995b1159c1bf25947916c",
       "snapshot": {
-        "src/services/types.ts": "187ca467d75e3814316312a666cbbfdfbf080695582691d09b392acaccd49bf5"
+        "src/services/types.ts": "abc9677808df6a014afdc37b2ba989d46fa5b28eb33a82c4d20c1bf65eede496"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/hooks/plugins.ts": {
@@ -2338,15 +2338,15 @@
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
-      "fingerprint": "b8a2f6bbe71560a052e5506c0b1a9e809b8ef0bb33f7661611d92aab9e5ba04b",
+      "fingerprint": "ec40d22af3187dad026142bba5cb4baefd89ab70d75c0bce01735c78e178753d",
       "snapshot": {
-        "src/tui/screens/board/layout.ts": "4dc2c9c28b706eaab1a05899cc9cee0dc1168686d0577fe29cbe1fe4e6ef97eb"
+        "src/tui/screens/board/layout.ts": "b6ebdbf1ee8e070ef9f36b7dae1f47021bd13c17be5509011c03928a6083cba9"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/screens/board/useCardBadges.ts": {
@@ -2458,15 +2458,15 @@
       ]
     },
     "source:test/commands/stages.test.ts": {
-      "fingerprint": "99078df4de1dfdb4d54bbd8ad181b382b3580defe7f400ac415fb843b8c38aaa",
+      "fingerprint": "34fa8ae0c2e7d1a9b0987e0b99186da4b9ed8e057da74c205876390c55bd2160",
       "snapshot": {
-        "test/commands/stages.test.ts": "52bc5bbef12a679133eeb3e6107abd6beb8893bc9d669e7c7ac32909158f0d40"
+        "test/commands/stages.test.ts": "907c74d779ffb05a6a1d976affa780bd0bb913500eae02e7c9a09cb0d73b4b15"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/commands/stories.test.ts": {
@@ -2506,15 +2506,15 @@
       ]
     },
     "source:test/e2e/scenario.test.ts": {
-      "fingerprint": "45fcdda250511774a66aca5ccc995250a15b5662fa7b200595d00bb8b94cbd0f",
+      "fingerprint": "b962eba6b2e24ba3d6ab09768c8cce02829fc15573b601dff5e2e3566831b367",
       "snapshot": {
-        "test/e2e/scenario.test.ts": "cc5ed26ad7d532809393e17728bef88efc86fbed5679e12f7acee55931942668"
+        "test/e2e/scenario.test.ts": "fd2d854af1c8f3d6d151461b56371d404015f81ebd62a6273cd50ce376d3daa4"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/helpers/fixtures.ts": {
@@ -2578,15 +2578,15 @@
       ]
     },
     "source:test/plugins/bags.test.ts": {
-      "fingerprint": "62754f83d3b576c828adf095d571496c991ac6a1b96ff6b0ec42827dcea660e3",
+      "fingerprint": "822046d102c91215307c29327d503ee05d08764ad03bdca3b388182614b5420f",
       "snapshot": {
-        "test/plugins/bags.test.ts": "a47bee40b194bca57500d80cb538efc25efc292d801456db2f8b00a60bb6522b"
+        "test/plugins/bags.test.ts": "c3571493d8d69414c11e3c9011fb5b9c2383f63cd821d345c4c0ccb92cfdca7e"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/plugins/cli.test.ts": {
@@ -2818,15 +2818,15 @@
       ]
     },
     "source:test/schemas/schemas.test.ts": {
-      "fingerprint": "1dcb0dd8ece46a46938e2fbad2b18d30869c6cef4ae9f5d54ee1471f323c534f",
+      "fingerprint": "c51f36f08035ff7a2f8aeb46f5f4fd41e7f9ec9bfaedab2a180788861532be97",
       "snapshot": {
-        "test/schemas/schemas.test.ts": "04515cc7477ea3f2d7e55e4c9a85f9682162ed9af80ffd90d1d83203ef6dcbb9"
+        "test/schemas/schemas.test.ts": "af0211eeadf6f97cefbcd09e96db06416aaca223080d40ef56cff916a4ee30e7"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/services/combinedEdit.test.ts": {
@@ -2866,15 +2866,15 @@
       ]
     },
     "source:test/services/stages.test.ts": {
-      "fingerprint": "3c6262c638e92ad23fd55ff73b9eac05bb61a83343c4459222772c13ebc9105e",
+      "fingerprint": "612d93b5bcb065f20cdd40c487707b464de4807ab3df0b4facabf8ff453de8f2",
       "snapshot": {
-        "test/services/stages.test.ts": "77cdc304e730549cc194d4824680c159b306007b74e45ff13609e8a9961dc85d"
+        "test/services/stages.test.ts": "5ea1da2f5f671bc3e3f57c0431c41bb1e56de4be96e771068af7376e6f8fcc9f"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/services/stories.test.ts": {
@@ -3250,15 +3250,15 @@
       ]
     },
     "source:test/commands/doctor.test.ts": {
-      "fingerprint": "30d5c8f7388d04d5aa91bca49d565ef42de274e9af4d914494327b8fb483e9ca",
+      "fingerprint": "8002b899a52e0bfa308761a2cfb3a303c7fd89620d19b2c8a847c1211a6a35a6",
       "snapshot": {
-        "test/commands/doctor.test.ts": "8056f600018c1a56ab821c7a028205c5ecb6c8921bebb247a43cf28f20e7fa3a"
+        "test/commands/doctor.test.ts": "7d22b7efbcab83053c45003757481d8b5afeeec0d9cb7ea94acc320dc62c0314"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/commands/prompting.test.ts": {
@@ -3274,15 +3274,15 @@
       ]
     },
     "source:test/commands/setup.test.ts": {
-      "fingerprint": "ddae893392be4201c867bc72ed3d956103c0e1f73602f48914532c60379c7976",
+      "fingerprint": "cdd81a92ce57660d9b091d920ca788133e93ab92dfa341efb07e8491e8773d61",
       "snapshot": {
-        "test/commands/setup.test.ts": "e5c53ddbc4a89ce6c03e1bd30c8936243964002ce8fd105005e4258e86fbd288"
+        "test/commands/setup.test.ts": "8496037b1c20406bd6c35bda6474098a055c19740745297ecb0aae4501ac0a3d"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/e2e/exitCodes.test.ts": {
@@ -3334,15 +3334,15 @@
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
-      "fingerprint": "f2c82a33ca99a7eba628f6eb4d85736730e1475522cf0ee995cb2b6524e1b44e",
+      "fingerprint": "3c567166356d7370eb223c0cd027632d8600b240257b6537f09c730b83b25d24",
       "snapshot": {
-        "test/plugins/concurrency.test.ts": "9c454d3a2bf90dc14af3502b893faf9ba6591d54453e0d4b3fac42836421d288"
+        "test/plugins/concurrency.test.ts": "c478629e9da8233566d5e44b485ea482a99ab4381dcc22bf168c376a0e21cbab"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/plugins/doctorIdentity.test.ts": {
@@ -3466,15 +3466,15 @@
       ]
     },
     "source:test/storage/cascade.test.ts": {
-      "fingerprint": "c29ac1c0a756e9a394f53a85e9a60252d8c39dca0310c5dee1eee17a79b8ecef",
+      "fingerprint": "13526ff64b197fb8e83e038a1338d0eb4bdd4d840e83660b9c822ee996341ab1",
       "snapshot": {
-        "test/storage/cascade.test.ts": "c98660641d90309ea6a15454ef2823b5f1adcfe7d664d7094cb5abff7d21ffb6"
+        "test/storage/cascade.test.ts": "79b5d8bd28f73fd406c7fc55c29e1f82f8117ad0da60c23a5e9e15a2b44a3e52"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/storage/jsonStore.test.ts": {
@@ -3526,15 +3526,15 @@
       ]
     },
     "source:test/tui/parity.test.tsx": {
-      "fingerprint": "789932921f26a1b87ed59936b0cab05d0c8e23d7288ed6784442a9af54f172d2",
+      "fingerprint": "a400c7bea191d64a7b4b177012d7b74e2989449fa254f1a06f2d2fd4d15bdc7f",
       "snapshot": {
-        "test/tui/parity.test.tsx": "0455754bae47b0a4835a59c632757ca7a1dcd2d7c87fb4c05ee6bd56eaa55839"
+        "test/tui/parity.test.tsx": "42fd435b64281689fa53b2733962664b5fe6ed3c3874178ca29e49dcfd03e64e"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/settings.test.tsx": {
@@ -3571,6 +3571,294 @@
       "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
         "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/board.config.json": {
+      "fingerprint": "fd3f65c5cd032e16d63470d71ac155a0b626fb1ed496b951830a092fe6598ea8",
+      "snapshot": {
+        ".rowbly/boards/rowbly/board.config.json": "fc7a689237c1ad8234c9f6aef9a796708c9b8cdacfbc7a9d8dd7b4f069823e4d"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:.rowbly/rowbly.config.json": {
+      "fingerprint": "bef727177c221d47c945c60bd325caaf8c6451f4239e84874039e4855a076348",
+      "snapshot": {
+        ".rowbly/rowbly.config.json": "8d749b9e0ba69496e48900d31f7d3fa627110368ce1facb92aa2600d696d7584"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:docs/agents/adr/0005-stages-and-fields-are-configuration.md": {
+      "fingerprint": "c586c3ce2213c033c81e3e282909e65e4fc1a1357ec981d8c995ef92a5cbdcd0",
+      "snapshot": {
+        "docs/agents/adr/0005-stages-and-fields-are-configuration.md": "2e12c1b2c350653628c146a94b3175f10a8e4c076499ca550337b10cbd167efb"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:docs/agents/adr/0016-git-automation-design.md": {
+      "fingerprint": "d1a6ad8ad81a2fc505c4e99e73a59527f4b10a3045932412c6bd5b45c90accbe",
+      "snapshot": {
+        "docs/agents/adr/0016-git-automation-design.md": "b873497e8e36a9446b09922e54493be0499d3c7646170aea162532eaff0e7a50"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:docs/agents/adr/0024-backlog-and-done-are-fixed-stages.md": {
+      "fingerprint": "4ed3af65397c7da13b726cb91a1e34c27b5f32541ed5c810e6545241ca520cd2",
+      "snapshot": {
+        "docs/agents/adr/0024-backlog-and-done-are-fixed-stages.md": "710fb1ee3267957ce10f0342eb550c843c17d61f97b85b735a2351f1d1090bf2"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/output/colors.ts": {
+      "fingerprint": "ae6a6a9a1c375e9f5a0709b9aa8a5528b51269b7e52c08f9f53411c0af3ed348",
+      "snapshot": {
+        "src/output/colors.ts": "c276582bf382b739baac7987e594f33549eaecefb2b8ab9c6b45663a8a99d189"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/schemas/stage.ts": {
+      "fingerprint": "bdd68121b67b51005fa02597548ee8b48103c10fd63e678553c4e003966142e6",
+      "snapshot": {
+        "src/schemas/stage.ts": "3d54e33f09bbd10546b35b26bfe4df4c475cbce346807390500c5f5828012ed5"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/services/_configTarget.ts": {
+      "fingerprint": "27e0ad9157706bebda463243aacfb7774c88e1361ab1396feecfca0e5e25e339",
+      "snapshot": {
+        "src/services/_configTarget.ts": "a486d16cef7eb6b811bdfe4f152a173fefb84188ca2b2ccd5b2197ba57df7aa8"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/storage/cascade.ts": {
+      "fingerprint": "44ac3be82c5b1e7d28e625b8937c206109fbd3c62d86bae5bc5768e88edb4c91",
+      "snapshot": {
+        "src/storage/cascade.ts": "e72e14bb0c8a62a02bdb36fcd48dba88a43a7619eb6a588ae67b254f7e039359"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/components/StageBadge.tsx": {
+      "fingerprint": "4cf9393c256b603d51df629fc07dccc119f5bf1d9ba3da37b602380708086144",
+      "snapshot": {
+        "src/tui/components/StageBadge.tsx": "02ca828f2fe194e64efb40bb1f64eb056aa7e167b622e9795da28673c562d76f"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/hooks/layout.ts": {
+      "fingerprint": "5c21428255ea8e5b7f9255468604c7f2df7474ce733986bc1b95540adddea18b",
+      "snapshot": {
+        "src/tui/hooks/layout.ts": "3215fb57e9c6c78484ec5ec0c1fea4ad94823d0e53fd827c872d40c098e7838e"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/screens/board/BoardList.tsx": {
+      "fingerprint": "5fba6c52fd7c65f3436ec2f756aaa2ec9614e6531f30a861586bc6905a70f2e4",
+      "snapshot": {
+        "src/tui/screens/board/BoardList.tsx": "47ad681672435b887fe78dd0978d2bdd2b4267365c41217bb76685cd13448463"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/screens/board/BoardListRow.tsx": {
+      "fingerprint": "bba9e33faf4adebb270e81b2c8c3c63686dc8fffe5d900b198cc13f198e57506",
+      "snapshot": {
+        "src/tui/screens/board/BoardListRow.tsx": "9c94171bcf6d4f5afc49500018bc852dcf5142fb8494eadc7d8f869c10f510d5"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/screens/demo/index.tsx": {
+      "fingerprint": "b921dc062c7648382e846a466f71fb332b4c31f0ad15936c81abef7294dfe900",
+      "snapshot": {
+        "src/tui/screens/demo/index.tsx": "a297213af72d286c6b9a5276ad85722aa96b13795df11ac520d4db2abccf7d56"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/shell/Header.tsx": {
+      "fingerprint": "b987a7408792744f9c49b04cff74b3f3323e71597bf6398a3cb1ca3729a0f249",
+      "snapshot": {
+        "src/tui/shell/Header.tsx": "bff6497e8dd196bcd8529230e94d3172c0b91a9bb6d4b7d797b361b8331f91a1"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/shell/Shell.tsx": {
+      "fingerprint": "7b3adcbd6a7d956196a5cdb5c715ef486836c11ebad80f93993af47cdcc7fe20",
+      "snapshot": {
+        "src/tui/shell/Shell.tsx": "5fee9b54c191aea8bf5b17c105ee9d770efa16b986b69ed8a564d228e1c82012"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/shell/ViewSwitch.tsx": {
+      "fingerprint": "4c54163f0dd69de20720c5c752b44f803d2262c64a8e17b7992787676d422053",
+      "snapshot": {
+        "src/tui/shell/ViewSwitch.tsx": "163898315fa3e9e5b35edb508bf659e60e4b7ec4040ac33fbaaa4d83b4b34ba4"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:src/tui/shell/ViewSwitchOption.tsx": {
+      "fingerprint": "ed0fac9cfd4e73044945f9f0a91a62dec219193414521f89c7df24bc5782d03f",
+      "snapshot": {
+        "src/tui/shell/ViewSwitchOption.tsx": "3608085fc797152cc3df323767f1077b69db20c0ef924a04501989a9020df746"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/commands/boards.test.ts": {
+      "fingerprint": "ce815e26f4c6ecc662ddde8270ce82b692f10ef1a806c4fedba9a12eb4c12249",
+      "snapshot": {
+        "test/commands/boards.test.ts": "fd4b499760e61ee43514f985da77313b710c6cd7bd749d4974b67a1013ce584f"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/plugins/epics.test.ts": {
+      "fingerprint": "194dbfff01d5dfe5094e34333cbb4dd277928b5eab6384d83afa2e6d4ba0c521",
+      "snapshot": {
+        "test/plugins/epics.test.ts": "90cc932fc5ead69f4a5705292dd11fa3db1aab33ce027fa1e0c739106a4d3e12"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/plugins/epicsCli.test.ts": {
+      "fingerprint": "92462de6f798676985426a68c77a8b38d70df6875943d3d8cd61fdae869b5f07",
+      "snapshot": {
+        "test/plugins/epicsCli.test.ts": "e4a0a73c1c7069d1209ceb6c32be90167c28a2e72ea5380fee00f6bc18b472b5"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/plugins/epicsSummaries.test.ts": {
+      "fingerprint": "051311fa2436a327fb2801de2c8b4848393a76732fecdb2ed7009e8d66c311c4",
+      "snapshot": {
+        "test/plugins/epicsSummaries.test.ts": "044533cc1b942a72003de90a5d470c63eccbc4df47d24a64c6286f27d53eab62"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/plugins/epicsTui.test.tsx": {
+      "fingerprint": "79b0730fd1ced1fa0a16c8ae439fb545bfe03083a51a4dd7a12b05d7b64ec557",
+      "snapshot": {
+        "test/plugins/epicsTui.test.tsx": "5783f70ecd2b8caffa14d4cd303689fae6a5d940de7efab00cd0c775c6ab392f"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+      ]
+    },
+    "source:test/plugins/results.test.ts": {
+      "fingerprint": "533867e08583c16747d5432f0eebe1932b8b11d8bbe43712594d21b13eff6351",
+      "snapshot": {
+        "test/plugins/results.test.ts": "88db7a7d192affedf9f43668dde38e0eff7e2565ea6bd9f86f06ee42e7afdeed"
+      },
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "evidence": [
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     }
   }

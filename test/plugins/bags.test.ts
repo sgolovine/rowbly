@@ -40,7 +40,7 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     await services.stories.move('WEB-1', 'todo');
     await services.stories.rank('WEB-1', 'bottom');
     await services.boards.update('web', { description: 'Changed' });
-    await services.stages.remove({ level: 'global' }, 'backlog', { moveTo: 'todo' });
+    await services.stages.remove({ level: 'global' }, 'in-progress', { moveTo: 'todo' });
     await services.fields.remove({ level: 'global' }, 'size');
     await services.context.use('web');
     await services.context.setMe('alice');

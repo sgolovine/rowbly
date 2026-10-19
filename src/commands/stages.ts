@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colorByCategory, colors, printResult, renderTable } from '../output';
-import { type ConfigLevel, type Slug, type Stage, type StageCategory, StageCategorySchema } from '../schemas';
+import { type ConfigLevel, type Slug, type Stage, withFixedStages } from '../schemas';
 import type { ConfigTarget, Position, RowblyContext, Services } from '../services';
 import { affectedBoards, type ConfigListKey, readLevel } from '../services/_configTarget';
 import { boardFlag, type ContextFlags, promptIfMissing, withContext } from './_shared';
@@ -67,7 +67,6 @@ export function affectsLine(target: ConfigTarget, boards: readonly Slug[]): stri
 
 interface StageOptions extends LevelFlags {
   name?: string;
-  category?: string;
   before?: string;
   after?: string;
   first?: boolean;
@@ -84,7 +83,7 @@ export function registerStages(program: Command): void {
         const target = await resolveConfigTarget(services, opts);
         const { items, source } = await readLevel(ctx, target, 'stages');
         printResult(
-          { level: target.level, stages: items, source },
+          { level: target.level, stages: withFixedStages(items), source },
           { json: globals.json, human: (d) => renderStageList(target, d.stages, d.source) },
         );
       }),
@@ -93,24 +92,16 @@ export function registerStages(program: Command): void {
   withLevelOptions(
     stages
       .command('add <key>')
-      .description('Add a Stage (default: at the end)')
+      .description('Add a Stage between Backlog and Done (default: just before Done)')
       .option('--name <name>', 'display name')
-      .option('--category <category>', 'Stage Category: todo, in_progress or done')
       .option('--before <key>', 'insert before this Stage')
       .option('--after <key>', 'insert after this Stage'),
   ).action(async (key: string, opts: StageOptions, cmd: Command) =>
     withContext(cmd, async ({ ctx, services, globals }) => {
       const target = await resolveConfigTarget(services, opts);
       const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Stage name' });
-      const category = parseCategory(
-        await promptIfMissing(opts.category, globals, {
-          flag: '--category',
-          message: 'Stage Category',
-          options: StageCategorySchema.options.map((value) => ({ value })),
-        }),
-      );
       const position = parsePosition(opts, false) ?? 'last';
-      const list = await services.stages.add(target, { key, name, category }, position);
+      const list = await services.stages.add(target, { key, name }, position);
       printMutation(await mutationResult(ctx, target, 'stages', list), globals.json, target, `Added Stage ${key}`);
     }),
   );
@@ -118,17 +109,13 @@ export function registerStages(program: Command): void {
   withLevelOptions(
     stages
       .command('edit <key>')
-      .description("Edit a Stage's name or Stage Category")
-      .option('--name <name>', 'new display name')
-      .option('--category <category>', 'new Stage Category: todo, in_progress or done'),
+      .description("Edit a Stage's name (Backlog and Done are fixed)")
+      .option('--name <name>', 'new display name'),
   ).action(async (key: string, opts: StageOptions, cmd: Command) =>
     withContext(cmd, async ({ ctx, services, globals }) => {
-      if (opts.name === undefined && opts.category === undefined) {
-        throw new UsageError('nothing to change', { hint: 'pass --name and/or --category' });
-      }
+      if (opts.name === undefined) throw new UsageError('nothing to change', { hint: 'pass --name' });
       const target = await resolveConfigTarget(services, opts);
-      const category = opts.category === undefined ? undefined : parseCategory(opts.category);
-      const list = await services.stages.update(target, key, { name: opts.name, category });
+      const list = await services.stages.update(target, key, { name: opts.name });
       printMutation(await mutationResult(ctx, target, 'stages', list), globals.json, target, `Updated Stage ${key}`);
     }),
   );
@@ -139,8 +126,8 @@ export function registerStages(program: Command): void {
       .description('Move a Stage to a new position')
       .option('--before <key>', 'move before this Stage')
       .option('--after <key>', 'move after this Stage')
-      .option('--first', 'move to the start')
-      .option('--last', 'move to the end'),
+      .option('--first', 'move to just after Backlog')
+      .option('--last', 'move to just before Done'),
   ).action(async (key: string, opts: StageOptions, cmd: Command) =>
     withContext(cmd, async ({ ctx, services, globals }) => {
       const position = parsePosition(opts, true);
@@ -162,7 +149,7 @@ export function registerStages(program: Command): void {
       const affected = await affectedBoards(ctx, target, 'stages');
       const moved = await services.stages.remove(target, key, { moveTo: opts.moveTo });
       const { items } = await readLevel(ctx, target, 'stages');
-      const result = { level: target.level, items, affectedBoards: affected, ...moved };
+      const result = { level: target.level, items: withFixedStages(items), affectedBoards: affected, ...moved };
       printResult(result, {
         json: globals.json,
         human: (r) =>
@@ -191,13 +178,6 @@ function renderStageTable(stages: readonly Stage[]): string {
     ['#', 'KEY', 'NAME', 'CATEGORY'],
     stages.map((s, i) => [String(i + 1), s.key, colorByCategory(s.category, s.name), s.category]),
   );
-}
-
-function parseCategory(value: string): StageCategory {
-  const result = StageCategorySchema.safeParse(value);
-  if (!result.success)
-    throw new UsageError(`invalid --category "${value}"`, { hint: 'expected todo, in_progress or done' });
-  return result.data;
 }
 
 /** At most one of `--before`, `--after` (and, for `move`, `--first`, `--last`). */

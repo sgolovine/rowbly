@@ -37,16 +37,30 @@ const stageKeys = async (t: TempRoot) =>
   ((await createRepositories(t.root).boards.get('web')).stages ?? []).map((s) => s.key);
 
 describe('stages screen', () => {
-  it('shows the order, category badges and the level with its inherited source', async () => {
+  it('shows the order, category badges, the fixed Stages and the level with its inherited source', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
     const frame = app.lastFrame() ?? '';
     expect(frame).toContain('Level:  board   global');
     expect(frame).toContain('inherited from default (copied to board on first');
-    expect(frame).toContain('› 1. ● Backlog backlog · todo');
-    expect(frame).toContain('3. ● In Progress in-progress · in_progress');
+    expect(frame).toContain('› 1. ● Backlog backlog · backlog · fixed');
+    expect(frame).toContain('3. ● In Progress in-progress · board');
+    expect(frame).toContain('4. ● Done done · done · fixed');
     await app.press('l');
     await waitForFrame(app, (f) => f.includes('copied to global'));
+    app.unmount();
+  });
+
+  it('does not edit or remove Backlog and Done', async () => {
+    const t = await setup();
+    const app = await open(t, 'stages');
+    await app.press('e', 'd', 'B', 'j');
+    // The cursor moving proves the earlier keys were handled.
+    const frame = await waitForFrame(app, (f) => f.includes('› 2. ● Todo'));
+    expect(frame).not.toContain('Edit backlog');
+    expect(frame).not.toContain('Remove Stage');
+    expect(frame).toContain('1. ● Backlog');
+    expect(await stageKeys(t)).toEqual([]);
     app.unmount();
   });
 
@@ -56,55 +70,55 @@ describe('stages screen', () => {
     await app.press('j', 'j', 'n');
     expect(app.lastFrame()).toContain('Add a Stage');
     expect(app.lastFrame()).toContain('‹ after in-progress ›');
-    await app.press(...'qa', KEYS.down, ...'QA', KEYS.down, KEYS.right, KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('4. ● QA qa · in_progress'));
-    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'qa', 'done']);
+    await app.press(...'qa', KEYS.down, ...'QA', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('4. ● QA qa · board'));
+    expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'qa']);
     expect(app.lastFrame()).toContain('· own list');
     app.unmount();
   });
 
-  it('moves a Stage last and first with B and T', async () => {
+  it('moves a Stage last and first with B and T, between Backlog and Done', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
     expect(app.lastFrame()).toContain('T/B move first/last');
-    await app.press('B');
-    await waitForFrame(app, (f) => f.includes('› 4. ● Backlog'));
-    expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done', 'backlog']);
+    await app.press('j', 'B');
+    await waitForFrame(app, (f) => f.includes('› 3. ● Todo'));
+    expect(await stageKeys(t)).toEqual(['in-progress', 'todo']);
     await app.press('T');
-    await waitForFrame(app, (f) => f.includes('› 1. ● Backlog'));
-    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'done']);
+    await waitForFrame(app, (f) => f.includes('› 2. ● Todo'));
+    expect(await stageKeys(t)).toEqual(['todo', 'in-progress']);
     app.unmount();
   });
 
   it('moves a Stage down and edits it', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
-    await app.press(KEYS.shiftDown);
-    await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
-    expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
+    await app.press('j', KEYS.shiftDown);
+    await waitForFrame(app, (f) => f.includes('› 3. ● Todo'));
+    expect(await stageKeys(t)).toEqual(['in-progress', 'todo']);
     // K is the vim alternative to shift+↑.
     await app.press('K');
-    await waitForFrame(app, (f) => f.includes('› 1. ● Backlog'));
-    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'done']);
+    await waitForFrame(app, (f) => f.includes('› 2. ● Todo'));
+    expect(await stageKeys(t)).toEqual(['todo', 'in-progress']);
     await app.press('J');
-    await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
-    expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
-    await app.press('e', ...Array(7).fill(KEYS.backspace), ...'Icebox', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('2. ● Icebox backlog'));
+    await waitForFrame(app, (f) => f.includes('› 3. ● Todo'));
+    expect(await stageKeys(t)).toEqual(['in-progress', 'todo']);
+    await app.press('e', ...Array(4).fill(KEYS.backspace), ...'Next', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('3. ● Next todo'));
     app.unmount();
   });
 
   it('removing a Stage in use asks for a move-to target', async () => {
     const t = await setup();
-    await makeStory(t.path, { ...web, key: 'WEB-1', stage: 'backlog' });
+    await makeStory(t.path, { ...web, key: 'WEB-1', stage: 'todo' });
     const app = await open(t, 'stages');
-    await app.press('d');
-    expect(app.lastFrame()).toContain('Remove Stage Backlog at the board level?');
+    await app.press('j', 'd');
+    await waitForFrame(app, 'Remove Stage Todo at the board level?');
     await app.press('y');
-    await waitForFrame(app, (f) => f.includes('Stage "backlog" is used by 1 Story. Move them to:'));
+    await waitForFrame(app, (f) => f.includes('Stage "todo" is used by 1 Story. Move them to:'));
     await app.press('j', KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('Removed Backlog; moved 1 Stories to in-progress'));
-    expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done']);
+    await waitForFrame(app, (f) => f.includes('Removed Todo; moved 1 Stories to in-progress'));
+    expect(await stageKeys(t)).toEqual(['in-progress']);
     expect((await createRepositories(t.root).stories.findByKey('WEB-1')).stage).toBe('in-progress');
     app.unmount();
   });

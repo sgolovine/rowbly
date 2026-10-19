@@ -3,7 +3,8 @@ import { Box, Text } from 'ink';
 import { useContext } from 'react';
 import type { RowblyContext } from '../../services';
 import { Button, Panel } from '../components';
-import { type HeaderLabel, ServicesContext } from '../hooks';
+import { type BoardView, type HeaderLabel, ServicesContext } from '../hooks';
+import { ViewSwitch } from './ViewSwitch';
 
 /** The project the Data Root belongs to: the folder holding `.rowbly`, or "Global" for `~/.rowbly`. */
 export function projectName(ctx: RowblyContext | null): string {
@@ -25,10 +26,13 @@ export function Header({
   clickable,
   actions = [],
   actionsClickable = clickable,
+  boardView,
 }: {
   label: HeaderLabel | null;
   onNewStory?: () => void;
   clickable: boolean;
+  /** The board view switch, shown while the board is the root screen. */
+  boardView?: { view: BoardView; onChange(view: BoardView): void };
   actions?: readonly HeaderAction[];
   /** Actions act on the screen in focus, which may be in a modal. */
   actionsClickable?: boolean;
@@ -60,6 +64,7 @@ export function Header({
           compact
         />
       ))}
+      {boardView && <ViewSwitch view={boardView.view} onChange={boardView.onChange} clickable={clickable} />}
       {onNewStory && <Button label="+ New Story" onClick={onNewStory} clickable={clickable} compact />}
     </Box>
   );

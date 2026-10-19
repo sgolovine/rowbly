@@ -3,9 +3,10 @@ import {
   definePlugin,
   type PluginFinding,
   type PluginHookContext,
-  type Stage,
+  type StageConfig,
   type Story,
   toTimestamp,
+  withFixedStages,
 } from '../../plugin-api';
 import { commands } from './commands';
 import { TasksBag } from './model';
@@ -42,8 +43,9 @@ function plural(n: number): string {
 }
 
 /** The Board Stages that `story`'s Tasks may use, from the records doctor read. */
-function doctorStages(config: { stages?: Stage[] } | null, board: { stages?: Stage[] } | undefined) {
-  return board?.stages ?? config?.stages;
+function doctorStages(config: { stages?: StageConfig[] } | null, board: { stages?: StageConfig[] } | undefined) {
+  const configured = board?.stages ?? config?.stages;
+  return configured && withFixedStages(configured);
 }
 
 export const tasks = definePlugin({

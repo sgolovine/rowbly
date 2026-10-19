@@ -1,7 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { type ReactNode, useState } from 'react';
 import { ValidationError } from '../../../core';
-import { DEFAULT_STAGES } from '../../../schemas';
+import { DEFAULT_STAGES, withFixedStages } from '../../../schemas';
 import {
   ConfirmDialog,
   DetailView,
@@ -58,7 +58,7 @@ function DemoScreen() {
     <Box flexDirection="column" gap={1}>
       <Panel title="StageBadge">
         <Box gap={2}>
-          {DEFAULT_STAGES.map((stage) => (
+          {withFixedStages(DEFAULT_STAGES).map((stage) => (
             <StageBadge key={stage.key} stage={stage} />
           ))}
         </Box>
@@ -67,7 +67,7 @@ function DemoScreen() {
         <DetailView
           rows={[
             { label: 'Key', value: 'WEB-42' },
-            { label: 'Stage', value: <StageBadge stage={{ name: 'In Progress', category: 'in_progress' }} /> },
+            { label: 'Stage', value: <StageBadge stage={{ name: 'In Progress', category: 'board' }} /> },
             { label: 'Assignees', value: 'ada, grace' },
             { label: 'Priority', value: 'P1' },
           ]}

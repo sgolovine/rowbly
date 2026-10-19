@@ -1,11 +1,11 @@
 import { ConflictError, NotFoundError, rankAfter, toTimestamp, UsageError, ValidationError } from '../core';
-import { type Stage, StageSchema, type Story } from '../schemas';
+import { isFixedStage, type Stage, type StageConfig, StageConfigSchema, type Story, withFixedStages } from '../schemas';
 import { type Repositories, resolveCascade } from '../storage';
 import { insertIndex, openLevel } from './_configTarget';
 import type { CoreChangeSet } from './plugins/changeSet';
 import { type Finalizer, type OperationRunner, resultRemoved } from './plugins/runtime';
 import type { RootConfigChange } from './plugins/types';
-import type { ConfigTarget, RowblyContext, StagesService } from './types';
+import type { ConfigTarget, Position, RowblyContext, StagesService } from './types';
 
 export function createStagesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StagesService {
   const open = (target: ConfigTarget) => openLevel(ctx, repos, target, 'stages');
@@ -27,9 +27,9 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
             throw new ConflictError(`Stage "${stage.key}" already exists`);
           }
           const next = [...level.items];
-          next.splice(insertIndex(keysOf(next), position, stageNotFound), 0, stage);
+          next.splice(insertIndex(keysOf(next), configuredPosition(position), stageNotFound), 0, stage);
           await level.save(changes, next);
-          return next;
+          return withFixedStages(next);
         },
         latestStages(target),
       ),
@@ -39,12 +39,13 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
         { target, key, ...patch },
         async (changes) => {
           const { plugins: _plugins, ...fields } = patch;
+          assertConfigurable(key);
           const level = await open(target);
           const current = findStage(level.items, key);
           const updated = parseStage({ ...current, ...definedOnly(fields) });
           const next = level.items.map((s) => (s.key === key ? updated : s));
           await level.save(changes, next);
-          return next;
+          return withFixedStages(next);
         },
         latestStages(target),
       ),
@@ -53,27 +54,28 @@ export function createStagesService(ctx: RowblyContext, repos: Repositories, ops
         'stages.move',
         { target, key, position, ...opts },
         async (changes) => {
+          assertConfigurable(key);
           const level = await open(target);
           const stage = findStage(level.items, key);
           if (typeof position === 'object' && ('before' in position ? position.before : position.after) === key) {
             throw new UsageError(`cannot move Stage "${key}" relative to itself`);
           }
           const rest = level.items.filter((s) => s.key !== key);
-          rest.splice(insertIndex(keysOf(rest), position, stageNotFound), 0, stage);
+          rest.splice(insertIndex(keysOf(rest), configuredPosition(position), stageNotFound), 0, stage);
           await level.save(changes, rest);
-          return rest;
+          return withFixedStages(rest);
         },
         latestStages(target),
       ),
     remove: (target, key, opts) =>
       ops.run('stages.remove', { target, key, ...opts }, async (changes) => {
         const { moveTo } = opts;
+        assertConfigurable(key);
         const level = await open(target);
         findStage(level.items, key);
-        if (level.items.length === 1) throw new ConflictError(`cannot remove "${key}": it is the last Stage`);
         if (moveTo !== undefined) {
           if (moveTo === key) throw new UsageError('--move-to must name a different Stage');
-          findStage(level.items, moveTo);
+          if (!isFixedStage(moveTo)) findStage(level.items, moveTo);
         }
 
         const boards = await Promise.all(level.affected.map((boardId) => repos.stories.allInBoard(boardId)));
@@ -120,21 +122,38 @@ function latestStages(target: ConfigTarget): Finalizer<Stage[]> {
   return (changes, stages) => {
     if (target.level === 'global') {
       const root = changes.changes.find((c): c is RootConfigChange => c.type === 'rootConfig');
-      return root?.after.stages ?? stages;
+      return root?.after.stages ? withFixedStages(root.after.stages) : stages;
     }
     const board = changes.board(target.boardId);
     if (board && board.after === null) resultRemoved(`Board ${target.boardId}`);
-    return board?.after?.stages ?? stages;
+    return board?.after?.stages ? withFixedStages(board.after.stages) : stages;
   };
 }
 
-function parseStage(input: unknown): Stage {
-  const result = StageSchema.safeParse(input);
+/** Backlog and Done are fixed (ADR-0024). */
+function assertConfigurable(key: string): void {
+  if (isFixedStage(key)) {
+    throw new UsageError(`Stage "${key}" is fixed`, { hint: 'every Board starts with Backlog and ends with Done' });
+  }
+}
+
+/** A position among the configured Stages: right after Backlog is first, right before Done is last. */
+function configuredPosition(position: Position): Position {
+  if (position === 'first' || position === 'last') return position;
+  if ('after' in position && position.after === 'backlog') return 'first';
+  if ('before' in position && position.before === 'done') return 'last';
+  const anchor = 'before' in position ? position.before : position.after;
+  if (isFixedStage(anchor)) throw new UsageError('a Stage cannot go before Backlog or after Done');
+  return position;
+}
+
+function parseStage(input: unknown): StageConfig {
+  const result = StageConfigSchema.safeParse(input);
   if (!result.success) throw new ValidationError('invalid Stage', { details: { issues: result.error.issues } });
   return result.data;
 }
 
-function findStage(stages: readonly Stage[], key: string): Stage {
+function findStage(stages: readonly StageConfig[], key: string): StageConfig {
   const stage = stages.find((s) => s.key === key);
   if (!stage) throw stageNotFound(key);
   return stage;
@@ -144,7 +163,7 @@ function stageNotFound(key: string): NotFoundError {
   return new NotFoundError(`Stage "${key}" not found`);
 }
 
-function keysOf(stages: readonly Stage[]): string[] {
+function keysOf(stages: readonly StageConfig[]): string[] {
   return stages.map((s) => s.key);
 }
 

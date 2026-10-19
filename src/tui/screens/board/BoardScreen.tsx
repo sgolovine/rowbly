@@ -1,12 +1,13 @@
-import { Box, Text, useInput, useWindowSize } from 'ink';
+import { Box, type Key, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
-import type { Slug, Stage, Story } from '../../../schemas';
+import type { Slug, Stage, StageCategory, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
   useActionFocus,
   useAsync,
   useBoardSelection,
+  useBoardView,
   useEscape,
   useHeaderLabel,
   useIsActive,
@@ -33,6 +34,7 @@ import {
 } from '../stories';
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
+import { BoardList } from './BoardList';
 import {
   type Columns,
   cardsPerColumn,
@@ -41,6 +43,8 @@ import {
   follow,
   GUTTER_WIDTH,
   groupColumns,
+  type ListRow,
+  listRows,
   moveCard,
   removeCard,
   replaceCard,
@@ -58,7 +62,8 @@ interface Cursor {
 /**
  * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
  * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
- * reverted if the service refuses them.
+ * reverted if the service refuses them. The list view (`v`, or the header's switch) shows the same Stories as
+ * one list in collapsible Backlog, Board and Done sections.
  */
 export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -74,6 +79,10 @@ export function BoardScreen({ params }: ScreenProps) {
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
   const [columns, setColumns] = useState<Columns>([]);
+  const { view, setView } = useBoardView();
+  const [collapsed, setCollapsed] = useState<ReadonlySet<StageCategory>>(new Set());
+  const [listCursor, setListCursor] = useState(0);
+  const firstListRow = useRef(0);
   const writing = useRef(false);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
@@ -109,7 +118,28 @@ export function BoardScreen({ params }: ScreenProps) {
   const col = Math.max(0, Math.min(cursor.col, stages.length - 1));
   const row = Math.max(0, Math.min(cursor.row, (columns[col]?.length ?? 0) - 1));
   const card = columns[col]?.[row];
-  useActionFocus({ board: scope.data?.choices.board, story: card });
+  const rows = listRows(stages, columns, collapsed);
+  const listAt = Math.max(0, Math.min(listCursor, rows.length - 1));
+  const listRow = rows[listAt];
+  const listStory = listRow?.kind === 'story' ? listRow.story : undefined;
+  // The Story the keys act on: the highlighted card, or the highlighted line of the list.
+  const focused = view === 'list' ? listStory : card;
+  useActionFocus({ board: scope.data?.choices.board, story: focused });
+
+  // Switching views keeps the same Story highlighted when the other view shows it.
+  const seenView = useRef(view);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs only when the view changes.
+  useEffect(() => {
+    if (seenView.current === view) return;
+    seenView.current = view;
+    if (view === 'list' && card) {
+      const at = rows.findIndex((r) => r.kind === 'story' && r.story.key === card.key);
+      if (at >= 0) setListCursor(at);
+    } else if (view === 'stages' && listStory) {
+      const at = columns.findIndex((cards) => cards.some((s) => s.key === listStory.key));
+      if (at >= 0) setCursor({ col: at, row: columns[at]?.findIndex((s) => s.key === listStory.key) ?? 0 });
+    }
+  }, [view]);
 
   /**
    * Shows `next` at once, then runs the write; on failure puts the board and cursor back and shows a
@@ -159,6 +189,23 @@ export function BoardScreen({ params }: ScreenProps) {
     else setCursor(at);
   };
 
+  const toggleSection = (category: StageCategory, fold?: boolean) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (fold ?? !next.has(category)) next.add(category);
+      else next.delete(category);
+      return next;
+    });
+
+  /** A click selects a line of the list; a click on the selected line opens its Story or folds its section. */
+  const clickRow = (at: number) => {
+    const clicked = rows[at];
+    if (!clicked) return;
+    if (at !== listAt) setListCursor(at);
+    else if (clicked.kind === 'section') toggleSection(clicked.category);
+    else router.push('story', { key: clicked.story.key, title: clicked.story.key });
+  };
+
   const reorder = (delta: -1 | 1) => {
     const neighbour = columns[col]?.[row + delta];
     if (!card || !neighbour) return;
@@ -192,37 +239,77 @@ export function BoardScreen({ params }: ScreenProps) {
     setViewing(undefined);
     setFilters({});
     setCursor({ col: 0, row: 0 });
+    setListCursor(0);
     firstCol.current = 0;
+    firstListRow.current = 0;
     firstRows.current.clear();
   }, [selection.version]);
 
   useKeyCapture(active && mode === 'filter', { escape: true });
   useEscape(active && mode === 'filter', () => setMode('view'));
   useKeyHints(
-    mode === 'view'
-      ? [
-          { key: '←/→ ↑/↓', description: 'select' },
-          { key: 'enter', description: 'open' },
-          { key: 'shift+←/→', description: 'move Stage', secondary: true },
-          { key: 'shift+↑/↓', description: 'reorder', secondary: true },
-          { key: 'T/B', description: 'to top/bottom', secondary: true },
-          { key: 'n', description: 'new' },
-          { key: 'e', description: 'edit', secondary: true },
-          { key: 'd', description: 'delete', secondary: true },
-          { key: '/', description: 'filter' },
-          { key: 'c', description: 'clear filter', secondary: true },
-          { key: 'r', description: 'reload', secondary: true },
-          { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
-          { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
-          { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
-        ]
-      : [{ key: 'esc', description: 'cancel' }],
+    mode !== 'view'
+      ? [{ key: 'esc', description: 'cancel' }]
+      : view === 'list'
+        ? [
+            { key: '↑/↓', description: 'select' },
+            { key: 'enter', description: 'open/fold' },
+            { key: '←/→', description: 'fold/unfold section', secondary: true },
+            { key: 'n', description: 'new' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'Stages view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'j/k', description: 'select (vim keys)', secondary: true },
+          ]
+        : [
+            { key: '←/→ ↑/↓', description: 'select' },
+            { key: 'enter', description: 'open' },
+            { key: 'shift+←/→', description: 'move Stage', secondary: true },
+            { key: 'shift+↑/↓', description: 'reorder', secondary: true },
+            { key: 'T/B', description: 'to top/bottom', secondary: true },
+            { key: 'n', description: 'new' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'list view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
+            { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
+            { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
+          ],
   );
+
+  /** The list view's keys; `n` adds to the highlighted Story's Stage, or a section's first Stage. */
+  const listInput = (input: string, key: Key, boardId: Slug) => {
+    const delta = moveDelta(input, key);
+    const section = listRow?.kind === 'section' ? listRow : undefined;
+    if (delta) setListCursor(Math.max(0, Math.min(rows.length - 1, listAt + delta)));
+    else if (section && (key.return || input === ' ')) toggleSection(section.category);
+    else if (section && key.leftArrow) toggleSection(section.category, true);
+    else if (section && key.rightArrow) toggleSection(section.category, false);
+    else if (key.return && listStory) router.push('story', { key: listStory.key, title: listStory.key });
+    else if (input === 'e' && listStory)
+      router.push('story-form', { key: listStory.key, title: `Edit ${listStory.key}` });
+    else if (input === 'd' && listStory) setMode('confirm-delete');
+    else if (input === 'n') router.push('story-form', { boardId, stage: stageFor(listRow), title: 'New Story' });
+    else if (input === '/') setMode('filter');
+    else if (input === 'c') setFilters({});
+    else if (input === 'r') scope.reload();
+  };
+
+  const stageFor = (at: ListRow | undefined) =>
+    at?.kind === 'story' ? at.stage.key : stages.find((s) => s.category === at?.category)?.key;
 
   useInput(
     (input, key) => {
       if (!scope.data || writing.current) return;
       const { boardId } = scope.data;
+      if (input === 'v') return setView(view === 'list' ? 'stages' : 'list');
+      if (view === 'list') return listInput(input, key, boardId);
       const delta = moveDelta(input, key);
       // shift+arrows (or H/L/K/J) move the Story; plain arrows (or h/l/j/k) move the cursor.
       if (input === 'H' || (key.shift && key.leftArrow)) moveTo(col - 1);
@@ -250,7 +337,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const shownStages = stages.slice(firstCol.current, firstCol.current + layout.visible);
   const hiddenLeft = firstCol.current;
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
-  const scrolled = hiddenLeft + hiddenRight > 0;
+  const scrolled = view === 'stages' && hiddenLeft + hiddenRight > 0;
   const described = describeWithPlugins(describeFilters(filters), plugins, scope.data?.extra, filters);
   const summary = described.summary;
   const boardId = scope.data?.boardId;
@@ -276,7 +363,11 @@ export function BoardScreen({ params }: ScreenProps) {
   const { choices, extra } = scope.data;
   // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
   // title line and gap when the label is shown here.
-  const size = cardsPerColumn((room.height ?? termRows - 3) - (inHeader ? 0 : 2));
+  const height = (room.height ?? termRows - 3) - (inHeader ? 0 : 2);
+  const size = cardsPerColumn(height);
+  // The list view's scroll markers take a line above and below it.
+  const listSize = Math.max(1, height - 2);
+  firstListRow.current = follow(firstListRow.current, listAt, listSize, rows.length);
 
   return (
     <Box flexDirection="column">
@@ -289,6 +380,18 @@ export function BoardScreen({ params }: ScreenProps) {
       <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
       {shown?.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
+      ) : view === 'list' ? (
+        <Box marginTop={inHeader ? 0 : 1}>
+          <BoardList
+            rows={rows}
+            width={room.width}
+            first={firstListRow.current}
+            size={listSize}
+            cursor={listAt}
+            active={active && mode === 'view'}
+            onClick={clickRow}
+          />
+        </Box>
       ) : (
         <Box marginTop={inHeader ? 0 : 1}>
           {scrolled && <Gutter text={hiddenLeft > 0 ? `‹${hiddenLeft}` : ''} />}
@@ -329,14 +432,14 @@ export function BoardScreen({ params }: ScreenProps) {
           />
         </Modal>
       )}
-      {mode === 'confirm-delete' && card && (
+      {mode === 'confirm-delete' && focused && (
         <Modal size="dialog">
           <ConfirmDialog
-            message={`Delete ${card.key} "${card.name}"?`}
+            message={`Delete ${focused.key} "${focused.name}"?`}
             confirmLabel="Delete"
             cancelLabel="Cancel"
             destructive
-            onConfirm={() => remove(card)}
+            onConfirm={() => remove(focused)}
             onCancel={() => setMode('view')}
           />
         </Modal>

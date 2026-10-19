@@ -18,6 +18,7 @@ import {
   StoryKeySchema,
   StorySchema,
   TimestampSchema,
+  withFixedStages,
 } from '../../src/schemas';
 
 const T = '2026-10-12T17:21:07.000Z';
@@ -66,18 +67,23 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
   {
     name: 'Stage',
     schema: StageSchema,
-    valid: [{ key: 'review', name: 'Review', category: 'in_progress' }],
+    valid: [{ key: 'review', name: 'Review', category: 'board' }],
     invalid: [
-      { key: 'review', name: 'Review', category: 'doing' },
-      { key: 'review', name: '', category: 'todo' },
-      { key: 'Review', name: 'Review', category: 'todo' },
+      { key: 'review', name: 'Review', category: 'in_progress' },
+      { key: 'review', name: '', category: 'board' },
+      { key: 'Review', name: 'Review', category: 'board' },
     ],
   },
   {
     name: 'Stage list',
     schema: StageListSchema,
-    valid: [[...DEFAULT_STAGES]],
-    invalid: [[], [DEFAULT_STAGES[0], DEFAULT_STAGES[0]]],
+    valid: [[...DEFAULT_STAGES], []],
+    invalid: [
+      [DEFAULT_STAGES[0], DEFAULT_STAGES[0]],
+      [{ key: 'backlog', name: 'Backlog' }],
+      [{ key: 'done', name: 'Done' }],
+      [{ key: 'review', name: '' }],
+    ],
   },
   {
     name: 'CustomFieldDef',
@@ -120,7 +126,7 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
     name: 'RowblyConfig',
     schema: RowblyConfigSchema,
     valid: [{ version: 1 }, { version: 1, stages: [...DEFAULT_STAGES], customFields: [] }],
-    invalid: [{}, { version: 2 }, { version: 1, stages: [] }],
+    invalid: [{}, { version: 2 }, { version: 1, stages: [{ key: 'done', name: 'Done' }] }],
   },
   {
     name: 'BoardConfig',
@@ -129,7 +135,7 @@ const cases: { name: string; schema: ZodType; valid: unknown[]; invalid: unknown
     invalid: [
       { ...board, keyPrefix: 'web' },
       { ...board, id: 'Web' },
-      { ...board, stages: [] },
+      { ...board, stages: [{ key: 'backlog', name: 'Backlog' }] },
     ],
   },
   {
@@ -181,11 +187,11 @@ describe('schema defaults', () => {
     expect(StorySchema.parse({ ...story, assignees: ['sam'] })).not.toHaveProperty('assignees');
   });
 
-  it('defines the built-in default stages', () => {
-    expect(DEFAULT_STAGES.map((s) => `${s.key}:${s.category}`)).toEqual([
-      'backlog:todo',
-      'todo:todo',
-      'in-progress:in_progress',
+  it('defines the built-in default stages between the fixed Backlog and Done', () => {
+    expect(withFixedStages(DEFAULT_STAGES).map((s) => `${s.key}:${s.category}`)).toEqual([
+      'backlog:backlog',
+      'todo:board',
+      'in-progress:board',
       'done:done',
     ]);
   });

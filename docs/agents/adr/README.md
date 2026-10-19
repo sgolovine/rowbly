@@ -16,11 +16,12 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0002](0002-data-root-discovery.md) | The Data Root is discovered like `.git`, with a global fallback | Accepted |
 | [0003](0003-story-keys.md) | Stories are identified by sequential keys | Accepted |
 | [0004](0004-epic-link-on-story.md) | The Story holds the Epic link | Superseded by 0008 |
-| [0005](0005-stages-and-fields-are-configuration.md) | Stages and Custom Fields are configuration; the most specific level replaces the levels above | Accepted |
+| [0005](0005-stages-and-fields-are-configuration.md) | Stages and Custom Fields are configuration; the most specific level replaces the levels above | Accepted; amended by 0024 |
 | [0006](0006-ink-owns-the-interactive-mode.md) | Ink owns the interactive mode; Clack only prompts in command mode | Accepted |
 | [0007](0007-no-workspaces.md) | The Data Root is the only container; there are no Workspaces | Accepted |
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
 | [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
+| [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
 
 ### Plugins
 
@@ -41,7 +42,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | --- | --- | --- |
 | [0014](0014-epics-return-as-a-built-in-plugin.md) | Epics return as a Built-in Plugin | Accepted |
 | [0015](0015-specs-are-markdown-files.md) | Specs are Markdown files | Accepted |
-| [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built |
+| [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built; amended by 0024 |
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
 | [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted |

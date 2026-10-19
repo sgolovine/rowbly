@@ -145,10 +145,7 @@ describe('rowbly doctor', () => {
     // A hand edit or merge drops the Stage from the Board without moving its Stories.
     const boardFile = join(tmp.path, 'boards/web/board.config.json');
     const board = JSON.parse(await readFile(boardFile, 'utf8'));
-    board.stages = [
-      { key: 'todo', name: 'Todo', category: 'todo' },
-      { key: 'done', name: 'Done', category: 'done' },
-    ];
+    board.stages = [{ key: 'todo', name: 'Todo' }];
     await writeFile(boardFile, JSON.stringify(board, null, 2));
 
     const json = await cli('doctor', '--json');

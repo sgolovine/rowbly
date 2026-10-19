@@ -7,7 +7,8 @@ import {
   type EffectiveBoardConfig,
   type RowblyConfig,
   type Slug,
-  type Stage,
+  type StageConfig,
+  withFixedStages,
 } from '../schemas';
 import { createRepositories } from './repositories';
 
@@ -18,9 +19,13 @@ export async function resolveCascade(root: DataRoot, boardId: Slug): Promise<Eff
   return cascade(global, board);
 }
 
-/** The most specific level that defines a list replaces the levels above it (ADR-0005). */
+/**
+ * The most specific level that defines a list replaces the levels above it (ADR-0005). Backlog and Done
+ * surround the configured Stages (ADR-0024).
+ */
 export function cascade(global: RowblyConfig, board: BoardConfig): EffectiveBoardConfig {
-  const [stages, stagesSource] = pick<Stage>(board.stages, global.stages, DEFAULT_STAGES);
+  const [configured, stagesSource] = pick<StageConfig>(board.stages, global.stages, DEFAULT_STAGES);
+  const stages = withFixedStages(configured);
   const [customFields, customFieldsSource] = pick<CustomFieldDef>(board.customFields, global.customFields, []);
   return { board, stages, stagesSource, customFields, customFieldsSource };
 }

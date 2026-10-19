@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { SlugSchema, uniqueKeys } from './primitives';
 
-export const StageCategorySchema = z.enum(['todo', 'in_progress', 'done']);
+export const StageCategorySchema = z.enum(['backlog', 'board', 'done']);
 export type StageCategory = z.infer<typeof StageCategorySchema>;
 
+/** A Stage of a Board as Rowbly uses it: the fixed Backlog and Done Stages and the configured ones between them. */
 export const StageSchema = z.object({
   key: SlugSchema,
   name: z.string().min(1).max(60),
@@ -11,16 +12,38 @@ export const StageSchema = z.object({
 });
 export type Stage = z.infer<typeof StageSchema>;
 
-/** An ordered Stage list: at least one Stage, unique keys. */
+/** Every Board starts with Backlog and ends with Done; neither is configured, edited, moved or removed (ADR-0024). */
+export const BACKLOG_STAGE: Readonly<Stage> = Object.freeze({ key: 'backlog', name: 'Backlog', category: 'backlog' });
+export const DONE_STAGE: Readonly<Stage> = Object.freeze({ key: 'done', name: 'Done', category: 'done' });
+export const FIXED_STAGE_KEYS: readonly string[] = Object.freeze([BACKLOG_STAGE.key, DONE_STAGE.key]);
+
+export function isFixedStage(key: string): boolean {
+  return FIXED_STAGE_KEYS.includes(key);
+}
+
+/** A configured Stage: one between Backlog and Done, always in the `board` Stage Category. */
+export const StageConfigSchema = z.object({
+  key: SlugSchema.refine((key) => !isFixedStage(key), { message: 'backlog and done are fixed Stages' }),
+  name: z.string().min(1).max(60),
+});
+export type StageConfig = z.infer<typeof StageConfigSchema>;
+
+/** An ordered list of configured Stages, with unique keys. It may be empty. */
 export const StageListSchema = z
-  .array(StageSchema)
-  .min(1)
-  .superRefine(uniqueKeys<Stage>('stage key', (stage) => stage.key));
+  .array(StageConfigSchema)
+  .superRefine(uniqueKeys<StageConfig>('stage key', (stage) => stage.key));
 
 /** Used when no Configuration Cascade level defines `stages`; also written by `init`. */
-export const DEFAULT_STAGES: readonly Stage[] = Object.freeze([
-  { key: 'backlog', name: 'Backlog', category: 'todo' },
-  { key: 'todo', name: 'Todo', category: 'todo' },
-  { key: 'in-progress', name: 'In Progress', category: 'in_progress' },
-  { key: 'done', name: 'Done', category: 'done' },
+export const DEFAULT_STAGES: readonly StageConfig[] = Object.freeze([
+  { key: 'todo', name: 'Todo' },
+  { key: 'in-progress', name: 'In Progress' },
 ]);
+
+/** The Board's Stages in order: Backlog, the configured Stages, then Done. */
+export function withFixedStages(stages: readonly StageConfig[]): Stage[] {
+  return [
+    { ...BACKLOG_STAGE },
+    ...stages.map((stage) => ({ key: stage.key, name: stage.name, category: 'board' as const })),
+    { ...DONE_STAGE },
+  ];
+}

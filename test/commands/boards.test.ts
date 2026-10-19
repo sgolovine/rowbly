@@ -41,7 +41,7 @@ describe('rowbly boards', () => {
     const human = await cli('boards', 'show', 'web');
     expect(human.exitCode).toBe(0);
     expect(human.stdout).toContain('Stages (from default)');
-    expect(human.stdout).toMatch(/todo\s+Todo\s+todo\s+2/);
+    expect(human.stdout).toMatch(/todo\s+Todo\s+board\s+2/);
     expect(human.stdout).toContain('Custom Fields (from board)');
     expect(human.stdout).toMatch(/size\s+Size\s+select\s+no\s+s, m/);
     const json = JSON.parse((await cli('boards', 'show', 'web', '--json')).stdout);

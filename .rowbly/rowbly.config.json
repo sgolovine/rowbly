@@ -3,24 +3,12 @@
   "assignees": [],
   "stages": [
     {
-      "key": "backlog",
-      "name": "Backlog",
-      "category": "todo"
-    },
-    {
       "key": "todo",
-      "name": "Todo",
-      "category": "todo"
+      "name": "Todo"
     },
     {
       "key": "in-progress",
-      "name": "In Progress",
-      "category": "in_progress"
-    },
-    {
-      "key": "done",
-      "name": "Done",
-      "category": "done"
+      "name": "In Progress"
     }
   ]
 }
