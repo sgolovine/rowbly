@@ -3,66 +3,75 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "3deeb974230b9ac46099fe7c9c0a8e159f5e1784af3874eb793218068cad853f",
+      "fingerprint": "fd4aa8db528b7199cd61d8c4490c87462e524974636393efcb39a3d4392a92c1",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
-        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
       "evidence": [
-        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2ae74bebeee9c47828fbd30ca6881cda878015a641e07a31288d8ec53a0cf5db",
+      "fingerprint": "2cc8eaf88b928da346eb44e4d137797543de600fc1951a1bb6fd7ffdf2121df0",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
-        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
-        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
         "skills/rowbly-doctor/references/finding-codes.md": "0346eb86c890ace316d3bea3a8a6d27f4e050606ee74e87b4d19fe5208ba9aef",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
       "evidence": [
-        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "573e671b6131498430901f3ffcd519e8cbe3d5b59f35a2235593e0131e890896",
+      "fingerprint": "936c0100e51408cbd9bd5fb3237fc87b5896fc3f857bfc3f30515df24a0483cc",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
-        "docs/plugins/README.md": "d6a9cf51b0134b3a7d5322745f1178a3599a4161d6e2e708ec6532db2a4b7277",
-        "docs/plugins/built-in.md": "1b48591a97c5cdf10c0c64e650dd29fe2a23ca050ff8fdadfba1ac9262e687f6",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
+        "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
         "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/comments/commands.ts": "d3861a53ad56b06c0b6871d76c9beaa5d702de34927c80d72dc10f8ed48a68fe",
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
       "evidence": [
-        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "a7c3f264f2e19530c2ebb778716207397ccbe477da204eaf76787be493e16ef5",
+      "fingerprint": "3e1db34e580f297284afeb931d4ef45ce0df4e9e7a7626344bbb10ae1ac12b86",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
-        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
         "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -70,17 +79,20 @@
         "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
         "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
       "evidence": [
-        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "95dfd370d4f9dae0f8804aea210a4d970de5f4b480aaa420ccd4f4821d6a64b0",
+      "fingerprint": "3761d1ffeae059027ea89786d6448a2fac3fb66bd8d6c47cb4dc40060be2d1a4",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
         "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
@@ -88,22 +100,25 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "New skill authored in batch 1 (operating Rowbly as an agent); every command and claim was checked against README.md, the reorganized docs, and the built CLI.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
       "evidence": [
-        "intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "7b9d36b312d9ddb647623b7b9fffdf8cc35d84af2fbde49f126e98823a4908d5",
+      "fingerprint": "999df835614d80076015cc53fc93105b09faca67e9642560531cf0111074b037",
       "snapshot": {
-        "README.md": "aee0df9307d5474227b7c73e5f42d6904e788459dcc95574a8a50572d13c51bd",
+        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
-        "docs/architecture/data-model.md": "9060aee3b1a84f03e7d6a061e81a419946d74a8d52229e2ec63afe8a324ddd8b",
-        "docs/architecture/storage.md": "e7a4ff2a579bf9a08e196e1742188ee7c65bc3aeddc3167db45f72b6fa50e192",
-        "docs/plugins/README.md": "d6a9cf51b0134b3a7d5322745f1178a3599a4161d6e2e708ec6532db2a4b7277",
-        "docs/plugins/built-in.md": "1b48591a97c5cdf10c0c64e650dd29fe2a23ca050ff8fdadfba1ac9262e687f6",
+        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
+        "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
+        "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
         "skills/_artifacts/domain_map.yaml": "4ada5b6182c90bd77b4656e5f9f36cdf9af04169ea44f077bd4e337ee0415b27",
         "skills/_artifacts/skill_spec.md": "7b960e61e85bd5e4a190020151dfe957dc6332e8e878b5d569cd4e9775f59532",
         "skills/_artifacts/skill_tree.yaml": "d59586ff2b43ecb02ac93f8ba7e03243a83f4469651a0f14f29bf237ffb19b7e",
@@ -133,11 +148,14 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml now record the five domains, the skills with their tasks, failure modes, tensions, gaps, decisions and batch 1 history; the tree lists the doctor reference.",
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "Reviewed skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml: all five skills still cover command-mode operation. The modal layout fix does not change their task inventories, prerequisites, source mappings or recorded decisions. The existing TUI-operation and Plugin-authoring gaps remain open. All three records remain accurate; no rewrite or artificial version bump is needed.",
       "evidence": [
-        "YAML parsed by intent maintainer sync/validate; intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1626,6 +1644,51 @@
       "reason": "biome.json now excludes Intent's generated .intent/ state from formatting; lint config only, no CLI behavior the skills describe.",
       "evidence": [
         "pnpm lint passes (370 files); git diff biome.json is one includes entry."
+      ]
+    },
+    "source:src/tui/components/Modal.tsx": {
+      "fingerprint": "bf20a3ea14c53e8bdcea3b09af120a062d4e89a4da9176fcc52bc9483b4e2c25",
+      "snapshot": {
+        "src/tui/components/Modal.tsx": "e5cd3ccb86acd4af0dbaf07f0917eca3f94f6ac81bbffa239ce01a4f45b80697"
+      },
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "This file changes or verifies shared TUI presentation: Modal now uses natural Yoga layout capped on the outer Panel instead of first painting the maximum height and then measuring. Existing published skills explicitly teach CLI operation. TUI development conventions remain in AGENTS.md and docs/development/README.md; this fix does not require a new operational skill.",
+      "evidence": [
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+      ]
+    },
+    "source:src/tui/components/Panel.tsx": {
+      "fingerprint": "2eabade04a4ac57b5577ab6a960461b8f501a091593938298bdac3c094440e60",
+      "snapshot": {
+        "src/tui/components/Panel.tsx": "569080820e6a27d514ddc546391c1106c4ec6830290ec7f24dc1f1c575d4a3df"
+      },
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "This file changes or verifies shared TUI presentation: Modal now uses natural Yoga layout capped on the outer Panel instead of first painting the maximum height and then measuring. Existing published skills explicitly teach CLI operation. TUI development conventions remain in AGENTS.md and docs/development/README.md; this fix does not require a new operational skill.",
+      "evidence": [
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+      ]
+    },
+    "source:test/tui/modal.test.tsx": {
+      "fingerprint": "fcf98c053bd62187b1d76be6615ad942312fa60223568735663f95d78ccb4852",
+      "snapshot": {
+        "test/tui/modal.test.tsx": "1e218bfc4596f92c034d1dc2c5f44a4472fa70cc3dd0e041e946acc2b1ef777a"
+      },
+      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "outcome": "no-change",
+      "reason": "This file changes or verifies shared TUI presentation: Modal now uses natural Yoga layout capped on the outer Panel instead of first painting the maximum height and then measuring. Existing published skills explicitly teach CLI operation. TUI development conventions remain in AGENTS.md and docs/development/README.md; this fix does not require a new operational skill.",
+      "evidence": [
+        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
+        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
+        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
+        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
       ]
     }
   }

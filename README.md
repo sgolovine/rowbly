@@ -350,6 +350,8 @@ Run `rowbly` with no command in a terminal to open the full-screen app; global f
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name, Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
+Screens and dialogs open in centred modals that fit their content from the first frame, up to the available height. Longer content is clipped while the modal's title and key hints stay visible.
+
 ### Keys on every screen
 
 | Key | Action |
@@ -413,6 +415,7 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm format` | Format with Biome |
 | `pnpm test` | Run every vitest project; the `cli` project builds the CLIs into its own `.test-dist/run-*` folder first |
 | `pnpm test:unit` | Run the suites that need no CLI build (services, storage, TUI) |
+| `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLIs into `.test-dist/run-*` first |
 | `pnpm test:watch` | vitest in watch mode |
 | `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
 

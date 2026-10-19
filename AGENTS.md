@@ -83,6 +83,22 @@ Update the page that describes a behavior in the same change as the behavior:
 - Pure helpers and constants shared between files get their own `camelCase.ts` file (e.g.
   `shell/layout.ts`, `shell/boardKey.ts`).
 
+## Tests
+
+- Tests are split into two Vitest projects (`vitest.config.ts`), run as separate CI jobs:
+  - `pnpm test:unit` — every suite that needs no build (core, storage, services, TUI, Plugins). Fast;
+    run it while you work.
+  - `pnpm test:cli` — every suite that mentions `runCli`, `CLI_PATH` or `FIXTURE_CLI_PATH`. Its global
+    setup builds the CLIs from source first, so it is slower. Run it when you touch commands, output,
+    exit codes, the CLI wiring or anything a command reaches.
+  - `pnpm test` runs both, as `pnpm test:unit && pnpm test:cli` would.
+- A suite's project follows from its text: referencing `runCli` or a CLI path puts it in `cli`. Keep
+  in-process tests out of files that spawn the CLI, so the `unit` job stays fast.
+- A test that fails in CI but passes locally is a race in the test or the code, not noise. Find the
+  window from the last frame in the CI log, reproduce it deterministically with a barrier (for example
+  a held Data Root lock, as in `test/plugins/specsTuiStates.test.tsx`), fix it, and keep that test as
+  the regression. Never re-run CI until it passes, add retries, or raise timeouts to hide it.
+
 ## Async tests
 
 - Synchronize on the state the **next action needs**. In TUI tests, use `waitForFrame` to wait for
@@ -95,7 +111,15 @@ Update the page that describes a behavior in the same change as the behavior:
   timeouts are not substitutes for a readiness assertion. Use controlled promises/barriers to
   exercise delayed loads and ordering races deterministically; release them and restore mocks in
   `finally` so failures cannot leave work blocked.
+- A screen or tab that reloads on return (`useReloadOnReturn`) keeps its loaded data on screen and its
+  keys working while it reloads: show `<Loading />` only when there is no data yet, and do not gate
+  `useInput` on `loading`. A Story tab can reload twice on return (its own reload, then again when the
+  Story screen's reload passes a new `story`), so a key gated on `loading` can be dropped between the
+  two loads even after the test saw the frame it waited for. Gate key hints and input on the same
+  condition, so a hint in the footer means its key is accepted.
 
 ## Checks
 
-Run `pnpm typecheck`, `pnpm lint` and `pnpm test` before finishing.
+Run `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` before finishing, and report
+each result. All four run in CI on every pull request and push to `main`; do not merge while any of
+them fails.
