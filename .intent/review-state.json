@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "fd4aa8db528b7199cd61d8c4490c87462e524974636393efcb39a3d4392a92c1",
+      "fingerprint": "63b5ea684f9e13b266e2c892818b3963a3ed8a11a8a4cd4e146eaf91a221bb92",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
@@ -14,20 +14,17 @@
         "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2cc8eaf88b928da346eb44e4d137797543de600fc1951a1bb6fd7ffdf2121df0",
+      "fingerprint": "822b3b91147768b312be0a4adb498ff2b7d9663a9ee31fcafcb1413c0dc7c4e1",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
@@ -35,20 +32,17 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "936c0100e51408cbd9bd5fb3237fc87b5896fc3f857bfc3f30515df24a0483cc",
+      "fingerprint": "09ef9aa250b384edb59474b3505e7ad547b5ace78be73f2ee7dcd8a271c228c1",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
         "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
         "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
@@ -57,20 +51,17 @@
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "3e1db34e580f297284afeb931d4ef45ce0df4e9e7a7626344bbb10ae1ac12b86",
+      "fingerprint": "d319246ce51c56e8d27888250c8eb05c009b50c242b34a5c635485dba0aebbed",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
         "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
@@ -79,20 +70,17 @@
         "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
         "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "3761d1ffeae059027ea89786d6448a2fac3fb66bd8d6c47cb4dc40060be2d1a4",
+      "fingerprint": "79beef89e35fe7cae3618bf2e9f925e9dff558e96c6e9abb258f8f9a614bb69e",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
         "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
@@ -100,20 +88,17 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "999df835614d80076015cc53fc93105b09faca67e9642560531cf0111074b037",
+      "fingerprint": "3dcf6b0d873022221dc305c8388508aec2199eddf378a114511fcd5aabce9d6e",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
+        "README.md": "e59091d6bda9167ab580728145dece23855c82a2d9f9eef98e25a4262440dd63",
         "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
         "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -148,14 +133,11 @@
         "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
         "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
       "outcome": "no-change",
-      "reason": "Reviewed skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml: all five skills still cover command-mode operation. The modal layout fix does not change their task inventories, prerequisites, source mappings or recorded decisions. The existing TUI-operation and Plugin-authoring gaps remain open. All three records remain accurate; no rewrite or artificial version bump is needed.",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "Changed: README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -543,15 +525,15 @@
       ]
     },
     "source:docs/development/README.md": {
-      "fingerprint": "b6f320b864a9cc3ca7d1a0cb4c1b8a67d4e1fc7c5d99e2efd2807c7b75ce1032",
+      "fingerprint": "d1cb1060b88edfcc1caddd6250bf049d7bd3edf13d6bc5636969a03adafd62bb",
       "snapshot": {
-        "docs/development/README.md": "3e948f16d05eedbd7a5b7982b217a08a623ffce5885051a54a55c7b6a7b56228"
+        "docs/development/README.md": "77ccb1e0cc136adaf529f6e2c647cd269cd03a6235e4c5d06a11c94dc12ee77e"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Changed: docs/development/README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "source:docs/plugins/API.md": {
@@ -1689,6 +1671,42 @@
         "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
         "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
         "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+      ]
+    },
+    "source:.github/workflows/ci.yml": {
+      "fingerprint": "89cd4d348689490a021c982a5aa2fb54084846401eca383058b9f29c2f3b5f4a",
+      "snapshot": {
+        ".github/workflows/ci.yml": "ccdc70c8a6455852275293a0fda9100d6880fe12f94919d7499ec12090b2e0b7"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: .github/workflows/ci.yml at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:src/plugins/specs/SpecTab.tsx": {
+      "fingerprint": "411fdd1b6299a2eb4597745df3b4e95873b64ed3cdae6e26c3435a9b1b08f5c8",
+      "snapshot": {
+        "src/plugins/specs/SpecTab.tsx": "ddc7ea42516bfb62bc8af17607736b8edccb8f012cb19c041be01e647a8e177c"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: src/plugins/specs/SpecTab.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:test/plugins/specsTuiStates.test.tsx": {
+      "fingerprint": "ebb3ded430fa53597251c85568e7b2aee07a882e74c367917fc96f6a8aeee9a8",
+      "snapshot": {
+        "test/plugins/specsTuiStates.test.tsx": "2e2ff2123f85c8594ba834654d06ac77f252bf43cce72788f83bb091c13ca3b6"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: test/plugins/specsTuiStates.test.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     }
   }
