@@ -354,7 +354,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 
 | Key | Action |
 | --- | --- |
-| `↑`/`↓`, `j`/`k` | move |
+| `↑`/`↓` (or `j`/`k`) | move |
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
@@ -366,9 +366,11 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 
 ### Keys per screen
 
+The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand in for `←`/`↓`/`↑`/`→`, and `H`/`J`/`K`/`L` for `shift` with those arrows (on the board and the Stages screen).
+
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
+| Board | `←`/`→` previous / next Stage, `↑`/`↓` previous / next Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage (bottom), `shift+↑`/`shift+↓` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
@@ -376,7 +378,7 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 | Assignees | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
-| Stages | `n` add, `e` edit, `K`/`J` move up / down, `T`/`B` move first / last, `d` remove (asks where to move Stories still in it), `l` switch level |
+| Stages | `n` add, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last, `d` remove (asks where to move Stories still in it), `l` switch level |
 | Fields | `n` add, `e` edit, `d` remove, `l` switch level |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` pick Me from the roster, `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
