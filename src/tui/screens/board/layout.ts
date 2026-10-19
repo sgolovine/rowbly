@@ -7,6 +7,8 @@ export const MIN_COLUMN_WIDTH = 24;
 export const GUTTER_WIDTH = 3;
 /** Lines per card, including its border and the gap below it. */
 export const CARD_HEIGHT = 6;
+/** Lines per line of the list view: its text and the rule below it. */
+export const LIST_ROW_HEIGHT = 2;
 /** Lines of the board view that are not cards: column header and rule, scroll markers. */
 const CHROME_HEIGHT = 4;
 
