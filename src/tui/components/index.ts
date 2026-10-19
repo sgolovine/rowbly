@@ -1,4 +1,5 @@
 export * from './Button';
+export * from './CloseButton';
 export * from './ConfirmDialog';
 export * from './CursorRows';
 export * from './DetailView';
@@ -13,4 +14,5 @@ export * from './StageBadge';
 export * from './StoryStage';
 export * from './Tabs';
 export * from './TextArea';
+export * from './TextAreaModal';
 export * from './TextInput';

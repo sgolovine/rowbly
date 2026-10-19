@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' | 'borderColor' | 'borderDimColor'> {
   /** Set into the top edge of the border, lazygit style: `╭─Title────╮`. */
   title?: string;
+  /** Set into the right of the top edge, after the rule, e.g. a close button. */
+  aside?: ReactNode;
   /** Border and title colour; a panel without one has a dim border. */
   color?: string;
   children?: ReactNode;
@@ -13,7 +15,7 @@ export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' |
  * A box framed by a rounded border with its title in the top edge. Ink draws no titles, so the top
  * edge is a row of its own and the box below it is bordered on the other three sides.
  */
-export function Panel({ title, color, children, flexDirection = 'column', ...box }: PanelProps) {
+export function Panel({ title, aside, color, children, flexDirection = 'column', ...box }: PanelProps) {
   const dim = color === undefined;
   return (
     <Box flexDirection="column" flexShrink={0} {...pick(box)}>
@@ -34,6 +36,7 @@ export function Panel({ title, color, children, flexDirection = 'column', ...box
             {'─'.repeat(400)}
           </Text>
         </Box>
+        {aside}
         <Text color={color} dimColor={dim}>
           ╮
         </Text>
