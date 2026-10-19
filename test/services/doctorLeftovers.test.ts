@@ -182,7 +182,7 @@ describe('.gitignore', () => {
 describe('data from an older Rowbly (VER-03, U1: no importer)', () => {
   it('top-level Comments, an epicId and old Epic files are LEGACY_DATA, and doctor --fix never rewrites them', async () => {
     const t = await pluginRoot();
-    const story = await makeStory(t.path, { boardId: 'web', key: 'WEB-1', assignees: ['ghost'] });
+    const story = await makeStory(t.path, { boardId: 'web', key: 'WEB-1', customFields: { ghost: 1 } });
     const legacy = {
       ...story,
       epicId: 'auth',
@@ -197,8 +197,32 @@ describe('data from an older Rowbly (VER-03, U1: no importer)', () => {
     expect(found.map((f) => f.path)).toEqual([storyFile('WEB-1'), 'epics/auth.json']);
     expect(found[0]?.message).toContain('comments');
     expect(found[0]?.message).toContain('epicId');
-    // The unknown Assignee is not fixed: that would save the Story and drop its Comments.
-    expect(report.findings.find((f) => f.code === 'UNKNOWN_ASSIGNEE')?.fixable).toBe(false);
+    // The unknown Custom Field is not fixed: that would save the Story and drop its Comments.
+    expect(report.findings.find((f) => f.code === 'UNKNOWN_FIELD')?.fixable).toBe(false);
+    const before = await snapshotTree(t.path);
+    await services.doctor.fix();
+    expect(await snapshotTree(t.path)).toEqual(before);
+  });
+
+  it('an Assignee roster in rowbly.config.json and Story assignees are LEGACY_DATA, kept by doctor --fix', async () => {
+    const t = await pluginRoot();
+    const story = await makeStory(t.path, { boardId: 'web', key: 'WEB-1', customFields: { ghost: 1 } });
+    await put(t, storyFile('WEB-1'), `${JSON.stringify({ ...story, assignees: ['ana'] }, null, 2)}\n`);
+    const config = JSON.parse(await readFile(join(t.path, 'rowbly.config.json'), 'utf8'));
+    await put(
+      t,
+      'rowbly.config.json',
+      `${JSON.stringify({ ...config, assignees: [{ handle: 'ana', name: 'Ana' }] }, null, 2)}\n`,
+    );
+    const { services } = await withPlugins(t, []);
+    const report = await services.doctor.check();
+    const found = report.findings.filter((f) => f.code === 'LEGACY_DATA');
+    expect(found.map((f) => [f.path, f.details?.fields])).toEqual([
+      [storyFile('WEB-1'), ['assignees']],
+      ['rowbly.config.json', ['assignees']],
+    ]);
+    // The unknown Custom Field is not fixed: that would save the Story and drop its Assignees.
+    expect(report.findings.find((f) => f.code === 'UNKNOWN_FIELD')?.fixable).toBe(false);
     const before = await snapshotTree(t.path);
     await services.doctor.fix();
     expect(await snapshotTree(t.path)).toEqual(before);

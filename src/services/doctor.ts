@@ -299,7 +299,21 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     // 2. Configuration files.
     let global: RowblyConfig | null = null;
     if (fileSet.has('rowbly.config.json')) {
-      global = parse('rowbly.config.json', await readDataRootFile(ctx.root, 'rowbly.config.json'), RowblyConfigSchema);
+      const text = await readDataRootFile(ctx.root, 'rowbly.config.json');
+      global = parse('rowbly.config.json', text, RowblyConfigSchema);
+      if (global && hasLegacyRoster(text)) {
+        add(
+          'LEGACY_DATA',
+          'rowbly.config.json',
+          'holds an Assignee roster from an older Rowbly; Rowbly drops it the next time it saves this file',
+          {
+            details: {
+              fields: ['assignees'],
+              hint: 'back up the file first; Assignees are a Plugin now and nothing is imported',
+            },
+          },
+        );
+      }
     } else {
       add('SCHEMA_INVALID', 'rowbly.config.json', 'required file is missing');
     }
@@ -393,7 +407,7 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
             {
               details: {
                 fields: legacy,
-                hint: 'back up the file before changing the Story; Comments and Epics are Plugins now and nothing is imported',
+                hint: 'back up the file before changing the Story; Assignees, Comments and Epics are Plugins now and nothing is imported',
               },
             },
           );
@@ -918,14 +932,25 @@ function legacyFields(text: string): string[] {
     return [];
   }
   if (typeof raw !== 'object' || raw === null) return [];
-  const story = raw as { comments?: unknown; epicId?: unknown; tasks?: unknown };
+  const story = raw as { assignees?: unknown; comments?: unknown; epicId?: unknown; tasks?: unknown };
   const fields: string[] = [];
+  if (story.assignees !== undefined) fields.push('assignees');
   if (story.comments !== undefined) fields.push('comments');
   if (story.epicId !== undefined) fields.push('epicId');
   if (Array.isArray(story.tasks) && story.tasks.some((t) => typeof t === 'object' && t !== null && 'comments' in t)) {
     fields.push('Task comments');
   }
   return fields;
+}
+
+/** Whether the raw `rowbly.config.json` still has the roster of a Rowbly before the Assignees Plugin. */
+function hasLegacyRoster(text: string): boolean {
+  try {
+    const raw: unknown = JSON.parse(text);
+    return typeof raw === 'object' && raw !== null && 'assignees' in raw;
+  } catch {
+    return false;
+  }
 }
 
 function messageOf(err: unknown): string {
