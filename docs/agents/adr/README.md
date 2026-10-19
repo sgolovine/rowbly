@@ -28,11 +28,11 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | --- | --- | --- |
 | [0009](0009-built-in-plugins-use-only-the-plugin-api.md) | Built-in Plugins live in this repository and use only the Plugin API | Accepted |
 | [0010](0010-plugins-are-turned-on-per-data-root.md) | Plugins are turned on per Data Root, and a broken Plugin is skipped | Accepted |
-| [0011](0011-plugin-data-is-a-bag-per-plugin.md) | Plugin Data is a bag per Plugin, and core keeps it unchanged | Accepted |
+| [0011](0011-plugin-data-is-a-bag-per-plugin.md) | Plugin Data is a bag per Plugin, and core keeps it unchanged | Accepted; amended by 0022 |
 | [0012](0012-plugins-intercept-service-operations.md) | Plugins intercept Service Layer operations through Change Sets | Accepted; amended by 0019 and 0020 |
-| [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted |
-| [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted |
-| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted |
+| [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted; amended by 0022 |
+| [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 |
+| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022 |
 | [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
 
 ### Built-in Plugins
@@ -42,4 +42,5 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0014](0014-epics-return-as-a-built-in-plugin.md) | Epics return as a Built-in Plugin | Accepted |
 | [0015](0015-specs-are-markdown-files.md) | Specs are Markdown files | Accepted |
 | [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built |
-| [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted |
+| [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
+| [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |

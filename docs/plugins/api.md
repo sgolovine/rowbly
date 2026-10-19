@@ -29,7 +29,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 
 | Module | Imported by | Holds |
 | --- | --- | --- |
-| `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `isTaskId`, `parseStoryKey`, `parseTaskId`, `parseRepeatable`, `toTimestamp`; `colors` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `CORE_OPERATION_NAMES`; the record types (`Story`, `Task`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
+| `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
 | `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `ConfirmDialog`, `Loading`, `StageBadge`; the hooks `useAsync`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; `FORM_KEYS`, `moveDelta`, `markdownToPlain` |
 | `src/plugin-api/testing.ts` | tests only | `createPluginTestHost`, `validatePluginDefinition` ([Testing](#testing)) |
 
@@ -41,7 +41,7 @@ The types a Plugin meets at run time, by where it meets them:
 | Hooks | `TransformEvent`, `GuardEvent`, `ReactionEvent`, `ReplacementEvent`, `GuardResult`, `PluginHookContext`, `PluginChangeSet`, `PluginChangeSetView`, `ChangeSetView`, `Change` and its kinds, `DeepReadonly` |
 | Commands | `PluginCli`, `PluginCommandEnv`, `PluginContext`, `PluginServices`, `Command` |
 | Options | `PluginOption`, `PluginInputOptions`, `PluginFilterOptions`, `PluginOptionValues`, `PluginOptionCommand` |
-| TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginTaskTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
+| TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
 | Doctor | `DoctorData`, `PluginFinding` |
 
 Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring (a Plugin gets `PluginServices` or `PluginReadServices`), `PluginError` (the framework's own attribution error), and the TUI's `useToast` (use `ui.toast` and `ui.error`).
@@ -54,7 +54,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | --- | --- |
 | `id` | A slug: the Plugin's command (`rowbly <id>`), bag key and folder name. |
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
-| `bags` | Schemas of its bags on Stories, Tasks, Assignees and Local State, checked by doctor. |
+| `bags` | Schemas of its bags on Stories, Assignees and Local State, checked by doctor. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
 | `start({ settings })` | Runs each time the Plugin loads. Throwing fails the load. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
@@ -62,7 +62,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `commands(group, cli)` | Verbs under `rowbly <id>`. |
 | `options` | Options on core commands. |
 | `filterStories(story, filter, plugin)` | Whether a Story matches the Plugin's filter. |
-| `storyRows`, `taskRows` | Rows for `stories show` / `tasks show` and the TUI Story / Task screens. |
+| `storyRows` | Rows for `stories show` and the TUI Story screen. |
 | `doctor.check({ data, plugin })` | Findings about the Plugin's data. |
 | `actions` | TUI Actions. |
 | `tui()` | Loads the TUI part: `() => import('./tui').then((m) => m.tui)`. |
@@ -110,11 +110,11 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 
 [Operations](../architecture/operations.md) lists every operation, its input and its result; `test/plugins/operationInventory.test.ts` keeps it in line with the code.
 
-- Core operations are `<service>.<verb>` (`stories.create`, `tasks.update`, `boards.remove`, …; `CORE_OPERATION_NAMES`). A Plugin's own are `<id>.<name>`; `plugin.operation` takes `<name>`, one lower-kebab-case word.
+- Core operations are `<service>.<verb>` (`stories.create`, `stages.remove`, `boards.remove`, …; `CORE_OPERATION_NAMES`). A Plugin's own are `<id>.<name>`; `plugin.operation` takes `<name>`, one lower-kebab-case word.
 - **Order:** the Plugin input is parsed → the body (or a replacement) → every transform → every guard (each in registry order) → the save → every reaction.
 - **Results.** Hooks and callers see an operation's public result. Transforms and guards get `result`, the body's or replacement's result before any transform; for `stories.create`, `result.key` is the new Story. Callers and reactions get the **final** result, read back from the Change Set after the transforms: a created Story includes the bags transforms wrote. A Plugin operation passes `{ result(changes, bodyResult) }` to `plugin.operation` to read its own final record the same way. A transform that deletes the record an operation returns fails the operation with `CONFLICT` before the save.
-- **Stage changes.** `stories.update` and `tasks.update` can change a Stage, as `stories.move` and `tasks.move` do. A hook about Stage changes compares `before.stage` with `after.stage` in all of them.
-- **Hook names** in a core namespace (`context`, `assignees`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
+- **Stage changes.** `stories.update` can change a Stage, as `stories.move` does. A hook about Stage changes compares `before.stage` with `after.stage` in both.
+- **Hook names** in a core namespace (`context`, `assignees`, `boards`, `stages`, `fields`, `stories`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
 - **Reactions** have 5 s each. On timeout Rowbly warns and goes on with the next reaction; nothing is undone. The CLI waits for reactions; the TUI runs them in the background, one operation after another. A timeout cannot stop a synchronous loop or detached work. A rejection the reaction did not return is not caught and ends the process: return or await all work.
 
 ## Stored and pending reads
@@ -210,7 +210,7 @@ A Plugin's input of a core operation is `plugins.<id>` in the operation's input.
 - **Convention:** `undefined` changes nothing, `null` clears, a value sets.
 - `storyFilterSchema` parses the Story filter (`StoryFilter.plugins.<id>`) once per list, from the CLI, the TUI or a service caller alike. Without one the value reaches `filterStories` unchecked.
 
-**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `tasks create|edit|move|delete`, `boards create|edit|delete`, `assignees add|edit|remove`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
+**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `boards create|edit|delete`, `assignees add|edit|remove`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
 
 `values` holds the raw values by Commander attribute name (`--add-spec` → `addSpec`, `--no-epic` → `epic`). Only options that were given have a value:
 
@@ -249,20 +249,21 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 ## Screens, focus and Actions
 
 - **Screens** get `{ params, plugin, ui }`. `ui.open(screen, params)` opens one of the Plugin's screens on top. `params.title` is the breadcrumb (without one, the screen name with a capital letter); `plugin` and `screen` are reserved route params that Rowbly sets and the screen never gets. Params are not checked: validate them, for example with a schema, and show an error instead of using a bad value.
-- `ui.openStory(key)`, `ui.openTask(id)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
-- **Story tabs** get `{ story, active, plugin, ui }`, **Task tabs** also `task`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
+- `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
+- **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
+- **Card badges.** `cardBadge({ story, stages, plugin })` returns a short text for a Story's board card, such as the Tasks Plugin's `✓ 2/5`, or `null` for none. It runs for every card each time the board renders, so it must be quick and must not read files: use the Story and the Board's effective Stages it is given. A badge that throws shows nothing on that card.
 - **Focus.** `useIsActive()` is false while a dialog is open or another screen is on top. A tab is active only when it is selected: use `useIsActive() && active`. Give one flag (also covering your own modes, e.g. `active && !confirming`) to `useInput`'s `isActive`, `useKeyHints` (pass `[]` when inactive) and `useKeyCapture`.
 - **Reloading.** `useAsync(fn, deps)` runs again when `deps` change, toasts a failure, and ignores a run that was superseded. Use `useReloadOnReturn(reload, active?)` to reload when the screen or tab is active again; do not put `active` in `useAsync`'s deps.
-- **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story, `task` the Task **and** its Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action only opens or shows something; a data change it offers must also be a command or an option.
+- **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action only opens or shows something; a data change it offers must also be a command or an option.
 
 ```ts
 actions: [
   {
     key: 'x',
-    label: 'tally Task',
-    target: 'task',
-    // A `task` Action runs only where a Task is in focus, and always gets its Story too.
-    run: ({ focus, ui }) => ui.toast(`${focus.task.id} of Story ${focus.story.key}`),
+    label: 'tally Story',
+    target: 'story',
+    // A `story` Action runs only where a Story is in focus.
+    run: ({ focus, ui }) => ui.toast(`${focus.story.key} on Board ${focus.story.boardId}`),
   },
 ],
 ```

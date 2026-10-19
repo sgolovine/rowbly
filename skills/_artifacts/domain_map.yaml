@@ -23,7 +23,7 @@ domains:
     description: Day-to-day Story and Task work on a Board.
   - name: Plugins
     slug: plugins
-    description: Turning Built-in Plugins on and off and using Epics, Specs and Comments.
+    description: Turning Built-in Plugins on and off and using Tasks, Epics, Specs and Comments.
   - name: Data integrity
     slug: data-integrity
     description: Checking and repairing the Data Root with doctor, mainly after git merges.
@@ -163,12 +163,12 @@ skills:
       --epic), Specs (rowbly specs, --spec, Story and Board Specs) and Comments
       (rowbly comments). Also when a rowbly command is unknown because its Plugin is
       off, or a Plugin failed to load. Not for writing a new Plugin."
-    covers: [plugins list/show/enable/disable, Plugin settings, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, PLUGIN_FAILED]
+    covers: [plugins list/show/enable/disable, Plugin settings, tasks, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, PLUGIN_FAILED]
     tasks:
       - Turn a Built-in Plugin on or off and change its settings
       - Group Stories into Epics and check Epic Progress
       - Write Specs and link Stories to Board Specs
-      - Comment on Stories and Tasks
+      - Comment on Stories
     failure_modes:
       - mistake: Naming a Story Spec by slug
         mechanism: Story Keys are case-insensitive and web-42 is also a Board Spec slug.

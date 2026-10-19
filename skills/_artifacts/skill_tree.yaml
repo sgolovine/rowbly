@@ -74,9 +74,9 @@ skills:
             README.md,
             docs/agents/CONTEXT.md,
             src/commands/stories.ts,
-            src/commands/tasks.ts,
+            src/plugins/tasks/commands.ts,
             src/services/stories.ts,
-            src/services/tasks.ts
+            src/plugins/tasks/tasks.ts
           ],
         requires: [ rowbly-cli ],
         purpose: "Show an agent how to do day-to-day work tracking with the Rowbly CLI:
