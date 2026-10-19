@@ -32,6 +32,7 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
 | Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
+| Agent skills for developing Rowbly (screenshots with agentic-tui) | `.agents/skills/<name>/SKILL.md`, linked from `.claude/skills/`; not published and not Intent skills |
 
 ## Domain language and decisions
 
@@ -64,6 +65,15 @@ Update the page that describes a behavior in the same change as the behavior:
 - Anything a user sees (commands, flags, TUI keys, doctor codes, exit codes): `README.md`.
 - Describe what is built; mark anything planned as planned. Do not add work plans, specs or review
   reports to `docs/`.
+
+## Screenshots
+
+Take every screenshot of Rowbly, whether the user asks for one or a pull request needs one, with
+[agentic-tui](https://github.com/codeboltai/agentic-tui) (`pnpm exec agentic-tui`, a devDependency).
+Follow `.agents/skills/rowbly-screenshots/SKILL.md`: it runs the built CLI in a PTY against the demo
+Data Root from `scripts/demo-data-root.sh` and saves PNG and text captures outside the repository.
+`.agents/skills/agentic-tui/SKILL.md` is the tool's full reference. Do not use another screenshot
+tool, hand-drawn screens or `ink-testing-library` frames instead, and do not commit screenshots.
 
 ## TUI code organization (`src/tui/`)
 
