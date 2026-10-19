@@ -23,7 +23,7 @@ describe('rowbly plugins', () => {
         loaded: true,
         known: true,
       },
-      { id: 'stamp', name: 'Stamp', description: 'Stamps new Tasks', enabled: false, loaded: false, known: true },
+      { id: 'stamp', name: 'Stamp', description: 'Stamps new Stories', enabled: false, loaded: false, known: true },
     ]);
     const human = await cli(t, ['plugins', 'list']);
     expect(human.stdout).toMatch(/notes\s+on\s+Notes/);
@@ -145,8 +145,7 @@ describe('the pipeline in command mode', () => {
 
   it('a replacement runs instead of core', async () => {
     const t = await pluginRoot({ stamp: true });
-    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const run = await cli(t, ['tasks', 'create', 'WEB-1', '--name', 'Test', '--json']);
+    const run = await cli(t, ['stories', 'create', '--name', 'Test', '--json']);
     expect(json(run.stdout).name).toBe('[stamped] Test');
   });
 });

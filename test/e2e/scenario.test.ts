@@ -6,9 +6,15 @@ import type { Story } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
 import { type RunCliResult, runCli } from '../helpers';
 
-/** The Comments the Comments Plugin keeps on a Story or Task. */
+/** The Comments the Comments Plugin keeps on a Story. */
 function thread(record: Pick<Story, 'plugins'> | undefined): { author: string | null; body: string }[] {
   return (record?.plugins?.comments?.comments ?? []) as { author: string | null; body: string }[];
+}
+
+/** The Tasks the Tasks Plugin keeps on a Story, with their Task Ids, as `tasks list --json` prints them. */
+function tasksOf(story: Story): { id: string; stage: string }[] {
+  const stored = (story.plugins?.tasks?.tasks ?? []) as { number: number; stage: string }[];
+  return stored.map((t) => ({ id: `${story.key}.${t.number}`, ...t }));
 }
 
 /**
@@ -161,30 +167,34 @@ describe('end-to-end scenario', () => {
     expect(all.slice(0, 2)).toEqual(['API-1', 'WEB-1']);
   });
 
-  it('6. adds Tasks, and Comments with the Comments Plugin on', async () => {
+  it('6. adds Tasks and Comments with the Tasks and Comments Plugins on', async () => {
+    await ok('plugins', 'enable', 'tasks');
     const task = await json('tasks', 'create', 'WEB-2', '--name', 'Write tests');
     expect(task).toMatchObject({ id: 'WEB-2.1', stage: 'backlog' });
     await ok('tasks', 'create', 'WEB-2', '--name', 'Fix copy', '--stage', 'todo');
     await ok('tasks', 'move', 'WEB-2.1', 'done');
     await ok('plugins', 'enable', 'comments');
     await ok('comments', 'add', 'WEB-2', '--body', 'Looks good');
-    const piped = await runCli(['comments', 'add', 'WEB-2.1', '--body-file', '-'], { cwd: dir, stdin: 'From stdin\n' });
+    const piped = await runCli(['comments', 'add', 'WEB-2', '--body-file', '-'], { cwd: dir, stdin: 'From stdin\n' });
     expect(piped.exitCode).toBe(0);
 
     const saved = await story('WEB-2');
-    expect(saved.tasks.map((t) => [t.id, t.stage])).toEqual([
+    expect(tasksOf(saved).map((t) => [t.id, t.stage])).toEqual([
       ['WEB-2.1', 'done'],
       ['WEB-2.2', 'todo'],
     ]);
-    expect(thread(saved)).toMatchObject([{ author: 'alice', body: 'Looks good' }]);
-    expect(thread(saved.tasks[0]).map((c) => c.body.trim())).toContain('From stdin');
+    expect(thread(saved)).toMatchObject([
+      { author: 'alice', body: 'Looks good' },
+      { author: 'alice', body: 'From stdin' },
+    ]);
+    expect((await ok('stories', 'show', 'WEB-2')).replace(/ +/g, ' ')).toContain('Tasks: 1/2 done');
   });
 
   it('7. removes a Stage with --move-to', async () => {
     const refused = await rowbly('stages', 'remove', 'review');
     expect(refused.exitCode).toBe(4);
     const removed = await json('stages', 'remove', 'review', '--move-to', 'in-progress');
-    expect(removed).toMatchObject({ storiesMoved: 1, tasksMoved: 0 });
+    expect(removed).toMatchObject({ storiesMoved: 1 });
     expect((await story('WEB-2')).stage).toBe('in-progress');
     expect((await repos().boards.get('web')).stages?.map((s) => s.key)).not.toContain('review');
   });
@@ -220,8 +230,7 @@ describe('end-to-end scenario', () => {
     expect(await json('fields', 'list')).toEqual({ level: 'board', source: 'board', fields: webConfig.customFields });
     expect(sortByKey(await json('stories', 'list'))).toEqual(sortByKey(webStories));
     expect(sortByKey(await json('stories', 'list', '--all-boards'))).toEqual(sortByKey(allStories));
-    expect(await json('tasks', 'list', 'WEB-2')).toEqual(signup.tasks);
+    expect(await json('tasks', 'list', 'WEB-2')).toEqual(tasksOf(signup));
     expect(await json('comments', 'list', 'WEB-2')).toEqual(thread(signup));
-    expect(await json('comments', 'list', 'WEB-2.1')).toEqual(thread(signup.tasks[0]));
   });
 });

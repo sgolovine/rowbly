@@ -9,9 +9,7 @@ async function setup(on = true) {
   const t = await pluginRoot(on ? { comments: true } : {});
   await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
   const cli = (args: string[], env: NodeJS.ProcessEnv = {}) => runCli(args, { root: t.path, cwd: t.dir, env });
-  await cli(['tasks', 'create', 'WEB-1', '--name', 'One']);
-  await cli(['tasks', 'create', 'WEB-1', '--name', 'Two']);
-  const thread = (task?: number) => readCommentThread(t, 'WEB-1', task);
+  const thread = () => readCommentThread(t, 'WEB-1');
   return { t, cli, thread };
 }
 
@@ -24,23 +22,20 @@ describe('rowbly comments', () => {
     expect((await cli(['comments', 'list', 'WEB-1'])).stdout).toContain('No Comments yet.');
   });
 
-  it('stores a Comment on a Task, not on its Story', async () => {
+  it('stores a Comment on a Story, and refuses a Task id as its target', async () => {
     const { cli, thread } = await setup();
-    const result = await cli(['comments', 'add', 'WEB-1.2', '--body', 'hi', '--json']);
+    const result = await cli(['comments', 'add', 'WEB-1', '--body', 'hi', '--json']);
     expect(result.exitCode).toBe(0);
     const { id } = JSON.parse(result.stdout);
-    expect(await thread()).toEqual([]);
-    expect(await thread(1)).toEqual([expect.objectContaining({ id, body: 'hi', author: null })]);
+    expect(await thread()).toEqual([expect.objectContaining({ id, body: 'hi', author: null })]);
+    expect((await cli(['comments', 'add', 'WEB-1.1', '--body', 'hi'])).exitCode).toBe(2);
   });
 
-  it('counts Comments in stories show and tasks show', async () => {
+  it('counts Comments in stories show', async () => {
     const { cli } = await setup();
     await cli(['comments', 'add', 'WEB-1', '--body', 'one']);
     await cli(['comments', 'add', 'WEB-1', '--body', 'two']);
-    await cli(['comments', 'add', 'WEB-1.1', '--body', 'three']);
     expect((await cli(['stories', 'show', 'WEB-1'])).stdout).toMatch(/Comments:\s+2/);
-    expect((await cli(['tasks', 'show', 'WEB-1.1'])).stdout).toMatch(/Comments:\s+1/);
-    expect((await cli(['tasks', 'show', 'WEB-1.2'])).stdout).toMatch(/Comments:\s+0/);
   });
 
   it('stores the output of $EDITOR with --edit', async () => {
@@ -78,19 +73,16 @@ describe('rowbly comments', () => {
     expect(list.stdout).toContain('(edited)');
     expect((await cli(['comments', 'add', 'WEB-1', '--body', ''])).exitCode).toBe(2);
     expect((await cli(['comments', 'add', 'WEB-1'])).stderr).toContain('missing required --body');
-    expect((await cli(['comments', 'list', 'WEB-1.9'])).exitCode).toBe(3);
+    expect((await cli(['comments', 'list', 'WEB-9'])).exitCode).toBe(3);
   });
 
   // UI-02: the TUI must store the same bodies (commentsTui.test.tsx).
-  it('stores bodies on a Story and a Task exactly as given, and refuses a whitespace-only one', async () => {
+  it('stores bodies on a Story exactly as given, and refuses a whitespace-only one', async () => {
     const { cli, thread } = await setup();
-    for (const target of ['WEB-1', 'WEB-1.1']) {
-      for (const body of WHITESPACE_BODIES)
-        expect((await cli(['comments', 'add', target, '--body', body])).exitCode).toBe(0);
-      expect((await cli(['comments', 'add', target, '--body', ' \n  '])).exitCode).toBe(2);
-    }
+    for (const body of WHITESPACE_BODIES)
+      expect((await cli(['comments', 'add', 'WEB-1', '--body', body])).exitCode).toBe(0);
+    expect((await cli(['comments', 'add', 'WEB-1', '--body', ' \n  '])).exitCode).toBe(2);
     expect((await thread()).map((c) => c.body)).toEqual(WHITESPACE_BODIES);
-    expect((await thread(0)).map((c) => c.body)).toEqual(WHITESPACE_BODIES);
   });
 
   it('refuses to list or change an invalid Thread, naming the Plugin and doctor', async () => {

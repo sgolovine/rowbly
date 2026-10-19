@@ -16,7 +16,7 @@ import {
   type PluginOptionValues,
   type PluginStatus,
   parseRepeatable,
-  parseTaskId,
+  parseStoryKey,
   z,
 } from '../../src/plugin-api';
 import type { FieldKind, FormField, FormValue } from '../../src/tui/components';
@@ -92,10 +92,9 @@ function rawOptionValuesAreTyped(values: PluginOptionValues) {
 function actionsNarrowTheirFocus() {
   const actions: PluginAction[] = [
     { key: 'S', label: 'Story', target: 'story', run: ({ focus }) => void focus.story.key },
-    { key: 'T', label: 'Task', target: 'task', run: ({ focus }) => void [focus.task.id, focus.story.key] },
     { key: 'B', label: 'Board', target: 'board', run: ({ focus }) => void focus.board.id },
-    // @ts-expect-error a Story Action is not promised a Task
-    { key: 'X', label: 'Wrong', target: 'story', run: ({ focus }) => void focus.task.id },
+    // @ts-expect-error a Board Action is not promised a Story
+    { key: 'X', label: 'Wrong', target: 'board', run: ({ focus }) => void focus.story.key },
     { key: 'N', label: 'None', target: 'none', run: ({ focus }) => void focus.story?.key },
   ];
   return actions;
@@ -132,7 +131,7 @@ describe('author API types', () => {
     ];
     expect(fixtures.every((f) => typeof f === 'function')).toBe(true);
     expect([option.flags, label, finding.code]).toEqual(['--tag <label>', 'backend', 'X']);
-    expect(parseTaskId('web-1.2').storyKey).toBe('WEB-1');
+    expect(parseStoryKey('web-1').key).toBe('WEB-1');
     expect(parseRepeatable(['a,b', ' c', 'a'])).toEqual(['a', 'b', 'c']);
   });
 });

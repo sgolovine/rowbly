@@ -49,11 +49,11 @@ describe('rowbly stages', () => {
 
     const refused = await cli('stages', 'remove', 'todo');
     expect(refused.exitCode).toBe(4);
-    expect(refused.stderr).toContain('Stage "todo" is used by 2 Stories and 0 Tasks');
+    expect(refused.stderr).toContain('Stage "todo" is used by 2 Stories');
 
     const moved = await cli('stages', 'remove', 'todo', '--move-to', 'backlog', '--json');
     expect(moved.exitCode).toBe(0);
-    expect(JSON.parse(moved.stdout)).toMatchObject({ storiesMoved: 2, tasksMoved: 0, level: 'board' });
+    expect(JSON.parse(moved.stdout)).toMatchObject({ storiesMoved: 2, level: 'board' });
 
     const stories = await createRepositories(t.root).stories.allInBoard('web');
     expect(stories.every((s) => s.stage === 'backlog')).toBe(true);

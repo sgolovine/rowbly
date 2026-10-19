@@ -186,25 +186,6 @@ describe('rowbly stories', () => {
       name: 'Login',
       description: 'The **login** page',
       customFields: { estimate: 5 },
-      nextTaskNumber: 3,
-      tasks: [
-        {
-          id: 'WEB-1.1',
-          name: 'A',
-          description: '',
-          stage: 'done',
-          createdAt: '2026-10-12T17:21:07.000Z',
-          updatedAt: '2026-10-12T17:21:07.000Z',
-        },
-        {
-          id: 'WEB-1.2',
-          name: 'B',
-          description: '',
-          stage: 'todo',
-          createdAt: '2026-10-12T17:21:07.000Z',
-          updatedAt: '2026-10-12T17:21:07.000Z',
-        },
-      ],
     });
     const json = await cli('stories', 'show', 'web-1', '--json');
     const parsed = StorySchema.parse(JSON.parse(json.stdout));
@@ -214,7 +195,6 @@ describe('rowbly stories', () => {
     expect(human.stdout).toMatch(/Stage: +● Backlog/);
     expect(human.stdout).toMatch(/Estimate: +5/);
     expect(human.stdout).toContain('The **login** page');
-    expect(human.stdout).toContain('Tasks: 1/2 done');
   });
 
   it('edit applies replace, add/remove, --no-* and field flags', async () => {

@@ -94,9 +94,9 @@ describe('stages screen', () => {
     await app.press('d');
     expect(app.lastFrame()).toContain('Remove Stage Backlog at the board level?');
     await app.press('y');
-    await waitForFrame(app, (f) => f.includes('Backlog is used by 1 Stories and 0 Tasks. Move them to:'));
+    await waitForFrame(app, (f) => f.includes('Stage "backlog" is used by 1 Story. Move them to:'));
     await app.press('j', KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('Removed Backlog; moved 1 Stories and 0 Tasks to in-progress'));
+    await waitForFrame(app, (f) => f.includes('Removed Backlog; moved 1 Stories to in-progress'));
     expect(await stageKeys(t)).toEqual(['todo', 'in-progress', 'done']);
     expect((await createRepositories(t.root).stories.findByKey('WEB-1')).stage).toBe('in-progress');
     app.unmount();

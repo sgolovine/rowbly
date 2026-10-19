@@ -1,7 +1,8 @@
 // ARCH-43 in the TUI: the Story and Task forms submit an edit and a Stage change as one operation.
 import { describe, expect, it } from 'vitest';
 import { type Change, type DeepReadonly, definePlugin } from '../../src/plugin-api';
-import type { Story } from '../../src/schemas';
+import { tasks } from '../../src/plugins/tasks';
+import { pluginRoute } from '../../src/tui/hooks';
 import { makeStory } from '../helpers';
 import { KEYS, waitForFrame } from '../tui/helpers';
 import { notes } from './fixtures';
@@ -11,15 +12,36 @@ import { focusFormField, openPluginApp } from './tuiHelpers';
 const OPS = ['stories.update', 'stories.move', 'tasks.update', 'tasks.move'] as const;
 const reacted: string[] = [];
 
+/** WEB-1's Tasks bag: one Task, WEB-1.1, in `backlog`. */
+const TASKS = {
+  nextNumber: 2,
+  tasks: [
+    {
+      number: 1,
+      name: 'Task',
+      description: '',
+      stage: 'backlog',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ],
+};
+
 type Changes = { changes: readonly DeepReadonly<Change>[] };
+
+/** The Tasks in a Story's Tasks bag, as the Tasks Plugin stores them. */
+function tasksOf(story: DeepReadonly<{ plugins?: Record<string, unknown> }>) {
+  return (story.plugins?.tasks as { tasks?: { number: number; stage: string }[] } | undefined)?.tasks ?? [];
+}
 
 /** Whether the Story, or one of its Tasks, enters the `done` Stage. */
 function entersDone({ changes }: Changes): boolean {
   return changes.some((c) => {
     if (c.type !== 'story' || !c.before || !c.after) return false;
     if (c.before.stage !== 'done' && c.after.stage === 'done') return true;
-    return c.after.tasks.some(
-      (t) => t.stage === 'done' && c.before?.tasks.find((b) => b.id === t.id)?.stage !== 'done',
+    const before = tasksOf(c.before);
+    return tasksOf(c.after).some(
+      (t) => t.stage === 'done' && before.find((b) => b.number === t.number)?.stage !== 'done',
     );
   });
 }
@@ -43,24 +65,13 @@ const gate = definePlugin({
 /** WEB-1 in `backlog` with a Note, a Task and an unknown Plugin's bag; WEB-2 already in `todo`. */
 async function setup() {
   reacted.length = 0;
-  const t = await pluginRoot({ notes: true, gate: true });
+  const t = await pluginRoot({ tasks: true, notes: true, gate: true });
   await makeStory(t.path, {
     boardId: 'web',
     key: 'WEB-1',
     name: 'Old',
     rank: 'a5',
-    nextTaskNumber: 2,
-    tasks: [
-      {
-        id: 'WEB-1.1',
-        name: 'Task',
-        description: '',
-        stage: 'backlog',
-        createdAt: '2026-01-01T00:00:00.000Z',
-        updatedAt: '2026-01-01T00:00:00.000Z',
-      },
-    ],
-    plugins: { notes: { note: 'old' }, ghost: { kept: true } },
+    plugins: { tasks: TASKS, notes: { note: 'old' }, ghost: { kept: true } },
   });
   await makeStory(t.path, { boardId: 'web', key: 'WEB-2', stage: 'todo', rank: 'a3' });
   return t;
@@ -68,7 +79,7 @@ async function setup() {
 
 /** Edits the name, the Note and the Stage (`rights` steps along the Stage select), then submits. */
 async function editStory(t: Awaited<ReturnType<typeof setup>>, rights: number) {
-  const { app } = await openPluginApp(t, [notes, gate], { screen: 'story-form', params: { key: 'WEB-1' } });
+  const { app } = await openPluginApp(t, [tasks, notes, gate], { screen: 'story-form', params: { key: 'WEB-1' } });
   await waitForFrame(app, (f) => f.includes('Edit WEB-1') && f.includes('Note'));
   await app.press(KEYS.end, ' new');
   await focusFormField(app, 'Stage');
@@ -96,7 +107,7 @@ describe('Story form (ARCH-43)', () => {
     const saved = await readJsonFile(t, storyFile('WEB-1'));
     expect(saved).toMatchObject({ name: 'Old new', stage: 'todo' });
     expect(String(saved.rank) > 'a3').toBe(true);
-    expect(saved.plugins).toEqual({ notes: { note: 'old!' }, ghost: { kept: true } });
+    expect(saved.plugins).toEqual({ tasks: TASKS, notes: { note: 'old!' }, ghost: { kept: true } });
     await waitForFrame(app, () => reacted.length > 0);
     expect(reacted).toEqual(['stories.update']);
     app.unmount();
@@ -113,7 +124,8 @@ describe('Story form (ARCH-43)', () => {
 
 describe('Task form (ARCH-43)', () => {
   async function editTask(t: Awaited<ReturnType<typeof setup>>, rights: number) {
-    const { app } = await openPluginApp(t, [notes, gate], { screen: 'task-form', params: { id: 'WEB-1.1' } });
+    const route = pluginRoute('tasks', 'form', { id: 'WEB-1.1', title: 'Edit WEB-1.1' });
+    const { app } = await openPluginApp(t, [tasks, notes, gate], route);
     await waitForFrame(app, (f) => f.includes('Edit WEB-1.1') && f.includes('Name*'));
     await app.press(KEYS.end, ' new');
     await focusFormField(app, 'Stage');
@@ -135,8 +147,8 @@ describe('Task form (ARCH-43)', () => {
     const t = await setup();
     const app = await editTask(t, 2);
     await waitForFrame(app, 'Updated WEB-1.1');
-    const saved = (await readJsonFile(t, storyFile('WEB-1'))) as unknown as Story;
-    expect(saved.tasks[0]).toMatchObject({ name: 'Task new', stage: 'in-progress' });
+    const saved = await readJsonFile(t, storyFile('WEB-1'));
+    expect(tasksOf(saved)[0]).toMatchObject({ name: 'Task new', stage: 'in-progress' });
     await waitForFrame(app, () => reacted.length > 0);
     expect(reacted).toEqual(['tasks.update']);
     app.unmount();

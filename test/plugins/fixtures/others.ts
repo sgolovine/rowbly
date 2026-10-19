@@ -1,29 +1,27 @@
 // Small fixture Plugins, each for one part of the pipeline or one way to fail to load.
 import { definePlugin, parseStoryKey, z } from '../../../src/plugin-api';
 
-/** Replaces `tasks.create`: runs core, then stamps the new Task's name in the same Change Set. */
+/** Replaces `stories.create`: runs core, then stamps the new Story's name in the same Change Set. */
 export const stamp = definePlugin({
   id: 'stamp',
   name: 'Stamp',
-  description: 'Stamps new Tasks',
+  description: 'Stamps new Stories',
   replaces: {
-    'tasks.create': async ({ core, changes, input }) => {
-      const task = await core();
-      const story = await changes.updateStory(input.storyKey, (s) => ({
-        ...s,
-        tasks: s.tasks.map((t) => (t.id === task.id ? { ...t, name: `[stamped] ${t.name}` } : t)),
-      }));
-      return story.tasks.find((t) => t.id === task.id) ?? task;
+    'stories.create': async ({ core, changes }) => {
+      const story = await core();
+      const name = `[stamped] ${story.name}`;
+      await changes.updateStory(story.key, (s) => ({ ...s, name }));
+      return { ...story, name };
     },
   },
 });
 
-/** Another replacement of `tasks.create`: always clashes with `stamp`, which is earlier. */
+/** Another replacement of `stories.create`: always clashes with `stamp`, which is earlier. */
 export const rival = definePlugin({
   id: 'rival',
   name: 'Rival',
-  description: 'Also replaces tasks.create',
-  replaces: { 'tasks.create': async ({ core }) => core() },
+  description: 'Also replaces stories.create',
+  replaces: { 'stories.create': async ({ core }) => core() },
 });
 
 /** Throws while it starts. */

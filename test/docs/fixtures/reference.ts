@@ -46,10 +46,10 @@ export const tally = definePlugin({
   actions: [
     {
       key: 'x',
-      label: 'tally Task',
-      target: 'task',
-      // A `task` Action runs only where a Task is in focus, and always gets its Story too.
-      run: ({ focus, ui }) => ui.toast(`${focus.task.id} of Story ${focus.story.key}`),
+      label: 'tally Story',
+      target: 'story',
+      // A `story` Action runs only where a Story is in focus.
+      run: ({ focus, ui }) => ui.toast(`${focus.story.key} on Board ${focus.story.boardId}`),
     },
   ],
   // #endregion

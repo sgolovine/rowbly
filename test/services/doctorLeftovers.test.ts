@@ -187,7 +187,6 @@ describe('data from an older Rowbly (VER-03, U1: no importer)', () => {
       ...story,
       epicId: 'auth',
       comments: [{ id: 'c1', author: 'ana', body: 'old', createdAt: story.createdAt }],
-      tasks: [],
     };
     await put(t, storyFile('WEB-1'), `${JSON.stringify(legacy, null, 2)}\n`);
     await put(t, 'epics/auth.json', '{"id":"auth"}');

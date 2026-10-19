@@ -17,7 +17,6 @@ afterEach(async () => {
 const recordingUi = (): PluginUi => ({
   open: vi.fn(),
   openStory: vi.fn(),
-  openTask: vi.fn(),
   openBoard: vi.fn(),
   back: vi.fn(),
   toast: vi.fn(),
