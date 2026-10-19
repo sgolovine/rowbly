@@ -43,6 +43,7 @@ import {
   follow,
   GUTTER_WIDTH,
   groupColumns,
+  LIST_ROW_HEIGHT,
   type ListRow,
   listRows,
   moveCard,
@@ -84,6 +85,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const [listCursor, setListCursor] = useState(0);
   const firstListRow = useRef(0);
   const writing = useRef(false);
+  // Mirrors `writing` for rendering: the keys are ignored while a write runs, so their hints are hidden too.
+  const [saving, setSaving] = useState(false);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
   // A Board opened for viewing only; picking a Board in the sidebar drops it.
@@ -148,6 +151,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const write = async (next: Columns, nextCursor: Cursor, run: () => Promise<Story | undefined>) => {
     const before = { columns, cursor: { col, row } };
     writing.current = true;
+    setSaving(true);
     setColumns(next);
     setCursor(nextCursor);
     try {
@@ -159,6 +163,7 @@ export function BoardScreen({ params }: ScreenProps) {
       toast.error(err);
     } finally {
       writing.current = false;
+      setSaving(false);
       // Supersedes any load still in flight (for example the reload on return), which could be stale.
       list.reload();
     }
@@ -248,39 +253,41 @@ export function BoardScreen({ params }: ScreenProps) {
   useKeyCapture(active && mode === 'filter', { escape: true });
   useEscape(active && mode === 'filter', () => setMode('view'));
   useKeyHints(
-    mode !== 'view'
-      ? [{ key: 'esc', description: 'cancel' }]
-      : view === 'list'
-        ? [
-            { key: '↑/↓', description: 'select' },
-            { key: 'enter', description: 'open/fold' },
-            { key: '←/→', description: 'fold/unfold section', secondary: true },
-            { key: 'n', description: 'new' },
-            { key: 'e', description: 'edit', secondary: true },
-            { key: 'd', description: 'delete', secondary: true },
-            { key: '/', description: 'filter' },
-            { key: 'c', description: 'clear filter', secondary: true },
-            { key: 'v', description: 'Stages view' },
-            { key: 'r', description: 'reload', secondary: true },
-            { key: 'j/k', description: 'select (vim keys)', secondary: true },
-          ]
-        : [
-            { key: '←/→ ↑/↓', description: 'select' },
-            { key: 'enter', description: 'open' },
-            { key: 'shift+←/→', description: 'move Stage', secondary: true },
-            { key: 'shift+↑/↓', description: 'reorder', secondary: true },
-            { key: 'T/B', description: 'to top/bottom', secondary: true },
-            { key: 'n', description: 'new' },
-            { key: 'e', description: 'edit', secondary: true },
-            { key: 'd', description: 'delete', secondary: true },
-            { key: '/', description: 'filter' },
-            { key: 'c', description: 'clear filter', secondary: true },
-            { key: 'v', description: 'list view' },
-            { key: 'r', description: 'reload', secondary: true },
-            { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
-            { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
-            { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
-          ],
+    saving
+      ? []
+      : mode !== 'view'
+        ? [{ key: 'esc', description: 'cancel' }]
+        : view === 'list'
+          ? [
+              { key: '↑/↓', description: 'select' },
+              { key: 'enter', description: 'open/fold' },
+              { key: '←/→', description: 'fold/unfold section', secondary: true },
+              { key: 'n', description: 'new' },
+              { key: 'e', description: 'edit', secondary: true },
+              { key: 'd', description: 'delete', secondary: true },
+              { key: '/', description: 'filter' },
+              { key: 'c', description: 'clear filter', secondary: true },
+              { key: 'v', description: 'Stages view' },
+              { key: 'r', description: 'reload', secondary: true },
+              { key: 'j/k', description: 'select (vim keys)', secondary: true },
+            ]
+          : [
+              { key: '←/→ ↑/↓', description: 'select' },
+              { key: 'enter', description: 'open' },
+              { key: 'shift+←/→', description: 'move Stage', secondary: true },
+              { key: 'shift+↑/↓', description: 'reorder', secondary: true },
+              { key: 'T/B', description: 'to top/bottom', secondary: true },
+              { key: 'n', description: 'new' },
+              { key: 'e', description: 'edit', secondary: true },
+              { key: 'd', description: 'delete', secondary: true },
+              { key: '/', description: 'filter' },
+              { key: 'c', description: 'clear filter', secondary: true },
+              { key: 'v', description: 'list view' },
+              { key: 'r', description: 'reload', secondary: true },
+              { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
+              { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
+              { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
+            ],
   );
 
   /** The list view's keys; `n` adds to the highlighted Story's Stage, or a section's first Stage. */
@@ -366,7 +373,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const height = (room.height ?? termRows - 3) - (inHeader ? 0 : 2);
   const size = cardsPerColumn(height);
   // The list view's scroll markers take a line above and below it.
-  const listSize = Math.max(1, height - 2);
+  const listSize = Math.max(1, Math.floor((height - 2) / LIST_ROW_HEIGHT));
   firstListRow.current = follow(firstListRow.current, listAt, listSize, rows.length);
 
   return (
