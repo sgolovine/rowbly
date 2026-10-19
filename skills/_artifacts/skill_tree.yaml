@@ -39,7 +39,7 @@ skills:
         path: skills/rowbly-setup/SKILL.md,
         description: "Use when setting up or configuring Rowbly in a repository:
           creating the .rowbly/ Data Root with rowbly init, adding Boards and
-          key prefixes, the Assignee roster and Me (whoami), the current Board
+          key prefixes, Me (whoami) and the Assignee roster, the current Board
           (use), and changing Stages or Custom Fields at Board or global level
           through the Configuration Cascade. Not for day-to-day Story work
           (rowbly-stories).",
@@ -49,13 +49,13 @@ skills:
             docs/architecture/data-model.md,
             src/commands/setup.ts,
             src/commands/boards.ts,
-            src/commands/assignees.ts,
+            src/plugins/assignees/commands.ts,
             src/commands/stages.ts,
             src/commands/fields.ts
           ],
         requires: [ rowbly-cli ],
         purpose: "Guide an agent through creating and configuring a Rowbly Data Root:
-          init, Boards, the Assignee roster and Me, and Stages and Custom Fields
+          init, Boards, Me and the Assignee roster, and Stages and Custom Fields
           edited at the correct Configuration Cascade level."
       },
     {
@@ -89,9 +89,10 @@ skills:
         domain: plugins,
         path: skills/rowbly-plugins/SKILL.md,
         description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
-          Plugin settings, or using the Built-in Plugins' commands: Epics
-          (rowbly epics, --epic), Specs (rowbly specs, --spec, Story and Board
-          Specs) and Comments (rowbly comments). Also when a rowbly command is
+          Plugin settings, or using the Built-in Plugins' commands: Assignees
+          (rowbly assignees, --assignee), Epics (rowbly epics, --epic), Specs
+          (rowbly specs, --spec, Story and Board Specs) and Comments (rowbly
+          comments). Also when a rowbly command is
           unknown because its Plugin is off, or a Plugin failed to load. Not for
           writing a new Plugin.",
         sources:
@@ -100,14 +101,15 @@ skills:
             docs/plugins/README.md,
             docs/plugins/built-in.md,
             src/commands/plugins.ts,
+            src/plugins/assignees/commands.ts,
             src/plugins/epics/commands.ts,
             src/plugins/specs/commands.ts,
             src/plugins/comments/commands.ts
           ],
         requires: [ rowbly-cli ],
         purpose: "Explain how an agent turns Rowbly's Built-in Plugins on and off,
-          handles Plugin settings and load failures, and uses the Epics, Specs
-          and Comments commands and Story options."
+          handles Plugin settings and load failures, and uses the Assignees,
+          Epics, Specs and Comments commands and Story options."
       },
     {
         name: rowbly-doctor,

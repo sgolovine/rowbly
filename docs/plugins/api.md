@@ -54,7 +54,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | --- | --- |
 | `id` | A slug: the Plugin's command (`rowbly <id>`), bag key and folder name. |
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
-| `bags` | Schemas of its bags on Stories, Tasks, Assignees and Local State, checked by doctor. |
+| `bags` | Schemas of its bags on Stories, Tasks and Local State, checked by doctor. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
 | `start({ settings })` | Runs each time the Plugin loads. Throwing fails the load. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
@@ -78,7 +78,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
-- `me` is the locally chosen Me. In a long TUI run it may be stale: check it against the roster before you record it.
+- `me` is the locally chosen Me, a handle, or `null`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
 - `warn` shows a warning after the command, or a toast in the TUI.
 
 ## Stages and capabilities
@@ -114,7 +114,7 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 - **Order:** the Plugin input is parsed → the body (or a replacement) → every transform → every guard (each in registry order) → the save → every reaction.
 - **Results.** Hooks and callers see an operation's public result. Transforms and guards get `result`, the body's or replacement's result before any transform; for `stories.create`, `result.key` is the new Story. Callers and reactions get the **final** result, read back from the Change Set after the transforms: a created Story includes the bags transforms wrote. A Plugin operation passes `{ result(changes, bodyResult) }` to `plugin.operation` to read its own final record the same way. A transform that deletes the record an operation returns fails the operation with `CONFLICT` before the save.
 - **Stage changes.** `stories.update` and `tasks.update` can change a Stage, as `stories.move` and `tasks.move` do. A hook about Stage changes compares `before.stage` with `after.stage` in all of them.
-- **Hook names** in a core namespace (`context`, `assignees`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
+- **Hook names** in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
 - **Reactions** have 5 s each. On timeout Rowbly warns and goes on with the next reaction; nothing is undone. The CLI waits for reactions; the TUI runs them in the background, one operation after another. A timeout cannot stop a synchronous loop or detached work. A rejection the reaction did not return is not caught and ends the process: return or await all work.
 
 ## Stored and pending reads
@@ -210,7 +210,7 @@ A Plugin's input of a core operation is `plugins.<id>` in the operation's input.
 - **Convention:** `undefined` changes nothing, `null` clears, a value sets.
 - `storyFilterSchema` parses the Story filter (`StoryFilter.plugins.<id>`) once per list, from the CLI, the TUI or a service caller alike. Without one the value reaches `filterStories` unchecked.
 
-**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `tasks create|edit|move|delete`, `boards create|edit|delete`, `assignees add|edit|remove`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
+**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `tasks create|edit|move|delete`, `boards create|edit|delete`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
 
 `values` holds the raw values by Commander attribute name (`--add-spec` → `addSpec`, `--no-epic` → `epic`). Only options that were given have a value:
 
@@ -245,6 +245,7 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 - Field names are unique within the Plugin; a duplicate fails its fields.
 - A `select` cycles through `options` only, so "no value" is an option of the Plugin's own whose label cannot be a real value (Epics: `No Epic`). A filter keeps "any" (`All Epics`) apart from "none".
 - `storyFilter.fields` / `filter(values)` / `describe(values)` fill the filter of the Stories list and the board. A Plugin whose filter fields fail is left out of the filter, and the screen says so.
+- `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story's board card and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
 
 ## Screens, focus and Actions
 
@@ -345,7 +346,7 @@ rowbly trace op-5 stories.update operation rejected code=CONFLICT at=guard:point
 
 `src/plugin-api/testing.ts` is the test harness; tests import it, Plugins and production code never do. It is internal until Plugin packages exist.
 
-- `createPluginTestHost({ plugins, settings?, boards?, assignees?, now?, newId?, me? })` creates a Data Root under the system temp folder (Board `web` unless `boards` is given), turns `plugins` on with `settings`, and loads them as Rowbly does, with a fixed clock (`2026-01-01T00:00:00.000Z`) and ids `id000001`, `id000002`, …. It returns `root`, `services` (every core service, for the test only), `warnings`, `status()`, `context(id)` (what the Plugin's own code gets) and `dispose()`.
+- `createPluginTestHost({ plugins, settings?, boards?, now?, newId?, me? })` creates a Data Root under the system temp folder (Board `web` unless `boards` is given), turns `plugins` on with `settings`, and loads them as Rowbly does, with a fixed clock (`2026-01-01T00:00:00.000Z`) and ids `id000001`, `id000002`, …. It returns `root`, `services` (every core service, for the test only), `warnings`, `status()`, `context(id)` (what the Plugin's own code gets) and `dispose()`.
 - `validatePluginDefinition(definition)` lists what loading would refuse; empty when it is fine.
 - For a TUI part, render one component with `ink-testing-library`, `host.context(id)` and a recording `PluginUi`, and wait for its loaded data before pressing keys (the recipe is in the module header).
 - `pnpm bench:plugins` runs the opt-in performance measurements ([`test/performance/README.md`](../../test/performance/README.md)).

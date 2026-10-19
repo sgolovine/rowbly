@@ -2,13 +2,13 @@
 name: rowbly-setup
 description: "Use when setting up or configuring Rowbly in a repository:
   creating the .rowbly/ Data Root with rowbly init, adding Boards and key
-  prefixes, the Assignee roster and Me (whoami), the current Board (use), and
+  prefixes, Me (whoami) and the Assignee roster, the current Board (use), and
   changing Stages or Custom Fields at Board or global level through the
   Configuration Cascade. Not for day-to-day Story work (rowbly-stories)."
 metadata:
   purpose: >-
     Guide an agent through creating and configuring a Rowbly Data Root:
-    init, Boards, the Assignee roster and Me, and Stages and Custom Fields
+    init, Boards, Me and the Assignee roster, and Stages and Custom Fields
     edited at the correct Configuration Cascade level.
   type: lifecycle
   library: rowbly
@@ -20,7 +20,7 @@ sources:
   - docs/architecture/data-model.md
   - src/commands/setup.ts
   - src/commands/boards.ts
-  - src/commands/assignees.ts
+  - src/plugins/assignees/commands.ts
   - src/commands/stages.ts
   - src/commands/fields.ts
 ---
@@ -64,18 +64,21 @@ rowbly boards list --json --no-prompt
   `--force`. With the Specs Plugin on, Board Specs also block it. Never pass `--force` without the
   user's explicit approval: it deletes every Story on the Board.
 
-## 3. Set up Assignees and Me
+## 3. Set up Me and Assignees
 
 ```sh
-rowbly assignees add sam --name "Sam Lee" --email sam@example.com
 rowbly whoami sam
+rowbly plugins enable assignees      # only if the team assigns Stories; it changes the Data Root for everyone
+rowbly assignees add sam --name "Sam Lee" --email sam@example.com
 ```
 
-- A handle is a slug, unique in the Data Root. An email is optional. When an Assignee's email matches
-  `git config user.email`, Rowbly recognises that person as Me without `whoami`.
-- Me is the creator of new Stories (and the author of Comments). It is Local State in `local.json`,
-  so it is per developer and is never committed. Only set Me to the person you work for; do not
-  invent an Assignee for yourself unless the user asks.
+- Me is a handle (a slug), the creator of new Stories (and the author of Comments). It is Local State
+  in `local.json`, so it is per developer and is never committed. Only set Me to the person you work
+  for; do not invent a handle for yourself unless the user asks.
+- Assignees are the Assignees Plugin, off until the Data Root turns it on. Ask the user before you
+  turn it on. With it on, `rowbly assignees` keeps the roster in
+  `.rowbly/plugins/assignees/roster.json`: a handle is a slug, unique in the Data Root, and an email is
+  optional. Add Me's handle to the roster too, or doctor warns `ASSIGNEES_UNKNOWN_ME`.
 - `assignees remove <handle>` also takes the handle off every Story, and warns with the count.
 - `assignees edit <handle> --email ""` removes an email.
 
@@ -139,8 +142,8 @@ rowbly fields remove estimate --board web
 - **HIGH: running `init` inside an existing tree.** A parent `.rowbly/` already serves this directory; a
   new one hides it. Check with `rowbly use --json --no-prompt` first.
 - **MEDIUM: editing `rowbly.config.json` or `board.config.json` by hand** for Stages, Fields or
-  Assignees. That bypasses validation, and Stories can be left in Stages that no longer exist. Use the
-  commands.
+  Plugin entries. That bypasses validation, and Stories can be left in Stages that no longer exist.
+  Use the commands.
 
 ## Completion
 

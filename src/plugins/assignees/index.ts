@@ -33,7 +33,7 @@ function assigneesText(plugin: PluginReadContext, story: Bagged): string {
 export const assignees = definePlugin({
   id: 'assignees',
   name: 'Assignees',
-  description: 'A roster of people who can be assigned to Stories',
+  description: 'A roster of Assignees for Stories',
   // Assignees has no settings; the roster is a Plugin file (ADR-0013).
   settings: z.object({}),
   bags: { story: AssigneesBag },

@@ -36,17 +36,17 @@ rowbly stories create --name "Login page" --priority P1
 rowbly                               # open the board in the TUI
 ```
 
-`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` after `rowbly assignees add <handle> --name <name>` to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
+`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
 
 ## Concepts
 
 The exact meaning of each term is in [`CONTEXT.md`](docs/agents/CONTEXT.md). In short:
 
-- A **Data Root** (`.rowbly/`) holds everything: **Boards** and one **Assignee** roster.
+- A **Data Root** (`.rowbly/`) holds everything: its **Boards**, and the data of its Plugins.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
-- A Story has a name, a markdown description, Assignees, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, and embedded **Tasks** (`WEB-42.1`).
+- A Story has a name, a markdown description, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, and embedded **Tasks** (`WEB-42.1`).
 - Each Stage belongs to a **Stage Category**: `todo`, `in_progress` or `done`.
-- **Me** is the Assignee you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
+- **Me** is the handle you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
 - **Plugins** add optional features; a Data Root turns each one on or off for everyone who uses it. See [Plugins](#plugins).
 
 ## Data Root and git workflow
@@ -55,7 +55,7 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
 
 ```text
 .rowbly/
-  rowbly.config.json                 # Assignee roster, optional Stages / Custom Fields
+  rowbly.config.json                 # optional Stages / Custom Fields, Plugin entries
   local.json                         # Local State (git-ignored)
   .gitignore                         # keeps local.json out of git
   plugins/<id>/                      # files of a Plugin, for the whole Data Root
@@ -71,7 +71,7 @@ Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local
 
 - **Story Keys** are the highest number on the Board plus one. There is no shared counter, so two branches can both create `WEB-7`. After such a merge, run `rowbly doctor --fix`: it keeps the earlier Story as `WEB-7` and renumbers the other one (and its Task ids). Update branch names or commit messages that used the renumbered key.
 - **Deleted keys may be reused.** If the highest-numbered Story is deleted, the next new Story gets its number. git history still shows which Story a key meant at any time.
-- **Run `rowbly doctor` after every merge** that touched `.rowbly/`. It reports conflict markers, invalid files, references to Stages or Assignees that no longer exist, and other drift, and `--fix` repairs what is safe to repair. See [Doctor](#doctor).
+- **Run `rowbly doctor` after every merge** that touched `.rowbly/`. It reports conflict markers, invalid files, references to Stages that no longer exist, and other drift, and `--fix` repairs what is safe to repair. See [Doctor](#doctor).
 
 ## Configuration Cascade
 
@@ -97,7 +97,7 @@ A Board uses the most specific level that defines the list; the lists are not me
 
 `ROWBLY_BOARD` stands in for `--board`. Colour follows `NO_COLOR` and `FORCE_COLOR`. A command asks for a missing value (or a confirmation) only when stdin and stdout are terminals and neither `--json` nor `--no-prompt` is given; otherwise it exits 2, and destructive commands need `--yes`.
 
-Long text such as a description takes `--description <text>`, `--description-file <path>` (`-` reads stdin) or `--edit`, which opens `$VISUAL` or `$EDITOR` (fallback `vi`). Repeatable flags such as `--assignee`, `--label` and `--field key=value` may also be comma-separated.
+Long text such as a description takes `--description <text>`, `--description-file <path>` (`-` reads stdin) or `--edit`, which opens `$VISUAL` or `$EDITOR` (fallback `vi`). Repeatable flags such as `--label` and `--field key=value` may also be comma-separated.
 
 ## Command reference
 
@@ -119,15 +119,14 @@ rowbly config show [--board <id>]
 - `use web` stores the current Board in `local.json`. Without a target it prints the current context
   and where it came from: a flag, the environment (`ROWBLY_BOARD`), `local.json`, or the only Board
   there is. A Board is resolved in that order: `--board`, `ROWBLY_BOARD`, `local.json`, the only Board.
-- `whoami` prints Me and whether it came from `local.json` or from the roster email that matches
-  `git config user.email`. `whoami <handle>` claims a handle; one missing from the roster is
-  stored with a warning.
+- `whoami` prints Me. `whoami <handle>` claims a handle (a lower-kebab-case slug) and stores it in
+  `local.json`; `--clear` unsets it.
 - `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
-  The **Context** section of the settings (`,`) switches the Board; press `m` there to pick Me from the
-  roster, or `c` to clear the current Board. While `~/.rowbly` does not exist,
+  The **Context** section of the settings (`,`) switches the Board; press `m` there to set Me, or `c` to
+  clear the current Board. While `~/.rowbly` does not exist,
   Context also lists **Create global Data Root**, which runs the same form as the first-run screen
   (`init --global`) and then returns to the Data Root you are using.
 - The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
@@ -137,19 +136,36 @@ rowbly config show [--board <id>]
 <!-- BEGIN assignees -->
 ### Assignees
 
-A Data Root has one roster of Assignees, kept as `assignees` in `rowbly.config.json`.
+Assignees are a Built-in Plugin: run `rowbly plugins enable assignees` first. The Data Root has one
+roster of Assignees, kept in `.rowbly/plugins/assignees/roster.json`.
 
-```sh
+```text
 rowbly assignees list
 rowbly assignees add <handle> --name <name> [--email <email>]
 rowbly assignees edit <handle> [--name <name>] [--email <email>]   # --email "" removes the email
 rowbly assignees remove <handle>
+rowbly stories list … [--assignee <h|me>…]
+rowbly stories create … [--assignee <h|me>…]
+rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --remove-assignee <h|me>…]
 ```
 
-- Handles are slugs, unique within the Data Root. An email is optional but must be valid; it lets
-  Rowbly recognise Me from `git config user.email`.
+- Handles are slugs, unique within the Data Root. An email is optional but must be valid.
+- A Story has zero or more Assignees, kept as Plugin Data on the Story
+  (`"plugins": { "assignees": { "assignees": ["sam"] } }`). Its Tasks share them: `tasks show`
+  lists the Story's Assignees.
+- `--assignee` may be repeated or comma-separated, and `me` means Me (exit 2 when Me is not set).
+  An Assignee must be in the roster: otherwise the command exits 2 and `--json` lists the valid
+  handles in `details.validHandles`.
 - `remove` also takes the handle off every Story in the Data Root and warns with the count, e.g.
   `warning: Assignee "sam" removed from 1 story`.
+- `doctor` reports `ASSIGNEES_UNKNOWN_ASSIGNEE` for a Story Assignee that is not in the roster and
+  `ASSIGNEES_UNKNOWN_ME` for a Me that is not; `--fix` removes them. A roster file that cannot be
+  read is `ASSIGNEES_ROSTER_UNAVAILABLE` (error, fixed by hand).
+- In the TUI, an **Assignees** section in the settings (`,`) lists the roster (`enter` open, then
+  Edit or Remove; `n` add). The Story form has an Assignees choice, the filter has Assignees and
+  "Assigned to me", and board cards and Story list rows show `@handle`.
+- Rosters and Story Assignees from a Rowbly before this Plugin are not imported: core drops them the
+  next time it saves `rowbly.config.json` or the Story.
 <!-- END assignees -->
 
 <!-- BEGIN boards -->
@@ -210,15 +226,14 @@ rowbly fields remove <key>
 ### Stories
 
 ```text
-rowbly stories list [--stage <k>…] [--category todo|in_progress|done] [--open] [--assignee <h|me>…]
+rowbly stories list [--stage <k>…] [--category todo|in_progress|done] [--open]
                     [--label <l>…] [--priority <P>…] [--search <text>]
                     [--sort rank|priority|created|updated|due] [--board <id>] [--all-boards]
 rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
-                      [--assignee <h>…] [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
+                      [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
                       [--field key=value …] [--board <id>]
 rowbly stories show <KEY>
 rowbly stories edit <KEY> [--name <n>] [description flags]
-                    [--assignee <h>… | --add-assignee <h>… | --remove-assignee <h>…]
                     [--priority <P> | --no-priority]
                     [--label <l>… | --add-label <l>… | --remove-label <l>…]
                     [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
@@ -228,10 +243,11 @@ rowbly stories delete <KEY>                          # confirms; pass --yes when
 ```
 
 - A new Story gets the next Story Key on its Board: the highest existing number plus one. If the highest-numbered Story is deleted, its key is given to the next new Story.
-- A new Story goes to the bottom of its Stage (default: the first effective Stage). `createdBy` is Me when Me is in the roster.
+- A new Story goes to the bottom of its Stage (default: the first effective Stage). `createdBy` is Me.
 - Story Keys are case-insensitive (`web-2` is `WEB-2`) and need no `--board`: the key prefix finds the Board.
-- Repeatable flags (`--assignee`, `--label`, `--stage`, `--priority`, `--field`) may also be comma-separated. `--assignee me` means Me; it exits 2 when Me is not set.
-- Assignees must be in the roster and Custom Field values must fit their field; required fields must have a value. A violation exits 2 and `--json` lists the valid choices in `details` (for example `validHandles`).
+- Repeatable flags (`--label`, `--stage`, `--priority`, `--field`) may also be comma-separated.
+- Custom Field values must fit their field; required fields must have a value. A violation exits 2 and `--json` lists the problems in `details`.
+- Plugins that are on add their own options, such as `--assignee` ([Assignees](#assignees)) or `--epic`.
 - `list` lists the current Board; `--all-boards` lists every Board in the Data Root. It sorts by Stage order then Rank. `--sort priority` puts the most urgent first, `created` the oldest first, `updated` the newest first and `due` the soonest first. `--open` hides Stories in a `done` Stage. `--search` matches name and description, ignoring case.
 - `move` places the Story at the bottom of the target Stage, or at the top with `--top`. `rank` reorders a Story within its Stage. Both write only that Story's file.
 - `--json` prints Story objects: an array for `list`, one Story for `create`, `show`, `edit`, `move` and `rank`, and `{ deleted }` for `delete`.
@@ -253,7 +269,6 @@ rowbly tasks delete <TASK-ID>                        # confirms; pass --yes when
 - Tasks live inside their Story's file. A Task id is the Story Key plus a number (`WEB-42.1`), taken from the Story's `nextTaskNumber`. Ids are never reused: after deleting `WEB-42.3`, the next Task is still `WEB-42.4`.
 - A new Task goes into the first effective Stage unless `--stage` is given. The Stage must be one of the Board's effective Stages; `move` to any other Stage exits 2.
 - Tasks are listed in creation order and have no Rank.
-- Tasks have no Assignees of their own; `show` displays the Story's Assignees.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects: an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
 - In the TUI, a Story's **Tasks** tab and the Task detail both edit (`e`), move (`m`) and delete (`d`) a Task.
@@ -272,7 +287,7 @@ rowbly comments delete <KEY|TASK-ID> <comment-id>   # confirms; pass --yes when 
 ```
 
 - The target is a Story Key (`WEB-42`) for a Comment on the Story, or a Task id (`WEB-42.1`) for a Comment on that Task.
-- The author is Me when Me is in the roster, otherwise none. Comment ids are 8-character random ids.
+- The author is Me, or none when Me is not set. Comment ids are 8-character random ids.
 - The body comes from exactly one of `--body`, `--body-file` (`-` reads stdin) or `--edit` (`$VISUAL`/`$EDITOR`, fallback `vi`). Without any of them, an interactive run asks for the body; otherwise the command exits 2. An empty body exits 2.
 - `list` shows Comments oldest first. `edit` updates the Comment's `updatedAt`.
 - `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
@@ -300,12 +315,11 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `CONFLICT_MARKERS` | error | Conflict markers in any other file, including one Story edited on both branches | — (merge by hand) |
 | `DUPLICATE_PREFIX` | error | Two Boards with the same key prefix | — |
 | `UNKNOWN_STAGE` | error | A Story or Task in a Stage that is not in its Board's effective Stages | — (use `stories move` / `tasks move`) |
-| `UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the roster | Removes it |
 | `UNKNOWN_FIELD` / `INVALID_FIELD_VALUE` | warning | A Custom Field value with no definition, or one that does not fit its definition | Strips unknown fields; invalid values are only reported |
 | `MISSING_REQUIRED_FIELD` | warning | A required Custom Field without a value | — |
 | `TASK_COUNTER_BEHIND` | warning | `nextTaskNumber` at or below the highest Task number | Sets it to the highest + 1 |
 | `DUPLICATE_RANK` | warning | Stories in one Stage with the same Rank | Re-ranks the tied Stories, keeping the current order |
-| `STALE_LOCAL_STATE` | warning | `local.json` names a Board that does not exist, or a Me that is not in the roster | Clears those entries |
+| `STALE_LOCAL_STATE` | warning | `local.json` names a Board that does not exist | Clears it |
 | `UNKNOWN_FILE` | info | A file outside the Data Root layout | — |
 | `PLUGIN_FAILED` | error | A Plugin that is on failed to load | — (see `rowbly plugins list`) |
 | `PLUGIN_DATA_INVALID` | warning | Plugin Data of a Plugin that is on that does not match its schema | — |
@@ -314,7 +328,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |
 | `ORPHAN_FOLDER` | warning | A Board or Story folder with Plugin files but no `board.config.json` / `story.json`; a Story folder still reserves its key | — (restore the file or delete the folder) |
-| `LEGACY_DATA` | warning | Comments, an `epicId` or Epic files from a Rowbly before Plugins; nothing imports them, and the next save of that Story drops them | — (back up first) |
+| `LEGACY_DATA` | warning | Comments, an `epicId`, Story Assignees, Epic files or an Assignee roster from a Rowbly before Plugins; nothing imports them, and the next save of that Story or `rowbly.config.json` drops them | — (back up first) |
 | `GITIGNORE_INCOMPLETE` | info | A Data Root `.gitignore` that does not list `local.json`, `.lock`, `.lock.break` and `.txn/` | Adds the missing lines |
 | `<PLUGIN>_…` | any | The checks of a Plugin that is on, such as `EPICS_MISSING_EPIC` | As the Plugin says |
 
@@ -348,7 +362,7 @@ rowbly plugins disable <id>    # keeps its settings and data
 
 Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
 
-The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name, Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
+The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name, what Plugins add (such as `@handle` for Assignees) and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
 ### Keys on every screen
 
@@ -358,7 +372,7 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 | `enter` | select or open |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
 | `esc` | back (or cancel the open form) |
-| `,` | settings, in a sidebar grouped into Global (Boards, Assignees, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings, in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -368,17 +382,17 @@ In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `
 
 | Screen | Keys |
 | --- | --- |
-| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Assignees, Me, Labels, Priorities or text (several values per field), `c` clear the filter, `r` reload |
-| Stories | `enter` open, `n` new, `/` filter by Stages, Assignees, Me, Labels, Priorities, text, Stage Category or open only, and sort, `c` clear the filter, `A` all Boards / this Board only |
+| Board | `h`/`l` previous / next Stage, `j`/`k` next / previous Story, `enter` open, `H`/`L` move the Story to the previous / next Stage (bottom), `K`/`J` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Labels, Priorities, text and the filters Plugins add (several values per field), `c` clear the filter, `r` reload |
+| Stories | `enter` open, `n` new, `/` filter by Stages, Labels, Priorities, text, Stage Category, open only and the filters Plugins add, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details, Tasks and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
 | Task | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
-| Assignees | `enter` open (then: Edit, Remove), `n` add |
+| Assignees (Plugin) | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
 | Stages | `n` add, `e` edit, `K`/`J` move up / down, `T`/`B` move first / last, `d` remove (asks where to move Stories still in it), `l` switch level |
 | Fields | `n` add, `e` edit, `d` remove, `l` switch level |
-| Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` pick Me from the roster, `c` clear the current Board |
+| Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` set Me, `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 

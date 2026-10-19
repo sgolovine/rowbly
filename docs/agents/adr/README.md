@@ -43,3 +43,4 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0015](0015-specs-are-markdown-files.md) | Specs are Markdown files | Accepted |
 | [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built |
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted |
+| [0022](0022-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted |

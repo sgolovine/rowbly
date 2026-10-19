@@ -12,13 +12,12 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `CONFLICT_MARKERS` | error | Conflict markers in any other file, including one Story edited on both branches | nothing | Merge the two versions by hand into valid JSON |
 | `DUPLICATE_PREFIX` | error | Two Boards with the same key prefix | nothing | Ask the user which Board keeps the prefix; this needs a manual data change |
 | `UNKNOWN_STAGE` | error | A Story or Task in a Stage that its Board does not have | nothing | `rowbly stories move <KEY> <stage>` / `rowbly tasks move <TASK-ID> <stage>` |
-| `UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the roster | Removes it | Or add the Assignee: `rowbly assignees add` |
 | `UNKNOWN_FIELD` | warning | A Custom Field value with no definition | Strips it | — |
 | `INVALID_FIELD_VALUE` | warning | A Custom Field value that does not fit its definition | nothing | `rowbly stories edit <KEY> --field key=value` |
 | `MISSING_REQUIRED_FIELD` | warning | A required Custom Field without a value | nothing | `rowbly stories edit <KEY> --field key=value` |
 | `TASK_COUNTER_BEHIND` | warning | `nextTaskNumber` at or below the highest Task number | Sets it to the highest + 1 | — |
 | `DUPLICATE_RANK` | warning | Stories in one Stage with the same Rank | Re-ranks them, keeping the current order | — |
-| `STALE_LOCAL_STATE` | warning | `local.json` names a missing Board, or a Me not in the roster | Clears those entries | — |
+| `STALE_LOCAL_STATE` | warning | `local.json` names a missing Board | Clears it | — |
 | `UNKNOWN_FILE` | info | A file outside the Data Root layout | nothing | Remove it if it does not belong there |
 | `PLUGIN_FAILED` | error | A Plugin that is on failed to load | nothing | Read the reason in `rowbly plugins list --json`; fix its settings, or turn it off with the user's approval |
 | `PLUGIN_DATA_INVALID` | warning | Data of a Plugin that is on that does not match its schema | nothing | Correct the `plugins.<id>` value on that record |
@@ -27,6 +26,9 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `TRANSACTION_LEFTOVER` | warning | A finished or abandoned commit folder in `.txn/` that could not be removed | Removes it | — |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write, or a `.moving` folder from an older Rowbly | Removes a temporary file; only reports a `.moving` folder | Move that Story's folder back by hand |
 | `ORPHAN_FOLDER` | warning | A Board or Story folder with Plugin files but no `board.config.json` / `story.json`. A Story folder still reserves its key | nothing | Restore the missing file from git, or delete the folder with the user's approval |
-| `LEGACY_DATA` | warning | Comments, an `epicId` or Epic files from a Rowbly before Plugins. The next save of that Story drops them | nothing | Back up first; recreate them with the Epics and Comments Plugins |
+| `LEGACY_DATA` | warning | Comments, an `epicId`, Story Assignees, Epic files or an Assignee roster from a Rowbly before Plugins. The next save of that Story or `rowbly.config.json` drops them | nothing | Back up first; recreate them with the Assignees, Epics and Comments Plugins |
+| `ASSIGNEES_UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the Assignees Plugin's roster | Removes it | Or add the Assignee: `rowbly assignees add` |
+| `ASSIGNEES_UNKNOWN_ME` | warning | Me is not in the Assignees Plugin's roster | Clears Me | Or add Me: `rowbly assignees add <handle>` |
+| `ASSIGNEES_ROSTER_UNAVAILABLE` | error | `plugins/assignees/roster.json` has conflict markers, is not valid JSON or fails its schema | nothing | Merge or correct the file by hand |
 | `GITIGNORE_INCOMPLETE` | info | `.rowbly/.gitignore` lacks `local.json`, `.lock`, `.lock.break` or `.txn/` | Adds the missing lines | — |
 | `<PLUGIN>_…` (e.g. `EPICS_MISSING_EPIC`, `SPECS_MISSING_SPEC`) | any | Checks of a Plugin that is on | As the Plugin says (`EPICS_MISSING_EPIC` and `SPECS_MISSING_SPEC` unlink the missing target) | Other Epics file errors (`EPICS_INVALID_JSON`, …) need the Epic file corrected by hand |

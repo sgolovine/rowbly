@@ -53,7 +53,7 @@ export class ValidationError extends RowblyError {
   readonly exitCode = ExitCode.validation;
 }
 
-/** Unknown board, story, task, stage, field or assignee. */
+/** Unknown board, story, task, stage or field, or a Plugin record. */
 export class NotFoundError extends RowblyError {
   readonly code = 'NOT_FOUND';
   readonly exitCode = ExitCode.notFound;

@@ -186,6 +186,9 @@ describe('rowbly-stories', () => {
     );
     expect(JSON.parse(created.stdout).description).toBe('## Goal\n\nSign in.');
 
+    // Assignees are a Plugin, off until the Data Root turns it on.
+    expect((await rowbly('stories', 'edit', 'WEB-1', '--add-assignee', 'sam', '--json')).exitCode).toBe(2);
+    await json('plugins', 'enable', 'assignees');
     await json('assignees', 'add', 'sam', '--name', 'Sam');
     const unknown = await rowbly('stories', 'edit', 'WEB-1', '--add-assignee', 'bob', '--json');
     expect(unknown.exitCode).toBe(2);
@@ -205,6 +208,7 @@ describe('rowbly-plugins', () => {
       expect(await json('plugins', 'enable', id)).toEqual({ id, enabled: true });
     const plugins = await json('plugins', 'list');
     expect(plugins.map((p: { id: string; enabled: boolean; loaded: boolean }) => [p.id, p.enabled, p.loaded])).toEqual([
+      ['assignees', false, false],
       ['epics', true, true],
       ['specs', true, true],
       ['comments', true, true],

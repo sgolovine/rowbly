@@ -34,7 +34,6 @@ Planned, not built:
 ```json
 {
   "version": 1,
-  "assignees": [],
   "plugins": {
     "epics": { "enabled": true },
     "specs": { "enabled": false }
@@ -69,7 +68,6 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
 ```json
 {
   "version": 1,
-  "assignees": [],
   "plugins": {
     "points": { "enabled": true, "label": "Estimate", "max": 8 }
   }
@@ -86,9 +84,9 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
 
 ```text
 .rowbly/
-  rowbly.config.json        # "plugins": { "<id>": { "enabled": true, …settings } }; Assignee bags in the roster
+  rowbly.config.json        # "plugins": { "<id>": { "enabled": true, …settings } }
   local.json                # per-developer bags, never committed
-  plugins/<id>/…            # Data Root files of a Plugin, e.g. Epics
+  plugins/<id>/…            # Data Root files of a Plugin, e.g. Epics or the Assignee roster
   boards/<board>/
     board.config.json       # Board bags (settings that cascade)
     plugins/<id>/…          # Board files of a Plugin, e.g. Board Specs
@@ -128,7 +126,7 @@ Clashes are found when the Plugins load. The later Plugin in the registry fails 
 - an option flag that a core command or an earlier Plugin has (by name, ignoring `no-`), or either polarity of a global option (`--root`, `--json`, `--yes`, `--prompt`, `--version`, `--help`);
 - an Action key that a core screen uses ([`CORE_KEYS`](../../src/tui/keymap.ts)) or an earlier Plugin uses;
 - a second replacement of an operation, or a `replaces` key that is not a core operation;
-- a hook key in a core namespace (`context`, `assignees`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) that is not a core operation;
+- a hook key in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `tasks`, `plugins`, `doctor`) that is not a core operation;
 - options on a core command that does not take them (the commands that do are `PluginOptionCommand`);
 - a `home` or `settings` link to a missing screen, or two Story tabs, Task tabs or settings sections of one Plugin with the same label.
 
