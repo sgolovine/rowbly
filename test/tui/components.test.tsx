@@ -33,6 +33,13 @@ describe('SelectList', () => {
     ui.unmount();
   });
 
+  it('leaves shift+arrows to the screen', async () => {
+    const ui = renderTui(<SelectList items={ITEMS} />);
+    await ui.press(KEYS.shiftDown);
+    expect(ui.lastFrame()).toContain('› ada');
+    ui.unmount();
+  });
+
   it('filters by label with / and clears the filter on esc', async () => {
     const onSelect = vi.fn();
     const ui = renderTui(<SelectList items={ITEMS} onSelect={onSelect} />);

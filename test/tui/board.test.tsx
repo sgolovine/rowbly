@@ -184,27 +184,42 @@ describe('board view', () => {
     app.unmount();
   });
 
-  it('moves a card to the next Stage with L, at the bottom, and on disk', async () => {
+  it('moves a card to the next Stage with shift+→, at the bottom, and on disk', async () => {
     const t = await seed();
     const app = await open(t);
-    await app.press('l', 'L');
+    await app.press(KEYS.right, KEYS.shiftRight);
     await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
     const lines = frameLines(app).join('\n');
     expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
     expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
-    // The cursor follows the card: H moves it back.
+    // The cursor follows the card: shift+← moves it back.
+    await app.press(KEYS.shiftLeft);
+    await waitForFrame(app, (f) => f.includes('● Todo (1)'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
+    app.unmount();
+  });
+
+  it('keeps h/l and H/L as alternatives to the arrow keys', async () => {
+    const t = await seed();
+    const app = await open(t);
+    await app.press('l', 'L');
+    await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
+    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
     await app.press('H');
     await waitForFrame(app, (f) => f.includes('● Todo (1)'));
     await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
     app.unmount();
   });
 
-  it('reorders within a column with K, changing only one file', async () => {
+  it.each([
+    ['shift+↑', [KEYS.down, KEYS.down, KEYS.shiftUp]],
+    ['K', ['j', 'j', 'K']],
+  ])('reorders within a column with %s, changing only one file', async (_name, keys) => {
     const t = await seed();
     const before = await storyFiles(t);
     const app = await open(t);
-    await app.press('j', 'j', 'K');
+    await app.press(...keys);
     await waitForFrame(app, (f) => f.indexOf('WEB-3') < f.indexOf('WEB-2'));
     const changed = async () => {
       const after = await storyFiles(t);

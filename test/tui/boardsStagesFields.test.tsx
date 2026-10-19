@@ -79,6 +79,13 @@ describe('stages screen', () => {
   it('moves a Stage down and edits it', async () => {
     const t = await setup();
     const app = await open(t, 'stages');
+    await app.press(KEYS.shiftDown);
+    await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
+    // K is the vim alternative to shift+↑.
+    await app.press('K');
+    await waitForFrame(app, (f) => f.includes('› 1. ● Backlog'));
+    expect(await stageKeys(t)).toEqual(['backlog', 'todo', 'in-progress', 'done']);
     await app.press('J');
     await waitForFrame(app, (f) => f.includes('› 2. ● Backlog'));
     expect(await stageKeys(t)).toEqual(['todo', 'backlog', 'in-progress', 'done']);
