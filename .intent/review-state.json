@@ -1762,16 +1762,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "a1d8d9090d58fb51c401e5a04d90a230e5d43821f37560995c297f2875148a78",
+      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "c90fa3113e29a5d04bb68e47c4bd98eea43946b2b721f59e4a9d3e01099ca4e4"
+        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
       },
-      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
+      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
       "outcome": "out-of-scope",
-      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
-        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
+        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
+        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1799,16 +1799,16 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "acc94ca477ee77c4528d413af13faceb96ce1d0a321753c23a3abf04cbfc4a76",
+      "fingerprint": "fc1511f29fffe4514b99adf6f7868f76c00dd615f4ad4097b8b9695b73c11440",
       "snapshot": {
-        "test/tui/board.test.tsx": "b1f80de1ccbed66f2ac266f3f60943341b3474ce5eda452876a51cd66f84c354"
+        "test/tui/board.test.tsx": "e9c6b81f74f23c018d82c2ee407700a3593457f799a59dcd9542b1c336e81ffe"
       },
-      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
+      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
       "outcome": "out-of-scope",
-      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
-        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
+        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
+        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
