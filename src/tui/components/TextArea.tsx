@@ -27,7 +27,7 @@ export interface TextAreaProps {
 /**
  * A multi-line text input: `enter` starts a new line, `↑/↓` move between rows, and the editing keys of
  * `TextInput` work within a line. While focused, the shell leaves printable keys to it; `tab`, `ctrl+enter` and `esc` go to its parent.
- * Its Full screen button (or `ctrl+f`) opens the text in a modal over the main area, which keeps every
+ * Its Full screen button (or `ctrl+f`) opens the text in a modal over the whole terminal, which keeps every
  * edit when it closes.
  */
 export function TextArea({
@@ -119,7 +119,7 @@ export function TextArea({
     <Box flexDirection="column" flexShrink={0}>
       {text}
       <FullScreenButton focused={focus} clickable={!expanded} onClick={expand} />
-      {/* Outside the shell there is no main area to cover, so the modal shows here. */}
+      {/* Outside the shell there is nothing to cover, so the modal shows here. */}
       {expanded && !overlay && modal.current}
     </Box>
   );

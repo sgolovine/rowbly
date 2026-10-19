@@ -35,7 +35,7 @@ import { ToastArea } from './ToastArea';
 type Overlay =
   | { kind: 'help' }
   | { kind: 'confirm'; action: 'quit' | 'back' }
-  // A node a screen shows over the main area, such as a full-screen editor.
+  // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
 
 /**
@@ -228,7 +228,6 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                     </Modal>
                   </Box>
                 )}
-                {overlay?.kind === 'main' && overlay.node}
                 {overlay?.kind === 'help' && (
                   <Modal title="Keys" size="dialog">
                     <HelpOverlay hints={hints} />
@@ -259,6 +258,12 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
           </Box>
           <ToastArea />
           <Footer hints={atRoot ? hints : []} atRoot={atRoot} />
+          {overlay?.kind === 'main' && (
+            // Over the whole terminal rather than the main area; the Modal keeps its margin to the edges.
+            <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>
+              {overlay.node}
+            </LayoutContext.Provider>
+          )}
         </Box>
       </MainOverlayContext.Provider>
     </BoardSelectionContext.Provider>

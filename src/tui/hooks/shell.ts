@@ -97,7 +97,7 @@ export const ShellContext = createContext<ShellRegistry>(createShellRegistry());
 export const ActiveContext = createContext(true);
 
 /**
- * Shows a node, such as a full-screen editor, over the whole main area. While it is open the
+ * Shows a node, such as a full-screen editor, over the whole terminal. While it is open the
  * screens below it take no keys. `id` names the opener, so it closes only its own node.
  */
 export interface MainOverlay {
@@ -105,7 +105,7 @@ export interface MainOverlay {
   close(id: string): void;
 }
 
-/** `null` outside the shell, where there is no main area to cover. */
+/** `null` outside the shell, which has nothing to cover. */
 export const MainOverlayContext = createContext<MainOverlay | null>(null);
 
 export function useMainOverlay(): MainOverlay | null {

@@ -334,6 +334,27 @@ describe('TextArea full screen', () => {
     app.unmount();
   });
 
+  it('fills the terminal on a real one, keeping a margin to its edges', async () => {
+    const screens = {
+      a: () => <Form fields={[{ name: 'description', label: 'Description', kind: 'multiline' }]} onSubmit={() => {}} />,
+    };
+    const app = renderApp(screens);
+    Object.defineProperty(app.stdout, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(app.stdout, 'columns', { value: 80, configurable: true });
+    Object.defineProperty(app.stdout, 'rows', { value: 20, configurable: true });
+    app.stdout.emit('resize');
+    await waitForFrame(app, 'ctrl+f full screen');
+    await app.press(KEYS.ctrlF);
+    const lines = (await waitForFrame(app, 'esc/ctrl+f close')).split('\n');
+    // One line above and below, two columns either side, as a modal keeps over the main area.
+    expect(lines).toHaveLength(20);
+    expect(lines[1]?.indexOf('╭─Description')).toBe(2);
+    expect(lines[1]?.lastIndexOf('╮')).toBe(77);
+    expect(lines[18]?.[2]).toBe('╰');
+    expect(lines[18]?.[77]).toBe('╯');
+    app.unmount();
+  });
+
   it('opens from its button and closes from the ✕ in the border with a click', async () => {
     const mouse = new EventEmitter();
     const app = renderTui(
