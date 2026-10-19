@@ -1,6 +1,6 @@
 import { UsageError } from './errors';
 
-/** Board, Stage, Custom Field and Assignee ids (1–40 chars). */
+/** Board, Stage and Custom Field ids, and handles such as Me (1–40 chars). */
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const SLUG_MAX_LENGTH = 40;
 /** Board key prefix, unique across the Data Root. */

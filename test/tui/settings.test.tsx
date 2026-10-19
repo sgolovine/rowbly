@@ -38,7 +38,7 @@ describe('settings', () => {
     let frame = await waitForFrame(app, 'web web · WEB (current)');
     expect(frame).toContain('Board › Settings');
     expect(frame).toMatch(/Global[\s\S]*Doctor[\s\S]*Board: web[\s\S]*Config[\s\S]*Stages[\s\S]*Fields/);
-    for (const section of ['Assignees', 'Context']) expect(frame).toContain(section);
+    for (const section of ['Context', 'Plugins']) expect(frame).toContain(section);
     expect(frame).toContain('enter/tab focus section');
 
     // Up from the first section wraps to the Board's Fields, then its Stages.
@@ -48,10 +48,10 @@ describe('settings', () => {
     await app.press('j', 'j');
     await waitForFrame(app, 'web web · WEB (current)');
     await app.press('j');
-    await waitForFrame(app, 'No Assignees yet');
+    await waitForFrame(app, (f) => f.includes('Level:') && f.includes('Backlog'));
     // The sidebar has focus, so the section's own keys do nothing yet.
     await app.press('n');
-    expect(app.lastFrame()).not.toContain('New Assignee');
+    expect(app.lastFrame()).not.toContain('Add a Stage');
     app.unmount();
   });
 
@@ -59,8 +59,8 @@ describe('settings', () => {
     const app = await open();
     await app.press(',');
     await waitForFrame(app, 'Board: web');
-    await app.press('j', 'j');
-    const frame = await waitForFrame(app, 'Level:');
+    await app.press('j');
+    const frame = await waitForFrame(app, (f) => f.includes('Level:') && f.includes('Backlog'));
     expect(frame).not.toMatch(/Level:.*board/);
     app.unmount();
   });
@@ -69,16 +69,18 @@ describe('settings', () => {
     const app = await open();
     await app.press(',');
     await waitForFrame(app, 'Board: web');
-    await app.press('j');
-    await waitForFrame(app, 'No Assignees yet');
+    // Context is the fourth global section.
+    await app.press('j', 'j', 'j');
+    await waitForFrame(app, (f) => f.includes('Switch Board') && f.includes('focus section'));
+    // The hints are the section's once it has focus.
     await app.press(KEYS.tab);
-    await waitForFrame(app, 'n add assignee · tab sections');
-    await app.press('n');
-    await waitForFrame(app, 'Settings › New Assignee');
+    await waitForFrame(app, (f) => f.includes('m who am I') && f.includes('tab sections'));
+    await app.press('m');
+    await waitForFrame(app, (f) => f.includes('Settings › Who am I') && f.includes('Handle (empty clears Me)'));
     await app.press(KEYS.escape);
-    await waitForFrame(app, 'No Assignees yet');
+    await waitForFrame(app, (f) => f.includes('Switch Board') && f.includes('m who am I'));
     await app.press(KEYS.tab, 'j');
-    await waitForFrame(app, 'Level:');
+    await waitForFrame(app, 'No problems found');
     app.unmount();
   });
 

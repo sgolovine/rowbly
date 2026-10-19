@@ -10,7 +10,7 @@ import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
 import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
 import { boardIdFor, NONE } from './shared';
-import { assigneesValue, priorityValue } from './storyFormValues';
+import { priorityValue } from './storyFormValues';
 
 /** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
 export function StoryFormScreen({ params }: ScreenProps) {
@@ -43,7 +43,6 @@ export function StoryFormScreen({ params }: ScreenProps) {
     const common = {
       name: String(values.name),
       description: String(values.description ?? ''),
-      assignees: assigneesValue(values.assignees),
       priority: priorityValue(values.priority),
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
@@ -82,7 +81,6 @@ function formFields(choices: StoryChoices): FormField[] {
     { name: 'name', label: 'Name', kind: 'text', required: true },
     { name: 'description', label: 'Description', kind: 'multiline' },
     { name: 'stage', label: 'Stage', kind: 'select', required: true, options: choices.stages.map((s) => s.key) },
-    { name: 'assignees', label: 'Assignees', kind: 'multiselect', options: choices.assignees.map((a) => a.handle) },
     { name: 'priority', label: 'Priority', kind: 'select', options: [NONE, ...PrioritySchema.options] },
     { name: 'labels', label: 'Labels (a,b)', kind: 'text' },
     { name: 'dueDate', label: 'Due', kind: 'date' },
@@ -115,7 +113,6 @@ function initialValues(choices: StoryChoices, story: Story | null, stage?: strin
     name: story?.name ?? '',
     description: story?.description ?? '',
     stage: story?.stage ?? stage ?? choices.stages[0]?.key ?? null,
-    assignees: story?.assignees ?? [],
     priority: story?.priority ?? NONE,
     labels: story?.labels.join(',') ?? '',
     dueDate: story?.dueDate ?? null,

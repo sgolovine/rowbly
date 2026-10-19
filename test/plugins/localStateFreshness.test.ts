@@ -33,15 +33,7 @@ function prefs() {
 }
 
 async function setup(overrides = {}) {
-  const t = await pluginRoot(
-    { prefs: true },
-    {
-      assignees: [
-        { handle: 'alice', name: 'Alice' },
-        { handle: 'bob', name: 'Bob' },
-      ],
-    },
-  );
+  const t = await pluginRoot({ prefs: true });
   await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
   const { plugin, seen } = prefs();
   const loaded = await withPlugins(t, [plugin], overrides);

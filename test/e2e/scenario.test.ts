@@ -1,10 +1,15 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Story } from '../../src/schemas';
 import { createRepositories } from '../../src/storage';
 import { type RunCliResult, runCli } from '../helpers';
+
+/** The Assignees the Assignees Plugin keeps on a Story. */
+function assigneesOf(record: Pick<Story, 'plugins'>): string[] {
+  return (record.plugins?.assignees?.assignees ?? []) as string[];
+}
 
 /** The Comments the Comments Plugin keeps on a Story. */
 function thread(record: Pick<Story, 'plugins'> | undefined): { author: string | null; body: string }[] {
@@ -57,11 +62,12 @@ describe('end-to-end scenario', () => {
     expect(await repos().localState.get()).toEqual({ version: 1, board: 'web' });
   });
 
-  it('2. adds two Assignees and claims Me with whoami', async () => {
+  it('2. turns the Assignees Plugin on, adds two Assignees and claims Me with whoami', async () => {
+    await ok('plugins', 'enable', 'assignees');
     await ok('assignees', 'add', 'alice', '--name', 'Alice', '--email', 'alice@example.com');
     await ok('assignees', 'add', 'bob', '--name', 'Bob');
     expect(await ok('whoami', 'alice')).toBe('You are alice\n');
-    expect(await ok('whoami')).toBe('alice  (from local.json)\n');
+    expect(await ok('whoami')).toBe('alice\n');
   });
 
   it('3. adds a board-level Stage and a select Custom Field', async () => {
@@ -135,12 +141,13 @@ describe('end-to-end scenario', () => {
       stage: 'backlog',
       priority: 'P1',
       labels: ['ui', 'auth'],
-      assignees: ['alice'],
+      plugins: { assignees: { assignees: ['alice'] } },
       dueDate: '2026-11-01',
       customFields: { size: 'm' },
       createdBy: 'alice',
     });
-    expect(created[3]).toMatchObject({ boardId: 'api', assignees: ['alice', 'bob'], customFields: {} });
+    expect(created[3]).toMatchObject({ boardId: 'api', customFields: {} });
+    expect(assigneesOf(created[3] as Story)).toEqual(['alice', 'bob']);
     // A Custom Field defined only on web is not valid on api.
     const invalid = await rowbly('stories', 'create', '--name', 'X', '--board', 'api', '--field', 'size=m');
     expect(invalid.exitCode).toBe(2);
@@ -203,8 +210,8 @@ describe('end-to-end scenario', () => {
     const result = await rowbly('assignees', 'remove', 'bob');
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toContain('warning: Assignee "bob" removed from 2 stories');
-    expect((await story('API-1')).assignees).toEqual(['alice']);
-    expect((await story('WEB-2')).assignees).toEqual([]);
+    expect(assigneesOf(await story('API-1'))).toEqual(['alice']);
+    expect(assigneesOf(await story('WEB-2'))).toEqual([]);
   });
 
   it('9. doctor finds nothing wrong', async () => {
@@ -224,7 +231,8 @@ describe('end-to-end scenario', () => {
     const sortByKey = <T extends { key: string }>(items: T[]) => [...items].sort(byKey);
     const signup = await r.stories.findByKey('WEB-2');
 
-    expect(await json('assignees', 'list')).toEqual((await r.rootConfig.get()).assignees);
+    const roster = JSON.parse(await readFile(join(dir, '.rowbly/plugins/assignees/roster.json'), 'utf8'));
+    expect(await json('assignees', 'list')).toEqual(roster.assignees);
     expect(await json('boards', 'list')).toEqual(await r.boards.list());
     expect(await json('stages', 'list')).toEqual({ level: 'board', source: 'board', stages: webConfig.stages });
     expect(await json('fields', 'list')).toEqual({ level: 'board', source: 'board', fields: webConfig.customFields });

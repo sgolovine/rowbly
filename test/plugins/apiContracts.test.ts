@@ -88,7 +88,6 @@ const decoy = definePlugin({
         description: '',
         stage: 'backlog',
         rank: 'a0',
-        assignees: [],
         priority: null,
         labels: [],
         dueDate: null,
@@ -155,7 +154,7 @@ describe('capabilities (ARCH-05, ARCH-11, SEC-03)', () => {
     expect(reachable.setup).toBeUndefined();
     expect(Object.keys(plugin.services.doctor)).toEqual(['check']);
     expect(Object.keys(plugin.services).sort()).toEqual(
-      ['assignees', 'boards', 'config', 'context', 'doctor', 'fields', 'stages', 'stories'].sort(),
+      ['boards', 'config', 'context', 'doctor', 'fields', 'stages', 'stories'].sort(),
     );
     expect('editText' in plugin).toBe(false);
     expect(typeof services.plugins.context).toBe('function');

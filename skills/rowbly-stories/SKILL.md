@@ -22,6 +22,7 @@ sources:
   - src/plugins/tasks/commands.ts
   - src/services/stories.ts
   - src/plugins/tasks/tasks.ts
+  - src/plugins/assignees/index.ts
 ---
 
 # Track work with Stories and Tasks
@@ -30,14 +31,19 @@ Read `rowbly-cli` first. Every command below takes `--json --no-prompt`, and a d
 
 ## 1. Learn the Board before you change it
 
-Stage keys, Custom Fields and Assignees differ per Board. Read them once:
+Stage keys and Custom Fields differ per Board. Read them once:
 
 ```sh
 rowbly boards list --json --no-prompt               # Board ids and key prefixes
 rowbly config show --board web --json --no-prompt   # .stages[] {key,name,category}, .customFields[]
-rowbly assignees list --json --no-prompt            # valid handles
+rowbly plugins list --json --no-prompt              # which Plugins (Assignees, Epics, …) are on
+rowbly assignees list --json --no-prompt            # valid handles, with the Assignees Plugin on
 rowbly whoami --json --no-prompt                    # {"me": "sam" | null}
 ```
+
+Assignees are the Assignees Plugin. While it is off, `--assignee` is an unknown option (exit 2) and
+`rowbly assignees` is an unknown command. Do not turn it on to assign one Story: it changes the Data
+Root for everyone, so ask the user first (`rowbly-plugins`).
 
 Pick Stages by **category**, not by name. The Stage to start work is the first Stage whose category is
 `in_progress`, and the Stage to finish is the first whose category is `done`. A Board's Stages might be
@@ -52,14 +58,15 @@ rowbly stories list --all-boards --label auth --search login --json --no-prompt
 rowbly stories show WEB-42 --json --no-prompt                                  # full Story with its Plugin Data
 ```
 
-- Filters: `--stage <key>`, `--category todo|in_progress|done`, `--open`, `--assignee <handle|me>`,
-  `--label`, `--priority P0..P4`, `--search <text>` (name and description, any case). A repeated filter
+- Filters: `--stage <key>`, `--category todo|in_progress|done`, `--open`, `--assignee <handle|me>`
+  (Assignees Plugin), `--label`, `--priority P0..P4`, `--search <text>` (name and description, any case). A repeated filter
   matches any of its values.
 - `--sort rank|priority|created|updated|due`. The default is Stage order, then Rank. `priority` puts
   `P0` first, `updated` newest first, `due` soonest first.
 - Story Keys are case-insensitive (`web-42` is `WEB-42`) and need no `--board`.
-- A Story's JSON has `key`, `name`, `description` (markdown), `stage`, `rank`, `assignees`, `priority`
-  (`"P1"` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, and with Plugins on, `plugins`.
+- A Story's JSON has `key`, `name`, `description` (markdown), `stage`, `rank`, `priority` (`"P1"` or
+  `null`), `labels`, `dueDate`, `customFields`, `createdBy` (Me when it was created), and
+  Plugin Data in `plugins`: its Assignees are `plugins.assignees.assignees`, absent when it has none.
   Its Tasks are under `plugins.tasks` (`nextNumber`, and `tasks[]` stored by `number`); read them with
   `tasks list --json` instead, whose items include each Task's `id`.
 
@@ -74,8 +81,8 @@ rowbly stories create --board web --name "Login page" \
 
 - The new Story gets the next key on its Board (the highest number plus one) and goes to the
   bottom of the first Stage, or of `--stage <key>`. Read the key from the JSON output; do not predict it.
-- Rules (each violation exits 2 with the valid choices in `details`): Assignees must be in the roster;
-  `--assignee me` needs Me set; Priority is `P0`–`P4`; a Label is lower-kebab-case (`auth`, not `Auth` or
+- Rules (each violation exits 2 with the valid choices in `details`): Assignees must be in the roster
+  (`details.validHandles`); `--assignee me` needs Me set; Priority is `P0`–`P4`; a Label is lower-kebab-case (`auth`, not `Auth` or
   `needs review`); `--due` is `YYYY-MM-DD`; every required Custom Field needs a `--field`.
 - Custom Field values are given as `key=value`: `true`/`false`, numbers, `YYYY-MM-DD`, absolute
   `http(s)` URLs, and comma-separated multiselect values. Use `select` and `multiselect` options exactly
@@ -129,7 +136,8 @@ rowbly tasks delete WEB-42.1 --yes --json --no-prompt
 1. `rowbly stories show <KEY> --json --no-prompt`, and `rowbly tasks list <KEY> --json --no-prompt` when the
    Tasks Plugin is on. Read the description and Tasks; this is the request.
 2. Start: `rowbly stories move <KEY> <first in_progress Stage> --json --no-prompt`. Add
-   `--add-assignee me` with `stories edit` only if Me is set and the user wants it.
+   `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
+   wants it.
    To leave a progress note, use `rowbly comments add <KEY> --body "…"`. Comments is a Plugin and
    is off by default. If `comments` is an unknown command, turn it on as `rowbly-plugins` describes,
    and tell the user, since that changes shared configuration. The author is Me, or `null` when Me is

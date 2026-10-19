@@ -52,8 +52,8 @@ async function open(t: TempRoot, screen: string, params: Record<string, unknown>
   return { app, services, toasts };
 }
 
-/** Tabs from the Name field to the first Plugin field: Description, Stage, Assignees, Priority, Labels, Due. */
-const TO_PLUGIN_FIELDS = Array(7).fill(KEYS.tab);
+/** Tabs from the Name field to the first Plugin field: Description, Stage, Priority, Labels, Due. */
+const TO_PLUGIN_FIELDS = Array(6).fill(KEYS.tab);
 
 const INVALID = {
   epics: { epic: 'Not A Slug', extra: 'v2 field' },

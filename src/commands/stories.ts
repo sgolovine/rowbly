@@ -42,9 +42,6 @@ interface StoryOptions extends ContextFlags {
   stage?: string[] | string;
   category?: string;
   open?: boolean;
-  assignee?: string[];
-  addAssignee?: string[];
-  removeAssignee?: string[];
   /** `--priority <P>` (repeatable on `list`) or `false` with `--no-priority`. */
   priority?: string[] | string | false;
   label?: string[];
@@ -74,7 +71,6 @@ export function registerStories(program: Command): void {
     .option('--stage <key>', 'only these Stages (repeatable)', collect)
     .option('--category <category>', `only this Stage Category: ${StageCategorySchema.options.join(', ')}`)
     .option('--open', 'only Stories whose Stage Category is not done')
-    .option('--assignee <handle>', 'only Stories with any of these Assignees; "me" is Me (repeatable)', collect)
     .option('--label <label>', 'only Stories with any of these Labels (repeatable)', collect)
     .option('--priority <P>', 'only these Priorities, P0–P4 (repeatable)', collect)
     .option('--search <text>', 'case-insensitive match on name and description')
@@ -98,7 +94,6 @@ export function registerStories(program: Command): void {
       .description('Create a Story at the bottom of its Stage (default: the first Stage)')
       .option('--name <name>', 'Story name')
       .option('--stage <key>', 'Stage (default: the first effective Stage)')
-      .option('--assignee <handle>', 'Assignee handle; "me" is Me (repeatable, comma-separated)', collect)
       .option('--priority <P>', 'Priority P0–P4')
       .option('--label <label>', 'Label (repeatable, comma-separated)', collect)
       .option('--due <date>', 'due date, YYYY-MM-DD')
@@ -113,7 +108,6 @@ export function registerStories(program: Command): void {
         name,
         description,
         stage: typeof opts.stage === 'string' ? opts.stage : undefined,
-        assignees: parseRepeatable(opts.assignee),
         priority: opts.priority ? toPriority(String(opts.priority)) : undefined,
         labels: parseRepeatable(opts.label),
         dueDate: opts.due || undefined,
@@ -142,9 +136,6 @@ export function registerStories(program: Command): void {
       .command('edit <key>')
       .description('Edit a Story; list flags either replace the list or add/remove entries')
       .option('--name <name>', 'new name')
-      .option('--assignee <handle>', 'replace the Assignees (repeatable, comma-separated)', collect)
-      .option('--add-assignee <handle>', 'add Assignees (repeatable)', collect)
-      .option('--remove-assignee <handle>', 'remove Assignees (repeatable)', collect)
       .option('--priority <P>', 'set the Priority, P0–P4')
       .option('--no-priority', 'remove the Priority')
       .option('--label <label>', 'replace the Labels (repeatable, comma-separated)', collect)
@@ -230,13 +221,11 @@ function listFilter(opts: StoryOptions): StoryFilter {
   }
   const priorities = Array.isArray(opts.priority) ? parseRepeatable(opts.priority).map(toPriority) : [];
   const stages = Array.isArray(opts.stage) ? parseRepeatable(opts.stage) : [];
-  const assignees = parseRepeatable(opts.assignee);
   const labels = parseRepeatable(opts.label);
   return {
     ...(stages.length ? { stages } : {}),
     ...(opts.category ? { category: opts.category as StageCategory } : {}),
     ...(opts.open ? { open: true } : {}),
-    ...(assignees.length ? { assignees } : {}),
     ...(labels.length ? { labels } : {}),
     ...(priorities.length ? { priorities } : {}),
     ...(opts.search ? { search: opts.search } : {}),
@@ -253,9 +242,6 @@ function editPatch(opts: StoryOptions, description: string | undefined): StoryPa
   return {
     name: opts.name,
     description,
-    assignees: list(opts.assignee),
-    addAssignees: list(opts.addAssignee),
-    removeAssignees: list(opts.removeAssignee),
     priority: clearable(opts.priority as string | false | undefined, toPriority),
     labels: list(opts.label),
     addLabels: list(opts.addLabel),
@@ -298,13 +284,12 @@ function stageBadge(stages: readonly Stage[], key: string): string {
 function renderStories(stories: readonly Story[], stages: Map<string, Stage[]>): string {
   if (stories.length === 0) return colors.dim('No Stories match.');
   return renderTable(
-    ['KEY', 'NAME', 'STAGE', 'PRIORITY', 'ASSIGNEES', 'LABELS', 'DUE'],
+    ['KEY', 'NAME', 'STAGE', 'PRIORITY', 'LABELS', 'DUE'],
     stories.map((s) => [
       s.key,
       s.name,
       stageBadge(stages.get(s.boardId) ?? [], s.stage),
       s.priority ?? '',
-      s.assignees.join(', '),
       s.labels.join(', '),
       s.dueDate ?? '',
     ]),
@@ -321,7 +306,6 @@ function renderStory(
   const rows: [string, string][] = [
     ['Stage', stageBadge(stages, story.stage)],
     ['Priority', story.priority ?? none],
-    ['Assignees', story.assignees.join(', ') || none],
     ['Labels', story.labels.join(', ') || none],
     ['Due', story.dueDate ?? none],
     ...extra,

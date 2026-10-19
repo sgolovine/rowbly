@@ -10,7 +10,7 @@ import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import { screens } from '../../src/tui/screens';
 import { columnLayout, follow, groupColumns, moveCard, swapCard, truncate } from '../../src/tui/screens/board/layout';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, type Rendered, renderTui, tick, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
@@ -32,12 +32,6 @@ const SIX_STAGES: Stage[] = [
 /** A Board with the given Stages and 6 Stories. */
 async function seed(stages: Stage[] = FOUR_STAGES) {
   const t = await tempRoot();
-  await makeRootConfig(t.path, {
-    assignees: [
-      { handle: 'alice', name: 'Alice' },
-      { handle: 'bob', name: 'Bob' },
-    ],
-  });
   await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB', stages });
   await makeBoard(t.path, { id: 'api', name: 'API', keyPrefix: 'API' });
   await makeStory(t.path, {
@@ -46,7 +40,6 @@ async function seed(stages: Stage[] = FOUR_STAGES) {
     name: 'Login page with a rather long name that must be truncated',
     stage: 'backlog',
     rank: 'a0',
-    assignees: ['alice', 'bob'],
     priority: 'P1',
     labels: ['ui'],
   });
@@ -58,7 +51,6 @@ async function seed(stages: Stage[] = FOUR_STAGES) {
     name: 'Dark mode',
     stage: 'todo',
     rank: 'a0',
-    assignees: ['bob'],
     priority: 'P3',
   });
   await makeStory(t.path, { ...web, key: 'WEB-5', name: 'Fix footer', stage: 'doing', rank: 'a0', priority: 'P0' });
@@ -141,10 +133,9 @@ describe('board view', () => {
     const frame = app.lastFrame() ?? '';
     expect(frame).toContain('Website web');
     for (const header of ['● Backlog (3)', '● Todo (1)', '● Doing (1)', '● Done (1)']) expect(frame).toContain(header);
-    // key + Priority, truncated name, Assignees (Plugins add badges; none are on here)
+    // key + Priority, truncated name, Plugin badges (none are on here).
     expect(frame).toContain('┃ WEB-1 P1');
     expect(frame).toMatch(/Login page with a.*…/);
-    expect(frame).toMatch(/┃ @alice @bob +┃/);
     expect(frame.indexOf('WEB-1')).toBeLessThan(frame.indexOf('WEB-2'));
     expect(frame.indexOf('WEB-2')).toBeLessThan(frame.indexOf('WEB-3'));
     expect(stable(frame)).toMatchSnapshot();
@@ -233,13 +224,13 @@ describe('board view', () => {
   it('narrows the cards with the filter and clears it', async () => {
     const t = await seed();
     const app = await open(t);
-    // assignee, me, label, priority, text
-    await app.press('/', KEYS.down, ' ', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('filter: mine') && !f.includes('WEB-4'));
+    // label, priority, text
+    await app.press('/', ' ', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('filter: #ui') && !f.includes('WEB-4'));
     expect(app.lastFrame()).toContain('● Backlog (1)');
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-4'));
-    await app.press('/', ...Array(4).fill(KEYS.down), ...'footer', KEYS.ctrlEnter);
+    await app.press('/', ...Array(2).fill(KEYS.down), ...'footer', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filter: "footer"') && !f.includes('WEB-1'));
     expect(app.lastFrame()).toContain('WEB-5');
     app.unmount();
@@ -248,17 +239,12 @@ describe('board view', () => {
   it('filters on several values per field, like the Stories list', async () => {
     const t = await seed();
     const app = await open(t);
-    // assignees, me, labels, priorities, text: P0 and P3 at once.
-    await app.press('/', ...Array(3).fill(KEYS.down), ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.ctrlEnter);
-    let frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
+    // labels, priorities, text: P0 and P3 at once, like a repeated --priority.
+    await app.press('/', KEYS.down, ' ', KEYS.right, KEYS.right, KEYS.right, ' ', KEYS.ctrlEnter);
+    const frame = await waitForFrame(app, (f) => f.includes('filter: P0 P3') && !f.includes('WEB-1'));
     expect(frame).toContain('WEB-4');
     expect(frame).toContain('WEB-5');
     expect(frame).not.toContain('WEB-6');
-    // Both Assignees: any of them matches, like a repeated --assignee.
-    await app.press('c', '/', ' ', KEYS.right, ' ', KEYS.ctrlEnter);
-    frame = await waitForFrame(app, (f) => f.includes('filter: @alice @bob') && !f.includes('WEB-5'));
-    expect(frame).toContain('WEB-1');
-    expect(frame).toContain('WEB-4');
     app.unmount();
   });
 

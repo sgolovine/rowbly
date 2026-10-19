@@ -19,7 +19,6 @@ async function open(screen: string, params: RouteParams, plugins?: Record<string
     boardId: 'web',
     key: 'WEB-1',
     name: 'Login',
-    assignees: ['alice'],
     plugins,
   });
   const clock = fixedClock();

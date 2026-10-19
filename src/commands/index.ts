@@ -1,5 +1,4 @@
 import type { Command } from 'commander';
-import { registerAssignees } from './assignees';
 import { registerBoards } from './boards';
 import { registerDoctor } from './doctor';
 import { registerFields } from './fields';
@@ -11,7 +10,6 @@ import { registerStories } from './stories';
 /** Registers every command area. Each area owns its own file; this registry does not change. */
 export function registerCommands(program: Command): void {
   registerSetup(program);
-  registerAssignees(program);
   registerBoards(program);
   registerStages(program);
   registerFields(program);

@@ -21,7 +21,7 @@ describe('test helpers', () => {
     const { path } = await tempRoot();
     RowblyConfigSchema.parse(JSON.parse(await readFile(join(path, 'rowbly.config.json'), 'utf8')));
 
-    await makeRootConfig(path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
+    await makeRootConfig(path, { plugins: { assignees: { enabled: true } } });
     await makeBoard(path, { id: 'web', keyPrefix: 'WEB' });
     await makeStory(path, { key: 'WEB-1', boardId: 'web', labels: ['auth'] });
 
@@ -30,7 +30,7 @@ describe('test helpers', () => {
     expect(text.endsWith('}\n')).toBe(true);
     expect(text).toContain('\n  "version": 1,');
     expect(StorySchema.parse(JSON.parse(text)).labels).toEqual(['auth']);
-    await expect(readFile(join(path, 'rowbly.config.json'), 'utf8')).resolves.toContain('"sam"');
+    await expect(readFile(join(path, 'rowbly.config.json'), 'utf8')).resolves.toContain('"assignees"');
     await expect(readFile(join(path, 'boards/web/board.config.json'), 'utf8')).resolves.toContain('"WEB"');
   });
 });

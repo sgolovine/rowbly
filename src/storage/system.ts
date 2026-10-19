@@ -1,11 +1,10 @@
 // Small filesystem and process helpers that the Command and TUI layers need but may not
 // implement themselves, because only storage may import `node:fs`.
-import { execFile, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
-import { promisify } from 'node:util';
 import { NotFoundError, UsageError } from '../core';
 import { io } from './io';
 
@@ -87,15 +86,5 @@ export async function editTextInEditor(initial: string, env: NodeJS.ProcessEnv =
     return await readFile(file, 'utf8');
   } finally {
     await rm(dir, { recursive: true, force: true });
-  }
-}
-
-/** `git config user.email`, or `null` when git or the setting is missing. */
-export async function gitUserEmail(cwd: string): Promise<string | null> {
-  try {
-    const { stdout } = await promisify(execFile)('git', ['config', 'user.email'], { cwd });
-    return stdout.trim() || null;
-  } catch {
-    return null;
   }
 }

@@ -12,7 +12,6 @@ const SORTS: readonly StorySort[] = ['rank', 'priority', 'created', 'updated', '
 export interface FilterChoices {
   /** Not needed with `board: true`. */
   stages?: readonly string[];
-  assignees: readonly string[];
   labels: readonly string[];
 }
 
@@ -23,8 +22,6 @@ export interface FilterChoices {
 export function filterFields(choices: FilterChoices, { board = false } = {}): FormField[] {
   const stage: FormField = { name: 'stage', label: 'Stages', kind: 'multiselect', options: choices.stages ?? [] };
   const shared: FormField[] = [
-    { name: 'assignee', label: 'Assignees', kind: 'multiselect', options: choices.assignees },
-    { name: 'me', label: 'Assigned to me', kind: 'boolean' },
     { name: 'label', label: 'Labels', kind: 'multiselect', options: choices.labels },
     { name: 'priority', label: 'Priorities', kind: 'multiselect', options: PrioritySchema.options },
     { name: 'search', label: 'Search', kind: 'text' },
@@ -55,7 +52,6 @@ function many(value: unknown): string[] {
 
 export function toFilter(filters: FormValues): StoryFilter {
   const stages = many(filters.stage);
-  const assignees = [...many(filters.assignee), ...(filters.me === true ? ['me'] : [])];
   const labels = many(filters.label);
   const priorities = many(filters.priority) as Priority[];
   const search = chosen(filters.search);
@@ -63,7 +59,6 @@ export function toFilter(filters: FormValues): StoryFilter {
   const sort = chosen(filters.sort) as StorySort | undefined;
   return {
     ...(stages.length > 0 ? { stages } : {}),
-    ...(assignees.length > 0 ? { assignees } : {}),
     ...(labels.length > 0 ? { labels } : {}),
     ...(priorities.length > 0 ? { priorities } : {}),
     ...(search ? { search } : {}),
@@ -80,8 +75,6 @@ export function describeFilters(filters: FormValues): string {
       .join(' ');
   const parts = [
     many(filters.stage).length > 0 && `stage ${list(filters.stage)}`,
-    list(filters.assignee, '@'),
-    filters.me === true && 'mine',
     list(filters.label, '#'),
     list(filters.priority),
     chosen(filters.search) && `"${filters.search}"`,

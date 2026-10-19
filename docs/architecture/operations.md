@@ -20,7 +20,7 @@ parse each Plugin's input → take the Data Root lock → body (or a Plugin's re
 | Save | Validates the whole plan, then commits it through the journal ([Storage and commits](storage.md)) | Nothing is saved, or the commit finishes at the next recovery |
 | Reactions | Act only outside Rowbly's data, after the lock is released. 5 s each. The CLI waits for them; the TUI runs them in the background | A warning; the exit code stays 0 |
 
-- A **Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text). `before: null` is a created record, `after: null` a deleted one. Assignees are inside the root config's change. A renumbered Story is one `story` change whose keys differ. Deleting a Board lists a `story` change for each of its Stories, then the `board` change; Plugin files deleted with a folder are not listed.
+- A **Change Set** lists stored records, each with `before` and `after`: `rootConfig`, `localState`, `board`, `story` and `file` (a Plugin file, as text). `before: null` is a created record, `after: null` a deleted one. A renumbered Story is one `story` change whose keys differ. Deleting a Board lists a `story` change for each of its Stories, then the `board` change; Plugin files deleted with a folder are not listed.
 - **Results.** Callers and reactions get the final result, read back from the Change Set after the transforms, so `stories create --epic auth --json` prints the bag the Epics transform wrote. Transforms and guards get the body's result before transforms. A transform that deletes the record an operation returns fails the operation with `CONFLICT`.
 - **Stage changes.** `stories.update` can change a Stage, like `stories.move`. Compare `before.stage` with `after.stage` rather than relying on the operation name.
 - **Nesting.** A hook cannot start another operation; it changes data through the Change Set it receives. What each Plugin callback may do is in the [Plugin API reference](../plugins/api.md#stages-and-capabilities).
@@ -48,9 +48,6 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `context.use` | `{ board }` | `LocalState` |
 | `context.clearUse` | `{}` | `undefined` |
 | `context.setMe` | `{ handle }` | `LocalState` |
-| `assignees.add` | `{ handle, name, email? }` | `Assignee` |
-| `assignees.update` | `{ handle, name?, email? }` | `Assignee` |
-| `assignees.remove` | `{ handle }` | `{ storiesUpdated }` |
 | `boards.create` | `{ id, name, keyPrefix, description? }` | `BoardConfig` |
 | `boards.update` | `{ id, name?, description? }` | `BoardConfig` |
 | `boards.remove` | `{ id, force }` | `undefined` |
@@ -74,10 +71,6 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 
 | Operation | Input | Result |
 | --- | --- | --- |
-| `tasks.create` | `{ storyKey, name, description?, stage? }` | `Task` |
-| `tasks.update` | `{ taskId, name?, description?, stage? }` | `Task` |
-| `tasks.move` | `{ taskId, stage }` | `Task` |
-| `tasks.remove` | `{ taskId }` | `{ deleted }` |
 | `epics.create` | `{ id, name, description }` | `Epic` |
 | `epics.edit` | `{ id, name?, description? }` | `Epic` |
 | `epics.close` | `{ id }` | `Epic` |
@@ -98,7 +91,8 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 
 | Plugin | Operations | Input |
 | --- | --- | --- |
+| Assignees | `stories.create`, `stories.update` | `{ assignees?, add?, remove? }`: handles or `me`; `assignees` replaces the list and cannot be combined with `add` or `remove` |
 | Epics | `stories.create`, `stories.update` | `{ epic: id \| null }` |
 | Specs | `stories.create`, `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset? }` |
 
-A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Epics this is an Epic ID, or `false` for Stories without one. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.
+A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.

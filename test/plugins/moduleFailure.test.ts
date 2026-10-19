@@ -12,7 +12,7 @@ const ids = builtInPlugins.map((d) => d.id);
 
 describe('every Built-in Plugin (RES-18A)', () => {
   it('has a valid definition', () => {
-    expect(ids).toEqual(['tasks', 'epics', 'specs', 'comments']);
+    expect(ids).toEqual(['assignees', 'tasks', 'epics', 'specs', 'comments']);
     for (const definition of builtInPlugins) expect(validatePluginDefinition(definition, reservedNames())).toEqual([]);
   });
 

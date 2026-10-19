@@ -1,6 +1,5 @@
 import type { BoardConfig } from '../../../schemas';
 import { pluginRoute, type TuiPlugin } from '../../hooks';
-import { assigneesScreens } from '../assignees';
 import { boardsScreens } from '../boards';
 import { doctorScreens } from '../doctor';
 import { fieldsScreens } from '../fields';
@@ -37,7 +36,6 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
       title: 'Global',
       sections: [
         { id: 'boards', label: 'Boards', screen: 'boards' },
-        { id: 'assignees', label: 'Assignees', screen: 'assignees' },
         { id: 'global-stages', label: 'Stages', screen: 'stages', params: { global: true } },
         { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
         { id: 'context', label: 'Context', screen: 'context' },
@@ -69,7 +67,6 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
 
 const SECTION_SCREENS: ScreenRegistry = {
   ...boardsScreens,
-  ...assigneesScreens,
   ...stagesScreens,
   ...fieldsScreens,
   ...setupScreens,

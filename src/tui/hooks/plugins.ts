@@ -1,7 +1,9 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
+import type { Story } from '../../schemas';
 import type { PluginAction, PluginTui, PluginUi } from '../../services';
 import { type Router, useRouter } from '../router';
 import { type ToastStore, useToast } from './toasts';
+import { useServices } from './useServices';
 
 /** A Plugin that is on, with its Actions and, once loaded, its TUI part. */
 export interface TuiPlugin {
@@ -58,4 +60,32 @@ export function usePluginUi(id: string): PluginUi {
   const router = useRouter();
   const toasts = useToast();
   return useMemo(() => pluginUi(id, router, toasts), [id, router, toasts]);
+}
+
+/**
+ * The badges the Plugins that are on show for a Story (`PluginTui.storyBadges`), in registry order. A
+ * Plugin whose badges throw shows none: they only show something.
+ */
+export function useStoryBadges(): (story: Story) => string[] {
+  const { plugins } = usePlugins();
+  const services = useServices();
+  // One context per Plugin, not per Story.
+  const badged = useMemo(
+    () =>
+      plugins.flatMap(({ id, tui }) =>
+        tui.storyBadges ? [{ badges: tui.storyBadges, plugin: services.plugins.context(id) }] : [],
+      ),
+    [plugins, services],
+  );
+  return useCallback(
+    (story) =>
+      badged.flatMap(({ badges, plugin }) => {
+        try {
+          return badges({ story, plugin });
+        } catch {
+          return [];
+        }
+      }),
+    [badged],
+  );
 }

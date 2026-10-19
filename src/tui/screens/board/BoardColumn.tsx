@@ -2,7 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
-import { useMouse } from '../../hooks';
+import { useMouse, useStoryBadges } from '../../hooks';
 import { truncate } from './layout';
 import { useCardBadges } from './useCardBadges';
 
@@ -43,6 +43,7 @@ export function BoardColumn({
   const inner = width - 1;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
+  const storyBadges = useStoryBadges();
   useMouse(ref, { onClick: () => onClick?.(-1), onDrop }, active);
   return (
     <Box ref={ref} flexDirection="column" width={width} paddingRight={1} flexShrink={0}>
@@ -59,7 +60,7 @@ export function BoardColumn({
         <Card
           key={story.key}
           story={story}
-          badges={badgesOf(story, stages)}
+          badges={[...storyBadges(story), ...badgesOf(story, stages)]}
           width={inner}
           selected={selected === first + i}
           active={active}
@@ -72,7 +73,7 @@ export function BoardColumn({
   );
 }
 
-/** Three lines in a box: key and Priority, name, Assignees and the Plugins' badges. Never wraps. */
+/** Three lines in a box: key and Priority, name, Plugin badges. Never wraps. */
 function Card({
   story,
   badges,
@@ -92,7 +93,7 @@ function Card({
   useMouse(ref, { onClick, drag: story.key }, active);
   // Border and padding take two columns on each side.
   const room = width - 4;
-  const meta = [story.assignees.map((h) => `@${h}`).join(' '), ...badges].filter(Boolean).join(' · ');
+  const meta = badges.join(' · ');
   const priority = story.priority ? ` ${story.priority}` : '';
   // Both border styles are one cell thick, so selecting a card changes only the border's weight and colour.
   return (

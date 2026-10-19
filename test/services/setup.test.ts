@@ -5,9 +5,9 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { ConflictError, ValidationError } from '../../src/core';
 import { type DataRoot, DEFAULT_STAGES } from '../../src/schemas';
 import { createServices, type InitOptions, type RowblyContext } from '../../src/services';
-import { claimMe, initTarget, meSource } from '../../src/services/setup';
+import { initTarget } from '../../src/services/setup';
 import { createRepositories } from '../../src/storage';
-import { FIXED_NOW, fixedClock, fixedIds, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
+import { FIXED_NOW, fixedClock, fixedIds, tempRoot } from '../helpers';
 
 async function emptyDir(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'rowbly-init-'));
@@ -15,14 +15,14 @@ async function emptyDir(): Promise<string> {
   return dir;
 }
 
-function contextFor(root: DataRoot, warnings: string[] = []): RowblyContext {
+function contextFor(root: DataRoot): RowblyContext {
   return {
     root,
     local: { version: 1 },
     me: null,
     now: fixedClock().now,
     newId: fixedIds(),
-    warn: (message) => warnings.push(message),
+    warn: () => {},
   };
 }
 
@@ -37,7 +37,6 @@ describe('setup.init', () => {
     expect(result).toEqual({ root, board: null });
     expect(await createRepositories(root).rootConfig.get()).toEqual({
       version: 1,
-      assignees: [],
       stages: [...DEFAULT_STAGES],
     });
     expect(await readFile(join(root.path, '.gitignore'), 'utf8')).toBe('local.json\n.lock\n.lock.break\n.txn/\n');
@@ -82,45 +81,5 @@ describe('initTarget', () => {
       path: '/work/data',
       kind: 'local',
     });
-  });
-});
-
-describe('claimMe', () => {
-  async function withRoster(t: TempRoot) {
-    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
-  }
-
-  it('stores a roster handle without warnings', async () => {
-    const t = await tempRoot();
-    await withRoster(t);
-    const warnings: string[] = [];
-    const ctx = contextFor(t.root, warnings);
-    expect(await claimMe(ctx, 'sam')).toEqual({ version: 1, me: 'sam' });
-    expect(ctx.me).toBe('sam');
-    expect(meSource(ctx)).toBe('local');
-    expect(warnings).toEqual([]);
-  });
-
-  it('warns rather than failing for a handle outside the roster, even an empty one', async () => {
-    const t = await tempRoot();
-    const warnings: string[] = [];
-    await claimMe(contextFor(t.root, warnings), 'bob');
-    await withRoster(t);
-    await claimMe(contextFor(t.root, warnings), 'bob');
-    expect(warnings).toEqual(['"bob" is not in the roster', '"bob" is not in the roster']);
-    expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'bob' });
-  });
-
-  it('rejects a handle that is not a slug', async () => {
-    const t = await tempRoot();
-    await expect(claimMe(contextFor(t.root), 'Not A Slug')).rejects.toThrow(ValidationError);
-  });
-});
-
-describe('meSource', () => {
-  it('is git when Me did not come from Local State', async () => {
-    const t = await tempRoot();
-    expect(meSource({ ...contextFor(t.root), me: 'sam' })).toBe('git');
-    expect(meSource(contextFor(t.root))).toBeNull();
   });
 });

@@ -134,31 +134,16 @@ describe('rowbly use', () => {
 });
 
 describe('rowbly whoami', () => {
-  it('resolves Me through a git email match when local.json has no me', async () => {
+  it('sets Me to any handle, refuses one that is not a slug, and clears it', async () => {
     const t = await tempRoot();
-    await git(t.dir, 'init', '-q');
-    await git(t.dir, 'config', 'user.email', 'Sam@Example.com');
-    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam', email: 'sam@example.com' }] });
-    const whoami = await runCli(['whoami'], { cwd: t.dir });
-    expect(whoami).toMatchObject({ exitCode: 0, stdout: 'sam  (matched by git email)\n' });
-    expect(JSON.parse((await runCli(['whoami', '--json'], { cwd: t.dir })).stdout)).toEqual({
-      me: 'sam',
-      source: 'git',
-    });
-  });
-
-  it('sets Me, warns for a handle outside the roster, and clears it', async () => {
-    const t = await tempRoot();
-    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
     const cli = (...args: string[]) => runCli(args, { root: t.path });
 
     expect(await cli('whoami')).toMatchObject({ stdout: expect.stringContaining('Me is not set') });
+    expect(JSON.parse((await cli('whoami', '--json')).stdout)).toEqual({ me: null });
     expect(await cli('whoami', 'sam')).toMatchObject({ exitCode: 0, stdout: 'You are sam\n', stderr: '' });
-    expect((await cli('whoami')).stdout).toBe('sam  (from local.json)\n');
-
-    const outside = await cli('whoami', 'bob');
-    expect(outside).toMatchObject({ exitCode: 0, stdout: 'You are bob\n' });
-    expect(outside.stderr).toContain('warning: "bob" is not in the roster');
+    expect((await cli('whoami')).stdout).toBe('sam\n');
+    expect(JSON.parse((await cli('whoami', '--json')).stdout)).toEqual({ me: 'sam' });
+    expect((await cli('whoami', 'Not A Slug')).exitCode).toBe(2);
 
     expect((await cli('whoami', '--clear')).exitCode).toBe(0);
     expect(JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8'))).toEqual({ version: 1 });

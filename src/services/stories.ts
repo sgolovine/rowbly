@@ -11,7 +11,6 @@ import {
   ValidationError,
 } from '../core';
 import {
-  type Assignee,
   type CustomFieldValue,
   type EffectiveBoardConfig,
   formatIssues,
@@ -33,42 +32,6 @@ import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort 
 export function createStoriesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StoriesService {
   /** The Story's Board and its effective Stages and Custom Fields. */
   const effective = (story: Pick<Story, 'boardId'>) => resolveCascade(ctx.root, story.boardId);
-
-  /** Resolves `'me'`, drops duplicates and checks every handle against the roster. */
-  async function checkAssignees(handles: readonly string[]): Promise<Slug[]> {
-    const resolved = [...new Set(handles.map(resolveMe))];
-    if (resolved.length === 0) return resolved;
-    const roster = (await repos.rootConfig.get()).assignees.map((a) => a.handle);
-    const unknown = resolved.filter((handle) => !roster.includes(handle));
-    if (unknown.length > 0) {
-      throw new ValidationError(
-        `unknown Assignee${unknown.length > 1 ? 's' : ''} ${unknown.map((h) => `"${h}"`).join(', ')}`,
-        {
-          details: {
-            issues: unknown.map((handle) => ({ path: ['assignees'], message: `unknown Assignee "${handle}"` })),
-            validHandles: roster,
-          },
-          hint:
-            roster.length > 0
-              ? `valid handles: ${roster.join(', ')}`
-              : 'the roster is empty; run `rowbly assignees add`',
-        },
-      );
-    }
-    return resolved;
-  }
-
-  function resolveMe(handle: string): string {
-    if (handle !== 'me') return handle;
-    if (!ctx.me) throw new UsageError('Me is not set', { hint: 'run `rowbly whoami <handle>`' });
-    return ctx.me;
-  }
-
-  async function createdBy(): Promise<Slug | null> {
-    if (!ctx.me) return null;
-    const roster = (await repos.rootConfig.get()).assignees;
-    return roster.some((a) => a.handle === ctx.me) ? ctx.me : null;
-  }
 
   /** The next free Story Key on the Board; if that key turns out to exist, re-scans once. */
   async function nextKey(boardId: Slug, prefix: string): Promise<string> {
@@ -109,7 +72,7 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
         if (!configs.has(story.boardId)) configs.set(story.boardId, await effective(story));
       }
       const stagesOf = (story: Story) => configs.get(story.boardId)?.stages ?? [];
-      const matches = storyMatcher(filter, stagesOf, filter.assignees?.map(resolveMe));
+      const matches = storyMatcher(filter, stagesOf);
       const boardOrder = [...configs.keys()];
       return stories.filter(matches).sort((a, b) => {
         const byDefault =
@@ -131,14 +94,12 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
           const stage = input.stage ?? config.stages[0]?.key;
           if (stage === undefined) throw new ValidationError('the Board has no Stages');
           checkStage(config.stages, stage);
-          const assignees = await checkAssignees(input.assignees ?? []);
           const customFields = validateFieldValues(config.customFields, input.customFields ?? {}, {
             requireRequired: true,
           });
           const existing = await repos.stories.allInBoard(boardId);
           const rank = rankAfter(bottomRank(existing, stage));
           const now = toTimestamp(ctx.now());
-          const author = await createdBy();
           const key = await nextKey(boardId, config.board.keyPrefix);
           return changes.putStory(
             parseStory({
@@ -149,12 +110,11 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
               description: input.description ?? '',
               stage,
               rank,
-              assignees,
               priority: input.priority ?? null,
               labels: unique(input.labels ?? []),
               dueDate: input.dueDate ?? null,
               customFields,
-              createdBy: author,
+              createdBy: ctx.me,
               createdAt: now,
               updatedAt: now,
             }),
@@ -169,18 +129,10 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
         { key, ...patch },
         async (changes) => {
           const story = await repos.stories.findByKey(key);
-          checkListPatch('assignees', patch.assignees, patch.addAssignees, patch.removeAssignees);
           checkListPatch('labels', patch.labels, patch.addLabels, patch.removeLabels);
           const next: Story = { ...story };
           if (patch.name !== undefined) next.name = patch.name;
           if (patch.description !== undefined) next.description = patch.description;
-          if (patch.assignees !== undefined) {
-            next.assignees = await checkAssignees(patch.assignees);
-          } else if (patch.addAssignees || patch.removeAssignees) {
-            const added = await checkAssignees(patch.addAssignees ?? []);
-            const removed = (patch.removeAssignees ?? []).map(resolveMe);
-            next.assignees = unique([...story.assignees, ...added]).filter((h) => !removed.includes(h));
-          }
           if (patch.priority !== undefined) next.priority = patch.priority;
           if (patch.labels !== undefined) next.labels = unique(patch.labels);
           else if (patch.addLabels || patch.removeLabels) {
@@ -308,36 +260,29 @@ export function createStoriesService(ctx: RowblyContext, repos: Repositories, op
 
 /** What a Story on a Board can be set to, for the TUI's story form and filters. */
 export interface StoryChoices extends EffectiveBoardConfig {
-  assignees: Assignee[];
   /** Labels already used on the Board. */
   labels: string[];
 }
 
 export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<StoryChoices> {
   const repos = createRepositories(ctx.root);
-  const [config, root, labels] = await coordinated(ctx.root, 'stories.choices', () =>
+  const [config, labels] = await coordinated(ctx.root, 'stories.choices', () =>
     Promise.all([
       resolveCascade(ctx.root, boardId),
-      repos.rootConfig.get(),
       repos.stories.allInBoard(boardId).then((stories) => [...new Set(stories.flatMap((s) => s.labels))].sort()),
     ]),
   );
-  return { ...config, assignees: root.assignees, labels };
+  return { ...config, labels };
 }
 
 /** Every given filter must match (contracts §5). */
-function storyMatcher(
-  filter: StoryFilter,
-  stagesOf: (story: Story) => readonly Stage[],
-  assignees: readonly string[] | undefined,
-): (story: Story) => boolean {
+function storyMatcher(filter: StoryFilter, stagesOf: (story: Story) => readonly Stage[]): (story: Story) => boolean {
   const search = filter.search?.toLowerCase();
   return (story) => {
     const category = stagesOf(story).find((s) => s.key === story.stage)?.category;
     if (filter.stages?.length && !filter.stages.includes(story.stage)) return false;
     if (filter.category && category !== filter.category) return false;
     if (filter.open && category === 'done') return false;
-    if (assignees?.length && !story.assignees.some((h) => assignees.includes(h))) return false;
     if (filter.labels?.length && !story.labels.some((l) => filter.labels?.includes(l))) return false;
     if (filter.priorities?.length && !(story.priority && filter.priorities.includes(story.priority))) return false;
     if (search && !`${story.name}\n${story.description}`.toLowerCase().includes(search)) return false;
@@ -376,7 +321,7 @@ function stageIndex(stages: readonly Stage[], key: string): number {
   return index === -1 ? stages.length : index;
 }
 
-/** `--assignee`/`--label` replace the list, so they cannot be combined with the add/remove flags. */
+/** `--label` replaces the list, so it cannot be combined with the add/remove flags. */
 function checkListPatch(name: string, replace?: unknown[], add?: unknown[], remove?: unknown[]): void {
   if (replace !== undefined && (add !== undefined || remove !== undefined)) {
     throw new UsageError(`replace ${name} or add/remove them, not both`);

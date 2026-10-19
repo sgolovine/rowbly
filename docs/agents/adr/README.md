@@ -44,3 +44,4 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Accepted, not built |
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
+| [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted |

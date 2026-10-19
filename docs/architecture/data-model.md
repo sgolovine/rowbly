@@ -8,25 +8,23 @@ Everything Rowbly knows is in the Data Root, a `.rowbly/` folder of JSON and Mar
 erDiagram
     DATA_ROOT ||--|| ROOT_CONFIG : "rowbly.config.json"
     DATA_ROOT ||--o| LOCAL_STATE : "local.json (never committed)"
-    ROOT_CONFIG ||--o{ ASSIGNEE : "roster"
     DATA_ROOT ||--o{ BOARD : "boards/<board>/"
     BOARD ||--o{ STORY : "stories/<KEY>/story.json"
-    STORY }o--o{ ASSIGNEE : "assignees"
 ```
 
 - There is no container between the Data Root and a Board ([ADR-0007](../agents/adr/0007-no-workspaces.md)).
 - Stages and Custom Fields are **configuration**, not records: ordered lists in the [Configuration Cascade](#configuration-cascade), with no ids of their own ([ADR-0005](../agents/adr/0005-stages-and-fields-are-configuration.md)).
-- Tasks, Epics, Specs and Comments are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
+- Assignees, Tasks, Epics, Specs and Comments are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
 
 ## Layout
 
 ```text
 .rowbly/
-  rowbly.config.json            # the Assignee roster, optional Stages / Custom Fields, Plugin entries
+  rowbly.config.json            # optional Stages / Custom Fields, Plugin entries
   local.json                    # Local State: current Board and Me; never committed
   .gitignore                    # local.json, .lock, .lock.break, .txn/
   .lock, .lock.break, .txn/     # the lock and the commit journal (see storage.md); never committed
-  plugins/<id>/…                # Plugin files for the whole Data Root (Epics)
+  plugins/<id>/…                # Plugin files for the whole Data Root (Epics, the Assignee roster)
   boards/<board>/
     board.config.json           # the Board record, optional Stages / Custom Fields, Board Plugin settings
     plugins/<id>/…              # Plugin files for this Board (Board Specs)
@@ -43,18 +41,17 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 
 | Record | File | Holds |
 | --- | --- | --- |
-| Root config (`RowblyConfig`) | `rowbly.config.json` | `assignees` (the roster), optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
-| Assignee | inside the roster | `handle` (a slug), `name`, optional `email` |
-| Local State | `local.json` | optional `board` (the current Board) and `me` (an Assignee handle) |
+| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
+| Local State | `local.json` | optional `board` (the current Board) and `me` (Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
-| Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `assignees`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
+| Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
 
 ### Identity
 
 - **Board:** a lower-kebab-case slug, which is also its folder name. Its `keyPrefix` is unique in the Data Root, so a Story Key alone names its Board.
 - **Story Key:** the Board's key prefix and a number (`WEB-42`), which is also the Story's folder name. A new Story takes the highest number on the Board plus one; there is no counter file, because a shared counter would conflict on every merge. Two branches can therefore create the same key, and `rowbly doctor --fix` renumbers the later Story. A key freed by deleting the highest Story may be reused ([ADR-0003](../agents/adr/0003-story-keys.md)). A Story never moves to another Board.
 - **Rank:** a fractional index (a string) that orders Stories inside one Stage.
-- **Me:** `local.json`'s `me`; without one, the roster entry whose `email` equals `git config user.email`, if any.
+- **Me:** `local.json`'s `me`, a slug claimed with `rowbly whoami`.
 
 ## Configuration Cascade
 
@@ -71,8 +68,8 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 
 ## Plugin Data and Plugin files
 
-- **Plugin Data** is a bag per Plugin on a record: `"plugins": { "<id>": { … } }` on the root config, an Assignee, Local State, a Board or a Story ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Core never interprets a bag and keeps every bag unchanged when it writes a record, including bags of Plugins that are off or unknown and bags that do not parse.
-- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)). Assignees have no folder, so Plugins keep values for them only as bags.
+- **Plugin Data** is a bag per Plugin on a record: `"plugins": { "<id>": { … } }` on the root config, Local State, a Board or a Story ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Core never interprets a bag and keeps every bag unchanged when it writes a record, including bags of Plugins that are off or unknown and bags that do not parse.
+- **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)).
 - Deleting a Story or Board deletes its folder with every Plugin's files. Renumbering a Story moves its whole folder.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused. A symlinked Data Root is fine.
 
@@ -80,7 +77,7 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 
 Git merges and hand edits can leave the Data Root in a state no Rowbly command would write. `rowbly doctor` finds it, and `--fix` repairs what is safe to repair. Run it after every merge that touched `.rowbly/`. The full list of findings is in the [README](../../README.md#doctor).
 
-- Doctor reads the Data Root under the lock. Its checks cover conflict markers, invalid JSON and schemas, ids that do not match their paths, duplicate Story Keys and key prefixes, references to Stages, Assignees or Custom Fields that no longer exist, Rank ties, stale Local State, unknown files, Plugin load failures and Plugin Data, and leftovers of interrupted commits.
+- Doctor reads the Data Root under the lock. Its checks cover conflict markers, invalid JSON and schemas, ids that do not match their paths, duplicate Story Keys and key prefixes, references to Stages or Custom Fields that no longer exist, Rank ties, stale Local State, unknown files, Plugin load failures and Plugin Data, and leftovers of interrupted commits.
 - `--fix` repairs in passes: structural repairs (duplicate Story Keys) first, then a fresh check, then the other fixes, at most 5 passes. Each pass is a `doctor.fix` [operation](operations.md), planned and saved under the lock. A failed pass saves nothing, and its error lists the passes that did save (`details.committed`).
 - A Plugin that is on adds checks and fixes for its own data, with codes prefixed by its id (`EPICS_MISSING_EPIC`).
 - Doctor never removes `.moving` folders or orphan folders (`ORPHAN_FOLDER`) by itself.

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { PluginError } from '../../src/core';
 import { CORE_OPERATION_NAMES, definePlugin } from '../../src/plugin-api';
+import { assignees } from '../../src/plugins/assignees';
+import { addAssignee, editAssignee, removeAssignee } from '../../src/plugins/assignees/service';
 import { comments } from '../../src/plugins/comments';
 import { addComment, deleteComment, editComment } from '../../src/plugins/comments/comments';
 import { epics } from '../../src/plugins/epics';
@@ -55,14 +57,18 @@ describe('the operation inventory (ARCH-02)', () => {
       description: '',
       hooks: Object.fromEntries([...listed.keys()].map((name) => [name, record])),
     });
-    const t = await pluginRoot({ tasks: true, epics: true, specs: true, comments: true, rec: true });
+    const t = await pluginRoot({ assignees: true, tasks: true, epics: true, specs: true, comments: true, rec: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [tasks, epics, specs, comments, recorder]);
+    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, recorder]);
+    const assignee = services.plugins.context('assignees');
     const epic = services.plugins.context('epics');
     const spec = services.plugins.context('specs');
     const comment = services.plugins.context('comments');
     const task = services.plugins.context('tasks');
 
+    await addAssignee(assignee, { handle: 'ada', name: 'Ada', email: 'ada@example.com' });
+    await editAssignee(assignee, 'ada', { name: 'Ada L', email: null });
+    await removeAssignee(assignee, 'ada');
     await createEpic(epic, { id: 'auth', name: 'Auth' });
     await editEpic(epic, 'auth', { name: 'Authentication' });
     await setEpicClosed(epic, 'auth', true);

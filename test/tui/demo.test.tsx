@@ -49,9 +49,10 @@ describe('home screen', () => {
   it('lists the go-to destinations and opens one', async () => {
     const app = renderApp(screens, 'home');
     await app.press();
-    for (const label of ['Board', 'Stories', 'Boards', 'Assignees', 'Stages', 'Fields', 'Context']) {
+    for (const label of ['Board', 'Stories', 'Boards', 'Stages', 'Fields', 'Context']) {
       expect(app.lastFrame()).toContain(label);
     }
+    expect(app.lastFrame()).not.toContain('Assignees');
     await app.press('j', 'j', KEYS.enter);
     expect(app.lastFrame()).toContain('Home › Boards');
     // No Data Root in this test, so the Boards screen reports that instead of listing Boards.

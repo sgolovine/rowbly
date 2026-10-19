@@ -7,7 +7,7 @@ A developer-focused, file-backed Kanban tracker that runs as a CLI and an intera
 ### Containers
 
 **Data Root**:
-The `.rowbly/` directory that holds all Rowbly data (Boards and the Assignee roster) and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`; it is the only container above a Board.
+The `.rowbly/` directory that holds all Rowbly data (Boards and Plugin data) and top-level configuration, found by walking up from the current directory and falling back to `~/.rowbly`; it is the only container above a Board.
 _Avoid_: database, store, repo, workspace, project
 
 **Board**:
@@ -56,12 +56,8 @@ _Avoid_: property, attribute, metadata
 
 ### People
 
-**Assignee**:
-A person in the Data Root's roster (in `rowbly.config.json`) who can be assigned to Stories; a Story has zero or more Assignees.
-_Avoid_: user, owner, member
-
 **Me**:
-The Assignee handle the local developer has claimed with `rowbly whoami`, used as Story creator and by Plugins that record who did something.
+The handle the local developer has claimed with `rowbly whoami`, recorded as a Story's creator and used by Plugins that record who did something.
 _Avoid_: current user, login
 
 **Local State**:
@@ -89,7 +85,7 @@ A Plugin that ships as part of Rowbly itself.
 _Avoid_: first-party plugin, official plugin, core plugin
 
 **Plugin Data**:
-The values a Plugin keeps under its own name on the Data Root, a Board, Story or Assignee, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
+The values a Plugin keeps under its own name on the Data Root, a Board or a Story, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
 _Avoid_: custom data, extension data
 
 **Action**:

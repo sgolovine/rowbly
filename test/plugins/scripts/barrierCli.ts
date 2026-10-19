@@ -14,6 +14,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { main } from '../../../src/main';
 import { definePlugin } from '../../../src/plugin-api';
+import { assignees } from '../../../src/plugins/assignees';
 import { io } from '../../../src/storage/io';
 import { fixturePlugins } from '../fixtures';
 
@@ -57,7 +58,7 @@ const barrierPlugin = definePlugin({
   hooks: {
     'stories.create': transform,
     'stories.update': transform,
-    'assignees.add': transform,
+    'stages.add': transform,
     'barrier.append': transform,
   },
   commands(group, cli) {
@@ -77,4 +78,4 @@ const barrierPlugin = definePlugin({
 });
 
 if (dir) process.on('exit', () => writeFileSync(join(dir, `${self}.done`), ''));
-process.exitCode = await main(process.argv.slice(2), [...fixturePlugins, barrierPlugin]);
+process.exitCode = await main(process.argv.slice(2), [...fixturePlugins, assignees, barrierPlugin]);

@@ -31,9 +31,6 @@ afterEach(() => {
 
 /** The operation (or the `stories list` filter) each option command passes its Plugin input to. */
 const OPERATION_OF: Record<PluginOptionCommand, string> = {
-  'assignees add': 'assignees.add',
-  'assignees edit': 'assignees.update',
-  'assignees remove': 'assignees.remove',
   'boards create': 'boards.create',
   'boards edit': 'boards.update',
   'boards delete': 'boards.remove',
@@ -88,11 +85,9 @@ async function setup() {
 }
 
 describe('Plugin options reach their operation (ARCH-16)', () => {
-  it('on every option command, including option-only edits of Boards and Assignees', async () => {
+  it('on every option command, including option-only edits of Boards', async () => {
     const { seen, run } = await setup();
     const cases: [PluginOptionCommand, string[]][] = [
-      ['assignees add', ['assignees', 'add', 'bob', '--name', 'Bob']],
-      ['assignees edit', ['assignees', 'edit', 'bob']],
       ['boards create', ['boards', 'create', 'api', '--name', 'API', '--prefix', 'API']],
       ['boards edit', ['boards', 'edit', 'api']],
       ['stories create', ['stories', 'create', '--name', 'A', '--board', 'web']],
@@ -102,7 +97,6 @@ describe('Plugin options reach their operation (ARCH-16)', () => {
       ['stories list', ['stories', 'list', '--board', 'web']],
       ['stories delete', ['stories', 'delete', 'WEB-1']],
       ['boards delete', ['boards', 'delete', 'api']],
-      ['assignees remove', ['assignees', 'remove', 'bob']],
     ];
     expect(cases.map(([command]) => command).sort()).toEqual([...PLUGIN_OPTION_COMMANDS].sort());
     for (const [command, argv] of cases) {

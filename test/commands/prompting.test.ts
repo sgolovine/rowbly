@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { registerAssignees } from '../../src/commands/assignees';
 import { registerBoards } from '../../src/commands/boards';
 import { createRepositories } from '../../src/storage';
 import { makeBoard, tempRoot } from '../helpers';
@@ -21,7 +20,6 @@ function program(): Command {
     .option('--no-prompt')
     .exitOverride();
   registerBoards(cli);
-  registerAssignees(cli);
   return cli;
 }
 
@@ -42,13 +40,10 @@ describe('prompting with a TTY', () => {
   it('asks for a missing --name through Clack', async () => {
     const t = await tempRoot();
     await program().parseAsync(['boards', 'create', 'web', '--prefix', 'WEB', '--root', t.path], { from: 'user' });
-    await program().parseAsync(['assignees', 'add', 'sam', '--root', t.path], { from: 'user' });
     const { text } = await import('@clack/prompts');
     expect(text).toHaveBeenCalledWith(expect.objectContaining({ message: 'Board name' }));
-    expect(text).toHaveBeenCalledWith(expect.objectContaining({ message: 'Assignee name' }));
     const repos = createRepositories(t.root);
     expect((await repos.boards.get('web')).name).toBe('Prompted Name');
-    expect((await repos.rootConfig.get()).assignees).toEqual([{ handle: 'sam', name: 'Prompted Name' }]);
   });
 
   it('confirms a delete through Clack', async () => {

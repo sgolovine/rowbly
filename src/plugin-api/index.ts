@@ -32,7 +32,6 @@ export {
 } from '../core';
 export { colorByCategory, colors, renderTable } from '../output';
 export type {
-  Assignee,
   BoardConfig,
   CustomFieldDef,
   CustomFieldValue,

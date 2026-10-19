@@ -20,7 +20,7 @@ import { pluginTestHost, storyFile } from './helpers';
 async function setup() {
   const clock = fixedClock();
   const loaded = await pluginTestHost({ plugins: [tasks], now: clock.now });
-  await makeStory(loaded.t.path, { boardId: 'web', key: 'WEB-1', assignees: [] });
+  await makeStory(loaded.t.path, { boardId: 'web', key: 'WEB-1' });
   const plugin = loaded.context('tasks');
   const story = () => createRepositories(loaded.root).stories.findByKey('WEB-1');
   /** The saved Tasks bag of WEB-1. */

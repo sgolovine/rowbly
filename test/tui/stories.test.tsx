@@ -4,19 +4,13 @@ import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
 
 async function setup() {
   const t = await tempRoot();
-  await makeRootConfig(t.path, {
-    assignees: [
-      { handle: 'alice', name: 'Alice' },
-      { handle: 'bob', name: 'Bob' },
-    ],
-  });
   await makeBoard(t.path, {
     ...web,
     id: 'web',
@@ -52,8 +46,8 @@ describe('story form', () => {
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('New Story on web'));
     expect(app.lastFrame()).toContain('‹ backlog ›');
-    // name, description, stage, assignees, priority, labels, due, size
-    await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down, ' ', KEYS.down);
+    // name, description, stage, priority, labels, due, size
+    await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down);
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);
     expect(app.lastFrame()).toContain('‹ s ›');
     await app.press(KEYS.ctrlEnter);
@@ -62,7 +56,6 @@ describe('story form', () => {
     expect(await story(t, 'WEB-1')).toMatchObject({
       name: 'Login page',
       stage: 'todo',
-      assignees: ['alice'],
       priority: 'P1',
       labels: ['ui', 'auth'],
       customFields: { size: 's' },
@@ -75,7 +68,7 @@ describe('story form', () => {
     const t = await setup();
     const app = await open(t, 'story-form', web);
     await waitForFrame(app, (f) => f.includes('Name*'));
-    await app.press(...'X', ...Array(5).fill(KEYS.down), ...'Bad Label', KEYS.ctrlEnter);
+    await app.press(...'X', ...Array(4).fill(KEYS.down), ...'Bad Label', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('must be lower-kebab-case'));
     expect(await createRepositories(t.root).stories.allInBoard('web')).toEqual([]);
     app.unmount();
@@ -90,7 +83,7 @@ describe('story form', () => {
     await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, ...'New');
     // stage → todo; size: (none) s m l → back to (none) unsets it
     await app.press(KEYS.down, KEYS.down, KEYS.right);
-    await app.press(KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.left, KEYS.left);
+    await app.press(KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.down, KEYS.left, KEYS.left);
     await app.press(KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('WEB-1 New') && f.includes('Updated WEB-1'));
     expect(await story(t, 'WEB-1')).toMatchObject({ name: 'New', stage: 'todo', customFields: {} });
@@ -130,12 +123,12 @@ describe('story detail', () => {
 });
 
 describe('story list', () => {
-  it('filters by me, label and search, and clears filters', async () => {
+  it('filters by label and search, and clears filters', async () => {
     const t = await setup();
-    await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Mine', assignees: ['alice'], labels: ['ui'] });
-    await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Theirs', assignees: ['bob'] });
-    const app = await open(t, 'stories', {}, 'alice');
-    expect(app.lastFrame()).toContain('WEB-1 Mine ● Backlog @alice #ui');
+    await makeStory(t.path, { ...web, key: 'WEB-1', name: 'Mine', labels: ['ui'] });
+    await makeStory(t.path, { ...web, key: 'WEB-2', name: 'Theirs' });
+    const app = await open(t, 'stories');
+    expect(app.lastFrame()).toContain('WEB-1 Mine ● Backlog #ui');
     expect(app.lastFrame()).toContain('WEB-2 Theirs');
     expect(app.lastFrame()).toContain('/ filter · c clear filter');
     // The help lists the screen's `/` instead of the global "filter lists".
@@ -144,13 +137,13 @@ describe('story list', () => {
     expect(app.lastFrame()).not.toContain('filter lists');
     await app.press('?');
 
-    // stage, assignee, me, label, priority, search
-    await app.press('/', KEYS.down, KEYS.down, ' ', KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('filters: mine') && !f.includes('WEB-2'));
+    // stage, label, priority, search
+    await app.press('/', KEYS.down, ' ', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('filters: #ui') && !f.includes('WEB-2'));
     await app.press('c');
     await waitForFrame(app, (f) => f.includes('WEB-2'));
 
-    await app.press('/', ...Array(5).fill(KEYS.down), ...'nothing', KEYS.ctrlEnter);
+    await app.press('/', ...Array(3).fill(KEYS.down), ...'nothing', KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('No Stories match.'));
     app.unmount();
   });
@@ -162,8 +155,8 @@ describe('story list', () => {
     await makeStory(t.path, { ...web, key: 'WEB-3', name: 'Shipped', stage: 'done', rank: 'a0', priority: 'P1' });
     const app = await open(t, 'stories');
     expect(app.lastFrame()).toContain('WEB-3 Shipped');
-    // stages, assignees, me, labels, priorities, search, category, open, sort
-    await app.press('/', ...Array(7).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.ctrlEnter);
+    // stages, labels, priorities, search, category, open, sort
+    await app.press('/', ...Array(5).fill(KEYS.down), ' ', KEYS.down, KEYS.right, KEYS.ctrlEnter);
     await waitForFrame(app, (f) => f.includes('filters: open · sorted by priority') && !f.includes('WEB-3'));
     const frame = app.lastFrame() ?? '';
     expect(frame.indexOf('WEB-2 High')).toBeLessThan(frame.indexOf('WEB-1 Low'));
@@ -171,7 +164,7 @@ describe('story list', () => {
     await app.press(
       'c',
       '/',
-      ...Array(4).fill(KEYS.down),
+      ...Array(2).fill(KEYS.down),
       ' ',
       KEYS.right,
       KEYS.right,

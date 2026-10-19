@@ -21,9 +21,9 @@ export async function writeFixture<T>(path: string, schema: ZodType<T>, value: T
   return parsed;
 }
 
-/** Replaces `rowbly.config.json`, e.g. to set the Assignee roster or global Stages. */
+/** Replaces `rowbly.config.json`, e.g. to set global Stages or Plugin entries. */
 export async function makeRootConfig(root: string, overrides: Partial<RowblyConfig> = {}): Promise<RowblyConfig> {
-  const config: RowblyConfig = { version: 1, assignees: [], ...overrides };
+  const config: RowblyConfig = { version: 1, ...overrides };
   return writeFixture(join(root, 'rowbly.config.json'), RowblyConfigSchema, config);
 }
 
@@ -52,7 +52,6 @@ export async function makeStory(
     description: '',
     stage: 'backlog',
     rank: 'a0',
-    assignees: [],
     priority: null,
     labels: [],
     dueDate: null,
@@ -63,4 +62,21 @@ export async function makeStory(
     ...overrides,
   };
   return writeFixture(join(root, 'boards', story.boardId, 'stories', story.key, 'story.json'), StorySchema, story);
+}
+
+/** Writes the Assignees Plugin's roster, `plugins/assignees/roster.json`. */
+export async function makeRoster(
+  root: string,
+  assignees: readonly { handle: string; name: string; email?: string }[],
+): Promise<void> {
+  await mkdir(join(root, 'plugins', 'assignees'), { recursive: true });
+  await writeFile(
+    join(root, 'plugins', 'assignees', 'roster.json'),
+    `${JSON.stringify({ version: 1, assignees }, null, 2)}\n`,
+  );
+}
+
+/** A Story's Assignees as the Assignees Plugin stores them, for `makeStory` overrides. */
+export function assigned(...handles: string[]): Pick<Story, 'plugins'> {
+  return { plugins: { assignees: { assignees: handles } } };
 }

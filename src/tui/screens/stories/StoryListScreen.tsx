@@ -15,6 +15,7 @@ import {
   useReloadOnReturn,
   useRowblyContext,
   useServices,
+  useStoryBadges,
 } from '../../hooks';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
@@ -36,6 +37,7 @@ export function StoryListScreen({ params }: ScreenProps) {
   const [filtering, setFiltering] = useState(false);
   const [allBoards, setAllBoards] = useState(false);
   const { plugins } = usePlugins();
+  const badges = useStoryBadges();
   const scope = useAsync(async () => {
     const boardId = await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
@@ -122,16 +124,20 @@ export function StoryListScreen({ params }: ScreenProps) {
         <CursorRows
           cursor={cursor}
           active={active && !filtering}
-          rows={stories.map((s) => (
-            <Text key={s.key}>
-              {allBoards ? <Text dimColor>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}
-              <Text color="cyan">{s.key}</Text> {s.name} <StoryStage stages={stagesOf.get(s.boardId) ?? []} story={s} />
-              {s.priority ? <Text color="magenta"> {s.priority}</Text> : null}
-              {s.assignees.length > 0 ? <Text dimColor> @{s.assignees.join(' @')}</Text> : null}
-              {s.labels.length > 0 ? <Text dimColor> #{s.labels.join(' #')}</Text> : null}
-              {s.dueDate ? <Text dimColor> due {s.dueDate}</Text> : null}
-            </Text>
-          ))}
+          rows={stories.map((s) => {
+            const shown = badges(s);
+            return (
+              <Text key={s.key}>
+                {allBoards ? <Text dimColor>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}
+                <Text color="cyan">{s.key}</Text> {s.name}{' '}
+                <StoryStage stages={stagesOf.get(s.boardId) ?? []} story={s} />
+                {s.priority ? <Text color="magenta"> {s.priority}</Text> : null}
+                {shown.length > 0 ? <Text dimColor> {shown.join(' ')}</Text> : null}
+                {s.labels.length > 0 ? <Text dimColor> #{s.labels.join(' #')}</Text> : null}
+                {s.dueDate ? <Text dimColor> due {s.dueDate}</Text> : null}
+              </Text>
+            );
+          })}
         />
       )}
       {filtering && (
@@ -143,7 +149,6 @@ export function StoryListScreen({ params }: ScreenProps) {
               ...filterFields({
                 // Across Boards, any Stage key or Label of any Board, like `--stage` with `--all-boards`.
                 stages: unique([...stagesOf.values()].flatMap((stages) => stages.map((s) => s.key))),
-                assignees: choices.assignees.map((a) => a.handle),
                 labels: boards ? unique(boards.flatMap((b) => b.labels)).sort() : choices.labels,
               }),
               ...extra.fields,

@@ -1,14 +1,14 @@
 ---
 name: rowbly-plugins
 description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
-  Plugin settings, or using the Built-in Plugins' commands: Tasks (rowbly tasks),
-  Epics (rowbly epics, --epic), Specs (rowbly specs, --spec, Story and Board
-  Specs) and Comments (rowbly comments). Also when a rowbly command is unknown because its Plugin is
+  Plugin settings, or using the Built-in Plugins' commands: Assignees (rowbly
+  assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly epics, --epic), Specs (rowbly specs,
+  --spec, Story and Board Specs) and Comments (rowbly comments). Also when a rowbly command is unknown because its Plugin is
   off, or a Plugin failed to load. Not for writing a new Plugin."
 metadata:
   purpose: >-
     Explain how an agent turns Rowbly's Built-in Plugins on and off, handles
-    Plugin settings and load failures, and uses the Tasks, Epics, Specs and
+    Plugin settings and load failures, and uses the Assignees, Tasks, Epics, Specs and
     Comments commands and Story options.
   type: sub-skill
   library: rowbly
@@ -20,6 +20,7 @@ sources:
   - docs/plugins/README.md
   - docs/plugins/built-in.md
   - src/commands/plugins.ts
+  - src/plugins/assignees/commands.ts
   - src/plugins/tasks/commands.ts
   - src/plugins/epics/commands.ts
   - src/plugins/specs/commands.ts
@@ -30,14 +31,14 @@ sources:
 
 Read `rowbly-cli` first. Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships four Built-in Plugins: **Tasks**, **Epics**, **Specs**
+Plugins add optional features. Rowbly ships five Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**
 and **Comments**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
 everyone who uses that Data Root, because the setting is in the committed `rowbly.config.json`.
 
 ## 1. See and change which Plugins are on
 
 ```sh
-rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: tasks, epics, specs, comments
+rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments
 rowbly plugins enable epics --json --no-prompt    # {"id": "epics", "enabled": true}
 rowbly plugins disable epics --json --no-prompt   # keeps its settings and data
 rowbly plugins show epics --json --no-prompt
@@ -64,7 +65,7 @@ JSON by hand. This is the only hand edit the agent rules allow.
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
   ``fix "plugins.<id>" in rowbly.config.json``. Add the setting, then enable it again.
-- Tasks, Epics, Specs and Comments have no settings today.
+- Assignees, Tasks, Epics, Specs and Comments have no settings today.
 
 ## 2. Epics: group Stories from any Boards
 
@@ -123,10 +124,28 @@ rowbly comments delete WEB-42 lcMT5Ekv --yes --json --no-prompt
 ```
 
 - The target is a Story Key. Tasks have no Comments: comment on their Story.
-- The author is Me when Me is in the roster, otherwise `null`. Comment ids are 8 random characters; get
+- The author is Me, or `null` when Me is not set. Comment ids are 8 random characters; get
   them from `list` or `add`.
 - The body comes from exactly one of `--body`, `--body-file <path|->` or `--edit`. An empty body exits 2.
 - Use Comments to record progress, blockers and decisions on the Story you are working on.
+
+## 5. Assignees: who works on a Story
+
+```sh
+rowbly assignees add sam --name "Sam Lee" --email sam@example.com --json --no-prompt
+rowbly assignees list --json --no-prompt                                  # the roster
+rowbly stories create --board web --name "Login page" --assignee sam,me --json --no-prompt
+rowbly stories edit WEB-42 --add-assignee me --json --no-prompt           # --assignee replaces, --remove-assignee drops
+rowbly stories list --board web --assignee me --json --no-prompt
+rowbly assignees remove sam --json --no-prompt                            # also from every Story, with a warning
+```
+
+- The roster is `.rowbly/plugins/assignees/roster.json`. A Story's Assignees are
+  `plugins.assignees.assignees` in its JSON; its Tasks share them.
+- An Assignee must be in the roster: otherwise exit 2 with `details.validHandles`. `me` means Me, and
+  exits 2 when Me is not set.
+- Doctor reports `ASSIGNEES_UNKNOWN_ASSIGNEE` and `ASSIGNEES_UNKNOWN_ME` (fixable) and
+  `ASSIGNEES_ROSTER_UNAVAILABLE` for a roster file that cannot be read (fix it by hand).
 
 ## Common mistakes
 

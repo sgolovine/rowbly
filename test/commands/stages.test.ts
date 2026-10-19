@@ -10,7 +10,7 @@ const web = { boardId: 'web' };
 /** Global stages are the defaults; the one Board, web, inherits them. */
 async function setup() {
   const t = await tempRoot();
-  await createRepositories(t.root).rootConfig.put({ version: 1, assignees: [], stages: [...DEFAULT_STAGES] });
+  await createRepositories(t.root).rootConfig.put({ version: 1, stages: [...DEFAULT_STAGES] });
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   const cli = (...args: string[]) => runCli(args, { root: t.path, cwd: t.dir });
   const read = async (path: string) => JSON.parse(await readFile(join(t.path, path), 'utf8'));

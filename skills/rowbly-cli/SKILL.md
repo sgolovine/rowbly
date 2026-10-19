@@ -31,7 +31,7 @@ in the code repository. It has two modes: `rowbly` with no command opens a full-
 
 Follow these rules for every `rowbly` call. The task skills build on them:
 
-- `rowbly-setup`: create the Data Root, Boards, Assignees, Stages and Custom Fields.
+- `rowbly-setup`: create the Data Root, Boards, Me, Assignees, Stages and Custom Fields.
 - `rowbly-stories`: find, create, edit and move Stories and Tasks.
 - `rowbly-plugins`: Epics, Specs, Comments, and turning Plugins on or off.
 - `rowbly-doctor`: check and repair the Data Root, mainly after git merges.
@@ -71,8 +71,8 @@ printf '%s\n' "## Goal" "" "Users can sign in with email." \
   | rowbly stories create --name "Login page" --description-file - --json --no-prompt
 ```
 
-Repeatable flags (`--assignee`, `--label`, `--stage`, `--priority`, `--field key=value`) may be
-repeated or comma-separated.
+Repeatable flags (`--label`, `--stage`, `--priority`, `--field key=value`, and the Assignees Plugin's
+`--assignee`) may be repeated or comma-separated.
 
 ## 3. Read results and errors
 
@@ -138,7 +138,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 | Task | A smaller item inside one Story, `WEB-42.1` (the Tasks Plugin) | subtask, checklist item |
 | Stage | A step of a Board's workflow, in a Stage Category `todo`, `in_progress` or `done` | status, column |
 | Rank | A Story's position inside its Stage | order |
-| Assignee / Me | A person in the roster / the Assignee you work as (`rowbly whoami`) | user, owner |
+| Me / Assignee | The handle you work as (`rowbly whoami`) / a person in the Assignees Plugin's roster | user, owner |
 | Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag | severity / tag |
 
 ## Common mistakes

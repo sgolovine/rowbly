@@ -21,8 +21,7 @@ import { deleteTask, getTask, moveTask, stagesOf } from './tasks';
 type Mode = 'view' | 'move' | 'confirm-delete';
 
 /**
- * One Task (`params.id`): `e` edits, `m` moves it to a Stage and `d` deletes it. Tasks have no
- * Assignees of their own: the Story's are shown.
+ * One Task (`params.id`): `e` edits, `m` moves it to a Stage and `d` deletes it.
  */
 export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
   const active = useIsActive();
@@ -98,16 +97,6 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   const rows: DetailRow[] = [
     { label: 'Story', value: `${story.key} ${story.name}` },
     { label: 'Stage', value: <TaskStage stages={stages} stage={task.stage} /> },
-    {
-      label: 'Assignees',
-      value: story.assignees.length ? (
-        <Text>
-          {story.assignees.join(', ')} <Text dimColor>(from the Story)</Text>
-        </Text>
-      ) : (
-        <Text dimColor>—</Text>
-      ),
-    },
     { label: 'Created', value: task.createdAt },
     { label: 'Updated', value: task.updatedAt },
   ];

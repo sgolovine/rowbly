@@ -17,7 +17,7 @@ function contextFor(t: TempRoot): RowblyContext {
 /** Global stages = defaults; Boards web and api (api has its own stages). */
 async function setup() {
   const t = await tempRoot();
-  await createRepositories(t.root).rootConfig.put({ version: 1, assignees: [], stages: [...DEFAULT_STAGES] });
+  await createRepositories(t.root).rootConfig.put({ version: 1, stages: [...DEFAULT_STAGES] });
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
   await makeBoard(t.path, {
     id: 'api',

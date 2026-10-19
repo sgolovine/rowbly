@@ -49,8 +49,9 @@ when there are no errors, and 6 while errors remain. Warnings and info do not ch
 rowbly doctor --fix --json --no-prompt
 ```
 
-`--fix` repairs only what is safe: duplicate Story Keys, unknown Assignees, stale Local State,
-duplicate Ranks, interrupted commits, leftover temporary files, and the `.gitignore`.
+`--fix` repairs only what is safe: duplicate Story Keys, stale Local State,
+duplicate Ranks, interrupted commits, leftover temporary files, the `.gitignore`, and
+the fixable checks of Plugins that are on (such as unknown Assignees and Task counters).
 It reports in `fixed` what it changed and in `findings` what remains. It never deletes a Story or merges
 text for you. Run `rowbly doctor --json --no-prompt` again afterwards.
 Success: exit 0.

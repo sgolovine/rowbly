@@ -14,6 +14,7 @@ describe('exit codes (contracts §6)', () => {
     dir = await mkdtemp(join(tmpdir(), 'rowbly-exit-'));
     expect((await rowbly('init', '--board', 'web', '--board-name', 'Web', '--prefix', 'WEB')).exitCode).toBe(0);
     expect((await rowbly('stories', 'create', '--name', 'One')).exitCode).toBe(0);
+    expect((await rowbly('plugins', 'enable', 'assignees')).exitCode).toBe(0);
   });
   afterAll(() => rm(dir, { recursive: true, force: true }));
 

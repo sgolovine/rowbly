@@ -1,7 +1,6 @@
 // Service Layer contract (contracts §8). Frozen: changes need an approved CCR.
 
 import type {
-  Assignee,
   BoardConfig,
   ConfigLevel,
   CustomFieldDef,
@@ -73,20 +72,6 @@ export interface InitResult {
   board: BoardConfig | null;
 }
 
-// ── Assignees ───────────────────────────────────────────────────────────────
-
-export interface AssigneeInput extends OperationOptions {
-  handle: Slug;
-  name: string;
-  email?: string;
-}
-
-export interface AssigneePatch extends OperationOptions {
-  name?: string;
-  /** `null` removes the email. */
-  email?: string | null;
-}
-
 // ── Boards, Stages & Custom Fields ──────────────────────────────────────────
 
 export interface BoardCreateInput extends OperationOptions {
@@ -135,8 +120,6 @@ export interface StoryFilter {
   category?: StageCategory;
   /** `--open`: Stage Category is not `done`. */
   open?: boolean;
-  /** `--assignee`: any of these handles; the literal `'me'` resolves to Me (`UsageError` if Me is unset). */
-  assignees?: string[];
   /** `--label`: any of these Labels. */
   labels?: Label[];
   /** `--priority`: any of these Priorities. */
@@ -165,8 +148,6 @@ export interface StoryCreateInput extends OperationOptions {
   description?: string;
   /** Defaults to the first effective Stage. */
   stage?: Slug;
-  /** Handles; the literal `'me'` resolves to Me. */
-  assignees?: string[];
   priority?: Priority | null;
   labels?: Label[];
   dueDate?: IsoDate | null;
@@ -177,12 +158,6 @@ export interface StoryCreateInput extends OperationOptions {
 export interface StoryPatch extends OperationOptions {
   name?: string;
   description?: string;
-  /** `--assignee`: replaces the whole list. */
-  assignees?: string[];
-  /** `--add-assignee`. */
-  addAssignees?: string[];
-  /** `--remove-assignee`. */
-  removeAssignees?: string[];
   priority?: Priority | null;
   /** `--label`: replaces the whole list. */
   labels?: Label[];
@@ -211,7 +186,6 @@ export type CoreDoctorCode =
   | 'CONFLICT_MARKERS'
   | 'DUPLICATE_PREFIX'
   | 'UNKNOWN_STAGE'
-  | 'UNKNOWN_ASSIGNEE'
   | 'UNKNOWN_FIELD'
   | 'INVALID_FIELD_VALUE'
   | 'MISSING_REQUIRED_FIELD'
@@ -277,13 +251,6 @@ export interface ConfigService {
   effective(boardId: Slug): Promise<EffectiveBoardConfig>;
 }
 
-export interface AssigneesService {
-  list(): Promise<Assignee[]>;
-  add(input: AssigneeInput): Promise<Assignee>;
-  update(handle: Slug, patch: AssigneePatch): Promise<Assignee>;
-  remove(handle: Slug, opts?: OperationOptions): Promise<{ storiesUpdated: number }>;
-}
-
 export interface BoardsService {
   list(): Promise<BoardConfig[]>;
   get(id: Slug): Promise<BoardConfig>;
@@ -347,7 +314,6 @@ export interface Services {
   context: ContextService;
   setup: SetupService;
   config: ConfigService;
-  assignees: AssigneesService;
   boards: BoardsService;
   stages: StagesService;
   fields: FieldsService;

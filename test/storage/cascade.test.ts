@@ -18,7 +18,7 @@ async function setup(stagesFrom: Level, fieldsFrom: Level) {
     ...(at(stagesFrom, level) ? { stages: [stage(`${level}-stage`)] } : {}),
     ...(at(fieldsFrom, level) ? { customFields: [field(`${level}-field`)] } : {}),
   });
-  await createRepositories(t.root).rootConfig.put({ version: 1, assignees: [], ...lists('global') });
+  await createRepositories(t.root).rootConfig.put({ version: 1, ...lists('global') });
   await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB', ...lists('board') });
   return t;
 }

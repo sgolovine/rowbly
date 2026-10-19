@@ -8,5 +8,5 @@ export { canonicalDataRoot, listPluginFiles, readPluginFile, resolvePluginFile }
 export { type DataRootPaths, paths } from './paths';
 export * from './repositories';
 export { listDataRootFiles, readDataRootFile, removeDataRootFile } from './scan';
-export { editTextInEditor, gitUserEmail, pathExists, readTextFile, writeFileAtomic, writeTextFile } from './system';
+export { editTextInEditor, pathExists, readTextFile, writeFileAtomic, writeTextFile } from './system';
 export * from './transaction';

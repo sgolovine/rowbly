@@ -109,11 +109,10 @@ describe('createPluginTestHost', () => {
     const { services } = await host({
       plugins: [],
       now: () => new Date(Date.UTC(2030, 0, 1, 0, 0, tick++)),
-      assignees: [{ handle: 'alice', name: 'Alice' }],
       me: 'alice',
     });
-    const story = await services.stories.create('web', { name: 'Mine', assignees: ['me'] });
-    expect(story.assignees).toEqual(['alice']);
+    const story = await services.stories.create('web', { name: 'Mine' });
+    expect(story.createdBy).toBe('alice');
     expect(story.createdAt.startsWith('2030-01-01T00:00:')).toBe(true);
   });
 

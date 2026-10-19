@@ -48,7 +48,6 @@ describe('writeJson', () => {
       name: 'First',
       stage: 'todo',
       rank: 'a0',
-      assignees: ['ana'],
       epicId: null,
       priority: 'P1',
       labels: ['ui'],

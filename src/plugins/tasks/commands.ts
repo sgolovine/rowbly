@@ -54,7 +54,7 @@ export const commands: PluginCommands = (group, cli) => {
 
   group
     .command('show <task-id>')
-    .description("Show a Task with its Stage, description and the Story's Assignees")
+    .description('Show a Task with its Stage and description')
     .action((taskId: string, _opts: unknown, cmd) =>
       cli.run(cmd, async ({ plugin, json, print }) => {
         const { story, task } = await getTask(plugin, taskId);
@@ -132,11 +132,9 @@ function renderTasks(tasks: readonly Task[], stages: readonly Stage[]): string {
 }
 
 function renderTask(task: Task, story: Story, stages: readonly Stage[]): string {
-  const none = colors.dim('—');
   const rows: [string, string][] = [
     ['Story', `${story.key} ${story.name}`],
     ['Stage', stageBadge(stages, task.stage)],
-    ['Assignees', story.assignees.length ? `${story.assignees.join(', ')} ${colors.dim('(from the Story)')}` : none],
     ['Created', task.createdAt],
     ['Updated', task.updatedAt],
   ];

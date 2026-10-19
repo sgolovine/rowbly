@@ -1,12 +1,10 @@
 import { join, resolve } from 'node:path';
 import { nanoid } from 'nanoid';
-import { ConflictError, isSlug, toTimestamp, ValidationError } from '../core';
-import { BoardConfigSchema, type DataRoot, DEFAULT_STAGES, type LocalState, type Slug } from '../schemas';
+import { ConflictError, toTimestamp } from '../core';
+import { BoardConfigSchema, type DataRoot, DEFAULT_STAGES } from '../schemas';
 import { createRepositories, pathExists, type Repositories, writeTextFile } from '../storage';
 import { validInput } from './_validate';
-import { coordinated, coordinatedRepositories, mutationCoordinator } from './coordination';
 import { createServices } from './index';
-import { createOperationRunner } from './plugins/runtime';
 import type { RowblyContext, SetupService } from './types';
 
 const DATA_ROOT_DIR = '.rowbly';
@@ -35,33 +33,6 @@ export function newContext(root: DataRoot, warn: (message: string) => void): Row
   return { root, local: { version: 1 }, me: null, now: () => new Date(), newId: () => nanoid(8), warn };
 }
 
-export type MeSource = 'local' | 'git';
-
-/** Where Me came from: `local.json`, a roster email matching `git config user.email`, or nowhere. */
-export function meSource(ctx: RowblyContext): MeSource | null {
-  if (ctx.me === null) return null;
-  return ctx.local.me === ctx.me ? 'local' : 'git';
-}
-
-/**
- * Claims `handle` as Me, as operation `context.setMe`. Unlike `context.setMe`, a handle missing from the roster only warns, so Me can be set before the roster exists.
- * Lives beside the service because the frozen `ContextService` contract has no such method.
- */
-export async function claimMe(ctx: RowblyContext, handle: Slug): Promise<LocalState> {
-  if (!isSlug(handle))
-    throw new ValidationError(`invalid Assignee handle "${handle}": must be a lower-kebab-case slug`);
-  const repos = coordinatedRepositories(ctx.root, createRepositories(ctx.root));
-  const ops = createOperationRunner(ctx, repos, () => createServices(ctx), mutationCoordinator(ctx.root));
-  // The runner copies the saved Local State, and the new Me, into the context (ARCH-37).
-  return coordinated(ctx.root, 'context.setMe', async () => {
-    const { assignees } = await repos.rootConfig.get();
-    if (!assignees.some((a) => a.handle === handle)) ctx.warn(`"${handle}" is not in the roster`);
-    return ops.run('context.setMe', { handle }, (changes) =>
-      changes.updateLocalState((state): LocalState => ({ ...state, me: handle })),
-    );
-  });
-}
-
 /**
  * `init` is not an operation: no Plugin can be on before the Data Root exists, and `init` turns
  * none on (ADR-0010).
@@ -87,7 +58,6 @@ export function createSetupService(ctx: RowblyContext, _repos: Repositories): Se
       const repos = createRepositories(root);
       await repos.rootConfig.put({
         version: 1,
-        assignees: [],
         stages: DEFAULT_STAGES.map((stage) => ({ ...stage })),
       });
       // Local State, the lock and the journal are never Git data (ADR-0019 §2).

@@ -8,7 +8,7 @@ import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
-import { fixedClock, fixedIds, makeBoard, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 async function emptyDir(): Promise<string> {
@@ -97,7 +97,6 @@ describe('setup screen (first run)', () => {
 describe('context switcher', () => {
   async function twoBoards() {
     const t = await tempRoot();
-    await makeRootConfig(t.path, { assignees: [{ handle: 'sam', name: 'Sam' }] });
     await makeBoard(t.path, { id: 'api', keyPrefix: 'API' });
     await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB' });
     return t;
@@ -107,10 +106,10 @@ describe('context switcher', () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home', { version: 1, board: 'api' });
     await waitForFrame(app, (f) => f.includes('▌ 1 api') && f.includes('● Backlog (0)'));
-    // Context is the fifth section, the second-to-last global one.
+    // Context is the fourth section.
     await app.press(',');
     await waitForFrame(app, 'Board: ');
-    await app.press(...Array(4).fill('j'), KEYS.enter);
+    await app.press(...Array(3).fill('j'), KEYS.enter);
     await waitForFrame(app, 'api *');
     expect(app.lastFrame()).toContain('Switch Board');
     expect(app.lastFrame()).toContain('web web (WEB)');
@@ -150,26 +149,31 @@ describe('context switcher', () => {
     app.unmount();
   });
 
-  it('the whoami picker lists the roster and claims a handle', async () => {
+  it('the whoami form claims a handle, and an empty one clears Me', async () => {
     const t = await twoBoards();
     const { app, ctx } = renderApp(t, 'home');
     await waitForFrame(app, 'Go to');
     await app.press(',');
     await waitForFrame(app, 'None in context');
-    await app.press(...Array(4).fill('j'), KEYS.enter);
+    await app.press(...Array(3).fill('j'), KEYS.enter);
     await waitForFrame(app, 'Switch Board');
     await app.press('m');
-    await waitForFrame(app, 'sam Sam');
-    expect(app.lastFrame()).toContain('Me: not set');
-    expect(app.lastFrame()).toContain('Roster');
-    await app.press(KEYS.enter);
-    await waitForFrame(app, 'me: sam');
+    await waitForFrame(app, (f) => f.includes('Handle (empty clears Me)') && f.includes('Me: not set'));
+    await app.press(...'sam', KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('You are sam') && f.includes('me: sam'));
     expect(ctx.me).toBe('sam');
     // The header reads `ctx.me`, which is set before Local State is written.
     await vi.waitFor(async () =>
       expect(await createRepositories(t.root).localState.get()).toEqual({ version: 1, me: 'sam' }),
     );
     expect(app.lastFrame()).toContain('me: sam');
+
+    await waitForFrame(app, (f) => f.includes('Switch Board') && f.includes('m who am I'));
+    await app.press('m');
+    await waitForFrame(app, (f) => f.includes('Handle (empty clears Me)') && f.includes('Me: sam'));
+    await app.press(KEYS.backspace, KEYS.backspace, KEYS.backspace, KEYS.ctrlEnter);
+    await waitForFrame(app, (f) => f.includes('Cleared Me') && f.includes('me: —'));
+    expect(ctx.me).toBeNull();
     app.unmount();
   });
 });

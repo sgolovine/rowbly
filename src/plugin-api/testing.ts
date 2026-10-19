@@ -28,7 +28,6 @@ import { reservedNames } from '../main';
 import type { DataRoot } from '../schemas';
 import {
   type AnyPluginDefinition,
-  type AssigneeInput,
   type BoardCreateInput,
   createServices,
   failureWarning,
@@ -59,8 +58,6 @@ export interface PluginTestHostOptions {
   settings?: Readonly<Record<string, Record<string, unknown>>>;
   /** The Boards to create, before any Plugin is on. Default: Board `web` (`WEB`). */
   boards?: readonly BoardCreateInput[];
-  /** The Assignee roster. Default: none. */
-  assignees?: readonly AssigneeInput[];
   /** The clock. Default: always `2026-01-01T00:00:00.000Z`. */
   now?: () => Date;
   /** The id generator. Default: `id000001`, `id000002`, … */
@@ -91,7 +88,7 @@ export interface PluginTestHost {
 export const TEST_NOW = '2026-01-01T00:00:00.000Z';
 
 /**
- * Creates a Data Root with the given Boards and Assignees, turns `plugins` on there, and loads them
+ * Creates a Data Root with the given Boards, turns `plugins` on there, and loads them
  * as Rowbly does: a Plugin that fails to load is skipped and reported in `warnings` and `status()`.
  */
 export async function createPluginTestHost(options: PluginTestHostOptions): Promise<PluginTestHost> {
@@ -114,7 +111,6 @@ export async function createPluginTestHost(options: PluginTestHostOptions): Prom
     // Set up without Plugins, so that their hooks see only what the test does.
     const core = createServices(base);
     await core.setup.init({ root });
-    for (const assignee of options.assignees ?? []) await core.assignees.add(assignee);
     for (const board of options.boards ?? [{ id: 'web', name: 'Web', keyPrefix: 'WEB' }]) {
       await core.boards.create(board);
     }

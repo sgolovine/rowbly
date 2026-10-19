@@ -13,7 +13,7 @@ import type { Repositories } from '../../storage';
 import { coordinated } from '../coordination';
 import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
-import { CoreChangeSet, frozenCopy, listPluginFiles, readPluginFile } from './changeSet';
+import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
@@ -484,7 +484,8 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       });
     },
     writeBag(record, bag) {
-      if (isRootConfig(record)) {
+      // Root settings are entries with `enabled`, not bags (ADR-0010).
+      if (isRootConfigCopy(record)) {
         throw new PluginError(`Plugin "${id}" cannot use writeBag on rowbly.config.json`, {
           details: { plugin: id },
           hint: 'change settings with changes.updateRootConfig and keep "enabled"',
@@ -601,19 +602,10 @@ function withGetters<A extends object, B extends object>(base: A, extra: B): A &
   return Object.defineProperties(base, Object.getOwnPropertyDescriptors(extra)) as A & B;
 }
 
-/**
- * The root config (`rowbly.config.json`): its Plugin entries are settings with `enabled`, not bags.
- * It has `version` and `assignees`; a Story has both too, but also its `key`.
- */
-function isRootConfig(record: object): boolean {
-  return 'version' in record && 'assignees' in record && !('key' in record);
-}
-
 /** How an error names the record a bag is on. */
 function recordName(record: Bagged): string {
   const r = record as Record<string, unknown>;
   if (typeof r.key === 'string' && typeof r.boardId === 'string') return `Story ${r.key}`;
-  if (typeof r.handle === 'string') return `Assignee ${r.handle}`;
   if (typeof r.id === 'string' && typeof r.keyPrefix === 'string') return `Board ${r.id}`;
   if ('version' in r) return 'Local State';
   return 'a record';
