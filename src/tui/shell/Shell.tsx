@@ -1,5 +1,5 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
-import { useContext, useMemo, useState } from 'react';
+import { type ReactNode, useContext, useMemo, useState } from 'react';
 import { invokePlugin } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
@@ -8,6 +8,8 @@ import {
   type BoardView,
   BoardViewContext,
   LayoutContext,
+  type MainOverlay,
+  MainOverlayContext,
   pluginUi,
   ServicesContext,
   ShellContext,
@@ -32,7 +34,11 @@ import { ScreenSlot } from './ScreenSlot';
 import { Sidebar } from './Sidebar';
 import { ToastArea } from './ToastArea';
 
-type Overlay = { kind: 'help' } | { kind: 'confirm'; action: 'quit' | 'back' };
+type Overlay =
+  | { kind: 'help' }
+  | { kind: 'confirm'; action: 'quit' | 'back' }
+  // A node a screen shows over the whole terminal, such as a full-screen editor.
+  | { kind: 'main'; id: string; node: ReactNode };
 
 /**
  * The frame: a header with the project and its actions, the Board sidebar, and the main area. The
@@ -50,6 +56,13 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const fullscreen = (useStdout().stdout as NodeJS.WriteStream).isTTY === true;
   const toastCount = useToasts().length;
   const [overlay, setOverlay] = useState<Overlay | null>(null);
+  const mainOverlay = useMemo<MainOverlay>(
+    () => ({
+      open: (id, node) => setOverlay({ kind: 'main', id, node }),
+      close: (id) => setOverlay((current) => (current?.kind === 'main' && current.id === id ? null : current)),
+    }),
+    [],
+  );
   const [boardVersion, setBoardVersion] = useState(0);
   // Every launch starts with the Stages side by side; the choice then lasts until Rowbly quits.
   const [boardView, setBoardView] = useState<BoardView>('stages');
@@ -161,97 +174,105 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   return (
     <BoardSelectionContext.Provider value={selection}>
       <BoardViewContext.Provider value={boardViewChoice}>
-        <Box flexDirection="column" height={fullscreen ? rows : undefined}>
-          <Header
-            label={label}
-            onNewStory={services ? newStory : undefined}
-            clickable={idle}
-            actions={actions}
-            actionsClickable={overlay === null}
-            boardView={router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined}
-          />
-          <Box flexGrow={1}>
-            {services && (
-              <Sidebar
-                boards={boards}
-                current={currentIndex}
+        <MainOverlayContext.Provider value={mainOverlay}>
+          <Box flexDirection="column" height={fullscreen ? rows : undefined}>
+            <Header
+              label={label}
+              onNewStory={services ? newStory : undefined}
+              clickable={idle}
+              actions={actions}
+              actionsClickable={overlay === null}
+              boardView={router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined}
+            />
+            <Box flexGrow={1}>
+              {services && (
+                <Sidebar
+                  boards={boards}
+                  current={currentIndex}
+                  height={mainHeight}
+                  clickable={idle}
+                  onSelect={(boardId) => void selection.select(boardId)}
+                  onNewBoard={newBoard}
+                />
+              )}
+              <Panel
+                title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
+                color={idle ? 'cyan' : undefined}
+                flexGrow={1}
+                flexShrink={1}
                 height={mainHeight}
-                clickable={idle}
-                onSelect={(boardId) => void selection.select(boardId)}
-                onNewBoard={newBoard}
-              />
-            )}
-            <Panel
-              title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-              color={idle ? 'cyan' : undefined}
-              flexGrow={1}
-              flexShrink={1}
-              height={mainHeight}
-              overflow="hidden"
-            >
-              <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
-                {router.stack[0] && (
-                  <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
-                    <ScreenSlot route={router.stack[0]} depth={0} top active={idle} screens={screens} />
-                  </Box>
-                )}
-                {depth > 0 && top && (
-                  // Pinned to the top of the main area so the Modal centres there rather than below
-                  // the root screen's content.
-                  <Box
-                    display={screenHidden ? 'none' : 'flex'}
-                    flexDirection="column"
-                    position={fullscreen ? 'absolute' : 'relative'}
-                    top={0}
-                    left={0}
-                    width="100%"
-                  >
-                    <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
-                      {router.stack.slice(1).map((route, i) => (
-                        <ScreenSlot
-                          // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
-                          key={`${i + 1}:${route.screen}`}
-                          route={route}
-                          depth={i + 1}
-                          top={i + 1 === depth}
-                          active={i + 1 === depth && overlay === null}
-                          screens={screens}
-                        />
-                      ))}
+                overflow="hidden"
+              >
+                <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
+                  {router.stack[0] && (
+                    <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
+                      <ScreenSlot route={router.stack[0]} depth={0} top active={idle} screens={screens} />
+                    </Box>
+                  )}
+                  {depth > 0 && top && (
+                    // Pinned to the top of the main area so the Modal centres there rather than below
+                    // the root screen's content.
+                    <Box
+                      display={screenHidden ? 'none' : 'flex'}
+                      flexDirection="column"
+                      position={fullscreen ? 'absolute' : 'relative'}
+                      top={0}
+                      left={0}
+                      width="100%"
+                    >
+                      <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
+                        {router.stack.slice(1).map((route, i) => (
+                          <ScreenSlot
+                            // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
+                            key={`${i + 1}:${route.screen}`}
+                            route={route}
+                            depth={i + 1}
+                            top={i + 1 === depth}
+                            active={i + 1 === depth && overlay === null}
+                            screens={screens}
+                          />
+                        ))}
+                      </Modal>
+                    </Box>
+                  )}
+                  {overlay?.kind === 'help' && (
+                    <Modal title="Keys" size="dialog">
+                      <HelpOverlay hints={hints} />
                     </Modal>
-                  </Box>
-                )}
-                {overlay?.kind === 'help' && (
-                  <Modal title="Keys" size="dialog">
-                    <HelpOverlay hints={hints} />
-                  </Modal>
-                )}
-                {overlay?.kind === 'confirm' && (
-                  <Modal size="dialog">
-                    <ConfirmDialog
-                      message={
-                        overlay.action === 'quit'
-                          ? 'Quit and discard unsaved changes?'
-                          : 'Go back and discard unsaved changes?'
-                      }
-                      confirmLabel="Discard"
-                      cancelLabel="Keep editing"
-                      destructive
-                      onConfirm={() => {
-                        setOverlay(null);
-                        if (overlay.action === 'quit') exit();
-                        else router.pop();
-                      }}
-                      onCancel={() => setOverlay(null)}
-                    />
-                  </Modal>
-                )}
+                  )}
+                  {overlay?.kind === 'confirm' && (
+                    <Modal size="dialog">
+                      <ConfirmDialog
+                        message={
+                          overlay.action === 'quit'
+                            ? 'Quit and discard unsaved changes?'
+                            : 'Go back and discard unsaved changes?'
+                        }
+                        confirmLabel="Discard"
+                        cancelLabel="Keep editing"
+                        destructive
+                        onConfirm={() => {
+                          setOverlay(null);
+                          if (overlay.action === 'quit') exit();
+                          else router.pop();
+                        }}
+                        onCancel={() => setOverlay(null)}
+                      />
+                    </Modal>
+                  )}
+                </LayoutContext.Provider>
+              </Panel>
+            </Box>
+            <ToastArea />
+            <Footer hints={atRoot ? hints : []} atRoot={atRoot} />
+            {overlay?.kind === 'main' && (
+              // Over the whole terminal rather than the main area; the Modal keeps its margin to the edges.
+              <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>
+                {overlay.node}
               </LayoutContext.Provider>
-            </Panel>
+            )}
           </Box>
-          <ToastArea />
-          <Footer hints={atRoot ? hints : []} atRoot={atRoot} />
-        </Box>
+        </MainOverlayContext.Provider>
       </BoardViewContext.Provider>
     </BoardSelectionContext.Provider>
   );

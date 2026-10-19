@@ -37,8 +37,8 @@ export const CORE_KEYS: readonly string[] = [
   // Lists and forms: `/` filters, space toggles; confirmation dialogs: y/n.
   ...'/ yn',
   // Screen actions: add, edit, delete, move Stage, top/bottom, filters (clear, all Boards), fix,
-  // open (view Board, Stories, Stages, fields), reload. `a`, `e` and `s` are also `ctrl` bindings
-  // of text inputs and forms.
+  // open (view Board, Stories, Stages, fields), reload. `a`, `e`, `f` and `s` are also `ctrl`
+  // bindings of text inputs and forms.
   ...'nedmTBcAfvosra',
 ];
 

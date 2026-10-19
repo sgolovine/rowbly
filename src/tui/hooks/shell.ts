@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useSyncExternalStore } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useId, useSyncExternalStore } from 'react';
 import type { ActionFocus } from '../../services';
 import type { KeyHint } from '../keymap';
 
@@ -95,6 +95,22 @@ export const ShellContext = createContext<ShellRegistry>(createShellRegistry());
 
 /** False while an overlay is open or the screen is not on top of the router stack. */
 export const ActiveContext = createContext(true);
+
+/**
+ * Shows a node, such as a full-screen editor, over the whole terminal. While it is open the
+ * screens below it take no keys. `id` names the opener, so it closes only its own node.
+ */
+export interface MainOverlay {
+  open(id: string, node: ReactNode): void;
+  close(id: string): void;
+}
+
+/** `null` outside the shell, which has nothing to cover. */
+export const MainOverlayContext = createContext<MainOverlay | null>(null);
+
+export function useMainOverlay(): MainOverlay | null {
+  return useContext(MainOverlayContext);
+}
 
 /** The router-stack depth of the screen being rendered; `-1` outside any screen. */
 export const ScreenDepthContext = createContext(-1);

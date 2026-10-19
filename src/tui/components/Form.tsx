@@ -112,8 +112,8 @@ function isSubmitKey(input: string, key: Key): boolean {
 /**
  * A keyboard form, with a Save button after the last field. `enter`, `tab` and `↓` move to the next
  * field and `shift+tab` and `↑` to the previous one; text, number and date fields are `TextInput`s;
- * multiline fields are `TextArea`s, where `enter` starts a new line and `↑/↓` leave the text from its
- * first and last rows; `space` toggles booleans and multiselect options; `←/→` change selects.
+ * multiline fields are `TextArea`s, where `enter` starts a new line, `↑/↓` leave the text from its
+ * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
  * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` on the Save button submits.
  */
 export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: FormProps) {
@@ -219,8 +219,9 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 
   const labelWidth = Math.max(...fields.map((f) => f.label.length + (f.required ? 1 : 0))) + 4;
   const inputWidth = Math.max(16, Math.min(INPUT_MAX_WIDTH, layout.width - labelWidth));
-  // Space the fields out when the room allows: a blank line after each field plus the button row.
-  const lines = fields.reduce((sum, f) => sum + (f.kind === 'multiline' ? TEXTAREA_ROWS : 1) + 1, 0);
+  // Space the fields out when the room allows: a blank line after each field plus the button row. A
+  // multiline field has its Full screen button below its rows.
+  const lines = fields.reduce((sum, f) => sum + (f.kind === 'multiline' ? TEXTAREA_ROWS + 1 : 1) + 1, 0);
   const roomy = layout.height !== undefined && layout.height >= lines + 3;
   return (
     <Box flexDirection="column" gap={roomy ? 1 : 0}>
@@ -276,7 +277,7 @@ const FIELD_HELP: Record<FieldKind, string> = {
   boolean: 'space toggles',
   select: '←/→ change',
   multiselect: '←/→ pick · space toggles',
-  multiline: 'enter new line',
+  multiline: 'enter new line · ctrl+f full screen',
 };
 
 function FieldRow({
@@ -407,6 +408,7 @@ function FieldValue({
           rows={TEXTAREA_ROWS}
           placeholder="(empty)"
           onLeave={onLeave}
+          title={field.label}
         />
       );
     default:
