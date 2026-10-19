@@ -411,6 +411,7 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm format` | Format with Biome |
 | `pnpm test` | Run every vitest project; the `cli` project builds the CLIs into its own `.test-dist/run-*` folder first |
 | `pnpm test:unit` | Run the suites that need no CLI build (services, storage, TUI) |
+| `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLIs into `.test-dist/run-*` first |
 | `pnpm test:watch` | vitest in watch mode |
 | `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
 
