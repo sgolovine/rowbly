@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "5e6e300a5b30124ea80e63f2075e868260fb9ad6c6c076b879cd72f6f2482b38",
+      "fingerprint": "6ce7971ce8a353297f460ffc1bf85e1858756b2c53a36ae588522db330a5aaea",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "ef9da4d472999359eafa6f5f66f4a05cd05fb61b346101f28339a76227931480",
@@ -14,19 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "dac3446e2e4feea58686acb940cccb0f90fcf317bdbe5c29cb22a64ff846ce31",
+      "fingerprint": "9b2be54f86e0837d57dc4fc883492f9c61d08ed9d5bc7d5b7215c291d9806ad0",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -34,19 +34,19 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "6d4ed4472bd27b449f8272fb5cd86de25f77afeced6e63b86391730e615abf48",
+      "fingerprint": "6e2ccbb5d83df9b6efee54f0996c08213fcedf54ae3a319205eecb84b60330d9",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "782f43ae54cddf810828011507d7818f1b4215f334f7979a8fd69bc54add00d7",
@@ -57,19 +57,19 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "bc8261822f7c8cb8e750a29566922f3e9c0fbed2b0a5f4d020a2e6df1def9460",
+      "fingerprint": "e618e105ba616d57e7c2e19f635aa0edf54a58e68a965178e124e2a79343819a",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
         "skills/rowbly-setup/SKILL.md": "7bf693ff1e110c81d3ce3703efc8a491974f74b25acead25a53ce14851be5ba9",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -78,19 +78,19 @@
         "src/commands/stages.ts": "e2cbb81aea3189aeb1ce1ed1156c38f25ac741db97044e7d94e7713a20e79682",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "4b3db3c243dc6abfcb6b2cfc98fcc3a7d0d2d9b5d9ba09edaf6f12f61a36fac1",
+      "fingerprint": "1a87e15919b0648c71ece6014e4b2436885dd06564a0a6466699cae1ebe386f1",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
         "skills/rowbly-stories/SKILL.md": "717503b2e704b81086e8a9790f953e02b8752b46b843d3f739fc2d1b16d84dea",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -99,19 +99,19 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "2d3a155693f53c053f8736439bec4f94104e6a36cd07944c120d9f4afbc587a2",
+      "fingerprint": "46d5289ee01e5fc1b48a8892da5144eba38932b26def06615336586bcfb6747e",
       "snapshot": {
-        "README.md": "8132c76a731a0dcc2bd3e9e410655db56d721bde7c77c1a82e26c7a86be67c4c",
+        "README.md": "3fc21a7d7df52b45dfa7f030e64a3b53c9653101ce0a1bb7a4b0c7780aa54bb0",
         "docs/agents/CONTEXT.md": "fdfd183a1487513e0cfc2450b12267d180a5cccf371a741985763521147b4462",
         "docs/architecture/data-model.md": "dd8046b29b001c9f28aa7d1bcb01aa5f6026ade6c8133e194ed91d674f1ddee6",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -147,13 +147,13 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1822,17 +1822,17 @@
       ]
     },
     "source:test/tui/components.test.tsx": {
-      "fingerprint": "3d03f3f2f1460a13c0152582bc69ab4fadeb20ad28b137b1efb7026d75532565",
+      "fingerprint": "2aeb655b0d390c5055fac9fcba10d420d53e5d47c167276302ff81dfef05ca2d",
       "snapshot": {
-        "test/tui/components.test.tsx": "74653aaa4c46f5b09a009d0ee4aea39145387e18837fc163735a77de56b43c63"
+        "test/tui/components.test.tsx": "198bab67e168717bcc82bf5d35ac6eddb9ca928c9845f47a69934f73e4cf17c4"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "source:test/tui/helpers.tsx": {
@@ -2318,17 +2318,17 @@
       ]
     },
     "source:src/tui/hooks/shell.ts": {
-      "fingerprint": "b1d7f85ef60eb1473ff65647b95ade7e0477ed95cb9a074138a820c4ddf627fc",
+      "fingerprint": "b9c850c4bcc42222fdc142e6f13164fc502be080b1d69a3824036fe7035b7837",
       "snapshot": {
-        "src/tui/hooks/shell.ts": "d5614699193c5998ab68e02f03b60fc00cfdced07982c6f84e2bdc2aab9a2634"
+        "src/tui/hooks/shell.ts": "06cb8f4933e3ce9822b57bfac41be8a3ffc8dbee8457d4ac0aa117927d949c7f"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "source:src/tui/loadPlugins.ts": {
@@ -3634,17 +3634,17 @@
       ]
     },
     "source:src/tui/components/TextArea.tsx": {
-      "fingerprint": "a03e1dc421042bec5212b0bef40dfa2a42f4d8b6210fa674b26fbcde9b29dcfd",
+      "fingerprint": "d5a461f8a3af04cc5457c030f953e5034127abb0b0729539be042ffe165b3b47",
       "snapshot": {
-        "src/tui/components/TextArea.tsx": "0eae9185fb7a2ecca41dbc7610a3a1dbb6ff09c3e8c4b281c58cf53e30777048"
+        "src/tui/components/TextArea.tsx": "dc7f618da38ddc8c7284549d62cc2363bf465be6f841a244bbda60547b839e16"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "source:src/tui/components/TextAreaModal.tsx": {
@@ -3676,17 +3676,17 @@
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "67178a5e7cc62b4b1a07d41ac3395354aa52951c3f88af9824ad06acde55f4f8",
+      "fingerprint": "cecca0cad82a5f9d32b65fdfac4db62c7ec0325ba3929449735af3f7e4b5d722",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "aa1569bb3580b481d624be9368a5964853ef634465d9d2517dccc82ddea50d4c"
+        "src/tui/shell/Shell.tsx": "8ab57a399783e6ca11caa4910a03303d8fa6e676fa1eb90362dbbf0f8955e1fa"
       },
-      "head": "82a69b71ffc63bf802ff8222cd1cc2795a249a02",
+      "head": "d1fba49f8edfa51c636344eeb76678590a15ffae",
       "outcome": "no-change",
-      "reason": "TUI-only change: a TextArea gets a [Full screen] button and ctrl+f that open its text in a bordered modal over the main area (title in the border, a clickable ✕, esc/ctrl+f close, text kept). The skills teach command-mode operation only and tell agents not to open the TUI; skill_spec.md §Scope lists TUI operation as not assessed, and domain_map.yaml/skill_tree.yaml mention the TUI only as something to avoid. No command, flag, output, exit code, doctor finding or Data Root behavior changed, so no skill or planning document needs an update. The README change is the TUI form-keys paragraph, which no skill cites.",
+      "reason": "TUI-only fix to PR #53: the full screen TextArea modal is now rendered at the Shell root over the whole terminal instead of inside the main panel, keeping the Modal's 1-line/2-column margin. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changed. The README change rewords the TUI form-keys paragraph, which no skill cites.",
       "evidence": [
-        "git diff origin/main...codex/textarea-fullscreen (6e60571..HEAD): src/tui/components/{TextArea,TextAreaModal,FullScreenButton,CloseButton,Modal,Panel,Form}.tsx, src/tui/hooks/shell.ts, src/tui/shell/Shell.tsx, src/tui/keymap.ts (comment only), README.md TUI form paragraph",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; skills/rowbly-cli/SKILL.md: never run bare rowbly",
-        "pnpm typecheck, pnpm lint, pnpm test:unit pass; new tests in test/tui/components.test.tsx ('TextArea full screen')"
+        "git diff 5c50244..HEAD: src/tui/shell/Shell.tsx, src/tui/components/TextArea.tsx (comments), src/tui/hooks/shell.ts (comments), README.md TUI form paragraph, test/tui/components.test.tsx",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (962 passed), pnpm test:cli (156 passed); new test 'fills the terminal on a real one, keeping a margin to its edges' fails without the Shell change"
       ]
     },
     "source:test/tui/__snapshots__/demo.test.tsx.snap": {
