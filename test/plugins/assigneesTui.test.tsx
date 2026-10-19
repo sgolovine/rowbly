@@ -3,10 +3,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { definePlugin } from '../../src/plugin-api';
 import { assignees } from '../../src/plugins/assignees';
+import { tasks } from '../../src/plugins/tasks';
+import { createTask } from '../../src/plugins/tasks/tasks';
 import type { LocalState } from '../../src/schemas';
 import { assigned, makeRoster, makeStory, type TempRoot } from '../helpers';
 import { KEYS, waitForFrame } from '../tui/helpers';
-import { pluginRoot, readJsonFile, storyFile } from './helpers';
+import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
 
 async function seed(on: Record<string, true> = {}) {
@@ -37,6 +39,20 @@ const bag = async (t: TempRoot, key: string) =>
   ((await readJsonFile(t, storyFile(key))) as { plugins?: { assignees?: unknown } }).plugins?.assignees;
 
 describe('Assignees TUI', () => {
+  it('shows Assignees and Task progress together on the board', async () => {
+    const t = await seed({ tasks: true });
+    const { services } = await withPlugins(t, [assignees, tasks]);
+    const plugin = services.plugins.context('tasks');
+    await createTask(plugin, 'WEB-1', { name: 'Done', stage: 'done' });
+    await createTask(plugin, 'WEB-1', { name: 'Next', stage: 'todo' });
+    const { app } = await open(t, 'board', { boardId: 'web' }, { registry: [assignees, tasks] });
+    try {
+      await waitForFrame(app, (frame) => frame.includes('@sam · ✓ 1/2'));
+    } finally {
+      app.unmount();
+    }
+  });
+
   it('adds, edits and removes Assignees from the settings section', async () => {
     const t = await seed();
     const { app, toasts } = await open(t, 'home', {}, { me: 'ana' });

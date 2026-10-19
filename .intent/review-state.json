@@ -3,131 +3,117 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "fd4aa8db528b7199cd61d8c4490c87462e524974636393efcb39a3d4392a92c1",
+      "fingerprint": "7f1fce510e465331b467b40e102371daa1a34e868aaa9d465170657b73b91509",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/agents/CONTEXT.md": "e23a7bfe3db695080a6c2cc6e8b5edcf92beb1f388f99cba41542fe9d1396bc5",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
-        "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
+        "skills/rowbly-cli/SKILL.md": "a18cb2c72afc3941a3a7487233dc3cc1f1cbdeae7510197a75414842b2f74538",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "Reviewed the Tasks move to plugins.tasks, explicit enablement, plugin-prefixed doctor findings and Story-only Comments against the existing revised CLI skills. The branch updates the affected guidance and source mappings without changing skill ownership.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2cc8eaf88b928da346eb44e4d137797543de600fc1951a1bb6fd7ffdf2121df0",
+      "fingerprint": "4c620cfe0f898dec88d831bad2eb930bd47c3943633f8477a1b0a3355f457877",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/architecture/data-model.md": "345d0582196144bb03171a5cc640ac228afa7e0f36593a764dc31b278da05f0b",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
-        "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
-        "skills/rowbly-doctor/references/finding-codes.md": "0346eb86c890ace316d3bea3a8a6d27f4e050606ee74e87b4d19fe5208ba9aef",
+        "skills/rowbly-doctor/SKILL.md": "881429b0cedf932bd23f40e4d061299d200274a463bdca3e9b9d33d1a30ee7e3",
+        "skills/rowbly-doctor/references/finding-codes.md": "3981e51b3d471f7ab5e0db727d862edcc2491cfe5aa0b7385649334dc8ca263c",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
-        "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29"
+        "src/services/doctor.ts": "47e9282ef29413e187ae2e61cfa2da47b9ad5866428bf6f36f997b3a5edd71c7"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "Reviewed the Tasks move to plugins.tasks, explicit enablement, plugin-prefixed doctor findings and Story-only Comments against the existing revised CLI skills. The branch updates the affected guidance and source mappings without changing skill ownership.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "936c0100e51408cbd9bd5fb3237fc87b5896fc3f857bfc3f30515df24a0483cc",
+      "fingerprint": "95ff89c5a624c32ef48784609ea8ce13b843d30ea52bef3b58d5e8e9e903207e",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
-        "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
-        "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/plugins/README.md": "6ab681f164fbbcc6a16b36617ef1a55cc4b1ce1d0b0f93769d391d9861253c49",
+        "docs/plugins/built-in.md": "320d7c70ea05fe83201f7e60402d1df713d4af668ae714ef571e9b5a16889728",
+        "skills/rowbly-plugins/SKILL.md": "e5d04696e5c4203208f4dc7d2dfdf0cb1820d548075653aad9ad1c974370b7bf",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
-        "src/plugins/comments/commands.ts": "d3861a53ad56b06c0b6871d76c9beaa5d702de34927c80d72dc10f8ed48a68fe",
+        "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
-        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0"
+        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
+        "src/plugins/tasks/commands.ts": "54f433ca8c60569b8ad0e52b9cb5faf76ab8e2bb1679f1ebf38e7f9c8a2daeba"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "Reviewed the Tasks move to plugins.tasks, explicit enablement, plugin-prefixed doctor findings and Story-only Comments against the existing revised CLI skills. The branch updates the affected guidance and source mappings without changing skill ownership.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "3e1db34e580f297284afeb931d4ef45ce0df4e9e7a7626344bbb10ae1ac12b86",
+      "fingerprint": "d045ec87c46680f51d991fe0fe91daa55e66b1b285277ba840af67798ea03923",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
-        "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/architecture/data-model.md": "345d0582196144bb03171a5cc640ac228afa7e0f36593a764dc31b278da05f0b",
+        "skills/rowbly-setup/SKILL.md": "75c11bdbe13253f2c633c2c4c54cd245932bc81dfd7a0656d8c0cbdad6d52e91",
         "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
         "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
-        "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7"
+        "src/commands/stages.ts": "e2cbb81aea3189aeb1ce1ed1156c38f25ac741db97044e7d94e7713a20e79682"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "Reviewed the Tasks move to plugins.tasks, explicit enablement, plugin-prefixed doctor findings and Story-only Comments against the existing revised CLI skills. The branch updates the affected guidance and source mappings without changing skill ownership.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "3761d1ffeae059027ea89786d6448a2fac3fb66bd8d6c47cb4dc40060be2d1a4",
+      "fingerprint": "e8f4fcf81845fa0bedfeff4f75c0d09a23486e1725e5c8290ec71ccd82f5c3a6",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
-        "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
-        "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
-        "src/commands/tasks.ts": "e19a43b4f88a33f2f14a159283c1a3df657d60bbc71e77db015b688ad4bd0de4",
-        "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
-        "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/agents/CONTEXT.md": "e23a7bfe3db695080a6c2cc6e8b5edcf92beb1f388f99cba41542fe9d1396bc5",
+        "skills/rowbly-stories/SKILL.md": "6340b4f06a706736a03bc7bd115003af51c93e9b74a5ca492520a95c88d58de7",
+        "src/commands/stories.ts": "5205a1d3da484f416d89896043ad0b29b83bd6fb585d9af5d9a69783f49a7c4e",
+        "src/plugins/tasks/commands.ts": "54f433ca8c60569b8ad0e52b9cb5faf76ab8e2bb1679f1ebf38e7f9c8a2daeba",
+        "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
+        "src/services/stories.ts": "3bd303588a466fe671a6498e0715111134d060420a02787535a991c7ce7b15a3"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Compared the current source and README with the previous review at 2e488a8 and task base dd71375. Earlier README changes relocate documentation links, and reorganized data-model/storage/Plugin docs describe existing behavior. This task adds only a TUI modal description and changes shared presentation layout. The CLI workflows, flags, errors, stored data and commands this skill teaches remain unchanged; its existing guidance is accurate.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "Reviewed the Tasks move to plugins.tasks, explicit enablement, plugin-prefixed doctor findings and Story-only Comments against the existing revised CLI skills. The branch updates the affected guidance and source mappings without changing skill ownership.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "999df835614d80076015cc53fc93105b09faca67e9642560531cf0111074b037",
+      "fingerprint": "be69a835f2a51e41f6aa15e3a85ddc0aabf9e74c2d106fa23b92231f5c7213bf",
       "snapshot": {
-        "README.md": "33a6215a3b414eecf014d5312b81b328aa7ff55585d4db0d7a3c64dff8403792",
-        "docs/agents/CONTEXT.md": "1bd2df7aadd0b3e0be9a5b26d34f91646cfcd4bbb1b9053a11c1fd9807e3e831",
-        "docs/architecture/data-model.md": "013c6a87ecc2631d2ef78a3246324a04f45d6a5764c0653a560bf956579bf2e3",
+        "README.md": "e05d99a3dd8794ff46dd3740afd9ff591dcd143d6f22700455bb227f9976baa5",
+        "docs/agents/CONTEXT.md": "e23a7bfe3db695080a6c2cc6e8b5edcf92beb1f388f99cba41542fe9d1396bc5",
+        "docs/architecture/data-model.md": "345d0582196144bb03171a5cc640ac228afa7e0f36593a764dc31b278da05f0b",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
-        "docs/plugins/README.md": "1ad9431eab299c454afc443339893fa238f164e836e85c47c6061e127198dce9",
-        "docs/plugins/built-in.md": "71a334a29fd159ebbf7c800614ccd88d082e36ec5633312b3a6b69c1e17e1c97",
-        "skills/_artifacts/domain_map.yaml": "4ada5b6182c90bd77b4656e5f9f36cdf9af04169ea44f077bd4e337ee0415b27",
-        "skills/_artifacts/skill_spec.md": "7b960e61e85bd5e4a190020151dfe957dc6332e8e878b5d569cd4e9775f59532",
-        "skills/_artifacts/skill_tree.yaml": "d59586ff2b43ecb02ac93f8ba7e03243a83f4469651a0f14f29bf237ffb19b7e",
-        "skills/rowbly-cli/SKILL.md": "7299262a766dcccd4c406e3e8f12ccb9a0028adb4c3bdda1de04ebeeff5ec045",
-        "skills/rowbly-doctor/SKILL.md": "27403acd7d2a6e948448da41e31b07f8a8ee0dbe93e9ac8aaf2b4e69def6b9e9",
-        "skills/rowbly-doctor/references/finding-codes.md": "0346eb86c890ace316d3bea3a8a6d27f4e050606ee74e87b4d19fe5208ba9aef",
-        "skills/rowbly-plugins/SKILL.md": "6803f0a5874549aaf55d9e52943a11141b57e777e4deb2fa4f38b7f839cca37f",
-        "skills/rowbly-setup/SKILL.md": "99010a218a1bfe2fdc6ce6678b9a94bc78af3610e2d8b84c91d89a5a8e5176db",
-        "skills/rowbly-stories/SKILL.md": "9335a9562f128fddb335226169f7c47b5339f889a039fc0d4393ff2b6afe9b68",
+        "docs/plugins/README.md": "6ab681f164fbbcc6a16b36617ef1a55cc4b1ce1d0b0f93769d391d9861253c49",
+        "docs/plugins/built-in.md": "320d7c70ea05fe83201f7e60402d1df713d4af668ae714ef571e9b5a16889728",
+        "skills/_artifacts/domain_map.yaml": "7bdd12e7b425e04e53d2ee4ec9842a86e3fb02b2f56e7d6743d0b15629ba3b49",
+        "skills/_artifacts/skill_spec.md": "88b22d57d2afbee175c61bd4bd022d76ca9dcbf01b0f330680b4076974a19fbc",
+        "skills/_artifacts/skill_tree.yaml": "e8beb8d3a00b7c2c200672c04b0785399c17b3e27ebaffa765993a19888be9fe",
+        "skills/rowbly-cli/SKILL.md": "a18cb2c72afc3941a3a7487233dc3cc1f1cbdeae7510197a75414842b2f74538",
+        "skills/rowbly-doctor/SKILL.md": "881429b0cedf932bd23f40e4d061299d200274a463bdca3e9b9d33d1a30ee7e3",
+        "skills/rowbly-doctor/references/finding-codes.md": "3981e51b3d471f7ab5e0db727d862edcc2491cfe5aa0b7385649334dc8ca263c",
+        "skills/rowbly-plugins/SKILL.md": "e5d04696e5c4203208f4dc7d2dfdf0cb1820d548075653aad9ad1c974370b7bf",
+        "skills/rowbly-setup/SKILL.md": "75c11bdbe13253f2c633c2c4c54cd245932bc81dfd7a0656d8c0cbdad6d52e91",
+        "skills/rowbly-stories/SKILL.md": "6340b4f06a706736a03bc7bd115003af51c93e9b74a5ca492520a95c88d58de7",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/commands/assignees.ts": "45584e3bf1fceb1cdf891d6d9bc2e29bd254e2a7705cc8e55320de785dc6554f",
@@ -136,26 +122,23 @@
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/commands/setup.ts": "c72ed7f96f43bed659d318649538a638026cb395669df782ed0417becbf057fd",
-        "src/commands/stages.ts": "a8bab52305a84e71c8c82ac847be2c11fb37ae1356fafeb0892549e3829dc8f7",
-        "src/commands/stories.ts": "1e15460dd16b6f9dbcf72f8e8c53e341786e12e2ca1f5b6d8c8499774442efcf",
-        "src/commands/tasks.ts": "e19a43b4f88a33f2f14a159283c1a3df657d60bbc71e77db015b688ad4bd0de4",
+        "src/commands/stages.ts": "e2cbb81aea3189aeb1ce1ed1156c38f25ac741db97044e7d94e7713a20e79682",
+        "src/commands/stories.ts": "5205a1d3da484f416d89896043ad0b29b83bd6fb585d9af5d9a69783f49a7c4e",
         "src/core/errors.ts": "1c1ad767f9cd4bd4b1281b46eee5e794c5349de59002bf3bdaee943760248cbb",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf",
-        "src/plugins/comments/commands.ts": "d3861a53ad56b06c0b6871d76c9beaa5d702de34927c80d72dc10f8ed48a68fe",
+        "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
-        "src/services/doctor.ts": "c3331747c4b126cf3eaca83e4115877d4fe04c12f5537d61e760ec8cdf08cb29",
-        "src/services/stories.ts": "ca61538133be26ab172c74d0113c6c1adb91334dab84a4487e619df9c2c4cbfe",
-        "src/services/tasks.ts": "8830427651c4dbcea88b9cfad93fa7241e350e0617a1765a35e97b83298cd859"
+        "src/plugins/tasks/commands.ts": "54f433ca8c60569b8ad0e52b9cb5faf76ab8e2bb1679f1ebf38e7f9c8a2daeba",
+        "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
+        "src/services/doctor.ts": "47e9282ef29413e187ae2e61cfa2da47b9ad5866428bf6f36f997b3a5edd71c7",
+        "src/services/stories.ts": "3bd303588a466fe671a6498e0715111134d060420a02787535a991c7ce7b15a3"
       },
-      "head": "dd7137526574b3e0999858a380a33dd7e2e35d92",
-      "outcome": "no-change",
-      "reason": "Reviewed skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml: all five skills still cover command-mode operation. The modal layout fix does not change their task inventories, prerequisites, source mappings or recorded decisions. The existing TUI-operation and Plugin-authoring gaps remain open. All three records remain accurate; no rewrite or artificial version bump is needed.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "updated",
+      "reason": "The domain map, skill specification and skill tree retain the five established tasks and record Tasks as an optional Built-in Plugin; source mappings point to src/plugins/tasks instead of the removed core service.",
       "evidence": [
-        "Task base dd7137526574b3e0999858a380a33dd7e2e35d92; reviewed git diff plus existing skills and all three planning documents. README.md Interactive mode documents content-sized centered modals.",
-        "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
-        "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
-        "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -219,15 +202,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "05fea754c2a9990e9c592cf50050b9b9be196450f5cfe680d514339b791711bb",
+      "fingerprint": "edb9201a36d9539a5ee80d850f26b2474a5bbff1f1c825e89310586197e25f4c",
       "snapshot": {
-        "docs/README.md": "425df8db416807d7b654a216a80b669b714e2811c634f3a749a8bd8b29bb05c1"
+        "docs/README.md": "e0721a0bb49ce796028c0883f1ece4d4625515ec1b297efe5c489cc806da0f6e"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/TECHNICAL_DETAILS.md": {
@@ -519,39 +502,39 @@
       ]
     },
     "source:docs/architecture/operations.md": {
-      "fingerprint": "8644f141f196f1dfd57cb1a620b7fc9c7400a88f882b801fa4cd7eb5156136ce",
+      "fingerprint": "9f72e83352c9696ea55fe49cc0b702cc2796acdd1cd103350ebfc9016d18b62a",
       "snapshot": {
-        "docs/architecture/operations.md": "fc458c9ef80e13d7a9d827934d56fd0bf17c6323581b8af12b2dbf20f90744a7"
+        "docs/architecture/operations.md": "5e9be7bb7ac2f986bdb630fe8c85f9c4b3618f1f7230d94973788312b9b29f0e"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/architecture/overview.md": {
-      "fingerprint": "217bdd3123b22f1ba031737ff007deb574970f054bfa6b0a05d5c3b9cedb273c",
+      "fingerprint": "4db45af723d2b11a6d963bf92ab0ed32f2702fbb6cad8f1de9074d75cab1457a",
       "snapshot": {
-        "docs/architecture/overview.md": "6811720cba23f4d8e57038b155736a33722e37284f7006fc83aa4a7cead618f7"
+        "docs/architecture/overview.md": "a1a7966ecf2fe68db8e64c71400cecec5abd71bd6f8a635c1bbb2306ed0de82f"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/development/README.md": {
-      "fingerprint": "b6f320b864a9cc3ca7d1a0cb4c1b8a67d4e1fc7c5d99e2efd2807c7b75ce1032",
+      "fingerprint": "d1cb1060b88edfcc1caddd6250bf049d7bd3edf13d6bc5636969a03adafd62bb",
       "snapshot": {
-        "docs/development/README.md": "3e948f16d05eedbd7a5b7982b217a08a623ffce5885051a54a55c7b6a7b56228"
+        "docs/development/README.md": "77ccb1e0cc136adaf529f6e2c647cd269cd03a6235e4c5d06a11c94dc12ee77e"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "Changed: docs/development/README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
       ]
     },
     "source:docs/plugins/API.md": {
@@ -591,27 +574,27 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "6db018a54f6f265168904ea1af600458ca853e43ab0cd33456c6390d73a3a095",
+      "fingerprint": "5c9f1f9b79687121a3d69015abbb9ad825163e5c8724eb7aaf173fcefb724b77",
       "snapshot": {
-        "docs/plugins/api.md": "d557324356ba6f2fc7936e38466b2fa7c0e036bc0215643d62d0c7076937fc24"
+        "docs/plugins/api.md": "a5ce6a7bdc918d3d429bdbaba56f1cb7f914214d1057641cffe64c124a7246f3"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/plugins/compatibility.md": {
-      "fingerprint": "3bd2e3470aa670a1cb83e3f478f4b066737b2dded7f37c28f9769ff19eec946a",
+      "fingerprint": "3950beb1f21869911debd1ac3f24801ef825c9c1e102a014ffc7cb2d553830d9",
       "snapshot": {
-        "docs/plugins/compatibility.md": "40c7d56e06ed70f075911b69e95c49d60c05629139b4435cbb94c42969c02f6d"
+        "docs/plugins/compatibility.md": "3c35d8e26dab18b39bb95359d2ab197f9a965acb5f1ae7b99f02641c505e8ed4"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/plugins/trust.md": {
@@ -627,15 +610,15 @@
       ]
     },
     "source:docs/plugins/writing-a-plugin.md": {
-      "fingerprint": "ec2abfef7908869da826d85efbe1278a5105cea3fd8a3edc750f9b617e2ba18d",
+      "fingerprint": "3abd8aaad76a62f9352e9201b130fb028bd350438cff3659beef0a2657263acf",
       "snapshot": {
-        "docs/plugins/writing-a-plugin.md": "c50a1ffe6be8e047644ead00ce5fefac48e0e04fbf719372b50ed4c17ae7afcc"
+        "docs/plugins/writing-a-plugin.md": "b5ed6a1ef1f38507b8be56cfc45c669de1cd2189fd37a45935053b4f97f2db34"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/reviews/plugin-architecture/README.md": {
@@ -1467,15 +1450,15 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "249fb2d615e58092199b97d0ab05b9b440ddea7d4550283e61b63aafab6f7a01",
+      "fingerprint": "6240fea115e4d2bdfce3ad506fb7b86b0d6ac7c01658ea2b5a5821e8a9a28b65",
       "snapshot": {
-        "src/plugin-api/index.ts": "2cfdc0ed7b2e90334d7c113ec9580a3bed848de5da42e55db41f08537e43754f"
+        "src/plugin-api/index.ts": "29b6ab40783049df9859a5b5e68b656adfa9b6d39f0cd0541637f424037d44f6"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1563,15 +1546,15 @@
       ]
     },
     "source:test/docs/fixtures/reference.ts": {
-      "fingerprint": "0fdf077e6c5866ca5ad267c7c2c24894ca344edb62a3aca9bd574b9a8052554b",
+      "fingerprint": "2e42bcb4b49f0689f53970313b0a88f02c699e36bd3866cd8de60dfb1b5c4355",
       "snapshot": {
-        "test/docs/fixtures/reference.ts": "7b16a3bd326c1426da63c149cec2365edb3368b7d02ddb75eb86440aea9d0744"
+        "test/docs/fixtures/reference.ts": "d89ee4555496134f341284cdc1e04944877208c7029a1571b60b2bdeb07f2b22"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:test/docs/fixtures/trash.ts": {
@@ -1611,27 +1594,27 @@
       ]
     },
     "source:test/plugins/operationInventory.test.ts": {
-      "fingerprint": "14e4fddffdf9da909ae1fe3c029a8881a678fc9843eb8d231b5fa8db0abd307e",
+      "fingerprint": "2323facd59b85361c7ad48665fee930e3196405da1c30571c5d237f848912d7c",
       "snapshot": {
-        "test/plugins/operationInventory.test.ts": "4e1df006d920e9f1e5503997a5952324777990b7db484e05c424da18e68653ed"
+        "test/plugins/operationInventory.test.ts": "acab004c70cb5c9bb40a9404ff20654edd35b763839fc83607eb08181b698b54"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "out-of-scope",
-      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:test/skills/agentWorkflows.test.ts": {
-      "fingerprint": "e5cb952b767015bfba05a9045ecf44974167542ab4b0a7c4e833af5d02c508fc",
+      "fingerprint": "fbf5ce10d245bf665315a9a8314fccc2b44c16a7a0a9f333cc9e1913758e960b",
       "snapshot": {
-        "test/skills/agentWorkflows.test.ts": "0bcc26ccca7984d84673c5401d2f64b579c5e1319c703e3767dfd99dd98a435d"
+        "test/skills/agentWorkflows.test.ts": "a321de91756457fa39716cda2cfde742220cba8598fb39858a798c0c535f0d15"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
-      "outcome": "updated",
-      "reason": "Executable task checks added for batch 1; they exercise the guidance in all five skills.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "10/10 passed with vitest run test/skills"
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:biome.json": {
@@ -1689,6 +1672,1266 @@
         "test/tui/modal.test.tsx: 9 regression tests pass; before the fix both opening-frame tests failed with height 28 instead of 7. Coverage includes panel/dialog first frames, delayed loading, content shrink, clipping, terminal height/width changes and inline output.",
         "pnpm typecheck, pnpm lint (371 files), pnpm build and pnpm test all pass; 120 test files, 1114 tests, including existing test/skills/agentWorkflows.test.ts.",
         "pnpm exec intent validate skills: all 5 pass. pnpm exec intent maintainer sync: nothing to synchronize. Guidance is unchanged, so no new fresh-consumer evaluation was performed."
+      ]
+    },
+    "source:.github/workflows/ci.yml": {
+      "fingerprint": "89cd4d348689490a021c982a5aa2fb54084846401eca383058b9f29c2f3b5f4a",
+      "snapshot": {
+        ".github/workflows/ci.yml": "ccdc70c8a6455852275293a0fda9100d6880fe12f94919d7499ec12090b2e0b7"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: .github/workflows/ci.yml at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:src/plugins/specs/SpecTab.tsx": {
+      "fingerprint": "411fdd1b6299a2eb4597745df3b4e95873b64ed3cdae6e26c3435a9b1b08f5c8",
+      "snapshot": {
+        "src/plugins/specs/SpecTab.tsx": "ddc7ea42516bfb62bc8af17607736b8edccb8f012cb19c041be01e647a8e177c"
+      },
+      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "outcome": "no-change",
+      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "evidence": [
+        "Changed: src/plugins/specs/SpecTab.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+      ]
+    },
+    "source:test/plugins/specsTuiStates.test.tsx": {
+      "fingerprint": "2577d8f9cc4bb7654790790a31b744f17812903c4704ebce57b63101e39ed5ae",
+      "snapshot": {
+        "test/plugins/specsTuiStates.test.tsx": "b765513b9ebff5fdc872ae3ce9516a9bbd6b9536267ec9768100411498ee1831"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/components/SelectList.tsx": {
+      "fingerprint": "8e55927e07486aee8063c5c41683c29c3994a45b05f21dcf2b487337c096c032",
+      "snapshot": {
+        "src/tui/components/SelectList.tsx": "013da591157c7600c603188367d1c0e40b935850b39f1442a157ef3979f04c51"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/components/SelectList.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/hooks/useCursor.ts": {
+      "fingerprint": "8f44f7f012927f3bfb0e75717fb76a6bdb0282aad8822bb04d283428104eef03",
+      "snapshot": {
+        "src/tui/hooks/useCursor.ts": "dccaea85c8d78ee213e9d8b24c931429b083cc50a7733ac53a9442fc395e8199"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/hooks/useCursor.ts at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/keymap.ts": {
+      "fingerprint": "be3f3dd070e186b4efa953adc0f4b5f3996ccd15dbb0e3411020a8487a8a6eb2",
+      "snapshot": {
+        "src/tui/keymap.ts": "1e033fbb7ea5ca8c93d6ab4ce4b2cb14029903adbc189b4334953d3321afbd51"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: src/tui/keymap.ts at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:src/tui/screens/board/BoardScreen.tsx": {
+      "fingerprint": "6cce280a830d741a50ca5361771bbbd1974461a46b23b0533c75237e43f5fe63",
+      "snapshot": {
+        "src/tui/screens/board/BoardScreen.tsx": "548b12420aec7f336ee5bf6b0c4e870cea693307a679a4c7d90723eb630ccaff"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/stages/index.tsx": {
+      "fingerprint": "92308846b7d7e298a03f9f0763bb07f8e59edce69d9b4299c7801d7167082a13",
+      "snapshot": {
+        "src/tui/screens/stages/index.tsx": "507cf9a4c1cdf4d72b9f47c2702ac19230a4bc4c05475729b94cf82037b8617b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/__snapshots__/board.test.tsx.snap": {
+      "fingerprint": "25a633ac3995b5b6b43943a6f0342361661639fd9682f92eb61b6e0ca991da96",
+      "snapshot": {
+        "test/tui/__snapshots__/board.test.tsx.snap": "e9a10a3c452598a607dfcfc5c4cc3f1b9e8735cad798c9457fc1319969b4a227"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/board.test.tsx": {
+      "fingerprint": "698c6ecb98be0e4de8367618d36785342d46367d2e63d8271261bcb58f819ee5",
+      "snapshot": {
+        "test/tui/board.test.tsx": "3fc038310966ed85a611ce60441e430d8e2f7487c1b7c56155ea667a01961225"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/boardsStagesFields.test.tsx": {
+      "fingerprint": "130c852e0962e73ad1b2d57d359e80689a18a21a8e198fd7365288920f14e119",
+      "snapshot": {
+        "test/tui/boardsStagesFields.test.tsx": "27fb95717ceea189c7fd7af561b3998e23b650a7e136b032e0bb75d28abaa31a"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/components.test.tsx": {
+      "fingerprint": "ea5e8572b64706db2b9f098e8287470e4bd6627d253fac61cea18cf656509728",
+      "snapshot": {
+        "test/tui/components.test.tsx": "9009dfd596b3fa6ddb7c5abb084fccf1a517465edda6f8c32f97b652bcb2ebbc"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/components.test.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:test/tui/helpers.tsx": {
+      "fingerprint": "1a38108d93b3cf22d75888657e67f8e35bdac2fb7586272be5b4e60e9f1d9d7d",
+      "snapshot": {
+        "test/tui/helpers.tsx": "75684ca73486ed666f6f1f51e0fc769844a8f27aceff618e16551139115570be"
+      },
+      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "outcome": "no-change",
+      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "evidence": [
+        "Changed: test/tui/helpers.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+      ]
+    },
+    "source:docs/agents/CONTEXT-MAP.md": {
+      "fingerprint": "f4dcef20c378dce718d4cf959ddb914c0e5510dfb2d3de6ee6b046dbe15d06ac",
+      "snapshot": {
+        "docs/agents/CONTEXT-MAP.md": "1d583e221118ddd87d84ee90adc5cd31e51f2959c11cfc45b7d715d91bc2cb3e"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0011-plugin-data-is-a-bag-per-plugin.md": {
+      "fingerprint": "13b1101977f9daf3fbaac62f9305dd47a9cff8e870ab3f872711108ec69e0edb",
+      "snapshot": {
+        "docs/agents/adr/0011-plugin-data-is-a-bag-per-plugin.md": "1d72372b39013a7fadc19a5bcec52845c77fdda08925fceaa24359474047f898"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md": {
+      "fingerprint": "c9f4c395e8680cd69ed5e1927e1396abb36a091c23747e6dbea190a628dc08ff",
+      "snapshot": {
+        "docs/agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md": "90aaa272c7388521642c1c1d0169ad82c229ec5ffdd9e6a0a3f45210a94ec91c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0017-actions-are-tui-only.md": {
+      "fingerprint": "6a0e73498a3f09f3af6b7b1aac617058379e3dd755d84a8fce0b9b9ba5c6bda0",
+      "snapshot": {
+        "docs/agents/adr/0017-actions-are-tui-only.md": "36c4ddac857a64336127c4e6737ae01799d0c0543b5b51c8adfc7521a1e3d4db"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0018-comments-are-a-built-in-plugin.md": {
+      "fingerprint": "1a4c4e1eea0b23def24a81b4e54dd3b07702814081f1f5ac5491f146d16c1990",
+      "snapshot": {
+        "docs/agents/adr/0018-comments-are-a-built-in-plugin.md": "0516d1d041920096d3f30419b6154f8a8f519491255c4651d01ad4a351d1e14b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0020-plugin-execution-and-data-contracts.md": {
+      "fingerprint": "bc608e24c098acd53455a7ba632efa2ce8bbc4181264233cdce91ea6a5679365",
+      "snapshot": {
+        "docs/agents/adr/0020-plugin-execution-and-data-contracts.md": "64d573649ecca83231c30af78c52cf88f13fba2c11a0ce6ba8970d645953f5e4"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/0022-tasks-are-a-built-in-plugin.md": {
+      "fingerprint": "18b9163b1e90d26916d450f15bae6c309010c715e43143dfa2e7ee5f0a8b1bca",
+      "snapshot": {
+        "docs/agents/adr/0022-tasks-are-a-built-in-plugin.md": "b03c242169d73c696534d0d4e3805dca9807fdbbf708e60e7729c22d7b7702b0"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:docs/agents/adr/README.md": {
+      "fingerprint": "5ba4037593d2e6f5b8fcd11a51d9de9051a03582be927ab43e78f4df562e0239",
+      "snapshot": {
+        "docs/agents/adr/README.md": "8c98c1f29f119368cca8dd4b66694633ebc90513f375a9e01e5ffcf8e5d413c7"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/commands/index.ts": {
+      "fingerprint": "83610cb22535c8c52a01170087ecce762ed1b132eed6fca4f0009979078acdb9",
+      "snapshot": {
+        "src/commands/index.ts": "481a7fbc3ba1c72de48823f6b30b7173b4c947a7ae32a82dd628a618b7224e85"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/commands/tasks.ts": {
+      "fingerprint": "b911e9fa17d818e526b302e32ada1949883828b020a5247bb43fb81bcd083292",
+      "snapshot": {
+        "src/commands/tasks.ts": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/core/ids.ts": {
+      "fingerprint": "85d43bd3f1907bb0e7a2e724c2a1ff673da0705d9903b401473fe739a0c45764",
+      "snapshot": {
+        "src/core/ids.ts": "b86f908b72923e1a96782141990cb0ed945014c75ccf4d1446450ac44b5a9889"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugin-api/testing.ts": {
+      "fingerprint": "05d5c2919cc78a95ca669f43d800f8290d9a7a5e9496efab1231542f3df5cc4c",
+      "snapshot": {
+        "src/plugin-api/testing.ts": "256486b31470304c4480ac7e62fc0bd61c2d19532baf3ce73676d5a8227b1943"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/CONTEXT.md": {
+      "fingerprint": "c74dba462e9985133280b44aafea30c2ed3e5098f8bf04208c35e43f6ec46587",
+      "snapshot": {
+        "src/plugins/comments/CONTEXT.md": "26bb99fe60870c31e0a791054b0a0530a299f240ce25d1c5a215bbe5becda40b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/CommentFormScreen.tsx": {
+      "fingerprint": "471b327cf06de49cc0609a9f0ea5711bc1a59ba4684abc04aeaff64c6e32f3b7",
+      "snapshot": {
+        "src/plugins/comments/CommentFormScreen.tsx": "7a62bcc39b199ac6b8c3d3d4d706a5661ae9ef206e2d3dd05f7c878f3724f828"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/CommentsTab.tsx": {
+      "fingerprint": "85905cb46e67d8de45de0c0fae17ceb5b8ae92b13cbf3bb459d84151f929b925",
+      "snapshot": {
+        "src/plugins/comments/CommentsTab.tsx": "aae51505bf1f870952182d03903df46fb9e5457edfcb993c419f3cb3c5e02695"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/comments.ts": {
+      "fingerprint": "a1e7cf55d2ba2c52a8180fbc1bfd66ff9e02623b55ef9918ed3aba28f04ac9c4",
+      "snapshot": {
+        "src/plugins/comments/comments.ts": "c9d8690fe77137238917963436d9edac45456aca0b41ff30825dc4cb24a12c84"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/index.ts": {
+      "fingerprint": "b0e8e285dab18ec788a750e9ee43ab8ae8fe4552066eb5157ae9516c5904d379",
+      "snapshot": {
+        "src/plugins/comments/index.ts": "23f8ba7004fa454537a93c4e5464beeacb84841cf6e4914e6b0b729591c0ff1c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/model.ts": {
+      "fingerprint": "ead0f4fef6f26bf9488645ead10cf49ad7a88d45813eeb6e512e32996e0b1e1f",
+      "snapshot": {
+        "src/plugins/comments/model.ts": "244e6edc783f0d44d55c655263c824daad1583a40d8fa1b0bc589509ff0275db"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/comments/tui.ts": {
+      "fingerprint": "90e0c1d771a330b731944a1acf5a89752e9d24b72b60b73ea77439e0dcbfaf54",
+      "snapshot": {
+        "src/plugins/comments/tui.ts": "8bcb8f9b31e771fa4d23a3de8d3cf625274938ec13106e386486b7a7ebddca7a"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/index.ts": {
+      "fingerprint": "b659f593063c72e264e01953de97072ecbbf11e24198d6e9ce6b39c10db1007f",
+      "snapshot": {
+        "src/plugins/index.ts": "e55a12809622a6b700ae2fa1b55d30a63e3e72c60a3d6ab03b97a64d27a22ca7"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/CONTEXT.md": {
+      "fingerprint": "b67ea8348a96dae8430444a9dedb64e147acea552c5d6192fd66dc3d493801f9",
+      "snapshot": {
+        "src/plugins/tasks/CONTEXT.md": "0f5dbc02edc610db4b16a3555898887ae4f406df689a3d9c71db8263f954e2ad"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/TaskFormScreen.tsx": {
+      "fingerprint": "ccd4f8bd0ad5538705a5cc336fb22f78ce048186af2e1efee88cdca1fe957bab",
+      "snapshot": {
+        "src/plugins/tasks/TaskFormScreen.tsx": "ee968ff4b7e2bea20af9d7cdd8fa094b26d9b62e0c1930b4c4fdbfe09e5beb94"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/TaskScreen.tsx": {
+      "fingerprint": "c928163b40b92fc4f0fb0c8ab57988a1e9f29c2eb7ea376a5134ce0b9441be21",
+      "snapshot": {
+        "src/plugins/tasks/TaskScreen.tsx": "e7e3e8ebbe3e014eb2444d39dee59dc5364f4be3801ddfcba6c58fa40a78e17d"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/TaskStage.tsx": {
+      "fingerprint": "31c00e8bb349df94cb19d9e0cbf64cc859f03dd1b4d9a63405427ba2c5b2dbaa",
+      "snapshot": {
+        "src/plugins/tasks/TaskStage.tsx": "1cc252af1ccb6af3c28055fb12393ee1f6eeb6c04c3ef623eb8cef948120fa9f"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/TasksTab.tsx": {
+      "fingerprint": "8e286b8c4dc85da81438181eaade9a4767bfa858dbe54762c7221f169965ec41",
+      "snapshot": {
+        "src/plugins/tasks/TasksTab.tsx": "089f0da1dbdb63745f139b5111728356e22345cc68df4a3941f69a9d111cf67c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/index.ts": {
+      "fingerprint": "e5662b6c0fa5cd1703833ff9b610f203821a622f650dbead22117ea3f997c032",
+      "snapshot": {
+        "src/plugins/tasks/index.ts": "9804e327075e3ca9a7ff50fa63b059a6f5a9fa95fff678764a033349692c70d9"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/model.ts": {
+      "fingerprint": "0b59dcd2b2c34288a1c687bb367e3f92c2fe2bae843837200c8ce7324e746978",
+      "snapshot": {
+        "src/plugins/tasks/model.ts": "c0d53b239bdfd1662d62ca61a9e4bc926893e515fabad56ed1c758a9f8dae687"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/plugins/tasks/tui.ts": {
+      "fingerprint": "f01c8134eadc4608216240e3d0872bdebf0d8f67f0c8901bd3257e2b43de0708",
+      "snapshot": {
+        "src/plugins/tasks/tui.ts": "559ee5a58441750b6b920cf3bf6c65c412301c71a67547815ac4fa54c4badbc7"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/schemas/primitives.ts": {
+      "fingerprint": "245c2e91472066fcae5cbd1928a89ab409389f10c5835f9edeefb7ab1bcca80f",
+      "snapshot": {
+        "src/schemas/primitives.ts": "f86f9e59dfc38c86a8c5cbd7b831716568ce738861d9289e74ebd266783a2e5b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/schemas/story.ts": {
+      "fingerprint": "394e02c75760a2bf7343ad1d3017ca57f2d3853b099bcc17c921fd34faa9a036",
+      "snapshot": {
+        "src/schemas/story.ts": "32182a58e088cd11af783c380db3381629778eb366c4194f8d1acfc2dfc7e5ee"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/index.ts": {
+      "fingerprint": "d20ff64270cb12c16722a47ba00179437ed13ad81f33948732030814076011aa",
+      "snapshot": {
+        "src/services/index.ts": "c25135077ba664c0e5fdc0fc1b5ff58c2c2eb2ab9db00f3910fa29a0f0c95d87"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/plugins/capabilities.ts": {
+      "fingerprint": "dfe905f73e919519107f467579cb61fb723b4231e089639fed4af87f347b92f3",
+      "snapshot": {
+        "src/services/plugins/capabilities.ts": "2937ce66019d86e7efb1b9819a5b95efddad211a036257aeb35747af12df91ae"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/plugins/runtime.ts": {
+      "fingerprint": "0bd76cfcb7488d5a27588c9220f6deef98b8424b29bd6daf8392f51bf54dbc03",
+      "snapshot": {
+        "src/services/plugins/runtime.ts": "e37899fc22f379a85d9a2ae81f57c56d390c30b6c8b1a7e22864427ff0fbbb82"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/plugins/service.ts": {
+      "fingerprint": "b1d45ba113ddf865c6bbc5b171f8ed8b9e17c38ef11d3fd63179d2a169c483f2",
+      "snapshot": {
+        "src/services/plugins/service.ts": "557c5d29c9682e26941e59f458f9ef379a3af07a7dbf868de3625de297cf5066"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/plugins/types.ts": {
+      "fingerprint": "37ba58f8e9743b4dfadb1215273b66bdbdeee9c355ebae98154c973c210a93b6",
+      "snapshot": {
+        "src/services/plugins/types.ts": "99d0baf1b10e9f8b7d851c770885fc699edea9cd8f24640d38e6e1c8bd376fc4"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/stages.ts": {
+      "fingerprint": "a2db07f8443eba00235ffc871f5bfdb25dada305bd679e3d4806cf66c4c925ad",
+      "snapshot": {
+        "src/services/stages.ts": "d6c6eb7957e1c6d5b4d88391e502d9af73436be937ac8bdb4184c185287e425b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/tasks.ts": {
+      "fingerprint": "6b20694737cbe4b7df4500eeb68cc3abaf55c907926046ee68da0d63b515f237",
+      "snapshot": {
+        "src/services/tasks.ts": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/services/types.ts": {
+      "fingerprint": "9fa2b154be8b8c4659f1771d7ac77bad06575ac260cbedb8426b8865e1e32936",
+      "snapshot": {
+        "src/services/types.ts": "952d7de1832e4dcafdb3966b65994fec1f5fdbd5a8f95fe17be7fbd6219a1ae2"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/hooks/plugins.ts": {
+      "fingerprint": "dd703a8292652778b3c2121bb782ac30464afedbcfb43c3d2f3bfbc4c2739f30",
+      "snapshot": {
+        "src/tui/hooks/plugins.ts": "3b7aeba34d62f0d6243608496e1cf2670943f264aa0c7cc1ea8f475fd3e0dd4d"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/hooks/shell.ts": {
+      "fingerprint": "cc0d6d2b59b98fd0de6e3ba813aa5d1e2fc7d33ab269a61a5317ecfda0701b6f",
+      "snapshot": {
+        "src/tui/hooks/shell.ts": "09c65155972bc9ebd329144b1ff8e9119dce94ad388dd2c2a0055475a43fdffd"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/loadPlugins.ts": {
+      "fingerprint": "d16a8fa08187d2b4566ad2669ef961b6eb9b467bc205a2da837ff7fd584aab72",
+      "snapshot": {
+        "src/tui/loadPlugins.ts": "d9e0a6d5fb0e46a722449484a2a4f2367a0e3c6a29b85aa56d722cdb03967a0a"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/board/BoardColumn.tsx": {
+      "fingerprint": "edcca48d6b2451cbe5ae6f2470f47fbc9efa9fff353dbbe1f6368f209527f111",
+      "snapshot": {
+        "src/tui/screens/board/BoardColumn.tsx": "b40ae939204e99edec649627a11883e3c0c175d46e5b49a4f857e77be6b6a6c8"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/board/layout.ts": {
+      "fingerprint": "b8a2f6bbe71560a052e5506c0b1a9e809b8ef0bb33f7661611d92aab9e5ba04b",
+      "snapshot": {
+        "src/tui/screens/board/layout.ts": "4dc2c9c28b706eaab1a05899cc9cee0dc1168686d0577fe29cbe1fe4e6ef97eb"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/board/useCardBadges.ts": {
+      "fingerprint": "78908bcb8fd66b9bac039e22a7ef083fcbbd0bb8f95d19949ad703b2fcff6293",
+      "snapshot": {
+        "src/tui/screens/board/useCardBadges.ts": "261988f797dd078e9b2026d4e96fc781724f5c2dc4e365dc10ef86bab235b9ad"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/index.ts": {
+      "fingerprint": "4f431f26a3db2c351c7726efc1fe9ecca09040d8742911f7f246c19b3c39f99d",
+      "snapshot": {
+        "src/tui/screens/index.ts": "577e8b7c069aceffae795cbb39e0a287d6593718339f8dcf02c0ca1caf18b419"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/stories/StoryDetailScreen.tsx": {
+      "fingerprint": "1aef1282aadd62e0d683bb995ff07cae0e0e69a20f65c2e31033c43a63d60648",
+      "snapshot": {
+        "src/tui/screens/stories/StoryDetailScreen.tsx": "1432313e4f705a3a6e476ae701af8871e531374d31400b3541eb4603fb28559f"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/tasks/StoryTasksTab.tsx": {
+      "fingerprint": "75b721160b46c2ec4ca0dfb3d5a06f43fea05ddcd2075878d1e5d55f87748af0",
+      "snapshot": {
+        "src/tui/screens/tasks/StoryTasksTab.tsx": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/tasks/TaskDetailScreen.tsx": {
+      "fingerprint": "04f769c421c23eaf6315f67ab14a3dd2f147fe16f1dded0b2cc18225e2a6b1b6",
+      "snapshot": {
+        "src/tui/screens/tasks/TaskDetailScreen.tsx": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/tasks/TaskFormScreen.tsx": {
+      "fingerprint": "50a2b8533cc6ed508464ca5e51c19c01a5ea0b75eccfbc42565cc383994cf6a8",
+      "snapshot": {
+        "src/tui/screens/tasks/TaskFormScreen.tsx": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/screens/tasks/index.ts": {
+      "fingerprint": "b5a2a86e81bab7c6dba4afd526a98d741c2dd6b7b06287b794c8ec55098fb907",
+      "snapshot": {
+        "src/tui/screens/tasks/index.ts": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:src/tui/shell/actionFocus.ts": {
+      "fingerprint": "e405ea2cb7fb6939b2e94bc0f7112d59797fe68da3f407bdef117035971515c5",
+      "snapshot": {
+        "src/tui/shell/actionFocus.ts": "aa834757558fc5081a08827139c77c44d6018f732a89c27139fbaf0e56c7c3d5"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/cli.test.ts": {
+      "fingerprint": "3041c9291bd132a2c50681f79c8c961422102d90fd500be1d47f485f984e1ac2",
+      "snapshot": {
+        "test/cli.test.ts": "877d0b90a1029ea9106a278e21c0125883a8c279d1d336e773db5e4568cb5314"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/commands/stages.test.ts": {
+      "fingerprint": "5fb2af66870309dfac6a61ca10c6c3b6157dd017ee896de3f17a4e19903e34e0",
+      "snapshot": {
+        "test/commands/stages.test.ts": "598ff0ace85a92dbf31a9d5aaeb59a8f710e56d26eca9d6a05bb77acbf2da214"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/commands/stories.test.ts": {
+      "fingerprint": "5ae2bac095ca2db45a6577596befbedf4b3aabe1c8f662310e5154f5c7bb65e0",
+      "snapshot": {
+        "test/commands/stories.test.ts": "5b763a963a81dd637168237a7a468fdbbec87501da5ddf4b66c57a44ce584390"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/commands/tasks.test.ts": {
+      "fingerprint": "5aef209f29478f3cde4274ab6fafb3b67cfe581e8f31e799004e33349084ad0b",
+      "snapshot": {
+        "test/commands/tasks.test.ts": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/core/ids.test.ts": {
+      "fingerprint": "ad010a8e1ef1f5b5d12c1f7e416a21a43b85a1f3971b93a528ea4720402ba227",
+      "snapshot": {
+        "test/core/ids.test.ts": "d5eaecb4402439bd224585d37fd21f08f043e262e15ff122192e9b19f6814649"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/e2e/scenario.test.ts": {
+      "fingerprint": "6539292eda4f91efcfb45a6c797029d707f729f5742aaed0392cc2fef78f60ab",
+      "snapshot": {
+        "test/e2e/scenario.test.ts": "b2e9fb1dcad5f6e132e7b67b811a3ba2c043d63a0da4ef704b406bfb49d7485a"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/helpers/fixtures.ts": {
+      "fingerprint": "69d86485945428f65174ca6b393bb801f2b99e10864d846be98ff98a15aee0c3",
+      "snapshot": {
+        "test/helpers/fixtures.ts": "de01985065af21550f7bb8b3ad9c68d8ee0965210b3a35f7cf44da8e4fb46f27"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/performance/fixture.ts": {
+      "fingerprint": "ee08c41f31e8f67370bee315210e6d755b24c4331db7cab21fe50757c7eaf5c6",
+      "snapshot": {
+        "test/performance/fixture.ts": "700ab9baf055d39ce1bb32217417e2073e50cec8110736d22a386ab372ec3112"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/PARITY.md": {
+      "fingerprint": "94ac0e5001028bb91472ceb0431b7e96913dec1edf69492a266c09ce7e17babd",
+      "snapshot": {
+        "test/plugins/PARITY.md": "cfff57950d50e574f5c0f9617cb4f38eb32e969599d9e21cb1a0d47e2b9dbefc"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/apiContracts.test.ts": {
+      "fingerprint": "465077ca1f5d8d375002ec20b328b8921232040dd8608fd8f5ffe5a83be89119",
+      "snapshot": {
+        "test/plugins/apiContracts.test.ts": "3dde7c229494913315f8f1054f6362c7623624fdc630f1c6aa16a6ebba228bfe"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/authorApiTypes.test.ts": {
+      "fingerprint": "8bc7d9fe2d884d8cbadaa38d57817e9803c7064b308632dcc248cee33d4ca78d",
+      "snapshot": {
+        "test/plugins/authorApiTypes.test.ts": "1a73559111794ff769c9e929cb02d6f99d9a121e4d3243f29978f41809e4d7c7"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/bags.test.ts": {
+      "fingerprint": "08cd9a69aa51b0266f1a814a26157ec17590ead63eacfd1f9a9013a163168786",
+      "snapshot": {
+        "test/plugins/bags.test.ts": "939f0da90f584a09c936e1e8da15f6e7bd37d5e78fb1cd3472ed04d0baaecec0"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/cli.test.ts": {
+      "fingerprint": "03f48ed83cb23e8af6c1c4e99cd0c9e4b7fd656464e3b943a6affc8169f862aa",
+      "snapshot": {
+        "test/plugins/cli.test.ts": "cc0c435297e0a59670a02a6b8a45ee87828e07831e37f4aa4cacc0b90f96b15c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/cliWiring.test.ts": {
+      "fingerprint": "e28dafa2a5ef1d9adb07c93a027c236087872cd089a9154596fb3df9f582d87e",
+      "snapshot": {
+        "test/plugins/cliWiring.test.ts": "61766005c6093559a47774596b7daf406b4b354f33bc621a203bd0b4020c08d9"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/combinedEditTui.test.tsx": {
+      "fingerprint": "304ec3b92837378e6637fc5a1462f3109cf8e2ebe4af2ad3b3c8896029949765",
+      "snapshot": {
+        "test/plugins/combinedEditTui.test.tsx": "dcbeb37066ce6a60e0f613a7539845c5dd0e4689b63fdc4bf40a4bf3a77b1372"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/comments.test.ts": {
+      "fingerprint": "4efca82ff818fcad6e6e147a85dde550f9251c174151cc091f51303b98961251",
+      "snapshot": {
+        "test/plugins/comments.test.ts": "f68baae54a59440bc793509a2491d891ffa3ba2e46561e21fe7fce0e464f569c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/commentsCli.test.ts": {
+      "fingerprint": "5990c87302637ed93be979c23a041944658dfa7e11a81d59c1dfddc6687556bc",
+      "snapshot": {
+        "test/plugins/commentsCli.test.ts": "7c2a96d38fcd27ea4b227178f04219ede61bf2b84c2212f301faa52631b83792"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/commentsHelpers.ts": {
+      "fingerprint": "54a4752de4a2073c6441478f2b863c26aebfbdc4acc01b8593115e2970118ddc",
+      "snapshot": {
+        "test/plugins/commentsHelpers.ts": "771af2dc40b12c7e5dfac99a40af5c2a31f09bc9b1de2aab662bca5f68a29f51"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/commentsTui.test.tsx": {
+      "fingerprint": "1c1b5d0ad0a408503fd377b63c4fe86a7cfb4880a9086ef17070cdbfc0bad3fd",
+      "snapshot": {
+        "test/plugins/commentsTui.test.tsx": "b27e495fb7ef59d96fb5e786174a31417b920cabe34780ecb1ecbd37f377e49b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/fixtures/others.ts": {
+      "fingerprint": "4105579d26ad2fdf9a3cae85c3ad2bc9a0e86abcf0d5857aaa945133561c40fa",
+      "snapshot": {
+        "test/plugins/fixtures/others.ts": "dadea01d5f8ff4220b13a1474ff878e372e79e1d7c6fea0e287ecfae4ff97354"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/load.test.ts": {
+      "fingerprint": "4602a20c4ded987b6e5dbe3156bba8489ddea468b763f4892541bf0f03edc66c",
+      "snapshot": {
+        "test/plugins/load.test.ts": "55da3643821e945bccac2d130aa16ed91205a13888d35ed5c295e329be314cf1"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/moduleFailure.test.ts": {
+      "fingerprint": "79ceed0dbd541e5720f39ef527ca824fb3353b85bff91a15c238b6c39c0c658a",
+      "snapshot": {
+        "test/plugins/moduleFailure.test.ts": "e0f9fb57cf1d5c703ec9f5c5f524b98adb6859739fc9656b5c8279dd1da0df0c"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/pipeline.test.ts": {
+      "fingerprint": "af812eb301a38f477d54406b2d5b4ead38ef78fcf811b87d8383abce36e58238",
+      "snapshot": {
+        "test/plugins/pipeline.test.ts": "90a3a53b3ed752fec0774d142aa4f373343015b86d703974b44e6de6770f8c9e"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/registrationFailure.test.ts": {
+      "fingerprint": "f85248b73b7bfff04e22d297d8a101b772c7c6419ac7a0d7dd1b10cc9b0386d6",
+      "snapshot": {
+        "test/plugins/registrationFailure.test.ts": "a9f7bad0bcb77741e6944b25edb60e0832bd4eea820c1b3fd015754a749817dd"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/specsTui.test.tsx": {
+      "fingerprint": "71f0d34995df2d83acbc3a05a921143bf1ce380e955337f9a9f0b11d4343e11b",
+      "snapshot": {
+        "test/plugins/specsTui.test.tsx": "22428b2baf0fef92852aef901ec63a995af1405e34515468ec410e8707e9ea1a"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/tasks.test.ts": {
+      "fingerprint": "109d16b2cd7a9ea35aea1a16d2124d2fa0aeb69151420298f02795fe2db6186e",
+      "snapshot": {
+        "test/plugins/tasks.test.ts": "c386c44463458a027837d1532c02a039f414b9e4136a6bbd4767226a0d617e8b"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/tasksCli.test.ts": {
+      "fingerprint": "14f045dba409fd52ddc6e06396f36d2369a0c6ff62648c1c7c010928cb4be175",
+      "snapshot": {
+        "test/plugins/tasksCli.test.ts": "80bd99c63f1391c9ba9f38526545c9e9344994a8cf612d43fcef6c436b35d4a7"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/tasksTui.test.tsx": {
+      "fingerprint": "8e8db2f29f09c2356c235073317a993d4ba9f3ffc9e58daf4d8ef9bb77e6430d",
+      "snapshot": {
+        "test/plugins/tasksTui.test.tsx": "50b62f6b110ebe49acfc86ff2aae81e8e1b5b8c5ed0620ea6e7cf22891b985d1"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/testingHarnessTui.test.tsx": {
+      "fingerprint": "00457136554df4586faaa014a66471346cca5a4b592dfe29fba9b6a1bc6c2292",
+      "snapshot": {
+        "test/plugins/testingHarnessTui.test.tsx": "075da75caf33b1e43addf19ce5b065ce1bc56fd96ef92175b36c237e712f379d"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/tui.test.tsx": {
+      "fingerprint": "b988259f2ba414e2f44c6a685bcb0911bf466838d8624a7de2cdbe0d97a6cafc",
+      "snapshot": {
+        "test/plugins/tui.test.tsx": "0af4ee13a25e25baca60bbebba8ed0ad2406d3202d5889a9bd188bfc0c13952f"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/plugins/tuiFailureIsolation.test.tsx": {
+      "fingerprint": "db412cb04b0cc727b931a07a31168139fc5d40de1b9a9eb951fc66d62dbbed31",
+      "snapshot": {
+        "test/plugins/tuiFailureIsolation.test.tsx": "b179f0979c15719373481407823157a92826e6e08c48f9e869fda186ad1c7e00"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/schemas/schemas.test.ts": {
+      "fingerprint": "6a65e68c1ad6daa36fab2b39989de38b00e019ba3a34da2d325d7a8bed0ae530",
+      "snapshot": {
+        "test/schemas/schemas.test.ts": "9de5cbe098e3c455a67268bfeae86890cdc44d2479a53d8761f9adb2bd9c8828"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/combinedEdit.test.ts": {
+      "fingerprint": "8b55bcb798dea914d3f37808c29556df18f1eb07e1f3aad999dcae74b08eb3fd",
+      "snapshot": {
+        "test/services/combinedEdit.test.ts": "5bfa5885bd98e196bbcfbb11b486bfc4c056c9d2d402e374108863596708bc52"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/doctor.test.ts": {
+      "fingerprint": "2d1c4cf066df2790f4580d564d4f4759afa32575cb082e0c759bfef3d8c41ebe",
+      "snapshot": {
+        "test/services/doctor.test.ts": "14cda4ba91ff765b922a76111e08ab50c2f3eb258b52cf42dad1529d6702e411"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/doctorLeftovers.test.ts": {
+      "fingerprint": "32b2ec556ccfed5761dcdcdefc4bd45129541f979487b4f8760630c1ec5030d6",
+      "snapshot": {
+        "test/services/doctorLeftovers.test.ts": "5c87ef1182ad2d0862c19620c6d8b97d3f644824d02007a7232aae0219b7db7f"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/stages.test.ts": {
+      "fingerprint": "28f90390bcc9508f537cc1a232d31bb18822ca2cf25887a54d782938f0201829",
+      "snapshot": {
+        "test/services/stages.test.ts": "9ac749f532f9088c8d5da99ad95cda70890e5ffc263113bd01c5b9a8e1a74b69"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/stories.test.ts": {
+      "fingerprint": "1de3e695ce311a1e72891542a0e4d7954e479232ea244d07ce569e91bfd27367",
+      "snapshot": {
+        "test/services/stories.test.ts": "aa7a9880f88c9160c27e8959c31102ed9d47b1b1ac3f238d568ab5b008ff8c97"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/services/tasks.test.ts": {
+      "fingerprint": "c473112868dce2c9ea8f482005111c95fb65cfeee307957a393419a29144fa37",
+      "snapshot": {
+        "test/services/tasks.test.ts": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/screens.test.tsx": {
+      "fingerprint": "bf05cadbcbaaf0bed5ecbc13c2ca04c650a2e8f98fb5d13d14683d9bd2007143",
+      "snapshot": {
+        "test/tui/screens.test.tsx": "cc71ad4df7ccadba433bc3770dade06198f8b21e4b5f95299d14676b8c4347fa"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/stories.test.tsx": {
+      "fingerprint": "acb34229aab2eab5e1aede6762afa952a30524d77157971d058c786b98234324",
+      "snapshot": {
+        "test/tui/stories.test.tsx": "f444e9c92696ba99a3980dc7dd928bb0f62362fe20b8bc9569e94868a0f099d4"
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+      ]
+    },
+    "source:test/tui/tasks.test.tsx": {
+      "fingerprint": "3154d19252ee196c16d8a26ae093d8eb1b92caae6b727e7374698561038752b3",
+      "snapshot": {
+        "test/tui/tasks.test.tsx": null
+      },
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "evidence": [
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     }
   }
