@@ -4018,18 +4018,17 @@
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "672f10c6f74eb70a0297afd6c4f9c0ddbf15ef7385b11fef9a657888f32afb3e",
+      "fingerprint": "fec0ea5f80623d7013dd58b10a5ff42966fe81d32a52eb2af0c3578afa38928e",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "e5a17e898714ab6b5025640da14fda27057f6468890f3645164a742eea11aa95"
+        "src/tui/shell/Shell.tsx": "6f3d7510fc8da599a6875c9e4688ff19a6c2059309d1648f32323479b69efa85"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "f43112647f559562f6bace01aa4da0fe1b8bdaff",
       "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "reason": "TUI source of Plugin Sidebars (ADR-0029); f431126 only moves a comment, reflows a doc comment and drops an unused field. The skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "git diff 020d7e0..f431126 -- src/tui/shell: comment placement and the unused PluginSidebars.buttons[].open field",
         "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests passed"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -5716,18 +5715,17 @@
       ]
     },
     "source:src/tui/shell/usePluginSidebars.ts": {
-      "fingerprint": "bd7edd1a174d4d57fc76e0014ca15d9ed8d4eab6169bb62c2d725135139b945e",
+      "fingerprint": "fb4fddab53242fd1138ab200b99d4ffb38273bfb2d5713473195ba62fcdddbfe",
       "snapshot": {
-        "src/tui/shell/usePluginSidebars.ts": "f77db6daa655f3e57fd220de4ac5fad5d6b72b6543e457862f574c259df61486"
+        "src/tui/shell/usePluginSidebars.ts": "c95fd64e04460c351323ff8a01b101722cde1460820433ee041497a3d8129e7e"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "f43112647f559562f6bace01aa4da0fe1b8bdaff",
       "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "reason": "TUI source of Plugin Sidebars (ADR-0029); f431126 only moves a comment, reflows a doc comment and drops an unused field. The skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "git diff 020d7e0..f431126 -- src/tui/shell: comment placement and the unused PluginSidebars.buttons[].open field",
         "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests passed"
       ]
     }
   }
