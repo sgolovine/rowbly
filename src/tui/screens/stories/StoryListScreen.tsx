@@ -4,6 +4,7 @@ import type { Stage } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { CursorRows, Form, type FormValues, Loading, StoryStage } from '../../components';
 import {
+  loadStoryBadges,
   useActionFocus,
   useAsync,
   useCursor,
@@ -15,7 +16,6 @@ import {
   useReloadOnReturn,
   useRowblyContext,
   useServices,
-  useStoryBadges,
 } from '../../hooks';
 import { useRouter } from '../../router';
 import type { ScreenProps } from '../types';
@@ -37,7 +37,6 @@ export function StoryListScreen({ params }: ScreenProps) {
   const [filtering, setFiltering] = useState(false);
   const [allBoards, setAllBoards] = useState(false);
   const { plugins } = usePlugins();
-  const badges = useStoryBadges();
   const scope = useAsync(async () => {
     const boardId = await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
@@ -61,7 +60,11 @@ export function StoryListScreen({ params }: ScreenProps) {
   const list = useAsync(async () => {
     if (!scope.data) return null;
     const { filter, failures } = withPluginFilters(toFilter(filters), plugins, scope.data.extra, filters);
-    return { stories: await services.stories.list(allBoards ? null : scope.data.boardId, filter), failures };
+    const [stories, badges] = await Promise.all([
+      services.stories.list(allBoards ? null : scope.data.boardId, filter),
+      loadStoryBadges(plugins, services),
+    ]);
+    return { stories, badges, failures };
   }, [services, scope.data, filters, allBoards, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
@@ -125,7 +128,7 @@ export function StoryListScreen({ params }: ScreenProps) {
           cursor={cursor}
           active={active && !filtering}
           rows={stories.map((s) => {
-            const shown = badges(s);
+            const shown = list.data?.badges(s) ?? [];
             return (
               <Text key={s.key}>
                 {allBoards ? <Text dimColor>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}

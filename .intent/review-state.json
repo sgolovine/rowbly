@@ -24,33 +24,34 @@
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2d81aa2b1b8b4fc9059da862d936c8eae61ad0e38874d20aa32897e29445a418",
+      "fingerprint": "7b9aedff2ec1e4c5d1e35a900bf96ed76f883b56d52d06b06295abd02f5fe97a",
       "snapshot": {
         "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
+        "docs/plugins/built-in.md": "d3777dc159401c8d73e7a426239630166881cefa4ea18a4fdf3a5772cbcf064b",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "rowbly-doctor tracks docs/plugins/built-in.md, whose only change is the Epics TUI line (the '◆ <Epic name>' badge on board cards, the board's list view and the Stories list). The skill teaches command-mode operation; no Epics command, flag, JSON output, exit code or doctor finding it describes changed.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-doctor/SKILL.md against origin/main and PR head 9ee41d2."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/rowbly-doctor/SKILL.md reviewed: no TUI or badge guidance",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "2d53559aa60e2e735788c47f954ed7aaeea89378df74dea8e1fd44f38bec0eab",
+      "fingerprint": "fac1e39d87e16c78510034983963020b440b87124a36ecf4aa88cfc129fc3273",
       "snapshot": {
         "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
+        "docs/plugins/built-in.md": "d3777dc159401c8d73e7a426239630166881cefa4ea18a4fdf3a5772cbcf064b",
         "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -66,13 +67,14 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "rowbly-plugins tracks docs/plugins/built-in.md, whose only change is the Epics TUI line (the '◆ <Epic name>' badge on board cards, the board's list view and the Stories list). The skill teaches command-mode operation; no Epics command, flag, JSON output, exit code or doctor finding it describes changed.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-plugins/SKILL.md against origin/main and PR head 9ee41d2."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/rowbly-plugins/SKILL.md reviewed: no TUI or badge guidance",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
@@ -118,16 +120,16 @@
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "a77d58144ee0b4cab54f429e244f362166cbcb1b33417688fdb592cdf1f046f8",
+      "fingerprint": "1bb0c10054598f7200e669b53cd299c2488ccf19268d95ed4a83cf3f140321e3",
       "snapshot": {
         "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
+        "docs/plugins/built-in.md": "d3777dc159401c8d73e7a426239630166881cefa4ea18a4fdf3a5772cbcf064b",
         "skills/_artifacts/domain_map.yaml": "dc287076faea671cd2c3d1bb1c4d675be5abb48cf1edcc7b1d21c9d6923d82ef",
-        "skills/_artifacts/skill_spec.md": "8f41ae4ac4070b1dd117626ec338c3d2f253b43b7e75c50629ceabcecc57ddc1",
+        "skills/_artifacts/skill_spec.md": "8f0df6cd3ba33a34d00c98e3990237d8a296376ca8da93edffbcc0d1630d4633",
         "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
@@ -163,13 +165,14 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "updated",
-      "reason": "Preserved both histories in skill_spec.md, retained Git/Specs task mappings and metadata in domain_map.yaml and skill_tree.yaml, and retained the PR correction to removed test citations. Recorded maintainer approval for test-policy ADR-0027 and merged-tree checks; no skill identity, dependency or operating recommendation changed.",
+      "reason": "Added the 'Behavior change — Epic names on board cards' entry to skill_spec.md recording the source baseline, the TUI-only scope and the checks. domain_map.yaml and skill_tree.yaml stay accurate: no developer task, source mapping, prerequisite or activation text changed.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/_artifacts against origin/main and PR head 9ee41d2."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md: new ADR-0028 entry",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -614,18 +617,18 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "1dc00a36ad57dcf6583a0b1b58f345d87d090bf27c068cf48e2f8ba6cf1780b5",
+      "fingerprint": "1644230284e03c717fbd8d7b3cb41347a9b43995a6216597045bc12ac05db86a",
       "snapshot": {
-        "docs/plugins/api.md": "1169580d6dfa7cb34fa4c76439d334b91bc6deb88c02df6529152b846be22489"
+        "docs/plugins/api.md": "89095b7edb908b93f2746a35b9b29e87f9633e46dcc0c4a73bf27e9021cb1a33"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/plugins/api.md; changed files: docs/plugins/api.md"
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1817,19 +1820,18 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "4d0536d0fe5ac2e65af62e3b07fe12e54216c952fdb60df5c821364aefad6c32",
+      "fingerprint": "bb13b110ec3f09e9d4c1b5cd09d377a6b124a03e23a0e1cf5b5bf91ff4f68a28",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "6e3dfeb3ed67fdd44e13bccad46e04b0e18c3d58f5eddae7bc72f2ec6f09c7ce"
+        "src/tui/screens/board/BoardScreen.tsx": "b464839b07708b456dcac3df30598c4aa6354082a346e63ca3f647d811fa1a5c"
       },
-      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
-        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
-        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
-        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
-        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -2002,17 +2004,18 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "7ce7677a5aaebc4ae94bdfc368e095848d186ce103758670124ef388972d8cb3",
+      "fingerprint": "6e157ae1df84aa76e91c60d90de2de127305ccf8154135c8e768f1d7cefd69f7",
       "snapshot": {
-        "docs/agents/adr/README.md": "1612a352af872d698969e908e171c1534b4142dd0ccd732b1e7ffa962511ecb3"
+        "docs/agents/adr/README.md": "2ff3ba4444a2d5c0c23283d757bd0eefaf6bb72d230a940987549fd5a518e833"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Retained both accepted decisions: main Story Specs ADR-0025 and Git ADR-0026, plus test-policy ADR-0027 and its index/references, with explicit maintainer approval to resolve the concurrent numbering collision. No decision or section content changed.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed docs/agents/adr/README.md against origin/main and PR head 9ee41d2."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/commands/index.ts": {
@@ -2342,18 +2345,18 @@
       ]
     },
     "source:src/services/plugins/types.ts": {
-      "fingerprint": "8012686327ff9ffeae78aacea9fa6b19f3eca9cde2c6a165d8e944957ba61b90",
+      "fingerprint": "221cb05c33925278609809bc7f9f150c988d1685858851ba18f31510c96b5174",
       "snapshot": {
-        "src/services/plugins/types.ts": "9dc9c3381b16f989eee2ffe46f83171f780099e300b7d496278df18f83c020f1"
+        "src/services/plugins/types.ts": "47059e3211685495738e08e0b0a48d00d551402c604d43285136933d5b8cee2a"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/services/plugins/types.ts; changed files: src/services/plugins/types.ts"
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/services/stages.ts": {
@@ -2393,15 +2396,18 @@
       ]
     },
     "source:src/tui/hooks/plugins.ts": {
-      "fingerprint": "23e01e51723bffbfd77ea47ee3131ca77a54a9719c38a008ac840198eba562ef",
+      "fingerprint": "024a326f56aa80a6adac1aa2a787e439b4c419c721b012d19ee5b416effd77be",
       "snapshot": {
-        "src/tui/hooks/plugins.ts": "6efe22e27801ad73e4645851ef992b30f5cc5b4ac206f2220b10e1a9d2c16108"
+        "src/tui/hooks/plugins.ts": "f46935a48325f8d933bf638d81d6d8800c44bde5b11fb62f303fb1936bd9a532"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/tui/hooks/shell.ts": {
@@ -2431,15 +2437,18 @@
       ]
     },
     "source:src/tui/screens/board/BoardColumn.tsx": {
-      "fingerprint": "72c1d1e28325cadbd7333ab13e5c3a927e0538b31bef5cf9edac9c63e8546459",
+      "fingerprint": "9d142aa72e86ed2e66b250e3fccae615948aa16649f889a83972f08f8628f0eb",
       "snapshot": {
-        "src/tui/screens/board/BoardColumn.tsx": "33a92bb7980f5a9ba537cc1939335ff09970d5997e095f150d342c4d8cd62f11"
+        "src/tui/screens/board/BoardColumn.tsx": "6fee72f9b4c8c3ae5b6db5c08a44cde2969d4b3c57046e4858414a971ccbf163"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
@@ -3110,15 +3119,18 @@
       ]
     },
     "source:docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": {
-      "fingerprint": "3e749d7fe665b76dffb133df2db0ff459695c5e36ac4e425239d978e1165ab10",
+      "fingerprint": "afa9bc2de89d34781a69d8eae6cd7c40e704d35b735da609b2af60e6d7ec9088",
       "snapshot": {
-        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "ba16453cce39a1873ba8265f73d374b667f930c7753a0ba3b165f3d0309f9b63"
+        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "fc58f8aa5d88226671767713122d63c68113ba9aedbfdf2e16279845345a2f12"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/commands/assignees.ts": {
@@ -3374,15 +3386,18 @@
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
-      "fingerprint": "238d7cc4a7cb4703550773f24aa72ea21bd79e6ed1df93732ece26fdff606d96",
+      "fingerprint": "a353f85ce0d2f46df5f00e0103dd38bb4f4bad5aeb5a8b30237e06b13eb856ab",
       "snapshot": {
-        "src/tui/screens/stories/StoryListScreen.tsx": "2ea0ad3d35599e2127962b86ee7b5cd021c490f8125a08e8d158df64e3d32329"
+        "src/tui/screens/stories/StoryListScreen.tsx": "178ba7057a5908b58f72544d135a25576748a1baac690d4ad2d77e05a71e2ffe"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/tui/screens/stories/filter.ts": {
@@ -3935,19 +3950,18 @@
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
+      "fingerprint": "f941c41b4876681131cd7038bb0acb5115dc1d36c88d6485ebacd14aaefacfff",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
+        "src/tui/screens/board/BoardList.tsx": "d8e7c9df567d939b924e2bfe626e967ab38579e2565dced8e2cddbaf47656dfd"
       },
-      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
       "outcome": "no-change",
-      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
-        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
-        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
-        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
-        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
@@ -5610,6 +5624,36 @@
         "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
         "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
         "Reviewed docs/agents/adr/0027-tests-guard-only-what-review-cannot-check.md against origin/main and PR head 9ee41d2."
+      ]
+    },
+    "source:docs/agents/adr/0028-plugin-badges-can-load-from-files.md": {
+      "fingerprint": "164241e5e3073c2fd7715708b21c7b28fa6db4ba028d5ab96c58794112ba75fd",
+      "snapshot": {
+        "docs/agents/adr/0028-plugin-badges-can-load-from-files.md": "2fa4b5d02beaafdaa0bba472fd6ec24066a3fde377737ca2768910905e3deef1"
+      },
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "outcome": "no-change",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+      ]
+    },
+    "source:src/plugins/epics/tui.ts": {
+      "fingerprint": "876c44d717a3aca777f4cf25499c1324ada0c32554679ea2a994f0eebb6e0e91",
+      "snapshot": {
+        "src/plugins/epics/tui.ts": "51d1bb27215ded5fe9efc445565f79d72b5006f6d821b1a937812a29b0328e1b"
+      },
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "outcome": "no-change",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
       ]
     }
   }

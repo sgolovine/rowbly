@@ -850,6 +850,12 @@ export interface PluginTui<S = Record<string, unknown>> {
    * only show something, so a Plugin that throws shows none there.
    */
   storyBadges?(args: { story: Story; plugin: PluginContext<S> }): string[];
+  /**
+   * Badges that need the Plugin's files, such as an Epic's name: reads them once each time a screen
+   * that shows badges loads its Stories, and returns the badges of a Story, shown after `storyBadges`.
+   * They only show something, so a Plugin whose load or badges throw shows none there.
+   */
+  loadStoryBadges?(args: { plugin: PluginContext<S> }): Promise<(story: Story) => string[]>;
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
   /**

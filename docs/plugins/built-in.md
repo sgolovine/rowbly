@@ -109,7 +109,7 @@ rowbly stories edit … [--epic <id> | --no-epic]
 
 `stories list --epic <id>` takes an Epic ID (a slug); anything else is exit 2. `stories show` has an Epic row.
 
-**TUI:** an Epics entry in the home menu; the Epic list and Epic detail with Epic Progress, where `enter` on a Story opens the Story screen; an Epic select in the Story form (with `No Epic`); an Epic filter (`All Epics` is apart from "no Epic"); an Epic row on the Story screen.
+**TUI:** an Epics entry in the home menu; the Epic list and Epic detail with Epic Progress, where `enter` on a Story opens the Story screen; an Epic select in the Story form (with `No Epic`); an Epic filter (`All Epics` is apart from "no Epic"); `◆ <Epic name>` on the board card, the board's list view line and the Story list row of a Story of an Epic (its Epic ID when the Epic file is missing or cannot be read); an Epic row on the Story screen.
 
 **Errors and doctor**
 

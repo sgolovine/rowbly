@@ -20,6 +20,14 @@ function chosenEpic(value: PluginFormValue | undefined): string | false | undefi
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { list: EpicList, detail: EpicDetail, form: EpicForm },
   home: [{ label: 'Epics', screen: 'list' }],
+  /** `◆ <Epic name>` on a Story of an Epic; its ID when the Epic file is missing or cannot be read. */
+  async loadStoryBadges({ plugin }) {
+    const names = new Map((await readEpics(plugin)).epics.map((epic) => [epic.id, epic.name]));
+    return (story) => {
+      const epic = storyEpic(plugin, story);
+      return epic ? [`◆ ${names.get(epic) ?? epic}`] : [];
+    };
+  },
   storyForm: {
     async fields({ story, plugin }) {
       if (story && plugin.inspectBag(story, EpicBag).kind === 'invalid') {
