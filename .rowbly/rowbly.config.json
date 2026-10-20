@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "assignees": [],
   "stages": [
     {
       "key": "todo",
@@ -10,5 +9,10 @@
       "key": "in-progress",
       "name": "In Progress"
     }
-  ]
+  ],
+  "plugins": {
+    "git": {
+      "enabled": true
+    }
+  }
 }
