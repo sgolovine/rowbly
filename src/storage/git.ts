@@ -11,7 +11,7 @@ import { writeTextFile } from './system';
 const execute = promisify(execFile);
 
 /** No shell, bounded output/time, and no inherited Git directory/index/author overrides. */
-export async function runGit(cwd: string, args: readonly string[]): Promise<string> {
+async function runGit(cwd: string, args: readonly string[]): Promise<string> {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   const { stdout } = await execute('git', [...args], {
     cwd,
@@ -42,9 +42,18 @@ export async function gitInfo(root: DataRoot) {
   return { root: top, authorName: await config('user.name'), authorEmail: await config('user.email') };
 }
 
+/** Personal Git commit preferences; omitted author fields use Git configuration. */
+export interface GitCommitOptions {
+  frequency: 'change' | 'interval';
+  intervalSeconds: number;
+  authorName?: string;
+  authorEmail?: string;
+}
+
 export interface GitPending {
   paths: string[];
   due: number;
+  options: GitCommitOptions;
 }
 
 export async function pendingPath(root: DataRoot, plugin: string): Promise<string> {
@@ -66,7 +75,17 @@ export async function readGitPending(path: string): Promise<GitPending | null> {
     !value.paths.every((p: unknown) => typeof p === 'string') ||
     !('due' in value) ||
     typeof value.due !== 'number' ||
-    !Number.isFinite(value.due)
+    !Number.isFinite(value.due) ||
+    !('options' in value) ||
+    !value.options ||
+    typeof value.options !== 'object' ||
+    !('frequency' in value.options) ||
+    !['change', 'interval'].includes(String(value.options.frequency)) ||
+    !('intervalSeconds' in value.options) ||
+    typeof value.options.intervalSeconds !== 'number' ||
+    !Number.isInteger(value.options.intervalSeconds) ||
+    value.options.intervalSeconds < 1 ||
+    value.options.intervalSeconds > 86400
   )
     throw new Error('Invalid pending Git automation data');
   return value as GitPending;
@@ -123,22 +142,28 @@ export async function commitGitPaths(
   await runGit(info.root, ['add', '--intent-to-add', '--', ...selected]);
   const hooks = join(dirname(await pendingPath(root, 'git')), 'disabled-hooks');
   await io.mkdir(hooks);
-  await runGit(info.root, [
-    '-c',
-    `core.hooksPath=${hooks}`,
-    '-c',
-    'commit.gpgSign=false',
-    '-c',
-    `user.name=${name}`,
-    '-c',
-    `user.email=${email}`,
-    'commit',
-    '--only',
-    '--author',
-    `${name} <${email}>`,
-    '-m',
-    'chore: update Rowbly data',
-    '--',
-    ...selected,
-  ]);
+  try {
+    await runGit(info.root, [
+      '-c',
+      `core.hooksPath=${hooks}`,
+      '-c',
+      'commit.gpgSign=false',
+      '-c',
+      `user.name=${name}`,
+      '-c',
+      `user.email=${email}`,
+      'commit',
+      '--only',
+      '--author',
+      `${name} <${email}>`,
+      '-m',
+      'chore: update Rowbly data',
+      '--',
+      ...selected,
+    ]);
+  } catch (err) {
+    // These paths had no staged content before our intent-to-add. Restore that condition on failure.
+    await runGit(info.root, ['reset', '--quiet', '--', ...selected]).catch(() => undefined);
+    throw err;
+  }
 }

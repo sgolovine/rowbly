@@ -39,7 +39,7 @@ export function createPluginGit(
   id: string,
   warn: (message: string) => void = (message) => process.stderr.write(`${message}\n`),
 ): PluginGit {
-  async function schedule(options: GitCommitOptions, paths: string[] = []) {
+  async function schedule(given?: GitCommitOptions, paths: string[] = []) {
     await coordinated(root, `${id}.git`, async () => {
       const file = await pendingPath(root, id);
       clearTimeout(timers.get(file));
@@ -47,14 +47,19 @@ export function createPluginGit(
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return;
       let pending = await readGitPending(file);
+      const options = given ?? pending?.options;
+      if (!options) return;
       if (paths.length) {
         pending = {
           paths: [...new Set([...(pending?.paths ?? []), ...paths])],
           due: pending?.due ?? Date.now() + options.intervalSeconds * 1000,
+          options: pending?.options ?? options,
         };
-        await writeGitPending(file, pending);
       }
       if (!pending) return;
+      pending.due += (options.intervalSeconds - pending.options.intervalSeconds) * 1000;
+      pending.options = options;
+      await writeGitPending(file, pending);
       if (options.frequency === 'change' || pending.due <= Date.now()) {
         await commitGitPaths(root, pending.paths, options);
         await writeGitPending(file, null);
@@ -62,7 +67,7 @@ export function createPluginGit(
         const timer = setTimeout(
           () => {
             timers.delete(file);
-            void schedule(options).catch((err: unknown) =>
+            void schedule().catch((err: unknown) =>
               warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`),
             );
           },

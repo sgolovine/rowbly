@@ -3,7 +3,7 @@ name: rowbly-plugins
 description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
   Plugin settings, or using the Built-in Plugins' commands: Assignees (rowbly
   assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly epics, --epic), Specs (rowbly specs,
-  --spec, Story and Board Specs) and Comments (rowbly comments). Also when a rowbly command is unknown because its Plugin is
+  --spec, Story and Board Specs) and Comments (rowbly comments), and configuring automatic Git commits (rowbly git). Also when a rowbly command is unknown because its Plugin is
   off, or a Plugin failed to load. Not for writing a new Plugin."
 metadata:
   purpose: >-
@@ -25,20 +25,27 @@ sources:
   - src/plugins/epics/commands.ts
   - src/plugins/specs/commands.ts
   - src/plugins/comments/commands.ts
+  - src/plugins/git/commands.ts
+  - src/plugins/git/model.ts
+  - src/services/plugins/git.ts
+  - src/storage/git.ts
+  - test/plugins/gitCli.test.ts
+  - test/skills/cases/git-automation.md
+  - test/skills/checkGitConsumer.mjs
 ---
 
 # Use Rowbly Plugins
 
 Read `rowbly-cli` first. Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships five Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**
-and **Comments**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
+Plugins add optional features. Rowbly ships six Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**,
+**Comments** and **Git**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
 everyone who uses that Data Root, because the setting is in the committed `rowbly.config.json`.
 
 ## 1. See and change which Plugins are on
 
 ```sh
-rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments
+rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments, git
 rowbly plugins enable epics --json --no-prompt    # {"id": "epics", "enabled": true}
 rowbly plugins disable epics --json --no-prompt   # keeps its settings and data
 rowbly plugins show epics --json --no-prompt
@@ -59,8 +66,8 @@ Every Plugin command also takes `--json`, and prints the changed record.
 ### Settings
 
 A Plugin's settings sit beside `enabled` in its entry in `rowbly.config.json`. A Board can override them
-under `"plugins": { "<id>": { … } }` in its `board.config.json`. Rowbly has no settings command: edit the
-JSON by hand. This is the only hand edit the agent rules allow.
+under `"plugins": { "<id>": { … } }` in its `board.config.json`. For these shared settings, edit the
+JSON by hand. Git has personal preferences instead; use `git configure` below. This is the only hand edit the agent rules allow.
 
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
@@ -146,6 +153,25 @@ rowbly assignees remove sam --json --no-prompt                            # also
   exits 2 when Me is not set.
 - Doctor reports `ASSIGNEES_UNKNOWN_ASSIGNEE` and `ASSIGNEES_UNKNOWN_ME` (fixable) and
   `ASSIGNEES_ROSTER_UNAVAILABLE` for a roster file that cannot be read (fix it by hand).
+
+## 6. Git: automatically commit Rowbly changes
+
+Enable Git only when requested: future Rowbly writes will create commits. The Data Root must be inside a Git repository; otherwise `plugins enable git` exits 2 with a clear explanation and leaves it off. An enabled Plugin loaded outside Git is failed in `plugins list`. Establish a clean Data Root baseline first.
+
+```sh
+rowbly plugins enable git --json --no-prompt
+rowbly git show --json --no-prompt
+rowbly git configure --frequency change --json --no-prompt
+rowbly git configure --frequency interval --interval 600 --json --no-prompt
+rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com" --json --no-prompt
+rowbly git configure --author-name '' --author-email '' --json --no-prompt
+```
+
+- Preferences are personal, under `plugins.git` in Local State. Do not edit that file by hand. Enabling the Plugin is still shared Data Root configuration.
+- `change` is the default frequency. The interval is seconds (integer 1–86400, default 300). Omitted/cleared author fields use effective Git `user.name` and `user.email`, including `.gitconfig`; `git show` reports the defaults.
+- Automatic Commits use `chore: update Rowbly data` and select paths affected by saved Operations, including other Plugins' writes/deletions. Local State and internal files are excluded. Other paths and unrelated staged files stay untouched. Edits by hand to an affected path are included; a path with staged changes is refused with a warning.
+- Interval mode needs pending changes and runs only while Rowbly is alive. CLI commands do not wait for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run; no daemon or exit flush runs. Changing the interval adjusts the deadline from the first pending write. Disabling Git pauses pending commits.
+- A Git warning leaves the Rowbly change saved and pending work available for retry. Fix the cause (for example author configuration or staging), then run Rowbly again. Hooks and signing are suppressed for Automatic Commits; there is no automatic push.
 
 ## Common mistakes
 

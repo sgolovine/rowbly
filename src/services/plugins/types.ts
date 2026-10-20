@@ -14,6 +14,7 @@ import type {
   Story,
   StoryKey,
 } from '../../schemas';
+import type { GitCommitOptions } from '../../storage/git';
 import type {
   BoardCreateInput,
   BoardPatch,
@@ -427,13 +428,7 @@ export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
   doctor: Pick<DoctorService, 'check'>;
 };
 
-/** Personal Git commit preferences; omitted author fields use Git configuration. */
-export interface GitCommitOptions {
-  frequency: 'change' | 'interval';
-  intervalSeconds: number;
-  authorName?: string;
-  authorEmail?: string;
-}
+export type { GitCommitOptions } from '../../storage/git';
 
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {

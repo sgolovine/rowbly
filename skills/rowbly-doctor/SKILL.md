@@ -21,6 +21,8 @@ sources:
   - docs/architecture/storage.md
   - src/commands/doctor.ts
   - src/services/doctor.ts
+  - docs/plugins/built-in.md
+  - src/services/plugins/git.ts
 ---
 
 # Check and repair a Rowbly Data Root
@@ -44,6 +46,8 @@ The result is a DoctorReport, `{ findings, fixed, summary: { errors, warnings, i
 when there are no errors, and 6 while errors remain. Warnings and info do not change the exit code.
 
 ## 2. Fix what is safe
+
+If the Git Plugin is enabled, its Automatic Commits also observe saved doctor repair passes. To inspect all repairs and obtain doctor exit 0 before the next commit, pause Git first with `rowbly plugins disable git --json --no-prompt`. Remember whether it was enabled; restore it with `plugins enable git` only after repairs pass doctor. Disabling is shared Data Root configuration and retains pending paths. Keep other Plugins enabled so their doctor checks and fixes still run.
 
 ```sh
 rowbly doctor --fix --json --no-prompt
