@@ -248,6 +248,7 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 - A `select` cycles through `options` only, so "no value" is an option of the Plugin's own whose label cannot be a real value (Epics: `No Epic`). A filter keeps "any" (`All Epics`) apart from "none".
 - `storyFilter.fields` / `filter(values)` / `describe(values)` fill the filter of the Stories list and the board. A Plugin whose filter fields fail is left out of the filter, and the screen says so.
 - `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story's board card, its line in the board's list view and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
+- `loadStoryBadges({ plugin })` is for badges that need the Plugin's files, such as the Epics Plugin's `◆ <Epic name>`. It reads them once each time the board or the Stories list loads its Stories, so a change shows when the screen reloads, and returns a function from a Story to its badges, shown after the Plugin's `storyBadges` in the same places. The returned function runs while the screen renders, so it reads only what was loaded and the Story. A Plugin whose load or badges throw shows none.
 
 ## Screens, focus and Actions
 
