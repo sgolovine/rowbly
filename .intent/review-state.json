@@ -19,7 +19,7 @@
       "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
         "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
@@ -38,7 +38,7 @@
       "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
         "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
@@ -60,7 +60,7 @@
       "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
         "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
@@ -80,7 +80,7 @@
       "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
         "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
@@ -100,7 +100,7 @@
       "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
         "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "planning:skills/_artifacts": {
@@ -147,7 +147,7 @@
       "reason": "All three planning documents retain the correct CLI-only operating scope. The board list badge rendering and truncation changes add no CLI task, prerequisite, source ownership, distribution choice, or skill identity; TUI operation remains explicitly unassessed in skill_spec.md.",
       "evidence": [
         "Read skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml; preserved prior tasks/decisions and remaining work. README and docs/plugins/built-in.md diff only extends TUI badge surfaces and documents truncation. intent validate skills passed. No new or changed guidance; fresh consumer validation not run for this TUI-only correction.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -615,7 +615,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1790,7 +1790,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -3374,7 +3374,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
@@ -3760,7 +3760,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
@@ -3773,7 +3773,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -4313,7 +4313,7 @@
       "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
         "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
-        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     }
   }
