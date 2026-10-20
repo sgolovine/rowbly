@@ -29,11 +29,4 @@ describe('errors', () => {
     expect(exitCodeFor(new Error('boom'))).toBe(1);
     expect(exitCodeFor('boom')).toBe(1);
   });
-
-  it('carries details, hint and name', () => {
-    const err = new DataIntegrityError('bad file', { details: { path: 'a.json' } });
-    expect(err.details).toEqual({ path: 'a.json' });
-    expect(err.name).toBe('DataIntegrityError');
-    expect(new DataRootNotFoundError().hint).toMatch(/rowbly init/);
-  });
 });

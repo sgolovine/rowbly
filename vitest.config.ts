@@ -5,12 +5,12 @@ import { defineConfig } from 'vitest/config';
 const include = ['test/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'];
 
 /**
- * The suites that run a built CLI: those that mention `runCli` or a CLI path. Only these need
+ * The suites that run a built CLI: those that mention `runCli` or `CLI_PATH`. Only these need
  * test/helpers/globalSetup.ts, so every other suite runs without building anything.
  */
 const cliSuites = include
   .flatMap((pattern) => globSync(pattern))
-  .filter((file) => /\b(runCli|CLI_PATH|FIXTURE_CLI_PATH)\b/.test(readFileSync(file, 'utf8')));
+  .filter((file) => /\b(runCli|CLI_PATH)\b/.test(readFileSync(file, 'utf8')));
 
 export default defineConfig({
   test: {
@@ -29,8 +29,8 @@ export default defineConfig({
           name: 'cli',
           include: cliSuites,
           globalSetup: ['test/helpers/globalSetup.ts'],
-          // A command test spawns the built CLI many times in a row (one Epics test takes ~7 s on an
-          // idle machine, ~13 s under load); give it room on a loaded machine. A limit, not a budget.
+          // A command test spawns the built CLI many times in a row (the Plugins skill check takes
+          // ~7 s on an idle machine); give it room on a loaded machine. A limit, not a budget.
           testTimeout: 60_000,
           hookTimeout: 60_000,
         },

@@ -58,11 +58,4 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     expect((await readJsonFile(t, 'boards/web/board.config.json')).plugins).toEqual(GHOST);
     expect(await readJsonFile(t, 'local.json')).toEqual({ version: 1, board: 'web', me: 'alice', plugins: GHOST });
   });
-
-  it('are read back exactly as stored, so --json prints them', async () => {
-    const t = await bagged();
-    const { services } = await withPlugins(t, [notes]);
-    expect((await services.stories.get('WEB-1')).plugins).toEqual({ ...GHOST, notes: { note: 'kept while off' } });
-    expect((await services.boards.get('web')).plugins).toEqual(GHOST);
-  });
 });

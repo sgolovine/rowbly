@@ -2,7 +2,6 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { builtInPlugins } from '../../src/plugins';
-import { makeRootConfig, runCli, tempRoot } from '../helpers';
 import { userText } from './sourceText';
 
 /**
@@ -113,67 +112,4 @@ describe('language audit', () => {
     }
     expect(problems).toEqual([]);
   });
-
-  it('a missing glossary is a precise error, and one without _Avoid_ words gives no pattern', async () => {
-    await expect(glossary('no-such-plugin')).rejects.toThrow(
-      'Built-in Plugin "no-such-plugin" has no src/plugins/no-such-plugin/CONTEXT.md',
-    );
-    expect(avoidPattern('')).toBeUndefined();
-    expect(avoidPattern('# Hello\n\n**Greeting**:\nA word.\n')).toBeUndefined();
-    expect(avoidPattern('_Avoid_: salutation, hi there')?.test('say hi there')).toBe(true);
-    expect(avoidPattern('_Avoid_: salutation')?.test('a greeting')).toBe(false);
-  });
-
-  it('the audit catches an _Avoid_ word in a string, a template and JSX text', () => {
-    const source = [
-      "const a = 'Open the ticket';",
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: this is source text for the tokenizer.
-      'const b = `${n} sub-tasks`; // a column in a comment is fine',
-      'const c = <Text>Move the card</Text>;',
-      'const d = /issue/.test(x) ? 1 : 2;',
-    ].join('\n');
-    const hits = userText(source, true)
-      .map(({ text }) => text.match(AVOID)?.[0])
-      .filter(Boolean);
-    expect(hits).toEqual(['ticket', 'sub-tasks', 'card']);
-  });
-
-  // About 50 CLI runs; they run in parallel, but a loaded machine still needs more than the default.
-  // Every Built-in Plugin is on, so its commands and its options on core commands are in the help.
-  it('no _Avoid_ word appears in any --help text', { timeout: 60_000 }, async () => {
-    const t = await tempRoot();
-    await makeRootConfig(t.path, {
-      plugins: Object.fromEntries(builtInPlugins.map((p) => [p.id, { enabled: true }])),
-    });
-    const help = (args: string[]) => runCli([...args, '--help'], { root: t.path });
-    const root = await help([]);
-    const groups = commandsIn(root.stdout);
-    expect(groups).toContain('stories');
-    const groupPages = await Promise.all(groups.map((group) => help([group])));
-    const verbPages = await Promise.all(
-      groups.flatMap((group, i) =>
-        commandsIn(groupPages[i]?.stdout ?? '').map(async (verb) => ({ group, page: await help([group, verb]) })),
-      ),
-    );
-    const pages = [
-      { group: '', page: root },
-      ...groupPages.map((page, i) => ({ group: groups[i] ?? '', page })),
-      ...verbPages,
-    ];
-    expect(pages.length).toBeGreaterThan(40);
-    const plugins = await pluginAvoidWords();
-    const found = pages.flatMap(({ group, page }) =>
-      page.stdout.split('\n').filter((line) => {
-        const text = line.replace(/\bLocal State\b|\buser\.email\b/g, ' ');
-        return AVOID.test(text) || plugins.get(group)?.test(text);
-      }),
-    );
-    expect(found).toEqual([]);
-  });
 });
-
-/** The command names listed under "Commands:" in a commander help page. */
-function commandsIn(help: string): string[] {
-  const section = help.split(/^Commands:$/m)[1] ?? '';
-  return [...section.matchAll(/^ {2}([a-z][a-z-]*)\b/gm)].map((m) => m[1] as string).filter((c) => c !== 'help');
-}

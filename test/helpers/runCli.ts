@@ -13,8 +13,6 @@ const builds: ProvidedContext['cliBuilds'] | undefined = inject('cliBuilds');
 
 /** The CLI that this test run built from the current source (test/helpers/globalSetup.ts). */
 export const CLI_PATH = builds?.cli ?? NOT_BUILT;
-/** The same program with the fixture Plugins of test/plugins/fixtures as its registry. */
-export const FIXTURE_CLI_PATH = builds?.fixtureCli ?? NOT_BUILT;
 
 export interface RunCliOptions {
   /** Data Root path, passed as `ROWBLY_ROOT`. */

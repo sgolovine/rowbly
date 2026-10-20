@@ -1,4 +1,4 @@
-// The registry of fixture Plugins, in run order, as the fixture CLI and the tests use it.
+// The registry of fixture Plugins, in run order, as the tests use it.
 import type { AnyPluginDefinition } from '../../../src/plugin-api';
 import { notes } from './notes';
 import { boom, clash, echo, faulty, rival, stamp, storiesPlugin, strict, tracer } from './others';

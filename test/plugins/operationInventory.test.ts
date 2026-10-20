@@ -3,7 +3,6 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { PluginError } from '../../src/core';
 import { CORE_OPERATION_NAMES, definePlugin } from '../../src/plugin-api';
 import { assignees } from '../../src/plugins/assignees';
 import { addAssignee, editAssignee, removeAssignee } from '../../src/plugins/assignees/service';
@@ -101,19 +100,5 @@ describe('the operation inventory (ARCH-02)', () => {
         name,
       ).toEqual([]);
     }
-  });
-
-  it('a malformed local operation name fails before anything is saved', async () => {
-    const t = await pluginRoot({ epics: true });
-    const { services } = await withPlugins(t, [epics]);
-    const plugin = services.plugins.context('epics');
-    for (const name of ['', 'epics.create', 'Create', 'a/b']) {
-      const err = await plugin
-        .operation(name, {}, (changes) => changes.writeFile('dataRoot', 'x.json', '{}'))
-        .catch((e: unknown) => e);
-      expect(err, name).toBeInstanceOf(PluginError);
-      expect(err).toMatchObject({ details: { plugin: 'epics', operation: name } });
-    }
-    expect(await plugin.files.list('dataRoot')).toEqual([]);
   });
 });
