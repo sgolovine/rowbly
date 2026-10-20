@@ -119,3 +119,8 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 - Doctor guidance uses the same disable/resume path exercised by the Git interval regression and existing doctor pass tests; a fresh consumer run of the doctor-specific repair workflow was not performed.
 - Intent 0.5.5 review/check for this batch uses the actual PR base `0dacc4133030a1bb86b32751e2e2b21c304ca0f0`. Recording an explicit-base report retains the pre-existing default baseline `2e488a8f01b2cc5f4a77c72d33337d067f2c9445` in this installed version; combining `--record` and `--base` is refused. The default check still reports 34 historical ADR relocation items outside this task. Do not mark those unrelated changes reviewed solely to clear the default check; use the actual PR base for this batch's completion gate.
+
+### Decision — development skills stay outside Intent (2026-10-19)
+
+- Skills for developing Rowbly, such as `rowbly-screenshots` and the vendored upstream `agentic-tui` skill, live in `.agents/skills/<name>/` with pointers in `.claude/skills/<name>/`. They are not published, not registered with Intent, and not part of this spec's skill tree; their source reviews are recorded as `out-of-scope`. This keeps Batch 1's scope: development of Rowbly itself is covered by `AGENTS.md` and `docs/development/README.md`, not by the Intent skills.
+- No guidance in `skills/` changed: the agentic-tui integration adds no command, flag, output, exit code, doctor finding or Data Root behavior.

@@ -72,6 +72,18 @@ Wait for what the next action needs, never for a fixed time. The full rules for 
 | `test/docs/tutorial.test.ts` | [`docs/plugins/writing-a-plugin.md`](../plugins/writing-a-plugin.md), [`docs/plugins/api.md`](../plugins/api.md) | Every `ts`/`tsx` block is a `// #region` of a fixture in `test/docs/fixtures/`, and every region is shown |
 | `test/e2e/language.test.ts` | [`docs/agents/CONTEXT-MAP.md`](../agents/CONTEXT-MAP.md) and each `src/plugins/<id>/CONTEXT.md` | Each Built-in Plugin has a glossary with `_Avoid_` words, linked from the map; user-facing text avoids those words |
 
+## Screenshots
+
+Screenshots of the TUI are taken with [agentic-tui](https://github.com/codeboltai/agentic-tui), a
+devDependency that runs a command in a PTY and lets a script (or an agent) send keys, wait for text
+and save the screen as text, JSON or PNG. `scripts/demo-data-root.sh <dir>` builds the Data Root
+they are taken against with the built CLI: one Board with two Stories per Stage, Assignees, Tasks and
+a Comment. The steps are in the agent skill `.agents/skills/rowbly-screenshots/SKILL.md`. A PNG shows
+the text in one colour, without Stage colours or styling.
+
+`node-pty` is pinned to a 1.2 beta in `pnpm-workspace.yaml`, because 1.1.0 ships no Linux x64
+binary; its build script stays off, since the binaries it ships load without it.
+
 ## Debugging
 
 - `ROWBLY_DEBUG=trace` prints every operation, commit and Plugin callback with its stage, time and outcome to stderr ([Tracing](../plugins/api.md#tracing)). It never records inputs, data or messages.

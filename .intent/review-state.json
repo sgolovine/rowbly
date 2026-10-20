@@ -1703,10 +1703,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -1717,10 +1717,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -1806,10 +1806,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -1883,10 +1883,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -2406,10 +2406,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -3985,10 +3985,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -3999,10 +3999,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -4013,10 +4013,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -4027,10 +4027,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -4041,10 +4041,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -4055,10 +4055,10 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
@@ -4069,11 +4069,123 @@
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/LICENSE": {
+      "fingerprint": "4ede7b7249421133b62ab15fe31f032916be261100a9de67e067e8a9bc419739",
+      "snapshot": {
+        ".agents/skills/agentic-tui/LICENSE": "3a03b44a444ebf9f9bb30e84e5c199965fd0a5ccb54a29dd5fe9e9932b30ca27"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fb78b3a6430f5c849c1fae4ab7b899502fd3e959225cc58fad1926dbfcb9d829",
+      "snapshot": {
+        ".agents/skills/agentic-tui/SKILL.md": "e3f682a09b1e2248073b0eb57d4ea1369a8c93538a0aef00f4e9a0a8d6f93129"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/UPSTREAM.md": {
+      "fingerprint": "2b5ad0442c78e26ca0031f82f06cd558e37540fd28c0937d71c4f6676cd447a9",
+      "snapshot": {
+        ".agents/skills/agentic-tui/UPSTREAM.md": "b1dd7b5c7ea8cea79a9901db9ceba2362e6b5493607dd817adc41eccc16ef993"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "4108cb489eae5c29f224b06d205d1a5cc93c0488a77ac2fee7343843b41e52b9",
+      "snapshot": {
+        ".agents/skills/rowbly-screenshots/SKILL.md": "00c6b12cd8a3f96feaa1825a60453f1f2475a425fb7fbcd6314cf593600213bb"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fd925090f2867de1fff2a96b4f73cdeee99eb690dba70eb61a5c495741adc25c",
+      "snapshot": {
+        ".claude/skills/agentic-tui/SKILL.md": "d03331b137957bdc8d1c8cce87fb60bada7e225fc49a3ed8b22c8d950a535099"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "6caff2259045e97af5beefb766433e977b4a0f010f9ed80f849a83cd32a6c2df",
+      "snapshot": {
+        ".claude/skills/rowbly-screenshots/SKILL.md": "73843669e5b9f9412db44eab031162343ff06aa69c00116d2fd2410773489825"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:pnpm-workspace.yaml": {
+      "fingerprint": "12031148ce79fe131c558e4288d55562b2ef0f71389a06bf8e1277ab4ca6fd03",
+      "snapshot": {
+        "pnpm-workspace.yaml": "e20e7c9a3a4afe42e8f683d0b21222d38a073f7eecd91fafd26e60dfec74247c"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:scripts/demo-data-root.sh": {
+      "fingerprint": "14d1804d433a25ee01ed787e76e61b60b08fe767d916135494271c5b97375b08",
+      "snapshot": {
+        "scripts/demo-data-root.sh": "bd8a0d23f3bf555e7c47c5dcb181187746d324cb6f91220f5cf246dde52df7e5"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     },
     "source:docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
