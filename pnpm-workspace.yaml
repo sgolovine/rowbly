@@ -1,2 +1,8 @@
 allowBuilds:
   esbuild: true
+  # agentic-tui's PTY. Its install script would compile from source; the prebuilt
+  # binaries it ships load without it.
+  node-pty: false
+overrides:
+  # node-pty 1.1.0 ships no Linux x64 binary; 1.2 ships one for every CI and dev platform.
+  node-pty: 1.2.0-beta.15

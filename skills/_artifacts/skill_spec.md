@@ -115,3 +115,8 @@ See `domain_map.yaml` for mechanisms and patterns.
 - Updated guidance: rowbly-plugins (Story Spec definition, `specs list --story`, named Story Specs, the result shape, a new MEDIUM mistake: a second Story Spec without a slug exits 4). The HIGH "Story Spec named by slug" mistake keeps its correct pattern and adds the slug-after-verb form.
 - No change: rowbly-cli, rowbly-setup, rowbly-stories and rowbly-doctor. Their tracked sources changed only in the TUI section of README.md (the full-screen editor's view and edit modes, list clicks) and the Plugin-folder comment in `docs/architecture/data-model.md`; TUI operation is outside the assessed scope, and they say nothing about Story Specs.
 - Checks: `intent validate skills` passed; `test/skills/agentWorkflows.test.ts` now creates a second, named Story Spec, lists both and asserts the slug-less second create exits 4. The fresh consumer result is recorded in the review evidence for this revision.
+
+### Decision — development skills stay outside Intent (2026-10-19)
+
+- Skills for developing Rowbly, such as `rowbly-screenshots` and the vendored upstream `agentic-tui` skill, live in `.agents/skills/<name>/` with pointers in `.claude/skills/<name>/`. They are not published, not registered with Intent, and not part of this spec's skill tree; their source reviews are recorded as `out-of-scope`. This keeps Batch 1's scope: development of Rowbly itself is covered by `AGENTS.md` and `docs/development/README.md`, not by the Intent skills.
+- No guidance in `skills/` changed: the agentic-tui integration adds no command, flag, output, exit code, doctor finding or Data Root behavior.

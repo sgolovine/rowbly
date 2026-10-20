@@ -156,30 +156,79 @@ describe('board view', () => {
 
   it('moves a card to the next Stage with shift+→, at the bottom, and on disk', async () => {
     const t = await seed();
-    const app = await open(t);
-    await app.press(KEYS.right, KEYS.shiftRight);
-    await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
-    const lines = frameLines(app).join('\n');
-    expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
-    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
-    expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
-    // The cursor follows the card: shift+← moves it back.
-    await app.press(KEYS.shiftLeft);
-    await waitForFrame(app, (f) => f.includes('● Todo (1)'));
-    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
-    app.unmount();
+    // The move is on disk before the service call returns; the barrier holds the call open in that window.
+    // Each held call, in order; the test releases one once it has arrived.
+    const held: (() => void)[] = [];
+    const app = await open(t, {
+      patch: (services) => ({
+        ...services,
+        stories: {
+          ...services.stories,
+          move: async (...args: Parameters<Services['stories']['move']>) => {
+            const saved = await services.stories.move(...args);
+            await new Promise<void>((resolve) => held.push(resolve));
+            return saved;
+          },
+        },
+      }),
+    });
+    try {
+      await app.press(KEYS.right, KEYS.shiftRight);
+      await vi.waitFor(() => expect(held).toHaveLength(1));
+      expect((await story(t, 'WEB-4')).stage).toBe('doing');
+      // Saved on disk but still writing: the keys are ignored, so their hints are hidden.
+      expect(app.lastFrame()).not.toContain('n new');
+      held[0]?.();
+      await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)') && f.includes('n new'));
+      const lines = frameLines(app).join('\n');
+      expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
+      expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
+      // The cursor follows the card: shift+← moves it back.
+      await app.press(KEYS.shiftLeft);
+      await vi.waitFor(() => expect(held).toHaveLength(2));
+      expect((await story(t, 'WEB-4')).stage).toBe('todo');
+      held[1]?.();
+      await waitForFrame(app, (f) => f.includes('● Todo (1)') && f.includes('n new'));
+    } finally {
+      for (const release of held) release();
+      app.unmount();
+    }
   });
 
   it('keeps h/l and H/L as alternatives to the arrow keys', async () => {
     const t = await seed();
-    const app = await open(t);
-    await app.press('l', 'L');
-    await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)'));
-    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('doing'));
-    await app.press('H');
-    await waitForFrame(app, (f) => f.includes('● Todo (1)'));
-    await vi.waitFor(async () => expect((await story(t, 'WEB-4')).stage).toBe('todo'));
-    app.unmount();
+    // The move is on disk before the service call returns; the barrier holds the call open in that window.
+    const held: (() => void)[] = [];
+    const app = await open(t, {
+      patch: (services) => ({
+        ...services,
+        stories: {
+          ...services.stories,
+          move: async (...args: Parameters<Services['stories']['move']>) => {
+            const saved = await services.stories.move(...args);
+            await new Promise<void>((resolve) => held.push(resolve));
+            return saved;
+          },
+        },
+      }),
+    });
+    try {
+      await app.press('l', 'L');
+      await vi.waitFor(() => expect(held).toHaveLength(1));
+      expect((await story(t, 'WEB-4')).stage).toBe('doing');
+      // Saved on disk but still writing: the keys are ignored, so their hints are hidden.
+      expect(app.lastFrame()).not.toContain('n new');
+      held[0]?.();
+      await waitForFrame(app, (f) => f.includes('● Todo (0)') && f.includes('● Doing (2)') && f.includes('n new'));
+      await app.press('H');
+      await vi.waitFor(() => expect(held).toHaveLength(2));
+      expect((await story(t, 'WEB-4')).stage).toBe('todo');
+      held[1]?.();
+      await waitForFrame(app, (f) => f.includes('● Todo (1)') && f.includes('n new'));
+    } finally {
+      for (const release of held) release();
+      app.unmount();
+    }
   });
 
   it.each([
