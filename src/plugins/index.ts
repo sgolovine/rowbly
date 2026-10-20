@@ -4,7 +4,8 @@ import type { AnyPluginDefinition } from '../plugin-api';
 import { assignees } from './assignees';
 import { comments } from './comments';
 import { epics } from './epics';
+import { git } from './git';
 import { specs } from './specs';
 import { tasks } from './tasks';
 
-export const builtInPlugins: readonly AnyPluginDefinition[] = [assignees, tasks, epics, specs, comments];
+export const builtInPlugins: readonly AnyPluginDefinition[] = [assignees, tasks, epics, specs, comments, git];

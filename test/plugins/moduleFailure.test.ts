@@ -12,12 +12,14 @@ const ids = builtInPlugins.map((d) => d.id);
 
 describe('every Built-in Plugin (RES-18A)', () => {
   it('has a valid definition', () => {
-    expect(ids).toEqual(['assignees', 'tasks', 'epics', 'specs', 'comments']);
+    expect(ids).toEqual(['assignees', 'tasks', 'epics', 'specs', 'comments', 'git']);
     for (const definition of builtInPlugins) expect(validatePluginDefinition(definition, reservedNames())).toEqual([]);
   });
 
   it('starts with the built CLI, all on, without warnings', async () => {
     const t = await pluginRoot(Object.fromEntries(ids.map((id) => [id, true])));
+    const { execFileSync } = await import('node:child_process');
+    execFileSync('git', ['init', '-b', 'main'], { cwd: t.dir });
     const cli = (args: string[]) => runCli(args, { root: t.path });
 
     const listed = await cli(['plugins', 'list', '--json']);

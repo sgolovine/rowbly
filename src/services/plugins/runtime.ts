@@ -15,6 +15,7 @@ import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
+import { createPluginGit } from './git';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
@@ -280,7 +281,7 @@ export function createOperationRunner(
     traceOperation({ outcome: 'ok' });
     syncContext(changes);
 
-    const reactors = plugins.filter((plugin) => hooksOf(plugin)?.react);
+    const reactors = plugins.filter((plugin) => hooksOf(plugin)?.react || plugin.definition.react);
     if (reactors.length === 0) return result;
     // One frozen snapshot of the saved plan and result, shared by every reaction.
     const saved = changes.frozenView();
@@ -288,6 +289,11 @@ export function createOperationRunner(
     const reactions = async () => {
       for (const plugin of reactors) {
         const react = hooksOf(plugin)?.react;
+        if (plugin.definition.react) {
+          await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
+            plugin.definition.react?.({ ...event(plugin), changes: saved, result: finalResult }),
+          );
+        }
         if (react) {
           await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
             react({ ...event(plugin), changes: saved, result: finalResult }),
@@ -496,6 +502,8 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       const plugins = bag === undefined ? others : { ...others, [id]: bag };
       return Object.keys(plugins).length > 0 ? { ...rest, plugins } : rest;
     },
+    git: createPluginGit(ctx.root, id, ctx.warn),
+    localData: async () => (await repos.localState.get()).plugins?.[id],
     files: {
       // Each read is one participating read, under the Data Root lock (ADR-0019 §5).
       read: (scope, name) =>

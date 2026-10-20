@@ -23,7 +23,7 @@ domains:
     description: Day-to-day Story and Task work on a Board.
   - name: Plugins
     slug: plugins
-    description: Turning Built-in Plugins on and off and using Tasks, Epics, Specs and Comments.
+    description: Turning Built-in Plugins on and off and using Tasks, Epics, Specs, Comments and Git.
   - name: Data integrity
     slug: data-integrity
     description: Checking and repairing the Data Root with doctor, mainly after git merges.
@@ -161,14 +161,15 @@ skills:
     description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
       Plugin settings, or using the Built-in Plugins' commands: Epics (rowbly epics,
       --epic), Specs (rowbly specs, --spec, Story and Board Specs) and Comments
-      (rowbly comments). Also when a rowbly command is unknown because its Plugin is
+      (rowbly comments), and configuring automatic Git commits (rowbly git). Also when a rowbly command is unknown because its Plugin is
       off, or a Plugin failed to load. Not for writing a new Plugin."
-    covers: [plugins list/show/enable/disable, Plugin settings, assignees, tasks, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, PLUGIN_FAILED]
+    covers: [plugins list/show/enable/disable, Plugin settings, assignees, tasks, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, git show/configure, Automatic Commits, PLUGIN_FAILED]
     tasks:
       - Turn a Built-in Plugin on or off and change its settings
       - Group Stories into Epics and check Epic Progress
       - Write Specs and link Stories to Board Specs
       - Comment on Stories
+      - Configure personal automatic Git commits after each change or on an interval
     failure_modes:
       - mistake: Naming a Story Spec by slug
         mechanism: Story Keys are case-insensitive and web-42 is also a Board Spec slug.
@@ -216,6 +217,7 @@ skills:
       - Check and repair the Data Root after merging branches
       - Resolve a Story Key conflict from two branches
       - Recover when a command exits 6 or a commit was interrupted
+      - Pause Git Automatic Commits when reviewing all doctor repairs before committing
     failure_modes:
       - mistake: Resolving a Story Key add/add conflict by picking one side
         mechanism: One of the two Stories is lost; doctor --fix keeps both and renumbers.

@@ -53,6 +53,7 @@ export type * from './types';
  * operation runs through the Plugin pipeline of `ctx.plugins` (ADR-0012).
  */
 export function createServices(ctx: RowblyContext): Services {
+  ctx.plugins?.setWarningSink?.(ctx.warn);
   const repos = coordinatedRepositories(ctx.root, createRepositories(ctx.root));
   const ops = createOperationRunner(ctx, repos, () => services, mutationCoordinator(ctx.root));
   // Every service call holds the Data Root lock from its first read; an operation inside it reuses

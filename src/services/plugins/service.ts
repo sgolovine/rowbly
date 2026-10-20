@@ -1,6 +1,7 @@
 import { errorMessage, NotFoundError, PluginError, ValidationError } from '../../core';
 import type { Story } from '../../schemas';
 import type { Repositories } from '../../storage';
+import { gitInfo } from '../../storage/git';
 import type { PluginsService, RowblyContext, Services } from '../types';
 import { parseSettings } from './host';
 import { invokePlugin } from './invoke';
@@ -30,6 +31,7 @@ export function createPluginsService(ctx: RowblyContext, repos: Repositories, op
     enable: (id, opts = {}) =>
       ops.run('plugins.enable', { id, ...opts }, async (changes) => {
         const plugin = requireDefinition(id);
+        if (plugin.requiresGit) await gitInfo(ctx.root);
         await changes.updateRootConfig((config) => {
           const { enabled: _enabled, ...settings } = config.plugins?.[id] ?? {};
           try {

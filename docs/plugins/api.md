@@ -56,7 +56,9 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
 | `bags` | Schemas of its bags on Stories and Local State, checked by doctor. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
-| `start({ settings })` | Runs each time the Plugin loads. Throwing fails the load. |
+| `start({ settings, git, localData })` | Runs each time the Plugin loads. Throwing fails the load. |
+| `requiresGit` | When true, enabling the Plugin requires a Git repository containing the Data Root. |
+| `react` | A reaction for every saved Operation, including other Plugins’ Operations, with the same event and deadline as a named reaction. Runs before the named reaction. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
 | `replaces` | `{ '<core operation>': replacement }` ([replacements](#replacements)). |
 | `commands(group, cli)` | Verbs under `rowbly <id>`. |
@@ -71,7 +73,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 
 | Context | Given to | Has |
 | --- | --- | --- |
-| `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `files` (stored reads), `me`, `now()`, `newId()` |
+| `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
 | `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration and Board resolution only), `warn` |
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
@@ -352,3 +354,11 @@ rowbly trace op-5 stories.update operation rejected code=CONFLICT at=guard:point
 - `validatePluginDefinition(definition)` lists what loading would refuse; empty when it is fine.
 - For a TUI part, render one component with `ink-testing-library`, `host.context(id)` and a recording `PluginUi`, and wait for its loaded data before pressing keys (the recipe is in the module header).
 - `pnpm bench:plugins` runs the opt-in performance measurements ([`test/performance/README.md`](../../test/performance/README.md)).
+
+## Git capability
+
+`PluginGit` and `GitCommitOptions` are exported by the Plugin API. `git.info()` returns `{ root, authorName, authorEmail }` using the canonical Data Root's containing repository, independent of the caller's directory. Missing Git or no containing repository raises `VALIDATION` with a useful hint. Effective Git configuration supplies the author defaults.
+
+`git.changed(changes, options)` records paths from a saved `ChangeSetView` and commits immediately or schedules them. `git.resume(options)` resumes persisted paths and warns on failure. Options contain `frequency` (`change` or `interval`), `intervalSeconds`, and optional `authorName`/`authorEmail`. Local State-only changes add no paths. Both methods serialize with Data Root writes and check that the owning Plugin is still enabled. These effect methods are intended for `start` and reactions; commands and screens change personal preferences through an Operation. There is no arbitrary Git command or filesystem capability.
+
+Git executes argument arrays without a shell, with a 3.5 s limit per process and 1 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or drain guarantee on process exit. See [Git](built-in.md#git) for the user contract and ADR-0026 for scope.

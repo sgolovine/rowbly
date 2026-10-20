@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships five Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ Rowbly ships five Built-in Plugins. Each is off until a Data Root turns it on wi
 | [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
 | [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
+| [Git](#git) | Automatic Commits for saved Rowbly changes | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
@@ -190,3 +191,25 @@ Earlier Rowbly versions kept Epics, Comments, Tasks and Assignees in core ([ADR-
 - A Story's top-level `tasks` and `nextTaskNumber`, with any Comments on those Tasks: a hard cut-off. Doctor does not report them, and core drops them the next time it saves the Story.
 
 So **commit or back up the Data Root first**, then recreate what you need with the Assignees, Tasks, Epics and Comments Plugins.
+
+## Git
+
+![Git settings in the TUI](../assets/git-settings.png)
+
+Enable with `rowbly plugins enable git`. The Data Root must be inside a Git repository; activation outside one fails with `VALIDATION` (exit 2). An enabled Plugin loaded outside Git is reported as failed with the same explanation.
+
+Git reacts to all saved Operations, including other Plugins' changes, and creates `chore: update Rowbly data` commits. It commits the affected Rowbly-managed paths, including deletions, but excludes Local State, lock and transaction files. Other paths and unrelated staged changes are preserved. A touched path with staged changes is refused with a warning. Changes made by hand to an affected path are included; establish a clean Data Root baseline before enabling automation. Git ignores still apply.
+
+Personal preferences are in `local.json` under `plugins.git`:
+
+- `frequency`: `change` (default) or `interval`.
+- `intervalSeconds`: an integer from 1 to 86400; default 300.
+- `authorName` and `authorEmail`: optional; omitted fields use effective `git config user.name` and `user.email`, including repository and global `.gitconfig` settings.
+
+Use `rowbly git show` to inspect these preferences and defaults. Use `rowbly git configure --frequency interval --interval 600`, optionally with `--author-name` and `--author-email`. An empty author flag restores the Git default. In the TUI settings (`,`), **Git** appears when the Plugin is enabled and loaded and offers the same fields. Preferences take effect immediately and are never committed.
+
+Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. The next Rowbly load resumes pending work and commits it if due. There is no daemon or exit flush. Disabling the Plugin prevents pending commits and retains the pending paths for re-enabling.
+
+Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. There is no push, automatic branching or hook installation.
+
+Doctor repair passes are Operations too. To inspect a complete repair before the next Automatic Commit, disable Git before `doctor --fix` and re-enable it after doctor exits 0; keep other Plugins on for their checks.

@@ -362,6 +362,25 @@ rowbly plugins disable <id>    # keeps its settings and data
 <!-- END plugins -->
 
 <!-- BEGIN tui -->
+### Automatic Git commits
+
+Enable the **Git** Plugin with `rowbly plugins enable git` while the Data Root is inside a Git repository. Otherwise activation reports an error. Git creates `chore: update Rowbly data` commits for saved Rowbly changes, including other Plugins' writes and deletions. Establish a clean Data Root baseline first: edits made by hand to the same affected paths are included. Other files and unrelated staged changes stay untouched; staged changes on an affected path cause a warning instead of a commit. Local State, locks and transaction files are excluded.
+
+```sh
+rowbly git show
+rowbly git configure --frequency change
+rowbly git configure --frequency interval --interval 600
+rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com"
+rowbly git configure --author-name '' --author-email ''  # restore Git defaults
+```
+
+When Git is enabled and loaded, settings (`,`) includes **Git**, with frequency, interval in seconds (1–86400, default 300), and author name/email. These are personal preferences in Local State. The default frequency is after each change. Blank author fields use Git's effective `user.name` and `user.email` from repository/global configuration (`.gitconfig`).
+
+Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git prevents pending commits until re-enabled.
+
+Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](docs/plugins/built-in.md#git).
+
+
 ## Interactive mode (TUI)
 
 Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
