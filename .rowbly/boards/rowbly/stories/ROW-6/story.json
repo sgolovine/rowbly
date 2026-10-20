@@ -4,17 +4,13 @@
   "boardId": "rowbly",
   "name": "Make \"Assignees\" a plugin",
   "description": "Make the concept of assignees a plugin.",
-  "stage": "in-progress",
-  "rank": "a0",
-  "assignees": [],
+  "stage": "done",
+  "rank": "a5",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:55:48.635Z",
-  "updatedAt": "2026-10-13T19:55:48.635Z",
-  "nextTaskNumber": 1,
-  "tasks": [],
-  "comments": []
+  "updatedAt": "2026-10-20T22:28:24.888Z"
 }
