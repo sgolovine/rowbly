@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "b4d00aafad19dedd6694d896a498bf2ab660cc88a40d3938f5181261fa6543df",
+      "fingerprint": "869c418e9565d40d422fedf2221472802a073f025b6939dc607af06e283c177e",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,19 +14,18 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "6e5f5ad39099351b4907263cea38edd4e4c68dbde1934ff44cfa4a2278fcf9f9",
+      "fingerprint": "fe692284dd301f12fabeab30de20dded9a14b70031ff87b7a492d1a8c5869a5a",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -34,19 +33,18 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "eb951cad0bec45353e5839236800689c778cdd41a96573c538f2ff14ad529cad",
+      "fingerprint": "4b148709aea264170fbf93f06956bfec22f2436f975b2edb34e79be859cea27f",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
@@ -57,19 +55,18 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "3262453a38a9a272ce130fc2b18de1f976f110ab9ef373e30fddb46b029eba02",
+      "fingerprint": "bdb16654c935c5189b74762902ac8689c9f1379cdaadb549d5ed8d312c0f8add",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -78,19 +75,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "ddd97bb5e1b10100667de1edc289db27103ef1b6ab25f20f20f1a8835fb65244",
+      "fingerprint": "46540ef9912caffd7e39fb93f0405ae547788f0cc04313c15df5019cf9d5c7f2",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -99,19 +95,18 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "fb237de5a25ac9369e7f3d40ee50c4766c9f6cc20966b8dcfb8867b3710c7850",
+      "fingerprint": "96e2668df188d51e57e78ac5a636614a6b8817955ebb77028974cd1cea51d73a",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -147,11 +142,12 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "Changed: skills/_artifacts/skill_spec.md at ec76672d7f139c651c63a721e512a22e4498f9ea"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -251,255 +247,276 @@
       ]
     },
     "source:docs/adr/0001-json-files-not-sqlite.md": {
-      "fingerprint": "b2088675e8f7749beede3ffba39acc07bc0705b9830cefa96eebae0e58fd95a7",
+      "fingerprint": "16fab36d023e2c5f5d726730f7cb384fb8ed91e52c8c4bbbe055d66482440061",
       "snapshot": {
-        "docs/adr/0001-json-files-not-sqlite.md": "5d47c11bbd105168f5b2176b78db4de1b769aa3f23097958f8d7884a4b6d8f35"
+        "docs/adr/0001-json-files-not-sqlite.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0002-data-root-discovery.md": {
-      "fingerprint": "00a14d1074d02ff6550a98aabf7d63768ae5997c613f1e527e85945d47da679b",
+      "fingerprint": "e3c67b4b299fb041b2e84fc92fb3b26ef318c89fb80c3cebbd66ade6a577c47b",
       "snapshot": {
-        "docs/adr/0002-data-root-discovery.md": "c03f3d52468bb59d013d0580682432c576d7c840c1ac2ee8d453cb37d64fb53f"
+        "docs/adr/0002-data-root-discovery.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0003-story-keys.md": {
-      "fingerprint": "92a08ec29139147196ea5103b03120b35438b0f075348f121fba738949c6314a",
+      "fingerprint": "bab40f6652713d63b7cb65b220d5439544432030b01eef3e7b869e5962870c19",
       "snapshot": {
-        "docs/adr/0003-story-keys.md": "c5341f14ed957906b8e4e5a861c9d95b4de627c88d89531c4ef9436493b6fe01"
+        "docs/adr/0003-story-keys.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0004-epic-link-on-story.md": {
-      "fingerprint": "1fb68659f66bb055ca505d1436fbfc2495659d98de2e1d8ed6283c71001eb755",
+      "fingerprint": "6ad0fed51438c3c85c261dd1ae3c503a3b76d509190902ce39130a5abc82e09f",
       "snapshot": {
-        "docs/adr/0004-epic-link-on-story.md": "6ede5fa901a15be9a572182d95a43a42c83c7250d862ee6edde13b170e331caf"
+        "docs/adr/0004-epic-link-on-story.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0005-stages-and-fields-are-configuration.md": {
-      "fingerprint": "cf817fbce27334edaa2d82ba31d6dfab2bb9689f813f479043c08e1df90f61b8",
+      "fingerprint": "3d321bcd8b6b47e002127f1a66f7ff9ac14ff924459c8aea48290e58bae613e9",
       "snapshot": {
-        "docs/adr/0005-stages-and-fields-are-configuration.md": "a465ac0a642ac1f33c2b590c83800c4b42217adbf831f454d170d360a34ccb7a"
+        "docs/adr/0005-stages-and-fields-are-configuration.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0006-ink-owns-the-interactive-mode.md": {
-      "fingerprint": "76d9d41bc7aa6f962af89b186782352b0420ff661e1d8ba40b5186e9f0479f2c",
+      "fingerprint": "c9d5c8106397e8b448c4bdbb78a62498961997364e0586ae3b2ecf046cd421df",
       "snapshot": {
-        "docs/adr/0006-ink-owns-the-interactive-mode.md": "10cf3bfb6110ef58bc06cddb207a8024014abb50d0314bc02a689f8d7e034245"
+        "docs/adr/0006-ink-owns-the-interactive-mode.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0007-no-workspaces.md": {
-      "fingerprint": "d1af3c65476d031dab38c803deaf9a2417047ae092b72fe550dc73dc5dec49fe",
+      "fingerprint": "809e8ff7d7c3fab180895edaf809c162183fed2fd2184b612b201e3fcdd03d73",
       "snapshot": {
-        "docs/adr/0007-no-workspaces.md": "a9043c9e18a4633c8c42345b324aaf8d750109bb9351b1c17dcde72c25a13683"
+        "docs/adr/0007-no-workspaces.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0008-no-epics.md": {
-      "fingerprint": "d61be5c2b309602f01a263e47908b30905c61f4f740e5180bbf7eff55a6fad97",
+      "fingerprint": "771c8e1358349e2a8089b1dad869fc58e5f098769507f9bdca545f0e0859c5af",
       "snapshot": {
-        "docs/adr/0008-no-epics.md": "a289d4477adabb93c433fc29368cc3fc3df390ec0e59e51c9351bddec094739f"
+        "docs/adr/0008-no-epics.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
-      "fingerprint": "b6e295ad00e46b9169e76431097aeebc3a05dd7e31102fa770a62718c9a9a498",
+      "fingerprint": "5931d301c2fc9e93dd53802ad73713a21760206457176756aeddde36776dd442",
       "snapshot": {
-        "docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
+        "docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0010-plugins-are-turned-on-per-data-root.md": {
-      "fingerprint": "6cbee3dec29c7eb99e0fc97087c2773c053311cd5b410d6506ffc0373bc62410",
+      "fingerprint": "932472a370009330521c59f067971677086cf146bfb343b49346744a5dd2d37b",
       "snapshot": {
-        "docs/adr/0010-plugins-are-turned-on-per-data-root.md": "de8efb2c15074373cffa6d7ec5ca927e4b274b7bf9a860f57c205273a51ea7ac"
+        "docs/adr/0010-plugins-are-turned-on-per-data-root.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": {
-      "fingerprint": "c20c17ca8e4662ff06085c4e88d42861ae41487186badcbcbbb70b626502da9b",
+      "fingerprint": "69a42767a0e74a4820df1395ddea1ce0052800a320f0b2b751fd093dc3d2c756",
       "snapshot": {
-        "docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": "ab964cb0b5961cbc8051f779e8dcb56fe759cbf77144830159a491005d6d6bd8"
+        "docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0012-plugins-intercept-service-operations.md": {
-      "fingerprint": "6e0967e1f665b9a237f032ed077c0a3536191ddd52a1e7db7b6e26323e532111",
+      "fingerprint": "769a12dce28d06d9209d28dd4c413595d0cddac85f66aa014cbf0f2b7b7194ab",
       "snapshot": {
-        "docs/adr/0012-plugins-intercept-service-operations.md": "b4f47e2c7820ebb20f526a9f5a2007fab824b42a56861ecd2658a162dfafcbf7"
+        "docs/adr/0012-plugins-intercept-service-operations.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": {
-      "fingerprint": "4c4629f7581d3854d65ec9a518b87369a6e92da079fc3870a4f01e48570c7c2b",
+      "fingerprint": "c9445a74880bae413d09cbd10aebbb72ab53227a2f1534f2b6b7a605fdabac0b",
       "snapshot": {
-        "docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": "eda52f3752d9f63bba4a44ef8ab443e2ad01110540b2642602541c3da16528d7"
+        "docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0014-epics-return-as-a-built-in-plugin.md": {
-      "fingerprint": "dbd8d1cefc584f8251eabdf516a5cba1192b3bf1139210fd26492add61c341a2",
+      "fingerprint": "d9c8db5a8d589ad8d67c917e67067b000bfdda253e62999b96652678aba61489",
       "snapshot": {
-        "docs/adr/0014-epics-return-as-a-built-in-plugin.md": "f540fd18128ed0741ba049468ad79eaeed964d1d7476e57e01f1948a76626d07"
+        "docs/adr/0014-epics-return-as-a-built-in-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0015-specs-are-markdown-files.md": {
-      "fingerprint": "ee89b07989a4a66755c5f0ae5442979703700c1b201d3afaad7753c1c4f913fd",
+      "fingerprint": "d736aab6933a74bbf2143283510d6ab1a706b5db10d2821b8bcff30f29f28dbb",
       "snapshot": {
-        "docs/adr/0015-specs-are-markdown-files.md": "2864e77eec2f4490093d5e40c2057f9f2b998a6bfa42c4a8727aa65e3b9cca4d"
+        "docs/adr/0015-specs-are-markdown-files.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0016-git-automation-design.md": {
-      "fingerprint": "0b4b2f41e4060b8af4ac09cc4cb3d264f7faa145a4102aacd5af815c7d538a2f",
+      "fingerprint": "ddfb8c652ceadc4f18803fee36b2a10abccb04637521f56e7f692d12d6e27f6c",
       "snapshot": {
-        "docs/adr/0016-git-automation-design.md": "c3830f871e187ad2df9e80d54a695e3400089832bfbd2ce24e7d7c0befd0cde7"
+        "docs/adr/0016-git-automation-design.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0017-actions-are-tui-only.md": {
-      "fingerprint": "244e10d40ecb8d561cbeb1a8653249f07b73b4b32d4ee05e31f5efa7dadeacdb",
+      "fingerprint": "a3fb99cfcdbf7930ff9251f402b55c4350900b025422337c57b75165564b4548",
       "snapshot": {
-        "docs/adr/0017-actions-are-tui-only.md": "b40fed05c66ddc2d222270d6b0af7bd0a90c52378da3943c5ea4c52ed7f347ee"
+        "docs/adr/0017-actions-are-tui-only.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0018-comments-are-a-built-in-plugin.md": {
-      "fingerprint": "8e4e54c4e8421c03ff52a88f9bfc3a1cfab72d0d17500723c6b4997db1f2af4c",
+      "fingerprint": "c0d474b136742d15d907bef49511d70287b9ba8f6bab0c2bb808746ca8c5a57c",
       "snapshot": {
-        "docs/adr/0018-comments-are-a-built-in-plugin.md": "f1d935a90d2e45556ebc73d0ce2316a972ac822dcafbeeff2f7ebd9af0df35d0"
+        "docs/adr/0018-comments-are-a-built-in-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0019-coordinated-recoverable-commits.md": {
-      "fingerprint": "44e8b61bc3ff688f311c3fb631ac2ef2f04989158a2e86f4576e675ba22cae99",
+      "fingerprint": "a6c0a83bf0d27fb22b6087297b41faf9241167037ef161c32e011ed599b10cb6",
       "snapshot": {
-        "docs/adr/0019-coordinated-recoverable-commits.md": "6a4685a897d9c7a4c5368e9bea40861833331dc262c1e035328b1393ab60b8ba"
+        "docs/adr/0019-coordinated-recoverable-commits.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0020-plugin-execution-and-data-contracts.md": {
-      "fingerprint": "26ac7205115a107b77534773e658842df933182bcacdbc23afdf27c53947b000",
+      "fingerprint": "87d96e4860fb6958cba5e21a6e99b740377dd030762977ee4c2ee2c7ffb0ee7a",
       "snapshot": {
-        "docs/adr/0020-plugin-execution-and-data-contracts.md": "03acab392100cd3218b84158b3a2b5dbd6948af3f4b65f45c1e3feae4ff77de5"
+        "docs/adr/0020-plugin-execution-and-data-contracts.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/0021-plugin-format-and-compatibility-policy.md": {
-      "fingerprint": "f31a97b5b1c6ee418216124315ed8cb9a77b06c91bace5af7bfb3694573b43a7",
+      "fingerprint": "642659087819e6fc6182aa184c23fbb5eb19654568aedff56e1690b0bdef8be6",
       "snapshot": {
-        "docs/adr/0021-plugin-format-and-compatibility-policy.md": "9424a9b1d751bc8c5851c133aed9bc650d71eeda4815ed0ccfde480e1a0d0577"
+        "docs/adr/0021-plugin-format-and-compatibility-policy.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/adr/README.md": {
@@ -613,15 +630,16 @@
       ]
     },
     "source:docs/plugins/trust.md": {
-      "fingerprint": "5f170ba26eef05e62ac386b4b81b0068201f6cb613e140a41dbedd04ae5d9d1e",
+      "fingerprint": "ba1f5873d72ac62e27b55539ac22dfdfe76fdb3f747a5bcd625359c761a550d5",
       "snapshot": {
-        "docs/plugins/trust.md": "2464d9075d0bfb6d392fcc3bac9052b200d309d4accd2b7d9475823e0e11b1f8"
+        "docs/plugins/trust.md": "2382fd8573ca2644301ddde20ce0e9b23ae60124ef560eb8ee0728ba99164b0f"
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/plugins/writing-a-plugin.md": {
@@ -1762,16 +1780,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
+      "fingerprint": "3a3f26bfc90a11647bab0bd6c23993734d5ebcdc147b263cfd97005c3dcfe32b",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
+        "src/tui/screens/board/BoardScreen.tsx": "7084eaacda09ce3cec7d8246abb5b66b9229e9dc2f528fd343b4871e36d4773d"
       },
-      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
-      "outcome": "out-of-scope",
-      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "no-change",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
-        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1800,15 +1818,16 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "ca39937a22b9e9a32d6254c6f2d27417069ef1d9da7762a3ea7f6db344435d74",
+      "fingerprint": "d5f77b6bf9ffe3922d0cb356cfbb9f55b21fff6ab4140bbf8a8e6c11d948a505",
       "snapshot": {
-        "test/tui/board.test.tsx": "5cdd9ae728325b2936ce674ed20c0ff8bcae327e14817db1042e155d9c32be13"
+        "test/tui/board.test.tsx": "2a28892680d6139890182b6432750857b2554f8df7705f7ec36c020b0f6e2cbc"
       },
-      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
       "outcome": "no-change",
-      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
+      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
       "evidence": [
-        "Changed: test/tui/board.test.tsx at ec76672d7f139c651c63a721e512a22e4498f9ea"
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -4097,6 +4116,188 @@
         "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
         "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:docs/agents/adr/0001-json-files-not-sqlite.md": {
+      "fingerprint": "c78063698977b0abf431f2544e05b4d06dec9d4a40b6ebb987ade4e6ecb38cba",
+      "snapshot": {
+        "docs/agents/adr/0001-json-files-not-sqlite.md": "5d47c11bbd105168f5b2176b78db4de1b769aa3f23097958f8d7884a4b6d8f35"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0002-data-root-discovery.md": {
+      "fingerprint": "fd69590b8524ff64f7647991e14e5f99e1762f5e4014351622792771bfff04d8",
+      "snapshot": {
+        "docs/agents/adr/0002-data-root-discovery.md": "c03f3d52468bb59d013d0580682432c576d7c840c1ac2ee8d453cb37d64fb53f"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0003-story-keys.md": {
+      "fingerprint": "cf7049ce4abbbb23d61c21e03702e316ccfa5dff632ace8a682cbd3d07eb2178",
+      "snapshot": {
+        "docs/agents/adr/0003-story-keys.md": "c5341f14ed957906b8e4e5a861c9d95b4de627c88d89531c4ef9436493b6fe01"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0004-epic-link-on-story.md": {
+      "fingerprint": "fd1f3f04e443fcf8945e7bbf9fa653f95472ac7c5252d3559dfc8ca3ad2ee231",
+      "snapshot": {
+        "docs/agents/adr/0004-epic-link-on-story.md": "6ede5fa901a15be9a572182d95a43a42c83c7250d862ee6edde13b170e331caf"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0006-ink-owns-the-interactive-mode.md": {
+      "fingerprint": "68e2012c818228b2ea3cc92988bdbda4b2b9d6cbb7ea20117753931d44bb8384",
+      "snapshot": {
+        "docs/agents/adr/0006-ink-owns-the-interactive-mode.md": "10cf3bfb6110ef58bc06cddb207a8024014abb50d0314bc02a689f8d7e034245"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0007-no-workspaces.md": {
+      "fingerprint": "6eb43f846b9a937fc48fc243fb63d71e0a17af1f01c4d01e0134b3506d110f29",
+      "snapshot": {
+        "docs/agents/adr/0007-no-workspaces.md": "a9043c9e18a4633c8c42345b324aaf8d750109bb9351b1c17dcde72c25a13683"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0008-no-epics.md": {
+      "fingerprint": "6e83ee5e60e615c70e648dd5a103d7ccaa9004f960de4b3db2a965c7dc7bb777",
+      "snapshot": {
+        "docs/agents/adr/0008-no-epics.md": "a289d4477adabb93c433fc29368cc3fc3df390ec0e59e51c9351bddec094739f"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
+      "fingerprint": "ba561511b734e1dce3c8b705e2cb90aa57b4ec8fb9bc8913febf4755c2cd102c",
+      "snapshot": {
+        "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0010-plugins-are-turned-on-per-data-root.md": {
+      "fingerprint": "a721d49c9e1037b08e44b2e244b1e20dbc21799e1f23c29a4542f077e63d2775",
+      "snapshot": {
+        "docs/agents/adr/0010-plugins-are-turned-on-per-data-root.md": "de8efb2c15074373cffa6d7ec5ca927e4b274b7bf9a860f57c205273a51ea7ac"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0012-plugins-intercept-service-operations.md": {
+      "fingerprint": "2f0c502e6614a577e5182f50a4d8cc8aaad8e0f933130dc548c23383c7f3cf94",
+      "snapshot": {
+        "docs/agents/adr/0012-plugins-intercept-service-operations.md": "b4f47e2c7820ebb20f526a9f5a2007fab824b42a56861ecd2658a162dfafcbf7"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0014-epics-return-as-a-built-in-plugin.md": {
+      "fingerprint": "16e0c640514c77b1a6ecdb8fb0eed8b9a9c760109fb219ba1cb3cbea2fa9ad17",
+      "snapshot": {
+        "docs/agents/adr/0014-epics-return-as-a-built-in-plugin.md": "f540fd18128ed0741ba049468ad79eaeed964d1d7476e57e01f1948a76626d07"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0015-specs-are-markdown-files.md": {
+      "fingerprint": "da3883c54a3c1d792af52004f2673b9e843e853ba7fcd9797d57681f0568ffcc",
+      "snapshot": {
+        "docs/agents/adr/0015-specs-are-markdown-files.md": "2864e77eec2f4490093d5e40c2057f9f2b998a6bfa42c4a8727aa65e3b9cca4d"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0019-coordinated-recoverable-commits.md": {
+      "fingerprint": "273cb4b55509969bcde74e97fb57547b4e9f3da6aaf0978c589e69104132d10c",
+      "snapshot": {
+        "docs/agents/adr/0019-coordinated-recoverable-commits.md": "2da6d546da40fdbba586a343fe3346165da29b48482979c90fc77ed96217cd50"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0021-plugin-format-and-compatibility-policy.md": {
+      "fingerprint": "7721a038f02e284f1b0159a7fd356ab9200fb5a08b2835708b88f69bd0c4796a",
+      "snapshot": {
+        "docs/agents/adr/0021-plugin-format-and-compatibility-policy.md": "ef0bcaa43ef0e179051afbf074615672cfdba2e7caa016bffcd53bdaccab72b2"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     }
   }
