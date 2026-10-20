@@ -25,6 +25,11 @@ interface Hold {
 /** The holds of the running code, per canonical Data Root. A continuation keeps them. */
 const holds = new AsyncLocalStorage<ReadonlyMap<string, Hold>>();
 
+/** Reactions and queued effects own their reads; they cannot extend the saving caller's hold. */
+export function outsideCoordination<T>(fn: () => Promise<T>): Promise<T> {
+  return holds.run(new Map(), fn);
+}
+
 /** Canonical paths, so that aliases of one Data Root share one hold (as they share one lock). */
 const canonicalPaths = new Map<string, Promise<string>>();
 

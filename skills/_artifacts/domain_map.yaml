@@ -163,7 +163,7 @@ skills:
       --epic), Specs (rowbly specs, --spec, Story and Board Specs) and Comments
       (rowbly comments), and configuring automatic Git commits (rowbly git). Also when a rowbly command is unknown because its Plugin is
       off, or a Plugin failed to load. Not for writing a new Plugin."
-    covers: [plugins list/show/enable/disable, Plugin settings, assignees, tasks, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, git show/configure, Automatic Commits, PLUGIN_FAILED]
+    covers: [plugins list/show/enable/disable, Plugin settings, assignees, tasks, epics, specs, comments, --epic, --spec, --add-spec, --reset-specs, git show/configure, Automatic Commits, queued Git snapshots, PLUGIN_FAILED]
     tasks:
       - Turn a Built-in Plugin on or off and change its settings
       - Group Stories into Epics and check Epic Progress

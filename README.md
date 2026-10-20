@@ -376,7 +376,9 @@ rowbly git configure --author-name '' --author-email ''  # restore Git defaults
 
 When Git is enabled and loaded, settings (`,`) includes **Git**, with frequency, interval in seconds (1–86400, default 300), and author name/email. These are personal preferences in Local State. The default frequency is after each change. Blank author fields use Git's effective `user.name` and `user.email` from repository/global configuration (`.gitconfig`).
 
-Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git prevents pending commits until re-enabled.
+Saved changes enter a Git queue. The TUI stays usable while commits run; rapid edits may share a commit. Git commits a snapshot of saved files and keeps later edits queued. Command mode waits for due commits, without the reaction's five-second deadline; it does not wait for future interval deadlines.
+
+Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git pauses waiting work until re-enabled; an already running commit may finish.
 
 Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](docs/plugins/built-in.md#git).
 

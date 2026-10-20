@@ -200,6 +200,8 @@ Enable with `rowbly plugins enable git`. The Data Root must be inside a Git repo
 
 Git reacts to all saved Operations, including other Plugins' changes, and creates `chore: update Rowbly data` commits. It commits the affected Rowbly-managed paths, including deletions, but excludes Local State, lock and transaction files. Other paths and unrelated staged changes are preserved. A touched path with staged changes is refused with a warning. Changes made by hand to an affected path are included; establish a clean Data Root baseline before enabling automation. Git ignores still apply.
 
+Reactions persist work in a queue and return before Git runs. The worker copies the selected saved files under a brief Data Root lock, then runs Git against that snapshot under a separate lock in Git's directory. Reads and edits remain available during Git work. An edit queued while a commit runs remains pending, including an edit to the same path. Rapid edits may share a commit. Command mode waits for due work outside the reaction deadline; the TUI continues after enqueueing. See ADR-0030.
+
 Personal preferences are in `local.json` under `plugins.git`:
 
 - `frequency`: `change` (default) or `interval`.
@@ -208,7 +210,7 @@ Personal preferences are in `local.json` under `plugins.git`:
 
 Use `rowbly git show` to inspect these preferences and defaults. Use `rowbly git configure --frequency interval --interval 600`, optionally with `--author-name` and `--author-email`. An empty author flag restores the Git default. In the TUI settings (`,`), **Git** appears when the Plugin is enabled and loaded and offers the same fields. Preferences take effect immediately and are never committed.
 
-Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. The next Rowbly load resumes pending work and commits it if due. There is no daemon or exit flush. Disabling the Plugin prevents pending commits and retains the pending paths for re-enabling.
+Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. The next Rowbly load resumes pending work and commits it if due. There is no daemon or flush of future interval work on exit. Disabling the Plugin pauses waiting work and retains the pending paths for re-enabling; an already running commit may finish.
 
 Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. There is no push, automatic branching or hook installation.
 

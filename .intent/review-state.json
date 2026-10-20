@@ -3,53 +3,54 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "d20a43857379a7b8f77c8c36d93635dc4d9dc05a6402c4c265d84bb746053fd2",
+      "fingerprint": "9f25a3a75c51f7fdbdddd9c965382caa94f4e07daf41a1abd7077e4ea059bedf",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
+        "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
-        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
+        "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "170831969ec4c91ad93131346e3e1a317b56b93c5b64f44d0e25d3e39c94f9b0",
+      "fingerprint": "9a17ef04bfd09419b2b0937e52a080019b0df7e054ee590a7646c3988aff69a7",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
-        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
+        "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "9b7d031c828275eaf6a8a681618fd3f825a80d4a45b458ce89c44c48973b2d5d",
+      "fingerprint": "f6ec20ccdd698071a75e5517f898f77cfe89eb801e0b8fccc004bffe38273149",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
+        "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
-        "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
+        "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -58,24 +59,25 @@
         "src/plugins/git/model.ts": "4fba98b457c2d0e7750638e6d6d8669b4402aa39c5b6358fa7a5294212a5d24e",
         "src/plugins/specs/commands.ts": "a7034574cc85aad657f0414a7b90fabcc063310fc0fc59921bd92eb945e3b04c",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf",
+        "src/storage/git.ts": "559f50d9a35310941b2d1139860e85f0553d4582280de905898a3a2851885bcf",
+        "test/plugins/git.test.ts": "74cc610b90e4d953939e8c5766b85a3d91478ed1885053c63f097397fb3060c5",
         "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "c1c0fe863d5364c9cf7b71384eb5cd1f61de57bd1768fb03d0e115f8f7d3ebd6",
+      "fingerprint": "7feb8d152589a6124c39affabe8a41f70559be435814bda8e4615eaf256f6b38",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -84,18 +86,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "d64c40285e760f17d8a7e0323799c400ba50845fa8b8301d58be40d73d12f083",
+      "fingerprint": "f4a0fc2785884cc19d126a8434a17047fc0b648f927ffba11d1e8c2564a5f796",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -104,30 +106,31 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "cfca9d13fa37c70577a054df45bae3b9cbd55279306aebd14164c3eed38ef0d4",
+      "fingerprint": "c0c7f5fbec2861af0e1e9fc9e3d63aa588eabafa5bf6d41190c1831ff4ff6e23",
       "snapshot": {
-        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
+        "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
+        "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
-        "skills/_artifacts/domain_map.yaml": "dc287076faea671cd2c3d1bb1c4d675be5abb48cf1edcc7b1d21c9d6923d82ef",
-        "skills/_artifacts/skill_spec.md": "cb9947d89624b4e7edb4172cfa6dfc8641a10aa5048502d0e37b3c3adc6abf3f",
-        "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
+        "skills/_artifacts/domain_map.yaml": "f931748c067ea3a7f3b752cb62f8e91b07ecd4568d0c297036c72d7a7d92a326",
+        "skills/_artifacts/skill_spec.md": "28b3d5678ea3d1ab24b152fe983085a1bd74cb8d42628b015f01a27c352da675",
+        "skills/_artifacts/skill_tree.yaml": "d5324d622b8311451db56912f2641a178aed566ee2a1d79b6a71d790bc1c251a",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
-        "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
+        "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
@@ -140,7 +143,7 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
-        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf",
+        "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -151,19 +154,20 @@
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
+        "src/storage/git.ts": "559f50d9a35310941b2d1139860e85f0553d4582280de905898a3a2851885bcf",
+        "test/plugins/git.test.ts": "74cc610b90e4d953939e8c5766b85a3d91478ed1885053c63f097397fb3060c5",
         "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -551,18 +555,17 @@
       ]
     },
     "source:docs/architecture/operations.md": {
-      "fingerprint": "4c3c6beb8c8f47752878b380c0866d03cce4d24d8c5ceb3d68b98c51e5211f5a",
+      "fingerprint": "4889f04ce9014e7c600f627ea8f110ccf8a51196b42c66b7ef8daca7186ddc7d",
       "snapshot": {
-        "docs/architecture/operations.md": "b944f1a6c8bff587518e807391f5c04c90a6b5fd3d86a523259e9ba2d8aa6adf"
+        "docs/architecture/operations.md": "46f3ef8049e382f874daad9078b61d6902fe7fed6a4aba61ba546c7a064363e4"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "df619614b005886a687ca5f810487ff28f9bf953",
       "outcome": "no-change",
-      "reason": "Reviewed docs/architecture/operations.md against merged Git behavior: registry/glossary, documented git.configure inventory and test expectations match six Built-in Plugins and personal preferences. Existing operating guidance covers the behavior; no separate skill or additional command instructions are needed. Inventory/language/skills checks pass in the full suites.",
+      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/architecture/operations.md; changed files: docs/architecture/operations.md"
+        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
+        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
       ]
     },
     "source:docs/architecture/overview.md": {
@@ -629,18 +632,17 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "1dc00a36ad57dcf6583a0b1b58f345d87d090bf27c068cf48e2f8ba6cf1780b5",
+      "fingerprint": "df2260426d85ed2c73cef6307e677d9bc3e7c89ab44d0f79e2e5749f071d7b9b",
       "snapshot": {
-        "docs/plugins/api.md": "1169580d6dfa7cb34fa4c76439d334b91bc6deb88c02df6529152b846be22489"
+        "docs/plugins/api.md": "1e17a44cc1bac0a80d7dd9b6a64fbbb849b1a5974cfa2cae81fcca82bc1545f3"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "df619614b005886a687ca5f810487ff28f9bf953",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/plugins/api.md; changed files: docs/plugins/api.md"
+        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
+        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1513,18 +1515,16 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "b99751fad8b22931e64b8d2639fa985c923657132b6b781aa01b5b050ce08d7f",
+      "fingerprint": "bb1a97ae50c4cca4e3167f3f57e74889e6d6237e5d8685fb392799d5d7570a0c",
       "snapshot": {
-        "src/plugin-api/index.ts": "e624e3e48c35c51bfc16f1691254970d85cf561fb298f174be6acdeb09c6286d"
+        "src/plugin-api/index.ts": "0806106f5492c70f398d0f45b8afcea578e512b3d2dab28cb406d0464f659ee9"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
-      "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/plugin-api/index.ts; changed files: src/plugin-api/index.ts"
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1818,33 +1818,29 @@
       ]
     },
     "source:src/tui/keymap.ts": {
-      "fingerprint": "576e6f1e296d23607956ad32d4fd7dfcb9126cda675aab6b109285d5aff38553",
+      "fingerprint": "82a7d2862d89821fc8a403653f64225c511662903cb95a646b8e44bdaf1d9d22",
       "snapshot": {
-        "src/tui/keymap.ts": "fb2baa370cc758d481688a9dc31f2fd02624dc8de1c56c7a9a6f6564e3cea353"
+        "src/tui/keymap.ts": "f57e91a82eb792d557c2c0b48eb11954f6dc01d0f0837661cdfaa3d06adf1caa"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
-      "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "4d0536d0fe5ac2e65af62e3b07fe12e54216c952fdb60df5c821364aefad6c32",
+      "fingerprint": "8092c3ce30ddb5b337bb1339400c24fd73a0922c430badc5e9a7e14ac6d3fdea",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "6e3dfeb3ed67fdd44e13bccad46e04b0e18c3d58f5eddae7bc72f2ec6f09c7ce"
+        "src/tui/screens/board/BoardScreen.tsx": "9b84392f524e681495a909566da71dd5acd3e6a5fd1904ad7c8f434418a9a016"
       },
-      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
-      "outcome": "no-change",
-      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
-        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
-        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
-        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
-        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -2016,17 +2012,17 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "7ce7677a5aaebc4ae94bdfc368e095848d186ce103758670124ef388972d8cb3",
+      "fingerprint": "114bec20e68dc497ae30e8bf025e7886c2727d48e05a918b0e832cf71caa7106",
       "snapshot": {
-        "docs/agents/adr/README.md": "1612a352af872d698969e908e171c1534b4142dd0ccd732b1e7ffa962511ecb3"
+        "docs/agents/adr/README.md": "0af1bb1ea80a4d4f6cac94cbbdadc7ad63cb0e72ff90b1b238f1d6f0b2fadd18"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "df619614b005886a687ca5f810487ff28f9bf953",
       "outcome": "no-change",
-      "reason": "Retained both accepted decisions: main Story Specs ADR-0025 and Git ADR-0026, plus test-policy ADR-0027 and its index/references, with explicit maintainer approval to resolve the concurrent numbering collision. No decision or section content changed.",
+      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed docs/agents/adr/README.md against origin/main and PR head 9ee41d2."
+        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
+        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
       ]
     },
     "source:src/commands/index.ts": {
@@ -2327,18 +2323,17 @@
       ]
     },
     "source:src/services/plugins/runtime.ts": {
-      "fingerprint": "f7fcebf3181a5194bb3adf29abd2ea025232b951f79e8776ea5a18d0e8d96ee2",
+      "fingerprint": "d76fc72ceecee301ceef3c2fc0744ca5c66bb83046a5c183e18a01ce372d398a",
       "snapshot": {
-        "src/services/plugins/runtime.ts": "e339ae85e8eec0a0d9c7c81aa9de9527fe97da56f209a0c1915dad321f528225"
+        "src/services/plugins/runtime.ts": "e69a2de8ab0a212d7753fc1513736515bd325ff77d770984edeb25bea1aa65ab"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/services/plugins/runtime.ts; changed files: src/services/plugins/runtime.ts"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     },
     "source:src/services/plugins/service.ts": {
@@ -2357,18 +2352,17 @@
       ]
     },
     "source:src/services/plugins/types.ts": {
-      "fingerprint": "8012686327ff9ffeae78aacea9fa6b19f3eca9cde2c6a165d8e944957ba61b90",
+      "fingerprint": "ad90ae0a340cc2f1bf6249153d10a348cf7289d88b7487a819603d1b1aae4da6",
       "snapshot": {
-        "src/services/plugins/types.ts": "9dc9c3381b16f989eee2ffe46f83171f780099e300b7d496278df18f83c020f1"
+        "src/services/plugins/types.ts": "c4652f1fb6de9264a5a4ee13da8323cff80813182fa309f75dbcf7ee7a736861"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "df619614b005886a687ca5f810487ff28f9bf953",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/services/plugins/types.ts; changed files: src/services/plugins/types.ts"
+        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
+        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
       ]
     },
     "source:src/services/stages.ts": {
@@ -2408,15 +2402,16 @@
       ]
     },
     "source:src/tui/hooks/plugins.ts": {
-      "fingerprint": "23e01e51723bffbfd77ea47ee3131ca77a54a9719c38a008ac840198eba562ef",
+      "fingerprint": "024a326f56aa80a6adac1aa2a787e439b4c419c721b012d19ee5b416effd77be",
       "snapshot": {
-        "src/tui/hooks/plugins.ts": "6efe22e27801ad73e4645851ef992b30f5cc5b4ac206f2220b10e1a9d2c16108"
+        "src/tui/hooks/plugins.ts": "f46935a48325f8d933bf638d81d6d8800c44bde5b11fb62f303fb1936bd9a532"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/hooks/shell.ts": {
@@ -2434,27 +2429,29 @@
       ]
     },
     "source:src/tui/loadPlugins.ts": {
-      "fingerprint": "d16a8fa08187d2b4566ad2669ef961b6eb9b467bc205a2da837ff7fd584aab72",
+      "fingerprint": "ce76eedc57c15dca55f58ded4968d4370e52096d6d247668b7ae1adb7c2f2704",
       "snapshot": {
-        "src/tui/loadPlugins.ts": "d9e0a6d5fb0e46a722449484a2a4f2367a0e3c6a29b85aa56d722cdb03967a0a"
+        "src/tui/loadPlugins.ts": "54eca72a20f9ebd1c8d8d8cf72478017b7d90575f7b4c90c0fa2023f42bbec19"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/board/BoardColumn.tsx": {
-      "fingerprint": "72c1d1e28325cadbd7333ab13e5c3a927e0538b31bef5cf9edac9c63e8546459",
+      "fingerprint": "9d142aa72e86ed2e66b250e3fccae615948aa16649f889a83972f08f8628f0eb",
       "snapshot": {
-        "src/tui/screens/board/BoardColumn.tsx": "33a92bb7980f5a9ba537cc1939335ff09970d5997e095f150d342c4d8cd62f11"
+        "src/tui/screens/board/BoardColumn.tsx": "6fee72f9b4c8c3ae5b6db5c08a44cde2969d4b3c57046e4858414a971ccbf163"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
@@ -2862,17 +2859,17 @@
       ]
     },
     "source:test/plugins/pipeline.test.ts": {
-      "fingerprint": "45b338453e2cb8791ba461629ccbc579045dfaa928bda1f18981d13722f8f86f",
+      "fingerprint": "bd6aabf6b5272f4a36e47049c918df636ddf9e5b947169e73731945f38b25fbc",
       "snapshot": {
-        "test/plugins/pipeline.test.ts": "08fbc3812af8a0009193b3e2b29f07862a605ea7957412fd1a7b1b6a9a997fea"
+        "test/plugins/pipeline.test.ts": "2b74f3ed9c886ac1e515523dbe3486b011761d20bbc1cfbedf58381be259d2b8"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Development of Rowbly itself (its test suite, test helpers, the test policy in AGENTS.md, ADR-0025 and the development and Plugin-author docs), which Batch 1 left to AGENTS.md and docs/development/README.md; it changes no command, flag, output, exit code, doctor finding or Data Root behavior that the skills describe.",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed test/plugins/pipeline.test.ts against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     },
     "source:test/plugins/registrationFailure.test.ts": {
@@ -3124,15 +3121,16 @@
       ]
     },
     "source:docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": {
-      "fingerprint": "3e749d7fe665b76dffb133df2db0ff459695c5e36ac4e425239d978e1165ab10",
+      "fingerprint": "afa9bc2de89d34781a69d8eae6cd7c40e704d35b735da609b2af60e6d7ec9088",
       "snapshot": {
-        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "ba16453cce39a1873ba8265f73d374b667f930c7753a0ba3b165f3d0309f9b63"
+        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "fc58f8aa5d88226671767713122d63c68113ba9aedbfdf2e16279845345a2f12"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/commands/assignees.ts": {
@@ -3388,15 +3386,16 @@
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
-      "fingerprint": "238d7cc4a7cb4703550773f24aa72ea21bd79e6ed1df93732ece26fdff606d96",
+      "fingerprint": "a353f85ce0d2f46df5f00e0103dd38bb4f4bad5aeb5a8b30237e06b13eb856ab",
       "snapshot": {
-        "src/tui/screens/stories/StoryListScreen.tsx": "2ea0ad3d35599e2127962b86ee7b5cd021c490f8125a08e8d158df64e3d32329"
+        "src/tui/screens/stories/StoryListScreen.tsx": "178ba7057a5908b58f72544d135a25576748a1baac690d4ad2d77e05a71e2ffe"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/stories/filter.ts": {
@@ -3937,31 +3936,29 @@
       ]
     },
     "source:src/tui/hooks/layout.ts": {
-      "fingerprint": "5c21428255ea8e5b7f9255468604c7f2df7474ce733986bc1b95540adddea18b",
+      "fingerprint": "aff5361e1892b0b49b31a55e115424a5abfd1ab076f283d7848d0e815595e3d9",
       "snapshot": {
-        "src/tui/hooks/layout.ts": "3215fb57e9c6c78484ec5ec0c1fea4ad94823d0e53fd827c872d40c098e7838e"
+        "src/tui/hooks/layout.ts": "4aed364a46b5663456f2323d23adc88ec96828775c3d96ff25aa3e6dcdd02fb9"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
+      "fingerprint": "f941c41b4876681131cd7038bb0acb5115dc1d36c88d6485ebacd14aaefacfff",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
+        "src/tui/screens/board/BoardList.tsx": "d8e7c9df567d939b924e2bfe626e967ab38579e2565dced8e2cddbaf47656dfd"
       },
-      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
-      "outcome": "no-change",
-      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "outcome": "out-of-scope",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
-        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
-        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
-        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
-        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
@@ -3993,29 +3990,29 @@
       ]
     },
     "source:src/tui/shell/Header.tsx": {
-      "fingerprint": "385e5774a3e06768cc5a82b7eac3dbbffdfb06fcabfd06b129619e4de2114a91",
+      "fingerprint": "aae8c9d97f7e55b9b11694cd4765bbdf0adab3236251151e58efa98dcf9f301e",
       "snapshot": {
-        "src/tui/shell/Header.tsx": "8981f367b6ef34219d19b67cbf8a904e28a28b0ad4a203eebc1f44fce47c6993"
+        "src/tui/shell/Header.tsx": "55f9bd9b2695894d5d0cbca6cee535b06089f79b0192d944ff1e2d166cde1038"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
       "outcome": "out-of-scope",
-      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Pending from main before this branch (TUI header Settings button, list view, arrow keys).",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "git log 2e488a8..origin/main -- src/tui/shell/Header.tsx",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "de944b6a5c71880b2ba897713a8135f8a3da00f30c77fd0e957035592d5b050f",
+      "fingerprint": "fec0ea5f80623d7013dd58b10a5ff42966fe81d32a52eb2af0c3578afa38928e",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "ae5ff4f6b3d77100910b39767180da0da18262073b194a3cb9e1340c526f16cf"
+        "src/tui/shell/Shell.tsx": "6f3d7510fc8da599a6875c9e4688ff19a6c2059309d1648f32323479b69efa85"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
       "outcome": "out-of-scope",
-      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Pending from main before this branch (TUI header Settings button, list view, arrow keys).",
+      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
       "evidence": [
-        "git log 2e488a8..origin/main -- src/tui/shell/Shell.tsx",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
+        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -5598,18 +5595,17 @@
       ]
     },
     "source:docs/agents/adr/0026-git-automatic-commits.md": {
-      "fingerprint": "c8407d5b14b90b04bdf640194242808de8bc80174e3c80f18d934d24672b16f4",
+      "fingerprint": "050dd2cf7cadf7f4080a3dcac24cb3a41b2728307f15371c94c4b0104387fc1f",
       "snapshot": {
-        "docs/agents/adr/0026-git-automatic-commits.md": "5923729fb41c11a201d1bbded5d0a20ec5503d2bd36aa123aa3f29e7e973b175"
+        "docs/agents/adr/0026-git-automatic-commits.md": "7700007a9c5a6066abce444616fb0d57ed40b2c85aea7238a9116c1e60c4eeae"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "df619614b005886a687ca5f810487ff28f9bf953",
       "outcome": "no-change",
-      "reason": "Git decision allocated ADR0026 with explicit maintainer approval to avoid Specs ADR0025 collision; decision and section content preserved, index and old ADR status references updated. No additional CLI skill claim changes; Git behavior is already covered by rowbly-plugins and doctor guidance.",
+      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/agents/adr/0026-git-automatic-commits.md; changed files: docs/agents/adr/0026-git-automatic-commits.md"
+        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
+        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
       ]
     },
     "source:docs/agents/adr/0027-tests-guard-only-what-review-cannot-check.md": {
@@ -5713,6 +5709,20 @@
         "git diff 020d7e0..f431126 -- src/tui/shell: comment placement and the unused PluginSidebars.buttons[].open field",
         "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
         "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests passed"
+      ]
+    },
+    "source:src/services/coordination.ts": {
+      "fingerprint": "b8a7fb18ac1cc9c55d13248a4e77f94bb5cf83efef7534e24b702c9c9a6d7ed5",
+      "snapshot": {
+        "src/services/coordination.ts": "d193a08c48666fdea212ee12e103af22d5ec244b2395e6a9ee2cba9a00cc8d4c"
+      },
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "no-change",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
+      "evidence": [
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     }
   }

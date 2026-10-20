@@ -8,7 +8,10 @@ import { comments } from '../../src/plugins/comments';
 import { addComment } from '../../src/plugins/comments/comments';
 import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
+import { drainGitQueue } from '../../src/services/plugins/git';
+import * as gitStorage from '../../src/storage/git';
 import { pendingPath, readGitPending } from '../../src/storage/git';
+import { deferred } from '../helpers/deferred';
 import { pluginRoot, withPlugins } from './helpers';
 
 const exec = promisify(execFile);
@@ -91,11 +94,13 @@ describe('Git automatic commits', () => {
     expect(await f.command('rev-parse', 'HEAD')).toBe(initial);
     await writeFile(pendingFile, JSON.stringify({ ...first, due: Date.now() - 1 }));
     await withPlugins(f.t, [git, comments]);
+    await drainGitQueue(f.t.root);
     expect(await f.command('rev-parse', 'HEAD')).not.toBe(initial);
     expect(await readGitPending(pendingFile)).toBeNull();
     const committed = await f.command('rev-parse', 'HEAD');
     await f.services.stories.update(story.key, { name: 'Second' });
     await plugin.git.resume({ frequency: 'change', intervalSeconds: 1 });
+    await drainGitQueue(f.t.root);
     expect(await f.command('rev-parse', 'HEAD')).toBe(committed);
   });
 
@@ -112,6 +117,7 @@ describe('Git automatic commits', () => {
     expect(await f.command('show', `:${path.slice(f.t.dir.length + 1)}`)).toContain('Staged');
     await f.command('reset', '--', path);
     await f.services.plugins.context('git').git.resume({ frequency: 'change', intervalSeconds: 300 });
+    await drainGitQueue(f.t.root);
     expect(await f.command('show', `HEAD:${path.slice(f.t.dir.length + 1)}`)).toContain('Saved');
   });
   it('runs a due timer with the latest persisted author and stops timers when disabled', async () => {
@@ -145,6 +151,7 @@ describe('Git automatic commits', () => {
     const before = await f.command('rev-parse', 'HEAD');
     await f.services.plugins.disable('git');
     await plugin.git.resume({ frequency: 'change', intervalSeconds: 3600 });
+    await drainGitQueue(f.t.root);
     expect(await f.command('rev-parse', 'HEAD')).toBe(before);
     expect(await readGitPending(file)).not.toBeNull();
   });
@@ -194,6 +201,53 @@ describe('Git automatic commits', () => {
     expect(await f.command('status', '--porcelain')).not.toContain(' A ');
     await f.command('config', '--unset', 'commit.cleanup');
     await f.services.plugins.context('git').git.resume({ frequency: 'change', intervalSeconds: 300 });
+    await drainGitQueue(f.t.root);
     expect(await f.command('log', '-1', '--format=%s')).toBe('chore: update Rowbly data');
+  });
+
+  it('keeps reads and edits live during queued Git work and retains same-path edits after a snapshot', async () => {
+    const f = await fixture();
+    f.ctx.backgroundReactions = true;
+    const snapshotted = deferred();
+    const release = deferred();
+    const enqueued = deferred();
+    const commit = gitStorage.commitGitPaths;
+    let first = true;
+    const spy = vi.spyOn(gitStorage, 'commitGitPaths').mockImplementation((root, paths, options, snapshot) =>
+      commit(root, paths, options, async (read) => {
+        const result = await snapshot(read);
+        if (first) {
+          first = false;
+          snapshotted.resolve();
+          await release.promise;
+        }
+        return result;
+      }),
+    );
+    const write = gitStorage.writeGitPending;
+    const writing = vi.spyOn(gitStorage, 'writeGitPending').mockImplementation(async (path, value) => {
+      await write(path, value);
+      if (value?.revision === 2) enqueued.resolve();
+    });
+    try {
+      const story = await f.services.stories.create('web', { name: 'First snapshot' });
+      await snapshotted.promise;
+      expect((await f.services.stories.get(story.key)).name).toBe('First snapshot');
+      const file = await pendingPath(f.t.root, 'git');
+      await f.services.stories.update(story.key, { name: 'Latest snapshot' });
+      await enqueued.promise;
+      release.resolve();
+      await drainGitQueue(f.t.root);
+      const path = `.rowbly/boards/web/stories/${story.key}/story.json`;
+      expect(await f.command('show', `HEAD~1:${path}`)).toContain('First snapshot');
+      expect(await f.command('show', `HEAD:${path}`)).toContain('Latest snapshot');
+      expect(await readGitPending(file)).toBeNull();
+      expect(f.warnings).toEqual([]);
+    } finally {
+      release.resolve();
+      await drainGitQueue(f.t.root);
+      spy.mockRestore();
+      writing.mockRestore();
+    }
   });
 });

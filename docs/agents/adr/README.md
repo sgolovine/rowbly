@@ -49,7 +49,8 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
 | [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted; amended by 0028 |
 | [0025](0025-a-story-has-many-story-specs.md) | A Story has any number of Story Specs, each named by a slug | Accepted |
-| [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted |
+| [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted; amended by 0030 |
+| [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
 
 ### Development
 

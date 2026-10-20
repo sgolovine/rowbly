@@ -21,6 +21,7 @@ The guarantee covers the Rowbly process dying (a crash, `kill -9`, Ctrl-C). It d
 - **Waiting.** A busy Data Root is retried with backoff for up to 10 s, then fails with `CONFLICT` (exit 4) naming the holder.
 - **Stale locks** are broken: a lock whose process is gone on this host, or older than 10 minutes. Breaking takes a second lock, `.lock.break`, so two waiters never both break one lock. An operation never waits for a person while it holds the lock: prompts and editors run before it.
 - **Reentrancy.** Reads inside an operation reuse its lock. Starting a change from inside an operation is refused before it reaches the lock.
+- **Reactions own their reads.** They run with an independent coordination context, so a background read cannot reacquire the saving caller's lock after that caller has already finished releasing it.
 
 ## The commit journal
 
@@ -60,4 +61,6 @@ A stale `.lock` is not a finding: the next acquisition breaks it.
 
 ## Git Automatic Commits
 
-The optional Git capability reacquires the Data Root lock after save, before collecting pending paths or committing them. Git sees a complete saved Data Root. It selects only affected record/file paths, never `local.json`, `.lock` or `.txn/`, and keeps pending paths/deadlines under Git's own directory. A Git failure leaves the Rowbly save intact and retains pending work. Per-Data Root locking serializes Rowbly effects; Git's index lock rejects overlapping commits from other Data Roots or external tools. External Git and editors do not participate in the Data Root lock. See [Git](../plugins/built-in.md#git) and ADR-0026.
+The optional Git capability persists pending paths/deadlines under Git's own directory. Queue updates and a copy of selected saved files take brief Data Root locks with recovery. All Git subprocesses run outside that lock, using the immutable copy as their working tree. A separate lock in the worktree's Git `rowbly/` directory serializes workers, including workers for different Data Roots sharing an index. Each enqueue increments a pending revision; a successful commit acknowledges only its revision, so later edits to the same paths remain pending. Legacy pending files without a revision resume normally. A Git failure leaves the Rowbly save intact and retains pending work.
+
+Only affected record/file paths are selected, never `local.json`, `.lock` or `.txn/`. The TUI returns after enqueueing, and command mode drains due work outside reaction deadlines. External Git and editors do not participate in either Rowbly lock; Git's own index lock still protects its index. See [Git](../plugins/built-in.md#git) and [ADR-0030](../agents/adr/0030-git-work-runs-outside-the-data-root-lock.md).

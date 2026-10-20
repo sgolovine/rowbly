@@ -1,11 +1,12 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { copyFile, mkdtemp } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { ValidationError } from '../core';
 import type { DataRoot } from '../schemas';
 import { readTextIfExists } from './files';
-import { io } from './io';
+import { errorCode, io } from './io';
 import { writeTextFile } from './system';
 
 const execute = promisify(execFile);
@@ -54,6 +55,8 @@ export interface GitPending {
   paths: string[];
   due: number;
   options: GitCommitOptions;
+  /** Older pending files omit this; every new enqueue increments it. */
+  revision?: number;
 }
 
 export async function pendingPath(root: DataRoot, plugin: string): Promise<string> {
@@ -76,6 +79,7 @@ export async function readGitPending(path: string): Promise<GitPending | null> {
     !('due' in value) ||
     typeof value.due !== 'number' ||
     !Number.isFinite(value.due) ||
+    ('revision' in value && (!Number.isSafeInteger(value.revision) || Number(value.revision) < 1)) ||
     !('options' in value) ||
     !value.options ||
     typeof value.options !== 'object' ||
@@ -101,6 +105,7 @@ export async function commitGitPaths(
   root: DataRoot,
   paths: string[],
   author: { authorName?: string; authorEmail?: string },
+  snapshot: <T>(read: () => Promise<T>) => Promise<T>,
 ) {
   const info = await gitInfo(root);
   const data = await io.realpath(root.path);
@@ -131,39 +136,65 @@ export async function commitGitPaths(
     .split('\0')
     .filter(Boolean);
   if (!tracked.length) return;
-  const selected = [...new Set(tracked)].map((path) => `:(literal)${path}`);
-  const dirty = await runGit(info.root, ['status', '--porcelain', '--untracked-files=all', '--', ...selected]);
-  if (!dirty) return;
+  const files = [...new Set(tracked)].filter((path) => {
+    const inside = prefix ? path.slice(prefix.length + 1) : path;
+    return inside !== 'local.json' && !inside.split('/').some((part) => part.startsWith('.'));
+  });
+  if (!files.length) return;
+  const selected = files.map((path) => `:(literal)${path}`);
   const name = author.authorName || info.authorName;
   const email = author.authorEmail || info.authorEmail;
   if (!name || !email)
     throw new Error('Git automation needs an author name and email; configure Git or the Git Plugin');
-  // Intent-to-add makes new files eligible for --only without staging their contents.
-  await runGit(info.root, ['add', '--intent-to-add', '--', ...selected]);
-  const hooks = join(dirname(await pendingPath(root, 'git')), 'disabled-hooks');
+  const queue = dirname(await pendingPath(root, 'git'));
+  const hooks = join(queue, 'disabled-hooks');
   await io.mkdir(hooks);
+  const tree = await mkdtemp(join(queue, 'snapshot-'));
   try {
-    await runGit(info.root, [
-      '-c',
-      `core.hooksPath=${hooks}`,
-      '-c',
-      'commit.gpgSign=false',
-      '-c',
-      `user.name=${name}`,
-      '-c',
-      `user.email=${email}`,
-      'commit',
-      '--only',
-      '--author',
-      `${name} <${email}>`,
-      '-m',
-      'chore: update Rowbly data',
-      '--',
-      ...selected,
-    ]);
-  } catch (err) {
-    // These paths had no staged content before our intent-to-add. Restore that condition on failure.
-    await runGit(info.root, ['reset', '--quiet', '--', ...selected]).catch(() => undefined);
-    throw err;
+    // Only file copies hold the Data Root lock. Every Git process reads this immutable snapshot.
+    await snapshot(async () => {
+      for (const file of files) {
+        const source = join(info.root, file);
+        const target = join(tree, file);
+        try {
+          if ((await io.lstat(source)).isSymbolicLink()) throw new Error(`Unsafe Git automation link: ${file}`);
+          await io.mkdir(dirname(target));
+          await copyFile(source, target);
+        } catch (err) {
+          if (errorCode(err) !== 'ENOENT') throw err; // Missing tracked files are deletions.
+        }
+      }
+    });
+    const git = (args: string[]) => runGit(tree, ['--git-dir', dirname(queue), '--work-tree', tree, ...args]);
+    const dirty = await git(['status', '--porcelain', '--untracked-files=all', '--', ...selected]);
+    if (!dirty) return;
+    // Intent-to-add makes new files eligible for --only without staging their contents.
+    try {
+      await git(['add', '--intent-to-add', '--', ...selected]);
+      await git([
+        '-c',
+        `core.hooksPath=${hooks}`,
+        '-c',
+        'commit.gpgSign=false',
+        '-c',
+        `user.name=${name}`,
+        '-c',
+        `user.email=${email}`,
+        'commit',
+        '--only',
+        '--author',
+        `${name} <${email}>`,
+        '-m',
+        'chore: update Rowbly data',
+        '--',
+        ...selected,
+      ]);
+    } catch (err) {
+      // These paths had no staged content before our intent-to-add. Restore it on failure.
+      await git(['reset', '--quiet', '--', ...selected]).catch(() => undefined);
+      throw err;
+    }
+  } finally {
+    await io.rm(tree);
   }
 }
