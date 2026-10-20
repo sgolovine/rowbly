@@ -73,6 +73,13 @@ export function renderTui(node: ReactElement): Rendered {
   });
 }
 
+/** Gives the rendered terminal a size, as a resize of a real one would. */
+export function resize(app: Rendered, columns: number, rows: number) {
+  Object.defineProperty(app.stdout, 'columns', { value: columns, configurable: true });
+  Object.defineProperty(app.stdout, 'rows', { value: rows, configurable: true });
+  app.stdout.emit('resize');
+}
+
 /** The App with test screens and no Data Root. */
 export function renderApp(screens: ScreenRegistry, initial = 'a', toasts = createToastStore()) {
   return renderTui(

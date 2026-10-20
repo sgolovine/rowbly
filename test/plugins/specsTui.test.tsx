@@ -3,7 +3,7 @@ import { specs } from '../../src/plugins/specs';
 import { createSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
 import { makeBoard } from '../helpers';
-import { KEYS, waitForFrame } from '../tui/helpers';
+import { KEYS, resize, waitForFrame } from '../tui/helpers';
 import { pluginRoot, withPlugins } from './helpers';
 import { focusFormField, openPluginApp } from './tuiHelpers';
 
@@ -162,6 +162,8 @@ describe('Specs TUI', () => {
 
   it.each(['stories', 'board'])('the %s Spec filter limits Stories', async (screen) => {
     const { app } = await setup(screen, { boardId: 'web' });
+    // Wide enough for the header to show the whole filter beside its buttons.
+    resize(app, 120, 40);
     await waitForFrame(app, 'WEB-2');
     await app.press('/');
     await waitForFrame(app, '[ ] auth');

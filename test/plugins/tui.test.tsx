@@ -461,7 +461,7 @@ describe('Turning a Plugin off in the TUI', () => {
     await app.press(KEYS.enter);
     await waitForFrame(app, '○ Notes');
     await app.press(KEYS.escape);
-    frame = await waitForFrame(app, (f) => f.includes('Login') && !f.includes('Settings'));
+    frame = await waitForFrame(app, (f) => f.includes('Login') && !f.includes('› Settings'));
     await waitForFrame(app, (f) => !f.includes('Z Note') && !/Note\s+note: hello/.test(f));
     // "Note" alone: the toast still says "Turned off Plugin Notes".
     expect(app.lastFrame()).not.toMatch(/\bNote\b/);

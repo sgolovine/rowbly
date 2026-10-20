@@ -6,7 +6,7 @@ import { createEpic } from '../../src/plugins/epics/service';
 import type { LocalState } from '../../src/schemas';
 import { pluginRoute } from '../../src/tui/hooks';
 import { makeBoard, makeStory, type TempRoot } from '../helpers';
-import { KEYS, waitForFrame } from '../tui/helpers';
+import { KEYS, resize, waitForFrame } from '../tui/helpers';
 import { pluginRoot, readJsonFile, withPlugins } from './helpers';
 import { focusFormField, focusListItem, openPluginApp } from './tuiHelpers';
 
@@ -137,6 +137,8 @@ describe('Epics TUI', () => {
   it.each(['stories', 'board'])('filters %s by Epic and by no Epic, and clears the filter', async (screen) => {
     const t = await seed();
     const { app } = await open(t, screen, { boardId: 'web' });
+    // Wide enough for the header to show the whole filter beside its buttons.
+    resize(app, 120, 40);
     await waitForFrame(app, 'WEB-2');
     const filterByEpic = async (...keys: string[]) => {
       await app.press('/');
