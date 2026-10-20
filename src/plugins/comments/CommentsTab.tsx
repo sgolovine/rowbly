@@ -15,7 +15,7 @@ import {
 import { deleteComment, readThread } from './comments';
 import { relativeTime } from './relativeTime';
 
-/** The Thread of a Story, oldest first: `c` add and `e` edit (in the Comment form), `d` delete. */
+/** The Thread of a Story, oldest first: `n` new and `e` edit (in the Comment form), `d` delete. */
 export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<Record<string, unknown>>) {
   const target = story.key;
   const isActive = useIsActive() && active;
@@ -34,7 +34,7 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
     viewing
       ? [
           { key: 'tab/←/→', description: 'switch tab' },
-          { key: 'c', description: 'add Comment' },
+          { key: 'n', description: 'new Comment' },
           ...(comment
             ? [
                 { key: 'e', description: 'edit Comment' },
@@ -49,7 +49,7 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
     (input, key) => {
       const delta = moveDelta(input, key);
       if (delta) setSelected(Math.max(0, Math.min(comments.length - 1, cursor + delta)));
-      else if (input === 'c') ui.open('form', { target, title: 'New Comment' });
+      else if (input === 'n') ui.open('form', { target, title: 'New Comment' });
       else if (!comment) return;
       else if (input === 'e') ui.open('form', { target, id: comment.id, title: 'Edit Comment' });
       else if (input === 'd') setConfirming(true);
@@ -82,7 +82,7 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
   return (
     <Box flexDirection="column" gap={1}>
       {comments.length === 0 ? (
-        <Text dimColor>No Comments yet. Press c to add one.</Text>
+        <Text dimColor>No Comments yet. Press n to add one.</Text>
       ) : (
         <Box flexDirection="column">
           {comments.map((c, i) => (

@@ -88,6 +88,8 @@ tool, hand-drawn screens or `ink-testing-library` frames instead, and do not com
   - `shell/` — the app frame: `Shell`, `Header`, `Sidebar`, `Footer`, toasts, overlays, `ScreenSlot`.
   - `screens/<area>/` — screens and their screen-specific pieces, registered in the area's `index.ts`.
   - `hooks/` — contexts and hooks.
+- **`n` creates.** On every screen or tab that can create a record (core or Plugin), the key that
+  creates it is `n`, with a `new …` key hint. Do not bind creation to another letter.
 - **Keep `app.tsx` thin.** It only wires providers around `Shell`. New layout or chrome goes in
   `shell/`; new screens go in `screens/`.
 - Pure helpers and constants shared between files get their own `camelCase.ts` file (e.g.
