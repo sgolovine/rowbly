@@ -4,17 +4,13 @@
   "boardId": "rowbly",
   "name": "Make story tasks a plugin",
   "description": "",
-  "stage": "in-progress",
-  "rank": "a2",
-  "assignees": [],
+  "stage": "done",
+  "rank": "a6",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:56:13.906Z",
-  "updatedAt": "2026-10-13T19:56:13.906Z",
-  "nextTaskNumber": 1,
-  "tasks": [],
-  "comments": []
+  "updatedAt": "2026-10-20T22:28:26.615Z"
 }
