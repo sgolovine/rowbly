@@ -27,6 +27,7 @@ Clack never runs inside the TUI: both libraries take over stdin and raw mode. Ev
 | Commands | `commander` |
 | Prompts in command mode | `@clack/prompts` |
 | TUI | `ink`, `react` |
+| Markdown in the TUI | `marked` with `marked-terminal` (the renderer `ink-markdown` wraps; its own build cannot load Ink 8), `wrap-ansi` |
 | Colour, tables | `picocolors`, `cli-table3` |
 | Story Rank | `fractional-indexing` |
 | Random ids | `nanoid` |

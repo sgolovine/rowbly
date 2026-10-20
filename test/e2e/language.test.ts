@@ -15,7 +15,8 @@ const AVOID =
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   { file: /^(tui|plugins)\//, text: /^column$/, why: 'Ink layout: flexDirection="column"' },
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
-  { text: /\buser\.email\b/g, why: 'the git config key' },
+  { text: /\buser\.(email|name)\b/g, why: 'the git config key' },
+  { file: /^storage\/git\.ts$/, text: /^status$/, why: 'git status command argv, not a Rowbly term' },
   { text: /\bLocal State\b/g, why: 'a CONTEXT.md term' },
   { text: /^\.\.?\/.*$/, why: 'a relative import path' },
 ];

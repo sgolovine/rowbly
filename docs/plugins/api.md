@@ -30,7 +30,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 | Module | Imported by | Holds |
 | --- | --- | --- |
 | `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
-| `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `ConfirmDialog`, `Loading`, `StageBadge`; the hooks `useAsync`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; `FORM_KEYS`, `moveDelta`, `markdownToPlain` |
+| `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `MarkdownView`, `ConfirmDialog`, `Loading`, `StageBadge`; the hooks `useAsync`, `useFullScreenEditor`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; `FORM_KEYS`, `moveDelta`, `markdownToPlain` |
 | `src/plugin-api/testing.ts` | tests only | `createPluginTestHost`, `validatePluginDefinition` ([Testing](#testing)) |
 
 The types a Plugin meets at run time, by where it meets them:
@@ -56,7 +56,9 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
 | `bags` | Schemas of its bags on Stories and Local State, checked by doctor. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
-| `start({ settings })` | Runs each time the Plugin loads. Throwing fails the load. |
+| `start({ settings, git, localData })` | Runs each time the Plugin loads. Throwing fails the load. |
+| `requiresGit` | When true, enabling the Plugin requires a Git repository containing the Data Root. |
+| `react` | A reaction for every saved Operation, including other Plugins’ Operations, with the same event and deadline as a named reaction. Runs before the named reaction. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
 | `replaces` | `{ '<core operation>': replacement }` ([replacements](#replacements)). |
 | `commands(group, cli)` | Verbs under `rowbly <id>`. |
@@ -71,7 +73,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 
 | Context | Given to | Has |
 | --- | --- | --- |
-| `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `files` (stored reads), `me`, `now()`, `newId()` |
+| `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
 | `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration and Board resolution only), `warn` |
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
@@ -245,15 +247,16 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 - Field names are unique within the Plugin; a duplicate fails its fields.
 - A `select` cycles through `options` only, so "no value" is an option of the Plugin's own whose label cannot be a real value (Epics: `No Epic`). A filter keeps "any" (`All Epics`) apart from "none".
 - `storyFilter.fields` / `filter(values)` / `describe(values)` fill the filter of the Stories list and the board. A Plugin whose filter fields fail is left out of the filter, and the screen says so.
-- `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story's board card and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
+- `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story's board card, its line in the board's list view and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
 
 ## Screens, focus and Actions
 
 - **Screens** get `{ params, plugin, ui }`. `ui.open(screen, params)` opens one of the Plugin's screens on top. `params.title` is the breadcrumb (without one, the screen name with a capital letter); `plugin` and `screen` are reserved route params that Rowbly sets and the screen never gets. Params are not checked: validate them, for example with a schema, and show an error instead of using a bad value.
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
 - **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
-- **Card badges.** `cardBadge({ story, stages, plugin })` returns a short text for a Story's board card, such as the Tasks Plugin's `✓ 2/5`, or `null` for none. It runs for every card each time the board renders, so it must be quick and must not read files: use the Story and the Board's effective Stages it is given. A badge that throws shows nothing on that card.
+- **Card badges.** `cardBadge({ story, stages, plugin })` returns a short text for a Story's board card and its line in the board's list view, such as the Tasks Plugin's `✓ 2/5`, or `null` for none. It runs for every card or line each time the board renders, so it must be quick and must not read files: use the Story and the Board's effective Stages it is given. A badge that throws shows nothing on that card or line.
 - **Focus.** `useIsActive()` is false while a dialog is open or another screen is on top. A tab is active only when it is selected: use `useIsActive() && active`. Give one flag (also covering your own modes, e.g. `active && !confirming`) to `useInput`'s `isActive`, `useKeyHints` (pass `[]` when inactive) and `useKeyCapture`.
+- **List filters.** `SelectList` reports its filter mode through `onFilteringChange(filtering)`. Pass a stable state setter and disable the screen's shortcuts and hints while filtering, while keeping the list active so it can accept text and finish filtering. The callback reports false when filtering ends or the list unmounts.
 - **Reloading.** `useAsync(fn, deps)` runs again when `deps` change, toasts a failure, and ignores a run that was superseded. Use `useReloadOnReturn(reload, active?)` to reload when the screen or tab is active again; do not put `active` in `useAsync`'s deps.
 - **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action only opens or shows something; a data change it offers must also be a command or an option.
 
@@ -351,3 +354,11 @@ rowbly trace op-5 stories.update operation rejected code=CONFLICT at=guard:point
 - `validatePluginDefinition(definition)` lists what loading would refuse; empty when it is fine.
 - For a TUI part, render one component with `ink-testing-library`, `host.context(id)` and a recording `PluginUi`, and wait for its loaded data before pressing keys (the recipe is in the module header).
 - `pnpm bench:plugins` runs the opt-in performance measurements ([`test/performance/README.md`](../../test/performance/README.md)).
+
+## Git capability
+
+`PluginGit` and `GitCommitOptions` are exported by the Plugin API. `git.info()` returns `{ root, authorName, authorEmail }` using the canonical Data Root's containing repository, independent of the caller's directory. Missing Git or no containing repository raises `VALIDATION` with a useful hint. Effective Git configuration supplies the author defaults.
+
+`git.changed(changes, options)` records paths from a saved `ChangeSetView` and commits immediately or schedules them. `git.resume(options)` resumes persisted paths and warns on failure. Options contain `frequency` (`change` or `interval`), `intervalSeconds`, and optional `authorName`/`authorEmail`. Local State-only changes add no paths. Both methods serialize with Data Root writes and check that the owning Plugin is still enabled. These effect methods are intended for `start` and reactions; commands and screens change personal preferences through an Operation. There is no arbitrary Git command or filesystem capability.
+
+Git executes argument arrays without a shell, with a 3.5 s limit per process and 1 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or drain guarantee on process exit. See [Git](built-in.md#git) for the user contract and ADR-0026 for scope.

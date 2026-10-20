@@ -3,7 +3,7 @@ name: rowbly-plugins
 description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
   Plugin settings, or using the Built-in Plugins' commands: Assignees (rowbly
   assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly epics, --epic), Specs (rowbly specs,
-  --spec, Story and Board Specs) and Comments (rowbly comments). Also when a rowbly command is unknown because its Plugin is
+  --spec, Story and Board Specs) and Comments (rowbly comments), and configuring automatic Git commits (rowbly git). Also when a rowbly command is unknown because its Plugin is
   off, or a Plugin failed to load. Not for writing a new Plugin."
 metadata:
   purpose: >-
@@ -25,20 +25,27 @@ sources:
   - src/plugins/epics/commands.ts
   - src/plugins/specs/commands.ts
   - src/plugins/comments/commands.ts
+  - src/plugins/git/commands.ts
+  - src/plugins/git/model.ts
+  - src/services/plugins/git.ts
+  - src/storage/git.ts
+  - test/plugins/gitCli.test.ts
+  - test/skills/cases/git-automation.md
+  - test/skills/checkGitConsumer.mjs
 ---
 
 # Use Rowbly Plugins
 
 Read `rowbly-cli` first. Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships five Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**
-and **Comments**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
+Plugins add optional features. Rowbly ships six Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**,
+**Comments** and **Git**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
 everyone who uses that Data Root, because the setting is in the committed `rowbly.config.json`.
 
 ## 1. See and change which Plugins are on
 
 ```sh
-rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments
+rowbly plugins list --json --no-prompt           # [{id, name, enabled, loaded, known, …}]: assignees, tasks, epics, specs, comments, git
 rowbly plugins enable epics --json --no-prompt    # {"id": "epics", "enabled": true}
 rowbly plugins disable epics --json --no-prompt   # keeps its settings and data
 rowbly plugins show epics --json --no-prompt
@@ -59,8 +66,8 @@ Every Plugin command also takes `--json`, and prints the changed record.
 ### Settings
 
 A Plugin's settings sit beside `enabled` in its entry in `rowbly.config.json`. A Board can override them
-under `"plugins": { "<id>": { … } }` in its `board.config.json`. Rowbly has no settings command: edit the
-JSON by hand. This is the only hand edit the agent rules allow.
+under `"plugins": { "<id>": { … } }` in its `board.config.json`. For these shared settings, edit the
+JSON by hand. Git has personal preferences instead; use `git configure` below. This is the only hand edit the agent rules allow.
 
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
@@ -89,14 +96,18 @@ rowbly epics delete auth --no-prompt                            # unlinks its St
 
 ## 3. Specs: markdown documents for Stories and Boards
 
-A **Story Spec** belongs to one Story (at most one per Story). A **Board Spec** belongs to a Board, has a
-slug, and Stories on that Board link to it. A Spec's title is its first `# ` heading.
+A **Story Spec** belongs to one Story; a Story can have any number, each named by a slug that is unique
+within the Story. A **Board Spec** belongs to a Board, has a slug, and Stories on that Board link to it.
+A Spec's title is its first `# ` heading.
 
 ```sh
-# The Story Spec of WEB-42 (always name it with --story, never as a slug)
+# Story Specs of WEB-42 (always name the Story with --story; the slug comes after the verb)
 printf '%s\n' "## Scope" "" "Email and password only." \
-  | rowbly specs create --story WEB-42 --title "Login page" --file - --json --no-prompt
-rowbly specs show --story WEB-42 --json --no-prompt             # {title, text}
+  | rowbly specs create --story WEB-42 --title "Login page" --file - --json --no-prompt   # slug: spec
+rowbly specs create design --story WEB-42 --title "Design" --text "One form." --json --no-prompt
+rowbly specs list --story WEB-42 --json --no-prompt             # [{slug, title, text}, …] by slug
+rowbly specs show --story WEB-42 --json --no-prompt             # the Story Spec spec: {slug, title, text}
+rowbly specs show design --story WEB-42 --json --no-prompt
 
 # A Board Spec, and links from Stories
 rowbly specs create auth-flow --board web --title "Auth flow" --text "Tokens expire after 1 h." --json --no-prompt
@@ -108,6 +119,10 @@ rowbly specs delete auth-flow --board web --yes --json --no-prompt   # unlinks i
 ```
 
 - Text comes from `--text`, `--file <path>` or `--file -` (stdin). Do not use `--edit`.
+- `--story <KEY>` without a slug names the Story Spec `spec` (`spec.md`). Give a slug for any other one;
+  `--story` cannot be combined with `--board`.
+- A Story's Story Specs are `stories/<KEY>/plugins/specs/<slug>.md`; `specs list --board` shows only Board
+  Specs.
 - A Story can link only to Board Specs of its own Board.
 - A Board that has Board Specs cannot be deleted without `--force`, even when it has no Stories.
 - If changing links exits 6 because the Story's stored links are invalid, `--reset-specs` (alone or with
@@ -147,10 +162,32 @@ rowbly assignees remove sam --json --no-prompt                            # also
 - Doctor reports `ASSIGNEES_UNKNOWN_ASSIGNEE` and `ASSIGNEES_UNKNOWN_ME` (fixable) and
   `ASSIGNEES_ROSTER_UNAVAILABLE` for a roster file that cannot be read (fix it by hand).
 
+## 6. Git: automatically commit Rowbly changes
+
+Enable Git only when requested: future Rowbly writes will create commits. The Data Root must be inside a Git repository; otherwise `plugins enable git` exits 2 with a clear explanation and leaves it off. An enabled Plugin loaded outside Git is failed in `plugins list`. Establish a clean Data Root baseline first.
+
+```sh
+rowbly plugins enable git --json --no-prompt
+rowbly git show --json --no-prompt
+rowbly git configure --frequency change --json --no-prompt
+rowbly git configure --frequency interval --interval 600 --json --no-prompt
+rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com" --json --no-prompt
+rowbly git configure --author-name '' --author-email '' --json --no-prompt
+```
+
+- Preferences are personal, under `plugins.git` in Local State. Do not edit that file by hand. Enabling the Plugin is still shared Data Root configuration.
+- `change` is the default frequency. The interval is seconds (integer 1–86400, default 300). Omitted/cleared author fields use effective Git `user.name` and `user.email`, including `.gitconfig`; `git show` reports the defaults.
+- Automatic Commits use `chore: update Rowbly data` and select paths affected by saved Operations, including other Plugins' writes/deletions. Local State and internal files are excluded. Other paths and unrelated staged files stay untouched. Edits by hand to an affected path are included; a path with staged changes is refused with a warning.
+- Interval mode needs pending changes and runs only while Rowbly is alive. CLI commands do not wait for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run; no daemon or exit flush runs. Changing the interval adjusts the deadline from the first pending write. Disabling Git pauses pending commits.
+- A Git warning leaves the Rowbly change saved and pending work available for retry. Fix the cause (for example author configuration or staging), then run Rowbly again. Hooks and signing are suppressed for Automatic Commits; there is no automatic push.
+
 ## Common mistakes
 
 - **HIGH: naming a Story Spec by slug.** `specs show web-42` looks for a Board Spec with that slug,
-  because Story Keys are case-insensitive and `web-42` is also a valid slug. Use `--story WEB-42`.
+  because Story Keys are case-insensitive and `web-42` is also a valid slug. Use `--story WEB-42`, with
+  the Story Spec's slug after the verb when it is not `spec`: `specs show design --story WEB-42`.
+- **MEDIUM: a second Story Spec without a slug.** `specs create --story WEB-42` always means the Story
+  Spec `spec`, so a second one exits 4 (already exists). Name it: `specs create design --story WEB-42`.
 - **HIGH: `--spec` on `stories edit` to add one link.** It replaces all links. Use `--add-spec`.
 - **MEDIUM: turning a Plugin off to silence an error.** Its commands disappear, but its data and the
   underlying problem stay. Read `plugins list` and `rowbly doctor` instead.

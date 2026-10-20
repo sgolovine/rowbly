@@ -19,7 +19,7 @@ Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. It k
 | rowbly-cli | core | cli-usage | Data Root/Board resolution, `--json`/`--no-prompt`/`--yes`, JSON errors, exit codes, glossary, no hand edits | 4 |
 | rowbly-setup | lifecycle | data-root-setup | `init`, `boards`, `assignees`, `whoami`, `use`, `stages`, `fields`, Configuration Cascade levels | 3 |
 | rowbly-stories | sub-skill | work-tracking | `stories` and `tasks` verbs, filters, valid values, choosing Stages by Stage Category, the pick-up/finish workflow | 4 |
-| rowbly-plugins | sub-skill | plugins | `plugins` verbs, settings, `epics`, `specs`, `comments`, Story options | 3 |
+| rowbly-plugins | sub-skill | plugins | `plugins` verbs, settings, `epics`, `specs`, `comments`, `git show/configure`, Story options | 3 |
 | rowbly-doctor | sub-skill | data-integrity | `doctor`, `--fix`, Story Key conflicts after merges, manual repairs; reference: finding codes | 3 |
 
 `rowbly-setup`, `rowbly-stories`, `rowbly-plugins` and `rowbly-doctor` require `rowbly-cli`, which is the single home of the shared rules (non-interactive flags, exit-code table, resolution, "change data only through commands").
@@ -43,6 +43,7 @@ See `domain_map.yaml` for mechanisms and patterns.
 | rowbly-stories | Predicting the next key | MEDIUM | README.md#stories |
 | rowbly-plugins | Story Spec named by slug | HIGH | docs/plugins/built-in.md#specs |
 | rowbly-plugins | `--spec` replaces links | HIGH | docs/plugins/built-in.md#specs |
+| rowbly-plugins | Second Story Spec without a slug | MEDIUM | docs/plugins/built-in.md#specs |
 | rowbly-plugins | Disabling a Plugin to silence an error | MEDIUM | docs/plugins/README.md |
 | rowbly-doctor | Deleting a Story folder or `.txn/` | CRITICAL | docs/architecture/storage.md |
 | rowbly-doctor | Picking one side of a key conflict | HIGH | README.md#doctor |
@@ -108,13 +109,38 @@ See `domain_map.yaml` for mechanisms and patterns.
 - Superseded decision: "Choose Stages by Stage Category, never by key" from Batch 1 now applies to the configured Stages only. `backlog` and `done` exist on every Board, so moving a Story to `done` by key is correct; the start Stage is still chosen by category (`board`).
 - Checks: `test/skills/agentWorkflows.test.ts` updated (the pick-up workflow adds `doing --after backlog` and expects it as the first `board` Stage). The TUI list view added in the same change is outside the assessed scope (TUI operation is not assessed). Fresh consumer validation of this revision has not been run.
 
+### Behavior change — Git Automatic Commits (2026-10-19, ADR-0026)
+
+- Source baseline: origin/main `0dacc4133030a1bb86b32751e2e2b21c304ca0f0`, package 0.1.0; implementation checkpoint `c76e5ec`. Added Git to rowbly-plugins task coverage and activation text, preserving its original purpose. No new skill is needed: enabling/configuring Built-in Plugins remains one developer task. Added a conditional pause/restore step to rowbly-doctor so saved repair passes do not bypass its inspect-before-commit workflow. CLI, setup and Stories guidance otherwise remains accurate; warnings leave saved changes intact and the existing PLUGIN_FAILED guidance covers load failure.
+- Maintainer decisions: no background daemon; TUI timers and next-run resumption for CLI changes. Author/frequency preferences are personal Local State, while enabling Git remains shared. Commit affected Rowbly-managed paths, preserve unrelated staging, refuse affected staged paths, and suppress hooks/signing. Branching and hook installation remain planned in ADR-0016.
+- Updated domain_map.yaml task/coverage and skill_tree.yaml source/activation metadata; prior tasks and open gaps are retained. Git behavior and validation are covered by test/plugins/git.test.ts, gitCli.test.ts and gitTui.test.tsx; the CLI workflow is the representative executable skill task.
+- Discovery probes: should load for “Have Rowbly commit my board edits every ten minutes with my bot email”; should not load for “Configure git's signing key for this code repository”. Consumer/discovery outcomes and final checks are recorded in the revision-bound Intent review; structural validation alone is not consumer evidence.
+
+- Completed checks: typecheck and lint passed; unit 102 files / 986 tests and CLI 22 files / 158 tests passed. Intent validated all five skills. A fresh gpt-6.1-sol consumer completed the task in test/skills/cases/git-automation.md using a copied built CLI and skills; checkGitConsumer.mjs passed and rejected an after-each-change negative control. The consumer reported loading rowbly-cli, rowbly-plugins and rowbly-stories. Normal Intent-installed discovery and the negative activation probe remain unverified; exposure was a supplied catalog, not an installed package. This is one successful task run, not a reliability claim.
+
+- Doctor guidance uses the same disable/resume path exercised by the Git interval regression and existing doctor pass tests; a fresh consumer run of the doctor-specific repair workflow was not performed.
+- Intent 0.5.5 review/check for this batch uses the actual PR base `0dacc4133030a1bb86b32751e2e2b21c304ca0f0`. Recording an explicit-base report retains the pre-existing default baseline `2e488a8f01b2cc5f4a77c72d33337d067f2c9445` in this installed version; combining `--record` and `--base` is refused. The default check still reports 34 historical ADR relocation items outside this task. Do not mark those unrelated changes reviewed solely to clear the default check; use the actual PR base for this batch's completion gate.
+
+### Behavior change — many Story Specs and the full-screen editor (2026-10-19, ADR-0025)
+
+- A Story can have any number of Story Specs, each `stories/<KEY>/plugins/specs/<slug>.md`. `spec.md` is the Story Spec `spec`, so existing data is read unchanged. `specs list --story <KEY>` lists them; `create|show|edit|delete [slug] --story <KEY>` take an optional slug that defaults to `spec`, and `--story` with `--board` exits 2. Spec results are `{ slug, title, text }` for both kinds (they were `{ title, text }` for a Story Spec).
+- Updated guidance: rowbly-plugins (Story Spec definition, `specs list --story`, named Story Specs, the result shape, a new MEDIUM mistake: a second Story Spec without a slug exits 4). The HIGH "Story Spec named by slug" mistake keeps its correct pattern and adds the slug-after-verb form.
+- No change: rowbly-cli, rowbly-setup, rowbly-stories and rowbly-doctor. Their tracked sources changed only in the TUI section of README.md (the full-screen editor's view and edit modes, list clicks) and the Plugin-folder comment in `docs/architecture/data-model.md`; TUI operation is outside the assessed scope, and they say nothing about Story Specs.
+- Checks: `intent validate skills` passed; `test/skills/agentWorkflows.test.ts` now creates a second, named Story Spec, lists both and asserts the slug-less second create exits 4. The fresh consumer result is recorded in the review evidence for this revision.
+
 ### Decision — development skills stay outside Intent (2026-10-19)
 
 - Skills for developing Rowbly, such as `rowbly-screenshots` and the vendored upstream `agentic-tui` skill, live in `.agents/skills/<name>/` with pointers in `.claude/skills/<name>/`. They are not published, not registered with Intent, and not part of this spec's skill tree; their source reviews are recorded as `out-of-scope`. This keeps Batch 1's scope: development of Rowbly itself is covered by `AGENTS.md` and `docs/development/README.md`, not by the Intent skills.
 - No guidance in `skills/` changed: the agentic-tui integration adds no command, flag, output, exit code, doctor finding or Data Root behavior.
 
-### Decision — task checks cover HIGH and CRITICAL failure modes only (2026-10-19, ADR-0025)
+### Merge review — Git decision numbering (2026-10-19)
 
-- The repository cut its test suite to the tests ADR-0025 requires. `test/skills/agentWorkflows.test.ts` keeps one check per skill workflow that covers a failure mode rated HIGH or CRITICAL above: rowbly-cli (prompts, exit codes and JSON errors), rowbly-setup (Configuration Cascade level; a second Data Root and a clashing prefix), rowbly-stories (picking up by Stage Category; `--add-label` against `--label` and Title Case Labels), rowbly-plugins (Epics, Specs and Comments as documented) and rowbly-doctor (a merge conflict blocks with exit 6 until `doctor --fix`).
+- The maintainer approved assigning the Git decision ADR-0026 because concurrent PR #58 introduces ADR-0025 for Specs. Updated the Git decision, index, amendment status lines and documentation references together; no decision or section content changed.
+- Preserved the development-skill scope decision from PR #59 and Git task coverage in domain_map.yaml and skill_tree.yaml. Added Git to the Built-in Plugins overview table; CLI guidance remains accurate.
+### Decision — task checks cover HIGH and CRITICAL failure modes only (2026-10-19, ADR-0027)
+
+- The repository cut its test suite to the tests ADR-0027 requires. `test/skills/agentWorkflows.test.ts` keeps one check per skill workflow that covers a failure mode rated HIGH or CRITICAL above: rowbly-cli (prompts, exit codes and JSON errors), rowbly-setup (Configuration Cascade level; a second Data Root and a clashing prefix), rowbly-stories (picking up by Stage Category; `--add-label` against `--label` and Title Case Labels), rowbly-plugins (Epics, Specs and Comments as documented) and rowbly-doctor (a merge conflict blocks with exit 6 until `doctor --fix`).
 - Removed checks, which covered MEDIUM failure modes or claims a kept check already covers: `--root` at the project folder and the Board context (rowbly-cli), `--description-file -` and the valid handles of an unknown Assignee (rowbly-stories), and a Story in a removed Stage (rowbly-doctor). Their guidance is unchanged and still sourced from README.md and the observed CLI.
 - No guidance in `skills/` changed: no command, flag, output, exit code, doctor finding or Data Root behavior changed. `test/commands/doctor.test.ts`, cited for the key conflict repair, was removed; the rowbly-doctor task check covers that repair.
+
+- PR #62 conflict resolution: the maintainer approved assigning the test-policy decision ADR-0027 because main already uses ADR-0025 for Story Specs and ADR-0026 for Git. Preserved both branches' planning history and main's Git/Specs guidance. Kept the deterministic refused-upward-move regression from main and its Git terminology exceptions in the language audit. Checks on the merged tree: typecheck and lint passed; unit 21 files / 65 tests and CLI 4 files / 20 tests passed; all five skills validated. No new consumer session was run because operating guidance is unchanged.

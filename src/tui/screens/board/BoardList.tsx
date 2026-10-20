@@ -1,9 +1,14 @@
 import { Box, Text } from 'ink';
+import type { Stage } from '../../../schemas';
+import { useStoryBadges } from '../../hooks';
 import { BoardListRow } from './BoardListRow';
 import type { ListRow } from './layout';
+import { useCardBadges } from './useCardBadges';
 
 export interface BoardListProps {
   rows: readonly ListRow[];
+  /** All Stages of the Board, for the Plugins' card badges. */
+  stages: readonly Stage[];
   width: number;
   /** Index of the first line shown and how many are shown. */
   first: number;
@@ -14,10 +19,12 @@ export interface BoardListProps {
   onClick(index: number): void;
 }
 
-/** The list view: the Backlog, Board and Done sections, scrolled to `first`. */
-export function BoardList({ rows, width, first, size, cursor, active, onClick }: BoardListProps) {
+/** The list view: the Backlog, Board and Done sections, scrolled to `first`. Story lines show the card's badges. */
+export function BoardList({ rows, stages, width, first, size, cursor, active, onClick }: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;
+  const badgesOf = useCardBadges();
+  const storyBadges = useStoryBadges();
   return (
     <Box flexDirection="column" width={width}>
       <Text dimColor>{first > 0 ? `↑ ${first} more` : ' '}</Text>
@@ -25,6 +32,7 @@ export function BoardList({ rows, width, first, size, cursor, active, onClick }:
         <BoardListRow
           key={row.kind === 'section' ? `section:${row.category}` : row.story.key}
           row={row}
+          badges={row.kind === 'story' ? [...storyBadges(row.story), ...badgesOf(row.story, stages)] : []}
           width={width}
           selected={first + i === cursor}
           active={active}

@@ -164,7 +164,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
   read is `ASSIGNEES_ROSTER_UNAVAILABLE` (error, fixed by hand).
 - In the TUI, an **Assignees** section in the settings (`,`) lists the roster (`enter` open, then
   Edit or Remove; `n` add). The Story form has an Assignees choice, the filter has Assignees and
-  "Assigned to me", and board cards and Story list rows show `@handle`.
+  "Assigned to me", and board cards, the board's list view and Story list rows show `@handle`.
 - Rosters and Story Assignees from a Rowbly before this Plugin are not imported: core drops them the
   next time it saves `rowbly.config.json` or the Story.
 <!-- END assignees -->
@@ -275,7 +275,7 @@ Tasks are a Built-in Plugin: run `rowbly plugins enable tasks` first.
 - Tasks are listed in creation order and have no Rank.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects (the stored fields and `id`): an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
-- `stories show` has a Tasks row (`2/5 done`), and the board card shows `✓ 2/5`.
+- `stories show` has a Tasks row (`2/5 done`), and the board card and the board's list view show `✓ 2/5`.
 - In the TUI, a Story's **Tasks** tab and the Task screen both edit (`e`), move (`m`) and delete (`d`) a Task.
 <!-- END tasks -->
 
@@ -362,6 +362,25 @@ rowbly plugins disable <id>    # keeps its settings and data
 <!-- END plugins -->
 
 <!-- BEGIN tui -->
+### Automatic Git commits
+
+Enable the **Git** Plugin with `rowbly plugins enable git` while the Data Root is inside a Git repository. Otherwise activation reports an error. Git creates `chore: update Rowbly data` commits for saved Rowbly changes, including other Plugins' writes and deletions. Establish a clean Data Root baseline first: edits made by hand to the same affected paths are included. Other files and unrelated staged changes stay untouched; staged changes on an affected path cause a warning instead of a commit. Local State, locks and transaction files are excluded.
+
+```sh
+rowbly git show
+rowbly git configure --frequency change
+rowbly git configure --frequency interval --interval 600
+rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com"
+rowbly git configure --author-name '' --author-email ''  # restore Git defaults
+```
+
+When Git is enabled and loaded, settings (`,`) includes **Git**, with frequency, interval in seconds (1–86400, default 300), and author name/email. These are personal preferences in Local State. The default frequency is after each change. Blank author fields use Git's effective `user.name` and `user.email` from repository/global configuration (`.gitconfig`).
+
+Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git prevents pending commits until re-enabled.
+
+Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](docs/plugins/built-in.md#git).
+
+
 ## Interactive mode (TUI)
 
 Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
@@ -377,14 +396,16 @@ Screens and dialogs open in centred modals that fit their content from the first
 | Key | Action |
 | --- | --- |
 | `↑`/`↓` (or `j`/`k`) | move |
-| `enter` | select or open |
-| `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
+| `enter` | select or open; a click on an item in a list does the same |
+| `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in a modal that fills the terminal, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+
+The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`) and `page up`/`page down` scroll it. **Edit** shows the raw text in a multi-line text box. `tab` switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
 ### Keys per screen
 
@@ -407,7 +428,9 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
+Long Plugin badges in the board's list view truncate to keep each Story on one line.
+
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards and the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
 <!-- END tui -->
 
 ## Exit codes

@@ -1,9 +1,9 @@
 import { Box, Text, useInput } from 'ink';
-import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { useKeyCapture, useMainOverlay } from '../hooks';
+import { useRef } from 'react';
+import { useKeyCapture } from '../hooks';
 import { FullScreenButton } from './FullScreenButton';
-import { TextAreaModal } from './TextAreaModal';
 import { editKey, follow, moveRow, rowOf, useEditState, WithCaret, wrapRows } from './textEditing';
+import { useFullScreenEditor } from './useFullScreenEditor';
 
 export interface TextAreaProps {
   value: string;
@@ -18,17 +18,17 @@ export interface TextAreaProps {
   placeholder?: string;
   /** Called when `↑` on the first row or `↓` on the last would move the caret out of the text. */
   onLeave?(direction: -1 | 1): void;
-  /** Shows a Full screen button below the text, and `ctrl+f` opens the text in a modal. Defaults to true. */
+  /** Shows a Full screen button below the text, and `ctrl+f` opens the text in a `FullScreenEditor`. Defaults to true. */
   expandable?: boolean;
-  /** The full-screen modal's title. */
+  /** The full-screen editor's title. */
   title?: string;
 }
 
 /**
  * A multi-line text input: `enter` starts a new line, `↑/↓` move between rows, and the editing keys of
  * `TextInput` work within a line. While focused, the shell leaves printable keys to it; `tab`, `ctrl+enter` and `esc` go to its parent.
- * Its Full screen button (or `ctrl+f`) opens the text in a modal over the whole terminal, which keeps every
- * edit when it closes.
+ * Its Full screen button (or `ctrl+f`) opens the text in a `FullScreenEditor` over the whole terminal, in
+ * edit mode; every edit there goes to `onChange`, so closing it keeps the text.
  */
 export function TextArea({
   value,
@@ -42,7 +42,8 @@ export function TextArea({
   title = 'Edit text',
 }: TextAreaProps) {
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
-  const [expanded, setExpanded] = useState(false);
+  const editor = useFullScreenEditor();
+  const expanded = editor.isOpen;
   const editing = focus && !expanded;
   useKeyCapture(editing);
   const top = useRef(0);
@@ -50,28 +51,11 @@ export function TextArea({
   const rowsOf = (text: string) => wrapRows(text, width - 1);
   const wrapped = rowsOf(value);
 
-  // The modal is built when it opens: it holds the text from then on and reports every edit.
-  const overlay = useMainOverlay();
-  const id = useId();
+  // The editor holds the text once it opens, and reports every edit to the latest `onChange`.
   const report = useRef(onChange);
   report.current = onChange;
-  const modal = useRef<ReactNode>(null);
-  const expand = () => {
-    modal.current = (
-      <TextAreaModal
-        title={title}
-        initial={latest.current.value}
-        onChange={(next) => report.current(next)}
-        onClose={() => setExpanded(false)}
-      />
-    );
-    setExpanded(true);
-  };
-  useEffect(() => {
-    if (!expanded || !overlay) return;
-    overlay.open(id, modal.current);
-    return () => overlay.close(id);
-  }, [expanded, overlay, id]);
+  const expand = () =>
+    editor.open({ title, initial: latest.current.value, mode: 'edit', onChange: (next) => report.current(next) });
 
   useInput(
     (input, key) => {
@@ -119,8 +103,8 @@ export function TextArea({
     <Box flexDirection="column" flexShrink={0}>
       {text}
       <FullScreenButton focused={focus} clickable={!expanded} onClick={expand} />
-      {/* Outside the shell there is nothing to cover, so the modal shows here. */}
-      {expanded && !overlay && modal.current}
+      {/* Outside the shell there is nothing to cover, so the editor shows here. */}
+      {editor.inline}
     </Box>
   );
 }

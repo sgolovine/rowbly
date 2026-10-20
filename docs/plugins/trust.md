@@ -15,7 +15,7 @@ Rowbly has several safeguards around Plugin code. Each one protects against *acc
 | Safeguard | What it does | What it does not do |
 | --- | --- | --- |
 | Architecture import tests (`test/architecture.test.ts`) | Keep repository code to the convention: a Plugin imports only the Plugin API and no Node built-in module. | Confine anything at run time. A computed `import()`, `require`, or a global such as `process` or `fetch` is not seen by a source check. |
-| Capabilities (`PluginServices`, `PluginReadServices`, `files`, `editText`) | Give each stage only the services it is meant to use. | Stop code from reaching the file system, network, environment or child processes by other means. |
+| Capabilities (`PluginServices`, `PluginReadServices`, `files`, `editText`, `git`) | Give each stage only the services it is meant to use. | Stop code from reaching the file system, network, environment or child processes by other means. |
 | Frozen snapshots and stage-bound writers (ADR-0020 §1) | Stop a hook from changing the plan except through validated writer methods, and stop a writer from being used after its stage. | Protect against code that is written to get around them. |
 | Plugin file scopes and the symlink policy (ADR-0019 §10) | Keep `files` reads and writes inside `plugins/<id>/` and reject symlinks there. | Make the check race-proof, or stop code that uses `node:fs` directly. |
 | Cooperative timeouts (the reaction deadline, ADR-0020 §4) | Let Rowbly stop *waiting* for a slow reaction and carry on. | Interrupt a synchronous loop or stop detached work. A promise timeout cannot do that. |

@@ -28,40 +28,39 @@ export const SpecsInput = z.object({
 });
 export type SpecsInput = z.infer<typeof SpecsInput>;
 
-/** A Story Spec (`story`) or a Board Spec (`slug`) on `board`. */
+/** A Story Spec (`story` and `slug`) or a Board Spec (`slug` alone) on `board`. */
 export type SpecTarget =
-  | { board: string; story: string; slug?: never }
+  | { board: string; story: string; slug: string }
   | { board: string; slug: string; story?: never };
-export type BoardSpecTarget = Extract<SpecTarget, { slug: string }>;
 
-export interface StorySpec {
+export interface Spec {
+  slug: string;
   title: string;
   text: string;
 }
 
-export interface BoardSpec extends StorySpec {
-  slug: string;
+/** The params of the Spec form, which only creates: a Board Spec, or a Story Spec of `story`. */
+export interface SpecFormParams {
+  board: string;
+  story?: string;
 }
 
-export type Spec = StorySpec | BoardSpec;
-
-/** The params of the Spec form: a draft Board Spec (its slug comes from the form), a draft Story Spec, or an edit. */
-export type SpecFormParams = { create: true; board: string; story?: string } | { create: false; target: SpecTarget };
-
-export const STORY_SPEC_FILE = 'spec.md';
+/** The slug of a Story Spec named by its Story alone; `spec.md` was a Story's one Story Spec before ADR-0025. */
+export const STORY_SPEC_SLUG = 'spec';
 const HEADING = /^# .*$/m;
 
-export function boardSpecFile(slug: string): string {
+/** The file of the Spec `slug`, in its Board's or Story's Plugin folder. */
+export function specFile(slug: string): string {
   return `${slug}.md`;
 }
 
-/** What a target is called in messages: the Story Key or the slug. */
+/** What a target is called in messages: the slug, after the Story Key for a Story Spec (`WEB-1/design`). */
 export function specTargetName(target: SpecTarget): string {
-  return target.story ?? target.slug;
+  return target.story === undefined ? target.slug : `${target.story}/${target.slug}`;
 }
 
-/** A Board Spec as one line: `<slug>  <title>`. */
-export function specLine(spec: BoardSpec): string {
+/** A Spec as one line: `<slug>  <title>`. */
+export function specLine(spec: Spec): string {
   return `${spec.slug}  ${spec.title}`;
 }
 
@@ -91,38 +90,29 @@ export function parseSpecsInput(value: unknown): SpecsInput {
   return input;
 }
 
-/** Checks a screen's Spec target params, which `ui.open` does not check. */
-export function parseSpecTarget(params: Record<string, unknown>): SpecTarget {
-  const { board, story, slug } = params;
-  if (typeof board !== 'string' || !board) throw new UsageError('A Spec needs a Board');
-  if (story !== undefined && slug !== undefined) throw new UsageError('A Spec names a Story or a slug, not both');
-  if (typeof story === 'string' && story) return { board, story };
-  if (typeof slug === 'string' && isSlug(slug)) return { board, slug };
-  throw new UsageError('A Spec needs a Story Key or a lower-kebab-case Board Spec slug');
-}
-
-/** Checks the Spec form's params: `create: true` for a draft, `create: false` with a whole target to edit. */
+/** Checks the Spec form's params, which `ui.open` does not check; a new Spec gets its slug in the form. */
 export function parseSpecFormParams(params: Record<string, unknown>): SpecFormParams {
-  if (params.create === false) return { create: false, target: parseSpecTarget(params) };
-  if (params.create !== true) throw new UsageError('The Spec form needs create: true or false');
   const { board, story, slug } = params;
   if (typeof board !== 'string' || !board) throw new UsageError('A Spec needs a Board');
-  if (slug !== undefined) throw new UsageError('A new Board Spec gets its slug in the form');
-  if (story === undefined) return { create: true, board };
+  if (slug !== undefined) throw new UsageError('A new Spec gets its slug in the form');
+  if (story === undefined) return { board };
   if (typeof story !== 'string' || !story) throw new UsageError('A Story Spec needs a Story Key');
-  return { create: true, board, story };
+  return { board, story };
 }
 
 function location(target: SpecTarget): { scope: FileScope; name: string } {
-  if (target.story !== undefined) return { scope: { story: target.story }, name: STORY_SPEC_FILE };
-  if (!isSlug(target.slug)) throw new UsageError('A Board Spec needs a lower-kebab-case slug');
-  return { scope: { board: target.board }, name: boardSpecFile(target.slug) };
+  if (!isSlug(target.slug)) throw new UsageError('A Spec needs a lower-kebab-case slug');
+  const scope = target.story === undefined ? { board: target.board } : { story: target.story };
+  return { scope, name: specFile(target.slug) };
 }
 
 function toSpec(target: SpecTarget, text: string): Spec {
-  return target.story !== undefined
-    ? { title: specTitle(text), text }
-    : { slug: target.slug, title: specTitle(text), text };
+  return { slug: target.slug, title: specTitle(text), text };
+}
+
+/** The slugs of the top-level `<slug>.md` files among `names`. */
+function specSlugs(names: readonly string[]): string[] {
+  return names.filter((name) => name.endsWith('.md') && isSlug(name.slice(0, -3))).map((name) => name.slice(0, -3));
 }
 
 export async function resolveTarget(
@@ -132,9 +122,10 @@ export async function resolveTarget(
   resolveBoard: (flag?: string) => Promise<string>,
 ): Promise<SpecTarget> {
   if (opts.story) {
-    if (slug || opts.board) throw new UsageError('Use --story alone to name a Story Spec');
+    if (opts.board) throw new UsageError('Use --story without --board to name a Story Spec');
+    if (slug !== undefined && !isSlug(slug)) throw new UsageError('A Story Spec needs a lower-kebab-case slug');
     const story = await plugin.services.stories.get(opts.story);
-    return { board: story.boardId, story: story.key };
+    return { board: story.boardId, story: story.key, slug: slug ?? STORY_SPEC_SLUG };
   }
   if (!slug || !isSlug(slug)) throw new UsageError('A Board Spec needs a lower-kebab-case slug');
   const target = { board: await resolveBoard(opts.board), slug };
@@ -142,8 +133,6 @@ export async function resolveTarget(
   return target;
 }
 
-export async function readSpec(plugin: PluginReadContext, target: BoardSpecTarget): Promise<BoardSpec | null>;
-export async function readSpec(plugin: PluginReadContext, target: SpecTarget): Promise<Spec | null>;
 export async function readSpec(plugin: PluginReadContext, target: SpecTarget): Promise<Spec | null> {
   const { scope, name } = location(target);
   const text = await plugin.files.read(scope, name);
@@ -162,15 +151,26 @@ export async function getSpec(plugin: PluginReadContext, target: SpecTarget): Pr
  */
 export async function listSpecSlugs(plugin: PluginHookContext, board: string): Promise<string[]> {
   await plugin.services.boards.get(board);
-  return (await plugin.files.list({ board }))
-    .filter((name) => name.endsWith('.md') && isSlug(name.slice(0, -3)))
-    .map((name) => name.slice(0, -3));
+  return specSlugs(await plugin.files.list({ board }));
 }
 
-export async function listSpecs(plugin: PluginHookContext, board: string): Promise<BoardSpec[]> {
-  const specs: BoardSpec[] = [];
+export async function listSpecs(plugin: PluginHookContext, board: string): Promise<Spec[]> {
+  const specs: Spec[] = [];
   for (const slug of await listSpecSlugs(plugin, board)) {
     const spec = await readSpec(plugin, { board, slug });
+    if (spec) specs.push(spec);
+  }
+  return specs;
+}
+
+/** The Story Specs of `story`: its top-level `<slug>.md` files. */
+export async function listStorySpecs(
+  plugin: PluginReadContext,
+  story: Pick<Story, 'key' | 'boardId'>,
+): Promise<Spec[]> {
+  const specs: Spec[] = [];
+  for (const slug of specSlugs(await plugin.files.list({ story: story.key }))) {
+    const spec = await readSpec(plugin, { board: story.boardId, story: story.key, slug });
     if (spec) specs.push(spec);
   }
   return specs;

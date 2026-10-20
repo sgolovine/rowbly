@@ -1,5 +1,6 @@
 import type { EventEmitter } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
+import { ConflictError } from '../../src/core/errors';
 import type { StageConfig } from '../../src/schemas';
 import { createServices, type RowblyContext, type Services } from '../../src/services';
 import { createRepositories } from '../../src/storage';
@@ -146,6 +147,52 @@ describe('board view', () => {
       await waitForFrame(app, (f) => f.includes('● Todo (1)') && f.includes('n new'));
     } finally {
       for (const release of held) release();
+      app.unmount();
+    }
+  });
+  it('restores folded Backlog and the highlighted Story after a refused upward move', async () => {
+    const t = await seed();
+    let release = () => {};
+    const app = await open(t, {
+      patch: (services) => ({
+        ...services,
+        stories: {
+          ...services.stories,
+          move: async () => {
+            await new Promise<void>((resolve) => {
+              release = resolve;
+            });
+            throw new ConflictError('the Story changed on disk');
+          },
+        },
+      }),
+    });
+    try {
+      await app.press('v');
+      await waitForFrame(app, (f) => /› +WEB-1 Login/.test(f));
+      await app.press('k', KEYS.left);
+      await waitForFrame(app, '› ▸ Backlog (3)');
+      await app.press('j', 'j');
+      await waitForFrame(app, (f) => /› +WEB-4 Dark mode/.test(f));
+      await app.press(KEYS.shiftUp);
+      await waitForFrame(app, (f) => f.includes('▾ Backlog (4)') && /› +WEB-4 Dark mode/.test(f));
+      expect(app.lastFrame()).not.toContain('v Stages view');
+      release();
+      const frame = await waitForFrame(
+        app,
+        (f) =>
+          f.includes('error: the Story changed on disk') &&
+          f.includes('▸ Backlog (3)') &&
+          /› +WEB-4 Dark mode/.test(f) &&
+          f.includes('v Stages view'),
+      );
+      expect(frame).not.toContain('WEB-2');
+      expect((await story(t, 'WEB-4')).stage).toBe('todo');
+      // The restored cursor also determines which Story the next action opens.
+      await app.press(KEYS.enter);
+      await waitForFrame(app, (f) => f.includes('WEB-4 Dark mode') && f.includes(' Details '));
+    } finally {
+      release();
       app.unmount();
     }
   });

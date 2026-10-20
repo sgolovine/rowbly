@@ -93,9 +93,9 @@ skills:
           Plugin settings, or using the Built-in Plugins' commands: Assignees
           (rowbly assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly
           epics, --epic), Specs (rowbly specs, --spec, Story and Board Specs)
-          and Comments (rowbly comments). Also when a rowbly command is unknown
-          because its Plugin is off, or a Plugin failed to load. Not for writing
-          a new Plugin.",
+          and Comments (rowbly comments), and configuring automatic Git commits
+          (rowbly git). Also when a rowbly command is unknown because its Plugin
+          is off, or a Plugin failed to load. Not for writing a new Plugin.",
         sources:
           [
             README.md,
@@ -106,7 +106,14 @@ skills:
             src/plugins/tasks/commands.ts,
             src/plugins/epics/commands.ts,
             src/plugins/specs/commands.ts,
-            src/plugins/comments/commands.ts
+            src/plugins/comments/commands.ts,
+            src/plugins/git/commands.ts,
+            src/plugins/git/model.ts,
+            src/services/plugins/git.ts,
+            src/storage/git.ts,
+            test/plugins/gitCli.test.ts,
+            test/skills/cases/git-automation.md,
+            test/skills/checkGitConsumer.mjs
           ],
         requires: [ rowbly-cli ],
         purpose: "Explain how an agent turns Rowbly's Built-in Plugins on and off,
@@ -130,7 +137,9 @@ skills:
             docs/architecture/data-model.md,
             docs/architecture/storage.md,
             src/commands/doctor.ts,
-            src/services/doctor.ts
+            src/services/doctor.ts,
+            docs/plugins/built-in.md,
+            src/services/plugins/git.ts
           ],
         requires: [ rowbly-cli ],
         references: [ references/finding-codes.md ],

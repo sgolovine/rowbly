@@ -1,4 +1,4 @@
-# ADR-0025: Tests guard only what review cannot check
+# ADR-0027: Tests guard only what review cannot check
 
 **Status:** Accepted. Built.
 

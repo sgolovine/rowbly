@@ -1,6 +1,6 @@
 # ADR-0015: Specs are markdown files
 
-**Status:** Accepted. Built.
+**Status:** Accepted. Built. [ADR-0025](0025-a-story-has-many-story-specs.md) gives a Story any number of Story Specs, each named by a slug; `spec.md` is the one with the slug `spec`.
 
 ADR-0001 makes JSON files the only storage. Specs are an exception: each Spec is a markdown file. A Board Spec is `boards/<board>/plugins/specs/<slug>.md`, so its file name is its slug. A Story Spec is `boards/<board>/stories/<KEY>/plugins/specs/spec.md`. The first `# ` heading of a Spec is its title. A Spec is longer than a Story description, and people review it in pull requests and edit it in their own editors, where a markdown file reads, renders and diffs much better than a string inside JSON. We rejected front matter for the title, because it needs a parser.
 

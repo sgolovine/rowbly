@@ -95,7 +95,7 @@ tool, hand-drawn screens or `ink-testing-library` frames instead, and do not com
 
 ## Tests
 
-The suite is small on purpose (ADR-0025): about 70 tests that run in under 20 s. Every test adds CI time to every
+The suite is small on purpose (ADR-0027): about 70 tests that run in under 20 s. Every test adds CI time to every
 pull request, so a test has to guard something a reviewer cannot check by reading the diff or running
 the change once. **By default, a change adds no test.** Verify it by running it (`pnpm dev …`, or the
 TUI) and say how in the pull request.

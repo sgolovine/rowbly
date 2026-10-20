@@ -15,11 +15,11 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 Built:
 
 - The Plugin API, the registry and loading; the operation pipeline (guard, transform, replace, react) with the Data Root lock and commit journal; Plugin Data and Plugin files; the `plugins` commands and the TUI **Plugins** settings section; every slot listed under [Surfaces](#surfaces).
-- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs) and [Comments](built-in.md#comments).
+- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs) [Comments](built-in.md#comments) and [Git](built-in.md#git).
 
 Planned, not built:
 
-- The Git Plugin and the Plugin API's `git` capability ([ADR-0016](../agents/adr/0016-git-automation-design.md)).
+- Git hook installation and automatic branching ([ADR-0016](../agents/adr/0016-git-automation-design.md)); automatic commits are built (see [Git](built-in.md#git)).
 - Third-party Plugins, dependencies between Plugins, and deleting a Plugin's data. The rules that must hold first are in [compatibility.md](compatibility.md) and [trust.md](trust.md).
 
 ## Where Plugins live
@@ -63,7 +63,7 @@ A Plugin is skipped **as a whole** when its settings are invalid, its `start` th
 
 ## Settings
 
-A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Rowbly has no generic settings editor: edit the file by hand, or use the Plugin's own commands or screens when it has them.
+A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Git has personal commit preferences in Local State, edited with `rowbly git configure` or its TUI settings section. Other Plugins keep their settings as described below. Rowbly has no generic settings editor: edit the file by hand, or use the Plugin's own commands or screens when it has them.
 
 ```json
 {
@@ -92,7 +92,7 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
     plugins/<id>/…          # Board files of a Plugin, e.g. Board Specs
     stories/<KEY>/
       story.json            # Story bags, e.g. Tasks and Comments
-      plugins/<id>/…        # Story files of a Plugin, e.g. the Story Spec
+      plugins/<id>/…        # Story files of a Plugin, e.g. Story Specs
 ```
 
 - A **bag** is `"plugins": { "<id>": { … } }` on a record ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Each Plugin validates its own bag. Core keeps every bag unchanged, including the bags of Plugins that are off or unknown and bags that do not parse, and `--json` prints records as they are stored, with every bag.
@@ -107,7 +107,7 @@ Every Service Layer operation, from core or from a Plugin, collects a Change Set
 - **Transform**: changes the Change Set before the save, through its writer methods only.
 - **Guard**: sees the final Change Set, read-only, and can refuse the operation: nothing is saved; exit 4 (`CONFLICT`), with `details.canForce` when `--force` would get past it.
 - **Replace**: runs instead of a core operation's body. An advanced capability; no Built-in Plugin uses one.
-- **React**: sees the saved Change Set and acts only outside Rowbly's data. Each reaction has 5 s; then Rowbly warns and goes on, and nothing is undone. A failure warns, and the exit code stays 0.
+- **React**: a definition-level `react` observes every saved Operation, including other Plugins’ Operations, before its named reaction. It sees the saved Change Set and acts only outside Rowbly's data. Each reaction has 5 s; then Rowbly warns and goes on, and nothing is undone. A failure warns, and the exit code stays 0.
 
 Rules that hold for every hook ([ADR-0020](../agents/adr/0020-plugin-execution-and-data-contracts.md)):
 

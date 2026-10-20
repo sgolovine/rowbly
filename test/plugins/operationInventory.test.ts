@@ -10,6 +10,8 @@ import { comments } from '../../src/plugins/comments';
 import { addComment, deleteComment, editComment } from '../../src/plugins/comments/comments';
 import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic, editEpic, setEpicClosed } from '../../src/plugins/epics/service';
+import { git } from '../../src/plugins/git';
+import { configure } from '../../src/plugins/git/model';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
 import { tasks } from '../../src/plugins/tasks';
@@ -56,9 +58,22 @@ describe('the operation inventory (ARCH-02)', () => {
       description: '',
       hooks: Object.fromEntries([...listed.keys()].map((name) => [name, record])),
     });
-    const t = await pluginRoot({ assignees: true, tasks: true, epics: true, specs: true, comments: true, rec: true });
+    const t = await pluginRoot({
+      assignees: true,
+      tasks: true,
+      epics: true,
+      specs: true,
+      comments: true,
+      git: true,
+      rec: true,
+    });
+    const { execFileSync } = await import('node:child_process');
+    execFileSync('git', ['init', '-b', 'main'], { cwd: t.dir });
+    execFileSync('git', ['config', 'user.name', 'Test'], { cwd: t.dir });
+    execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: t.dir });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, recorder]);
+    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, git, recorder]);
+    await configure(services.plugins.context('git'), { frequency: 'interval', intervalSeconds: 86400 });
     const assignee = services.plugins.context('assignees');
     const epic = services.plugins.context('epics');
     const spec = services.plugins.context('specs');
@@ -75,8 +90,8 @@ describe('the operation inventory (ARCH-02)', () => {
     await deleteEpic(epic, 'auth');
     await createSpec(spec, { board: 'web', slug: 'login' }, '# Login');
     await editSpec(spec, { board: 'web', slug: 'login' }, '# Login\n\nMore');
-    await createSpec(spec, { board: 'web', story: 'WEB-1' }, '# Story');
-    await deleteSpec(spec, { board: 'web', story: 'WEB-1' });
+    await createSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Story');
+    await deleteSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' });
     await deleteSpec(spec, { board: 'web', slug: 'login' });
     const added = await addComment(comment, 'WEB-1', 'Hello');
     await editComment(comment, 'WEB-1', added.id, 'Hello again');

@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
 import { moveDelta } from '../keymap';
+import { SelectListRow } from './SelectListRow';
 import { TextInput } from './TextInput';
 
 export interface SelectItem<T = string> {
@@ -17,6 +18,8 @@ export interface SelectListProps<T> {
   onSelect?(item: SelectItem<T>): void;
   /** Called with the highlighted item whenever it changes, so a screen's own keys can act on it. */
   onHighlight?(item: SelectItem<T> | undefined): void;
+  /** Reports whether the list is capturing filter text; false when filtering ends or it unmounts. */
+  onFilteringChange?(filtering: boolean): void;
   /** Multi-select mode: `space` toggles, `enter` submits the checked values. */
   multi?: boolean;
   /** Initially checked values in multi-select mode. */
@@ -30,11 +33,15 @@ export interface SelectListProps<T> {
   isActive?: boolean;
 }
 
-/** A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. */
+/**
+ * A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. In single mode
+ * a click on an item picks it, as `enter` does.
+ */
 export function SelectList<T>({
   items,
   onSelect,
   onHighlight,
+  onFilteringChange,
   multi = false,
   defaultSelected = [],
   onChange,
@@ -49,6 +56,11 @@ export function SelectList<T>({
   const [filtering, setFiltering] = useState(false);
   const [selected, setSelected] = useState<readonly T[]>(defaultSelected);
   useKeyCapture(active && filtering, { escape: true });
+
+  useEffect(() => {
+    onFilteringChange?.(filtering);
+  }, [filtering, onFilteringChange]);
+  useEffect(() => () => onFilteringChange?.(false), [onFilteringChange]);
 
   const needle = filter.toLowerCase();
   const visible = needle ? items.filter((item) => item.label.toLowerCase().includes(needle)) : items;
@@ -112,13 +124,20 @@ export function SelectList<T>({
       {rows.map((item, i) => {
         const highlighted = start + i === index;
         const checkbox = multi ? (selected.includes(item.value) ? '[x] ' : '[ ] ') : '';
+        // In single mode a click picks the item, as `enter` on it does.
+        const pick =
+          !multi && onSelect
+            ? () => {
+                setCursor(start + i);
+                onSelect(item);
+              }
+            : undefined;
         return (
-          <Text key={String(item.value)} color={highlighted && active ? 'cyan' : undefined}>
-            {highlighted ? '› ' : '  '}
+          <SelectListRow key={String(item.value)} highlighted={highlighted} active={active} onClick={pick}>
             {checkbox}
             {item.label}
             {item.description && <Text dimColor> {item.description}</Text>}
-          </Text>
+          </SelectListRow>
         );
       })}
       {visible.length > rows.length && <Text dimColor>{`  ${index + 1}/${visible.length}`}</Text>}
