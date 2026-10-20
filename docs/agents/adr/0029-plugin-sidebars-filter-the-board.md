@@ -1,0 +1,13 @@
+# ADR-0029: A Plugin can add a Plugin Sidebar that filters the board
+
+**Status:** Accepted. Built.
+
+People asked to see the Epics beside the Boards and to pick one to see only its Stories on the board, the way they pick a Board in the Board sidebar. The Epics Plugin already filters Stories by Epic (`storyFilterSchema`, `storyFilter`), but only through the filter form (`/`), and core must not name Epics (ADR-0008, ADR-0009).
+
+1. The Plugin API gains `PluginTui.sidebar`: a `title`, an `allLabel`, `items({ plugin })`, `filter(value)` and an optional `create` link to one of the Plugin's screens. The shell shows it as a **Plugin Sidebar**: a list beside the Board sidebar, built from the same component, with `allLabel` first and the `create` button at the bottom. A load check fails a Plugin whose `create` opens a screen it does not have, as for its Home entries.
+2. Each Plugin with a sidebar gets a header button titled `title` that shows or hides it. `\` shows the next Plugin's sidebar, then none; `{`/`}` pick the previous or next entry of the sidebar on screen. These keys are core keys (`CORE_KEYS`), so no Action can take them. At most one Plugin Sidebar shows at a time.
+3. Picking an entry sets that Plugin's filter (`StoryFilter.plugins.<id>`) to `filter(value)` for the board, in both views, and shows the board if another screen is the root. `allLabel` clears it. The pick lasts until Rowbly quits, applies to every Board, and stays when the sidebar is hidden; the board's header says `filter: <title>: <label>`. A filter the filter form sets for the same Plugin wins over the pick. An entry that is no longer listed, such as a deleted one, is no longer picked.
+4. `items` runs in the `field` stage when the sidebar shows and each time a screen opened over the board closes, so a new entry shows after its form; `filter` runs in the `filter` stage when an entry is picked. A failure is a toast, and the pick is not made.
+5. The Epics Plugin's sidebar is titled **Epics**, lists the open Epics by name after **All Epics**, filters by Epic ID and has a **+ New Epic** button that opens the Epic form.
+
+We rejected an Epics sidebar in core: core never names a Plugin's terms. We rejected a sidebar the Plugin draws itself, as a component: the shell would lose the shared look, mouse handling and keys of the Board sidebar, and each Plugin would rebuild them. We rejected a key chosen by each Plugin to show its sidebar: the TUI part loads after the definition is checked, so such a key could not be checked against core keys and Actions when the Plugin loads. We rejected putting the pick into the filter form's values: `c` and switching Boards clear those, while an Epic spans Boards and its pick should stay until it is changed in the sidebar.

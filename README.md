@@ -389,6 +389,8 @@ The board shows the Board's Stages side by side, in Stage order. Each Stage head
 
 The header's **Stages | List** switch (or `v` on the board) changes how the board shows its Stories. **Stages** is the view above, and every launch starts with it. **List** shows one line per Story, with its Story Key, name and Stage, in three sections: **Backlog** (the Backlog Stage), **Board** (every Stage between Backlog and Done, in Stage order) and **Done**. Inside a section, Stories are in Stage order, then Rank order. A section folds and unfolds, and a long list scrolls up and down. The choice lasts until you quit and applies to every Board; the highlighted Story stays highlighted when you switch.
 
+A Plugin can add a **Plugin Sidebar** beside the Board sidebar, with a header button that shows and hides it, such as the Epics Plugin's **Epics**. Its first entry, such as **All Epics**, shows every Story; picking another entry shows only the Stories it stands for on the board, in both views, and the header says `filter: Epics: <name>`. The pick applies to every Board, stays while the sidebar is hidden, and lasts until you quit. The button at the bottom, such as **+ New Epic**, creates an entry.
+
 Screens and dialogs open in centred modals that fit their content from the first frame, up to the available height. Longer content is clipped while the modal's title and key hints stay visible.
 
 ### Keys on every screen
@@ -400,6 +402,8 @@ Screens and dialogs open in centred modals that fit their content from the first
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
+| `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 

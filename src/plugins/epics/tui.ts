@@ -3,7 +3,7 @@ import { EpicDetail } from './EpicDetail';
 import { EpicForm } from './EpicForm';
 import { EpicList } from './EpicList';
 import { EpicBag } from './model';
-import { readEpics, storyEpic } from './service';
+import { listEpics, readEpics, storyEpic } from './service';
 
 /** The Story form's "no Epic" choice, and the filter's "Stories without an Epic". No Epic ID can be either. */
 const NO_EPIC = 'No Epic';
@@ -20,6 +20,24 @@ function chosenEpic(value: PluginFormValue | undefined): string | false | undefi
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { list: EpicList, detail: EpicDetail, form: EpicForm },
   home: [{ label: 'Epics', screen: 'list' }],
+  /** `◆ <Epic name>` on a Story of an Epic; its ID when the Epic file is missing or cannot be read. */
+  async loadStoryBadges({ plugin }) {
+    const names = new Map((await readEpics(plugin)).epics.map((epic) => [epic.id, epic.name]));
+    return (story) => {
+      const epic = storyEpic(plugin, story);
+      return epic ? [`◆ ${names.get(epic) ?? epic}`] : [];
+    };
+  },
+  /** The open Epics by name; picking one shows only its Stories on the board. */
+  sidebar: {
+    title: 'Epics',
+    allLabel: ALL_EPICS,
+    async items({ plugin }) {
+      return (await listEpics(plugin, 'open')).map((epic) => ({ value: epic.id, label: epic.name }));
+    },
+    filter: (id) => id,
+    create: { label: '+ New Epic', screen: 'form', params: { title: 'New Epic' } },
+  },
   storyForm: {
     async fields({ story, plugin }) {
       if (story && plugin.inspectBag(story, EpicBag).kind === 'invalid') {

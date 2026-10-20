@@ -3,10 +3,10 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "44c386017c2cafaea5e9c99693e690af2c83653b2d227bdec57c3c476af9f76f",
+      "fingerprint": "d20a43857379a7b8f77c8c36d93635dc4d9dc05a6402c4c265d84bb746053fd2",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
-        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
@@ -14,41 +14,41 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "cad64d5db1a933c3080625bc31ff9103a31804db29943586147dd98a49c8560b",
+      "fingerprint": "170831969ec4c91ad93131346e3e1a317b56b93c5b64f44d0e25d3e39c94f9b0",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
-        "docs/plugins/built-in.md": "287e2f1c5f3af153fac6805177c56b8d0e7d61611b7fa11bebc63b58acc40c21",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "95a745a470318ce62605d51cdef32c8b247735e24aee4b326bc73eb07ac33233",
+      "fingerprint": "9b7d031c828275eaf6a8a681618fd3f825a80d4a45b458ce89c44c48973b2d5d",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "287e2f1c5f3af153fac6805177c56b8d0e7d61611b7fa11bebc63b58acc40c21",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -64,18 +64,18 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "bd41be9b0910e1afa694c2cad403c859c9456974d3abbd6cce12a9f96032b259",
+      "fingerprint": "c1c0fe863d5364c9cf7b71384eb5cd1f61de57bd1768fb03d0e115f8f7d3ebd6",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -84,19 +84,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "5c5dd2d1fe3e55eb11e72fa13dda445b84252dbeb90ae9aa30743dcad0e2e4da",
+      "fingerprint": "d64c40285e760f17d8a7e0323799c400ba50845fa8b8301d58be40d73d12f083",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
-        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
@@ -104,25 +104,25 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "0dd49b0d287fcc321b5c7df65daa963c155eae6b005668c81ea513eff376cb46",
+      "fingerprint": "cfca9d13fa37c70577a054df45bae3b9cbd55279306aebd14164c3eed38ef0d4",
       "snapshot": {
-        "README.md": "a652e5d16ca51fd482baac1f38203a76d9ff93e8f4db002aed8bddd934290c3d",
-        "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
+        "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "287e2f1c5f3af153fac6805177c56b8d0e7d61611b7fa11bebc63b58acc40c21",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/_artifacts/domain_map.yaml": "dc287076faea671cd2c3d1bb1c4d675be5abb48cf1edcc7b1d21c9d6923d82ef",
-        "skills/_artifacts/skill_spec.md": "8f41ae4ac4070b1dd117626ec338c3d2f253b43b7e75c50629ceabcecc57ddc1",
+        "skills/_artifacts/skill_spec.md": "cb9947d89624b4e7edb4172cfa6dfc8641a10aa5048502d0e37b3c3adc6abf3f",
         "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
@@ -158,12 +158,12 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "This branch changes only TUI keys: the Comments tab creates a Comment with `n` instead of `c` (README Comments notes and keys-per-screen table, docs/plugins/built-in.md Comments TUI line). The skills and planning records cover command-mode use and exclude the TUI; no command, flag, output, exit code, doctor finding or Data Root behavior changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`') -- README.md docs/plugins/built-in.md",
-        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -5624,6 +5624,95 @@
         "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
         "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
         "Reviewed docs/agents/adr/0027-tests-guard-only-what-review-cannot-check.md against origin/main and PR head 9ee41d2."
+      ]
+    },
+    "source:docs/agents/adr/0028-plugin-badges-can-load-from-files.md": {
+      "fingerprint": "164241e5e3073c2fd7715708b21c7b28fa6db4ba028d5ab96c58794112ba75fd",
+      "snapshot": {
+        "docs/agents/adr/0028-plugin-badges-can-load-from-files.md": "2fa4b5d02beaafdaa0bba472fd6ec24066a3fde377737ca2768910905e3deef1"
+      },
+      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "outcome": "no-change",
+      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "evidence": [
+        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+      ]
+    },
+    "source:src/plugins/epics/tui.ts": {
+      "fingerprint": "3137b75fac87a3906a54c2a998e989e194188c3891ebdb2d495637f0a2378852",
+      "snapshot": {
+        "src/plugins/epics/tui.ts": "ccd0a79cbec6035d1d345fd1c9fd754c392c42089e2f6a8d8ccb6cb183856ea9"
+      },
+      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "outcome": "out-of-scope",
+      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "evidence": [
+        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
+        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+      ]
+    },
+    "source:docs/agents/adr/0029-plugin-sidebars-filter-the-board.md": {
+      "fingerprint": "f44ffe4d0e2705301a60b14ef78cbf66a65023486482b477713ae770b58db1d6",
+      "snapshot": {
+        "docs/agents/adr/0029-plugin-sidebars-filter-the-board.md": "86600756b8dccbbd4a53815b7ea854e43e285bfe0acf8e910a6f5809ff29df3f"
+      },
+      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "outcome": "out-of-scope",
+      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "evidence": [
+        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
+        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+      ]
+    },
+    "source:src/tui/shell/Sidebar.tsx": {
+      "fingerprint": "cabee14a9eedba7e2e35e78548ba4e6b58700392f4ab61d5e570af8b338a3117",
+      "snapshot": {
+        "src/tui/shell/Sidebar.tsx": "479440a310b059b1af0b1a11dbc8d8218350df2ac543dbfa02007fef7f80b784"
+      },
+      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "outcome": "out-of-scope",
+      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "evidence": [
+        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
+        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+      ]
+    },
+    "source:src/tui/shell/SidebarItem.tsx": {
+      "fingerprint": "d880fba24bc99199d422b4486c225320c797916e9e27a3a4e1c5f6fc9ba08039",
+      "snapshot": {
+        "src/tui/shell/SidebarItem.tsx": "a263480aaa4fc0c39958e1d39794c5cd9673251a7ccc24eef85cda74476bb575"
+      },
+      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "outcome": "out-of-scope",
+      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "evidence": [
+        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
+        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+      ]
+    },
+    "source:src/tui/shell/usePluginSidebars.ts": {
+      "fingerprint": "fb4fddab53242fd1138ab200b99d4ffb38273bfb2d5713473195ba62fcdddbfe",
+      "snapshot": {
+        "src/tui/shell/usePluginSidebars.ts": "c95fd64e04460c351323ff8a01b101722cde1460820433ee041497a3d8129e7e"
+      },
+      "head": "f43112647f559562f6bace01aa4da0fe1b8bdaff",
+      "outcome": "out-of-scope",
+      "reason": "TUI source of Plugin Sidebars (ADR-0029); f431126 only moves a comment, reflows a doc comment and drops an unused field. The skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "evidence": [
+        "git diff 020d7e0..f431126 -- src/tui/shell: comment placement and the unused PluginSidebars.buttons[].open field",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests passed"
       ]
     }
   }

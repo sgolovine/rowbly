@@ -35,6 +35,8 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 |
 | [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022 |
 | [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
+| [0028](0028-plugin-badges-can-load-from-files.md) | Plugin badges can load what they show from the Plugin's files | Accepted |
+| [0029](0029-plugin-sidebars-filter-the-board.md) | A Plugin can add a Plugin Sidebar that filters the board | Accepted |
 
 ### Built-in Plugins
 
@@ -45,7 +47,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Partially built by 0026; amended by 0024 |
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
-| [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted |
+| [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted; amended by 0028 |
 | [0025](0025-a-story-has-many-story-specs.md) | A Story has any number of Story Specs, each named by a slug | Accepted |
 | [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted |
 
