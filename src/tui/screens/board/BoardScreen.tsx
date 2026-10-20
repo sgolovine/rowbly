@@ -149,7 +149,7 @@ export function BoardScreen({ params }: ScreenProps) {
    * toast. Either way it then reloads the board from disk.
    */
   const write = async (next: Columns, nextCursor: Cursor, run: () => Promise<Story | undefined>) => {
-    const before = { columns, cursor: { col, row }, listCursor: listAt };
+    const before = { columns, cursor: { col, row }, listCursor: listAt, collapsed };
     writing.current = true;
     setSaving(true);
     setColumns(next);
@@ -161,6 +161,7 @@ export function BoardScreen({ params }: ScreenProps) {
       setColumns(before.columns);
       setCursor(before.cursor);
       setListCursor(before.listCursor);
+      setCollapsed(before.collapsed);
       toast.error(err);
     } finally {
       writing.current = false;
