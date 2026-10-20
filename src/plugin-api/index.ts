@@ -112,6 +112,8 @@ export type {
   PluginRow,
   PluginScreenProps,
   PluginServices,
+  PluginSidebar,
+  PluginSidebarItem,
   PluginStatus,
   PluginStoryFilter,
   PluginStoryForm,

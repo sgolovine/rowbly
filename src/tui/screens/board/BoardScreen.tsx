@@ -20,6 +20,7 @@ import {
   useReloadOnReturn,
   useRowblyContext,
   useServices,
+  useSidebarFilter,
   useToast,
 } from '../../hooks';
 import { moveDelta } from '../../keymap';
@@ -78,6 +79,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const room = useLayout();
   const selection = useBoardSelection();
   const { plugins } = usePlugins();
+  const sidebarFilter = useSidebarFilter();
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -105,12 +107,14 @@ export function BoardScreen({ params }: ScreenProps) {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
     const { filter, failures } = withPluginFilters(toFilter(filters), plugins, scope.data.extra, filters);
+    // A Plugin Sidebar's pick applies unless the filter form sets that Plugin's filter.
+    const plugin = { ...sidebarFilter.plugins, ...filter.plugins };
     const [stories, badges] = await Promise.all([
-      services.stories.list(boardId, filter),
+      services.stories.list(boardId, Object.keys(plugin).length > 0 ? { ...filter, plugins: plugin } : filter),
       loadStoryBadges(plugins, services),
     ]);
     return { boardId, stages: choices.stages, stories, badges, failures };
-  }, [services, scope.data, filters, plugins]);
+  }, [services, scope.data, filters, plugins, sidebarFilter]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
   // What is on screen: the columns, the Board and Stages they were grouped by, and the cards' badges.
@@ -378,7 +382,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const hiddenRight = stages.length - firstCol.current - shownStages.length;
   const scrolled = view === 'stages' && hiddenLeft + hiddenRight > 0;
   const described = describeWithPlugins(describeFilters(filters), plugins, scope.data?.extra, filters);
-  const summary = described.summary;
+  const summary = [described.summary, sidebarFilter.summary].filter(Boolean).join(' · ');
   const boardId = scope.data?.boardId;
   const inContext = ctx?.local.board === boardId;
 
