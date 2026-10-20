@@ -3,87 +3,80 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "df52ea3eada3a0c6e7b990055703ab24834ba9aabf6316f6beb61ff78892c923",
+      "fingerprint": "fb3b8d74ff8f591e57908674c499f2e6ee1c2b87e386ad5d86e8c4815dd23064",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
-        "docs/architecture/storage.md": "c13ec10c85020c1d51602c7142d9cdd91927f12556a8b509564494f69a62fa9d",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "The new optional Git side effect does not change CLI resolution, JSON flags, exit-code mappings or shared vocabulary. Git warnings and commit timing are owned by rowbly-plugins; storage.md still guarantees saved Rowbly Operations before reactions.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "e18b374e28b4a2fade474e5c5759080edf924a0c36a7906429202cf64d6055eb",
+      "fingerprint": "abf2467b15e353158278ed1abe6b4c4662d89d9ff33833e9d3704613283acd0c",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
-        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
-        "docs/architecture/storage.md": "c13ec10c85020c1d51602c7142d9cdd91927f12556a8b509564494f69a62fa9d",
-        "docs/plugins/built-in.md": "580b175d55e6965a73b0422e00ec7c21a61b5b3a7cdd2d8f43ef16811a5be728",
-        "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
+        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
+        "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
-        "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
+        "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "updated",
-      "reason": "Added a conditional Git pause/restore before doctor repairs when all repairs must be reviewed before committing. doctor.fix remains a saved Operation and triggers automatic reactions; other Plugins stay on for doctor checks.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/plugins/git.test.ts disable/resume regression passed; existing doctor pass suites passed in full unit/CLI checks. Fresh consumer validation of the doctor-specific pause/repair workflow was not run."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "0d2770fc65e7e2b974da721d2d79057b5cedbe34d715acaef335529f5e96904e",
+      "fingerprint": "5e4f6b3261d12d3ba2d073fef3ca002c9bcaf5544debc054be92a1340b6d4788",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
-        "docs/plugins/README.md": "c46b9d77ce044716633fd6482006dfdf5780e1d33bc853955242bceb15f49c7c",
-        "docs/plugins/built-in.md": "580b175d55e6965a73b0422e00ec7c21a61b5b3a7cdd2d8f43ef16811a5be728",
-        "skills/rowbly-plugins/SKILL.md": "7d81bfb7a0070cdda99b7f7c9b3d175e7eade3f4511ba5a0cc153a9e6aff9d1a",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
+        "docs/plugins/README.md": "41088ba5d0fc515b525cec11ac843038440a87152d9acc481357ca16b7c5bc33",
+        "docs/plugins/built-in.md": "30ec81b17b9b992c9576b450749726ac585462ea1c62bb05feaa169c1c80001a",
+        "skills/rowbly-plugins/SKILL.md": "1551b68dbab2dfb20159d84112168e204d0a3d22d909cb658fd49c3497d5638a",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
-        "src/plugins/git/commands.ts": "419e65ff6c9a3aec76c0069493486cb26a10360fc27436b4e0e2498bbb1d429c",
-        "src/plugins/git/model.ts": "4fba98b457c2d0e7750638e6d6d8669b4402aa39c5b6358fa7a5294212a5d24e",
-        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
-        "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
-        "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
-        "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
-        "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
+        "src/plugins/specs/commands.ts": "a7034574cc85aad657f0414a7b90fabcc063310fc0fc59921bd92eb945e3b04c",
+        "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "updated",
-      "reason": "Added the Git enable/show/configure workflow, personal preferences, author defaults, commit scope, warnings, and no-daemon interval semantics. Preserved the established purpose and extended the existing operating-Plugins task.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/plugins/gitCli.test.ts passed CLI recipe and validation errors; test/plugins/git.test.ts covers timers, pause/resume, failures and staging; gitTui.test.tsx passed settings interaction.",
-        "Fresh gpt-6.1-sol consumer in a disposable copied built CLI/skill fixture completed test/skills/cases/git-automation.md; node test/skills/checkGitConsumer.mjs passed and rejected the wrong-frequency negative control.",
-        "Consumer reported reading rowbly-cli, rowbly-plugins and rowbly-stories. Normal Intent-installed discovery and negative activation remain unverified; copied catalog exposure, single successful task run."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "81aff310231496f6fcf14b0a0c95fc62507a9087be673aa389b5cfa9bcf7cc3d",
+      "fingerprint": "d406b4fb1824cf07ad17b1df6ef5733efbe5deb75bcaa2da568a249e49a0dfd0",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
-        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
+        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
@@ -91,19 +84,21 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Board, Stage, Custom Field and Me setup commands are unchanged. The new Git personal preferences are covered by rowbly-plugins rather than the Configuration Cascade instructions.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "56e04365775d6a778817abc80592546f4193400fcc30004a9e45288f3f572f63",
+      "fingerprint": "ee85e15f29e055e8abcae6f749318f452e715486e987eb1974569c5179e1e0c2",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -112,31 +107,33 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Story/Task commands and input/result semantics are unchanged. Automatic Commits observe their completed writes; Git configuration belongs to rowbly-plugins.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "41d660450ed6a90e11aeb41ba55d492e8857753a129ef54f2069f134d80c0951",
+      "fingerprint": "10afc244723595106ac302993c8e6c40aaefeb418ef445c913b13db7aad8d4b8",
       "snapshot": {
-        "README.md": "446f67d022c62167d2808ad8bec76847b661a914bc3b3dcc2f300ab75557e85b",
+        "README.md": "810de59e466a1ff5b2d7a78fb05a04cdb3f45b2f0df93c3743bdab00fa550c55",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
-        "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
-        "docs/architecture/storage.md": "c13ec10c85020c1d51602c7142d9cdd91927f12556a8b509564494f69a62fa9d",
-        "docs/plugins/README.md": "c46b9d77ce044716633fd6482006dfdf5780e1d33bc853955242bceb15f49c7c",
-        "docs/plugins/built-in.md": "580b175d55e6965a73b0422e00ec7c21a61b5b3a7cdd2d8f43ef16811a5be728",
-        "skills/_artifacts/domain_map.yaml": "e118e8c26ff7bcc6970afae93d1d6eaf88730b3563edd625609bc88178c1c4c5",
-        "skills/_artifacts/skill_spec.md": "a54123f5e07d7da48a863ce8e8d7f7b1850a0a9744bfaade892b7245118a73a7",
-        "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
+        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
+        "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
+        "docs/plugins/README.md": "41088ba5d0fc515b525cec11ac843038440a87152d9acc481357ca16b7c5bc33",
+        "docs/plugins/built-in.md": "30ec81b17b9b992c9576b450749726ac585462ea1c62bb05feaa169c1c80001a",
+        "skills/_artifacts/domain_map.yaml": "d85bbebb6c4cceaf849d3affdd1cb4b32dcb6417e128c839a939b65736394430",
+        "skills/_artifacts/skill_spec.md": "559379ae587d9079c3838b30b16a6c20716006167614a1c098ea7c6254129e57",
+        "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
-        "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
+        "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
-        "skills/rowbly-plugins/SKILL.md": "7d81bfb7a0070cdda99b7f7c9b3d175e7eade3f4511ba5a0cc153a9e6aff9d1a",
+        "skills/rowbly-plugins/SKILL.md": "1551b68dbab2dfb20159d84112168e204d0a3d22d909cb658fd49c3497d5638a",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
@@ -154,26 +151,21 @@
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
         "src/plugins/epics/commands.ts": "2335615736e21d798cdee17b52d65ecabbb2df82c552e22dfda7c1d1a8a5443d",
-        "src/plugins/git/commands.ts": "419e65ff6c9a3aec76c0069493486cb26a10360fc27436b4e0e2498bbb1d429c",
-        "src/plugins/git/model.ts": "4fba98b457c2d0e7750638e6d6d8669b4402aa39c5b6358fa7a5294212a5d24e",
-        "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
+        "src/plugins/specs/commands.ts": "a7034574cc85aad657f0414a7b90fabcc063310fc0fc59921bd92eb945e3b04c",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
-        "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
-        "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
-        "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
-        "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
+        "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "updated",
-      "reason": "Preserved cumulative planning decisions and recorded the installed Intent explicit-base recording limitation. This batch has zero pending items against its actual PR base; historical default-baseline ADR relocation items remain outside scope.",
+      "reason": "Reconciled all three existing records: domain_map.yaml retains the same CLI operating tasks and TUI gaps; skill_tree.yaml retains the same five skill paths, sources and prerequisites; skill_spec.md preserves both the many-Story-Specs/ADR-0025 history and the merged decision to keep development skills outside Intent. The filter-key fix and imported Board TUI fixes do not change CLI guidance or create a new skill task.",
       "evidence": [
-        "All three planning documents reconciled; both YAML files parsed with all five original skill entries retained.",
-        "pnpm exec intent maintainer check --base 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 passed; default historical baseline retained by installed Intent 0.5.5.",
-        "pnpm typecheck and lint passed; unit 986/986 and CLI 158/158; 5 skills structurally valid. Fresh Git consumer external grader passed and rejected wrong-frequency control; normal installed discovery and doctor-specific fresh consumer remain unverified."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -237,19 +229,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "f6b119088d5d0e4d359e1c3fabc5d7a7c84417a45188f08b389d15d4925bb2a5",
+      "fingerprint": "edb9201a36d9539a5ee80d850f26b2474a5bbff1f1c825e89310586197e25f4c",
       "snapshot": {
-        "docs/README.md": "f6ede174e5f045447dcccd03257223a20ba6eff2c37428ea365864d2c792405c"
+        "docs/README.md": "e0721a0bb49ce796028c0883f1ece4d4625515ec1b297efe5c489cc806da0f6e"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
       "outcome": "no-change",
-      "reason": "docs/README.md documents Git registration, all-Operation reactions, bounded host capability, scope or trust. The consumer-facing Git workflow is updated in rowbly-plugins and doctor; this reference change does not warrant a new skill in the established operating-Rowbly scope.",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/README.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:docs/TECHNICAL_DETAILS.md": {
@@ -541,31 +529,28 @@
       ]
     },
     "source:docs/architecture/operations.md": {
-      "fingerprint": "6aac0d3389c9c4f90bba73b1290fd637b9c2766dfd4fc9138206120b14ddd4a6",
+      "fingerprint": "aa5d9a41330298267fdb6205d8ed7cd9d684ae74e2dec90bfbbb39e39f3966ee",
       "snapshot": {
-        "docs/architecture/operations.md": "ba8f09922c8a08888074abb71a3d9caebb217248a0b5db3d3ab482e5961e9aaf"
+        "docs/architecture/operations.md": "50d73ad1edd64f79ee5a54211b28b199608bbc0167a3a0f292fbe3ad3a56964e"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "docs/architecture/operations.md documents Git registration, all-Operation reactions, bounded host capability, scope or trust. The consumer-facing Git workflow is updated in rowbly-plugins and doctor; this reference change does not warrant a new skill in the established operating-Rowbly scope.",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "updated",
+      "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/architecture/operations.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
       ]
     },
     "source:docs/architecture/overview.md": {
-      "fingerprint": "541f93abcc3ecb283981d9126036ecd94ac9ade0591bda4719f675f2cee52353",
+      "fingerprint": "5771a3dec5623ae35156a42a16bbeafcfe59eae6686ac21f39f33920ee86bc52",
       "snapshot": {
-        "docs/architecture/overview.md": "6032b1b5aa42f79e4a4bd92d0a03f7f0f4e29e093c89518942354f0c3c4a38f5"
+        "docs/architecture/overview.md": "9a9803327152cce82b9a0572d44d968a8b5f7b6085b1807da02c260933396154"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
       ]
     },
     "source:docs/development/README.md": {
@@ -617,47 +602,43 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "9b091506e00b7fedc05af30e1760bdf18af8a3b8d76e4dcf606596fb7e625d92",
+      "fingerprint": "239c370e43a49303ef1ca28a0f051391175efbb545820545c629555dd2a7032d",
       "snapshot": {
-        "docs/plugins/api.md": "f2f8dc934af6957066e4cda486441fcba2b3faa7a56413d235576e0e4a04d406"
+        "docs/plugins/api.md": "626644cd768f7de14877c80de6ce989a1606f91a615b9d28aeb470350d222c8d"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "docs/plugins/api.md documents Git registration, all-Operation reactions, bounded host capability, scope or trust. The consumer-facing Git workflow is updated in rowbly-plugins and doctor; this reference change does not warrant a new skill in the established operating-Rowbly scope.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/plugins/api.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:docs/plugins/compatibility.md": {
-      "fingerprint": "3950beb1f21869911debd1ac3f24801ef825c9c1e102a014ffc7cb2d553830d9",
+      "fingerprint": "c5a2b47bc5521b063ad9febbb2f501d46c5eead50eed5d651e993f6c898bfd31",
       "snapshot": {
-        "docs/plugins/compatibility.md": "3c35d8e26dab18b39bb95359d2ab197f9a965acb5f1ae7b99f02641c505e8ed4"
+        "docs/plugins/compatibility.md": "382f6ecc6017bdf6d02f0cbcf74f4b113aae8d852a08d993417c10358cb63dde"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "updated",
+      "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
       ]
     },
     "source:docs/plugins/trust.md": {
-      "fingerprint": "27da90f7130c9dbca11e2f7e6b7889763588f61f37571e719a5e1d9c4938e35a",
+      "fingerprint": "5f170ba26eef05e62ac386b4b81b0068201f6cb613e140a41dbedd04ae5d9d1e",
       "snapshot": {
-        "docs/plugins/trust.md": "5c95b0ebe39c97446ab13130b4c1a4551b7a451b52355490c56492b08ca07060"
+        "docs/plugins/trust.md": "2464d9075d0bfb6d392fcc3bac9052b200d309d4accd2b7d9475823e0e11b1f8"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "docs/plugins/trust.md documents Git registration, all-Operation reactions, bounded host capability, scope or trust. The consumer-facing Git workflow is updated in rowbly-plugins and doctor; this reference change does not warrant a new skill in the established operating-Rowbly scope.",
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/plugins/trust.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
       ]
     },
     "source:docs/plugins/writing-a-plugin.md": {
@@ -1501,19 +1482,15 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "b99751fad8b22931e64b8d2639fa985c923657132b6b781aa01b5b050ce08d7f",
+      "fingerprint": "61b6806d46b321eb5b84c29714f1b0d9b85a6c871df09d73813789ce99072f0b",
       "snapshot": {
-        "src/plugin-api/index.ts": "e624e3e48c35c51bfc16f1691254970d85cf561fb298f174be6acdeb09c6286d"
+        "src/plugin-api/index.ts": "17bf2b69a49d948d7e8c0247b7c2e1397d7c2f686f3bc504701d5dba2cd1e9e0"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "src/plugin-api/index.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/plugin-api/index.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1637,51 +1614,39 @@
       ]
     },
     "source:test/e2e/language.test.ts": {
-      "fingerprint": "d8c7c5107dc4307066aea221618306f135842c0ba2f1df90b2ad58eb08399e79",
+      "fingerprint": "6dbd44b10ce68c052472193b19284fa86414d0cab1420875b5803fe331d0404b",
       "snapshot": {
-        "test/e2e/language.test.ts": "d66ef28565815e647804394c901d719d2ad21d06b8410ae47dcca7f7d021f7ff"
+        "test/e2e/language.test.ts": "4a14a101e8c743f3539b239ae4073cf3592ab5bb2048094ab6f91cda9a508ba4"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "test/e2e/language.test.ts adds or updates regression evidence for Git automation, Plugin enumeration or language enforcement; the operating guidance is updated in rowbly-plugins and rowbly-doctor. It introduces no additional independently discoverable consumer task.",
+      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "outcome": "out-of-scope",
+      "reason": "Test fixtures, doc-checking tests or a comment-only path update made by the docs reorganization; no change to CLI behavior that the skills describe.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/e2e/language.test.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
       ]
     },
     "source:test/plugins/operationInventory.test.ts": {
-      "fingerprint": "90436f57a6c105c79fc24941db792c0fba2f11a42eec1a14d0b9cccb4516652a",
+      "fingerprint": "9c764d7ebf14548edc3157ad41795324ccc0d1d22fad7cb9ef41c1aebc51ad58",
       "snapshot": {
-        "test/plugins/operationInventory.test.ts": "7afe8f157c79d6bfd9a2857b565000e9d79889b81ea03d7e758101195782a124"
+        "test/plugins/operationInventory.test.ts": "5c9245a1e2fee8bf34d7d3e0705f0d210397bf1e7c4991c9f84e1eab4ef6e5e3"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "test/plugins/operationInventory.test.ts adds or updates regression evidence for Git automation, Plugin enumeration or language enforcement; the operating guidance is updated in rowbly-plugins and rowbly-doctor. It introduces no additional independently discoverable consumer task.",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "updated",
+      "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/plugins/operationInventory.test.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
       ]
     },
     "source:test/skills/agentWorkflows.test.ts": {
-      "fingerprint": "05d8ad8bbd588d47ebf581b4bfe928cb87f530edcf68b68ed3a9594164d9ab2d",
+      "fingerprint": "82d46c6dcd3915965c3d7d7ee89bb160450235bda7ae74013f6387446062574e",
       "snapshot": {
-        "test/skills/agentWorkflows.test.ts": "b2e85944896cc7ca37780a9aa289203a16555935c5b411043cb7dbd36c6a9715"
+        "test/skills/agentWorkflows.test.ts": "c698020d7cb6fdf517632f135d05612b7f47a703cfb3aed0fa4fe0971c65d544"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "test/skills/agentWorkflows.test.ts adds or updates regression evidence for Git automation, Plugin enumeration or language enforcement; the operating guidance is updated in rowbly-plugins and rowbly-doctor. It introduces no additional independently discoverable consumer task.",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "updated",
+      "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/skills/agentWorkflows.test.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
       ]
     },
     "source:biome.json": {
@@ -1752,39 +1717,51 @@
       ]
     },
     "source:src/plugins/specs/SpecTab.tsx": {
-      "fingerprint": "411fdd1b6299a2eb4597745df3b4e95873b64ed3cdae6e26c3435a9b1b08f5c8",
+      "fingerprint": "573ed6172effdf27d438c4bc87ea1e4d870ebb947760faab47c2c597e7969427",
       "snapshot": {
-        "src/plugins/specs/SpecTab.tsx": "ddc7ea42516bfb62bc8af17607736b8edccb8f012cb19c041be01e647a8e177c"
+        "src/plugins/specs/SpecTab.tsx": "637c130b3cd640601698ad51c888dbd95b1aaff43f2a18b9f6b78c9ba13563a3"
       },
-      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Changed: src/plugins/specs/SpecTab.tsx at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:test/plugins/specsTuiStates.test.tsx": {
-      "fingerprint": "469178ba4fa90406b2872cc5e25547c49623618036d76befed1d064f5ca1dfaa",
+      "fingerprint": "9ef3ccfe5c0376dec72dd0c9eba539404531e06929425d56506dbb08291a01be",
       "snapshot": {
-        "test/plugins/specsTuiStates.test.tsx": "037f9b5a8fdba744cf650ad4a0bebbe807b7994c57daa0bbb1c949583b914154"
+        "test/plugins/specsTuiStates.test.tsx": "0d58fa795fffc677cac1f6d84553b6a10ef2aad8f34017f03f6d59edc8e3c177"
       },
-      "head": "fe0998d18e39432800b494b91cb67b10498f1ecb",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Adjusted the inherited Specs reload regression to select Spec with one Tab: Tasks is now an optional Plugin and this fixture enables only Specs, so the Story has Details and Spec, not a core Tasks tab. No CLI behavior or skill/planning guidance changes.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Changed: test/plugins/specsTuiStates.test.tsx at fe0998d18e39432800b494b91cb67b10498f1ecb"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/components/SelectList.tsx": {
-      "fingerprint": "8e55927e07486aee8063c5c41683c29c3994a45b05f21dcf2b487337c096c032",
+      "fingerprint": "3fe5be5ccda098cdc89f4ba8aaf83d5e8cb99a44ca15f95a0ddf23d6380230b3",
       "snapshot": {
-        "src/tui/components/SelectList.tsx": "013da591157c7600c603188367d1c0e40b935850b39f1442a157ef3979f04c51"
+        "src/tui/components/SelectList.tsx": "751b57f207022e29c2c25184e438ed2dc5faee2bfdf26df592649a9c8e63e9af"
       },
-      "head": "62d3582e1fd5cb7062ee9c9afa80302b1177a320",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Reviewed arrow and shift-arrow handlers, cursor routing, README key tables and board/component regression tests. CLI command usage, data formats and doctor behavior are unchanged. These five skills explicitly cover command mode, and the domain map, skill specification and tree still correctly exclude TUI operation and repository development. Shared Specs reload and CI changes were also reviewed; no CLI guidance update is needed.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Changed: src/tui/components/SelectList.tsx at 62d3582e1fd5cb7062ee9c9afa80302b1177a320"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/hooks/useCursor.ts": {
@@ -1814,16 +1791,19 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
+      "fingerprint": "4d0536d0fe5ac2e65af62e3b07fe12e54216c952fdb60df5c821364aefad6c32",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
+        "src/tui/screens/board/BoardScreen.tsx": "6e3dfeb3ed67fdd44e13bccad46e04b0e18c3d58f5eddae7bc72f2ec6f09c7ce"
       },
-      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
-      "outcome": "out-of-scope",
-      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
-        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1839,29 +1819,28 @@
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
-      "fingerprint": "6e99836eab32c12f84592e1072fa723d1946239220f36f536c1bc8d7c0a8ec64",
+      "fingerprint": "2179c742483a5a8c17ed3aee7a3b55acea9ee0c2e968e45a1ffee041681f6c67",
       "snapshot": {
-        "test/tui/__snapshots__/board.test.tsx.snap": "a890a9183f15f5678219fc66a4a32dfd40673795f8306ae5d0982d911550c4ac"
+        "test/tui/__snapshots__/board.test.tsx.snap": "33c5c58d9a87c8f480eeed5e9f383d7a4f115ae68ff76da71b980c021230aebe"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
+      "fingerprint": "fc1511f29fffe4514b99adf6f7868f76c00dd615f4ad4097b8b9695b73c11440",
       "snapshot": {
-        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
+        "test/tui/board.test.tsx": "e9c6b81f74f23c018d82c2ee407700a3593457f799a59dcd9542b1c336e81ffe"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
       "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
+        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -1877,9 +1856,22 @@
       ]
     },
     "source:test/tui/components.test.tsx": {
-      "fingerprint": "2aeb655b0d390c5055fac9fcba10d420d53e5d47c167276302ff81dfef05ca2d",
+      "fingerprint": "1b478eebf6f68354b4e3a186381fb38727da88c10b4f8abdb7c99de641093b3c",
       "snapshot": {
-        "test/tui/components.test.tsx": "198bab67e168717bcc82bf5d35ac6eddb9ca928c9845f47a69934f73e4cf17c4"
+        "test/tui/components.test.tsx": "b485570c746e69ef39ce5211ec0955292d2a7408d717a9cefab977dcdc7b1748"
+      },
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "no-change",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
+      "evidence": [
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
+      ]
+    },
+    "source:test/tui/helpers.tsx": {
+      "fingerprint": "d3f31357cb5e5ed438f9ceda7babb7f5b7df4a95581c88050d14e8ef6ac66408",
+      "snapshot": {
+        "test/tui/helpers.tsx": "d3712d0048a042865745f01cb00f0e569c51dc5ecc84aa4f7259e2a1fe65ff53"
       },
       "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
       "outcome": "no-change",
@@ -1890,33 +1882,16 @@
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
-    "source:test/tui/helpers.tsx": {
-      "fingerprint": "18987b6669ecd45c9b4f54a268cd706c07b831b600ae3b9663303e2f60c3fd02",
-      "snapshot": {
-        "test/tui/helpers.tsx": "b1795a1f32c2b81b8f2ae732966284a0d81ba45939cc6d6f1e1e91a5fa6c8266"
-      },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
-      "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
-      ]
-    },
     "source:docs/agents/CONTEXT-MAP.md": {
-      "fingerprint": "03e3a7f16030e2c619d6ab0e544f333e53dfb827ff5a08cd001423d119c5cdaf",
+      "fingerprint": "6664714dc10e597f62253c13b4ef560e3e020a34694c312c853bea445fef36d9",
       "snapshot": {
-        "docs/agents/CONTEXT-MAP.md": "a2c4ac7aa6d9e658f1ca1fae7726dbd9c05ac4cd834ffb4e74a09fd731fb78a2"
+        "docs/agents/CONTEXT-MAP.md": "6915a42bf124c5de258d9dcbfa132b04e560200c641965bc679bf38a97cc4d37"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "docs/agents/CONTEXT-MAP.md documents Git registration, all-Operation reactions, bounded host capability, scope or trust. The consumer-facing Git workflow is updated in rowbly-plugins and doctor; this reference change does not warrant a new skill in the established operating-Rowbly scope.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/agents/CONTEXT-MAP.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:docs/agents/adr/0011-plugin-data-is-a-bag-per-plugin.md": {
@@ -1992,19 +1967,15 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "e999b765ac7bc7c85486865b29abe3d3c19f37dc2d8dcde89c21a19ba4acb53b",
+      "fingerprint": "2abcce5ae8654942cd74061e1a9f84c3319d52d50309a93ed1af857b19bf0762",
       "snapshot": {
-        "docs/agents/adr/README.md": "82a5a1b69edae228a0b9dba10ea28db86401daec718563a7322362279b7e5298"
+        "docs/agents/adr/README.md": "7293da63fd10ad73b254324cb1629c9e04d8015fa613e52a5d77497b5031c7f0"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "docs/agents/adr/README.md records or indexes ADR-0025 implementation scope; existing ADR decisions are retained with status amendments. Hook installation/branching remain planned. The operating instructions are updated in rowbly-plugins; Plugin authoring remains an explicitly unassessed skill gap.",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "outcome": "updated",
+      "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/agents/adr/README.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
       ]
     },
     "source:src/commands/index.ts": {
@@ -2140,19 +2111,15 @@
       ]
     },
     "source:src/plugins/index.ts": {
-      "fingerprint": "e65a215a0fc10484df8c0d4676fd0ef0c11f918b69c6d14458c09c83ac3c4d2e",
+      "fingerprint": "f1f1acd537fd8d839358177c75347d53e6c5956ee95462cfd0401334c35d57c1",
       "snapshot": {
-        "src/plugins/index.ts": "dfc46dfc0e60d9a9c5d35e612271d3eed111f32f5fda0d83e930b4ca2aa9e734"
+        "src/plugins/index.ts": "53898a45f7f1a2419039e7acc890bc19803481f6f99ddccb9c24da0026f28d45"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "src/plugins/index.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/plugins/index.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/plugins/tasks/CONTEXT.md": {
@@ -2276,19 +2243,15 @@
       ]
     },
     "source:src/services/index.ts": {
-      "fingerprint": "33e973e3f13e83148806eb39f693f51cae2527da389520c2d07b202058d4e2b5",
+      "fingerprint": "02530e21d1bd645d01ba5d3a808fed926d9c9bf8ba465514b57b56e1f5ebf082",
       "snapshot": {
-        "src/services/index.ts": "6410efb368b78e63a5bbe0b2255c27d53a5330fe913d6a9ff4076ffb7d78a6f5"
+        "src/services/index.ts": "9de922f2f073790b031a086e1679660e9cef7cd9540629953f7de9383d794fd6"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "src/services/index.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/services/index.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/services/plugins/capabilities.ts": {
@@ -2304,51 +2267,39 @@
       ]
     },
     "source:src/services/plugins/runtime.ts": {
-      "fingerprint": "f7fcebf3181a5194bb3adf29abd2ea025232b951f79e8776ea5a18d0e8d96ee2",
+      "fingerprint": "ea0c622f0bb1161c20f3c0df7908fa5cd6b7c08e68cc4ba94ea172f8b1296f69",
       "snapshot": {
-        "src/services/plugins/runtime.ts": "e339ae85e8eec0a0d9c7c81aa9de9527fe97da56f209a0c1915dad321f528225"
+        "src/services/plugins/runtime.ts": "b3a8c6e25cd08c262f26c73875d2252afda82c1f7f8e99edab797375359532aa"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "src/services/plugins/runtime.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/services/plugins/runtime.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/services/plugins/service.ts": {
-      "fingerprint": "8ef04045a8f3786d699bf029345b4760ed79adc35b7cc6d2dd8bf1ff33b5c557",
+      "fingerprint": "b1d45ba113ddf865c6bbc5b171f8ed8b9e17c38ef11d3fd63179d2a169c483f2",
       "snapshot": {
-        "src/services/plugins/service.ts": "66f72d212d54afd3f9497451cbbda71585f10cf396418fe276a06737a866941d"
+        "src/services/plugins/service.ts": "557c5d29c9682e26941e59f458f9ef379a3af07a7dbf868de3625de297cf5066"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
       "outcome": "no-change",
-      "reason": "src/services/plugins/service.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/services/plugins/service.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:src/services/plugins/types.ts": {
-      "fingerprint": "8012686327ff9ffeae78aacea9fa6b19f3eca9cde2c6a165d8e944957ba61b90",
+      "fingerprint": "2f3009d13a8abd2379572e9d2ce1a4262e39556ee2f72d375bec68c0254c2335",
       "snapshot": {
-        "src/services/plugins/types.ts": "9dc9c3381b16f989eee2ffe46f83171f780099e300b7d496278df18f83c020f1"
+        "src/services/plugins/types.ts": "5fc654d79022137b5bb69119901bb5ed374cf74cedbf1f0b677b3bac130e2fc8"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "src/services/plugins/types.ts wires the registered Git Plugin, activation preflight, contexts or all-Operation reactions. End-user usage is documented in the updated rowbly-plugins workflow. Plugin API authoring remains outside the existing operating-skills batch; no unsupported authoring guidance was created.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "src/services/plugins/types.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/services/stages.ts": {
@@ -2799,19 +2750,15 @@
       ]
     },
     "source:test/plugins/moduleFailure.test.ts": {
-      "fingerprint": "3dd8f90ce6d462b2db9c4ac85324df0cd72e82790ffe31b5498a4ce5dbddf512",
+      "fingerprint": "d546a34b576f72bfaba63a80efef39a168a1548023f0275a2a641a8711590f30",
       "snapshot": {
-        "test/plugins/moduleFailure.test.ts": "9367d6fb6dc2806c4e7bc6e35e61bc6d5c856ea4387d4ae0b7357ed4a83ef0c3"
+        "test/plugins/moduleFailure.test.ts": "4bbe0cb67fe1cc62182ecc6bb395b6e4d97b878f47f661a2f5ef40dec5de922b"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "test/plugins/moduleFailure.test.ts adds or updates regression evidence for Git automation, Plugin enumeration or language enforcement; the operating guidance is updated in rowbly-plugins and rowbly-doctor. It introduces no additional independently discoverable consumer task.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "test/plugins/moduleFailure.test.ts",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:test/plugins/pipeline.test.ts": {
@@ -2839,16 +2786,19 @@
       ]
     },
     "source:test/plugins/specsTui.test.tsx": {
-      "fingerprint": "0073be515db2b9126720c1e9a676d8ea0e10d51e1d5463b0f505f0aaf84b44de",
+      "fingerprint": "54fa6e9cec458593c011e55a6c3180e4aeba551734044366cf9fb5bf1c567d22",
       "snapshot": {
-        "test/plugins/specsTui.test.tsx": "0838bc759b74594157e6657e1ac5590db7f6184443d8e04e089531d0596b2eac"
+        "test/plugins/specsTui.test.tsx": "0060af8f1c40f74a259561fb311aa87a13e9cc2581677126603f82df487677ef"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:test/plugins/tasks.test.ts": {
@@ -2900,29 +2850,27 @@
       ]
     },
     "source:test/plugins/tui.test.tsx": {
-      "fingerprint": "cc4858ae7971dd023947549864bc758f22137b3fb15a968cdbfe3c0da56ebd07",
+      "fingerprint": "b988259f2ba414e2f44c6a685bcb0911bf466838d8624a7de2cdbe0d97a6cafc",
       "snapshot": {
-        "test/plugins/tui.test.tsx": "def042da76736f2d76dc804ea955aecf80c42678fb122018db1cc421522b6a08"
+        "test/plugins/tui.test.tsx": "0af4ee13a25e25baca60bbebba8ed0ad2406d3202d5889a9bd188bfc0c13952f"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:test/plugins/tuiFailureIsolation.test.tsx": {
-      "fingerprint": "35bfd05ba73537f322f2b6fa5c8a41bc14271b764e126eb325ae5f11391b41f3",
+      "fingerprint": "f61c0569f2713716293be5f78e4c6ed908c120e3a8c1b3b9792bef5b40f9099d",
       "snapshot": {
-        "test/plugins/tuiFailureIsolation.test.tsx": "a0bb7195d219701f6e0512a061b2f47e3ef87abc47624b2671ec875d75abf1df"
+        "test/plugins/tuiFailureIsolation.test.tsx": "7041d4096d3e6d8564c35e48522685a3418efb80a398f55b854874fe79779627"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "outcome": "no-change",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:test/schemas/schemas.test.ts": {
@@ -3430,15 +3378,19 @@
       ]
     },
     "source:test/plugins/assigneesTui.test.tsx": {
-      "fingerprint": "c79474f265674213e81829de4c97035eed6253c77404953963334a4e9d7d67be",
+      "fingerprint": "3c0f46efd4f072a5520edb194705366fe82c97410da7c545a77cff018e61ba56",
       "snapshot": {
-        "test/plugins/assigneesTui.test.tsx": "f9d81da2f494377fa1066dad017735794263d80dc9ac085226a762ea2681b880"
+        "test/plugins/assigneesTui.test.tsx": "0f5014e8a9027535ab910eb1cddca16c28a96a601e4b246582c50809afbe7236"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
@@ -3646,16 +3598,15 @@
       ]
     },
     "source:test/tui/settings.test.tsx": {
-      "fingerprint": "c0ef4aee861f493a468917f64c97a2982cfb623254c63754fc638d648260e419",
+      "fingerprint": "42ff2d03d210a9a1d3f3b57b5274ca6b82d34eb8a32174769a1afb4bb168aa50",
       "snapshot": {
-        "test/tui/settings.test.tsx": "ae38b46f4f8e1c142c13a2df7c9b29761dda2f5ca92144478bcffbc021ba1ceb"
+        "test/tui/settings.test.tsx": "0175c5acc5e4bedcb746fc4dd31b9d390fc0e2c149ca8b9872aaffd9d017b985"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "outcome": "no-change",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:test/tui/setup.test.tsx": {
@@ -3719,19 +3670,15 @@
       ]
     },
     "source:docs/agents/adr/0016-git-automation-design.md": {
-      "fingerprint": "c67ccd2c7a93e49527c9529aa629cddb67b47bcb042d73bdd2cc190366337499",
+      "fingerprint": "d1a6ad8ad81a2fc505c4e99e73a59527f4b10a3045932412c6bd5b45c90accbe",
       "snapshot": {
-        "docs/agents/adr/0016-git-automation-design.md": "117c7528a387dc7cd32ab3471a33f60bcce2bc3cd9bb1c7a487ed3202e9ef693"
+        "docs/agents/adr/0016-git-automation-design.md": "b873497e8e36a9446b09922e54493be0499d3c7646170aea162532eaff0e7a50"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "docs/agents/adr/0016-git-automation-design.md records or indexes ADR-0025 implementation scope; existing ADR decisions are retained with status amendments. Hook installation/branching remain planned. The operating instructions are updated in rowbly-plugins; Plugin authoring remains an explicitly unassessed skill gap.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/agents/adr/0016-git-automation-design.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/agents/adr/0024-backlog-and-done-are-fixed-stages.md": {
@@ -3819,28 +3766,35 @@
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "5fba6c52fd7c65f3436ec2f756aaa2ec9614e6531f30a861586bc6905a70f2e4",
+      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "47ad681672435b887fe78dd0978d2bdd2b4267365c41217bb76685cd13448463"
+        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "267a9d1d03ea602737e30d646a9e28253257bc508260d9228274484c7328b9b6",
+      "fingerprint": "c2ec23e5a1af96d3b6e9c7613b5919aba83e9430173b0860ca367f97e5faf1cd",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "eacd15bf5198d5b781f324531abbaaea94abdac1739ca093e7cd1d7d02bce977"
+        "src/tui/screens/board/BoardListRow.tsx": "bfa6a4022415a5efcd53e81aa2506dc1ce20feaa33b42629e99f5486879b3fb5"
       },
-      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
-      "outcome": "out-of-scope",
-      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
-        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -3856,29 +3810,29 @@
       ]
     },
     "source:src/tui/shell/Header.tsx": {
-      "fingerprint": "385e5774a3e06768cc5a82b7eac3dbbffdfb06fcabfd06b129619e4de2114a91",
+      "fingerprint": "b987a7408792744f9c49b04cff74b3f3323e71597bf6398a3cb1ca3729a0f249",
       "snapshot": {
-        "src/tui/shell/Header.tsx": "8981f367b6ef34219d19b67cbf8a904e28a28b0ad4a203eebc1f44fce47c6993"
+        "src/tui/shell/Header.tsx": "bff6497e8dd196bcd8529230e94d3172c0b91a9bb6d4b7d797b361b8331f91a1"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "de944b6a5c71880b2ba897713a8135f8a3da00f30c77fd0e957035592d5b050f",
+      "fingerprint": "0c86a2f2e5070d188036ac3b6118f53058cb1a98b7a6b6b74ffeb0af87543a79",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "ae5ff4f6b3d77100910b39767180da0da18262073b194a3cb9e1340c526f16cf"
+        "src/tui/shell/Shell.tsx": "ab96ce44f5e126a5572eb101658571c021dfd8c1eebb0008c85a8f2f0790be9c"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -3954,16 +3908,15 @@
       ]
     },
     "source:test/plugins/epicsTui.test.tsx": {
-      "fingerprint": "40062e9cd3d5d879e11f2d5782b05fe95d1ad3d25721f0a01cc7c7fd9097a120",
+      "fingerprint": "79b0730fd1ced1fa0a16c8ae439fb545bfe03083a51a4dd7a12b05d7b64ec557",
       "snapshot": {
-        "test/plugins/epicsTui.test.tsx": "91c10a38db07deed7e5a20ca66adbf68e29750e64ccfe8021247c4e3bf7b1792"
+        "test/plugins/epicsTui.test.tsx": "5783f70ecd2b8caffa14d4cd303689fae6a5d940de7efab00cd0c775c6ab392f"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "no-change",
+      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:test/plugins/results.test.ts": {
@@ -4007,59 +3960,55 @@
       ]
     },
     "source:src/tui/components/FullScreenButton.tsx": {
-      "fingerprint": "42ad7d22d3b07d01e1acecadaeb0f10cd27c864e9f44dc28d5b9028732ea1652",
+      "fingerprint": "17ba737bd83873a49564777f53b4c9fd03614ea568d5d63ebdc2f1a79226cd3b",
       "snapshot": {
-        "src/tui/components/FullScreenButton.tsx": "5785b11b4b6aca1d0e50575497569e2e974e3566f39d2b70e3a76293e104fe6b"
+        "src/tui/components/FullScreenButton.tsx": "c4380a0219d5411eb5bb70a873ea390c08f0967120fd8d043ba0fa1e9b4fc987"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
       ]
     },
     "source:src/tui/components/TextArea.tsx": {
-      "fingerprint": "d5a461f8a3af04cc5457c030f953e5034127abb0b0729539be042ffe165b3b47",
+      "fingerprint": "28aa4eb2214b1d5a6261eeb21b238939e1fa3948fa2c830e50e786744e9db8a1",
       "snapshot": {
-        "src/tui/components/TextArea.tsx": "dc7f618da38ddc8c7284549d62cc2363bf465be6f841a244bbda60547b839e16"
+        "src/tui/components/TextArea.tsx": "8e7d9b25d56a84622e07837bc3ab92be5241b0214b810995af5c18e5e0436679"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
       ]
     },
     "source:src/tui/components/TextAreaModal.tsx": {
-      "fingerprint": "df48fa5bb53278d86ab2237c9297a554e22f850d4e4fe5b9adfb46aa132ce948",
+      "fingerprint": "b479cc6bc17a5ad7060df5480e47245cd31deee4197ccced3ce972f0a4ce8ac3",
       "snapshot": {
-        "src/tui/components/TextAreaModal.tsx": "354083b50b7c9dc5d1fff5ec243f2c57a6f15a2241bfaa7565dcb14bfc8f1007"
+        "src/tui/components/TextAreaModal.tsx": null
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
       ]
     },
     "source:src/tui/components/index.ts": {
-      "fingerprint": "d1767ec4caf6bd0bd245a7ad81845635a494715379eebb4c23088c41f834e1eb",
+      "fingerprint": "8289aa33517b8537f91908d9839914502997a80b65698b7902394d2273df53bc",
       "snapshot": {
-        "src/tui/components/index.ts": "2c7b39b33be729e37c2cbd9468e573d61646b646e1bfd0c6c02511884cf53c27"
+        "src/tui/components/index.ts": "eed6a9633d876cce8f49d2d4d17c6cf0647eeb3a84d1db7e8dcf0c2c19d596c1"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
       "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md \u00a7Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md \u00a7Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
+        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
       ]
     },
     "source:test/tui/__snapshots__/demo.test.tsx.snap": {
@@ -4280,19 +4229,16 @@
       ]
     },
     "source:docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
-      "fingerprint": "6b3d09485fecb8e319de3eb7db8c9b10f305e86e620d3f4a9d22c0b732ed7223",
+      "fingerprint": "ba561511b734e1dce3c8b705e2cb90aa57b4ec8fb9bc8913febf4755c2cd102c",
       "snapshot": {
-        "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "6b0350152789389bc6089aaab8cde2502d381ad6c2ad9a13f34b50e78685beb4"
+        "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
       },
-      "head": "c76e5ecdcfc7b8cd7a8d1b24bed6e08bc0720578",
-      "outcome": "no-change",
-      "reason": "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md records or indexes ADR-0025 implementation scope; existing ADR decisions are retained with status amendments. Hook installation/branching remain planned. The operating instructions are updated in rowbly-plugins; Plugin authoring remains an explicitly unassessed skill gap.",
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
       "evidence": [
-        "Baseline 0dacc4133030a1bb86b32751e2e2b21c304ca0f0; implementation checkpoint c76e5ec plus reviewed working diff.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 102 files / 986 tests; pnpm test:cli passed 22 files / 158 tests.",
-        "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
-        "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md",
-        "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/agents/adr/0010-plugins-are-turned-on-per-data-root.md": {
@@ -4449,16 +4395,19 @@
       ]
     },
     "source:src/plugins/specs/SpecsScreen.tsx": {
-      "fingerprint": "5ba51f25a3f3519a83337764b5ec138a2833081e0c296b92d6d248fa6a126a9a",
+      "fingerprint": "90a81ba462437cdf102357fe5a8933d4b83e4c4853093710a343ff0501a20e83",
       "snapshot": {
-        "src/plugins/specs/SpecsScreen.tsx": "08b29395e177194089ddc1e8b6fe132fbdc865a23c8195fe9551feb739e3607d"
+        "src/plugins/specs/SpecsScreen.tsx": "fbb964d8272dec58152d138584d969115a26a52f3b358f17a72f1419aaf6a268"
       },
-      "head": "479b607284a5eec265af3e4bc6b49af15f282ad6",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "TUI and Plugin API change: the common FullScreenEditor (rendered markdown view mode and raw edit mode, ctrl+s save) replaces TextAreaModal and is used by TextArea; the Specs tab and Board Specs screen list Specs and open them in it; SelectList items are clickable; the markdown renderer loads lazily. Skills teach command-mode operation only, and skill_spec.md \u00a7Scope lists TUI operation and Plugin authoring as not assessed; no command, flag, output, exit code, doctor finding or Data Root behavior changes here.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged.",
-        "skills/_artifacts/skill_spec.md \u00a7Scope (TUI operation and Plugin authoring not assessed)"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/plugins/specs/index.ts": {
@@ -4754,6 +4703,19 @@
         "pnpm exec intent validate skills: 5 skills passed. Both planning YAML files parsed with PyYAML; all five skill entries retained.",
         "test/plugins/gitTui.test.tsx",
         "docs/plugins/built-in.md#git; skills/rowbly-plugins/SKILL.md section 6; skills/_artifacts/skill_spec.md Git batch history."
+      ]
+    },
+    "source:test/tui/boardListRow.test.tsx": {
+      "fingerprint": "0b25e1d510058957fae2ec948c7babf8af0cb3ca9a1f7a242af49733947d3a9e",
+      "snapshot": {
+        "test/tui/boardListRow.test.tsx": "ff692c4dce7df4b0990391d7d53462a9a2d28ec115ac9c25a66b991e447148ee"
+      },
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "evidence": [
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
       ]
     }
   }
