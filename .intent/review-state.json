@@ -1861,16 +1861,18 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "fc1511f29fffe4514b99adf6f7868f76c00dd615f4ad4097b8b9695b73c11440",
+      "fingerprint": "76321a19dc3c0ff8447fa76b3df2576099fa520077c799f5ad79c5735e782ba3",
       "snapshot": {
-        "test/tui/board.test.tsx": "e9c6b81f74f23c018d82c2ee407700a3593457f799a59dcd9542b1c336e81ffe"
+        "test/tui/board.test.tsx": "e332ccc6194651fd5afadb5cac39ae9a4ce3092783c88365e78e7ec82ccdefce"
       },
-      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
-      "outcome": "out-of-scope",
-      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "6a8c71d0079d4aec03eaa7f9ffa815733381a5fe",
+      "outcome": "no-change",
+      "reason": "The imported PR57 regression now holds the move service after its saved write and waits for working-key hints plus the destination Story before another input. Only test/tui/board.test.tsx changed; no runtime behavior, CLI operating guidance, domain_map.yaml tasks/gaps, skill_spec.md decisions, or skill_tree.yaml identities/sources/prerequisites changed. Existing guidance and all three records remain accurate.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
-        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
+        "Merged exact stable race-fix 13569b9ee585993d2f98af5f78bda691de397166 as bb375a74fff9a806da8fceb3d2182582b3607268, retaining shared ancestry; reviewed the held service-return barrier and finally cleanup in the changed list-view move regression.",
+        "Fresh required checks at bb375a7: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests, 172.22 seconds); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests, 94.44 seconds).",
+        "Integrated exact final PR57 metadata head e889a007b46183d3d64dcc80702d9106b084dc1c via 6a8c71d. git diff --exit-code bb375a7 HEAD -- . :(exclude).intent passed; entire tracked source/docs/tests/lockfile tree is unchanged after the tested merge.",
+        "No skill descriptions or recommended CLI behavior changed, so no fresh consumer session is required for this test-only follow-up; prior skill validation and consumer evidence remain recorded."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
