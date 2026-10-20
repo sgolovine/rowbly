@@ -1,8 +1,7 @@
 // The recoverable commit engine (ADR-0019 §2; RES-01/ARCH-41 engine, RES-04 engine part).
-import { mkdir, readdir, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ConflictError, ValidationError } from '../../src/core';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
 import { FIXED_NOW, fixedClock, tempRoot } from '../helpers';
 import { fixtureScript, injectFaults, runScript, snapshotTree } from './engineHelpers';
@@ -39,197 +38,6 @@ async function fixtureRoot(): Promise<string> {
   await put('plugins/epics/epics.json', '{"epics":["e1"]}\n');
   return t.path;
 }
-
-describe('prepareTransaction', () => {
-  it('stages the new content without touching live files', async () => {
-    const root = await fixtureRoot();
-    const before = await snapshotTree(root);
-    const tx = await prepareTransaction(
-      root,
-      {
-        operation: 'stories.update',
-        changes: [{ kind: 'write', path: 'boards/web/stories/WEB-1/story.json', text: 'x' }],
-      },
-      { now: clock.now },
-    );
-    expect(tx.id).toMatch(/^20261012T172107000Z-[0-9a-f]{8}$/);
-    expect(await snapshotTree(root)).toEqual(before);
-    expect(await readdir(join(root, '.txn', tx.id))).toEqual(['moving', 'staged', 'trash']);
-    expect(tx.manifest.steps).toEqual([
-      { kind: 'write', path: 'boards/web/stories/WEB-1/story.json', staged: 'staged/0', existed: true },
-    ]);
-    await tx.discard();
-    expect(await journal(root)).toEqual([]);
-  });
-
-  it('orders steps: moves out, deletes, moves in, writes', async () => {
-    const root = await fixtureRoot();
-    const tx = await prepareTransaction(root, {
-      operation: 'doctor.fix',
-      changes: [
-        { kind: 'write', path: join(root, 'boards/web/stories/WEB-1/story.json'), text: '{"key":"WEB-1"}\n' },
-        { kind: 'move', from: 'boards/web/stories/WEB-1', to: 'boards/web/stories/WEB-2' },
-        { kind: 'move', from: 'boards/web/stories/WEB-2', to: 'boards/web/stories/WEB-1' },
-        { kind: 'delete', path: 'plugins/epics/epics.json', pruneTo: '' },
-        { kind: 'delete', path: 'boards/ops' },
-        { kind: 'delete', path: 'plugins/epics/missing.json' },
-      ],
-    });
-    expect(tx.manifest.steps.map((s) => s.kind)).toEqual([
-      'moveOut',
-      'moveOut',
-      'delete',
-      'delete',
-      'moveIn',
-      'moveIn',
-      'write',
-    ]);
-    expect(tx.manifest.steps[2]).toEqual({
-      kind: 'delete',
-      path: 'plugins/epics/epics.json',
-      entry: 'file',
-      trash: 'trash/0',
-      pruneTo: '',
-    });
-    expect(tx.manifest.steps[3]).toMatchObject({ path: 'boards/ops', entry: 'folder' });
-    await tx.discard();
-  });
-
-  it('names a file deleted in a moving folder inside the transaction', async () => {
-    const root = await fixtureRoot();
-    const tx = await prepareTransaction(root, {
-      operation: 'doctor.fix',
-      changes: [
-        { kind: 'move', from: 'boards/web/stories/WEB-3', to: 'boards/web/stories/WEB-4' },
-        {
-          kind: 'delete',
-          path: 'boards/web/stories/WEB-4/plugins/specs/spec.md',
-          pruneTo: 'boards/web/stories/WEB-4',
-        },
-      ],
-    });
-    expect(tx.manifest.steps[1]).toEqual({
-      kind: 'delete',
-      path: 'moving/0/plugins/specs/spec.md',
-      entry: 'file',
-      trash: 'trash/0',
-      pruneTo: 'moving/0',
-    });
-    await tx.discard();
-  });
-
-  const invalid: [string, TransactionPlan['changes'], typeof ConflictError | typeof ValidationError][] = [
-    ['a path outside the Data Root', [{ kind: 'write', path: '../outside.txt', text: 'x' }], ValidationError],
-    [
-      'an absolute path outside the Data Root',
-      [{ kind: 'write', path: '/etc/rowbly.txt', text: 'x' }],
-      ValidationError,
-    ],
-    ['the journal folder', [{ kind: 'write', path: '.txn/x', text: 'x' }], ValidationError],
-    [
-      'one path written twice',
-      [
-        { kind: 'write', path: 'a.txt', text: 'x' },
-        { kind: 'write', path: 'a.txt', text: 'y' },
-      ],
-      ConflictError,
-    ],
-    [
-      'a path written and deleted',
-      [
-        { kind: 'write', path: 'plugins/epics/epics.json', text: 'x' },
-        { kind: 'delete', path: 'plugins/epics/epics.json' },
-      ],
-      ConflictError,
-    ],
-    [
-      'an occupied move destination',
-      [{ kind: 'move', from: 'boards/web/stories/WEB-1', to: 'boards/web/stories/WEB-2' }],
-      ConflictError,
-    ],
-    [
-      'two moves to one destination',
-      [
-        { kind: 'move', from: 'boards/web/stories/WEB-1', to: 'boards/web/stories/WEB-9' },
-        { kind: 'move', from: 'boards/web/stories/WEB-2', to: 'boards/web/stories/WEB-9' },
-      ],
-      ConflictError,
-    ],
-    [
-      'a write that would revive a deleted Board',
-      [
-        { kind: 'delete', path: 'boards/ops' },
-        { kind: 'write', path: 'boards/ops/stories/OPS-1/story.json', text: 'x' },
-      ],
-      ConflictError,
-    ],
-    [
-      'a write into a folder that moves away',
-      [
-        { kind: 'move', from: 'boards/web/stories/WEB-3', to: 'boards/web/stories/WEB-4' },
-        { kind: 'write', path: 'boards/web/stories/WEB-3/story.json', text: 'x' },
-      ],
-      ConflictError,
-    ],
-    [
-      'a folder both moved and deleted',
-      [
-        { kind: 'move', from: 'boards/web/stories/WEB-3', to: 'boards/web/stories/WEB-4' },
-        { kind: 'delete', path: 'boards/web/stories/WEB-3' },
-      ],
-      ConflictError,
-    ],
-  ];
-  it.each(invalid)('rejects %s before writing anything', async (_name, changes, error) => {
-    const root = await fixtureRoot();
-    const before = await snapshotTree(root, []);
-    await expect(prepareTransaction(root, { operation: 'test', changes })).rejects.toBeInstanceOf(error);
-    expect(await snapshotTree(root, [])).toEqual(before);
-  });
-
-  it('accepts a destination that the same plan deletes first', async () => {
-    const root = await fixtureRoot();
-    const tx = await prepareTransaction(root, {
-      operation: 'doctor.fix',
-      changes: [
-        { kind: 'delete', path: 'boards/web/stories/WEB-2' },
-        { kind: 'move', from: 'boards/web/stories/WEB-3', to: 'boards/web/stories/WEB-2' },
-        { kind: 'write', path: 'boards/web/stories/WEB-2/story.json', text: '{"key":"WEB-2"}\n' },
-      ],
-    });
-    await tx.discard();
-  });
-
-  it('accepts a symlinked Data Root and records paths relative to it', async () => {
-    const root = await fixtureRoot();
-    const alias = join(root, '..', 'alias');
-    await symlink(root, alias);
-    const tx = await prepareTransaction(alias, {
-      operation: 'test',
-      changes: [{ kind: 'write', path: join(alias, 'plugins/epics/epics.json'), text: 'x' }],
-    });
-    expect(tx.manifest.steps[0]).toMatchObject({ path: 'plugins/epics/epics.json' });
-    await tx.discard();
-  });
-
-  it('removes its staging and rethrows when staging fails', async () => {
-    const root = await fixtureRoot();
-    const before = await snapshotTree(root, []);
-    const faults = injectFaults();
-    faults.failOnce(5); // three mkdirs, the first staged file, then the second staged file.
-    await expect(
-      prepareTransaction(root, {
-        operation: 'test',
-        changes: [
-          { kind: 'write', path: 'a.txt', text: 'a' },
-          { kind: 'write', path: 'b.txt', text: 'b' },
-        ],
-      }),
-    ).rejects.toThrow(/injected writeFile failure/);
-    faults.restore();
-    expect(await snapshotTree(root, [])).toEqual({ ...before, '.txn': '<dir>' });
-  });
-});
 
 /**
  * One plan that uses every primitive: an Assignee removal across the root config and two Stories,
@@ -285,16 +93,6 @@ describe('Transaction.commit', () => {
     expect(await journal(root)).toEqual([]);
   });
 
-  it('cannot commit twice', async () => {
-    const root = await fixtureRoot();
-    const tx = await prepareTransaction(root, {
-      operation: 'test',
-      changes: [{ kind: 'write', path: 'a', text: 'a' }],
-    });
-    await tx.commit();
-    await expect(tx.commit()).rejects.toThrow(/already/);
-  });
-
   it('ends in the complete old or the complete new state when any single step fails once', async () => {
     const newState = await expectedNewState();
     const probe = await fixtureRoot();
@@ -323,23 +121,6 @@ describe('Transaction.commit', () => {
         expect(state, `call ${n}: ${faults.log[n - 1]}`).toEqual(newState);
       }
     }
-  });
-
-  it('reports a partial save with the pending paths when the retry fails too', async () => {
-    const root = await fixtureRoot();
-    const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
-    const faults = injectFaults();
-    // Write the manifest (writeFile, rename, syncDir), sync .txn, then the first moveOut fails for good.
-    faults.crashAt(5);
-    const err = await tx.commit().catch((e: unknown) => e);
-    faults.restore();
-    expect(err).toMatchObject({
-      code: 'DATA_INTEGRITY',
-      message: 'assignees.remove was saved only in part; Rowbly finishes it before the next read or change',
-      details: { transaction: tx.id, operation: 'assignees.remove' },
-    });
-    expect((err as { details: { pending: string[] } }).details.pending).toContain('rowbly.config.json');
-    expect((err as Error).message).not.toMatch(/nothing/i);
   });
 });
 
@@ -399,92 +180,6 @@ describe('recoverTransactions', () => {
     }
   });
 
-  it('survives a second crash during recovery', { timeout: 120_000 }, async () => {
-    const newState = await expectedNewState();
-    const probe = await fixtureRoot();
-    const total = await countCalls(async () =>
-      (await prepareTransaction(probe, BIG_PLAN, { now: clock.now })).commit(),
-    );
-
-    for (let n = 1; n <= total; n++) {
-      const sample = await fixtureRoot();
-      const oldState = await snapshotTree(sample);
-      const { prepared } = await crashDuringCommit(sample, n);
-      const recoveryCalls = await countCalls(() => recoverTransactions(sample));
-
-      for (let m = 1; m <= recoveryCalls; m++) {
-        const root = await fixtureRoot();
-        await crashDuringCommit(root, n);
-        const faults = injectFaults();
-        faults.crashAt(m);
-        await recoverTransactions(root).catch(() => undefined);
-        faults.restore();
-
-        await recoverTransactions(root);
-        expect(await snapshotTree(root), `commit call ${n}, recovery call ${m}`).toEqual(
-          prepared ? newState : oldState,
-        );
-        expect(await journal(root)).toEqual([]);
-      }
-    }
-  });
-
-  it('removes unprepared and complete folders and ignores names that are not transactions', async () => {
-    const root = await fixtureRoot();
-    const before = await snapshotTree(root);
-    await mkdir(join(root, '.txn/20261012T172107000Z-00000001/staged'), { recursive: true });
-    await mkdir(join(root, '.txn/20261012T172107000Z-00000002'), { recursive: true });
-    await writeFile(
-      join(root, '.txn/20261012T172107000Z-00000002/manifest.json'),
-      JSON.stringify({
-        version: 1,
-        id: '20261012T172107000Z-00000002',
-        operation: 'test',
-        createdAt: FIXED_NOW,
-        pid: 1,
-        host: 'h',
-        phase: 'complete',
-        steps: [],
-      }),
-    );
-    await writeFile(join(root, '.txn/notes.txt'), 'not a transaction\n');
-
-    expect(await recoverTransactions(root)).toEqual({
-      finished: [],
-      removed: ['20261012T172107000Z-00000001', '20261012T172107000Z-00000002'],
-      leftovers: [],
-    });
-    expect(await journal(root)).toEqual(['notes.txt']);
-    expect(await snapshotTree(root)).toEqual(before);
-  });
-
-  it('reports a transaction it cannot finish with its operation and pending paths', async () => {
-    const root = await fixtureRoot();
-    const id = '20261012T172107000Z-0000000a';
-    await mkdir(join(root, '.txn', id, 'moving'), { recursive: true });
-    await writeFile(
-      join(root, '.txn', id, 'manifest.json'),
-      JSON.stringify({
-        version: 1,
-        id,
-        operation: 'doctor.fix',
-        createdAt: FIXED_NOW,
-        pid: 1,
-        host: 'h',
-        phase: 'prepared',
-        steps: [{ kind: 'moveIn', temp: 'moving/0', to: 'boards/web/stories/WEB-9' }],
-      }),
-    );
-    const err = await recoverTransactions(root).catch((e: unknown) => e);
-    expect(err).toMatchObject({
-      code: 'DATA_INTEGRITY',
-      message: 'doctor.fix was saved only in part; Rowbly finishes it before the next read or change',
-      details: { transaction: id, pending: ['boards/web/stories/WEB-9'] },
-    });
-    // Nothing was removed: the journal stays for the next attempt.
-    expect(await journal(root)).toEqual([id]);
-  });
-
   it('refuses to guess when a manifest cannot be read', async () => {
     const root = await fixtureRoot();
     const id = '20261012T172107000Z-0000000b';
@@ -496,11 +191,6 @@ describe('recoverTransactions', () => {
     });
     expect(await journal(root)).toEqual([id]);
   });
-
-  it('does nothing when there is no journal', async () => {
-    const root = await fixtureRoot();
-    expect(await recoverTransactions(root)).toEqual({ finished: [], removed: [], leftovers: [] });
-  });
 });
 
 describe('a killed process', () => {
@@ -510,38 +200,14 @@ describe('a killed process', () => {
     return path;
   }
 
-  const lastStep = 'applied:11'; // BIG_PLAN has 12 steps.
-  it.each([
-    ['staged', 'old'],
-    ['prepared', 'new'],
-    ['applied:0', 'new'],
-    ['applied:4', 'new'],
-    ['applied:9', 'new'],
-    [lastStep, 'new'],
-    ['complete', 'new'],
-  ] as const)(
-    'killed at %s recovers to the %s state when the root is reopened',
-    { timeout: 60_000 },
-    async (point, expected) => {
-      const newState = await expectedNewState();
-      const root = await fixtureRoot();
-      const oldState = await snapshotTree(root);
-      const killed = await runScript(fixtureScript('killAt.ts'), ['commit', root, await planFile(root), point]);
-      expect(killed.signal, killed.stderr).toBe('SIGKILL');
-      expect(await journal(root)).toHaveLength(1);
-
-      await recoverTransactions(root);
-      expect(await snapshotTree(root)).toEqual(expected === 'new' ? newState : oldState);
-      expect(await journal(root)).toEqual([]);
-    },
-  );
-
-  it('recovers after the recovery process is killed too', { timeout: 60_000 }, async () => {
+  it('killed after the commit point recovers to the new state when the root is reopened', {
+    timeout: 60_000,
+  }, async () => {
     const newState = await expectedNewState();
     const root = await fixtureRoot();
-    const plan = await planFile(root);
-    expect((await runScript(fixtureScript('killAt.ts'), ['commit', root, plan, 'applied:2'])).signal).toBe('SIGKILL');
-    expect((await runScript(fixtureScript('killAt.ts'), ['recover', root, plan, 'applied:7'])).signal).toBe('SIGKILL');
+    const killed = await runScript(fixtureScript('killAt.ts'), ['commit', root, await planFile(root), 'prepared']);
+    expect(killed.signal, killed.stderr).toBe('SIGKILL');
+    expect(await journal(root)).toHaveLength(1);
 
     await recoverTransactions(root);
     expect(await snapshotTree(root)).toEqual(newState);

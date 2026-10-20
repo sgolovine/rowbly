@@ -1,8 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { onTestFinished } from 'vitest';
+import { join } from 'node:path';
 import { reservedNames } from '../../src/main';
-import { createPluginTestHost, type PluginTestHost, type PluginTestHostOptions } from '../../src/plugin-api/testing';
 import type { RowblyConfig } from '../../src/schemas';
 import {
   type AnyPluginDefinition,
@@ -12,10 +10,8 @@ import {
   type RowblyContext,
   type Services,
 } from '../../src/services';
-import { FIXTURE_CLI_PATH, fixedClock, fixedIds, makeBoard, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
+import { fixedClock, fixedIds, makeBoard, makeRootConfig, type TempRoot, tempRoot } from '../helpers';
 import { fixturePlugins } from './fixtures';
-
-export { FIXTURE_CLI_PATH };
 
 /** Plugin entries for `rowbly.config.json`: `true` turns a Plugin on, an object adds settings. */
 export type Entries = Record<string, true | Record<string, unknown>>;
@@ -60,22 +56,6 @@ export async function withPlugins(
     ...ctxOverrides,
   };
   return { host, ctx, services: createServices(ctx), warnings };
-}
-
-/**
- * The Plugin test harness (src/plugin-api/testing.ts) as the repository's Plugin suites use it: by
- * default with the Board of `pluginRoot`, its Data Root as a `TempRoot` for direct
- * fixtures and assertions, and removed when the test finishes.
- */
-export async function pluginTestHost(options: PluginTestHostOptions): Promise<PluginTestHost & { t: TempRoot }> {
-  const host = await createPluginTestHost({
-    boards: [{ id: 'web', name: 'Website', keyPrefix: 'WEB' }],
-    now: fixedClock().now,
-    ...options,
-  });
-  onTestFinished(host.dispose);
-  const t: TempRoot = { dir: dirname(host.root.path), path: host.root.path, root: host.root, cleanup: host.dispose };
-  return { ...host, t };
 }
 
 /** A file in the Data Root, parsed as JSON. */

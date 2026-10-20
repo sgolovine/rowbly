@@ -2,13 +2,13 @@
 // the real pipeline and storage, with a fixed clock and fixed ids. A Plugin's tests import only this
 // module and `plugin-api`. It is a separate entry from `plugin-api` because it wires core (the
 // program's reserved names, storage, every service), which a Plugin never reaches at run time; no
-// production module imports it (test/plugins/testingHarnessBuild.test.ts checks the built CLI). Not
-// published from the package yet (WP10B).
+// production module imports it (test/architecture.test.ts gives it a layer no other layer may import).
+// Not published from the package yet (WP10B).
 //
 // Testing a Plugin's TUI part: render its component with `ink-testing-library`, passing the context
-// from `host.context(id)` and a `PluginUi` whose methods record calls (test/plugins/
-// testingHarnessTui.test.tsx runs this recipe). This covers one screen, tab or section; a test of
-// navigation between screens needs the whole TUI, which is not part of the harness yet. E.g.
+// from `host.context(id)` and a `PluginUi` whose methods record calls. This covers one screen, tab or
+// section; a test of navigation between screens needs the whole TUI, which is not part of the harness
+// yet. E.g.
 //
 //   const host = await createPluginTestHost({ plugins: [notes] });
 //   const ui = { open: vi.fn(), openStory: vi.fn(), openBoard: vi.fn(), back: vi.fn(),

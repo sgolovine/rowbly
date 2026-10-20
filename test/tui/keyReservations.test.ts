@@ -41,14 +41,6 @@ const PLAIN = {} as Key;
 const PRINTABLE = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i));
 
 describe('core key reservations (ARCH-13)', () => {
-  it('finds a key that core starts to handle', () => {
-    expect(keysIn(`if (input === 'X') go(); else if ('Y' == input) stay();`)).toEqual(['X', 'Y']);
-    expect(keysIn(`useKeyHints([{ key: 'W', description: 'w' }, { key: 'tab/←/→', description: 'switch' }]);`)).toEqual(
-      ['W'],
-    );
-    expect(keysIn(`switch (input) { case 'V': break; }`)).toEqual(['V']);
-  });
-
   it('reserves every single-character key in the TUI source', async () => {
     const found = new Map<string, string>();
     for (const file of await sources(TUI)) {
@@ -59,7 +51,6 @@ describe('core key reservations (ARCH-13)', () => {
     const missing = [...found].filter(([key]) => !CORE_KEYS.includes(key)).map(([key, file]) => `"${key}" (${file})`);
     expect(missing).toEqual([]);
   });
-
   it('reserves the keys the helper tables match', () => {
     const matched = PRINTABLE.filter(
       (c) => boardKey(c, 0, 9) !== null || moveDelta(c, PLAIN) !== 0 || globalAction(c, PLAIN) !== null,

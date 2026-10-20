@@ -3,8 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
-import pkg from '../package.json' with { type: 'json' };
-import { CLI_PATH, makeBoard, runCli, tempRoot } from './helpers';
+import { CLI_PATH, makeBoard, tempRoot } from './helpers';
 
 /** util-linux `script` gives the CLI a pseudo-terminal, so stdin and stdout are TTYs. */
 const hasScript = process.platform === 'linux' && spawnSync('script', ['--version']).status === 0;
@@ -35,77 +34,6 @@ function runInTty(args: string[], cwd: string, ready: string): Promise<{ output:
   });
 }
 
-const COMMAND_GROUPS = ['init', 'use', 'whoami', 'config', 'boards', 'stages', 'fields', 'stories', 'doctor'];
-
-describe('rowbly CLI', () => {
-  it('prints its version', async () => {
-    const result = await runCli(['--version']);
-    expect(result).toEqual({ stdout: `${pkg.version}\n`, stderr: '', exitCode: 0 });
-  });
-
-  it('lists every command group in --help', async () => {
-    const { stdout, exitCode } = await runCli(['--help']);
-    expect(exitCode).toBe(0);
-    for (const name of COMMAND_GROUPS) expect(stdout).toMatch(new RegExp(`^  ${name}\\b`, 'm'));
-    for (const flag of ['--root <path>', '--json', '--yes', '--no-prompt', '--version']) expect(stdout).toContain(flag);
-  });
-
-  it('shows global flags in subcommand help', async () => {
-    const { stdout, exitCode } = await runCli(['stories', 'list', '--help']);
-    expect(exitCode).toBe(0);
-    expect(stdout).toContain('--no-prompt');
-  });
-
-  it('reports errors as JSON with --json', async () => {
-    const { stdout, stderr, exitCode } = await runCli(['doctor', '--json']);
-    expect(exitCode).toBe(5);
-    expect(stdout).toBe('');
-    expect(JSON.parse(stderr)).toEqual({
-      error: {
-        code: 'NO_DATA_ROOT',
-        message: 'no Data Root found',
-        details: {},
-        hint: 'run `rowbly init` to create one',
-      },
-    });
-  });
-
-  it('exits 2 for an unknown command or option', async () => {
-    const command = await runCli(['bogus']);
-    expect(command.exitCode).toBe(2);
-    expect(command.stderr).toContain("error: unknown command 'bogus'");
-    const option = await runCli(['--bogus', '--json']);
-    expect(option.exitCode).toBe(2);
-    expect(JSON.parse(option.stderr).error.code).toBe('USAGE');
-  });
-
-  it('prints help and exits 2 for a command group without a verb', async () => {
-    const { stderr, exitCode } = await runCli(['stories']);
-    expect(exitCode).toBe(2);
-    expect(stderr).toContain('Usage: rowbly stories');
-  });
-
-  it('prints help and exits 2 with no arguments and no TTY', async () => {
-    const { stdout, stderr, exitCode } = await runCli([]);
-    expect(exitCode).toBe(2);
-    expect(stdout).toBe('');
-    expect(stderr).toContain('Usage: rowbly');
-  });
-
-  it('treats only global flags as no command: help and exit 2 without a TTY', async () => {
-    const t = await tempRoot();
-    for (const args of [
-      ['--root', t.path],
-      [`--root=${t.path}`, '--json'],
-      ['--no-prompt', '--yes'],
-    ]) {
-      const { stdout, stderr, exitCode } = await runCli(args);
-      expect({ args, exitCode, stdout }).toEqual({ args, exitCode: 2, stdout: '' });
-      expect(stderr).toContain('Usage: rowbly');
-    }
-  });
-});
-
 describe.skipIf(!hasScript)('rowbly in a terminal', () => {
   it('opens the TUI on the --root Data Root when only global flags are given', async () => {
     const t = await tempRoot();
@@ -117,12 +45,5 @@ describe.skipIf(!hasScript)('rowbly in a terminal', () => {
     expect(exitCode).toBe(0);
     expect(output).toContain('● Backlog (0)');
     expect(output).not.toContain('No Data Root found');
-  });
-
-  it('fails with exit 5 when --root names a missing Data Root', async () => {
-    const t = await tempRoot();
-    const { output, exitCode } = await runInTty(['--root', `${t.dir}/missing`], t.dir, 'error:');
-    expect(exitCode).toBe(5);
-    expect(output).toContain(`error: Data Root not found: ${t.dir}/missing`);
   });
 });

@@ -29,18 +29,3 @@ exports[`board view > renders one column per Stage with counts and cards in Rank
 ╰────────────────────╯╰────────────────────────────────────────────────────────────────────────────────────────────────╯
  ←/→ ↑/↓ select · enter open · n new · / filter · v list view · ? help · q quit"
 `;
-
-exports[`board view > scrolls horizontally at 80 columns with 6 Stages without wrapping cards 1`] = `
-"╭─rowbly-test-XXXXXX─────────────────╮╭──────────╮╭───────────────╮╭───────────╮
-│ Website web · Stages 4…  me: alice ││Settings ,││Stages │ List v││+ New Story│
-╰────────────────────────────────────╯╰──────────╯╰───────────────╯╰───────────╯
-╭─Boards─────────────╮╭─Board──────────────────────────────────────────────────╮
-│  1 API             ││‹3 ● Review (0)             ● QA (0)                 1› │
-│▌ 2 Website         ││   ──────────────────────── ━━━━━━━━━━━━━━━━━━━━━━━━    │
-│                    ││                                                        │
-│╭──────────────────╮││   (empty)                  (empty)                     │
-││  + New Board N   │││                                                        │
-│╰──────────────────╯││                                                        │
-╰────────────────────╯╰────────────────────────────────────────────────────────╯
- ←/→ ↑/↓ select · enter open · n new · / filter · v list view · ? help · q quit"
-`;

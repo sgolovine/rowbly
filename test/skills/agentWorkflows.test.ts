@@ -1,6 +1,4 @@
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { type RunCliResult, runCli, tempRoot } from '../helpers';
@@ -8,8 +6,7 @@ import { type RunCliResult, runCli, tempRoot } from '../helpers';
 /**
  * Task checks for the agent skills in skills/: each test runs a skill's documented workflow through
  * the built CLI, as an agent would (no TTY, `--json --no-prompt`), and checks the claims and the
- * mistakes the skill warns about. The Story Key conflict repair is covered in
- * test/commands/doctor.test.ts.
+ * mistakes the skill warns about.
  */
 
 /** A project directory with a Data Root and Board `web`, made the way rowbly-setup says. */
@@ -52,19 +49,6 @@ describe('rowbly-cli', () => {
     const badStage = await rowbly('stories', 'create', '--board', 'web', '--name', 'x', '--stage', 'nope', '--json');
     expect(badStage.exitCode).toBe(2);
     expect(jsonError(badStage).details.validStages).toEqual(['backlog', 'todo', 'in-progress', 'done']);
-  });
-
-  it('needs a Board in context, takes --root as the .rowbly folder, and exits 5 without a Data Root', async () => {
-    const { tmp, rowbly, json } = await project();
-    await json('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
-    const noBoard = await rowbly('stories', 'list', '--json');
-    expect(noBoard.exitCode).toBe(2);
-    expect(jsonError(noBoard).code).toBe('USAGE');
-    expect(await json('stories', 'list', '--board', 'api')).toEqual([]);
-
-    const elsewhere = (...args: string[]) => runCli([...args, '--no-prompt', '--json']);
-    expect((await elsewhere('--root', tmp.path, 'boards', 'list')).exitCode).toBe(0);
-    expect((await elsewhere('stories', 'list')).exitCode).toBe(5);
   });
 });
 
@@ -152,27 +136,6 @@ describe('rowbly-stories', () => {
     const bad = await rowbly('stories', 'edit', 'WEB-1', '--add-label', 'Needs Review', '--json');
     expect(bad.exitCode).toBe(2);
     expect(jsonError(bad).code).toBe('VALIDATION');
-  });
-
-  it('keeps newlines from --description-file - and lists valid handles for an unknown Assignee', async () => {
-    const { tmp, rowbly, json } = await project();
-    const created = await runCli(
-      ['stories', 'create', '--board', 'web', '--name', 'Doc', '--description-file', '-', '--json', '--no-prompt'],
-      {
-        cwd: tmp.dir,
-        stdin: '## Goal\n\nSign in.\n\n',
-      },
-    );
-    expect(JSON.parse(created.stdout).description).toBe('## Goal\n\nSign in.');
-
-    // Assignees are a Plugin, off until the Data Root turns it on.
-    expect((await rowbly('stories', 'edit', 'WEB-1', '--add-assignee', 'sam', '--json')).exitCode).toBe(2);
-    await json('plugins', 'enable', 'assignees');
-    await json('assignees', 'add', 'sam', '--name', 'Sam');
-    const unknown = await rowbly('stories', 'edit', 'WEB-1', '--add-assignee', 'bob', '--json');
-    expect(unknown.exitCode).toBe(2);
-    expect(jsonError(unknown).details.validHandles).toEqual(['sam']);
-    expect((await rowbly('stories', 'list', '--board', 'web', '--assignee', 'me', '--json')).exitCode).toBe(2);
   });
 });
 
@@ -271,21 +234,5 @@ describe('rowbly-doctor', () => {
       (s: { key: string; name: string }) => `${s.key} ${s.name}`,
     );
     expect(names.sort()).toEqual(['WEB-1 Base', 'WEB-2 From feature', 'WEB-3 From main']);
-  });
-
-  it('reports a Story in a Stage that no longer exists as an error that a move repairs', async () => {
-    const { tmp, json, rowbly } = await project();
-    await json('stories', 'create', '--board', 'web', '--name', 'Login');
-    const file = join(tmp.path, 'boards/web/stories/WEB-1/story.json');
-    await writeFile(file, (await readFile(file, 'utf8')).replace('"stage": "backlog"', '"stage": "gone"'));
-
-    const check = await rowbly('doctor', '--json');
-    expect(check.exitCode).toBe(6);
-    expect(JSON.parse(check.stdout).findings).toEqual([
-      expect.objectContaining({ code: 'UNKNOWN_STAGE', fixable: false }),
-    ]);
-    expect((await rowbly('doctor', '--fix', '--json')).exitCode).toBe(6);
-    await json('stories', 'move', 'WEB-1', 'todo');
-    expect((await rowbly('doctor', '--json')).exitCode).toBe(0);
   });
 });

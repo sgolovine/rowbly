@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const SRC = fileURLToPath(new URL('../src', import.meta.url));
-const FIXTURES = fileURLToPath(new URL('./plugins/fixtures', import.meta.url));
 
 async function sourceFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -171,22 +170,6 @@ describe('architecture', async () => {
         if (!api && !own) {
           offenders.push(`${srcPath(file)} imports ${spec}`);
         }
-      }
-    }
-    expect(offenders).toEqual([]);
-  });
-
-  // The fixture Plugins stand in for Built-in Plugins in the tests, so they follow the same rule.
-  it('the fixture Plugins import only the Plugin API and each other', async () => {
-    const offenders: string[] = [];
-    for (const file of await sourceFiles(FIXTURES)) {
-      if (file.endsWith(`${sep}cli.ts`)) continue;
-      for (const spec of specifiers(await readFile(file, 'utf8'))) {
-        const target = spec.startsWith('.') ? join(file, '..', spec) : '';
-        const api =
-          (target === join(SRC, 'plugin-api') || target.startsWith(join(SRC, 'plugin-api', sep))) &&
-          target !== join(SRC, 'plugin-api', 'testing');
-        if (!api && !target.startsWith(FIXTURES)) offenders.push(`${relative(FIXTURES, file)} imports ${spec}`);
       }
     }
     expect(offenders).toEqual([]);

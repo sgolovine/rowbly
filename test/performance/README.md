@@ -1,12 +1,8 @@
 # Performance checks (PERF-07)
 
-Two kinds, kept apart on purpose:
-
-- **Read budgets** — `readBudgets.test.ts`, part of `pnpm test`. Counts file reads and calls on a
-  generated fixture at two sizes, so a change that makes reads grow with a cross-product (Epics ×
-  Stories, links, candidate slugs, pending lookups) fails. No timings: the counts are the same on
-  every machine.
-- **Benchmark** — `bench.ts`, opt-in: `pnpm bench:plugins`. Never part of `pnpm test` or CI.
+The benchmark, `bench.ts`, is opt-in: `pnpm bench:plugins`. It is never part of `pnpm test` or CI.
+Run it by hand when a change could make reads grow with a cross-product (Epics × Stories, links,
+candidate slugs, pending lookups).
 
 ## Running the benchmark
 

@@ -62,7 +62,7 @@ skills:
         mechanism: --root names the Data Root itself; a project folder acts as an empty Data Root.
         wrong_pattern: rowbly --root ~/code/app stories list
         correct_pattern: rowbly --root ~/code/app/.rowbly stories list
-        source: observed with dist/cli.js at 2e488a8; test/skills/agentWorkflows.test.ts
+        source: observed with dist/cli.js at 2e488a8
         priority: MEDIUM
         status: active
       - mistake: Opening the TUI or $EDITOR from an agent
@@ -223,7 +223,7 @@ skills:
         mechanism: One of the two Stories is lost; doctor --fix keeps both and renumbers.
         wrong_pattern: git checkout --ours .rowbly/boards/web/stories/WEB-7/story.json
         correct_pattern: rowbly doctor --fix --json --no-prompt
-        source: README.md#doctor; test/commands/doctor.test.ts
+        source: README.md#doctor; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active
       - mistake: Deleting a Story folder or .txn/ to clear an error
