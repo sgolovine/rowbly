@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "869c418e9565d40d422fedf2221472802a073f025b6939dc607af06e283c177e",
+      "fingerprint": "56485ec5874c2c1701450780f03fdb3b985407b276bb39797fb9ae41b5953efc",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,18 +14,18 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "fe692284dd301f12fabeab30de20dded9a14b70031ff87b7a492d1a8c5869a5a",
+      "fingerprint": "6a4c94cda78471ad4a9a69eccab8382d14e81eca2b86a9d2f3bdb4c2a459417c",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -33,20 +33,20 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "4b148709aea264170fbf93f06956bfec22f2436f975b2edb34e79be859cea27f",
+      "fingerprint": "98a2ae503793976eff29ade7b7ea6a4401032509e50afe520284525be1aed3b4",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
+        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -55,18 +55,18 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "bdb16654c935c5189b74762902ac8689c9f1379cdaadb549d5ed8d312c0f8add",
+      "fingerprint": "db67f9e5169b0457fa47e75a5e4432a5f39a7a1747602afa65381b14749e929e",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -75,18 +75,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "46540ef9912caffd7e39fb93f0405ae547788f0cc04313c15df5019cf9d5c7f2",
+      "fingerprint": "ee150714f1593491211f39098f286954732e607ed4bc503bfa11dfd5f7736140",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -95,23 +95,23 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "96e2668df188d51e57e78ac5a636614a6b8817955ebb77028974cd1cea51d73a",
+      "fingerprint": "2c18835cc9abe2da274fd2882b3648567e69c81fad78416a6efdb6d256cefafd",
       "snapshot": {
-        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
+        "README.md": "d46f2e67e8eeb5d592df38c330d77ca32735794a103af3649ea698c07b7884a5",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
+        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
         "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
         "skills/_artifacts/skill_spec.md": "01a8fdf13f8290e55b2d0e770abe87bad457b1e17cc5f020df85efdbddf8998f",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
@@ -142,12 +142,12 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "reason": "All three planning documents retain the correct CLI-only operating scope. The board list badge rendering and truncation changes add no CLI task, prerequisite, source ownership, distribution choice, or skill identity; TUI operation remains explicitly unassessed in skill_spec.md.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Read skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml; preserved prior tasks/decisions and remaining work. README and docs/plugins/built-in.md diff only extends TUI badge surfaces and documents truncation. intent validate skills passed. No new or changed guidance; fresh consumer validation not run for this TUI-only correction.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -606,15 +606,16 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "67259307de2d587d061d74c3d59f7fdef21c7e6bdacd8ae183479b4efc420ed6",
+      "fingerprint": "43aebdb8273e55da598bcbd71e81fc156ad8c71b32e29b2ef2cb99c07a718362",
       "snapshot": {
-        "docs/plugins/api.md": "fab546e996ac7f3ef2ff6e424cdfa33b78c3d5cb6eb50027704fffbd7a509c42"
+        "docs/plugins/api.md": "68a2d8a1be8de53577e6ecb4198a3c247061103d5e8edbc688916f379bb78e1e"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1780,16 +1781,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "3a3f26bfc90a11647bab0bd6c23993734d5ebcdc147b263cfd97005c3dcfe32b",
+      "fingerprint": "4d0536d0fe5ac2e65af62e3b07fe12e54216c952fdb60df5c821364aefad6c32",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "7084eaacda09ce3cec7d8246abb5b66b9229e9dc2f528fd343b4871e36d4773d"
+        "src/tui/screens/board/BoardScreen.tsx": "6e3dfeb3ed67fdd44e13bccad46e04b0e18c3d58f5eddae7bc72f2ec6f09c7ce"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
-      "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -3364,15 +3365,16 @@
       ]
     },
     "source:test/plugins/assigneesTui.test.tsx": {
-      "fingerprint": "c79474f265674213e81829de4c97035eed6253c77404953963334a4e9d7d67be",
+      "fingerprint": "3c0f46efd4f072a5520edb194705366fe82c97410da7c545a77cff018e61ba56",
       "snapshot": {
-        "test/plugins/assigneesTui.test.tsx": "f9d81da2f494377fa1066dad017735794263d80dc9ac085226a762ea2681b880"
+        "test/plugins/assigneesTui.test.tsx": "0f5014e8a9027535ab910eb1cddca16c28a96a601e4b246582c50809afbe7236"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
@@ -3749,28 +3751,29 @@
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "5fba6c52fd7c65f3436ec2f756aaa2ec9614e6531f30a861586bc6905a70f2e4",
+      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "47ad681672435b887fe78dd0978d2bdd2b4267365c41217bb76685cd13448463"
+        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "267a9d1d03ea602737e30d646a9e28253257bc508260d9228274484c7328b9b6",
+      "fingerprint": "c2ec23e5a1af96d3b6e9c7613b5919aba83e9430173b0860ca367f97e5faf1cd",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "eacd15bf5198d5b781f324531abbaaea94abdac1739ca093e7cd1d7d02bce977"
+        "src/tui/screens/board/BoardListRow.tsx": "bfa6a4022415a5efcd53e81aa2506dc1ce20feaa33b42629e99f5486879b3fb5"
       },
-      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
       "outcome": "out-of-scope",
-      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
-        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -4298,6 +4301,19 @@
       "evidence": [
         "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
         "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:test/tui/boardListRow.test.tsx": {
+      "fingerprint": "0b25e1d510058957fae2ec948c7babf8af0cb3ca9a1f7a242af49733947d3a9e",
+      "snapshot": {
+        "test/tui/boardListRow.test.tsx": "ff692c4dce7df4b0990391d7d53462a9a2d28ec115ac9c25a66b991e447148ee"
+      },
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "evidence": [
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/17 files. No timing/retry changes."
       ]
     }
   }
