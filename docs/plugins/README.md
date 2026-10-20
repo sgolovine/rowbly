@@ -92,7 +92,7 @@ A Plugin's settings are its entry in `rowbly.config.json`, beside `enabled`. Row
     plugins/<id>/…          # Board files of a Plugin, e.g. Board Specs
     stories/<KEY>/
       story.json            # Story bags, e.g. Tasks and Comments
-      plugins/<id>/…        # Story files of a Plugin, e.g. the Story Spec
+      plugins/<id>/…        # Story files of a Plugin, e.g. Story Specs
 ```
 
 - A **bag** is `"plugins": { "<id>": { … } }` on a record ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Each Plugin validates its own bag. Core keeps every bag unchanged, including the bags of Plugins that are off or unknown and bags that do not parse, and `--json` prints records as they are stored, with every bag.

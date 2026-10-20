@@ -36,23 +36,30 @@ describe('Specs TUI', () => {
     detail.app.unmount();
   });
 
-  it('the Specs screens create, edit and delete Board Specs in the multi-line text box', async () => {
+  it('the Board Specs screen creates Specs, opens them rendered, edits, saves and deletes them', async () => {
     const { app, plugin } = await setup('plugin', { plugin: 'specs', screen: 'list', board: 'web' });
     await waitForFrame(app, 'auth  Auth');
     await app.press('n');
     await waitForFrame(app, 'Slug');
-    await app.press(...'api', KEYS.tab, ...'API', KEYS.tab, ...'Body', KEYS.ctrlS);
-    await waitForFrame(app, 'api  API');
-    expect(await plugin.files.read({ board: 'web' }, 'api.md')).toBe('# API\n\nBody');
+    await app.press(...'api', KEYS.tab, ...'API', KEYS.tab, ...'Some **Body**', KEYS.ctrlS);
+    await waitForFrame(app, (f) => f.includes('api  API') && f.includes('open Spec'));
+    expect(await plugin.files.read({ board: 'web' }, 'api.md')).toBe('# API\n\nSome **Body**');
+    // `api` is the first Board Spec, so `enter` opens it, rendered.
     await app.press(KEYS.enter);
-    await waitForFrame(app, 'Body');
+    const view = await waitForFrame(app, (f) => f.includes('Some Body') && f.includes('tab/e edit'));
+    expect(view).toContain('Board Spec api');
+    expect(view).not.toContain('**');
     await app.press('e');
-    await waitForFrame(app, 'enter new line');
-    await app.press(KEYS.ctrlS);
-    await waitForFrame(app, (f) => f.includes('Edited Spec') && !f.includes('enter new line'));
+    await waitForFrame(app, (f) => f.includes('Some **Body**') && f.includes('tab view'));
+    await app.press('!', KEYS.ctrlS);
+    await waitForFrame(app, (f) => f.includes('saved') && !f.includes('unsaved'));
+    expect(await plugin.files.read({ board: 'web' }, 'api.md')).toBe('# API\n\nSome **Body**!');
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('api  API') && f.includes('delete Spec') && !f.includes('tab view'));
     await app.press('d');
     await waitForFrame(app, 'Delete Spec "api"?');
     await app.press('n');
+    await waitForFrame(app, (f) => f.includes('api  API') && f.includes('delete Spec'));
     expect(await plugin.files.read({ board: 'web' }, 'api.md')).not.toBeNull();
     await app.press('d', 'y');
     await waitForFrame(app, (f) => f.includes('auth  Auth') && !f.includes('api  API'));
@@ -60,38 +67,59 @@ describe('Specs TUI', () => {
     app.unmount();
   });
 
-  it('the Story Spec tab shows own text then linked Board Specs and offers create/edit/delete', async () => {
+  it('the Story Specs tab lists Story Specs, then linked Board Specs, and creates, opens and deletes them', async () => {
     const { app, plugin } = await setup('story', { key: 'WEB-1' });
     await waitForFrame(app, 'Login');
     await app.press(KEYS.tab);
-    expect(await waitForFrame(app, 'Board requirements')).toContain('No Story Spec');
-    await app.press('e');
+    const empty = await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('new Story Spec'));
+    expect(empty).toContain('Board Spec');
+    await app.press('n');
     await waitForFrame(app, 'Title');
-    await app.press(...'Own', KEYS.tab, ...'Text', KEYS.ctrlS);
+    await app.press(...'design', KEYS.tab, ...'Design', KEYS.tab, ...'Text', KEYS.ctrlS);
     const frame = await waitForFrame(
       app,
-      (f) => /Story Spec[\s\S]*Own[\s\S]*Text[\s\S]*Board Spec: auth/.test(f) && !f.includes('enter new line'),
+      (f) => /design {2}Design Story Spec[\s\S]*auth {2}Auth Board Spec/.test(f) && f.includes('delete Story Spec'),
     );
-    expect(frame.indexOf('Own')).toBeLessThan(frame.indexOf('Board Spec: auth'));
-    await app.press('e');
-    await waitForFrame(app, 'enter new line');
-    await app.press(KEYS.ctrlS);
-    await waitForFrame(
-      app,
-      (f) =>
-        f.includes('Edited Spec') &&
-        !f.includes('enter new line') &&
-        /Story Spec[\s\S]*Own[\s\S]*Text[\s\S]*Board Spec: auth/.test(f),
-    );
+    expect(frame.indexOf('design  Design')).toBeLessThan(frame.indexOf('auth  Auth'));
+    expect(await plugin.files.read({ story: 'WEB-1' }, 'design.md')).toBe('# Design\n\nText');
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('Story Spec WEB-1/design') && f.includes('Text'));
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('delete Story Spec') && !f.includes('tab/e edit'));
+    // A linked Board Spec opens too, and is not deleted from here.
+    await app.press('j');
+    await waitForFrame(app, (f) => f.includes('edit Spec') && !f.includes('delete Story Spec'));
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('Board Spec auth') && f.includes('Board requirements'));
+    await app.press(KEYS.escape);
+    await waitForFrame(app, (f) => f.includes('edit Spec') && !f.includes('tab/e edit'));
+    await app.press('k');
+    await waitForFrame(app, 'delete Story Spec');
     await app.press('d');
-    await waitForFrame(app, 'Delete Story Spec?');
+    await waitForFrame(app, 'Delete Story Spec "design"?');
     await app.press('y');
-    await waitForFrame(app, 'No Story Spec');
-    expect(await plugin.files.read({ story: 'WEB-1' }, 'spec.md')).toBeNull();
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && !f.includes('design  Design'));
+    expect(await plugin.files.read({ story: 'WEB-1' }, 'design.md')).toBeNull();
     app.unmount();
   });
 
-  it('long Story Specs scroll to their linked Board Specs', async () => {
+  it('a Story Spec edited in the editor asks before discarding unsaved changes', async () => {
+    const { app, plugin } = await setup('story', { key: 'WEB-1' });
+    await createSpec(plugin, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Own\n\nStory text');
+    await waitForFrame(app, 'Login');
+    await app.press(KEYS.tab);
+    await waitForFrame(app, (f) => f.includes('spec  Own') && f.includes('delete Story Spec'));
+    await app.press('e');
+    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('tab view'));
+    await app.press('!', KEYS.escape);
+    await waitForFrame(app, 'Close and discard unsaved changes?');
+    await app.press('y');
+    await waitForFrame(app, (f) => f.includes('spec  Own') && !f.includes('tab view'));
+    expect(await plugin.files.read({ story: 'WEB-1' }, 'spec.md')).toBe('# Own\n\nStory text');
+    app.unmount();
+  });
+
+  it('a long Spec scrolls in the editor', async () => {
     const { app, plugin } = await setup('story', { key: 'WEB-1' });
     Object.defineProperty(app.stdout, 'isTTY', { value: true, configurable: true });
     Object.defineProperty(app.stdout, 'columns', { value: 100, configurable: true });
@@ -99,19 +127,17 @@ describe('Specs TUI', () => {
     app.stdout.emit('resize');
     await createSpec(
       plugin,
-      { board: 'web', story: 'WEB-1' },
-      `# Long\n${Array.from({ length: 30 }, (_, i) => `Line ${i}`).join('\n')}`,
+      { board: 'web', story: 'WEB-1', slug: 'spec' },
+      `# Long\n\n${Array.from({ length: 30 }, (_, i) => `Line ${i}`).join('\n\n')}`,
     );
     await waitForFrame(app, 'Login');
     await app.press(KEYS.tab);
-    const initial = await waitForFrame(app, 'Line 0');
-    expect(initial).not.toContain('Board requirements');
-    await app.press(...Array(40).fill('j'));
-    await waitForFrame(app, 'Board requirements');
-    await app.press('d');
-    await waitForFrame(app, 'Delete Story Spec?');
-    await app.press('n');
-    await waitForFrame(app, 'Line 0');
+    await waitForFrame(app, 'spec  Long');
+    await app.press(KEYS.enter);
+    const initial = await waitForFrame(app, (f) => f.includes('Line 0') && f.includes('↑/↓ scroll'));
+    expect(initial).not.toContain('Line 29');
+    await app.press(...Array(80).fill('j'));
+    await waitForFrame(app, 'Line 29');
     app.unmount();
   });
 

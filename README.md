@@ -377,14 +377,16 @@ Screens and dialogs open in centred modals that fit their content from the first
 | Key | Action |
 | --- | --- |
 | `↑`/`↓` (or `j`/`k`) | move |
-| `enter` | select or open |
-| `/` | filter a list by typing (on the board and the Stories list: open the filter form) |
+| `enter` | select or open; a click on an item in a list does the same |
+| `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in a modal that fills the terminal, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+
+The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`) and `page up`/`page down` scroll it. **Edit** shows the raw text in a multi-line text box. `tab` switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
 ### Keys per screen
 

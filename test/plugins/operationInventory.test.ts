@@ -76,8 +76,8 @@ describe('the operation inventory (ARCH-02)', () => {
     await deleteEpic(epic, 'auth');
     await createSpec(spec, { board: 'web', slug: 'login' }, '# Login');
     await editSpec(spec, { board: 'web', slug: 'login' }, '# Login\n\nMore');
-    await createSpec(spec, { board: 'web', story: 'WEB-1' }, '# Story');
-    await deleteSpec(spec, { board: 'web', story: 'WEB-1' });
+    await createSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Story');
+    await deleteSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' });
     await deleteSpec(spec, { board: 'web', slug: 'login' });
     const added = await addComment(comment, 'WEB-1', 'Hello');
     await editComment(comment, 'WEB-1', added.id, 'Hello again');

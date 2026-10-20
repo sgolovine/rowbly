@@ -4,18 +4,29 @@ export type { Key } from 'ink';
 export { Box, Text, useInput } from 'ink';
 export type { ReactNode } from 'react';
 export { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-export type { DetailRow, FormField, FormValue, FormValues, SelectItem } from '../tui/components';
+export type {
+  DetailRow,
+  EditorMode,
+  FormField,
+  FormValue,
+  FormValues,
+  FullScreenEditorControl,
+  FullScreenEditorOptions,
+  SelectItem,
+} from '../tui/components';
 export {
   ConfirmDialog,
   DetailView,
   Form,
   Loading,
+  MarkdownView,
   markdownToPlain,
   SelectList,
   StageBadge,
   Tabs,
   TextArea,
   TextInput,
+  useFullScreenEditor,
 } from '../tui/components';
 export type { AsyncState } from '../tui/hooks';
 export {

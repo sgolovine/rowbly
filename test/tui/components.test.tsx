@@ -9,7 +9,10 @@ import {
   DetailView,
   Form,
   type FormField,
+  FullScreenEditor,
+  loadMarkdownRenderer,
   markdownToPlain,
+  plainMarkdownRows,
   SelectList,
   StageBadge,
   TextArea,
@@ -33,6 +36,32 @@ describe('SelectList', () => {
     expect(onSelect).toHaveBeenCalledWith(ITEMS[1]);
     expect(ui.lastFrame()).toContain('› grace');
     ui.unmount();
+  });
+
+  it('picks an item when it is clicked, as enter does', async () => {
+    const mouse = new EventEmitter();
+    const onSelect = vi.fn();
+    const app = renderTui(
+      <App
+        ctx={null}
+        services={null}
+        initial={{ screen: 'a', params: {} }}
+        screens={{ a: () => <SelectList items={ITEMS} onSelect={onSelect} /> }}
+        toasts={createToastStore()}
+        mouse={mouse}
+      />,
+    );
+    await waitForFrame(app, 'linus');
+    // Click targets register in effects, which can trail the first frame on a busy machine.
+    await tick(200);
+    const lines = (app.lastFrame() ?? '').split('\n');
+    const y = lines.findIndex((line) => line.includes('linus'));
+    const x = lines[y]?.indexOf('linus') ?? -1;
+    mouse.emit('mouse', { kind: 'press', x, y });
+    mouse.emit('mouse', { kind: 'release', x, y });
+    await waitForFrame(app, '› linus');
+    expect(onSelect).toHaveBeenCalledWith(ITEMS[2]);
+    app.unmount();
   });
 
   it('leaves shift+arrows to the screen', async () => {
@@ -290,16 +319,16 @@ describe('TextArea full screen', () => {
     );
   }
 
-  it('opens with ctrl+f, edits in a titled modal and keeps the text when closed with esc', async () => {
+  it('opens with ctrl+f, edits in a titled full-screen editor and keeps the text when closed with esc', async () => {
     const onValue = vi.fn();
     const ui = renderTui(<Notes onValue={onValue} />);
     await waitForFrame(ui, '[Full screen] ctrl+f');
     await ui.press(KEYS.ctrlF);
-    await waitForFrame(ui, (f) => f.includes('Notes') && f.includes('esc/ctrl+f close') && f.includes('✕'));
+    await waitForFrame(ui, (f) => f.includes('Notes') && f.includes('esc close') && f.includes('✕'));
     await ui.press('one', KEYS.enter, 'two');
     expect(onValue).toHaveBeenLastCalledWith('one\ntwo');
     await ui.press(KEYS.escape);
-    const frame = await waitForFrame(ui, (f) => !f.includes('esc/ctrl+f close'));
+    const frame = await waitForFrame(ui, (f) => !f.includes('esc close'));
     expect(frame).toMatch(/one\s*\ntwo/);
     expect(frame).toContain('[Full screen]');
     // The text box takes keys again.
@@ -323,12 +352,14 @@ describe('TextArea full screen', () => {
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('Save') && f.includes('ctrl+f full screen'));
     await app.press(KEYS.ctrlF);
-    await waitForFrame(app, (f) => f.includes('Description') && f.includes('esc/ctrl+f close') && !f.includes('Save'));
-    // The form below takes no keys: `tab` is not a field move and `ctrl+s` does not save.
+    await waitForFrame(app, (f) => f.includes('Description') && f.includes('esc close') && !f.includes('Save'));
+    // The form below takes no keys: `tab` switches the editor's mode rather than moving fields, and
+    // `ctrl+s` does not save.
     await app.press('Hello', KEYS.tab, KEYS.ctrlS);
+    await waitForFrame(app, (f) => f.includes('tab/e edit') && f.includes('Hello'));
     expect(onSubmit).not.toHaveBeenCalled();
     await app.press(KEYS.escape);
-    await waitForFrame(app, (f) => f.includes('Save') && f.includes('Hello') && !f.includes('esc/ctrl+f close'));
+    await waitForFrame(app, (f) => f.includes('Save') && f.includes('Hello') && !f.includes('esc close'));
     await app.press(KEYS.ctrlS);
     expect(onSubmit).toHaveBeenCalledWith({ description: 'Hello' });
     app.unmount();
@@ -345,7 +376,7 @@ describe('TextArea full screen', () => {
     app.stdout.emit('resize');
     await waitForFrame(app, 'ctrl+f full screen');
     await app.press(KEYS.ctrlF);
-    const lines = (await waitForFrame(app, 'esc/ctrl+f close')).split('\n');
+    const lines = (await waitForFrame(app, 'esc close')).split('\n');
     // One line above and below, two columns either side, as a modal keeps over the main area.
     expect(lines).toHaveLength(20);
     expect(lines[1]?.indexOf('╭─Description')).toBe(2);
@@ -378,13 +409,93 @@ describe('TextArea full screen', () => {
     // Click targets register in effects, which can trail the first frame on a busy machine.
     await tick(200);
     await click('[Full screen]');
-    await waitForFrame(app, 'esc/ctrl+f close');
+    await waitForFrame(app, 'esc close');
     await app.press('kept');
     await tick(200);
     await click('✕');
-    const frame = await waitForFrame(app, (f) => f.includes('[Full screen]') && !f.includes('esc/ctrl+f close'));
+    const frame = await waitForFrame(app, (f) => f.includes('[Full screen]') && !f.includes('esc close'));
     expect(frame).toContain('kept');
     app.unmount();
+  });
+});
+
+describe('FullScreenEditor', () => {
+  it('renders markdown in view mode and shows the raw text in edit mode', async () => {
+    const onChange = vi.fn();
+    const ui = renderTui(
+      <FullScreenEditor
+        title="Doc"
+        initial={'# Title\n\nSome **bold** text'}
+        mode="view"
+        onChange={onChange}
+        onClose={() => {}}
+      />,
+    );
+    const view = await waitForFrame(ui, (f) => f.includes('Some bold text') && f.includes('tab/e edit'));
+    expect(view).not.toContain('**');
+    await ui.press('e');
+    await waitForFrame(ui, (f) => f.includes('Some **bold** text') && f.includes('tab view'));
+    await ui.press('!');
+    expect(onChange).toHaveBeenLastCalledWith('# Title\n\nSome **bold** text!');
+    await ui.press(KEYS.tab);
+    await waitForFrame(ui, (f) => f.includes('Some bold text!') && f.includes('tab/e edit'));
+    // `e` in view mode switches modes; it is not typed into the text.
+    await ui.press('e', 'x');
+    expect(onChange).toHaveBeenLastCalledWith('# Title\n\nSome **bold** text!x');
+    ui.unmount();
+  });
+
+  it('scrolls long text in view mode', async () => {
+    const text = Array.from({ length: 30 }, (_, i) => `Line ${i}`).join('\n\n');
+    const ui = renderTui(<FullScreenEditor title="Doc" initial={text} mode="view" onClose={() => {}} />);
+    const first = await waitForFrame(ui, (f) => f.includes('Line 0') && f.includes('↑/↓ scroll'));
+    expect(first).not.toContain('Line 29');
+    await ui.press(...Array(80).fill('j'));
+    const last = await waitForFrame(ui, 'Line 29');
+    expect(last).not.toContain('Line 0\n');
+    ui.unmount();
+  });
+
+  it('saves with ctrl+s and asks before discarding unsaved changes', async () => {
+    const onSave = vi.fn(async () => {});
+    const onClose = vi.fn();
+    const ui = renderTui(<FullScreenEditor title="Doc" initial="Hello" onSave={onSave} onClose={onClose} />);
+    await waitForFrame(ui, 'ctrl+s save');
+    await ui.press(' there');
+    await waitForFrame(ui, 'unsaved');
+    await ui.press(KEYS.ctrlS);
+    await waitForFrame(ui, (f) => f.includes('saved') && !f.includes('unsaved'));
+    expect(onSave).toHaveBeenCalledWith('Hello there');
+    await ui.press('!', KEYS.escape);
+    await waitForFrame(ui, 'Close and discard unsaved changes?');
+    await ui.press('n');
+    await waitForFrame(ui, (f) => f.includes('Hello there!') && f.includes('unsaved'));
+    expect(onClose).not.toHaveBeenCalled();
+    await ui.press(KEYS.escape, 'y');
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onSave).toHaveBeenCalledOnce();
+    ui.unmount();
+  });
+
+  it('keeps the text unsaved when saving fails, and closes at once when nothing changed', async () => {
+    const ui = renderTui(
+      <FullScreenEditor
+        title="Doc"
+        initial="Hello"
+        onSave={async () => {
+          throw new Error('disk full');
+        }}
+        onClose={() => {}}
+      />,
+    );
+    await ui.press('!', KEYS.ctrlS);
+    await waitForFrame(ui, 'not saved: disk full');
+    ui.unmount();
+    const onClose = vi.fn();
+    const clean = renderTui(<FullScreenEditor title="Doc" initial="Hello" onSave={async () => {}} onClose={onClose} />);
+    await clean.press(KEYS.escape);
+    expect(onClose).toHaveBeenCalledOnce();
+    clean.unmount();
   });
 });
 
@@ -503,5 +614,26 @@ describe('DetailView and StageBadge', () => {
 
   it('strips list markers', () => {
     expect(markdownToPlain('- one\n  * two')).toBe('• one\n  • two');
+  });
+});
+
+describe('the markdown renderer', () => {
+  it('renders markdown as terminal rows that fit the width', async () => {
+    const renderMarkdown = await loadMarkdownRenderer();
+    const rows = renderMarkdown(`# Title\n\nSome **bold** and \`code\`.\n\n\`\`\`\n${'x'.repeat(30)}\n\`\`\``, 20);
+    expect(rows[0]).toBe('# Title');
+    expect(rows.join('\n')).toContain('Some bold and code.');
+    expect(rows.join('\n')).not.toContain('**');
+    expect(rows.every((row) => row.length <= 20)).toBe(true);
+    expect(rows.join('')).toContain('x'.repeat(16));
+  });
+
+  it('renders the inline markdown of list items', async () => {
+    const renderMarkdown = await loadMarkdownRenderer();
+    expect(renderMarkdown('- one *two* **three** `four`', 40)).toEqual(['  * one two three four']);
+  });
+
+  it('shows the text without markdown syntax, in rows that fit, until the renderer loads', () => {
+    expect(plainMarkdownRows('# Title\n\nSome **bold** words\n\n', 10)).toEqual(['Title', '', 'Some bold ', 'words']);
   });
 });

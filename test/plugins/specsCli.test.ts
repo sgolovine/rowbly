@@ -51,9 +51,39 @@ describe('rowbly specs', () => {
     expect((await cli(t, ['specs', 'show', '--story', 'WEB-1'])).stdout).toContain('Own');
     expect((await cli(t, ['specs', 'edit', '--story', 'web-1', '--title', 'New'])).exitCode).toBe(0);
     expect((await cli(t, ['specs', 'create', '--story', 'WEB-1', '--title', 'Duplicate'])).exitCode).toBe(4);
-    expect((await cli(t, ['specs', 'show', 'web-1', '--story', 'WEB-1'])).exitCode).toBe(2);
+    // With --story, a slug names one of the Story's Story Specs, never the Board Spec.
+    expect((await cli(t, ['specs', 'show', 'web-1', '--story', 'WEB-1'])).exitCode).toBe(3);
+    expect((await cli(t, ['specs', 'show', '--story', 'WEB-1', '--board', 'web'])).exitCode).toBe(2);
     expect((await cli(t, ['specs', 'delete', '--story', 'WEB-1', '--yes'])).exitCode).toBe(0);
     expect((await cli(t, ['specs', 'show', 'web-1'])).stdout).toContain('# Board');
+  });
+
+  it('a Story has any number of Story Specs, named by slug; without one, --story means spec (ADR-0025)', async () => {
+    const t = await pluginRoot({ specs: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
+    expect((await cli(t, ['specs', 'list', '--story', 'WEB-1'])).stdout).toContain('No Story Specs.');
+    expect((await cli(t, ['specs', 'create', '--story', 'WEB-1', '--title', 'Requirements'])).exitCode).toBe(0);
+    const design = await cli(t, ['specs', 'create', 'design', '--story', 'web-1', '--title', 'Design', '--json']);
+    expect(json(design.stdout)).toEqual({ slug: 'design', title: 'Design', text: '# Design\n\n' });
+    expect(await readFile(join(t.path, 'boards/web/stories/WEB-1/plugins/specs/design.md'), 'utf8')).toBe(
+      '# Design\n\n',
+    );
+    expect(json((await cli(t, ['specs', 'list', '--story', 'WEB-1', '--json'])).stdout)).toMatchObject([
+      { slug: 'design', title: 'Design' },
+      { slug: 'spec', title: 'Requirements' },
+    ]);
+    expect((await cli(t, ['specs', 'show', 'spec', '--story', 'WEB-1'])).stdout).toContain('# Requirements');
+    expect(
+      (await cli(t, ['specs', 'edit', 'design', '--story', 'WEB-1', '--text', '# Design\n\nBoxes'])).exitCode,
+    ).toBe(0);
+    expect((await cli(t, ['specs', 'show', 'design', '--story', 'WEB-1'])).stdout).toContain('Boxes');
+    expect((await cli(t, ['specs', 'create', 'design', '--story', 'WEB-1', '--title', 'Again'])).exitCode).toBe(4);
+    expect((await cli(t, ['specs', 'create', 'Bad Slug', '--story', 'WEB-1', '--title', 'Bad'])).exitCode).toBe(2);
+    expect((await cli(t, ['specs', 'list', '--story', 'WEB-1', '--board', 'web'])).exitCode).toBe(2);
+    expect((await cli(t, ['specs', 'delete', 'design', '--story', 'WEB-1', '--yes'])).exitCode).toBe(0);
+    expect((await cli(t, ['specs', 'list', '--story', 'WEB-1'])).stdout).toBe('spec  Requirements\n');
+    // The Board's list holds only Board Specs.
+    expect((await cli(t, ['specs', 'list', '--board', 'web'])).stdout).toContain('No Board Specs.');
   });
 
   it('Story flags set/add/remove/filter links; deletion warns and unlinks', async () => {
