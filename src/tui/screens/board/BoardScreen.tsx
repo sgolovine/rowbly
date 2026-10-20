@@ -4,6 +4,8 @@ import type { Slug, Stage, StageCategory, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
+  loadStoryBadges,
+  type StoryBadges,
   useActionFocus,
   useAsync,
   useBoardSelection,
@@ -103,19 +105,23 @@ export function BoardScreen({ params }: ScreenProps) {
     if (!scope.data) return null;
     const { boardId, choices } = scope.data;
     const { filter, failures } = withPluginFilters(toFilter(filters), plugins, scope.data.extra, filters);
-    return { boardId, stages: choices.stages, stories: await services.stories.list(boardId, filter), failures };
+    const [stories, badges] = await Promise.all([
+      services.stories.list(boardId, filter),
+      loadStoryBadges(plugins, services),
+    ]);
+    return { boardId, stages: choices.stages, stories, badges, failures };
   }, [services, scope.data, filters, plugins]);
   // The list follows `scope.data`, so reloading the scope reloads both.
   useReloadOnReturn(scope.reload);
-  // What is on screen: the columns and the Board and Stages they were grouped by.
-  const [shown, setShown] = useState<{ boardId: Slug; stages: Stage[] } | null>(null);
+  // What is on screen: the columns, the Board and Stages they were grouped by, and the cards' badges.
+  const [shown, setShown] = useState<{ boardId: Slug; stages: Stage[]; badges: StoryBadges } | null>(null);
   const stages = shown?.stages ?? [];
 
   useEffect(() => {
     // A load that was already running when a write started may predate it; the write reloads after.
     if (!list.data || writing.current) return;
     setColumns(groupColumns(list.data.stages, list.data.stories));
-    setShown({ boardId: list.data.boardId, stages: list.data.stages });
+    setShown({ boardId: list.data.boardId, stages: list.data.stages, badges: list.data.badges });
   }, [list.data]);
 
   const col = Math.max(0, Math.min(cursor.col, stages.length - 1));
@@ -411,13 +417,14 @@ export function BoardScreen({ params }: ScreenProps) {
         </Text>
       )}
       <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
-      {shown?.boardId !== boardId ? (
+      {!shown || shown.boardId !== boardId ? (
         <Loading label="Loading Stories…" />
       ) : view === 'list' ? (
         <Box marginTop={inHeader ? 0 : 1}>
           <BoardList
             rows={rows}
             stages={stages}
+            storyBadges={shown.badges}
             width={room.width}
             first={firstListRow.current}
             size={listSize}
@@ -440,6 +447,7 @@ export function BoardScreen({ params }: ScreenProps) {
                 stage={stage}
                 cards={cards}
                 stages={stages}
+                storyBadges={shown.badges}
                 width={layout.width}
                 first={first}
                 size={size}

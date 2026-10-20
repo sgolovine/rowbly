@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink';
 import type { Stage } from '../../../schemas';
-import { useStoryBadges } from '../../hooks';
+import type { StoryBadges } from '../../hooks';
 import { BoardListRow } from './BoardListRow';
 import type { ListRow } from './layout';
 import { useCardBadges } from './useCardBadges';
@@ -9,6 +9,8 @@ export interface BoardListProps {
   rows: readonly ListRow[];
   /** All Stages of the Board, for the Plugins' card badges. */
   stages: readonly Stage[];
+  /** The Plugins' badges for a Story, loaded with the Stories. */
+  storyBadges: StoryBadges;
   width: number;
   /** Index of the first line shown and how many are shown. */
   first: number;
@@ -20,11 +22,10 @@ export interface BoardListProps {
 }
 
 /** The list view: the Backlog, Board and Done sections, scrolled to `first`. Story lines show the card's badges. */
-export function BoardList({ rows, stages, width, first, size, cursor, active, onClick }: BoardListProps) {
+export function BoardList({ rows, stages, storyBadges, width, first, size, cursor, active, onClick }: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;
   const badgesOf = useCardBadges();
-  const storyBadges = useStoryBadges();
   return (
     <Box flexDirection="column" width={width}>
       <Text dimColor>{first > 0 ? `↑ ${first} more` : ' '}</Text>
