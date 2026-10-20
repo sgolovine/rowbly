@@ -109,7 +109,7 @@
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "ae94241fab3ee9ec08187eddab7f9f91efb3099383ef9997f66ac99096f50197",
+      "fingerprint": "fb237de5a25ac9369e7f3d40ee50c4766c9f6cc20966b8dcfb8867b3710c7850",
       "snapshot": {
         "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
@@ -118,7 +118,7 @@
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
-        "skills/_artifacts/skill_spec.md": "47e77577d5c2367aba7a9ab2082134ed2e0daf065c3818b4cb86b7bedb2e763b",
+        "skills/_artifacts/skill_spec.md": "01a8fdf13f8290e55b2d0e770abe87bad457b1e17cc5f020df85efdbddf8998f",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -147,13 +147,11 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Changed: skills/_artifacts/skill_spec.md at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -541,15 +539,17 @@
       ]
     },
     "source:docs/development/README.md": {
-      "fingerprint": "d1cb1060b88edfcc1caddd6250bf049d7bd3edf13d6bc5636969a03adafd62bb",
+      "fingerprint": "7ac89155bac7eb11b72d6fd40a8a31ddc78365f5c768855d9c7d3fbb2823825c",
       "snapshot": {
-        "docs/development/README.md": "77ccb1e0cc136adaf529f6e2c647cd269cd03a6235e4c5d06a11c94dc12ee77e"
+        "docs/development/README.md": "17431b0e3b28db007bc2dcbc3da5a15a91ab8c7f3c5c758d0c5beb0b63fd8a8e"
       },
-      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
       "outcome": "no-change",
-      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "reason": "Adds a Screenshots section on the agentic-tui devDependency and scripts/demo-data-root.sh. The Intent skills teach operating Rowbly, not developing it, so none needs a change.",
       "evidence": [
-        "Changed: docs/development/README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     },
     "source:docs/plugins/API.md": {
@@ -1800,16 +1800,15 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
+      "fingerprint": "ca39937a22b9e9a32d6254c6f2d27417069ef1d9da7762a3ea7f6db344435d74",
       "snapshot": {
-        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
+        "test/tui/board.test.tsx": "5cdd9ae728325b2936ce674ed20c0ff8bcae327e14817db1042e155d9c32be13"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
+      "outcome": "no-change",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Changed: test/tui/board.test.tsx at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -3986,6 +3985,118 @@
         "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
         "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/LICENSE": {
+      "fingerprint": "4ede7b7249421133b62ab15fe31f032916be261100a9de67e067e8a9bc419739",
+      "snapshot": {
+        ".agents/skills/agentic-tui/LICENSE": "3a03b44a444ebf9f9bb30e84e5c199965fd0a5ccb54a29dd5fe9e9932b30ca27"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fb78b3a6430f5c849c1fae4ab7b899502fd3e959225cc58fad1926dbfcb9d829",
+      "snapshot": {
+        ".agents/skills/agentic-tui/SKILL.md": "e3f682a09b1e2248073b0eb57d4ea1369a8c93538a0aef00f4e9a0a8d6f93129"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/UPSTREAM.md": {
+      "fingerprint": "2b5ad0442c78e26ca0031f82f06cd558e37540fd28c0937d71c4f6676cd447a9",
+      "snapshot": {
+        ".agents/skills/agentic-tui/UPSTREAM.md": "b1dd7b5c7ea8cea79a9901db9ceba2362e6b5493607dd817adc41eccc16ef993"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "4108cb489eae5c29f224b06d205d1a5cc93c0488a77ac2fee7343843b41e52b9",
+      "snapshot": {
+        ".agents/skills/rowbly-screenshots/SKILL.md": "00c6b12cd8a3f96feaa1825a60453f1f2475a425fb7fbcd6314cf593600213bb"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fd925090f2867de1fff2a96b4f73cdeee99eb690dba70eb61a5c495741adc25c",
+      "snapshot": {
+        ".claude/skills/agentic-tui/SKILL.md": "d03331b137957bdc8d1c8cce87fb60bada7e225fc49a3ed8b22c8d950a535099"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "6caff2259045e97af5beefb766433e977b4a0f010f9ed80f849a83cd32a6c2df",
+      "snapshot": {
+        ".claude/skills/rowbly-screenshots/SKILL.md": "73843669e5b9f9412db44eab031162343ff06aa69c00116d2fd2410773489825"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:pnpm-workspace.yaml": {
+      "fingerprint": "12031148ce79fe131c558e4288d55562b2ef0f71389a06bf8e1277ab4ca6fd03",
+      "snapshot": {
+        "pnpm-workspace.yaml": "e20e7c9a3a4afe42e8f683d0b21222d38a073f7eecd91fafd26e60dfec74247c"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:scripts/demo-data-root.sh": {
+      "fingerprint": "14d1804d433a25ee01ed787e76e61b60b08fe767d916135494271c5b97375b08",
+      "snapshot": {
+        "scripts/demo-data-root.sh": "bd8a0d23f3bf555e7c47c5dcb181187746d324cb6f91220f5cf246dde52df7e5"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     }
   }
