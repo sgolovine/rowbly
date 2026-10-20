@@ -42,7 +42,7 @@ describe('BoardListRow', () => {
     const badges = ['@alexandra', '@benjamin', '@christina', '@daniella', '✓ 3/10'];
     const lines = renderRow(width, badges);
     expect(lines).toHaveLength(2);
-    expect(lines[0]).toMatch(/^  › WEB-1 /);
+    expect(lines[0]).toMatch(/^ {2}› WEB-1 /);
     expect(lines[0]).toContain('@alexandra');
     expect(lines[0]).toContain('…');
     expect(lines[0]).toContain('● In Progress');
@@ -55,7 +55,7 @@ describe('BoardListRow', () => {
     expect(line).toMatch(/WEB-1 Login page with a long name +@sam · ✓ 1\/2 +● In Progress/);
     const empty = renderRow(56, []);
     expect(empty).toHaveLength(2);
-    expect(empty[0]).toMatch(/^  › WEB-1 /);
+    expect(empty[0]).toMatch(/^ {2}› WEB-1 /);
     expect(empty[0]).toContain('● In Progress');
     expect(empty.every((row) => row.length <= 56)).toBe(true);
   });
