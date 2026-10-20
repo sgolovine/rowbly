@@ -181,7 +181,7 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 - `comments.add` and `comments.update` return the Comment as other Plugins' transforms left it; a transform that removes it fails the operation with `CONFLICT`.
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
-**TUI:** a **Comments** tab on the Story screen (`c` add, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
+**TUI:** a **Comments** tab on the Story screen (`n` new, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
 
 ## Upgrading from before Plugins
 

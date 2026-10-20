@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "bdcbce8f26f91ec757ff42103d32294f266ad7332c29be17442ab9451c201abb",
+      "fingerprint": "d20a43857379a7b8f77c8c36d93635dc4d9dc05a6402c4c265d84bb746053fd2",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,45 +14,41 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "rowbly-cli tracks README.md, docs/agents/CONTEXT.md, whose changes describe only the TUI (the Plugin Sidebar, its header button and the keys \\ and {/}) and the Plugin Sidebar glossary term. The skill teaches command-mode operation; no command, flag, JSON output, exit code or doctor finding it describes changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/rowbly-cli/SKILL.md reviewed: no TUI or sidebar guidance",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "36a5f4b36794d9c6a9ddeb133be2e7e46e1cdc0f493025dd8bbb8eba15b6f737",
+      "fingerprint": "170831969ec4c91ad93131346e3e1a317b56b93c5b64f44d0e25d3e39c94f9b0",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
-        "docs/plugins/built-in.md": "2fbeb9700395e64f242a95519c1dca7d8cf902cf355834d0d7f6281f4fed6e8b",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "rowbly-doctor tracks README.md, docs/plugins/built-in.md, whose changes describe only the TUI (the Plugin Sidebar, its header button and the keys \\ and {/}) and the Plugin Sidebar glossary term. The skill teaches command-mode operation; no command, flag, JSON output, exit code or doctor finding it describes changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/rowbly-doctor/SKILL.md reviewed: no TUI or sidebar guidance",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "f2455eefb85341ddf5a3d3dc8531515a9fdc09698bbf0778b70daa79aa4ca2c6",
+      "fingerprint": "9b7d031c828275eaf6a8a681618fd3f825a80d4a45b458ce89c44c48973b2d5d",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "2fbeb9700395e64f242a95519c1dca7d8cf902cf355834d0d7f6281f4fed6e8b",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -68,20 +64,18 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "rowbly-plugins tracks README.md, docs/plugins/built-in.md, whose changes describe only the TUI (the Plugin Sidebar, its header button and the keys \\ and {/}) and the Plugin Sidebar glossary term. The skill teaches command-mode operation; no command, flag, JSON output, exit code or doctor finding it describes changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/rowbly-plugins/SKILL.md reviewed: no TUI or sidebar guidance",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "33e19f642453339b24dba54d66c5218bbe0ada6aeab06e2a98db4b441161a45a",
+      "fingerprint": "c1c0fe863d5364c9cf7b71384eb5cd1f61de57bd1768fb03d0e115f8f7d3ebd6",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -90,20 +84,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "rowbly-setup tracks README.md, whose changes describe only the TUI (the Plugin Sidebar, its header button and the keys \\ and {/}) and the Plugin Sidebar glossary term. The skill teaches command-mode operation; no command, flag, JSON output, exit code or doctor finding it describes changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/rowbly-setup/SKILL.md reviewed: no TUI or sidebar guidance",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "c6e83890894a09e86dcd888f80cbd83c7fb1311ebc5c10cef1a5c7ebc92ff8dd",
+      "fingerprint": "d64c40285e760f17d8a7e0323799c400ba50845fa8b8301d58be40d73d12f083",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -112,25 +104,23 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
       "outcome": "no-change",
-      "reason": "rowbly-stories tracks README.md, docs/agents/CONTEXT.md, whose changes describe only the TUI (the Plugin Sidebar, its header button and the keys \\ and {/}) and the Plugin Sidebar glossary term. The skill teaches command-mode operation; no command, flag, JSON output, exit code or doctor finding it describes changed.",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/rowbly-stories/SKILL.md reviewed: no TUI or sidebar guidance",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "4ac95f714c0f9158b35681b3b8f33abb12146e9bf635ae6d05701eae316cc0c1",
+      "fingerprint": "cfca9d13fa37c70577a054df45bae3b9cbd55279306aebd14164c3eed38ef0d4",
       "snapshot": {
-        "README.md": "128d5180e50f70bdeb208192c194a5d2ad34189c7e4e7c8ebd0e409b07765ead",
+        "README.md": "8f50212b388973c2332affdc0e6df286d1b421a807ad573e2ec2e71f15480dc9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "2fbeb9700395e64f242a95519c1dca7d8cf902cf355834d0d7f6281f4fed6e8b",
+        "docs/plugins/built-in.md": "bbbdf06f3e5b6c7d9697f627c02bb14fd3a342554df954985de5d20e66e21dff",
         "skills/_artifacts/domain_map.yaml": "dc287076faea671cd2c3d1bb1c4d675be5abb48cf1edcc7b1d21c9d6923d82ef",
         "skills/_artifacts/skill_spec.md": "cb9947d89624b4e7edb4172cfa6dfc8641a10aa5048502d0e37b3c3adc6abf3f",
         "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
@@ -168,14 +158,12 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "updated",
-      "reason": "Added the 'Behavior change — Plugin Sidebars and the Epics sidebar' entry to skill_spec.md recording the source baseline, the TUI-only scope and the checks. domain_map.yaml and skill_tree.yaml stay accurate: no developer task, source mapping, prerequisite or activation text changed.",
+      "head": "3ad00e45f433a87cdeca5705cc211d25d67aca3f",
+      "outcome": "no-change",
+      "reason": "PR #64 changes only the Comments TUI creation key from c to n; integrated #63/#66 add Epic badges and Plugin Sidebars. The five existing skills cover command-mode operation and exclude TUI and Plugin authoring. domain_map.yaml, skill_spec.md and skill_tree.yaml preserve that scope and the existing sidebar/badge history; task ownership, mappings and prerequisites remain accurate.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md: new ADR-0029 entry",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "git diff origin/main: README.md Comments TUI notes and keys table, docs/plugins/built-in.md Comments TUI line, CommentsTab.tsx and commentsTui.test.tsx; inherited docs/agents/CONTEXT.md Plugin Sidebar term has no CLI behavior impact.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 66 tests; pnpm test:cli passed 4 files / 20 tests. No guidance behavior changed; no fresh consumer rerun required."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -278,255 +266,276 @@
       ]
     },
     "source:docs/adr/0001-json-files-not-sqlite.md": {
-      "fingerprint": "b2088675e8f7749beede3ffba39acc07bc0705b9830cefa96eebae0e58fd95a7",
+      "fingerprint": "16fab36d023e2c5f5d726730f7cb384fb8ed91e52c8c4bbbe055d66482440061",
       "snapshot": {
-        "docs/adr/0001-json-files-not-sqlite.md": "5d47c11bbd105168f5b2176b78db4de1b769aa3f23097958f8d7884a4b6d8f35"
+        "docs/adr/0001-json-files-not-sqlite.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0002-data-root-discovery.md": {
-      "fingerprint": "00a14d1074d02ff6550a98aabf7d63768ae5997c613f1e527e85945d47da679b",
+      "fingerprint": "e3c67b4b299fb041b2e84fc92fb3b26ef318c89fb80c3cebbd66ade6a577c47b",
       "snapshot": {
-        "docs/adr/0002-data-root-discovery.md": "c03f3d52468bb59d013d0580682432c576d7c840c1ac2ee8d453cb37d64fb53f"
+        "docs/adr/0002-data-root-discovery.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0003-story-keys.md": {
-      "fingerprint": "92a08ec29139147196ea5103b03120b35438b0f075348f121fba738949c6314a",
+      "fingerprint": "bab40f6652713d63b7cb65b220d5439544432030b01eef3e7b869e5962870c19",
       "snapshot": {
-        "docs/adr/0003-story-keys.md": "c5341f14ed957906b8e4e5a861c9d95b4de627c88d89531c4ef9436493b6fe01"
+        "docs/adr/0003-story-keys.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0004-epic-link-on-story.md": {
-      "fingerprint": "1fb68659f66bb055ca505d1436fbfc2495659d98de2e1d8ed6283c71001eb755",
+      "fingerprint": "6ad0fed51438c3c85c261dd1ae3c503a3b76d509190902ce39130a5abc82e09f",
       "snapshot": {
-        "docs/adr/0004-epic-link-on-story.md": "6ede5fa901a15be9a572182d95a43a42c83c7250d862ee6edde13b170e331caf"
+        "docs/adr/0004-epic-link-on-story.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0005-stages-and-fields-are-configuration.md": {
-      "fingerprint": "cf817fbce27334edaa2d82ba31d6dfab2bb9689f813f479043c08e1df90f61b8",
+      "fingerprint": "3d321bcd8b6b47e002127f1a66f7ff9ac14ff924459c8aea48290e58bae613e9",
       "snapshot": {
-        "docs/adr/0005-stages-and-fields-are-configuration.md": "a465ac0a642ac1f33c2b590c83800c4b42217adbf831f454d170d360a34ccb7a"
+        "docs/adr/0005-stages-and-fields-are-configuration.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0006-ink-owns-the-interactive-mode.md": {
-      "fingerprint": "76d9d41bc7aa6f962af89b186782352b0420ff661e1d8ba40b5186e9f0479f2c",
+      "fingerprint": "c9d5c8106397e8b448c4bdbb78a62498961997364e0586ae3b2ecf046cd421df",
       "snapshot": {
-        "docs/adr/0006-ink-owns-the-interactive-mode.md": "10cf3bfb6110ef58bc06cddb207a8024014abb50d0314bc02a689f8d7e034245"
+        "docs/adr/0006-ink-owns-the-interactive-mode.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0007-no-workspaces.md": {
-      "fingerprint": "d1af3c65476d031dab38c803deaf9a2417047ae092b72fe550dc73dc5dec49fe",
+      "fingerprint": "809e8ff7d7c3fab180895edaf809c162183fed2fd2184b612b201e3fcdd03d73",
       "snapshot": {
-        "docs/adr/0007-no-workspaces.md": "a9043c9e18a4633c8c42345b324aaf8d750109bb9351b1c17dcde72c25a13683"
+        "docs/adr/0007-no-workspaces.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0008-no-epics.md": {
-      "fingerprint": "d61be5c2b309602f01a263e47908b30905c61f4f740e5180bbf7eff55a6fad97",
+      "fingerprint": "771c8e1358349e2a8089b1dad869fc58e5f098769507f9bdca545f0e0859c5af",
       "snapshot": {
-        "docs/adr/0008-no-epics.md": "a289d4477adabb93c433fc29368cc3fc3df390ec0e59e51c9351bddec094739f"
+        "docs/adr/0008-no-epics.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
-      "fingerprint": "b6e295ad00e46b9169e76431097aeebc3a05dd7e31102fa770a62718c9a9a498",
+      "fingerprint": "5931d301c2fc9e93dd53802ad73713a21760206457176756aeddde36776dd442",
       "snapshot": {
-        "docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
+        "docs/adr/0009-built-in-plugins-use-only-the-plugin-api.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0010-plugins-are-turned-on-per-data-root.md": {
-      "fingerprint": "6cbee3dec29c7eb99e0fc97087c2773c053311cd5b410d6506ffc0373bc62410",
+      "fingerprint": "932472a370009330521c59f067971677086cf146bfb343b49346744a5dd2d37b",
       "snapshot": {
-        "docs/adr/0010-plugins-are-turned-on-per-data-root.md": "de8efb2c15074373cffa6d7ec5ca927e4b274b7bf9a860f57c205273a51ea7ac"
+        "docs/adr/0010-plugins-are-turned-on-per-data-root.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": {
-      "fingerprint": "c20c17ca8e4662ff06085c4e88d42861ae41487186badcbcbbb70b626502da9b",
+      "fingerprint": "69a42767a0e74a4820df1395ddea1ce0052800a320f0b2b751fd093dc3d2c756",
       "snapshot": {
-        "docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": "ab964cb0b5961cbc8051f779e8dcb56fe759cbf77144830159a491005d6d6bd8"
+        "docs/adr/0011-plugin-data-is-a-bag-per-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0012-plugins-intercept-service-operations.md": {
-      "fingerprint": "6e0967e1f665b9a237f032ed077c0a3536191ddd52a1e7db7b6e26323e532111",
+      "fingerprint": "769a12dce28d06d9209d28dd4c413595d0cddac85f66aa014cbf0f2b7b7194ab",
       "snapshot": {
-        "docs/adr/0012-plugins-intercept-service-operations.md": "b4f47e2c7820ebb20f526a9f5a2007fab824b42a56861ecd2658a162dfafcbf7"
+        "docs/adr/0012-plugins-intercept-service-operations.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": {
-      "fingerprint": "4c4629f7581d3854d65ec9a518b87369a6e92da079fc3870a4f01e48570c7c2b",
+      "fingerprint": "c9445a74880bae413d09cbd10aebbb72ab53227a2f1534f2b6b7a605fdabac0b",
       "snapshot": {
-        "docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": "eda52f3752d9f63bba4a44ef8ab443e2ad01110540b2642602541c3da16528d7"
+        "docs/adr/0013-plugin-files-live-beside-what-they-belong-to.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0014-epics-return-as-a-built-in-plugin.md": {
-      "fingerprint": "dbd8d1cefc584f8251eabdf516a5cba1192b3bf1139210fd26492add61c341a2",
+      "fingerprint": "d9c8db5a8d589ad8d67c917e67067b000bfdda253e62999b96652678aba61489",
       "snapshot": {
-        "docs/adr/0014-epics-return-as-a-built-in-plugin.md": "f540fd18128ed0741ba049468ad79eaeed964d1d7476e57e01f1948a76626d07"
+        "docs/adr/0014-epics-return-as-a-built-in-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0015-specs-are-markdown-files.md": {
-      "fingerprint": "ee89b07989a4a66755c5f0ae5442979703700c1b201d3afaad7753c1c4f913fd",
+      "fingerprint": "d736aab6933a74bbf2143283510d6ab1a706b5db10d2821b8bcff30f29f28dbb",
       "snapshot": {
-        "docs/adr/0015-specs-are-markdown-files.md": "2864e77eec2f4490093d5e40c2057f9f2b998a6bfa42c4a8727aa65e3b9cca4d"
+        "docs/adr/0015-specs-are-markdown-files.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0016-git-automation-design.md": {
-      "fingerprint": "0b4b2f41e4060b8af4ac09cc4cb3d264f7faa145a4102aacd5af815c7d538a2f",
+      "fingerprint": "ddfb8c652ceadc4f18803fee36b2a10abccb04637521f56e7f692d12d6e27f6c",
       "snapshot": {
-        "docs/adr/0016-git-automation-design.md": "c3830f871e187ad2df9e80d54a695e3400089832bfbd2ce24e7d7c0befd0cde7"
+        "docs/adr/0016-git-automation-design.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0017-actions-are-tui-only.md": {
-      "fingerprint": "244e10d40ecb8d561cbeb1a8653249f07b73b4b32d4ee05e31f5efa7dadeacdb",
+      "fingerprint": "a3fb99cfcdbf7930ff9251f402b55c4350900b025422337c57b75165564b4548",
       "snapshot": {
-        "docs/adr/0017-actions-are-tui-only.md": "b40fed05c66ddc2d222270d6b0af7bd0a90c52378da3943c5ea4c52ed7f347ee"
+        "docs/adr/0017-actions-are-tui-only.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0018-comments-are-a-built-in-plugin.md": {
-      "fingerprint": "8e4e54c4e8421c03ff52a88f9bfc3a1cfab72d0d17500723c6b4997db1f2af4c",
+      "fingerprint": "c0d474b136742d15d907bef49511d70287b9ba8f6bab0c2bb808746ca8c5a57c",
       "snapshot": {
-        "docs/adr/0018-comments-are-a-built-in-plugin.md": "f1d935a90d2e45556ebc73d0ce2316a972ac822dcafbeeff2f7ebd9af0df35d0"
+        "docs/adr/0018-comments-are-a-built-in-plugin.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0019-coordinated-recoverable-commits.md": {
-      "fingerprint": "44e8b61bc3ff688f311c3fb631ac2ef2f04989158a2e86f4576e675ba22cae99",
+      "fingerprint": "a6c0a83bf0d27fb22b6087297b41faf9241167037ef161c32e011ed599b10cb6",
       "snapshot": {
-        "docs/adr/0019-coordinated-recoverable-commits.md": "6a4685a897d9c7a4c5368e9bea40861833331dc262c1e035328b1393ab60b8ba"
+        "docs/adr/0019-coordinated-recoverable-commits.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0020-plugin-execution-and-data-contracts.md": {
-      "fingerprint": "26ac7205115a107b77534773e658842df933182bcacdbc23afdf27c53947b000",
+      "fingerprint": "87d96e4860fb6958cba5e21a6e99b740377dd030762977ee4c2ee2c7ffb0ee7a",
       "snapshot": {
-        "docs/adr/0020-plugin-execution-and-data-contracts.md": "03acab392100cd3218b84158b3a2b5dbd6948af3f4b65f45c1e3feae4ff77de5"
+        "docs/adr/0020-plugin-execution-and-data-contracts.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/0021-plugin-format-and-compatibility-policy.md": {
-      "fingerprint": "f31a97b5b1c6ee418216124315ed8cb9a77b06c91bace5af7bfb3694573b43a7",
+      "fingerprint": "642659087819e6fc6182aa184c23fbb5eb19654568aedff56e1690b0bdef8be6",
       "snapshot": {
-        "docs/adr/0021-plugin-format-and-compatibility-policy.md": "9424a9b1d751bc8c5851c133aed9bc650d71eeda4815ed0ccfde480e1a0d0577"
+        "docs/adr/0021-plugin-format-and-compatibility-policy.md": null
       },
-      "head": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "Design, Plugin-authoring or development documentation; batch 1 covers operating Rowbly through the CLI (Plugin authoring recorded as an open gap). Operator-facing facts used by the skills are confirmed against README.md and the built CLI.",
+      "reason": "Pending from main before this branch: docs/adr/ no longer exists; the ADRs moved to docs/agents/adr/ (b4f58f8 docs: reorganize documentation). ADRs record decisions and are not a source of the command-mode skills.",
       "evidence": [
-        "git diff of the working tree against 2e488a8 reviewed; skill checks: intent validate skills: 5 passed; test/skills/agentWorkflows.test.ts: 10/10 passed against CLI built from working tree (base 2e488a8); fresh consumer subagent completed pick-up/finish task with only the skills, grader PASS (single run; copied skills folder, not installed package)."
+        "ls docs/adr: no such directory",
+        "git log 2e488a8..origin/main -- docs/adr"
       ]
     },
     "source:docs/adr/README.md": {
@@ -620,18 +629,18 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "289e852dfac53d6ea06bf7a596eec88bc3fa163f814ac5020d114872dffb8c09",
+      "fingerprint": "1dc00a36ad57dcf6583a0b1b58f345d87d090bf27c068cf48e2f8ba6cf1780b5",
       "snapshot": {
-        "docs/plugins/api.md": "a08d9b5662a5a1089435db3936106a1d0ebf1682527bb79e0aa8be29aba0cc26"
+        "docs/plugins/api.md": "1169580d6dfa7cb34fa4c76439d334b91bc6deb88c02df6529152b846be22489"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "outcome": "no-change",
+      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
+        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
+        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
+        "Reviewed docs/plugins/api.md; changed files: docs/plugins/api.md"
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1504,18 +1513,18 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "bb1a97ae50c4cca4e3167f3f57e74889e6d6237e5d8685fb392799d5d7570a0c",
+      "fingerprint": "b99751fad8b22931e64b8d2639fa985c923657132b6b781aa01b5b050ce08d7f",
       "snapshot": {
-        "src/plugin-api/index.ts": "0806106f5492c70f398d0f45b8afcea578e512b3d2dab28cb406d0464f659ee9"
+        "src/plugin-api/index.ts": "e624e3e48c35c51bfc16f1691254970d85cf561fb298f174be6acdeb09c6286d"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "outcome": "no-change",
+      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
+        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
+        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
+        "Reviewed src/plugin-api/index.ts; changed files: src/plugin-api/index.ts"
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1809,33 +1818,33 @@
       ]
     },
     "source:src/tui/keymap.ts": {
-      "fingerprint": "82a7d2862d89821fc8a403653f64225c511662903cb95a646b8e44bdaf1d9d22",
+      "fingerprint": "576e6f1e296d23607956ad32d4fd7dfcb9126cda675aab6b109285d5aff38553",
       "snapshot": {
-        "src/tui/keymap.ts": "f57e91a82eb792d557c2c0b48eb11954f6dc01d0f0837661cdfaa3d06adf1caa"
+        "src/tui/keymap.ts": "fb2baa370cc758d481688a9dc31f2fd02624dc8de1c56c7a9a6f6564e3cea353"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
+      "outcome": "no-change",
+      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "8092c3ce30ddb5b337bb1339400c24fd73a0922c430badc5e9a7e14ac6d3fdea",
+      "fingerprint": "4d0536d0fe5ac2e65af62e3b07fe12e54216c952fdb60df5c821364aefad6c32",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "9b84392f524e681495a909566da71dd5acd3e6a5fd1904ad7c8f434418a9a016"
+        "src/tui/screens/board/BoardScreen.tsx": "6e3dfeb3ed67fdd44e13bccad46e04b0e18c3d58f5eddae7bc72f2ec6f09c7ce"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
+      "outcome": "no-change",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1907,17 +1916,16 @@
       ]
     },
     "source:test/tui/helpers.tsx": {
-      "fingerprint": "d3f31357cb5e5ed438f9ceda7babb7f5b7df4a95581c88050d14e8ef6ac66408",
+      "fingerprint": "18987b6669ecd45c9b4f54a268cd706c07b831b600ae3b9663303e2f60c3fd02",
       "snapshot": {
-        "test/tui/helpers.tsx": "d3712d0048a042865745f01cb00f0e569c51dc5ecc84aa4f7259e2a1fe65ff53"
+        "test/tui/helpers.tsx": "b1795a1f32c2b81b8f2ae732966284a0d81ba45939cc6d6f1e1e91a5fa6c8266"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
-      "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "outcome": "out-of-scope",
+      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Pending from main before this branch (TUI header Settings button, list view, arrow keys).",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "git log 2e488a8..origin/main -- test/tui/helpers.tsx",
+        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
       ]
     },
     "source:docs/agents/CONTEXT-MAP.md": {
@@ -2008,18 +2016,17 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "05489c0c6207c16c67d29ce855471198fff49173e9095b6718e25a98a41ae5b2",
+      "fingerprint": "7ce7677a5aaebc4ae94bdfc368e095848d186ce103758670124ef388972d8cb3",
       "snapshot": {
-        "docs/agents/adr/README.md": "2473ddf8479e20e12fe4a880391fc734cd1bb365b7a2619b4353fb51f11ab798"
+        "docs/agents/adr/README.md": "1612a352af872d698969e908e171c1534b4142dd0ccd732b1e7ffa962511ecb3"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "outcome": "no-change",
+      "reason": "Retained both accepted decisions: main Story Specs ADR-0025 and Git ADR-0026, plus test-policy ADR-0027 and its index/references, with explicit maintainer approval to resolve the concurrent numbering collision. No decision or section content changed.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
+        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
+        "Reviewed docs/agents/adr/README.md against origin/main and PR head 9ee41d2."
       ]
     },
     "source:src/commands/index.ts": {
@@ -2097,15 +2104,16 @@
       ]
     },
     "source:src/plugins/comments/CommentsTab.tsx": {
-      "fingerprint": "85905cb46e67d8de45de0c0fae17ceb5b8ae92b13cbf3bb459d84151f929b925",
+      "fingerprint": "f6729e76bb98de89a0392518d9e8cbffbf49987bcb0966b4dc35108210ecfdd6",
       "snapshot": {
-        "src/plugins/comments/CommentsTab.tsx": "aae51505bf1f870952182d03903df46fb9e5457edfcb993c419f3cb3c5e02695"
+        "src/plugins/comments/CommentsTab.tsx": "4a60fafe04c77c05267d801e6fd0185e28347172afa1d72d511906081102ea83"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "outcome": "out-of-scope",
+      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Changed on this branch: the Comments tab create key `c` -> `n`, and its regression test.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`')",
+        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
       ]
     },
     "source:src/plugins/comments/comments.ts": {
@@ -2349,18 +2357,18 @@
       ]
     },
     "source:src/services/plugins/types.ts": {
-      "fingerprint": "7ec543e9d09ea41a49d034bbfd7dd0995ee6ba64c973047dee35cbecb888c805",
+      "fingerprint": "8012686327ff9ffeae78aacea9fa6b19f3eca9cde2c6a165d8e944957ba61b90",
       "snapshot": {
-        "src/services/plugins/types.ts": "28cc65e92625d8f5efa61fe56ace358c4e1ba3f61e499fb8f033a07f38b04479"
+        "src/services/plugins/types.ts": "9dc9c3381b16f989eee2ffe46f83171f780099e300b7d496278df18f83c020f1"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "outcome": "no-change",
+      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
+        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
+        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
+        "Reviewed src/services/plugins/types.ts; changed files: src/services/plugins/types.ts"
       ]
     },
     "source:src/services/stages.ts": {
@@ -2400,18 +2408,15 @@
       ]
     },
     "source:src/tui/hooks/plugins.ts": {
-      "fingerprint": "024a326f56aa80a6adac1aa2a787e439b4c419c721b012d19ee5b416effd77be",
+      "fingerprint": "23e01e51723bffbfd77ea47ee3131ca77a54a9719c38a008ac840198eba562ef",
       "snapshot": {
-        "src/tui/hooks/plugins.ts": "f46935a48325f8d933bf638d81d6d8800c44bde5b11fb62f303fb1936bd9a532"
+        "src/tui/hooks/plugins.ts": "6efe22e27801ad73e4645851ef992b30f5cc5b4ac206f2220b10e1a9d2c16108"
       },
-      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/tui/hooks/shell.ts": {
@@ -2429,33 +2434,27 @@
       ]
     },
     "source:src/tui/loadPlugins.ts": {
-      "fingerprint": "ce76eedc57c15dca55f58ded4968d4370e52096d6d247668b7ae1adb7c2f2704",
+      "fingerprint": "d16a8fa08187d2b4566ad2669ef961b6eb9b467bc205a2da837ff7fd584aab72",
       "snapshot": {
-        "src/tui/loadPlugins.ts": "54eca72a20f9ebd1c8d8d8cf72478017b7d90575f7b4c90c0fa2023f42bbec19"
+        "src/tui/loadPlugins.ts": "d9e0a6d5fb0e46a722449484a2a4f2367a0e3c6a29b85aa56d722cdb03967a0a"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
-      "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "outcome": "no-change",
+      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
       ]
     },
     "source:src/tui/screens/board/BoardColumn.tsx": {
-      "fingerprint": "9d142aa72e86ed2e66b250e3fccae615948aa16649f889a83972f08f8628f0eb",
+      "fingerprint": "72c1d1e28325cadbd7333ab13e5c3a927e0538b31bef5cf9edac9c63e8546459",
       "snapshot": {
-        "src/tui/screens/board/BoardColumn.tsx": "6fee72f9b4c8c3ae5b6db5c08a44cde2969d4b3c57046e4858414a971ccbf163"
+        "src/tui/screens/board/BoardColumn.tsx": "33a92bb7980f5a9ba537cc1939335ff09970d5997e095f150d342c4d8cd62f11"
       },
-      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
@@ -2810,17 +2809,16 @@
       ]
     },
     "source:test/plugins/commentsTui.test.tsx": {
-      "fingerprint": "2f2ced7fb792b13f973804e25ff8735cf9557f4e7dd48516f1d359be2497d136",
+      "fingerprint": "f3164e9af24257a11e7c0190dd0266e75c9165ee50e7641ab3d32d956becce08",
       "snapshot": {
-        "test/plugins/commentsTui.test.tsx": null
+        "test/plugins/commentsTui.test.tsx": "67ef4d9f1b09ec079dc0a7db5b845a88613a74f2a57f20ba5224f15c45bbcadc"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
-      "outcome": "no-change",
-      "reason": "Development of Rowbly itself (its test suite, test helpers, the test policy in AGENTS.md, ADR-0025 and the development and Plugin-author docs), which Batch 1 left to AGENTS.md and docs/development/README.md; it changes no command, flag, output, exit code, doctor finding or Data Root behavior that the skills describe.",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
+      "outcome": "out-of-scope",
+      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Changed on this branch: the Comments tab create key `c` -> `n`, and its regression test.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed test/plugins/commentsTui.test.tsx against origin/main and PR head 9ee41d2."
+        "git diff origin/main..codex/n-creates-new (commit 'fix(tui): create a Comment with `n`')",
+        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
       ]
     },
     "source:test/plugins/fixtures/others.ts": {
@@ -3126,18 +3124,15 @@
       ]
     },
     "source:docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": {
-      "fingerprint": "afa9bc2de89d34781a69d8eae6cd7c40e704d35b735da609b2af60e6d7ec9088",
+      "fingerprint": "3e749d7fe665b76dffb133df2db0ff459695c5e36ac4e425239d978e1165ab10",
       "snapshot": {
-        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "fc58f8aa5d88226671767713122d63c68113ba9aedbfdf2e16279845345a2f12"
+        "docs/agents/adr/0023-assignees-are-a-built-in-plugin.md": "ba16453cce39a1873ba8265f73d374b667f930c7753a0ba3b165f3d0309f9b63"
       },
-      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/commands/assignees.ts": {
@@ -3393,18 +3388,15 @@
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
-      "fingerprint": "a353f85ce0d2f46df5f00e0103dd38bb4f4bad5aeb5a8b30237e06b13eb856ab",
+      "fingerprint": "238d7cc4a7cb4703550773f24aa72ea21bd79e6ed1df93732ece26fdff606d96",
       "snapshot": {
-        "src/tui/screens/stories/StoryListScreen.tsx": "178ba7057a5908b58f72544d135a25576748a1baac690d4ad2d77e05a71e2ffe"
+        "src/tui/screens/stories/StoryListScreen.tsx": "2ea0ad3d35599e2127962b86ee7b5cd021c490f8125a08e8d158df64e3d32329"
       },
-      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
       "outcome": "no-change",
-      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:src/tui/screens/stories/filter.ts": {
@@ -3945,33 +3937,31 @@
       ]
     },
     "source:src/tui/hooks/layout.ts": {
-      "fingerprint": "aff5361e1892b0b49b31a55e115424a5abfd1ab076f283d7848d0e815595e3d9",
+      "fingerprint": "5c21428255ea8e5b7f9255468604c7f2df7474ce733986bc1b95540adddea18b",
       "snapshot": {
-        "src/tui/hooks/layout.ts": "4aed364a46b5663456f2323d23adc88ec96828775c3d96ff25aa3e6dcdd02fb9"
+        "src/tui/hooks/layout.ts": "3215fb57e9c6c78484ec5ec0c1fea4ad94823d0e53fd827c872d40c098e7838e"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "f941c41b4876681131cd7038bb0acb5115dc1d36c88d6485ebacd14aaefacfff",
+      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "d8e7c9df567d939b924e2bfe626e967ab38579e2565dced8e2cddbaf47656dfd"
+        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
       },
-      "head": "518fb409cc9d0e685a706f0ee732c8e426a59f0a",
+      "head": "713300b4523079b3c855c8cc33b947bffe098e11",
       "outcome": "no-change",
-      "reason": "Adds PluginTui.loadStoryBadges and the Epics Plugin's '◆ <Epic name>' badge on board cards, list view lines and Stories list rows (ADR-0028). This is TUI and Plugin-authoring behavior; the skills teach command-mode operation only and change no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "reason": "The inspected delta concerns TUI Specs list filtering, Board/Assignee terminal behavior, related tests and TUI documentation. Existing Intent skills explicitly teach CLI operation; their commands, flags, results and task ownership remain accurate. Specs multi-document CLI guidance was already updated in this PR and remains unchanged by this fix. No new skill or artificial guidance rewrite is warranted.",
       "evidence": [
-        "git diff origin/main(3a64cef)..HEAD: PluginTui.loadStoryBadges (src/services/plugins/types.ts, src/tui/hooks/plugins.ts, board and Stories list screens), Epics badge (src/plugins/epics/tui.ts), docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0028",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "Rendered the board's Stages view, list view and the Stories list over a temp Data Root with Epics on: '◆ Authentication' shown, renamed Epic shown after reload, missing Epic file shown as '◆ gone'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)"
+        "Source fix 4ed5752: onFilteringChange in src/tui/components/SelectList.tsx; independent list activation and shortcut/hint guards in src/plugins/specs/SpecTab.tsx and SpecsScreen.tsx; callback contract in docs/plugins/api.md and filtering behavior in README.md.",
+        "Deterministic test/plugins/specsTuiStates.test.tsx regression: both old guards reproduce /deploy deletion (Board run unlinks one Story); fixed guards pass /deploy and /newb with unchanged documents and Board links, and restore deliberate d after Escape (2 passed).",
+        "pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit --maxWorkers=2 PASS (101 files, 995 tests); pnpm test:cli --maxWorkers=2 PASS (21 files, 157 tests), tested revision 47d333e.",
+        "Integrated real main 40504acd555ab538f7edf34a3c9936f61dbde512 and exact published PR57 head 08f6fe908b38e5b18a9941fb2015c5a6f2654cd5. git diff --exit-code 47d333e HEAD -- . :(exclude).intent passed: complete source, docs, tests and lockfile tree unchanged.",
+        "pnpm exec intent maintainer sync: nothing to synchronize; pnpm exec intent validate skills PASS (5 skills). Existing skill guidance unchanged; no new fresh-consumer run for this TUI-only source fix. Original Specs CLI consumer evidence is retained in earlier review records."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
@@ -4003,32 +3993,29 @@
       ]
     },
     "source:src/tui/shell/Header.tsx": {
-      "fingerprint": "aae8c9d97f7e55b9b11694cd4765bbdf0adab3236251151e58efa98dcf9f301e",
+      "fingerprint": "385e5774a3e06768cc5a82b7eac3dbbffdfb06fcabfd06b129619e4de2114a91",
       "snapshot": {
-        "src/tui/shell/Header.tsx": "55f9bd9b2695894d5d0cbca6cee535b06089f79b0192d944ff1e2d166cde1038"
+        "src/tui/shell/Header.tsx": "8981f367b6ef34219d19b67cbf8a904e28a28b0ad4a203eebc1f44fce47c6993"
       },
-      "head": "332c1ed7dfd10738b3f428fd91824cbb95d6c45e",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "TUI or Plugin-authoring source and documentation (Plugin Sidebars, ADR-0029); the skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Pending from main before this branch (TUI header Settings button, list view, arrow keys).",
       "evidence": [
-        "git diff 0e7b449 (PR #63 head)..HEAD: PluginTui.sidebar (src/services/plugins/types.ts, src/plugin-api/index.ts, src/tui/loadPlugins.ts), shell Plugin Sidebar (src/tui/shell/Sidebar.tsx, SidebarItem.tsx, usePluginSidebars.ts, Header.tsx, Shell.tsx, src/tui/hooks/layout.ts), core keys \\ { } (src/tui/keymap.ts), board filter (src/tui/screens/board/BoardScreen.tsx), Epics sidebar (src/plugins/epics/tui.ts), README TUI section, docs/agents/CONTEXT.md Plugin Sidebar term, docs/plugins/api.md, docs/plugins/built-in.md Epics TUI line, ADR-0029",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests and pnpm test:cli 4 files / 20 tests passed; pnpm exec intent validate skills passed (5 skills)",
-        "TUI verified with agentic-tui against the demo Data Root with Epics on: toggle, {/}, clicks on an Epic, All Epics and + New Epic, in both board views"
+        "git log 2e488a8..origin/main -- src/tui/shell/Header.tsx",
+        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "fec0ea5f80623d7013dd58b10a5ff42966fe81d32a52eb2af0c3578afa38928e",
+      "fingerprint": "de944b6a5c71880b2ba897713a8135f8a3da00f30c77fd0e957035592d5b050f",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "6f3d7510fc8da599a6875c9e4688ff19a6c2059309d1648f32323479b69efa85"
+        "src/tui/shell/Shell.tsx": "ae5ff4f6b3d77100910b39767180da0da18262073b194a3cb9e1340c526f16cf"
       },
-      "head": "f43112647f559562f6bace01aa4da0fe1b8bdaff",
+      "head": "542ba0e49e7cf5afbd61867f4cc11018b6ff9db3",
       "outcome": "out-of-scope",
-      "reason": "TUI source of Plugin Sidebars (ADR-0029); f431126 only moves a comment, reflows a doc comment and drops an unused field. The skills cover operating Rowbly through the CLI, and no command, flag, output, exit code or doctor behavior changed.",
+      "reason": "TUI source or TUI test code; the skills cover command-mode use only and exclude the TUI. Pending from main before this branch (TUI header Settings button, list view, arrow keys).",
       "evidence": [
-        "git diff 020d7e0..f431126 -- src/tui/shell: comment placement and the unused PluginSidebars.buttons[].open field",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation, Plugin authoring'",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 21 files / 65 tests passed"
+        "git log 2e488a8..origin/main -- src/tui/shell/Shell.tsx",
+        "pnpm typecheck: pass; pnpm lint: pass; pnpm test:unit: 66 passed; pnpm test:cli: 20 passed (includes test/skills/agentWorkflows.test.ts)"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
