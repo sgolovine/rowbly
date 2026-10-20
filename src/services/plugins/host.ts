@@ -1,6 +1,7 @@
 import { isSlug } from '../../core';
 import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
+import { createPluginGit } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
 /** Names that core already uses, so a Plugin that takes one fails to load (ADR-0012). */
@@ -45,6 +46,8 @@ export interface ActivePlugin {
 /** The Plugins of one Data Root for this run. */
 export interface PluginHost {
   readonly registry: readonly AnyPluginDefinition[];
+  /** Route deferred host effects to the active surface. */
+  setWarningSink?(warn: (message: string) => void): void;
   /** Built-in Plugins in registry order, then the other Plugins `rowbly.config.json` names. A copy. */
   status(): PluginStatus[];
   /** The Plugins that are on and loaded, in registry order: the order they run in. A copy of the list. */
@@ -78,6 +81,9 @@ export interface LoadPluginsOptions {
  * Plugin it clashed with fails afterwards, through `markFailed`.
  */
 export async function loadPlugins({ root, registry, reserved, stage }: LoadPluginsOptions): Promise<PluginHost> {
+  let warningSink = (message: string) => {
+    process.stderr.write(`${message}\n`);
+  };
   const entries = (root ? await readEntries(root) : null) ?? {};
   const statuses: PluginStatus[] = [];
   const active: ActivePlugin[] = [];
@@ -102,7 +108,13 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
       const claim = claimNames(definition, claims);
       const plugin: ActivePlugin = { definition, settings, entry: raw };
       await stage?.(plugin);
-      await definition.start?.({ settings });
+      if (!root) continue;
+      const dataRoot = root;
+      await definition.start?.({
+        settings,
+        git: createPluginGit(dataRoot, definition.id, (message) => warningSink(message)),
+        localData: async () => (await createRepositories(dataRoot).localState.get()).plugins?.[definition.id],
+      });
       claim();
       status.loaded = true;
       active.push(plugin);
@@ -127,6 +139,9 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
 
   return {
     registry,
+    setWarningSink(warn) {
+      warningSink = warn;
+    },
     status: () => statuses.map((s) => ({ ...s })),
     active: () => [...active],
     failures: () => statuses.filter((s) => s.enabled && !s.loaded).map((s) => ({ ...s })),

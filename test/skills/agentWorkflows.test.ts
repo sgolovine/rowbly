@@ -192,6 +192,7 @@ describe('rowbly-plugins', () => {
       ['epics', true, true],
       ['specs', true, true],
       ['comments', true, true],
+      ['git', false, false],
     ]);
 
     await json('epics', 'create', 'auth', '--name', 'Authentication');

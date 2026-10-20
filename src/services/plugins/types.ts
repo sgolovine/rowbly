@@ -427,9 +427,26 @@ export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
   doctor: Pick<DoctorService, 'check'>;
 };
 
+/** Personal Git commit preferences; omitted author fields use Git configuration. */
+export interface GitCommitOptions {
+  frequency: 'change' | 'interval';
+  intervalSeconds: number;
+  authorName?: string;
+  authorEmail?: string;
+}
+
+/** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
+export interface PluginGit {
+  info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
+  resume(options: GitCommitOptions): Promise<void>;
+  changed(changes: ChangeSetView, options: GitCommitOptions): Promise<void>;
+}
+
 /** What a Plugin gets in every stage. */
 export interface PluginReadContext<S = unknown> {
   readonly id: string;
+  readonly git: PluginGit;
+  localData(): Promise<unknown>;
   /** The Data Root's settings, checked by the Plugin's `settings` schema when it loaded. */
   readonly settings: S;
   /** A Board's settings: its bag deep-merged over the Data Root's; a list replaces (ADR-0005). */
@@ -878,13 +895,15 @@ export interface PluginDefinition<
    * Neither changes the stored entry.
    */
   settings?: ZodType<S>;
+  /** Refuse activation unless the Data Root is inside a Git repository. */
+  requiresGit?: boolean;
   bags?: PluginBagSchemas;
   /**
    * Runs each time the Plugin loads: every command-mode run, and in the TUI at start and again each
    * time a Plugin is turned on or off. There is no teardown, so it must be safe to run again.
    * Throwing makes the Plugin fail to load.
    */
-  start?(args: { settings: S }): void | Promise<void>;
+  start?(args: { settings: S; git: PluginGit; localData(): Promise<unknown> }): void | Promise<void>;
   /** Schemas for this Plugin's input of core operations, by operation (`PluginInputSchemas`). */
   inputs?: In;
   /**
@@ -894,6 +913,8 @@ export interface PluginDefinition<
    */
   storyFilterSchema?: FS;
   hooks?: OperationHookMap<S, In>;
+  /** Reacts to every saved operation, including other Plugins' operations. */
+  react?(event: ReactionEvent<OperationInput, unknown, S>): void | Promise<void>;
   /** Operations this Plugin runs instead of core. Two Plugins cannot replace the same operation. */
   replaces?: ReplacementMap<S, In>;
   /** Adds verbs to `rowbly <id>`, which is created for it. */

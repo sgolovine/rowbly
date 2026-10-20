@@ -57,3 +57,7 @@ Context changes (`use`, `whoami`) start from the stored Local State, read under 
 | `GITIGNORE_INCOMPLETE` | The Data Root `.gitignore` lacks `local.json`, `.lock`, `.lock.break` or `.txn/` | Adds the missing lines |
 
 A stale `.lock` is not a finding: the next acquisition breaks it.
+
+## Git Automatic Commits
+
+The optional Git capability reacquires the Data Root lock after save, before collecting pending paths or committing them. Git sees a complete saved Data Root. It selects only affected record/file paths, never `local.json`, `.lock` or `.txn/`, and keeps pending paths/deadlines under Git's own directory. A Git failure leaves the Rowbly save intact and retains pending work. Per-Data Root locking serializes Rowbly effects; Git's index lock rejects overlapping commits from other Data Roots or external tools. External Git and editors do not participate in the Data Root lock. See [Git](../plugins/built-in.md#git) and ADR-0025.

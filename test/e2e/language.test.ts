@@ -16,7 +16,8 @@ const AVOID =
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   { file: /^(tui|plugins)\//, text: /^column$/, why: 'Ink layout: flexDirection="column"' },
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
-  { text: /\buser\.email\b/g, why: 'the git config key' },
+  { text: /\buser\.(email|name)\b/g, why: 'the git config key' },
+  { file: /^storage\/git\.ts$/, text: /^status$/, why: 'git status command argv, not a Rowbly term' },
   { text: /\bLocal State\b/g, why: 'a CONTEXT.md term' },
   { text: /^\.\.?\/.*$/, why: 'a relative import path' },
 ];
@@ -145,6 +146,8 @@ describe('language audit', () => {
     await makeRootConfig(t.path, {
       plugins: Object.fromEntries(builtInPlugins.map((p) => [p.id, { enabled: true }])),
     });
+    const { execFileSync } = await import('node:child_process');
+    execFileSync('git', ['init', '-b', 'main'], { cwd: t.dir });
     const help = (args: string[]) => runCli([...args, '--help'], { root: t.path });
     const root = await help([]);
     const groups = commandsIn(root.stdout);
