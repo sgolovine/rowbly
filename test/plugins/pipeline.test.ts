@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { join } from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
+import { definePlugin } from '../../src/plugin-api';
+import { pathExists } from '../../src/storage';
+import { io } from '../../src/storage/io';
 import { makeStory } from '../helpers';
+import { deferred } from '../helpers/deferred';
 import { echo, faulty, notes, order, tracer } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
 
@@ -50,6 +55,47 @@ describe('guard', () => {
 });
 
 describe('react', () => {
+  it('releases a background reaction read acquired after its operation returns', async () => {
+    const reading = deferred();
+    const release = deferred();
+    const finished = deferred();
+    const reader = definePlugin({
+      id: 'reader',
+      name: 'Reader',
+      description: '',
+      async react({ plugin }) {
+        try {
+          await plugin.localData();
+        } finally {
+          finished.resolve();
+        }
+      },
+    });
+    const t = await pluginRoot({ reader: true });
+    const { services } = await withPlugins(t, [reader], { backgroundReactions: true });
+    const link = io.link;
+    let acquisitions = 0;
+    const spy = vi.spyOn(io, 'link').mockImplementation(async (from, to) => {
+      if (to === join(t.path, '.lock') && ++acquisitions === 2) {
+        reading.resolve();
+        await release.promise;
+      }
+      return link(from, to);
+    });
+    try {
+      const saving = services.stories.create('web', { name: 'Saved' });
+      await reading.promise;
+      await saving;
+      release.resolve();
+      await finished.promise;
+      expect(await pathExists(join(t.path, '.lock'))).toBe(false);
+    } finally {
+      release.resolve();
+      await finished.promise;
+      spy.mockRestore();
+    }
+  });
+
   it('a failure only warns; the change stays saved', async () => {
     const t = await pluginRoot({ echo: true });
     const { services, warnings } = await withPlugins(t, [echo]);

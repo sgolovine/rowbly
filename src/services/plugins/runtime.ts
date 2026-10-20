@@ -10,7 +10,7 @@ import {
 } from '../../core';
 import { formatIssues, type LocalState, type Story } from '../../schemas';
 import type { Repositories } from '../../storage';
-import { coordinated } from '../coordination';
+import { coordinated, outsideCoordination } from '../coordination';
 import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
@@ -286,21 +286,22 @@ export function createOperationRunner(
     // One frozen snapshot of the saved plan and result, shared by every reaction.
     const saved = changes.frozenView();
     const finalResult = frozenCopy(result);
-    const reactions = async () => {
-      for (const plugin of reactors) {
-        const react = hooksOf(plugin)?.react;
-        if (plugin.definition.react) {
-          await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
-            plugin.definition.react?.({ ...event(plugin), changes: saved, result: finalResult }),
-          );
+    const reactions = () =>
+      outsideCoordination(async () => {
+        for (const plugin of reactors) {
+          const react = hooksOf(plugin)?.react;
+          if (plugin.definition.react) {
+            await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
+              plugin.definition.react?.({ ...event(plugin), changes: saved, result: finalResult }),
+            );
+          }
+          if (react) {
+            await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
+              react({ ...event(plugin), changes: saved, result: finalResult }),
+            );
+          }
         }
-        if (react) {
-          await reaction(plugin, at(plugin.definition.id, 'reaction'), () =>
-            react({ ...event(plugin), changes: saved, result: finalResult }),
-          );
-        }
-      }
-    };
+      });
     if (ctx.backgroundReactions) background = background.then(reactions);
     else await reactions();
     return result;

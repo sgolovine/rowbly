@@ -21,6 +21,7 @@ The guarantee covers the Rowbly process dying (a crash, `kill -9`, Ctrl-C). It d
 - **Waiting.** A busy Data Root is retried with backoff for up to 10 s, then fails with `CONFLICT` (exit 4) naming the holder.
 - **Stale locks** are broken: a lock whose process is gone on this host, or older than 10 minutes. Breaking takes a second lock, `.lock.break`, so two waiters never both break one lock. An operation never waits for a person while it holds the lock: prompts and editors run before it.
 - **Reentrancy.** Reads inside an operation reuse its lock. Starting a change from inside an operation is refused before it reaches the lock.
+- **Reactions own their reads.** They run with an independent coordination context, so a background read cannot reacquire the saving caller's lock after that caller has already finished releasing it.
 
 ## The commit journal
 
