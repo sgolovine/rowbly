@@ -1,4 +1,4 @@
-# ADR-0028: Git work runs in a queue outside the Data Root lock
+# ADR-0030: Git work runs in a queue outside the Data Root lock
 
 **Status:** Accepted. Implements the maintainer's request to queue Git work without blocking the UI; amends ADR-0026 §2 and clarifies §1 and §4.
 

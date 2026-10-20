@@ -2,7 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
-import { useMouse, useStoryBadges } from '../../hooks';
+import { type StoryBadges, useMouse } from '../../hooks';
 import { truncate } from './layout';
 import { useCardBadges } from './useCardBadges';
 
@@ -12,6 +12,8 @@ export interface BoardColumnProps {
   cards: readonly Story[];
   /** All Stages of the Board, for the Plugins' card badges. */
   stages: readonly Stage[];
+  /** The Plugins' badges for a Story, loaded with the Stories. */
+  storyBadges: StoryBadges;
   width: number;
   /** Index of the first card shown and how many are shown. */
   first: number;
@@ -30,6 +32,7 @@ export function BoardColumn({
   stage,
   cards,
   stages,
+  storyBadges,
   width,
   first,
   size,
@@ -43,7 +46,6 @@ export function BoardColumn({
   const inner = width - 1;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
-  const storyBadges = useStoryBadges();
   useMouse(ref, { onClick: () => onClick?.(-1), onDrop }, active);
   return (
     <Box ref={ref} flexDirection="column" width={width} paddingRight={1} flexShrink={0}>

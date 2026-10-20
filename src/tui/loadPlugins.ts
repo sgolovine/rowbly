@@ -52,8 +52,8 @@ async function importTui(definition: ActivePlugin['definition']): Promise<Plugin
 }
 
 /**
- * What is wrong with a TUI part's declarations, if anything (ARCH-40): a Home entry or settings
- * section that opens a screen the Plugin does not have, or two settings sections or tabs of one
+ * What is wrong with a TUI part's declarations, if anything (ARCH-40): a Home entry, settings
+ * section or sidebar button that opens a screen the Plugin does not have, or two settings sections or tabs of one
  * kind with the same label. Field names are checked when the fields load.
  */
 function tuiProblem(tui: PluginTui<unknown>): string | undefined {
@@ -61,6 +61,7 @@ function tuiProblem(tui: PluginTui<unknown>): string | undefined {
   const links = [
     ...(tui.home ?? []).map((link) => ({ kind: 'Home entry', ...link })),
     ...(tui.settings ?? []).map((link) => ({ kind: 'settings section', ...link })),
+    ...(tui.sidebar?.create ? [{ kind: 'sidebar button', ...tui.sidebar.create }] : []),
   ];
   for (const link of links) {
     if (!Object.hasOwn(screens, link.screen)) {

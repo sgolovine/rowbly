@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Slug } from '../../schemas';
+import type { PluginInput } from '../../services';
 
 /** The room a screen has: the main area, or the inside of the modal it is shown in. */
 export interface Layout {
@@ -40,4 +41,18 @@ export const BoardViewContext = createContext<BoardViewChoice>({ view: 'stages',
 
 export function useBoardView(): BoardViewChoice {
   return useContext(BoardViewContext);
+}
+
+/** The board filter picked in the Plugin Sidebars, and its part of the board's filter summary. */
+export interface SidebarFilter {
+  /** Each Plugin's filter (`StoryFilter.plugins`); a Plugin with nothing picked is left out. */
+  plugins: PluginInput;
+  /** Such as `Epics: Login`; `''` for none. */
+  summary: string;
+}
+
+export const SidebarFilterContext = createContext<SidebarFilter>({ plugins: {}, summary: '' });
+
+export function useSidebarFilter(): SidebarFilter {
+  return useContext(SidebarFilterContext);
 }

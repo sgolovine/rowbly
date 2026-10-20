@@ -1,9 +1,8 @@
-import { createContext, useCallback, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import type { Story } from '../../schemas';
-import type { PluginAction, PluginTui, PluginUi } from '../../services';
+import type { PluginAction, PluginTui, PluginUi, Services } from '../../services';
 import { type Router, useRouter } from '../router';
 import { type ToastStore, useToast } from './toasts';
-import { useServices } from './useServices';
 
 /** A Plugin that is on, with its Actions and, once loaded, its TUI part. */
 export interface TuiPlugin {
@@ -62,30 +61,36 @@ export function usePluginUi(id: string): PluginUi {
   return useMemo(() => pluginUi(id, router, toasts), [id, router, toasts]);
 }
 
+/** A Story's badges from the Plugins that are on. */
+export type StoryBadges = (story: Story) => string[];
+
 /**
- * The badges the Plugins that are on show for a Story (`PluginTui.storyBadges`), in registry order. A
- * Plugin whose badges throw shows none: they only show something.
+ * Loads the badges the Plugins that are on show for a Story, in registry order: each Plugin's
+ * `PluginTui.storyBadges`, then what its `loadStoryBadges` returns. A screen loads them with its Stories,
+ * so they follow its reloads. A Plugin whose badges or load throw shows none: they only show something.
  */
-export function useStoryBadges(): (story: Story) => string[] {
-  const { plugins } = usePlugins();
-  const services = useServices();
-  // One context per Plugin, not per Story.
-  const badged = useMemo(
-    () =>
-      plugins.flatMap(({ id, tui }) =>
-        tui.storyBadges ? [{ badges: tui.storyBadges, plugin: services.plugins.context(id) }] : [],
-      ),
-    [plugins, services],
-  );
-  return useCallback(
-    (story) =>
-      badged.flatMap(({ badges, plugin }) => {
+export async function loadStoryBadges(plugins: readonly TuiPlugin[], services: Services): Promise<StoryBadges> {
+  const perPlugin = await Promise.all(
+    plugins.map(async ({ id, tui }) => {
+      // One context per Plugin, not per Story.
+      const plugin = services.plugins.context(id);
+      const { storyBadges, loadStoryBadges } = tui;
+      const badgers: StoryBadges[] = storyBadges ? [(story) => storyBadges({ story, plugin })] : [];
+      if (loadStoryBadges) {
         try {
-          return badges({ story, plugin });
-        } catch {
-          return [];
-        }
-      }),
-    [badged],
+          badgers.push(await loadStoryBadges({ plugin }));
+        } catch {}
+      }
+      return badgers;
+    }),
   );
+  const badgers = perPlugin.flat();
+  return (story) =>
+    badgers.flatMap((badges) => {
+      try {
+        return badges(story);
+      } catch {
+        return [];
+      }
+    });
 }

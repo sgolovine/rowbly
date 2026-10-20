@@ -839,6 +839,31 @@ export interface PluginLink {
   params?: Record<string, unknown>;
 }
 
+/** One entry of a Plugin Sidebar. */
+export interface PluginSidebarItem {
+  /** What `filter` gets when the entry is picked. */
+  value: string;
+  label: string;
+}
+
+/**
+ * A Plugin Sidebar: a list beside the Board sidebar, shown and hidden with its header button or `\`.
+ * Picking an entry filters the board by the Plugin's own Story filter; the first entry, `allLabel`,
+ * clears it.
+ */
+export interface PluginSidebar<S = Record<string, unknown>> {
+  /** The sidebar's title and its header button's label. */
+  title: string;
+  /** The first entry, which leaves the board unfiltered by this Plugin, such as `All Epics`. */
+  allLabel: string;
+  /** The entries, read when the sidebar opens and each time a screen on top of the board closes. */
+  items(args: { plugin: PluginContext<S> }): Promise<PluginSidebarItem[]>;
+  /** This Plugin's filter (`StoryFilter.plugins.<id>`) for a picked entry's `value`. */
+  filter(value: string): unknown;
+  /** The button at the bottom, such as `+ New Epic`: opens one of the Plugin's screens. */
+  create?: PluginLink;
+}
+
 /** A Plugin's TUI part, loaded only when the TUI starts. */
 export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
@@ -847,11 +872,18 @@ export interface PluginTui<S = Record<string, unknown>> {
   settings?: PluginLink[];
   storyForm?: PluginStoryForm<S>;
   storyFilter?: PluginStoryFilter<S>;
+  sidebar?: PluginSidebar<S>;
   /**
    * Short texts about a Story, such as `@ada`, shown on its board card and its Story list row. They
    * only show something, so a Plugin that throws shows none there.
    */
   storyBadges?(args: { story: Story; plugin: PluginContext<S> }): string[];
+  /**
+   * Badges that need the Plugin's files, such as an Epic's name: reads them once each time a screen
+   * that shows badges loads its Stories, and returns the badges of a Story, shown after `storyBadges`.
+   * They only show something, so a Plugin whose load or badges throw shows none there.
+   */
+  loadStoryBadges?(args: { plugin: PluginContext<S> }): Promise<(story: Story) => string[]>;
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
   /**

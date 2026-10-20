@@ -29,7 +29,7 @@ sources:
   - src/plugins/git/model.ts
   - src/services/plugins/git.ts
   - src/storage/git.ts
-  - docs/agents/adr/0028-git-work-runs-outside-the-data-root-lock.md
+  - docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md
   - test/plugins/git.test.ts
   - test/plugins/gitCli.test.ts
   - test/skills/cases/git-automation.md

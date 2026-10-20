@@ -28,6 +28,7 @@ export function Header({
   actions = [],
   actionsClickable = clickable,
   boardView,
+  sidebars = [],
 }: {
   label: HeaderLabel | null;
   onNewStory?: () => void;
@@ -39,6 +40,8 @@ export function Header({
   actions?: readonly HeaderAction[];
   /** Actions act on the screen in focus, which may be in a modal. */
   actionsClickable?: boolean;
+  /** A button per Plugin Sidebar, which shows or hides it; `\` steps through them. */
+  sidebars?: readonly { id: string; label: string; toggle(): void }[];
 }) {
   const { ctx } = useContext(ServicesContext);
   // The button sits beside the panel rather than inside it, so the header stays three lines tall.
@@ -57,6 +60,16 @@ export function Header({
           <Text dimColor>me: {ctx?.me ?? '—'}</Text>
         </Box>
       </Panel>
+      {sidebars.map((sidebar) => (
+        <Button
+          key={sidebar.id}
+          label={sidebar.label}
+          keyName={'\\'}
+          onClick={sidebar.toggle}
+          clickable={clickable}
+          compact
+        />
+      ))}
       {onSettings && <Button label="Settings" keyName="," onClick={onSettings} clickable={actionsClickable} compact />}
       {actions.map((action) => (
         <Button
