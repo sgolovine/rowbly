@@ -24,8 +24,8 @@ pnpm dev stories list --board web
 | `pnpm lint` | Biome lint and format check (`docs/` is not linted) |
 | `pnpm format` | Format with Biome |
 | `pnpm test` | Run both Vitest projects, `unit` and `cli` |
-| `pnpm test:unit` | Run the suites that need no CLI build (services, storage, TUI) |
-| `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLIs first |
+| `pnpm test:unit` | Run the suites that need no CLI build (storage, Plugins, TUI, rule checks) |
+| `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLI first |
 | `pnpm test:watch` | Vitest in watch mode |
 | `pnpm bench:plugins` | The opt-in Plugin benchmark ([`test/performance/README.md`](../../test/performance/README.md)) |
 
@@ -33,24 +33,29 @@ Before finishing a change, run `pnpm typecheck`, `pnpm lint` and `pnpm test`.
 
 ## Tests
 
+The suite is kept small: a test is required only for the changes listed in [`AGENTS.md`](../../AGENTS.md#tests), and every other change is verified by running it.
+
 ### Projects
 
 `vitest.config.ts` splits the suites into two projects:
 
 - **`unit`**: every suite that needs no build. It runs in-process against temporary Data Roots.
-- **`cli`**: every suite that mentions `runCli`, `CLI_PATH` or `FIXTURE_CLI_PATH`. Its global setup (`test/helpers/globalSetup.ts`) builds two CLIs from the current source into a `.test-dist/run-*` folder of the run's own and removes it afterwards: the real CLI, and one whose registry is the fixture Plugins in `test/plugins/fixtures/`. Parallel runs and worktrees are therefore safe, and tests never touch `dist/`.
+- **`cli`**: every suite that mentions `runCli` or `CLI_PATH`. Its global setup (`test/helpers/globalSetup.ts`) builds the CLI from the current source into a `.test-dist/run-*` folder of the run's own and removes it afterwards. Parallel runs and worktrees are therefore safe, and tests never touch `dist/`.
 
 ### Layout
 
 | Folder | Covers |
 | --- | --- |
-| `test/core`, `test/schemas`, `test/storage`, `test/services`, `test/output`, `test/commands` | Each layer on its own |
-| `test/tui` | Screens and the shell, rendered with `ink-testing-library` |
-| `test/plugins` | The plugin host, pipeline, loading, the Built-in Plugins, and fixture Plugins that exercise every hook |
-| `test/e2e` | Whole-program checks, such as the language test |
-| `test/docs` | The tutorial's fixtures and `tutorial.test.ts`, which runs them and checks the guides show them |
-| `test/performance` | Read budgets (part of `pnpm test`) and the opt-in benchmark |
+| `test/storage` | Atomic writes, the Data Root lock between processes, commit and crash recovery |
+| `test/core`, `test/output` | The exit codes and the JSON error shape |
+| `test/plugins` | The pipeline's stage order and failures, Plugin loading, Plugin Data kept by core, the operation inventory, and the fixture Plugins they use |
+| `test/tui` | Smoke tests of the board, the Story form and terminal restore, and the core key reservations |
+| `test/e2e` | The end-to-end CLI scenario and the language test |
+| `test/skills` | Task checks for the agent skills in `skills/` |
+| `test/docs` | The guides' fixtures and `tutorial.test.ts`, which checks the guides show them and runs the step 10 test example |
+| `test/cli.test.ts` | The built CLI opening the TUI in a pseudo-terminal |
 | `test/architecture.test.ts` | The source layers, the `node:fs` rule and the Plugin import rules |
+| `test/performance` | The opt-in benchmark (not a test suite) |
 
 ### Helpers
 

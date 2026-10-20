@@ -53,6 +53,34 @@ describe('rowbly-cli', () => {
 });
 
 describe('rowbly-setup', () => {
+  it('edits Stages at the level asked for, and a Board-level edit stops inheriting global changes', async () => {
+    const { json } = await project();
+    await json('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
+    const stageKeys = async (board: string) =>
+      (await json('config', 'show', '--board', board)).stages.map((s: { key: string }) => s.key);
+
+    await json(
+      'stages',
+      'add',
+      'review',
+      '--name',
+      'Review',
+      '--after',
+      'in-progress',
+      '--board',
+      'web',
+      '--level',
+      'board',
+    );
+    expect(await stageKeys('web')).toEqual(['backlog', 'todo', 'in-progress', 'review', 'done']);
+    expect(await stageKeys('api')).toEqual(['backlog', 'todo', 'in-progress', 'done']);
+
+    const global = await json('stages', 'add', 'blocked', '--name', 'Blocked', '--level', 'global');
+    expect(global.affectedBoards).toEqual(['api']);
+    expect(await stageKeys('api')).toContain('blocked');
+    expect(await stageKeys('web')).not.toContain('blocked');
+  });
+
   it('refuses a second Data Root and a clashing key prefix', async () => {
     const { rowbly } = await project();
     expect((await rowbly('init', '--json')).exitCode).toBe(4);

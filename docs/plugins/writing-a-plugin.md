@@ -1,6 +1,6 @@
 # Writing a Plugin
 
-This guide builds a Plugin step by step: first a row that shows on every Story, then **Points**, an editable Story field with CLI options, a filter, a command, TUI form fields, a screen, a guard, a file, a doctor check and tests. Every TypeScript example on this page is compiled by `pnpm typecheck` and run by `test/docs/tutorial.test.ts` (the sources are in `test/docs/fixtures/`), so the examples work with the current API.
+This guide builds a Plugin step by step: first a row that shows on every Story, then **Points**, an editable Story field with CLI options, a filter, a command, TUI form fields, a screen, a guard, a file, a doctor check and tests. Every TypeScript example on this page is compiled by `pnpm typecheck`, and `test/docs/tutorial.test.ts` checks that each one matches its source in `test/docs/fixtures/`, so the examples compile against the current API.
 
 Look up the details in the [Plugin API reference](api.md). The architecture, the Built-in Plugins and the reasons behind them are in [the plugin system](README.md) and [Built-in Plugins](built-in.md). The words used here (Plugin, Built-in Plugin, Plugin Data, Action, Story, Board, Data Root, …) are defined in [`CONTEXT.md`](../agents/CONTEXT.md).
 
@@ -534,7 +534,7 @@ it('rejects malformed input before anything is saved', async () => {
 - It returns `services`, every core service, **for the test only**: set up data and check results as a person would. `context(id)` is the context that the Plugin's own commands, screens and Actions get. A Plugin that fails to load is in `warnings` and `status()`.
 - `validatePluginDefinition(definition)` lists the problems Rowbly would refuse the Plugin for when it loads (names, options, Action keys, replacements and hooks); empty when it is fine.
 - **TUI.** Render a screen, tab or section with `ink-testing-library`, passing `host.context(id)` and a `PluginUi` whose methods record calls. Wait for what the screen shows once its data has loaded before you press keys: reads are async, and an early key may reach a screen that is still loading. The header of `src/plugin-api/testing.ts` has the recipe. Navigation between screens needs the whole TUI: `openPluginApp` in `test/plugins/tuiHelpers.tsx` renders it with your Plugins.
-- **Commands.** Run the CLI in the test process with `main(['--root', host.root.path, …], [points])` from `src/main.ts`; `test/docs/tutorial.test.ts` does this for every Points command.
+- **Commands.** Run the CLI in the test process with `main(['--root', host.root.path, …], [points])` from `src/main.ts`.
 - Test failure paths: malformed input saves nothing, a refusal saves nothing, and invalid stored data is kept.
 - `ROWBLY_DEBUG=trace` prints every Plugin callback with its stage, time and outcome to stderr (see [Tracing](api.md#tracing)).
 
@@ -575,6 +575,6 @@ export const trash = definePlugin({
 - [ ] Imports only from `../../plugin-api`, `../../plugin-api/tui` (TUI part only) and its own files (`test/architecture.test.ts`).
 - [ ] The TUI part is loaded lazily: `tui: () => import('./tui').then((m) => m.tui)`.
 - [ ] Every data change it offers works in both the CLI and the TUI; Actions only open or show something.
-- [ ] Tests under `test/plugins/`, including failure paths.
+- [ ] Tests only where [`AGENTS.md`](../../AGENTS.md#tests) requires them, such as a hook that changes what the pipeline saves; check its commands and screens by running them.
 - [ ] Turned on in a Data Root with `rowbly plugins enable <id>`; `rowbly init` turns no Plugins on.
 - [ ] Its section in [`built-in.md`](built-in.md), its row in the [context map](../agents/CONTEXT-MAP.md), and its operations in [Operations](../architecture/operations.md).

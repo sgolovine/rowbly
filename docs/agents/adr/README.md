@@ -46,3 +46,9 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
 | [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted |
+
+### Development
+
+| ADR | Decision | Status |
+| --- | --- | --- |
+| [0025](0025-tests-guard-only-what-review-cannot-check.md) | Tests guard only what review cannot check | Accepted |

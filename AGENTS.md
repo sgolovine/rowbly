@@ -37,7 +37,7 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 ## Domain language and decisions
 
 - Use the glossary terms exactly, in code, messages, help text and docs. Never use an `_Avoid_` word in
-  user-facing text: `test/e2e/language.test.ts` checks the source and help pages.
+  user-facing text: `test/e2e/language.test.ts` checks the source, where help text is written.
 - Core never uses a Plugin's terms; a Plugin uses core terms and its own.
 - Do not reverse an accepted ADR without the user. To change a decision, add a new ADR that supersedes or
   amends it and update the old one's **Status** line. Source comments cite ADRs by number and section
@@ -95,19 +95,63 @@ tool, hand-drawn screens or `ink-testing-library` frames instead, and do not com
 
 ## Tests
 
+The suite is small on purpose (ADR-0025): about 70 tests that run in under 20 s. Every test adds CI time to every
+pull request, so a test has to guard something a reviewer cannot check by reading the diff or running
+the change once. **By default, a change adds no test.** Verify it by running it (`pnpm dev …`, or the
+TUI) and say how in the pull request.
+
+### When a test is required
+
+Add or change a test only when the change touches one of these. Each has a home; extend it rather than
+starting a new file.
+
+| The change touches | Required test | Home |
+| --- | --- | --- |
+| How Rowbly writes, locks or recovers a Data Root: atomic writes, the commit journal, the Data Root lock | The failure path: a fault or crash at any step ends in the complete old or new state | `test/storage/` |
+| A contract that scripts, agents or git rely on: exit codes, the JSON error shape, the key order written to disk | The contract itself, once | `test/core/errors.test.ts`, `test/output/`, `test/storage/jsonStore.test.ts` |
+| The Plugin pipeline or Plugin loading: stage order, what a failing hook saves, skipping a broken Plugin, keeping Plugin Data unchanged (ADR-0011) | The rule, with one fixture Plugin | `test/plugins/` |
+| A rule that a doc or ADR says a test enforces: source layers, `_Avoid_` words, the operation inventory, guide examples, core keys | Update the check with the rule | the test the doc names |
+| A failure mode an agent skill rates HIGH or CRITICAL | One task check that the mistake fails as the skill says | `test/skills/agentWorkflows.test.ts` |
+| A core command workflow that agents and people run every day (create, move, rank, doctor, `--json` output) | One step in the end-to-end scenario, only if no step covers it | `test/e2e/scenario.test.ts` |
+| A new storage version for a Plugin's data | The tests in `docs/plugins/compatibility.md` §3.7 | `test/plugins/` |
+| A fix for data loss, corruption or a race | A regression test that reproduces it deterministically | next to the code's home above |
+
+### When a test is not required
+
+Do not add tests for these; reviewers should ask for them to be removed:
+
+- New or changed commands, flags, options, screens, keys, forms, filters, toasts and help text.
+- Formatting, tables, layout, wrapping, colours, key hints and screen snapshots.
+- Validation messages and per-input cases. If a rule needs a test, cover one representative case, not
+  an `it.each` over every input.
+- What `pnpm typecheck` or a zod schema already guarantees, and behavior a kept test already covers.
+- The same behavior through both the CLI and the TUI (parity), or through both a service and a command.
+- Test helpers, read counts and timings (`pnpm bench:plugins` measures performance by hand).
+- A Built-in Plugin's own commands and screens, unless they hit a row of the table above.
+
+### Keeping the suite small
+
+- Prefer an in-process test (`unit`) to one that spawns the CLI (`cli`); a new `cli` test needs a reason
+  in the pull request. Prefer adding an assertion to a kept test over adding a test.
+- If a change would take the suite past 100 tests, remove a weaker test in the same change or ask the
+  user first.
+- Remove a test in the same change as the behavior it covers, and remove a test that only repeats a
+  kept one. A deleted test needs no replacement unless the table above requires one.
+
+### Projects and flaky tests
+
 - Tests are split into two Vitest projects (`vitest.config.ts`), run as separate CI jobs:
-  - `pnpm test:unit` — every suite that needs no build (core, storage, services, TUI, Plugins). Fast;
-    run it while you work.
-  - `pnpm test:cli` — every suite that mentions `runCli`, `CLI_PATH` or `FIXTURE_CLI_PATH`. Its global
-    setup builds the CLIs from source first, so it is slower. Run it when you touch commands, output,
-    exit codes, the CLI wiring or anything a command reaches.
+  - `pnpm test:unit` — every suite that needs no build. Fast; run it while you work.
+  - `pnpm test:cli` — every suite that mentions `runCli` or `CLI_PATH`. Its global setup builds the
+    CLI from source first, so it is slower. Run it when you touch commands, output, exit codes, the
+    CLI wiring or anything a command reaches.
   - `pnpm test` runs both, as `pnpm test:unit && pnpm test:cli` would.
-- A suite's project follows from its text: referencing `runCli` or a CLI path puts it in `cli`. Keep
+- A suite's project follows from its text: referencing `runCli` or `CLI_PATH` puts it in `cli`. Keep
   in-process tests out of files that spawn the CLI, so the `unit` job stays fast.
 - A test that fails in CI but passes locally is a race in the test or the code, not noise. Find the
   window from the last frame in the CI log, reproduce it deterministically with a barrier (for example
-  a held Data Root lock, as in `test/plugins/specsTuiStates.test.tsx`), fix it, and keep that test as
-  the regression. Never re-run CI until it passes, add retries, or raise timeouts to hide it.
+  a held service call, as in the shift+→ move test in `test/tui/board.test.tsx`), fix it, and keep that
+  test as the regression. Never re-run CI until it passes, add retries, or raise timeouts to hide it.
 
 ## Async tests
 

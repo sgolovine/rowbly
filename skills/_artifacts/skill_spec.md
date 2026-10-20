@@ -33,7 +33,7 @@ See `domain_map.yaml` for mechanisms and patterns.
 | rowbly-cli | Omitting `--no-prompt` in a pseudo-terminal | HIGH | README.md#global-flags |
 | rowbly-cli | Retrying a deterministic failure unchanged | HIGH | README.md#exit-codes |
 | rowbly-cli | Opening the TUI or `$EDITOR` | HIGH | README.md#global-flags |
-| rowbly-cli | `--root` at the project folder | MEDIUM | observed; test/skills |
+| rowbly-cli | `--root` at the project folder | MEDIUM | observed |
 | rowbly-setup | Wrong Configuration Cascade level | HIGH | README.md#configuration-cascade |
 | rowbly-setup | `init` under an existing Data Root | HIGH | README.md#data-root-and-git-workflow |
 | rowbly-setup | Removing a used Custom Field/option | MEDIUM | README.md#custom-fields |
@@ -112,3 +112,9 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 - Skills for developing Rowbly, such as `rowbly-screenshots` and the vendored upstream `agentic-tui` skill, live in `.agents/skills/<name>/` with pointers in `.claude/skills/<name>/`. They are not published, not registered with Intent, and not part of this spec's skill tree; their source reviews are recorded as `out-of-scope`. This keeps Batch 1's scope: development of Rowbly itself is covered by `AGENTS.md` and `docs/development/README.md`, not by the Intent skills.
 - No guidance in `skills/` changed: the agentic-tui integration adds no command, flag, output, exit code, doctor finding or Data Root behavior.
+
+### Decision — task checks cover HIGH and CRITICAL failure modes only (2026-10-19, ADR-0025)
+
+- The repository cut its test suite to the tests ADR-0025 requires. `test/skills/agentWorkflows.test.ts` keeps one check per skill workflow that covers a failure mode rated HIGH or CRITICAL above: rowbly-cli (prompts, exit codes and JSON errors), rowbly-setup (Configuration Cascade level; a second Data Root and a clashing prefix), rowbly-stories (picking up by Stage Category; `--add-label` against `--label` and Title Case Labels), rowbly-plugins (Epics, Specs and Comments as documented) and rowbly-doctor (a merge conflict blocks with exit 6 until `doctor --fix`).
+- Removed checks, which covered MEDIUM failure modes or claims a kept check already covers: `--root` at the project folder and the Board context (rowbly-cli), `--description-file -` and the valid handles of an unknown Assignee (rowbly-stories), and a Story in a removed Stage (rowbly-doctor). Their guidance is unchanged and still sourced from README.md and the observed CLI.
+- No guidance in `skills/` changed: no command, flag, output, exit code, doctor finding or Data Root behavior changed. `test/commands/doctor.test.ts`, cited for the key conflict repair, was removed; the rowbly-doctor task check covers that repair.
