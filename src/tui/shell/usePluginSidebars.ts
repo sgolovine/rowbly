@@ -16,7 +16,7 @@ interface Pick {
 
 export interface PluginSidebars {
   /** One header button per Plugin with a sidebar, in registry order. */
-  buttons: { id: string; label: string; open: boolean; toggle(): void }[];
+  buttons: { id: string; label: string; toggle(): void }[];
   /** The sidebar on screen, if any: its title, entries, the picked one and the bottom button. */
   shown: {
     title: string;
@@ -111,7 +111,6 @@ export function usePluginSidebars(depth: number): PluginSidebars {
     buttons: withSidebar.map(({ id, sidebar }) => ({
       id,
       label: sidebar.title,
-      open: id === openId,
       toggle: () => setOpenId((was) => (was === id ? null : id)),
     })),
     shown: current

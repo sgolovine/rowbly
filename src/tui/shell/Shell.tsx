@@ -44,9 +44,8 @@ type Overlay =
 
 /**
  * The frame: a header with the project and its actions, the Board sidebar, the Plugin Sidebar shown
- * beside it, if any, and the main area. The
- * root screen fills the main area; every screen opened on top of it, and the shell's own overlays,
- * show in a modal over it.
+ * beside it, if any, and the main area. The root screen fills the main area; every screen opened on
+ * top of it, and the shell's own overlays, show in a modal over it.
  */
 export function Shell({ screens }: { screens: ScreenRegistry }) {
   const router = useRouter();
@@ -118,8 +117,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     [boardVersion, services, router, toast],
   );
 
-  // `depth` reloads the list when a modal closes, e.g. after creating a Board.
   const pluginSidebars = usePluginSidebars(depth);
+  // `depth` reloads the list when a modal closes, e.g. after creating a Board.
   const sidebar = useAsync(async () => (services ? services.boards.list() : null), [services, boardVersion, depth]);
   const boards = sidebar.data ?? [];
   // Read on every render: other screens (Context) switch the Board in `ctx.local` directly. Like
