@@ -21,7 +21,11 @@ export interface BoardListRowProps {
 export function BoardListRow({ row, badges, width, selected, active, onClick }: BoardListRowProps) {
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick }, active);
-  const marker = <Text color={selected && active ? 'cyan' : undefined}>{selected ? '› ' : '  '}</Text>;
+  const marker = (
+    <Box flexShrink={0}>
+      <Text color={selected && active ? 'cyan' : undefined}>{selected ? '› ' : '  '}</Text>
+    </Box>
+  );
   const line =
     row.kind === 'section' ? (
       <Box>
@@ -34,14 +38,16 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
     ) : (
       <Box paddingLeft={2} paddingRight={1}>
         {marker}
-        <Box flexGrow={1} flexShrink={1}>
+        <Box flexGrow={1} flexShrink={1} minWidth={row.story.key.length + 1}>
           <Text wrap="truncate-end" bold={selected}>
             <Text color="cyan">{row.story.key}</Text> {row.story.name}
           </Text>
         </Box>
         {badges.length > 0 && (
-          <Box flexShrink={0} marginLeft={2}>
-            <Text dimColor>{badges.join(' · ')}</Text>
+          <Box flexShrink={1} minWidth={0} maxWidth={Math.floor(width * 0.4)} marginLeft={2}>
+            <Text dimColor wrap="truncate-end">
+              {badges.join(' · ')}
+            </Text>
           </Box>
         )}
         <Box flexShrink={0} marginLeft={2}>
