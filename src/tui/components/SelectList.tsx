@@ -18,6 +18,8 @@ export interface SelectListProps<T> {
   onSelect?(item: SelectItem<T>): void;
   /** Called with the highlighted item whenever it changes, so a screen's own keys can act on it. */
   onHighlight?(item: SelectItem<T> | undefined): void;
+  /** Reports whether the list is capturing filter text; false when filtering ends or it unmounts. */
+  onFilteringChange?(filtering: boolean): void;
   /** Multi-select mode: `space` toggles, `enter` submits the checked values. */
   multi?: boolean;
   /** Initially checked values in multi-select mode. */
@@ -39,6 +41,7 @@ export function SelectList<T>({
   items,
   onSelect,
   onHighlight,
+  onFilteringChange,
   multi = false,
   defaultSelected = [],
   onChange,
@@ -53,6 +56,11 @@ export function SelectList<T>({
   const [filtering, setFiltering] = useState(false);
   const [selected, setSelected] = useState<readonly T[]>(defaultSelected);
   useKeyCapture(active && filtering, { escape: true });
+
+  useEffect(() => {
+    onFilteringChange?.(filtering);
+  }, [filtering, onFilteringChange]);
+  useEffect(() => () => onFilteringChange?.(false), [onFilteringChange]);
 
   const needle = filter.toLowerCase();
   const visible = needle ? items.filter((item) => item.label.toLowerCase().includes(needle)) : items;

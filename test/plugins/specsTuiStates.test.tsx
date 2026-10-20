@@ -2,7 +2,7 @@
 // (CQ-166), the Board chooser (CQ-117) and route titles (ARCH-25).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { specs } from '../../src/plugins/specs';
-import { createSpec } from '../../src/plugins/specs/specs';
+import { createSpec, readSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
 import { acquireLock } from '../../src/storage';
 import { io } from '../../src/storage/io';
@@ -295,5 +295,45 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('spec  Own') && f.includes('delete Story Spec'));
     app.unmount();
+  });
+});
+
+describe('Specs list filter shortcuts', () => {
+  it.each(['Board', 'Story'] as const)('%s Spec filtering keeps shortcuts out of query text', async (kind) => {
+    const story = kind === 'Story';
+    const { app, plugin, services } = await setup(
+      story ? 'story' : 'plugin',
+      story ? { key: 'WEB-1' } : { plugin: 'specs', screen: 'list', board: 'web' },
+    );
+    const target = story ? { board: 'web', story: 'WEB-1', slug: 'spec' } : { board: 'web', slug: 'auth' };
+    try {
+      if (story) {
+        await createSpec(plugin, target, '# Own\n\nStory text');
+        await waitForFrame(app, 'Login');
+        await app.press(KEYS.tab);
+      }
+      const hint = story ? 'delete Story Spec' : 'delete Spec';
+      await waitForFrame(app, (f) => f.includes(story ? 'spec  Own' : 'auth  Auth') && f.includes(hint));
+      const before = await readSpec(plugin, target);
+      const links = (await services.stories.get('WEB-1')).plugins;
+      for (const query of ['deploy', 'newb']) {
+        await app.press('/');
+        await waitForFrame(app, '│/');
+        await app.press(...query);
+        const frame = await waitForFrame(app, `No matches for "${query}".`);
+        expect(frame).not.toContain(hint);
+        expect(frame).not.toContain('Delete ');
+        expect(await readSpec(plugin, target)).toEqual(before);
+        expect((await services.stories.get('WEB-1')).plugins).toEqual(links);
+        await app.press(KEYS.escape);
+        await waitForFrame(app, (f) => f.includes(hint) && !f.includes('No matches'));
+      }
+      await app.press('d');
+      await waitForFrame(app, story ? 'Delete Story Spec "spec"?' : 'Delete Spec "auth"?');
+      await app.press('n');
+      await waitForFrame(app, (f) => f.includes(hint) && !f.includes('Delete '));
+    } finally {
+      app.unmount();
+    }
   });
 });

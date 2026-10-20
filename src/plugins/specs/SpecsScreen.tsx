@@ -28,6 +28,7 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
   );
   const active = useIsActive();
   const editor = useFullScreenEditor();
+  const [filtering, setFiltering] = useState(false);
   const [highlighted, setHighlighted] = useState<string>();
   const [deleting, setDeleting] = useState<Spec | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,7 +56,8 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
   // A reload keeps the list, and its keys, on screen; another Board's list is not this one.
   const list = !specs.error && specs.data?.board === board ? specs.data : undefined;
   const current = list?.specs.find((s) => s.slug === highlighted) ?? list?.specs[0];
-  const keys = active && !deleting && !busy && !editor.isOpen;
+  const listing = active && !deleting && !busy && !editor.isOpen;
+  const keys = listing && !filtering;
   useKeyHints(
     typeof board === 'string' && keys
       ? [
@@ -124,13 +126,14 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
       ) : (
         <SelectList
           items={list.specs.map((s) => ({ value: s.slug, label: specLine(s) }))}
+          onFilteringChange={setFiltering}
           onHighlight={(item) => setHighlighted(item?.value)}
           onSelect={({ value }) => {
             const spec = list.specs.find((s) => s.slug === value);
             if (spec) openSpec(editor, plugin, { board: list.board, slug: spec.slug }, spec, 'view');
           }}
           emptyText="No Board Specs. Press n to create one."
-          isActive={keys}
+          isActive={listing}
         />
       )}
       {/* The list stays under the confirmation, so its highlight is kept when the person cancels. */}

@@ -31,6 +31,7 @@ interface SpecDocument {
 export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Record<string, unknown>>) {
   const isActive = useIsActive() && active;
   const editor = useFullScreenEditor();
+  const [filtering, setFiltering] = useState(false);
   const [highlighted, setHighlighted] = useState<string>();
   const [deleting, setDeleting] = useState<SpecDocument | null>(null);
   const [busy, setBusy] = useState(false);
@@ -53,6 +54,8 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
   const current = data?.find((d) => d.key === highlighted) ?? data?.[0];
   const listing = isActive && !!data && !deleting && !busy && !editor.isOpen;
 
+  const keys = listing && !filtering;
+
   const open = (document: SpecDocument, mode: EditorMode) => {
     if (!document.spec) {
       ui.toast(`Board Spec "${document.target.slug}" not found`, 'warning');
@@ -61,7 +64,7 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
     openSpec(editor, plugin, document.target, document.spec, mode);
   };
   useKeyHints(
-    listing
+    keys
       ? [
           { key: 'tab/←/→', description: 'switch tab' },
           ...(current ? [{ key: 'enter', description: 'open Spec' }] : []),
@@ -77,7 +80,7 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
       else if (input === 'e' && current) open(current, 'edit');
       else if (input === 'd' && current?.target.story) setDeleting(current);
     },
-    { isActive: listing },
+    { isActive: keys },
   );
 
   const remove = async (document: SpecDocument) => {
@@ -104,6 +107,7 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
           label: d.spec ? specLine(d.spec) : `${d.target.slug}  (missing)`,
           description: d.target.story ? 'Story Spec' : 'Board Spec',
         }))}
+        onFilteringChange={setFiltering}
         onHighlight={(item) => setHighlighted(item?.value)}
         onSelect={({ value }) => {
           const document = data.find((d) => d.key === value);
