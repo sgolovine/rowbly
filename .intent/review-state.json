@@ -4271,6 +4271,19 @@
         "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
+    "source:test/tui/boardListRow.test.tsx": {
+      "fingerprint": "0b25e1d510058957fae2ec948c7babf8af0cb3ca9a1f7a242af49733947d3a9e",
+      "snapshot": {
+        "test/tui/boardListRow.test.tsx": "ff692c4dce7df4b0990391d7d53462a9a2d28ec115ac9c25a66b991e447148ee"
+      },
+      "head": "50697bff84ef226202ef18827b2fb2ab22a96373",
+      "outcome": "out-of-scope",
+      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "evidence": [
+        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged.",
+        "Final merged source tree matches tested 83e15f6 exactly after integrating main 40504acd555ab538f7edf34a3c9936f61dbde512. pnpm typecheck and lint pass; pnpm test:unit --maxWorkers=2 passes 983 tests/101 files; pnpm test:cli --maxWorkers=2 passes 156 tests/21 files. No timing/retry changes."
+      ]
+    },
     "source:docs/agents/adr/0025-a-story-has-many-story-specs.md": {
       "fingerprint": "76deede61e3daadeda02577872238c4422afa2c0cf26a5cfe7619271d08ffdd2",
       "snapshot": {
