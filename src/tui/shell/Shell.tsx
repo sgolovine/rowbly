@@ -179,6 +179,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
             <Header
               label={label}
               onNewStory={services ? newStory : undefined}
+              onSettings={services ? openSettings : undefined}
               clickable={idle}
               actions={actions}
               actionsClickable={overlay === null}

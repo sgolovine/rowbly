@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "315a2ce14f7d1ce09d6ef47076dbba82f4fa847ead60e01db7ce0516a05e7a16",
+      "fingerprint": "b4d00aafad19dedd6694d896a498bf2ab660cc88a40d3938f5181261fa6543df",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,18 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "73a3a3c6cea845a2bd27bd61a12e160cda91d522e7021b5ab39da26112019c99",
+      "fingerprint": "6e5f5ad39099351b4907263cea38edd4e4c68dbde1934ff44cfa4a2278fcf9f9",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -33,20 +34,21 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "6afe55c659c29f17633873ec0a3cf6eebce4689a9ea55ab82bb1b2cb4bfe30af",
+      "fingerprint": "eb951cad0bec45353e5839236800689c778cdd41a96573c538f2ff14ad529cad",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
+        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -55,18 +57,19 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "d5516a0582924c12986b22fa2c5d9f0d515e9cd6dbf750e5ef5c9764f1d7431f",
+      "fingerprint": "3262453a38a9a272ce130fc2b18de1f976f110ab9ef373e30fddb46b029eba02",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -75,18 +78,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "099dfe1d730f96c3387c9bfc12af42083fc4c9fe7b7f1ccf421cddf79b45500c",
+      "fingerprint": "ddd97bb5e1b10100667de1edc289db27103ef1b6ab25f20f20f1a8835fb65244",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -95,23 +99,24 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "3ff9160a5016542c290511f27a32c0f0bff9463b0847ed3956c9b98e4cf8f66b",
+      "fingerprint": "ae94241fab3ee9ec08187eddab7f9f91efb3099383ef9997f66ac99096f50197",
       "snapshot": {
-        "README.md": "36f5896d4d24411ebb6a061dd7cd22b940ac408e6195b6cab83935592d9a24fa",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
+        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
         "skills/_artifacts/skill_spec.md": "47e77577d5c2367aba7a9ab2082134ed2e0daf065c3818b4cb86b7bedb2e763b",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
@@ -142,12 +147,13 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -583,16 +589,15 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "43aebdb8273e55da598bcbd71e81fc156ad8c71b32e29b2ef2cb99c07a718362",
+      "fingerprint": "67259307de2d587d061d74c3d59f7fdef21c7e6bdacd8ae183479b4efc420ed6",
       "snapshot": {
-        "docs/plugins/api.md": "68a2d8a1be8de53577e6ecb4198a3c247061103d5e8edbc688916f379bb78e1e"
+        "docs/plugins/api.md": "fab546e996ac7f3ef2ff6e424cdfa33b78c3d5cb6eb50027704fffbd7a509c42"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
-      "outcome": "out-of-scope",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1757,16 +1762,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "73a197ba22523d80ad9fb5b817fab6fa687bb01cbe9ff107d323837a636b1d62",
+      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "7b6fb1ef77f0e88641f85f0b2c40c7dbbe47b6b07596089b91592a88dd38462a"
+        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
       "outcome": "out-of-scope",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
+        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1782,28 +1787,29 @@
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
-      "fingerprint": "2179c742483a5a8c17ed3aee7a3b55acea9ee0c2e968e45a1ffee041681f6c67",
+      "fingerprint": "6e99836eab32c12f84592e1072fa723d1946239220f36f536c1bc8d7c0a8ec64",
       "snapshot": {
-        "test/tui/__snapshots__/board.test.tsx.snap": "33c5c58d9a87c8f480eeed5e9f383d7a4f115ae68ff76da71b980c021230aebe"
+        "test/tui/__snapshots__/board.test.tsx.snap": "a890a9183f15f5678219fc66a4a32dfd40673795f8306ae5d0982d911550c4ac"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "fc1511f29fffe4514b99adf6f7868f76c00dd615f4ad4097b8b9695b73c11440",
+      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
       "snapshot": {
-        "test/tui/board.test.tsx": "e9c6b81f74f23c018d82c2ee407700a3593457f799a59dcd9542b1c336e81ffe"
+        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
       },
-      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "out-of-scope",
-      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
-        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -1833,17 +1839,16 @@
       ]
     },
     "source:test/tui/helpers.tsx": {
-      "fingerprint": "d3f31357cb5e5ed438f9ceda7babb7f5b7df4a95581c88050d14e8ef6ac66408",
+      "fingerprint": "18987b6669ecd45c9b4f54a268cd706c07b831b600ae3b9663303e2f60c3fd02",
       "snapshot": {
-        "test/tui/helpers.tsx": "d3712d0048a042865745f01cb00f0e569c51dc5ecc84aa4f7259e2a1fe65ff53"
+        "test/tui/helpers.tsx": "b1795a1f32c2b81b8f2ae732966284a0d81ba45939cc6d6f1e1e91a5fa6c8266"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
-      "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:docs/agents/CONTEXT-MAP.md": {
@@ -2750,15 +2755,16 @@
       ]
     },
     "source:test/plugins/specsTui.test.tsx": {
-      "fingerprint": "71f0d34995df2d83acbc3a05a921143bf1ce380e955337f9a9f0b11d4343e11b",
+      "fingerprint": "0073be515db2b9126720c1e9a676d8ea0e10d51e1d5463b0f505f0aaf84b44de",
       "snapshot": {
-        "test/plugins/specsTui.test.tsx": "22428b2baf0fef92852aef901ec63a995af1405e34515468ec410e8707e9ea1a"
+        "test/plugins/specsTui.test.tsx": "0838bc759b74594157e6657e1ac5590db7f6184443d8e04e089531d0596b2eac"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/plugins/tasks.test.ts": {
@@ -2810,27 +2816,29 @@
       ]
     },
     "source:test/plugins/tui.test.tsx": {
-      "fingerprint": "b988259f2ba414e2f44c6a685bcb0911bf466838d8624a7de2cdbe0d97a6cafc",
+      "fingerprint": "cc4858ae7971dd023947549864bc758f22137b3fb15a968cdbfe3c0da56ebd07",
       "snapshot": {
-        "test/plugins/tui.test.tsx": "0af4ee13a25e25baca60bbebba8ed0ad2406d3202d5889a9bd188bfc0c13952f"
+        "test/plugins/tui.test.tsx": "def042da76736f2d76dc804ea955aecf80c42678fb122018db1cc421522b6a08"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
-      "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/plugins/tuiFailureIsolation.test.tsx": {
-      "fingerprint": "f61c0569f2713716293be5f78e4c6ed908c120e3a8c1b3b9792bef5b40f9099d",
+      "fingerprint": "35bfd05ba73537f322f2b6fa5c8a41bc14271b764e126eb325ae5f11391b41f3",
       "snapshot": {
-        "test/plugins/tuiFailureIsolation.test.tsx": "7041d4096d3e6d8564c35e48522685a3418efb80a398f55b854874fe79779627"
+        "test/plugins/tuiFailureIsolation.test.tsx": "a0bb7195d219701f6e0512a061b2f47e3ef87abc47624b2671ec875d75abf1df"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/schemas/schemas.test.ts": {
@@ -3338,16 +3346,15 @@
       ]
     },
     "source:test/plugins/assigneesTui.test.tsx": {
-      "fingerprint": "3c0f46efd4f072a5520edb194705366fe82c97410da7c545a77cff018e61ba56",
+      "fingerprint": "c79474f265674213e81829de4c97035eed6253c77404953963334a4e9d7d67be",
       "snapshot": {
-        "test/plugins/assigneesTui.test.tsx": "0f5014e8a9027535ab910eb1cddca16c28a96a601e4b246582c50809afbe7236"
+        "test/plugins/assigneesTui.test.tsx": "f9d81da2f494377fa1066dad017735794263d80dc9ac085226a762ea2681b880"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
-      "outcome": "out-of-scope",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "outcome": "no-change",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
@@ -3555,15 +3562,16 @@
       ]
     },
     "source:test/tui/settings.test.tsx": {
-      "fingerprint": "42ff2d03d210a9a1d3f3b57b5274ca6b82d34eb8a32174769a1afb4bb168aa50",
+      "fingerprint": "c0ef4aee861f493a468917f64c97a2982cfb623254c63754fc638d648260e419",
       "snapshot": {
-        "test/tui/settings.test.tsx": "0175c5acc5e4bedcb746fc4dd31b9d390fc0e2c149ca8b9872aaffd9d017b985"
+        "test/tui/settings.test.tsx": "ae38b46f4f8e1c142c13a2df7c9b29761dda2f5ca92144478bcffbc021ba1ceb"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
-      "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/tui/setup.test.tsx": {
@@ -3723,29 +3731,28 @@
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
+      "fingerprint": "5fba6c52fd7c65f3436ec2f756aaa2ec9614e6531f30a861586bc6905a70f2e4",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
+        "src/tui/screens/board/BoardList.tsx": "47ad681672435b887fe78dd0978d2bdd2b4267365c41217bb76685cd13448463"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "out-of-scope",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "af81f0a29db751bb5a3332ba2b72f608ea41c2fd4b9b88e34a3230435b515446",
+      "fingerprint": "267a9d1d03ea602737e30d646a9e28253257bc508260d9228274484c7328b9b6",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "661b64167903c334b752fc8b5d622ecd7a31e8325440de88915a89608e792f25"
+        "src/tui/screens/board/BoardListRow.tsx": "eacd15bf5198d5b781f324531abbaaea94abdac1739ca093e7cd1d7d02bce977"
       },
-      "head": "88ddcc4ff3e585d9240c2d1c0f3e0aeb091a0045",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "The board's list view shows each Story line's Plugin badges (storyBadges and cardBadge, e.g. @sam · ✓ 1/2) as its board card does; README.md, docs/plugins/api.md and docs/plugins/built-in.md now say so. No skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "grep of skills/*/SKILL.md and references finds no guidance on board card badges or the board list view",
-        "Checks on 88ddcc4: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -3761,29 +3768,29 @@
       ]
     },
     "source:src/tui/shell/Header.tsx": {
-      "fingerprint": "b987a7408792744f9c49b04cff74b3f3323e71597bf6398a3cb1ca3729a0f249",
+      "fingerprint": "385e5774a3e06768cc5a82b7eac3dbbffdfb06fcabfd06b129619e4de2114a91",
       "snapshot": {
-        "src/tui/shell/Header.tsx": "bff6497e8dd196bcd8529230e94d3172c0b91a9bb6d4b7d797b361b8331f91a1"
+        "src/tui/shell/Header.tsx": "8981f367b6ef34219d19b67cbf8a904e28a28b0ad4a203eebc1f44fce47c6993"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "out-of-scope",
-      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "0c86a2f2e5070d188036ac3b6118f53058cb1a98b7a6b6b74ffeb0af87543a79",
+      "fingerprint": "de944b6a5c71880b2ba897713a8135f8a3da00f30c77fd0e957035592d5b050f",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "ab96ce44f5e126a5572eb101658571c021dfd8c1eebb0008c85a8f2f0790be9c"
+        "src/tui/shell/Shell.tsx": "ae5ff4f6b3d77100910b39767180da0da18262073b194a3cb9e1340c526f16cf"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
-      "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -3859,15 +3866,16 @@
       ]
     },
     "source:test/plugins/epicsTui.test.tsx": {
-      "fingerprint": "79b0730fd1ced1fa0a16c8ae439fb545bfe03083a51a4dd7a12b05d7b64ec557",
+      "fingerprint": "40062e9cd3d5d879e11f2d5782b05fe95d1ad3d25721f0a01cc7c7fd9097a120",
       "snapshot": {
-        "test/plugins/epicsTui.test.tsx": "5783f70ecd2b8caffa14d4cd303689fae6a5d940de7efab00cd0c775c6ab392f"
+        "test/plugins/epicsTui.test.tsx": "91c10a38db07deed7e5a20ca66adbf68e29750e64ccfe8021247c4e3bf7b1792"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "no-change",
-      "reason": "Test fixtures and expectations follow the Stage model change (ADR-0024); the guidance change is recorded on the affected skills.",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "outcome": "out-of-scope",
+      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:test/plugins/results.test.ts": {

@@ -23,6 +23,7 @@ export interface HeaderAction {
 export function Header({
   label,
   onNewStory,
+  onSettings,
   clickable,
   actions = [],
   actionsClickable = clickable,
@@ -30,6 +31,8 @@ export function Header({
 }: {
   label: HeaderLabel | null;
   onNewStory?: () => void;
+  /** Opens the settings, like `,`. */
+  onSettings?: () => void;
   clickable: boolean;
   /** The board view switch, shown while the board is the root screen. */
   boardView?: { view: BoardView; onChange(view: BoardView): void };
@@ -54,6 +57,7 @@ export function Header({
           <Text dimColor>me: {ctx?.me ?? '—'}</Text>
         </Box>
       </Panel>
+      {onSettings && <Button label="Settings" keyName="," onClick={onSettings} clickable={actionsClickable} compact />}
       {actions.map((action) => (
         <Button
           key={action.key}
