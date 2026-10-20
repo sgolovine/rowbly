@@ -91,3 +91,7 @@ _Avoid_: custom data, extension data
 **Action**:
 A key, with a matching button, that a Plugin adds to the TUI wherever the Board or Story it acts on is in focus; an Action that acts on no particular record shows on every screen.
 _Avoid_: button, shortcut, hotkey
+
+**Plugin Sidebar**:
+A list a Plugin adds beside the Board sidebar in the TUI, shown with its header button; picking an entry filters the board by that Plugin's filter.
+_Avoid_: side panel, drawer
