@@ -1819,16 +1819,15 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "d5f77b6bf9ffe3922d0cb356cfbb9f55b21fff6ab4140bbf8a8e6c11d948a505",
+      "fingerprint": "76321a19dc3c0ff8447fa76b3df2576099fa520077c799f5ad79c5735e782ba3",
       "snapshot": {
-        "test/tui/board.test.tsx": "2a28892680d6139890182b6432750857b2554f8df7705f7ec36c020b0f6e2cbc"
+        "test/tui/board.test.tsx": "e332ccc6194651fd5afadb5cac39ae9a4ce3092783c88365e78e7ec82ccdefce"
       },
-      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
-      "outcome": "no-change",
-      "reason": "PR #56 changes only list-view Stage shortcuts and refused-move fold/cursor rollback, with README key-table documentation and deterministic Ink regression. Existing five skills cover command mode only; all three planning records retain accurate CLI task identities, mappings, TUI exclusion and remaining gaps. No command/flag/storage/doctor/exit-code contract changes.",
+      "head": "13569b9ee585993d2f98af5f78bda691de397166",
+      "outcome": "out-of-scope",
+      "reason": "Only the board-list Stage movement test changes: await a held saved service return and restored input hints before sending the next key. Production operations, command behavior and installed CLI skill guidance are unchanged. Existing domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate CLI-only task scope, identities, prerequisites and remaining TUI gaps; no planning rewrite is warranted.",
       "evidence": [
-        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
-        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+        "CI run39347111704/job118382256710 stopped with WEB-4 still in Todo after a dropped key. Controlled post-save move-return barrier reproduces the old wait failure; final barrier regression passes after waiting selected Story/target Stage/working-key hints. Explicit plan-lint and independent verification pass. pnpm typecheck and pnpm lint passed; full pnpm test:unit --maxWorkers=2 passed 983 tests/101 files. No production, timeout or retry changes."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
