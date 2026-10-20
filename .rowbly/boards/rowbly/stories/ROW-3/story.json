@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Agent Skills",
   "description": "Create an agent skill so that agents know exactly how to use rowbly\n",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "backlog",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T03:00:12.848Z",
-  "updatedAt": "2026-10-20T22:27:39.877Z"
+  "updatedAt": "2026-10-20T22:28:12.058Z"
 }
