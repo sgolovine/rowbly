@@ -4090,6 +4090,149 @@
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     },
+    "source:docs/agents/adr/0001-json-files-not-sqlite.md": {
+      "fingerprint": "c78063698977b0abf431f2544e05b4d06dec9d4a40b6ebb987ade4e6ecb38cba",
+      "snapshot": {
+        "docs/agents/adr/0001-json-files-not-sqlite.md": "5d47c11bbd105168f5b2176b78db4de1b769aa3f23097958f8d7884a4b6d8f35"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0002-data-root-discovery.md": {
+      "fingerprint": "fd69590b8524ff64f7647991e14e5f99e1762f5e4014351622792771bfff04d8",
+      "snapshot": {
+        "docs/agents/adr/0002-data-root-discovery.md": "c03f3d52468bb59d013d0580682432c576d7c840c1ac2ee8d453cb37d64fb53f"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0003-story-keys.md": {
+      "fingerprint": "cf7049ce4abbbb23d61c21e03702e316ccfa5dff632ace8a682cbd3d07eb2178",
+      "snapshot": {
+        "docs/agents/adr/0003-story-keys.md": "c5341f14ed957906b8e4e5a861c9d95b4de627c88d89531c4ef9436493b6fe01"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0004-epic-link-on-story.md": {
+      "fingerprint": "fd1f3f04e443fcf8945e7bbf9fa653f95472ac7c5252d3559dfc8ca3ad2ee231",
+      "snapshot": {
+        "docs/agents/adr/0004-epic-link-on-story.md": "6ede5fa901a15be9a572182d95a43a42c83c7250d862ee6edde13b170e331caf"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0006-ink-owns-the-interactive-mode.md": {
+      "fingerprint": "68e2012c818228b2ea3cc92988bdbda4b2b9d6cbb7ea20117753931d44bb8384",
+      "snapshot": {
+        "docs/agents/adr/0006-ink-owns-the-interactive-mode.md": "10cf3bfb6110ef58bc06cddb207a8024014abb50d0314bc02a689f8d7e034245"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0007-no-workspaces.md": {
+      "fingerprint": "6eb43f846b9a937fc48fc243fb63d71e0a17af1f01c4d01e0134b3506d110f29",
+      "snapshot": {
+        "docs/agents/adr/0007-no-workspaces.md": "a9043c9e18a4633c8c42345b324aaf8d750109bb9351b1c17dcde72c25a13683"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0008-no-epics.md": {
+      "fingerprint": "6e83ee5e60e615c70e648dd5a103d7ccaa9004f960de4b3db2a965c7dc7bb777",
+      "snapshot": {
+        "docs/agents/adr/0008-no-epics.md": "a289d4477adabb93c433fc29368cc3fc3df390ec0e59e51c9351bddec094739f"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": {
+      "fingerprint": "ba561511b734e1dce3c8b705e2cb90aa57b4ec8fb9bc8913febf4755c2cd102c",
+      "snapshot": {
+        "docs/agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md": "ba3c14564de02c6e7ee3f72e9bbd8ff6f635c2205c1a77bae765dc269c5f4b89"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0010-plugins-are-turned-on-per-data-root.md": {
+      "fingerprint": "a721d49c9e1037b08e44b2e244b1e20dbc21799e1f23c29a4542f077e63d2775",
+      "snapshot": {
+        "docs/agents/adr/0010-plugins-are-turned-on-per-data-root.md": "de8efb2c15074373cffa6d7ec5ca927e4b274b7bf9a860f57c205273a51ea7ac"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0012-plugins-intercept-service-operations.md": {
+      "fingerprint": "2f0c502e6614a577e5182f50a4d8cc8aaad8e0f933130dc548c23383c7f3cf94",
+      "snapshot": {
+        "docs/agents/adr/0012-plugins-intercept-service-operations.md": "b4f47e2c7820ebb20f526a9f5a2007fab824b42a56861ecd2658a162dfafcbf7"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0014-epics-return-as-a-built-in-plugin.md": {
+      "fingerprint": "16e0c640514c77b1a6ecdb8fb0eed8b9a9c760109fb219ba1cb3cbea2fa9ad17",
+      "snapshot": {
+        "docs/agents/adr/0014-epics-return-as-a-built-in-plugin.md": "f540fd18128ed0741ba049468ad79eaeed964d1d7476e57e01f1948a76626d07"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
     "source:docs/agents/adr/0015-specs-are-markdown-files.md": {
       "fingerprint": "a5c121344e53f259507d42c7da5435b6a29cbc313e7ea05382fcdc237b6c8f7e",
       "snapshot": {
@@ -4100,6 +4243,32 @@
       "reason": "ADR-0025: a Story has any number of Story Specs, each stories/<KEY>/plugins/specs/<slug>.md; spec.md is the Story Spec `spec`. `specs list --story`, `create|show|edit|delete [slug] --story` (slug defaults to spec; --story with --board exits 2); Spec results are {slug, title, text} for both kinds. rowbly-plugins \u00a73 and Common mistakes updated (named Story Specs, result shape, new MEDIUM mistake: a second Story Spec without a slug exits 4).",
       "evidence": [
         "Checks on 479b607: pnpm typecheck and pnpm lint passed; pnpm test:unit 984/984 (run three times) and pnpm test:cli 157/157 passed, including test/skills/agentWorkflows.test.ts (rowbly-plugins workflow: named second Story Spec, specs list --story, slug-less second create exits 4); intent validate skills: 5 passed. Fresh consumer session (general-purpose subagent with only the five skills and rowbly on PATH, no authoring context) added a second Story Spec to WEB-1 with `specs create email-template --story WEB-1`, listed both and showed the new one with no failed rowbly command; spec.md was unchanged."
+      ]
+    },
+    "source:docs/agents/adr/0019-coordinated-recoverable-commits.md": {
+      "fingerprint": "273cb4b55509969bcde74e97fb57547b4e9f3da6aaf0978c589e69104132d10c",
+      "snapshot": {
+        "docs/agents/adr/0019-coordinated-recoverable-commits.md": "2da6d546da40fdbba586a343fe3346165da29b48482979c90fc77ed96217cd50"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
+      ]
+    },
+    "source:docs/agents/adr/0021-plugin-format-and-compatibility-policy.md": {
+      "fingerprint": "7721a038f02e284f1b0159a7fd356ab9200fb5a08b2835708b88f69bd0c4796a",
+      "snapshot": {
+        "docs/agents/adr/0021-plugin-format-and-compatibility-policy.md": "ef0bcaa43ef0e179051afbf074615672cfdba2e7caa016bffcd53bdaccab72b2"
+      },
+      "head": "b41979f14adc5ce2a1676ff8550096921bc1e037",
+      "outcome": "out-of-scope",
+      "reason": "Historical source change from recorded baseline 2e488a8 already present unchanged on main b785a351b6e0ca4af78eb02b554ea728c8b1f244; outside PR #56 diff. ADR relocation/amendments and trust policy belong to earlier completed main changes. Preserve existing command-only skill scope; no source edits made here.",
+      "evidence": [
+        "git diff origin/main --name-only lists only README.md, src/tui/screens/board/BoardScreen.tsx and test/tui/board.test.tsx. Main integrated at b785a351b6e0ca4af78eb02b554ea728c8b1f244.",
+        "Focused board regression failed before fix and full board suite passes 34/34 after fix; final typecheck and lint passed. Intent validate skills passed 5/5; sync no-op. Fresh consumer validation not repeated because guidance unchanged. Full sequential unit/CLI results will be supplied at handoff."
       ]
     },
     "source:docs/agents/adr/0025-a-story-has-many-story-specs.md": {
