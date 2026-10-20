@@ -64,7 +64,7 @@ interface Cursor {
  * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
  * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them. The list view (`v`, or the header's switch) shows the same Stories as
- * one list in collapsible Backlog, Board and Done sections.
+ * one list in collapsible Backlog, Board and Done sections, where shift+↑/↓ move a Story between Stages.
  */
 export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -149,7 +149,7 @@ export function BoardScreen({ params }: ScreenProps) {
    * toast. Either way it then reloads the board from disk.
    */
   const write = async (next: Columns, nextCursor: Cursor, run: () => Promise<Story | undefined>) => {
-    const before = { columns, cursor: { col, row } };
+    const before = { columns, cursor: { col, row }, listCursor: listAt, collapsed };
     writing.current = true;
     setSaving(true);
     setColumns(next);
@@ -160,6 +160,8 @@ export function BoardScreen({ params }: ScreenProps) {
     } catch (err) {
       setColumns(before.columns);
       setCursor(before.cursor);
+      setListCursor(before.listCursor);
+      setCollapsed(before.collapsed);
       toast.error(err);
     } finally {
       writing.current = false;
@@ -209,6 +211,25 @@ export function BoardScreen({ params }: ScreenProps) {
     if (at !== listAt) setListCursor(at);
     else if (clicked.kind === 'section') toggleSection(clicked.category);
     else router.push('story', { key: clicked.story.key, title: clicked.story.key });
+  };
+
+  /**
+   * Moves the list's highlighted Story to the previous or next Stage, at the bottom: from the first Stage in
+   * Board up to Backlog, from the last down to Done. The cursor follows it, unfolding the section it lands in.
+   */
+  const moveStage = (delta: -1 | 1) => {
+    if (listRow?.kind !== 'story') return;
+    const { story } = listRow;
+    const from = stages.findIndex((s) => s.key === listRow.stage.key);
+    const at = columns[from]?.findIndex((s) => s.key === story.key) ?? -1;
+    const target = stages[from + delta];
+    if (at < 0 || !target) return;
+    const unfolded = new Set(collapsed);
+    unfolded.delete(target.category);
+    const next = listRows(stages, moveCard(columns, from, at, from + delta, target.key), unfolded);
+    toggleSection(target.category, false);
+    setListCursor(next.findIndex((r) => r.kind === 'story' && r.story.key === story.key));
+    moveTo(from + delta, { col: from, row: at });
   };
 
   const reorder = (delta: -1 | 1) => {
@@ -261,6 +282,7 @@ export function BoardScreen({ params }: ScreenProps) {
           ? [
               { key: '↑/↓', description: 'select' },
               { key: 'enter', description: 'open/fold' },
+              { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
               { key: '←/→', description: 'fold/unfold section', secondary: true },
               { key: 'n', description: 'new' },
               { key: 'e', description: 'edit', secondary: true },
@@ -270,6 +292,7 @@ export function BoardScreen({ params }: ScreenProps) {
               { key: 'v', description: 'Stages view' },
               { key: 'r', description: 'reload', secondary: true },
               { key: 'j/k', description: 'select (vim keys)', secondary: true },
+              { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
             ]
           : [
               { key: '←/→ ↑/↓', description: 'select' },
@@ -294,7 +317,10 @@ export function BoardScreen({ params }: ScreenProps) {
   const listInput = (input: string, key: Key, boardId: Slug) => {
     const delta = moveDelta(input, key);
     const section = listRow?.kind === 'section' ? listRow : undefined;
-    if (delta) setListCursor(Math.max(0, Math.min(rows.length - 1, listAt + delta)));
+    // shift+↑/↓ (or K/J) move the Story to the previous / next Stage; plain ↑/↓ (or k/j) move the cursor.
+    if (input === 'K' || (key.shift && key.upArrow)) moveStage(-1);
+    else if (input === 'J' || (key.shift && key.downArrow)) moveStage(1);
+    else if (delta) setListCursor(Math.max(0, Math.min(rows.length - 1, listAt + delta)));
     else if (section && (key.return || input === ' ')) toggleSection(section.category);
     else if (section && key.leftArrow) toggleSection(section.category, true);
     else if (section && key.rightArrow) toggleSection(section.category, false);
