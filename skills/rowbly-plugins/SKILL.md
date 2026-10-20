@@ -29,6 +29,8 @@ sources:
   - src/plugins/git/model.ts
   - src/services/plugins/git.ts
   - src/storage/git.ts
+  - docs/agents/adr/0028-git-work-runs-outside-the-data-root-lock.md
+  - test/plugins/git.test.ts
   - test/plugins/gitCli.test.ts
   - test/skills/cases/git-automation.md
   - test/skills/checkGitConsumer.mjs
@@ -178,7 +180,8 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt
 - Preferences are personal, under `plugins.git` in Local State. Do not edit that file by hand. Enabling the Plugin is still shared Data Root configuration.
 - `change` is the default frequency. The interval is seconds (integer 1–86400, default 300). Omitted/cleared author fields use effective Git `user.name` and `user.email`, including `.gitconfig`; `git show` reports the defaults.
 - Automatic Commits use `chore: update Rowbly data` and select paths affected by saved Operations, including other Plugins' writes/deletions. Local State and internal files are excluded. Other paths and unrelated staged files stay untouched. Edits by hand to an affected path are included; a path with staged changes is refused with a warning.
-- Interval mode needs pending changes and runs only while Rowbly is alive. CLI commands do not wait for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run; no daemon or exit flush runs. Changing the interval adjusts the deadline from the first pending write. Disabling Git pauses pending commits.
+- Saved changes enter a queue; the TUI stays usable during Git work and rapid edits may share a commit. CLI commands wait for due work outside the reaction deadline, but do not wait for a future interval deadline.
+- Interval mode needs pending changes and runs only while Rowbly is alive. Pending paths persist in Git's directory and resume on the next Rowbly run; no daemon or flush of future interval work runs on exit. Changing the interval adjusts the deadline from the first pending write. Disabling Git pauses waiting commits; an already running commit may finish.
 - A Git warning leaves the Rowbly change saved and pending work available for retry. Fix the cause (for example author configuration or staging), then run Rowbly again. Hooks and signing are suppressed for Automatic Commits; there is no automatic push.
 
 ## Common mistakes

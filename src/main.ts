@@ -19,6 +19,7 @@ import {
   traceBuffer,
   traceRequested,
 } from './services';
+import { drainGitQueue } from './services/plugins/git';
 import { findDataRoot } from './storage';
 import { CORE_KEYS } from './tui/keymap';
 
@@ -183,6 +184,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
   } catch (err) {
     return handleError(err, json, registry);
   } finally {
+    await drainGitQueue();
     setTraceSink(undefined);
   }
 }

@@ -1,6 +1,6 @@
 # ADR-0026: Git Automatic Commits are a bounded first part of Git automation
 
-**Status:** Accepted. Built. Narrows the implementation scope of ADR-0016 without changing its remaining planned design.
+**Status:** Accepted. Built. Narrows the implementation scope of ADR-0016 without changing its remaining planned design. Amended by ADR-0028 §1–§3: Git effects run in a queue outside the Data Root lock.
 
 **§1 Scope.** The requested Git Plugin commits saved Rowbly changes immediately or on a configurable interval, with personal author preferences. Automatic branching and Git-to-Rowbly hooks remain planned. ADR-0016's prerequisites for those features do not gate this independent subset.
 

@@ -15,7 +15,7 @@ import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
-import { createPluginGit } from './git';
+import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
@@ -303,7 +303,10 @@ export function createOperationRunner(
         }
       });
     if (ctx.backgroundReactions) background = background.then(reactions);
-    else await reactions();
+    else {
+      await reactions();
+      await drainGitQueue(ctx.root);
+    }
     return result;
   }
 

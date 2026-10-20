@@ -3,55 +3,56 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "fc8e707b5ef3bb3bbdb08c309a9528a021427df6151702c2e67eb9e1fabcfde5",
+      "fingerprint": "1bc409e0e691a0135634e23c98c865e87609225f4530784d643da177a38eb12f",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
+        "docs/architecture/storage.md": "dd62cbb39ada00d00dc0139269f2d3b814e58a6eae44514d48709ce3d6a29324",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
-        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
+        "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "Queue draining changes internal timing only. Existing command flags, Data Root/Board resolution, exit codes, JSON errors and warning handling remain accurate; the shared CLI skill needs no rewrite.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-cli/SKILL.md against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Compared the complete current skill with changed README/storage/Plugin guidance and relevant commands. Existing agent workflow task checks passed in the CLI suite. No new HIGH or CRITICAL failure mode or changed activation description."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "2d81aa2b1b8b4fc9059da862d936c8eae61ad0e38874d20aa32897e29445a418",
+      "fingerprint": "a76202f0e10f88a3321c95054d86066389e04037483f7643ecc58b1f858a8749",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
+        "docs/architecture/storage.md": "dd62cbb39ada00d00dc0139269f2d3b814e58a6eae44514d48709ce3d6a29324",
+        "docs/plugins/built-in.md": "d2e2375e9ac848f21e228a108c5081f93783f4b595e54736f99e6e5060eb5a5b",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50"
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "Doctor still pauses Git with plugins disable before repairs and restores it only after doctor exits 0. Command completion waits for already-due Git work, so any in-flight commit finishes before the subsequent repair command. Findings, recovery and lock error advice remain accurate.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-doctor/SKILL.md against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Compared the complete current skill with changed README/storage/Plugin guidance and relevant commands. Existing agent workflow task checks passed in the CLI suite. No new HIGH or CRITICAL failure mode or changed activation description."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "2d53559aa60e2e735788c47f954ed7aaeea89378df74dea8e1fd44f38bec0eab",
+      "fingerprint": "bf44956e2c9eccd3491ecec44ce595d289e1213bc6ab78c5085a58486c6b2f0e",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
+        "docs/agents/adr/0028-git-work-runs-outside-the-data-root-lock.md": "b6988b33e60c052a1a5f514f2da37639242df69d578e949d9c1c07e51874bc5f",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
-        "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
+        "docs/plugins/built-in.md": "d2e2375e9ac848f21e228a108c5081f93783f4b595e54736f99e6e5060eb5a5b",
+        "skills/rowbly-plugins/SKILL.md": "fae152932ad7e2c275c65a10a1654e426ad8448d82a9fae91f252db0bab0d109",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -60,25 +61,27 @@
         "src/plugins/git/model.ts": "4fba98b457c2d0e7750638e6d6d8669b4402aa39c5b6358fa7a5294212a5d24e",
         "src/plugins/specs/commands.ts": "a7034574cc85aad657f0414a7b90fabcc063310fc0fc59921bd92eb945e3b04c",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf",
+        "src/storage/git.ts": "559f50d9a35310941b2d1139860e85f0553d4582280de905898a3a2851885bcf",
+        "test/plugins/git.test.ts": "74cc610b90e4d953939e8c5766b85a3d91478ed1885053c63f097397fb3060c5",
         "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
-      "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Final review reconciled queue behavior and all three planning records; recorded checks, fresh consumer result and the pre-existing default-baseline limitation. The Git race regression uses controlled barriers with the normal reaction deadline, avoiding a short timing threshold.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-plugins/SKILL.md against origin/main and PR head 9ee41d2."
+        "Actual PR base 3a64cef617d80a276c3348d20505fe658d37e8db. Final typecheck and lint passed; unit 67 and CLI 20 tests passed; 5 Intent skills validated.",
+        "test/plugins/git.test.ts and test/plugins/pipeline.test.ts exercise queued same-path edits and leaked lock acquisition with controlled promises. Updated rowbly-plugins lifetime guidance matches the implementation.",
+        "Fresh copied-CLI/catalog consumer grader passed and rejected frequency=change; Intent-installed discovery unverified. agentic-tui slow-Git run remained responsive and committed final done state; no reported lock/deadline/Git warnings.",
+        "domain_map.yaml records queue snapshots, skill_spec.md preserves prior scope and records the change/evidence, skill_tree.yaml synchronizes decision/test sources. Explicit-base check is clean; default check has 24 unrelated historical items from the older stored baseline."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "be2acf3af16a9db9b7a8fc2ff396f925b2a9f9862440b14f84fda7543f63145a",
+      "fingerprint": "da1554a00f44302cdbcc174ba9142f2344e595f52fe26277b33a9d4a8c95a62b",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -87,19 +90,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "README changes only Git queue/lifetime details. Data Root setup, Boards, Stages, Custom Fields and Configuration Cascade commands and guidance remain unchanged.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-setup/SKILL.md against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Compared the complete current skill with changed README/storage/Plugin guidance and relevant commands. Existing agent workflow task checks passed in the CLI suite. No new HIGH or CRITICAL failure mode or changed activation description."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "264c17ba172ca79244dfdbab9e3c75b9d6104319f6479caed43c51ef811fbf10",
+      "fingerprint": "c13f5e0f73a1996c642bdb073b75b3d19cb2a4d6bb851b3d24127cc154009752",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -108,31 +111,32 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Compared with main, tracked operating guidance and behavior are unchanged; README changes only the Development command table to describe the pruned single-CLI test setup. No skill rewrite is needed.",
+      "reason": "Story create/edit/move/rank inputs and results remain unchanged. Saved changes survive Git warnings as before; Story command guidance remains accurate.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/rowbly-stories/SKILL.md against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Compared the complete current skill with changed README/storage/Plugin guidance and relevant commands. Existing agent workflow task checks passed in the CLI suite. No new HIGH or CRITICAL failure mode or changed activation description."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "a77d58144ee0b4cab54f429e244f362166cbcb1b33417688fdb592cdf1f046f8",
+      "fingerprint": "0baab06511b3ddf93f6e24faadc6b512191bc79c8e31ed7a4451ecaec9b7975b",
       "snapshot": {
-        "README.md": "2cc0a3f39bf0c2c1a4af5600cd83205fe0abe55a61477e3d2549eaef64c6accf",
+        "README.md": "22f53b48a0c5a2f7067d09ed13a6112963d459989711d4b2acdbd7403924323b",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
+        "docs/agents/adr/0028-git-work-runs-outside-the-data-root-lock.md": "b6988b33e60c052a1a5f514f2da37639242df69d578e949d9c1c07e51874bc5f",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
-        "docs/architecture/storage.md": "77c87e345813df03dae6842367bdf5b9d36eceb6039e2a5775fc06c022fcfd58",
+        "docs/architecture/storage.md": "dd62cbb39ada00d00dc0139269f2d3b814e58a6eae44514d48709ce3d6a29324",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "de4ed9851ef419709f23805b7063487c17768cbfefc58a3badd55c5cac295663",
-        "skills/_artifacts/domain_map.yaml": "dc287076faea671cd2c3d1bb1c4d675be5abb48cf1edcc7b1d21c9d6923d82ef",
-        "skills/_artifacts/skill_spec.md": "8f41ae4ac4070b1dd117626ec338c3d2f253b43b7e75c50629ceabcecc57ddc1",
-        "skills/_artifacts/skill_tree.yaml": "eb64ae1806e2a3bd636e4a580573a81a9bf3d23a983d8e2c77e06c4347efe249",
+        "docs/plugins/built-in.md": "d2e2375e9ac848f21e228a108c5081f93783f4b595e54736f99e6e5060eb5a5b",
+        "skills/_artifacts/domain_map.yaml": "f931748c067ea3a7f3b752cb62f8e91b07ecd4568d0c297036c72d7a7d92a326",
+        "skills/_artifacts/skill_spec.md": "f14aed316f4a3d5902d6eae2a0511d5ba1771e31d51a4e5ce5bec4d08eec6668",
+        "skills/_artifacts/skill_tree.yaml": "e767dd3e63885e0d93f5d2e4f0bc0f6bbda4cdfddb42816185b92638c938fefe",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
-        "skills/rowbly-plugins/SKILL.md": "bc810acd12d940a839d208176c6eefd70b1cfeb0e8acb502ec0282328dc2f2af",
+        "skills/rowbly-plugins/SKILL.md": "fae152932ad7e2c275c65a10a1654e426ad8448d82a9fae91f252db0bab0d109",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
@@ -145,7 +149,7 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
-        "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf",
+        "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -156,20 +160,22 @@
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
-        "src/services/plugins/git.ts": "e8acc79a88ac908137a0f3f4ba2e6c9c01ba2d1e938cf0fb2893e7cf2345af50",
+        "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb",
-        "src/storage/git.ts": "487517c860e021e336cbd3c55bcb0c959b20cdf8b13a0c5a4b4d4215cbd40525",
+        "src/storage/git.ts": "559f50d9a35310941b2d1139860e85f0553d4582280de905898a3a2851885bcf",
+        "test/plugins/git.test.ts": "74cc610b90e4d953939e8c5766b85a3d91478ed1885053c63f097397fb3060c5",
         "test/plugins/gitCli.test.ts": "77e0e1993368b4063a47d977935d0c1a16665153f71c8e4a9f482024aa2534ac",
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "updated",
-      "reason": "Preserved both histories in skill_spec.md, retained Git/Specs task mappings and metadata in domain_map.yaml and skill_tree.yaml, and retained the PR correction to removed test citations. Recorded maintainer approval for test-policy ADR-0027 and merged-tree checks; no skill identity, dependency or operating recommendation changed.",
+      "reason": "Final review reconciled queue behavior and all three planning records; recorded checks, fresh consumer result and the pre-existing default-baseline limitation. The Git race regression uses controlled barriers with the normal reaction deadline, avoiding a short timing threshold.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed skills/_artifacts against origin/main and PR head 9ee41d2."
+        "Actual PR base 3a64cef617d80a276c3348d20505fe658d37e8db. Final typecheck and lint passed; unit 67 and CLI 20 tests passed; 5 Intent skills validated.",
+        "test/plugins/git.test.ts and test/plugins/pipeline.test.ts exercise queued same-path edits and leaked lock acquisition with controlled promises. Updated rowbly-plugins lifetime guidance matches the implementation.",
+        "Fresh copied-CLI/catalog consumer grader passed and rejected frequency=change; Intent-installed discovery unverified. agentic-tui slow-Git run remained responsive and committed final done state; no reported lock/deadline/Git warnings.",
+        "domain_map.yaml records queue snapshots, skill_spec.md preserves prior scope and records the change/evidence, skill_tree.yaml synchronizes decision/test sources. Explicit-base check is clean; default check has 24 unrelated historical items from the older stored baseline."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -536,18 +542,17 @@
       ]
     },
     "source:docs/architecture/operations.md": {
-      "fingerprint": "4c3c6beb8c8f47752878b380c0866d03cce4d24d8c5ceb3d68b98c51e5211f5a",
+      "fingerprint": "7f977da567961d7abf0476f3a074654dd0a2e424ed5f3e342cf326c0e4b94f9a",
       "snapshot": {
-        "docs/architecture/operations.md": "b944f1a6c8bff587518e807391f5c04c90a6b5fd3d86a523259e9ba2d8aa6adf"
+        "docs/architecture/operations.md": "64c46657355edfe6c2fa1315022190a48134caf63c45b0822d765ce5572fa69d"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
-      "outcome": "no-change",
-      "reason": "Reviewed docs/architecture/operations.md against merged Git behavior: registry/glossary, documented git.configure inventory and test expectations match six Built-in Plugins and personal preferences. Existing operating guidance covers the behavior; no separate skill or additional command instructions are needed. Inventory/language/skills checks pass in the full suites.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Reconciled Git queue semantics in existing rowbly-plugins guidance and all three planning records. Documentation and capability comments now distinguish enqueue completion, snapshot locking and command-mode draining; ADR-0028 amends ADR-0026 without rewriting its accepted decision. No new independently discoverable operational skill is justified.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/architecture/operations.md; changed files: docs/architecture/operations.md"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Built TUI driven via agentic-tui with Git commands delayed 1.2 s each (over 6 s per commit): Story moves and detail reads completed while Git ran; observed Data Root lock absent. Final ROW-1 saved and committed in done, pending file absent, no lock/deadline/Git warnings. Captures/logs stored outside repository."
       ]
     },
     "source:docs/architecture/overview.md": {
@@ -614,18 +619,17 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "1dc00a36ad57dcf6583a0b1b58f345d87d090bf27c068cf48e2f8ba6cf1780b5",
+      "fingerprint": "1f1c2e6283f68f45616d458bff63364c39eac73d7552deae4b1fafdf0a518b88",
       "snapshot": {
-        "docs/plugins/api.md": "1169580d6dfa7cb34fa4c76439d334b91bc6deb88c02df6529152b846be22489"
+        "docs/plugins/api.md": "49489c09d9f60e695d833bf514a60a53d7cfe0860f57f659d61188c74d84e860"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
-      "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Reconciled Git queue semantics in existing rowbly-plugins guidance and all three planning records. Documentation and capability comments now distinguish enqueue completion, snapshot locking and command-mode draining; ADR-0028 amends ADR-0026 without rewriting its accepted decision. No new independently discoverable operational skill is justified.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/plugins/api.md; changed files: docs/plugins/api.md"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Built TUI driven via agentic-tui with Git commands delayed 1.2 s each (over 6 s per commit): Story moves and detail reads completed while Git ran; observed Data Root lock absent. Final ROW-1 saved and committed in done, pending file absent, no lock/deadline/Git warnings. Captures/logs stored outside repository."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -2002,17 +2006,17 @@
       ]
     },
     "source:docs/agents/adr/README.md": {
-      "fingerprint": "7ce7677a5aaebc4ae94bdfc368e095848d186ce103758670124ef388972d8cb3",
+      "fingerprint": "f2fb21d0b0744cba55b68cc1cf5fea72cf59b2af16b637f104465476019eed4a",
       "snapshot": {
-        "docs/agents/adr/README.md": "1612a352af872d698969e908e171c1534b4142dd0ccd732b1e7ffa962511ecb3"
+        "docs/agents/adr/README.md": "ffa82165327dd83f1a128e3e360c207e5206f949381fb89d52c2106c7c1addfd"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
-      "outcome": "no-change",
-      "reason": "Retained both accepted decisions: main Story Specs ADR-0025 and Git ADR-0026, plus test-policy ADR-0027 and its index/references, with explicit maintainer approval to resolve the concurrent numbering collision. No decision or section content changed.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Reconciled Git queue semantics in existing rowbly-plugins guidance and all three planning records. Documentation and capability comments now distinguish enqueue completion, snapshot locking and command-mode draining; ADR-0028 amends ADR-0026 without rewriting its accepted decision. No new independently discoverable operational skill is justified.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed docs/agents/adr/README.md against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Built TUI driven via agentic-tui with Git commands delayed 1.2 s each (over 6 s per commit): Story moves and detail reads completed while Git ran; observed Data Root lock absent. Final ROW-1 saved and committed in done, pending file absent, no lock/deadline/Git warnings. Captures/logs stored outside repository."
       ]
     },
     "source:src/commands/index.ts": {
@@ -2312,18 +2316,17 @@
       ]
     },
     "source:src/services/plugins/runtime.ts": {
-      "fingerprint": "f7fcebf3181a5194bb3adf29abd2ea025232b951f79e8776ea5a18d0e8d96ee2",
+      "fingerprint": "d76fc72ceecee301ceef3c2fc0744ca5c66bb83046a5c183e18a01ce372d398a",
       "snapshot": {
-        "src/services/plugins/runtime.ts": "e339ae85e8eec0a0d9c7c81aa9de9527fe97da56f209a0c1915dad321f528225"
+        "src/services/plugins/runtime.ts": "e69a2de8ab0a212d7753fc1513736515bd325ff77d770984edeb25bea1aa65ab"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/services/plugins/runtime.ts; changed files: src/services/plugins/runtime.ts"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     },
     "source:src/services/plugins/service.ts": {
@@ -2342,18 +2345,17 @@
       ]
     },
     "source:src/services/plugins/types.ts": {
-      "fingerprint": "8012686327ff9ffeae78aacea9fa6b19f3eca9cde2c6a165d8e944957ba61b90",
+      "fingerprint": "2436bcc9b98966163ee5c99277131a4672978dee1621d8b52910a0835ebc71f3",
       "snapshot": {
-        "src/services/plugins/types.ts": "9dc9c3381b16f989eee2ffe46f83171f780099e300b7d496278df18f83c020f1"
+        "src/services/plugins/types.ts": "49c1163f63fce64bcec7046088a9b59af165f8205b958777f9f24bbd5d168618"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
-      "outcome": "no-change",
-      "reason": "Reviewed host-owned Git capability, definition-level saved-operation reaction and activation validation against implementation. Plugin authorship/API and trust details are outside the published operating-skill scope; operational consequences are covered by updated Git/doctor guidance. Full tests verify Plugin failure, reaction restrictions and API docs fixtures.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Reconciled Git queue semantics in existing rowbly-plugins guidance and all three planning records. Documentation and capability comments now distinguish enqueue completion, snapshot locking and command-mode draining; ADR-0028 amends ADR-0026 without rewriting its accepted decision. No new independently discoverable operational skill is justified.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed src/services/plugins/types.ts; changed files: src/services/plugins/types.ts"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Built TUI driven via agentic-tui with Git commands delayed 1.2 s each (over 6 s per commit): Story moves and detail reads completed while Git ran; observed Data Root lock absent. Final ROW-1 saved and committed in done, pending file absent, no lock/deadline/Git warnings. Captures/logs stored outside repository."
       ]
     },
     "source:src/services/stages.ts": {
@@ -2848,17 +2850,17 @@
       ]
     },
     "source:test/plugins/pipeline.test.ts": {
-      "fingerprint": "45b338453e2cb8791ba461629ccbc579045dfaa928bda1f18981d13722f8f86f",
+      "fingerprint": "bd6aabf6b5272f4a36e47049c918df636ddf9e5b947169e73731945f38b25fbc",
       "snapshot": {
-        "test/plugins/pipeline.test.ts": "08fbc3812af8a0009193b3e2b29f07862a605ea7957412fd1a7b1b6a9a997fea"
+        "test/plugins/pipeline.test.ts": "2b74f3ed9c886ac1e515523dbe3486b011761d20bbc1cfbedf58381be259d2b8"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
       "outcome": "no-change",
-      "reason": "Development of Rowbly itself (its test suite, test helpers, the test policy in AGENTS.md, ADR-0025 and the development and Plugin-author docs), which Batch 1 left to AGENTS.md and docs/development/README.md; it changes no command, flag, output, exit code, doctor finding or Data Root behavior that the skills describe.",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed test/plugins/pipeline.test.ts against origin/main and PR head 9ee41d2."
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     },
     "source:test/plugins/registrationFailure.test.ts": {
@@ -5584,18 +5586,17 @@
       ]
     },
     "source:docs/agents/adr/0026-git-automatic-commits.md": {
-      "fingerprint": "c8407d5b14b90b04bdf640194242808de8bc80174e3c80f18d934d24672b16f4",
+      "fingerprint": "360c4f2ed3fde9d8eb9e5c6f1e63148118f5a90287e70b793425b24f254d3ba2",
       "snapshot": {
-        "docs/agents/adr/0026-git-automatic-commits.md": "5923729fb41c11a201d1bbded5d0a20ec5503d2bd36aa123aa3f29e7e973b175"
+        "docs/agents/adr/0026-git-automatic-commits.md": "9ae49c914e6819442eb012226c7866c7b50c36e4e0517f570e5c9955b2b04781"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
-      "outcome": "no-change",
-      "reason": "Git decision allocated ADR0026 with explicit maintainer approval to avoid Specs ADR0025 collision; decision and section content preserved, index and old ADR status references updated. No additional CLI skill claim changes; Git behavior is already covered by rowbly-plugins and doctor guidance.",
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "updated",
+      "reason": "Reconciled Git queue semantics in existing rowbly-plugins guidance and all three planning records. Documentation and capability comments now distinguish enqueue completion, snapshot locking and command-mode draining; ADR-0028 amends ADR-0026 without rewriting its accepted decision. No new independently discoverable operational skill is justified.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/agents/adr/0026-git-automatic-commits.md; changed files: docs/agents/adr/0026-git-automatic-commits.md"
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "Built TUI driven via agentic-tui with Git commands delayed 1.2 s each (over 6 s per commit): Story moves and detail reads completed while Git ran; observed Data Root lock absent. Final ROW-1 saved and committed in done, pending file absent, no lock/deadline/Git warnings. Captures/logs stored outside repository."
       ]
     },
     "source:docs/agents/adr/0027-tests-guard-only-what-review-cannot-check.md": {
@@ -5610,6 +5611,20 @@
         "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
         "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
         "Reviewed docs/agents/adr/0027-tests-guard-only-what-review-cannot-check.md against origin/main and PR head 9ee41d2."
+      ]
+    },
+    "source:src/services/coordination.ts": {
+      "fingerprint": "b8a7fb18ac1cc9c55d13248a4e77f94bb5cf83efef7534e24b702c9c9a6d7ed5",
+      "snapshot": {
+        "src/services/coordination.ts": "d193a08c48666fdea212ee12e103af22d5ec244b2395e6a9ee2cba9a00cc8d4c"
+      },
+      "head": "d01c82a0e53f6520db1569abc0ca57e201ea999f",
+      "outcome": "no-change",
+      "reason": "Internal coordination/pipeline fix implements the documented independent post-save reaction contract. Deterministic barrier reproduces the original leaked lock and passes after isolating reaction holds. Operational skill boundaries and public command recipes need no additional guidance beyond the Git update; Plugin authoring remains an unassessed gap.",
+      "evidence": [
+        "Baseline origin/main 3a64cef617d80a276c3348d20505fe658d37e8db (Rowbly 0.1.0); lock fix checkpoint d01c82a; reviewed current source and documentation diff.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed (21 files, 67 tests); pnpm test:cli passed (4 files, 20 tests); pnpm exec intent validate skills passed (5 skills); git diff --check passed.",
+        "test/plugins/pipeline.test.ts: controlled second lock acquisition delayed until the saving operation returns; original code failed with .lock still present, independent context fix passes."
       ]
     }
   }

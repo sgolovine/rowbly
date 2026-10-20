@@ -433,7 +433,9 @@ export type { GitCommitOptions } from '../../storage/git';
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
+  /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
   resume(options: GitCommitOptions): Promise<void>;
+  /** Resolves after persisting the affected paths, before the queued commit finishes. */
   changed(changes: ChangeSetView, options: GitCommitOptions): Promise<void>;
 }
 
