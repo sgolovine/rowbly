@@ -1,6 +1,6 @@
 # ADR-0016: Git automation uses reactions, the `git` capability and hook commands
 
-**Status:** Accepted. Automatic Commits and their narrow `git` capability are built by ADR-0025; branching and Git hooks remain planned. Amended by ADR-0024 §5: the `in_progress` Stage Category is now `board`.
+**Status:** Accepted. Automatic Commits and their narrow `git` capability are built by ADR-0026; branching and Git hooks remain planned. Amended by ADR-0024 §5: the `in_progress` Stage Category is now `board`.
 
 Git automation goes both ways. It is designed now and built later, together with a Git Plugin; nothing in this ADR is built yet.
 

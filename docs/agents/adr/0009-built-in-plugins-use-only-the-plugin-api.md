@@ -1,6 +1,6 @@
 # ADR-0009: Built-in Plugins live in this repository and use only the Plugin API
 
-**Status:** Accepted. Built. A narrow `git` capability for Automatic Commits is built by ADR-0025; further Git automation remains planned in ADR-0016.
+**Status:** Accepted. Built. A narrow `git` capability for Automatic Commits is built by ADR-0026; further Git automation remains planned in ADR-0016.
 
 Rowbly keeps its core small and adds features as Plugins. For now every Plugin is a Built-in Plugin: a folder `src/plugins/<id>/` that is built into the same bundle as core and listed in one static registry. Loading a Plugin means activating it at startup when the Data Root turns it on (ADR-0010). A Plugin imports only the public Plugin API, never a core module directly. Core never imports a Plugin; only the entry point reads the registry. The architecture test enforces both rules. A Plugin's TUI part loads only when the TUI starts, so command mode starts as fast as before.
 

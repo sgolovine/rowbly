@@ -1,4 +1,4 @@
-# ADR-0025: Git Automatic Commits are a bounded first part of Git automation
+# ADR-0026: Git Automatic Commits are a bounded first part of Git automation
 
 **Status:** Accepted. Built. Narrows the implementation scope of ADR-0016 without changing its remaining planned design.
 
