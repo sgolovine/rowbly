@@ -9,7 +9,7 @@ A markdown document that describes work to be done, titled by its first level-on
 _Avoid_: specification, design doc, PRD
 
 **Story Spec**:
-A Spec that belongs to exactly one Story; a Story has at most one.
+A Spec that belongs to exactly one Story, identified by a slug within it; a Story can have any number. The one named by its Story alone has the slug `spec`.
 _Avoid_: story doc
 
 **Board Spec**:

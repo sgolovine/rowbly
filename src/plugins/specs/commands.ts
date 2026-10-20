@@ -5,7 +5,9 @@ import {
   editSpec,
   getSpec,
   listSpecs,
+  listStorySpecs,
   resolveTarget,
+  STORY_SPEC_SLUG,
   specLine,
   specTargetName,
   titledText,
@@ -23,10 +25,17 @@ interface SpecOptions {
 export const commands: PluginCommands = (group, cli) => {
   group
     .command('list')
-    .description("List the Board's Board Specs")
+    .description("List the Board's Board Specs, or a Story's Story Specs")
     .option('--board <id>', 'the Board')
+    .option('--story <KEY>', 'the Story Specs of this Story')
     .action((opts: SpecOptions, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
+        if (opts.story) {
+          if (opts.board) throw new UsageError('Use --story without --board to list Story Specs');
+          const specs = await listStorySpecs(plugin, await plugin.services.stories.get(opts.story));
+          print(specs, (items) => items.map(specLine).join('\n') || 'No Story Specs.');
+          return;
+        }
         const specs = await listSpecs(plugin, await resolveBoard(opts.board));
         print(specs, (items) => items.map(specLine).join('\n') || 'No Board Specs.');
       }),
@@ -36,7 +45,7 @@ export const commands: PluginCommands = (group, cli) => {
       .command(`${verb} [slug]`)
       .description(`${verb[0]?.toUpperCase()}${verb.slice(1)} a Board Spec or Story Spec`)
       .option('--board <id>', 'the Board')
-      .option('--story <KEY>', 'the Story Spec of this Story');
+      .option('--story <KEY>', `a Story Spec of this Story; its slug defaults to "${STORY_SPEC_SLUG}"`);
     if (verb === 'create' || verb === 'edit') {
       command
         .option('--title <title>', 'the Spec title')

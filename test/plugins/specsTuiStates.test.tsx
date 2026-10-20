@@ -2,7 +2,7 @@
 // (CQ-166), the Board chooser (CQ-117) and route titles (ARCH-25).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { specs } from '../../src/plugins/specs';
-import { createSpec } from '../../src/plugins/specs/specs';
+import { createSpec, readSpec } from '../../src/plugins/specs/specs';
 import type { LocalState } from '../../src/schemas';
 import { acquireLock } from '../../src/storage';
 import { io } from '../../src/storage/io';
@@ -53,51 +53,46 @@ describe('Specs failure and empty states (CQ-118)', () => {
     failMarkdownReads();
     await app.press(KEYS.tab);
     const frame = await waitForFrame(app, 'Could not load Specs.');
-    expect(frame).not.toContain('No Story Spec');
-    expect(frame).not.toContain('create Story Spec');
-    await app.press('e');
+    expect(frame).not.toContain('No Specs');
+    expect(frame).not.toContain('new Story Spec');
+    await app.press('n');
     await tick(100);
     expect(app.lastFrame()).not.toContain('Title');
     app.unmount();
   });
 
-  it('a successfully loaded absent Story Spec still offers create', async () => {
+  it('a Story without Story Specs still offers create', async () => {
     const { app } = await setup('story', { key: 'WEB-1' });
     await waitForFrame(app, 'Login');
     await app.press(KEYS.tab);
-    await waitForFrame(app, 'No Story Spec. Press e to create one.');
-    await app.press('e');
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('new Story Spec'));
+    await app.press('n');
     await waitForFrame(app, 'Title');
     app.unmount();
   });
 
-  it('a failed detail view cannot open edit or delete', async () => {
-    const { app } = await setup('plugin', { plugin: 'specs', screen: 'detail', board: 'web', slug: 'auth' });
-    await waitForFrame(app, 'Requirements');
-    app.unmount();
-    const failed = await setup('plugin', { plugin: 'specs', screen: 'detail', board: 'web', slug: 'missing' });
-    await waitForFrame(failed.app, 'Could not load Spec.');
-    await failed.app.press('e');
-    await failed.app.press('d');
+  it('a link to a missing Board Spec shows as missing, and neither opens nor offers edit or delete', async () => {
+    const { app } = await setup('story', { key: 'WEB-1' });
+    await waitForFrame(app, 'Login');
+    await app.press(KEYS.tab);
+    // The links are gone, then auth: `gone` is highlighted first.
+    const frame = await waitForFrame(app, (f) => f.includes('gone  (missing)') && f.includes('open Spec'));
+    expect(frame).not.toContain('edit Spec');
+    expect(frame).not.toContain('delete Story Spec');
+    await app.press(KEYS.enter);
+    await waitForFrame(app, 'Board Spec "gone" not found');
+    await app.press('e', 'd');
     await tick(100);
-    expect(failed.app.lastFrame()).not.toContain('enter new line');
-    expect(failed.app.lastFrame()).not.toContain('Delete Spec');
-    failed.app.unmount();
+    expect(app.lastFrame()).not.toContain('tab/e edit');
+    expect(app.lastFrame()).not.toContain('tab view');
+    expect(app.lastFrame()).not.toContain('Delete Story Spec');
+    app.unmount();
   });
 
-  it('malformed screen params show a failure instead of a broken screen', async () => {
-    const { app } = await setup('plugin', {
-      plugin: 'specs',
-      screen: 'detail',
-      board: 'web',
-      story: 'WEB-1',
-      slug: 'auth',
-    });
-    await waitForFrame(app, 'Could not load Spec.');
-    const form = await setup('plugin', { plugin: 'specs', screen: 'form', board: 'web', create: false });
-    await waitForFrame(form.app, 'Could not load Spec.');
+  it('malformed form params show a failure instead of a broken screen', async () => {
+    const { app } = await setup('plugin', { plugin: 'specs', screen: 'form', board: 'web', slug: 'auth' });
+    await waitForFrame(app, 'Could not open the Spec form.');
     app.unmount();
-    form.app.unmount();
   });
 
   it('a failed Board Spec list shows a failure; an empty one shows the genuine empty text', async () => {
@@ -208,18 +203,15 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
     app.unmount();
   });
 
-  it('routes are titled by document and action', async () => {
+  it('the form is titled by its action and the editor by the Spec it shows', async () => {
     const { app } = await setup('plugin', { plugin: 'specs', screen: 'list', board: 'web', title: 'Specs' });
     await waitForFrame(app, 'auth  Auth');
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('Specs › New Spec') && f.includes('Slug'));
     await app.press(KEYS.escape);
-    await waitForFrame(app, 'auth  Auth');
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('open Spec'));
     await app.press(KEYS.enter);
-    await waitForFrame(app, (f) => f.includes('Specs › auth─') && f.includes('Requirements'));
-    await app.press('e');
-    // The edit form names the action, and does not take the detail's title.
-    await waitForFrame(app, 'auth › Edit auth');
+    await waitForFrame(app, (f) => f.includes('Board Spec auth') && f.includes('Requirements'));
     app.unmount();
   });
 
@@ -244,18 +236,45 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
       reload.mockRestore();
       await lock.release();
     }
-    await waitForFrame(app, (f) => f.includes('Specs › auth─') && f.includes('Requirements'));
+    await waitForFrame(app, (f) => f.includes('Board Spec auth') && f.includes('Requirements'));
     app.unmount();
   });
 
-  it('the Story Spec tab keeps its keys while it reloads on return, also behind another lock holder', async () => {
+  it('the Spec list takes d while it reloads after the editor closes, also behind another lock holder', async () => {
+    const { t, app } = await setup('plugin', { plugin: 'specs', screen: 'list', board: 'web', title: 'Specs' });
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('delete Spec'));
+    await app.press(KEYS.enter);
+    await waitForFrame(app, (f) => f.includes('Board Spec auth') && f.includes('tab/e edit'));
+    // Another holder keeps the Data Root busy, so the list's reload on return waits in the lock queue.
+    const lock = await acquireLock(t.path, { operation: 'test.hold' });
+    const realpath = io.realpath;
+    const reloading = deferred();
+    const reload = vi.spyOn(io, 'realpath').mockImplementation((path) => {
+      reloading.resolve();
+      return realpath(path);
+    });
+    try {
+      await app.press(KEYS.escape);
+      await reloading.promise;
+      await app.press('d');
+      await waitForFrame(app, 'Delete Spec "auth"?');
+    } finally {
+      reload.mockRestore();
+      await lock.release();
+    }
+    await app.press('n');
+    await waitForFrame(app, (f) => f.includes('auth  Auth') && f.includes('delete Spec'));
+    app.unmount();
+  });
+
+  it('the Story Specs tab keeps its keys while it reloads on return, also behind another lock holder', async () => {
     const { t, app, plugin } = await setup('story', { key: 'WEB-1' });
-    await createSpec(plugin, { board: 'web', story: 'WEB-1' }, '# Own\n\nStory text');
+    await createSpec(plugin, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Own\n\nStory text');
     await waitForFrame(app, 'Login');
     await app.press(KEYS.tab);
-    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('delete Story Spec'));
+    await waitForFrame(app, (f) => f.includes('spec  Own') && f.includes('delete Story Spec'));
     await app.press('e');
-    await waitForFrame(app, 'enter new line');
+    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('tab view'));
     // Another holder keeps the Data Root busy, so the tab's reload on return waits in the lock queue.
     const lock = await acquireLock(t.path, { operation: 'test.hold' });
     const realpath = io.realpath;
@@ -268,13 +287,53 @@ describe('Specs Board chooser (CQ-117) and titles (ARCH-25)', () => {
       await app.press(KEYS.escape);
       await reloading.promise;
       await app.press('d');
-      await waitForFrame(app, 'Delete Story Spec?');
+      await waitForFrame(app, 'Delete Story Spec "spec"?');
     } finally {
       reload.mockRestore();
       await lock.release();
     }
     await app.press('n');
-    await waitForFrame(app, (f) => f.includes('Story text') && f.includes('delete Story Spec'));
+    await waitForFrame(app, (f) => f.includes('spec  Own') && f.includes('delete Story Spec'));
     app.unmount();
+  });
+});
+
+describe('Specs list filter shortcuts', () => {
+  it.each(['Board', 'Story'] as const)('%s Spec filtering keeps shortcuts out of query text', async (kind) => {
+    const story = kind === 'Story';
+    const { app, plugin, services } = await setup(
+      story ? 'story' : 'plugin',
+      story ? { key: 'WEB-1' } : { plugin: 'specs', screen: 'list', board: 'web' },
+    );
+    const target = story ? { board: 'web', story: 'WEB-1', slug: 'spec' } : { board: 'web', slug: 'auth' };
+    try {
+      if (story) {
+        await createSpec(plugin, target, '# Own\n\nStory text');
+        await waitForFrame(app, 'Login');
+        await app.press(KEYS.tab);
+      }
+      const hint = story ? 'delete Story Spec' : 'delete Spec';
+      await waitForFrame(app, (f) => f.includes(story ? 'spec  Own' : 'auth  Auth') && f.includes(hint));
+      const before = await readSpec(plugin, target);
+      const links = (await services.stories.get('WEB-1')).plugins;
+      for (const query of ['deploy', 'newb']) {
+        await app.press('/');
+        await waitForFrame(app, '│/');
+        await app.press(...query);
+        const frame = await waitForFrame(app, `No matches for "${query}".`);
+        expect(frame).not.toContain(hint);
+        expect(frame).not.toContain('Delete ');
+        expect(await readSpec(plugin, target)).toEqual(before);
+        expect((await services.stories.get('WEB-1')).plugins).toEqual(links);
+        await app.press(KEYS.escape);
+        await waitForFrame(app, (f) => f.includes(hint) && !f.includes('No matches'));
+      }
+      await app.press('d');
+      await waitForFrame(app, story ? 'Delete Story Spec "spec"?' : 'Delete Spec "auth"?');
+      await app.press('n');
+      await waitForFrame(app, (f) => f.includes(hint) && !f.includes('Delete '));
+    } finally {
+      app.unmount();
+    }
   });
 });

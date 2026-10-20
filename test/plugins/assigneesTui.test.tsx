@@ -53,6 +53,25 @@ describe('Assignees TUI', () => {
     }
   });
 
+  it('shows Assignees and Task progress on the board list view, as on the card', async () => {
+    const t = await seed({ tasks: true });
+    const { services } = await withPlugins(t, [assignees, tasks]);
+    const plugin = services.plugins.context('tasks');
+    await createTask(plugin, 'WEB-1', { name: 'Done', stage: 'done' });
+    await createTask(plugin, 'WEB-1', { name: 'Next', stage: 'todo' });
+    const { app } = await open(t, 'board', { boardId: 'web' }, { registry: [assignees, tasks] });
+    try {
+      await waitForFrame(app, (frame) => frame.includes('@sam · ✓ 1/2'));
+      await app.press('v');
+      const frame = await waitForFrame(app, (f) => f.includes('▾ Backlog (3)') && f.includes('Logout'));
+      expect(frame).toMatch(/WEB-1 Login +@sam · ✓ 1\/2 +● Backlog/);
+      expect(frame).toMatch(/WEB-2 Signup +@ana +● Backlog/);
+      expect(frame).toMatch(/WEB-3 Logout +● Backlog/);
+    } finally {
+      app.unmount();
+    }
+  });
+
   it('adds, edits and removes Assignees from the settings section', async () => {
     const t = await seed();
     const { app, toasts } = await open(t, 'home', {}, { me: 'ana' });

@@ -174,9 +174,16 @@ skills:
       - mistake: Naming a Story Spec by slug
         mechanism: Story Keys are case-insensitive and web-42 is also a Board Spec slug.
         wrong_pattern: rowbly specs show web-42
-        correct_pattern: rowbly specs show --story WEB-42
+        correct_pattern: rowbly specs show --story WEB-42 (or rowbly specs show design --story WEB-42)
         source: docs/plugins/built-in.md#specs
         priority: HIGH
+        status: active
+      - mistake: Creating a second Story Spec without a slug
+        mechanism: --story without a slug always names the Story Spec spec (ADR-0025), so a second create conflicts.
+        wrong_pattern: rowbly specs create --story WEB-42 --title Design
+        correct_pattern: rowbly specs create design --story WEB-42 --title Design
+        source: docs/plugins/built-in.md#specs
+        priority: MEDIUM
         status: active
       - mistake: Using --spec on edit to add one link
         mechanism: --spec replaces all links.

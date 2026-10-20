@@ -43,6 +43,7 @@ See `domain_map.yaml` for mechanisms and patterns.
 | rowbly-stories | Predicting the next key | MEDIUM | README.md#stories |
 | rowbly-plugins | Story Spec named by slug | HIGH | docs/plugins/built-in.md#specs |
 | rowbly-plugins | `--spec` replaces links | HIGH | docs/plugins/built-in.md#specs |
+| rowbly-plugins | Second Story Spec without a slug | MEDIUM | docs/plugins/built-in.md#specs |
 | rowbly-plugins | Disabling a Plugin to silence an error | MEDIUM | docs/plugins/README.md |
 | rowbly-doctor | Deleting a Story folder or `.txn/` | CRITICAL | docs/architecture/storage.md |
 | rowbly-doctor | Picking one side of a key conflict | HIGH | README.md#doctor |
@@ -119,6 +120,13 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 - Doctor guidance uses the same disable/resume path exercised by the Git interval regression and existing doctor pass tests; a fresh consumer run of the doctor-specific repair workflow was not performed.
 - Intent 0.5.5 review/check for this batch uses the actual PR base `0dacc4133030a1bb86b32751e2e2b21c304ca0f0`. Recording an explicit-base report retains the pre-existing default baseline `2e488a8f01b2cc5f4a77c72d33337d067f2c9445` in this installed version; combining `--record` and `--base` is refused. The default check still reports 34 historical ADR relocation items outside this task. Do not mark those unrelated changes reviewed solely to clear the default check; use the actual PR base for this batch's completion gate.
+
+### Behavior change — many Story Specs and the full-screen editor (2026-10-19, ADR-0025)
+
+- A Story can have any number of Story Specs, each `stories/<KEY>/plugins/specs/<slug>.md`. `spec.md` is the Story Spec `spec`, so existing data is read unchanged. `specs list --story <KEY>` lists them; `create|show|edit|delete [slug] --story <KEY>` take an optional slug that defaults to `spec`, and `--story` with `--board` exits 2. Spec results are `{ slug, title, text }` for both kinds (they were `{ title, text }` for a Story Spec).
+- Updated guidance: rowbly-plugins (Story Spec definition, `specs list --story`, named Story Specs, the result shape, a new MEDIUM mistake: a second Story Spec without a slug exits 4). The HIGH "Story Spec named by slug" mistake keeps its correct pattern and adds the slug-after-verb form.
+- No change: rowbly-cli, rowbly-setup, rowbly-stories and rowbly-doctor. Their tracked sources changed only in the TUI section of README.md (the full-screen editor's view and edit modes, list clicks) and the Plugin-folder comment in `docs/architecture/data-model.md`; TUI operation is outside the assessed scope, and they say nothing about Story Specs.
+- Checks: `intent validate skills` passed; `test/skills/agentWorkflows.test.ts` now creates a second, named Story Spec, lists both and asserts the slug-less second create exits 4. The fresh consumer result is recorded in the review evidence for this revision.
 
 ### Decision — development skills stay outside Intent (2026-10-19)
 

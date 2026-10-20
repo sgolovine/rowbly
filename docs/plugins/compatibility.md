@@ -57,7 +57,7 @@ These are requirements for the release that first loads code that does not ship 
 | Epics | Story bag `{ "epic": "<slug>" }` | legacy v1 (no `version` key) |
 | Epics | Data Root file `plugins/epics/<id>.json` | explicit `version: 1` |
 | Specs | Story bag `{ "specs": ["<slug>", …] }` | legacy v1 (no `version` key) |
-| Specs | Markdown files at Board and Story scope | none; Markdown need not carry a version |
+| Specs | Markdown files at Board and Story scope | none; Markdown need not carry a version. A release before ADR-0025 reads only the Story Spec `spec.md` and ignores a Story's other Story Specs |
 | Tasks | Story bag `{ "nextNumber": n, "tasks": [ … ] }` | legacy v1 (no `version` key) |
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
 

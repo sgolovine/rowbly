@@ -3,7 +3,15 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { definePlugin } from '../../src/plugin-api';
 import { specs } from '../../src/plugins/specs';
-import { createSpec, deleteSpec, editSpec, getSpec, listSpecs, specTitle } from '../../src/plugins/specs/specs';
+import {
+  createSpec,
+  deleteSpec,
+  editSpec,
+  getSpec,
+  listSpecs,
+  listStorySpecs,
+  specTitle,
+} from '../../src/plugins/specs/specs';
 import { makeBoard, makeStory } from '../helpers';
 import { pluginRoot, pluginTestHost, withPlugins } from './helpers';
 
@@ -15,24 +23,55 @@ async function setup() {
 const target = { board: 'web', slug: 'auth' };
 
 describe('Specs operations', () => {
-  it('stores markdown at Board and Story scopes, extracts the first H1 and enforces one Story Spec', async () => {
+  it('stores markdown at Board and Story scopes, extracts the first H1 and enforces unique slugs', async () => {
     const { t, services, plugin } = await setup();
     const story = await services.stories.create('web', { name: 'Login' });
     expect(specTitle('intro\n## Subheading\n# First\n# Second')).toBe('First');
     await createSpec(plugin, target, 'intro\n# Auth\n\nBody');
-    await createSpec(plugin, { board: 'web', story: story.key }, '# Login\n\nDetails');
+    await createSpec(plugin, { board: 'web', story: story.key, slug: 'spec' }, '# Login\n\nDetails');
     expect(await readFile(join(t.path, 'boards/web/plugins/specs/auth.md'), 'utf8')).toContain('# Auth');
     expect(await readFile(join(t.path, 'boards/web/stories/WEB-1/plugins/specs/spec.md'), 'utf8')).toContain('# Login');
     expect(await listSpecs(plugin, 'web')).toMatchObject([{ slug: 'auth', title: 'Auth' }]);
-    await expect(createSpec(plugin, { board: 'web', story: story.key }, '# Duplicate')).rejects.toMatchObject({
-      code: 'CONFLICT',
-    });
+    await expect(
+      createSpec(plugin, { board: 'web', story: story.key, slug: 'spec' }, '# Duplicate'),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
     await editSpec(plugin, target, '# Changed');
     expect((await getSpec(plugin, target)).title).toBe('Changed');
     await expect(createSpec(plugin, { board: 'web', slug: '../escape' }, '# Bad')).rejects.toMatchObject({
       code: 'USAGE',
     });
     await expect(editSpec(plugin, target, 'no heading')).rejects.toMatchObject({ code: 'USAGE' });
+  });
+
+  it('keeps any number of Story Specs per Story, each named by a slug (ADR-0025)', async () => {
+    const { t, services, plugin } = await setup();
+    const story = await services.stories.create('web', { name: 'Login' });
+    const other = await services.stories.create('web', { name: 'Other' });
+    expect(await listStorySpecs(plugin, story)).toEqual([]);
+    await createSpec(plugin, { board: 'web', story: story.key, slug: 'spec' }, '# Requirements');
+    expect(await createSpec(plugin, { board: 'web', story: story.key, slug: 'design' }, '# Design\n\nBoxes')).toEqual({
+      slug: 'design',
+      title: 'Design',
+      text: '# Design\n\nBoxes',
+    });
+    // The same slug on another Story, or as a Board Spec, is another Spec.
+    await createSpec(plugin, { board: 'web', story: other.key, slug: 'design' }, '# Other design');
+    await createSpec(plugin, { board: 'web', slug: 'design' }, '# Board design');
+    expect(await readFile(join(t.path, 'boards/web/stories/WEB-1/plugins/specs/design.md'), 'utf8')).toBe(
+      '# Design\n\nBoxes',
+    );
+    expect(await listStorySpecs(plugin, story)).toMatchObject([
+      { slug: 'design', title: 'Design' },
+      { slug: 'spec', title: 'Requirements' },
+    ]);
+    expect(await listSpecs(plugin, 'web')).toMatchObject([{ slug: 'design', title: 'Board design' }]);
+    await editSpec(plugin, { board: 'web', story: story.key, slug: 'design' }, '# Design v2');
+    expect(await deleteSpec(plugin, { board: 'web', story: story.key, slug: 'spec' })).toBe(0);
+    expect(await listStorySpecs(plugin, story)).toMatchObject([{ slug: 'design', title: 'Design v2' }]);
+    expect(await listStorySpecs(plugin, other)).toMatchObject([{ slug: 'design', title: 'Other design' }]);
+    await expect(
+      createSpec(plugin, { board: 'web', story: story.key, slug: '../escape' }, '# Bad'),
+    ).rejects.toMatchObject({ code: 'USAGE' });
   });
 
   it('sets, adds, removes and filters same-Board links, preserving other Plugin Data', async () => {

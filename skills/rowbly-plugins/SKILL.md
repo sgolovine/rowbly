@@ -96,14 +96,18 @@ rowbly epics delete auth --no-prompt                            # unlinks its St
 
 ## 3. Specs: markdown documents for Stories and Boards
 
-A **Story Spec** belongs to one Story (at most one per Story). A **Board Spec** belongs to a Board, has a
-slug, and Stories on that Board link to it. A Spec's title is its first `# ` heading.
+A **Story Spec** belongs to one Story; a Story can have any number, each named by a slug that is unique
+within the Story. A **Board Spec** belongs to a Board, has a slug, and Stories on that Board link to it.
+A Spec's title is its first `# ` heading.
 
 ```sh
-# The Story Spec of WEB-42 (always name it with --story, never as a slug)
+# Story Specs of WEB-42 (always name the Story with --story; the slug comes after the verb)
 printf '%s\n' "## Scope" "" "Email and password only." \
-  | rowbly specs create --story WEB-42 --title "Login page" --file - --json --no-prompt
-rowbly specs show --story WEB-42 --json --no-prompt             # {title, text}
+  | rowbly specs create --story WEB-42 --title "Login page" --file - --json --no-prompt   # slug: spec
+rowbly specs create design --story WEB-42 --title "Design" --text "One form." --json --no-prompt
+rowbly specs list --story WEB-42 --json --no-prompt             # [{slug, title, text}, …] by slug
+rowbly specs show --story WEB-42 --json --no-prompt             # the Story Spec spec: {slug, title, text}
+rowbly specs show design --story WEB-42 --json --no-prompt
 
 # A Board Spec, and links from Stories
 rowbly specs create auth-flow --board web --title "Auth flow" --text "Tokens expire after 1 h." --json --no-prompt
@@ -115,6 +119,10 @@ rowbly specs delete auth-flow --board web --yes --json --no-prompt   # unlinks i
 ```
 
 - Text comes from `--text`, `--file <path>` or `--file -` (stdin). Do not use `--edit`.
+- `--story <KEY>` without a slug names the Story Spec `spec` (`spec.md`). Give a slug for any other one;
+  `--story` cannot be combined with `--board`.
+- A Story's Story Specs are `stories/<KEY>/plugins/specs/<slug>.md`; `specs list --board` shows only Board
+  Specs.
 - A Story can link only to Board Specs of its own Board.
 - A Board that has Board Specs cannot be deleted without `--force`, even when it has no Stories.
 - If changing links exits 6 because the Story's stored links are invalid, `--reset-specs` (alone or with
@@ -176,7 +184,10 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt
 ## Common mistakes
 
 - **HIGH: naming a Story Spec by slug.** `specs show web-42` looks for a Board Spec with that slug,
-  because Story Keys are case-insensitive and `web-42` is also a valid slug. Use `--story WEB-42`.
+  because Story Keys are case-insensitive and `web-42` is also a valid slug. Use `--story WEB-42`, with
+  the Story Spec's slug after the verb when it is not `spec`: `specs show design --story WEB-42`.
+- **MEDIUM: a second Story Spec without a slug.** `specs create --story WEB-42` always means the Story
+  Spec `spec`, so a second one exits 4 (already exists). Name it: `specs create design --story WEB-42`.
 - **HIGH: `--spec` on `stories edit` to add one link.** It replaces all links. Use `--add-spec`.
 - **MEDIUM: turning a Plugin off to silence an error.** Its commands disappear, but its data and the
   underlying problem stay. Read `plugins list` and `rowbly doctor` instead.

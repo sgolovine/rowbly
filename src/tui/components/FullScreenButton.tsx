@@ -2,7 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import { useIsActive, useMouse } from '../hooks';
 
-/** The button below a `TextArea` that opens its text in a full-screen modal; `ctrl+f` does the same. */
+/** The button below a `TextArea` that opens its text in a `FullScreenEditor`; `ctrl+f` does the same. */
 export function FullScreenButton({
   focused,
   clickable,
