@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "b4d00aafad19dedd6694d896a498bf2ab660cc88a40d3938f5181261fa6543df",
+      "fingerprint": "869c418e9565d40d422fedf2221472802a073f025b6939dc607af06e283c177e",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,19 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "6e5f5ad39099351b4907263cea38edd4e4c68dbde1934ff44cfa4a2278fcf9f9",
+      "fingerprint": "fe692284dd301f12fabeab30de20dded9a14b70031ff87b7a492d1a8c5869a5a",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -34,19 +34,19 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "eb951cad0bec45353e5839236800689c778cdd41a96573c538f2ff14ad529cad",
+      "fingerprint": "4b148709aea264170fbf93f06956bfec22f2436f975b2edb34e79be859cea27f",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
         "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
@@ -57,19 +57,19 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "3262453a38a9a272ce130fc2b18de1f976f110ab9ef373e30fddb46b029eba02",
+      "fingerprint": "bdb16654c935c5189b74762902ac8689c9f1379cdaadb549d5ed8d312c0f8add",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -78,19 +78,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "ddd97bb5e1b10100667de1edc289db27103ef1b6ab25f20f20f1a8835fb65244",
+      "fingerprint": "46540ef9912caffd7e39fb93f0405ae547788f0cc04313c15df5019cf9d5c7f2",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -99,19 +99,19 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "ae94241fab3ee9ec08187eddab7f9f91efb3099383ef9997f66ac99096f50197",
+      "fingerprint": "021b670ec96aa2bfb1ed083f71f9f7cb61d79a9c18489eae0797126e17de3187",
       "snapshot": {
-        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
+        "README.md": "7092ae2e4a7cdf564b62ad44e0f0a52640335936f9082517bb4c4cae4dc4e9b8",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
@@ -147,13 +147,13 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
       "outcome": "no-change",
-      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
-        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -1762,16 +1762,17 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
+      "fingerprint": "3a3f26bfc90a11647bab0bd6c23993734d5ebcdc147b263cfd97005c3dcfe32b",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
+        "src/tui/screens/board/BoardScreen.tsx": "7084eaacda09ce3cec7d8246abb5b66b9229e9dc2f528fd343b4871e36d4773d"
       },
-      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
-      "outcome": "out-of-scope",
-      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
+      "outcome": "no-change",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
-        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1800,16 +1801,17 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
+      "fingerprint": "31c2ba17f81c4e0bb367963dba2183a99db0025c42f1c7d638af34df63c19a1a",
       "snapshot": {
-        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
+        "test/tui/board.test.tsx": "244607aff1cae526289875b254801218f7cbf3bbbf23f4649393c59b7d77e674"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "b1d0f7325515fb0079200b753f13357c89a15fbd",
+      "outcome": "no-change",
+      "reason": "PR #56 adds list-view Stage move keys and restores folded section state after a refused optimistic move. README changes only the Board (list view) key row. The five existing skills teach command mode only; domain_map.yaml retains the TUI gap, skill_spec.md explicitly excludes TUI operation/development from assessed scope, and skill_tree.yaml task identities/source mappings remain accurate. No CLI command, flag, storage contract, doctor finding, or exit code changes.",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Compared origin/main 0dacc4133030a1bb86b32751e2e2b21c304ca0f0 to b1d0f73 and inspected BoardScreen.tsx, board.test.tsx, README.md, five skill entrypoints and all three substantive planning records.",
+        "Deterministic deferred-service folded Backlog regression failed before fix and board suite passes 34/34 after fix. pnpm typecheck and pnpm lint passed. Full unit/CLI runs aborted on supervisor instruction due resource contention; sequential rerun pending.",
+        "pnpm exec intent validate skills passed 5/5; maintainer sync reported nothing to synchronize. Fresh consumer validation not run: guidance unchanged; existing CLI task checks will run in required CLI suite."
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
