@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "6abc75a6cc15f3bc43ca532264d247aa18a39200d020b4a49dcf15c5b858ee77",
+      "fingerprint": "b4d00aafad19dedd6694d896a498bf2ab660cc88a40d3938f5181261fa6543df",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,17 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "e79d54a32e13a6ec1cf08293e8ac06cbc140389e78ff9c9da94b02e70c07a7cf"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed."
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "14eb7f15e96cd84c83b6f78a7275821c66f442f27f70c09c9aead3f998325f75",
+      "fingerprint": "6e5f5ad39099351b4907263cea38edd4e4c68dbde1934ff44cfa4a2278fcf9f9",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -32,19 +34,21 @@
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed."
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "2870240df35bd7cff66df64645176b47f457fd36878729072d46c88829585660",
+      "fingerprint": "eb951cad0bec45353e5839236800689c778cdd41a96573c538f2ff14ad529cad",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
+        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/rowbly-plugins/SKILL.md": "4c751f5bbaed72db6acc3ffc3b583d840a14a6c1656053406e220e90f957d204",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -53,17 +57,19 @@
         "src/plugins/specs/commands.ts": "7bbcea366b7a4c8516ffc2283161f8cce4723aca3a4aaa60e9ae66086db3b0e0",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed."
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "9af90efd3db1ad6ede51ada1bd4d11cd3dafbe67b0ec505daf53f977f5bfdeba",
+      "fingerprint": "3262453a38a9a272ce130fc2b18de1f976f110ab9ef373e30fddb46b029eba02",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -72,17 +78,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed."
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "1fa5f712c2e6dcc28fc2bb627c09ec7ccd6caae470d393873fbabb4b0c37ab3d",
+      "fingerprint": "ddd97bb5e1b10100667de1edc289db27103ef1b6ab25f20f20f1a8835fb65244",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -91,24 +99,26 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
       "outcome": "no-change",
-      "reason": "Changed README and Plugin docs describe board-list badge rendering only. This CLI operating skill remains accurate: commands, arguments, JSON results, exit codes and developer workflows are unchanged.",
+      "reason": "README.md's only change notes that a click on the TUI header's Settings button opens the settings, like `,`. The skills teach command mode; skill_spec.md records TUI operation as outside the assessed scope, so no guidance changes.",
       "evidence": [
-        "Compared current skill with git diff origin/main for README.md and docs/plugins/built-in.md; rowbly-cli explicitly directs agents to command mode. Focused BoardListRow regression passed all 4 tests (widths 56, 60, 80, short/no badges). intent validate skills passed."
+        "git diff origin/main -- README.md changes only the `,` row of 'Keys on every screen'",
+        "grep of skills/*/SKILL.md finds no guidance on TUI keys or the header",
+        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "70260da3dcb2fbc97dd729394d4504bcb1e89f2226b5ff6549430a25f61d80f8",
+      "fingerprint": "fb237de5a25ac9369e7f3d40ee50c4766c9f6cc20966b8dcfb8867b3710c7850",
       "snapshot": {
-        "README.md": "6af68a62c7cbd30a005b889ddf12425a889bab2537fe2ae2d8d8d0aa0ab36606",
+        "README.md": "c0d2d554832014b4dea1842555beef4ab699743b87beee8ed82d2fe3c6c03277",
         "docs/agents/CONTEXT.md": "f230d2371ff1c21e50cd5671511a78a17a9cd4e7463703d1c97d59a62f982f1a",
         "docs/architecture/data-model.md": "880830f1df2c16675b35e25679c77ef8c365f2fa3b99bf56497d3e2efaf556a4",
         "docs/architecture/storage.md": "4da099780720b00235afa37fdd2ca591626a7878a87f0a3662117adad06bea44",
         "docs/plugins/README.md": "34c075c7a7ae4ef50d6eeea9782397e86ab9a0a33d9ea3f651b96fcb8a1b8820",
-        "docs/plugins/built-in.md": "ae00e374ebf30f83c9a43233b73f3bf268835dfbad0e8b3975a082e9a50a22da",
+        "docs/plugins/built-in.md": "fae72d1445ea3251e61e16053451dff8cd8f358595b888d5cf080ea8475ac09a",
         "skills/_artifacts/domain_map.yaml": "25332add2a7d57bd8f6ed05111296f7c9c3ca3c887c81ae776c583533127fd0e",
-        "skills/_artifacts/skill_spec.md": "47e77577d5c2367aba7a9ab2082134ed2e0daf065c3818b4cb86b7bedb2e763b",
+        "skills/_artifacts/skill_spec.md": "01a8fdf13f8290e55b2d0e770abe87bad457b1e17cc5f020df85efdbddf8998f",
         "skills/_artifacts/skill_tree.yaml": "3147553d2c9e7e188a3a234330ca84ebdbb5abeafbf8a52d3bc8b1c6377909f3",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "6230c06656a6020782428064da76b384112d489eb3d931fd8dcb5c2da5846fd0",
@@ -137,11 +147,11 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
       "outcome": "no-change",
-      "reason": "All three planning documents retain the correct CLI-only operating scope. The board list badge rendering and truncation changes add no CLI task, prerequisite, source ownership, distribution choice, or skill identity; TUI operation remains explicitly unassessed in skill_spec.md.",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "Read skills/_artifacts/domain_map.yaml, skill_spec.md and skill_tree.yaml; preserved prior tasks/decisions and remaining work. README and docs/plugins/built-in.md diff only extends TUI badge surfaces and documents truncation. intent validate skills passed. No new or changed guidance; fresh consumer validation not run for this TUI-only correction."
+        "Changed: skills/_artifacts/skill_spec.md at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -529,15 +539,17 @@
       ]
     },
     "source:docs/development/README.md": {
-      "fingerprint": "d1cb1060b88edfcc1caddd6250bf049d7bd3edf13d6bc5636969a03adafd62bb",
+      "fingerprint": "7ac89155bac7eb11b72d6fd40a8a31ddc78365f5c768855d9c7d3fbb2823825c",
       "snapshot": {
-        "docs/development/README.md": "77ccb1e0cc136adaf529f6e2c647cd269cd03a6235e4c5d06a11c94dc12ee77e"
+        "docs/development/README.md": "17431b0e3b28db007bc2dcbc3da5a15a91ab8c7f3c5c758d0c5beb0b63fd8a8e"
       },
-      "head": "ce1b26d608e2aa4979dca5ec03221e209f486fac",
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
       "outcome": "no-change",
-      "reason": "Reviewed the CI job split, test:cli documentation, and Specs reload input fix against origin/main. The five skills teach operating the CLI, not developing Rowbly or driving its TUI; their commands, storage rules and recovery guidance are unchanged. domain_map.yaml, skill_spec.md and skill_tree.yaml retain the same task ownership and scope. The deterministic held-lock regression exercises the displayed edit/delete keys during reload; typecheck, lint and skill validation pass.",
+      "reason": "Adds a Screenshots section on the agentic-tui devDependency and scripts/demo-data-root.sh. The Intent skills teach operating Rowbly, not developing it, so none needs a change.",
       "evidence": [
-        "Changed: docs/development/README.md at ce1b26d608e2aa4979dca5ec03221e209f486fac"
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     },
     "source:docs/plugins/API.md": {
@@ -577,15 +589,15 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "43aebdb8273e55da598bcbd71e81fc156ad8c71b32e29b2ef2cb99c07a718362",
+      "fingerprint": "67259307de2d587d061d74c3d59f7fdef21c7e6bdacd8ae183479b4efc420ed6",
       "snapshot": {
-        "docs/plugins/api.md": "68a2d8a1be8de53577e6ecb4198a3c247061103d5e8edbc688916f379bb78e1e"
+        "docs/plugins/api.md": "fab546e996ac7f3ef2ff6e424cdfa33b78c3d5cb6eb50027704fffbd7a509c42"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
-      "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
+      "outcome": "updated",
+      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1750,15 +1762,16 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "73a197ba22523d80ad9fb5b817fab6fa687bb01cbe9ff107d323837a636b1d62",
+      "fingerprint": "5bb59f337ab21c38ba92c8203ec97355154adfc3eaafb00c22af7660b2f36c8e",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "7b6fb1ef77f0e88641f85f0b2c40c7dbbe47b6b07596089b91592a88dd38462a"
+        "src/tui/screens/board/BoardScreen.tsx": "d581b3c89408cd64be2f12f4ddc1b288b2bc523494e6a34aee5169d7edeb7938"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "72174f62269eb9450a51da1c48f22c39f21d66fe",
       "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "reason": "The board hides its TUI key hints while a move, rank or delete is being written (the keys were already ignored then), and the T/B test holds the rank call at a barrier. No skill covers TUI key hints or rendering; skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "grep of skills/*/SKILL.md finds no guidance on the board's key hints",
+        "Checks on 72174f6 (merged with origin/main): pnpm typecheck and pnpm lint passed; pnpm test:unit 974/974 and pnpm test:cli 156/156 passed; the T/B test passed 20/20 runs and fails without the fix"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -1787,16 +1800,15 @@
       ]
     },
     "source:test/tui/board.test.tsx": {
-      "fingerprint": "a25c857c4eb4e0bde277f1c3a57d7863d86ff3e467a2ba4a5c5fc52fac169b8f",
+      "fingerprint": "ca39937a22b9e9a32d6254c6f2d27417069ef1d9da7762a3ea7f6db344435d74",
       "snapshot": {
-        "test/tui/board.test.tsx": "14de3b6ce6f625dff9a6d5854667086c2147ebc269e615c3102cf4ea13ddf667"
+        "test/tui/board.test.tsx": "5cdd9ae728325b2936ce674ed20c0ff8bcae327e14817db1042e155d9c32be13"
       },
-      "head": "d7ed9a1e4e669799d90af35a928d4d43a83507bb",
-      "outcome": "out-of-scope",
-      "reason": "A TUI header button that opens the settings like `,`, and test updates for the narrower header label. No skill covers TUI rendering or keys; skill_spec.md records TUI operation as outside the assessed scope. No commands, records or doctor findings changed.",
+      "head": "ec76672d7f139c651c63a721e512a22e4498f9ea",
+      "outcome": "no-change",
+      "reason": "Merge of main 0dacc41 into PR #59. Main's README change only documents clicking Settings in the TUI header; TUI operation is outside the skill scope per skill_spec.md §Scope. skill_spec.md's decision that development skills stay outside Intent is unchanged. board.test.tsx now waits for each move to finish before the next key (test-only). No command, flag, output, exit code, doctor finding or Data Root behavior changes; domain_map.yaml, skill_spec.md and skill_tree.yaml remain accurate: no skill, task, source mapping or decision changes. Checks: pnpm typecheck, pnpm lint, pnpm test:unit (975 passed), pnpm test:cli (156 passed).",
       "evidence": [
-        "grep of skills/*/SKILL.md finds no guidance on the TUI header",
-        "Checks on d7ed9a1: pnpm typecheck and pnpm lint passed; pnpm test:unit 975/975 and pnpm test:cli 156/156 passed"
+        "Changed: test/tui/board.test.tsx at ec76672d7f139c651c63a721e512a22e4498f9ea"
       ]
     },
     "source:test/tui/boardsStagesFields.test.tsx": {
@@ -3333,15 +3345,15 @@
       ]
     },
     "source:test/plugins/assigneesTui.test.tsx": {
-      "fingerprint": "3c0f46efd4f072a5520edb194705366fe82c97410da7c545a77cff018e61ba56",
+      "fingerprint": "c79474f265674213e81829de4c97035eed6253c77404953963334a4e9d7d67be",
       "snapshot": {
-        "test/plugins/assigneesTui.test.tsx": "0f5014e8a9027535ab910eb1cddca16c28a96a601e4b246582c50809afbe7236"
+        "test/plugins/assigneesTui.test.tsx": "f9d81da2f494377fa1066dad017735794263d80dc9ac085226a762ea2681b880"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
-      "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "outcome": "no-change",
+      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
       ]
     },
     "source:test/plugins/concurrency.test.ts": {
@@ -3718,27 +3730,28 @@
       ]
     },
     "source:src/tui/screens/board/BoardList.tsx": {
-      "fingerprint": "8e9f145e9cbfdea5876ba470b63b132f795f17e743c79e8c7d38745156648f1c",
+      "fingerprint": "5fba6c52fd7c65f3436ec2f756aaa2ec9614e6531f30a861586bc6905a70f2e4",
       "snapshot": {
-        "src/tui/screens/board/BoardList.tsx": "ceafe6e517aff9315d9d98fa9d8d0b00d99e5abaddd06896bd49dc6f31e18097"
+        "src/tui/screens/board/BoardList.tsx": "47ad681672435b887fe78dd0978d2bdd2b4267365c41217bb76685cd13448463"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
       "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "reason": "TUI-only change: the board's Stages | List view switch and list view. TUI operation is outside the assessed skill scope (skill_spec.md Batch 1); no command-mode behavior changed.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "c2ec23e5a1af96d3b6e9c7613b5919aba83e9430173b0860ca367f97e5faf1cd",
+      "fingerprint": "267a9d1d03ea602737e30d646a9e28253257bc508260d9228274484c7328b9b6",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "bfa6a4022415a5efcd53e81aa2506dc1ce20feaa33b42629e99f5486879b3fb5"
+        "src/tui/screens/board/BoardListRow.tsx": "eacd15bf5198d5b781f324531abbaaea94abdac1739ca093e7cd1d7d02bce977"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "ae42fa7fbe806b24547b2597616333eabeed32c4",
       "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "reason": "Visual spacing of the TUI board list view (a dim rule below each line, two terminal lines per list line); no skill covers TUI rendering, and skill_spec.md records TUI operation as outside the assessed scope. No commands, keys, records or doctor findings changed.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "grep of skills/*/SKILL.md finds no guidance on the board list view's layout",
+        "Checks on ae42fa7: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed"
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -3974,16 +3987,116 @@
         "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
       ]
     },
-    "source:test/tui/boardListRow.test.tsx": {
-      "fingerprint": "0b25e1d510058957fae2ec948c7babf8af0cb3ca9a1f7a242af49733947d3a9e",
+    "source:.agents/skills/agentic-tui/LICENSE": {
+      "fingerprint": "4ede7b7249421133b62ab15fe31f032916be261100a9de67e067e8a9bc419739",
       "snapshot": {
-        "test/tui/boardListRow.test.tsx": "ff692c4dce7df4b0990391d7d53462a9a2d28ec115ac9c25a66b991e447148ee"
+        ".agents/skills/agentic-tui/LICENSE": "3a03b44a444ebf9f9bb30e84e5c199965fd0a5ccb54a29dd5fe9e9932b30ca27"
       },
-      "head": "a151fdc0455c17e6cbe6ed690b13ed6cb69b2356",
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
       "outcome": "out-of-scope",
-      "reason": "Board-list rendering, Plugin TUI surface documentation and TUI regression tests are outside the installed CLI operating skill batch; no new independently useful CLI guidance is warranted.",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
       "evidence": [
-        "Inspected git diff origin/main and BoardList/BoardListRow/BoardScreen; all badges use existing storyBadges/cardBadge APIs. Actual row regression failed before fix at widths 56, 60, 80 and passed afterward; command behavior unchanged."
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fb78b3a6430f5c849c1fae4ab7b899502fd3e959225cc58fad1926dbfcb9d829",
+      "snapshot": {
+        ".agents/skills/agentic-tui/SKILL.md": "e3f682a09b1e2248073b0eb57d4ea1369a8c93538a0aef00f4e9a0a8d6f93129"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/agentic-tui/UPSTREAM.md": {
+      "fingerprint": "2b5ad0442c78e26ca0031f82f06cd558e37540fd28c0937d71c4f6676cd447a9",
+      "snapshot": {
+        ".agents/skills/agentic-tui/UPSTREAM.md": "b1dd7b5c7ea8cea79a9901db9ceba2362e6b5493607dd817adc41eccc16ef993"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.agents/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "4108cb489eae5c29f224b06d205d1a5cc93c0488a77ac2fee7343843b41e52b9",
+      "snapshot": {
+        ".agents/skills/rowbly-screenshots/SKILL.md": "00c6b12cd8a3f96feaa1825a60453f1f2475a425fb7fbcd6314cf593600213bb"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/agentic-tui/SKILL.md": {
+      "fingerprint": "fd925090f2867de1fff2a96b4f73cdeee99eb690dba70eb61a5c495741adc25c",
+      "snapshot": {
+        ".claude/skills/agentic-tui/SKILL.md": "d03331b137957bdc8d1c8cce87fb60bada7e225fc49a3ed8b22c8d950a535099"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:.claude/skills/rowbly-screenshots/SKILL.md": {
+      "fingerprint": "6caff2259045e97af5beefb766433e977b4a0f010f9ed80f849a83cd32a6c2df",
+      "snapshot": {
+        ".claude/skills/rowbly-screenshots/SKILL.md": "73843669e5b9f9412db44eab031162343ff06aa69c00116d2fd2410773489825"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:pnpm-workspace.yaml": {
+      "fingerprint": "12031148ce79fe131c558e4288d55562b2ef0f71389a06bf8e1277ab4ca6fd03",
+      "snapshot": {
+        "pnpm-workspace.yaml": "e20e7c9a3a4afe42e8f683d0b21222d38a073f7eecd91fafd26e60dfec74247c"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
+      ]
+    },
+    "source:scripts/demo-data-root.sh": {
+      "fingerprint": "14d1804d433a25ee01ed787e76e61b60b08fe767d916135494271c5b97375b08",
+      "snapshot": {
+        "scripts/demo-data-root.sh": "bd8a0d23f3bf555e7c47c5dcb181187746d324cb6f91220f5cf246dde52df7e5"
+      },
+      "head": "23860dffad9d5f0f67dbdaa4334e9931d7f7e7f5",
+      "outcome": "out-of-scope",
+      "reason": "Development tooling for taking screenshots of Rowbly with agentic-tui. It is not published (package.json files lists only dist and skills/rowbly-*) and changes no command, flag, output, exit code, doctor finding or Data Root behavior, so no Intent skill in skills/ teaches it.",
+      "evidence": [
+        "git diff origin/main..HEAD: devDependency @codebolt/agentic-tui, node-pty override, .agents/skills/{agentic-tui,rowbly-screenshots} with .claude/skills pointers, scripts/demo-data-root.sh, AGENTS.md and docs/development/README.md Screenshots sections",
+        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'; the Intent skills in skills/ teach operating Rowbly, not developing it",
+        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed)"
       ]
     }
   }
