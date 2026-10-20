@@ -297,7 +297,7 @@ rowbly comments delete <KEY> <comment-id>   # confirms; pass --yes when not inte
 - `list` shows Comments oldest first. `edit` updates the Comment's `updatedAt`.
 - `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
 - Comments are stored as Plugin Data on their Story (`"plugins": { "comments": { "comments": [ … ] } }`). `stories show` counts them.
-- In the TUI, the Story screen gets a **Comments** tab: `c` add, `e` edit (both open the Comment form), `d` delete.
+- In the TUI, the Story screen gets a **Comments** tab: `n` new, `e` edit (both open the Comment form), `d` delete.
 <!-- END comments -->
 
 <!-- BEGIN doctor -->
@@ -415,7 +415,7 @@ The full-screen editor fills the terminal and has two modes. **View** shows the 
 
 ### Keys per screen
 
-The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand in for `←`/`↓`/`↑`/`→`, and `H`/`J`/`K`/`L` for `shift` with those arrows (on the board and the Stages screen).
+The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand in for `←`/`↓`/`↑`/`→`, and `H`/`J`/`K`/`L` for `shift` with those arrows (on the board and the Stages screen). Wherever a screen or tab can create a record, `n` creates a new one.
 
 | Screen | Keys |
 | --- | --- |
@@ -425,6 +425,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Story | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks (Tasks Plugin) | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
 | Task (Tasks Plugin) | `e` edit, `m` move to a Stage, `d` delete |
+| Story › Comments (Comments Plugin) | `n` new, `e` edit, `d` delete |
 | Assignees (Plugin) | `enter` open (then: Edit, Remove), `n` add |
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |

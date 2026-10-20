@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "d594be210ec77a9e9697106ae9a9efb7767472c572ff0c5f7b48cc5b1e29e2c1",
+      "fingerprint": "9f25a3a75c51f7fdbdddd9c965382caa94f4e07daf41a1abd7077e4ea059bedf",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,44 +14,42 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "0eda858dec9e1a5706e3db9ff6d1af3fbdf2785d183862b748763371e1505be6",
+      "fingerprint": "9a17ef04bfd09419b2b0937e52a080019b0df7e054ee590a7646c3988aff69a7",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/plugins/built-in.md": "405ba58bff8f2f04d31e5608ba4f89b68830874a313edf42558f386c75de6ef4",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "c04573ec7e002a3eff06ab448f9e8c182089c51ba8850a00e97441fc2c5df3ae",
+      "fingerprint": "f6ec20ccdd698071a75e5517f898f77cfe89eb801e0b8fccc004bffe38273149",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "405ba58bff8f2f04d31e5608ba4f89b68830874a313edf42558f386c75de6ef4",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
         "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -68,19 +66,18 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
-      "outcome": "updated",
-      "reason": "Preserved the queued Git guidance and domain-map task coverage from #65; reconciled skill_spec history with #63/#66 and changed the incoming queue ADR/source mapping to available ADR-0030 to avoid the merged badge ADR-0028. skill_tree.yaml and rowbly-plugins now reference the existing queue decision at its unique path. Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
+      "outcome": "no-change",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "49918547e4879a0116b5c89839bab3d54aef78c5b2a70ce657bf72672fcac99a",
+      "fingerprint": "7feb8d152589a6124c39affabe8a41f70559be435814bda8e4615eaf256f6b38",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -89,19 +86,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "ebc6cd5616ad256d07be3677ffe89e7f6710aadb6831ae1f15154de5399900b4",
+      "fingerprint": "f4a0fc2785884cc19d126a8434a17047fc0b648f927ffba11d1e8c2564a5f796",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -110,25 +106,24 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "070ce7af16be1671539f3556ef0ded17050748b5f7cb5aa28fee71d04690655c",
+      "fingerprint": "c0c7f5fbec2861af0e1e9fc9e3d63aa588eabafa5bf6d41190c1831ff4ff6e23",
       "snapshot": {
-        "README.md": "47de9f0a114dbff4d84ed3cd82019bd445ab5455a63d40ea114c64f3fbbeb55c",
+        "README.md": "5099eca28b67f5b82587976f968dd5d59824b2a8422142452887476181d49ef4",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "405ba58bff8f2f04d31e5608ba4f89b68830874a313edf42558f386c75de6ef4",
+        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
         "skills/_artifacts/domain_map.yaml": "f931748c067ea3a7f3b752cb62f8e91b07ecd4568d0c297036c72d7a7d92a326",
         "skills/_artifacts/skill_spec.md": "28b3d5678ea3d1ab24b152fe983085a1bd74cb8d42628b015f01a27c352da675",
         "skills/_artifacts/skill_tree.yaml": "d5324d622b8311451db56912f2641a178aed566ee2a1d79b6a71d790bc1c251a",
@@ -167,13 +162,12 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "df619614b005886a687ca5f810487ff28f9bf953",
-      "outcome": "updated",
-      "reason": "Preserved the queued Git guidance and domain-map task coverage from #65; reconciled skill_spec history with #63/#66 and changed the incoming queue ADR/source mapping to available ADR-0030 to avoid the merged badge ADR-0028. skill_tree.yaml and rowbly-plugins now reference the existing queue decision at its unique path. Integration preserves #65 queue semantics and #63/#66 badges and sidebars. Command syntax, configuration, doctor findings, record formats and remaining CLI skill recommendations are unchanged by this reconciliation. README/storage describe asynchronous TUI commits and command-mode draining already covered by the Git Plugin guidance.",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
+      "outcome": "no-change",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "Incoming #65 df619614b005886a687ca5f810487ff28f9bf953; merged main 99f04e704347ed54b09aba365436b7d4712ac99a. Checked all three planning documents, queue docs and ADR references.",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 21 files / 67 tests including leaked-lock and same-path snapshot regressions; pnpm test:cli passed 4 files / 20 tests including skill workflow task checks.",
-        "Original #65 records a successful fresh consumer Git automation task; no new consumer session for ADR path/history reconciliation, which changes no recommendation."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -2092,15 +2086,16 @@
       ]
     },
     "source:src/plugins/comments/CommentsTab.tsx": {
-      "fingerprint": "85905cb46e67d8de45de0c0fae17ceb5b8ae92b13cbf3bb459d84151f929b925",
+      "fingerprint": "f6729e76bb98de89a0392518d9e8cbffbf49987bcb0966b4dc35108210ecfdd6",
       "snapshot": {
-        "src/plugins/comments/CommentsTab.tsx": "aae51505bf1f870952182d03903df46fb9e5457edfcb993c419f3cb3c5e02695"
+        "src/plugins/comments/CommentsTab.tsx": "4a60fafe04c77c05267d801e6fd0185e28347172afa1d72d511906081102ea83"
       },
-      "head": "b9d3940ba1a026b092b22c138eafcba1d8989d71",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Reviewed as part of moving Tasks from core to a Built-in Plugin, retiring Task extension slots and making Comments Story-only. Existing revised rowbly-stories, rowbly-plugins and rowbly-doctor guidance covers the consumer effects; no additional skill is needed for this internal source, test or documentation change.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "PR #51 diff against origin/main; src/plugins/tasks/{index,model,tasks,commands}.ts; README.md; docs/agents/adr/0022-tasks-are-a-built-in-plugin.md; test/plugins/tasks{,Cli,Tui}.test.ts* and test/skills/agentWorkflows.test.ts. Original PR CI Verify passed. Integrated branch typecheck and lint passed; Intent skill validation passed. Combined full-suite verification is pending; no fresh consumer session was run."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "source:src/plugins/comments/comments.ts": {
@@ -2794,17 +2789,16 @@
       ]
     },
     "source:test/plugins/commentsTui.test.tsx": {
-      "fingerprint": "2f2ced7fb792b13f973804e25ff8735cf9557f4e7dd48516f1d359be2497d136",
+      "fingerprint": "f3164e9af24257a11e7c0190dd0266e75c9165ee50e7641ab3d32d956becce08",
       "snapshot": {
-        "test/plugins/commentsTui.test.tsx": null
+        "test/plugins/commentsTui.test.tsx": "67ef4d9f1b09ec079dc0a7db5b845a88613a74f2a57f20ba5224f15c45bbcadc"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
+      "head": "521e309e1e0e5200377eb024404426937965508b",
       "outcome": "no-change",
-      "reason": "Development of Rowbly itself (its test suite, test helpers, the test policy in AGENTS.md, ADR-0025 and the development and Plugin-author docs), which Batch 1 left to AGENTS.md and docs/development/README.md; it changes no command, flag, output, exit code, doctor finding or Data Root behavior that the skills describe.",
+      "reason": "Integrated #64 on top of #65 and merged #63/#66. This last merge changes only the Comments TUI key c to n, README TUI descriptions, the Comments Plugin TUI description and its regression test. Existing CLI-only skill guidance, queue recommendations, domain_map.yaml task coverage, skill_spec.md cumulative decisions and skill_tree.yaml identities/source mappings remain accurate.",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed test/plugins/commentsTui.test.tsx against origin/main and PR head 9ee41d2."
+        "git diff 521e309: AGENTS.md n-creates rule; CommentsTab.tsx new Comment action/hints; commentsTui.test.tsx readiness assertions; README.md and docs/plugins/built-in.md Comments keys.",
+        "Combined tree: pnpm typecheck and pnpm lint passed; pnpm test:unit passed 22 files / 68 tests; pnpm test:cli passed 4 files / 20 tests including existing skill workflow checks. No guidance behavior changed in this merge; fresh consumer session not rerun."
       ]
     },
     "source:test/plugins/fixtures/others.ts": {
