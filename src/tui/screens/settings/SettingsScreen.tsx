@@ -57,14 +57,19 @@ export function SettingsScreen() {
   const Section = section ? sectionScreen(section) : undefined;
 
   useKeyCapture(active && focus === 'section', { escape: true });
-  useEscape(active && focus === 'section', () => setFocus('nav'));
+  // An open form or dialog in the section takes `esc` for itself; only then does `esc` leave the section.
+  useEscape(active && focus === 'section', () => {
+    if (!childShell.holdsEscape()) setFocus('nav');
+  });
   useKeyHints(
     focus === 'nav'
       ? [
           { key: '↑/↓', description: 'section' },
           { key: 'enter/tab', description: 'open section' },
         ]
-      : [...sectionHints, { key: 'esc', description: 'back to sections' }, { key: 'tab', description: 'sections' }],
+      : sectionHints.some((hint) => hint.key === 'esc')
+        ? sectionHints
+        : [...sectionHints, { key: 'tab', description: 'sections' }, { key: 'esc', description: 'back to sections' }],
   );
   useInput(
     (input, key) => {
