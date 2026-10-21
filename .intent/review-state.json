@@ -120,7 +120,7 @@
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "dd5a4f3d42c96f1687b5008388bcd45331fbfba5e1850bff2f507f1059e33a0e",
+      "fingerprint": "3c1ef25ea0fb3391cd223dad80d3bd4da8d76ab6f2726d8eb9e58a4725000294",
       "snapshot": {
         "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
@@ -130,7 +130,7 @@
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
         "skills/_artifacts/domain_map.yaml": "0cd3ea4cd163aacca6adabf32fcc417f4d1b2c5257227a0c8302cd2b1922a715",
-        "skills/_artifacts/skill_spec.md": "58063482db53d17bec85a5120fe4a9265d0b498e7d845519b90787419c3c27d5",
+        "skills/_artifacts/skill_spec.md": "5c83f6d091d0421c37267d23fe6087170bb6618f96ec3ae91dd64506dab7ba9e",
         "skills/_artifacts/skill_tree.yaml": "f440a3b9e46349c8b2808f8b4d50761803e6d831d08e1c47569ffa6b9cdacf41",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
@@ -167,13 +167,11 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
       "outcome": "no-change",
-      "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml stay accurate: this TUI correction pass changes no command, flag, output, exit code, doctor finding or Data Root behavior and adds no skill.",
+      "reason": "TUI-only mouse handling in src/tui/hooks/mouse.ts; outside the skills' assessed scope (skill_spec.md §Scope). No command, output, exit code or Data Root behavior changed.",
       "evidence": [
-        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
+        "Changed: skills/_artifacts/skill_spec.md at c9093e774a49f009e9ea3806d3e4c993880f4248"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -6083,17 +6081,15 @@
       ]
     },
     "source:src/tui/hooks/mouse.ts": {
-      "fingerprint": "9a4766f126b88db23b4f0c9c3a0a188f06bfb96167763e614c1fc8c6c60be2f9",
+      "fingerprint": "1a4f770955e51aa680933355f5417b2f4aab658c17ba0883f5477d24b93a4c0f",
       "snapshot": {
-        "src/tui/hooks/mouse.ts": "9930ee0b4c3c0ded70bf701702b05eb31992e486996dfbbeddbb6d3a935c6f5a"
+        "src/tui/hooks/mouse.ts": "2de9ea09c108298b7194ce626e4df44e25b36fb4fcc95c14c19da2b1e9b6bbc1"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "TUI-only mouse handling in src/tui/hooks/mouse.ts; outside the skills' assessed scope (skill_spec.md §Scope). No command, output, exit code or Data Root behavior changed.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Changed: src/tui/hooks/mouse.ts at c9093e774a49f009e9ea3806d3e4c993880f4248"
       ]
     },
     "source:src/tui/mouse.ts": {

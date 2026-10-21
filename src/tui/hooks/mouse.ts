@@ -8,7 +8,11 @@ export interface MouseHandlers {
   onClick?(): void;
   onEnter?(): void;
   onLeave?(): void;
-  /** Dragging starts on a press here and carries this value to the box it is released over. */
+  /**
+   * Dragging starts on a press here and carries this value to the box it is released over. On such a
+   * box `onClick` waits for the release: a press and release in the same cell is a click, and moving
+   * to another cell while the button is held is a drag.
+   */
   drag?: unknown;
   onDrop?(value: unknown): void;
 }
@@ -27,7 +31,7 @@ export interface MouseRegistry {
 export function createMouseRegistry(): MouseRegistry {
   const targets = new Set<Target>();
   let hovered: Target | undefined;
-  let dragging: { value: unknown; from: Target } | null = null;
+  let dragging: { value: unknown; from: Target; x: number; y: number; moved: boolean } | null = null;
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
     let best: { target: Target; area: number } | undefined;
@@ -56,6 +60,7 @@ export function createMouseRegistry(): MouseRegistry {
     },
     dispatch(event) {
       if (event.kind === 'move') {
+        if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
         const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
         if (next !== hovered) {
           hovered?.handlers.current.onLeave?.();
@@ -66,16 +71,21 @@ export function createMouseRegistry(): MouseRegistry {
       }
       if (event.kind === 'press') {
         const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined));
-        dragging =
-          target && target.handlers.current.drag !== undefined
-            ? { value: target.handlers.current.drag, from: target }
-            : null;
+        if (target && target.handlers.current.drag !== undefined) {
+          dragging = { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false };
+          return;
+        }
+        dragging = null;
         target?.handlers.current.onClick?.();
         return;
       }
       const drop = dragging;
       dragging = null;
       if (!drop) return;
+      if (!drop.moved && event.x === drop.x && event.y === drop.y) {
+        drop.from.handlers.current.onClick?.();
+        return;
+      }
       const target = hit(event, (h) => Boolean(h.onDrop));
       if (target && target !== drop.from) target.handlers.current.onDrop?.(drop.value);
     },
