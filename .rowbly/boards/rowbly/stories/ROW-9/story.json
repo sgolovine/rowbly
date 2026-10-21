@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-9",
+  "boardId": "rowbly",
+  "name": "Test Story 01",
+  "description": "",
+  "stage": "backlog",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": null,
+  "createdAt": "2026-10-20T23:03:29.485Z",
+  "updatedAt": "2026-10-20T23:03:29.485Z",
+  "plugins": {
+    "epics": {
+      "epic": "test-epic-01"
+    }
+  }
+}

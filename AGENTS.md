@@ -32,7 +32,7 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
 | Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published and not Intent skills |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published and not Intent skills |
 
 ## Domain language and decisions
 
@@ -77,6 +77,9 @@ tool, hand-drawn screens or `ink-testing-library` frames instead, and do not com
 
 ## TUI code organization (`src/tui/`)
 
+- **Design system.** Colours, borders, spacing, key hints and modals follow
+  `.agents/skills/rowbly-tui-design/SKILL.md` (planned: the TUI is not moved over yet). New and
+  changed TUI code uses its tokens and component rules.
 - **One component per file.** Each React component lives in its own `PascalCase.tsx` file named after
   the component. Don't add new components to an existing file, and split a file when it starts holding
   several. A small private helper that only that component uses (a constant, a pure function) may stay

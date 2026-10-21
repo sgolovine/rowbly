@@ -1,0 +1,455 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+/* Generated from ../tokens.json, then the shared preview styles. Open any preview in a browser; add data-theme="light" on <html> for the light theme. */
+:root,
+[data-theme="dark"] {
+  --ground: #111214;
+  --overlay: #1b1c21;
+  --overlay-raised: #23242b;
+  --keycap: #2c2d35;
+  --field: #26272e;
+  --field-focus: #2f3140;
+  --selection: #17324a;
+  --ink: #e7e6e1;
+  --ink-muted: #a3a39b;
+  --ink-faint: #8e8f97;
+  --border: #3a3b42;
+  --border-control: #64656d;
+  --accent: #56b6e8;
+  --on-accent: #111214;
+  --stage-backlog: #9a9aa2;
+  --stage-board: #e8b04b;
+  --stage-done: #5cc58a;
+  --danger: #f07a6f;
+  --epic: #b9a0f0;
+}
+[data-theme="light"] {
+  --ground: #f7f6f2;
+  --overlay: #ffffff;
+  --overlay-raised: #f1f0eb;
+  --keycap: #e4e3dc;
+  --field: #ecebe5;
+  --field-focus: #e2e6ef;
+  --selection: #dbe9f5;
+  --ink: #1c1d21;
+  --ink-muted: #55565c;
+  --ink-faint: #63646b;
+  --border: #c9c8c0;
+  --border-control: #8a8981;
+  --accent: #0b6aa3;
+  --on-accent: #ffffff;
+  --stage-backlog: #62636a;
+  --stage-board: #8a5a00;
+  --stage-done: #176b3d;
+  --danger: #b4312a;
+  --epic: #6a4bbf;
+}
+:root {
+  --col-1: 8px;
+  --col-2: 16px;
+  --row-1: 20px;
+  --row-2: 40px;
+  --border-single: 0px;
+  --border-round: 6px;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+/* Rowbly TUI — a cell-grid mock of Ink output. 1ch = one terminal column, 20px = one row. */
+body {
+  margin: 0;
+  background: var(--ground);
+}
+.tui {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 20px;
+  padding: 10px 2ch;
+  white-space: pre;
+  font-variant-ligatures: none;
+}
+.tui * {
+  box-sizing: border-box;
+}
+.tui .b {
+  font-weight: 700;
+}
+.ink {
+  color: var(--ink);
+}
+.muted {
+  color: var(--ink-muted);
+}
+.faint {
+  color: var(--ink-faint);
+}
+.accent {
+  color: var(--accent);
+}
+.danger {
+  color: var(--danger);
+}
+.epic {
+  color: var(--epic);
+}
+.c-backlog {
+  color: var(--stage-backlog);
+}
+.c-board {
+  color: var(--stage-board);
+}
+.c-done {
+  color: var(--stage-done);
+}
+.flex {
+  display: flex;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.grow {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.gap1 {
+  gap: 1ch;
+}
+.gap2 {
+  gap: 2ch;
+}
+.vgap {
+  row-gap: 20px;
+}
+.between {
+  justify-content: space-between;
+}
+.trunc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Panel: a round frame with its title set into the top edge. */
+.panel {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--border-round);
+  padding: 9px 1ch;
+  margin-top: 10px;
+  background: inherit;
+}
+.panel > .ttl {
+  position: absolute;
+  top: -11px;
+  left: 1ch;
+  padding: 0 1ch;
+  background: var(--ground);
+  color: var(--ink-muted);
+}
+.panel.focus {
+  border-color: var(--accent);
+}
+.panel.focus > .ttl {
+  color: var(--accent);
+  font-weight: 700;
+}
+.panel > .aside {
+  position: absolute;
+  top: -11px;
+  right: 1ch;
+  padding: 0 1ch;
+  background: var(--ground);
+}
+.modal {
+  background: var(--overlay);
+  border-color: var(--accent);
+}
+.panel.modal > .ttl,
+.panel.modal > .aside {
+  background: var(--overlay);
+}
+.crumb {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+.crumb + .crumb::before {
+  content: " › ";
+  color: var(--ink-faint);
+}
+.crumb:last-child {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Header controls: one row, no frame of their own, inside the header Panel */
+.ctls {
+  display: inline-flex;
+  align-items: center;
+}
+.ctl {
+  display: inline-flex;
+  gap: 1ch;
+  padding: 0 1ch;
+  color: var(--ink);
+}
+.ctl:hover {
+  background: var(--selection);
+}
+.ctl.primary {
+  color: var(--accent);
+  font-weight: 700;
+}
+.ctls .div {
+  color: var(--border-control);
+}
+.cap {
+  background: var(--keycap);
+  color: var(--ink-muted);
+  padding: 0 1ch;
+  font-weight: 400;
+}
+.ctl.primary .cap {
+  color: var(--accent);
+}
+.seg {
+  display: inline-flex;
+  gap: 1ch;
+  padding: 0 1ch;
+}
+.seg .on {
+  color: var(--accent);
+  font-weight: 700;
+}
+.seg .off {
+  color: var(--ink-faint);
+}
+.seg .sep {
+  color: var(--border-control);
+}
+
+/* Selectable rows */
+.row {
+  display: flex;
+  gap: 1ch;
+  padding-right: 1ch;
+}
+.row .bar {
+  width: 1ch;
+  color: var(--accent);
+}
+.row.sel {
+  background: var(--selection);
+}
+.row.sel .name {
+  color: var(--ink);
+  font-weight: 700;
+}
+.row.sel.blur {
+  background: transparent;
+}
+.row.sel.blur .bar {
+  color: var(--ink-faint);
+}
+.group {
+  color: var(--ink-faint);
+  padding-left: 2ch;
+}
+/* List view: one column of padding inside the row, no rules */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+.list .row {
+  padding: 0 1ch 0 0;
+}
+.list .row .bar + * {
+  margin-left: 1ch;
+}
+
+/* Stage column and Story */
+.rule {
+  border-bottom: 1px solid var(--border);
+  height: 10px;
+  margin-bottom: 10px;
+}
+.rule.focus {
+  border-bottom: 2px solid var(--accent);
+}
+.story {
+  border: 1px solid var(--border);
+  border-radius: var(--border-round);
+  padding: 9px 1ch;
+}
+.story.sel {
+  border-color: var(--accent);
+  background: var(--selection);
+}
+.story .key {
+  color: var(--accent);
+}
+.tui .story .name {
+  color: var(--ink);
+}
+.story.sel .name {
+  font-weight: 700;
+}
+.story .meta {
+  color: var(--ink-muted);
+}
+
+/* Detail */
+.dl {
+  display: grid;
+  grid-template-columns: 11ch 1fr;
+}
+.dl dt {
+  color: var(--ink-muted);
+  margin: 0;
+}
+.dl dd {
+  margin: 0;
+}
+.tabs {
+  display: flex;
+  gap: 1ch;
+}
+.tab {
+  padding: 0 1ch;
+  color: var(--ink-muted);
+}
+.tab.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+.tab.on.blur {
+  background: var(--selection);
+  color: var(--ink);
+}
+
+/* Form */
+.fld {
+  display: grid;
+  grid-template-columns: 2ch 13ch 1fr;
+}
+.fld .mk {
+  color: var(--accent);
+}
+.fld .in {
+  background: var(--field);
+  padding: 0 1ch;
+}
+.fld.focus .lbl {
+  color: var(--accent);
+  font-weight: 700;
+}
+.fld.focus .in {
+  background: var(--field-focus);
+}
+.ph {
+  color: var(--ink-faint);
+}
+.caret {
+  background: var(--ink);
+  color: var(--ground);
+}
+.err {
+  color: var(--danger);
+}
+
+/* Key hints */
+.hints {
+  display: flex;
+  gap: 2ch;
+  flex-wrap: nowrap;
+}
+.hints .k {
+  color: var(--ink);
+  font-weight: 700;
+}
+.hints .d {
+  color: var(--ink-faint);
+}
+.hintbar {
+  border-top: 1px solid var(--border);
+  padding-top: 9px;
+  margin-top: 10px;
+}
+
+/* Toast */
+.toast {
+  display: inline-flex;
+  gap: 1ch;
+  border: 1px solid currentColor;
+  border-radius: var(--border-round);
+  padding: 9px 1ch;
+}
+.toast .msg {
+  color: var(--ink);
+}
+.toast.info {
+  color: var(--accent);
+}
+.toast.warning {
+  color: var(--stage-board);
+}
+.toast.error {
+  color: var(--danger);
+}
+
+/* Modals: generic (sized to content) and screen (fixed size, band + body + hints) */
+.modal.generic {
+  display: inline-block;
+  min-width: 48ch;
+  max-width: 72ch;
+}
+.modal.screen {
+  padding: 0;
+  height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.modal.screen > .band {
+  background: var(--overlay-raised);
+  padding: 9px 2ch 0;
+  border-radius: var(--border-round) var(--border-round) 0 0;
+}
+.modal.screen > .band .tabs {
+  margin-top: 20px;
+}
+.modal.screen > .body {
+  flex: 1;
+  padding: 20px 2ch;
+  overflow: hidden;
+}
+.modal.screen > .hintbar {
+  margin: 0;
+  padding: 0 2ch 9px;
+  padding-top: 9px;
+}
+.modal .x {
+  color: var(--ink-faint);
+}
+.split {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 22ch 1fr;
+  overflow: hidden;
+}
+.split > .nav {
+  border-right: 1px solid var(--border);
+  padding: 20px 1ch 0 0;
+}
+.split > .pane {
+  padding: 0 2ch;
+}
+.split > .pane > .band {
+  background: var(--overlay-raised);
+  margin: 0 -2ch 20px;
+  padding: 10px 2ch;
+}
+.modal.under {
+  border-color: var(--border);
+}
+.modal.under > .ttl .crumb:last-child {
+  color: var(--ink-muted);
+}

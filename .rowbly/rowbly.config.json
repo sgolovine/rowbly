@@ -12,6 +12,9 @@
   ],
   "plugins": {
     "git": {
+      "enabled": false
+    },
+    "epics": {
       "enabled": true
     }
   }
