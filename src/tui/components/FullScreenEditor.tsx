@@ -58,7 +58,7 @@ export function FullScreenEditor({
   const latest = useRef(initial);
   const outer = useLayout();
   const active = useIsActive();
-  const { body } = modalSize(outer, { maxWidth: outer.width, footer: true });
+  const { body } = modalSize(outer, { size: 'screen', maxWidth: outer.width, footer: true });
   const rows = body.height === undefined ? UNBOUNDED_ROWS : Math.max(1, body.height - MODE_ROWS);
   const dirty = onSave !== undefined && value !== saved;
   const keys = active && !confirming && save.kind !== 'saving';
@@ -99,7 +99,7 @@ export function FullScreenEditor({
     { key: 'esc', description: 'close' },
   ];
   return (
-    <Modal title={title} hints={hints} maxWidth={outer.width} onClose={confirming ? undefined : close}>
+    <Modal title={title} hints={hints} size="screen" maxWidth={outer.width} onClose={confirming ? undefined : close}>
       {confirming ? (
         <ConfirmDialog
           message="Close and discard unsaved changes?"
