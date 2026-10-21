@@ -4,6 +4,7 @@ import {
   ConfirmDialog,
   type DetailRow,
   DetailView,
+  formatDate,
   Loading,
   SelectList,
   Text,
@@ -98,8 +99,8 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   const rows: DetailRow[] = [
     { label: 'Story', value: `${story.key} ${story.name}` },
     { label: 'Stage', value: <TaskStage stages={stages} stage={task.stage} /> },
-    { label: 'Created', value: task.createdAt },
-    { label: 'Updated', value: task.updatedAt },
+    { label: 'Created', value: formatDate(task.createdAt) },
+    { label: 'Updated', value: formatDate(task.updatedAt) },
   ];
 
   return (

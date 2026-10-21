@@ -4,6 +4,7 @@ import { useMouse } from '../hooks';
 import { theme } from '../theme';
 import { FieldValue } from './FieldValue';
 import type { FormField } from './Form';
+import { useScrollFocus } from './scrollFocus';
 
 type Raw = string | boolean | string[] | null;
 const FOCUSED_BACKGROUND = theme.fieldFocus;
@@ -35,6 +36,7 @@ export function FieldRow({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+  useScrollFocus(ref, focused && active);
   useMouse(ref, { onClick }, active);
   const lit = focused && active;
   return (
@@ -64,7 +66,7 @@ export function FieldRow({
           />
         </Box>
       </Box>
-      {error && <Text color={theme.danger}>{`${' '.repeat(labelWidth)}${error}`}</Text>}
+      {error && <Text color={theme.danger}>{`${' '.repeat(labelWidth)}! ${error}`}</Text>}
     </Box>
   );
 }

@@ -1,20 +1,14 @@
-import { Box, Text } from 'ink';
+import { Box } from 'ink';
+import { KeyHints } from '../components';
 import type { KeyHint } from '../keymap';
-import { theme } from '../theme';
 
 export function Footer({ hints, atRoot }: { hints: readonly KeyHint[]; atRoot: boolean }) {
-  // Away from the root the screen's keys are on its modal; this keeps to the global ones.
-  // Only the primary keys fit here; `?` lists the rest.
-  const shown = [
-    ...hints.filter((hint) => !hint.secondary),
-    { key: '?', description: 'help' },
-    ...(atRoot ? [{ key: 'q', description: 'quit' }] : []),
-  ];
   return (
-    <Box paddingX={1} flexShrink={0}>
-      <Text color={theme.inkFaint} wrap="truncate-end">
-        {shown.map((hint) => `${hint.key} ${hint.description}`).join(' · ')}
-      </Text>
+    <Box paddingX={1} flexShrink={0} columnGap={2} justifyContent="space-between">
+      <KeyHints hints={hints.filter((hint) => !hint.secondary)} />
+      <Box flexShrink={0}>
+        <KeyHints hints={[{ key: '?', description: 'help' }, ...(atRoot ? [{ key: 'q', description: 'quit' }] : [])]} />
+      </Box>
     </Box>
   );
 }

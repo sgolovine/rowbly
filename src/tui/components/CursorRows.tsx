@@ -8,8 +8,8 @@ export function CursorRows({ rows, cursor, active }: { rows: ReactNode[]; cursor
     <Box flexDirection="column">
       {rows.map((row, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional.
-        <Box key={i}>
-          <Text color={i === cursor && active ? theme.accent : undefined}>{i === cursor ? '› ' : '  '}</Text>
+        <Box key={i} backgroundColor={i === cursor && active ? theme.selection : undefined}>
+          <Text color={i === cursor && active ? theme.accent : theme.inkFaint}>{i === cursor ? '▌ ' : '  '}</Text>
           {row}
         </Box>
       ))}

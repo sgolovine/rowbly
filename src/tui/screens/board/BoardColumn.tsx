@@ -4,7 +4,7 @@ import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
 import { type StoryBadges, useMouse } from '../../hooks';
 import { theme } from '../../theme';
-import { truncate } from './layout';
+import { StoryCard } from './StoryCard';
 import { useCardBadges } from './useCardBadges';
 
 export interface BoardColumnProps {
@@ -44,14 +44,14 @@ export function BoardColumn({
 }: BoardColumnProps) {
   const shown = cards.slice(first, first + size);
   const below = cards.length - first - shown.length;
-  const inner = width - 1;
+  const inner = width - 2;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
   useMouse(ref, { onClick: () => onClick?.(-1), onDrop }, active);
   return (
-    <Box ref={ref} flexDirection="column" width={width} paddingRight={1} flexShrink={0}>
+    <Box ref={ref} flexDirection="column" width={width} paddingRight={2} flexShrink={0}>
       <Text wrap="truncate-end">
-        <StageBadge stage={stage} /> <Text color={theme.inkFaint}>({cards.length})</Text>
+        <StageBadge stage={stage} /> <Text color={theme.inkFaint}>{cards.length}</Text>
       </Text>
       {selected === null ? (
         <Text color={theme.inkFaint}>{'─'.repeat(inner)}</Text>
@@ -60,7 +60,7 @@ export function BoardColumn({
       )}
       <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
       {shown.map((story, i) => (
-        <Card
+        <StoryCard
           key={story.key}
           story={story}
           badges={[...storyBadges(story), ...badgesOf(story, stages)]}
@@ -70,53 +70,8 @@ export function BoardColumn({
           onClick={() => onClick?.(first + i)}
         />
       ))}
-      {cards.length === 0 && <Text color={theme.inkFaint}>(empty)</Text>}
+      {cards.length === 0 && <Text color={theme.inkFaint}>No Stories</Text>}
       {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}
-    </Box>
-  );
-}
-
-/** Three lines in a box: key and Priority, name, Plugin badges. Never wraps. */
-function Card({
-  story,
-  badges,
-  width,
-  selected,
-  active,
-  onClick,
-}: {
-  story: Story;
-  badges: readonly string[];
-  width: number;
-  selected: boolean;
-  active: boolean;
-  onClick(): void;
-}) {
-  const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick, drag: story.key }, active);
-  // Border and padding take two columns on each side.
-  const room = width - 4;
-  const meta = badges.join(' · ');
-  const priority = story.priority ? ` ${story.priority}` : '';
-  // Both border styles are one cell thick, so selecting a card changes only the border's weight and colour.
-  return (
-    <Box
-      ref={ref}
-      flexDirection="column"
-      width={width}
-      marginBottom={1}
-      paddingX={1}
-      borderStyle={selected ? 'bold' : 'single'}
-      borderColor={selected && active ? theme.accent : undefined}
-    >
-      <Text>
-        <Text bold color={theme.accent}>
-          {truncate(story.key, room)}
-        </Text>
-        <Text color={theme.epic}>{truncate(priority, room - story.key.length)}</Text>
-      </Text>
-      <Text bold={selected}>{truncate(story.name, room)}</Text>
-      <Text color={theme.inkFaint}>{truncate(meta, room) || ' '}</Text>
     </Box>
   );
 }

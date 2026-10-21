@@ -1,5 +1,5 @@
 import { basename, dirname } from 'node:path';
-import { Box, Text } from 'ink';
+import { Box, Text, useWindowSize } from 'ink';
 import { useContext } from 'react';
 import type { RowblyContext } from '../../services';
 import { Button, Panel } from '../components';
@@ -45,45 +45,76 @@ export function Header({
   sidebars?: readonly { id: string; label: string; toggle(): void }[];
 }) {
   const { ctx } = useContext(ServicesContext);
-  // The button sits beside the panel rather than inside it, so the header stays three lines tall.
+  const { columns } = useWindowSize();
+  const showKeys = columns >= 120;
+  const showControls = columns >= 100;
   return (
-    <Box flexShrink={0}>
-      <Panel title={projectName(ctx)} flexGrow={1} flexShrink={1} paddingX={1} flexDirection="row" columnGap={2}>
-        <Box flexGrow={1} flexShrink={1}>
-          {label && (
-            <Text wrap="truncate-end">
-              <Text bold>{label.title}</Text>
-              {label.detail && <Text color={theme.inkFaint}>{` ${label.detail}`}</Text>}
-            </Text>
-          )}
-        </Box>
-        <Box flexShrink={0}>
-          <Text color={theme.inkFaint}>me: {ctx?.me ?? '—'}</Text>
-        </Box>
-      </Panel>
-      {sidebars.map((sidebar) => (
-        <Button
-          key={sidebar.id}
-          label={sidebar.label}
-          keyName={'\\'}
-          onClick={sidebar.toggle}
-          clickable={clickable}
-          compact
-        />
-      ))}
-      {onSettings && <Button label="Settings" keyName="," onClick={onSettings} clickable={actionsClickable} compact />}
-      {actions.map((action) => (
-        <Button
-          key={action.key}
-          label={action.label}
-          keyName={action.key}
-          onClick={action.run}
-          clickable={actionsClickable}
-          compact
-        />
-      ))}
-      {boardView && <ViewSwitch view={boardView.view} onChange={boardView.onChange} clickable={clickable} />}
-      {onNewStory && <Button label="+ New Story" onClick={onNewStory} clickable={clickable} compact />}
-    </Box>
+    <Panel title={projectName(ctx)} height={3} paddingX={1} flexDirection="row" columnGap={2}>
+      <Box flexGrow={1} flexShrink={1} minWidth={8}>
+        {label && (
+          <Text color={theme.ink} wrap="truncate-end">
+            <Text bold>{label.title}</Text>
+            {label.detail && <Text color={theme.inkMuted}> {label.detail}</Text>}
+          </Text>
+        )}
+      </Box>
+      <Box flexShrink={0} alignItems="center">
+        {showControls && <Text color={theme.inkFaint}>me {ctx?.me ?? '—'} </Text>}
+        {showControls &&
+          sidebars.map((sidebar) => (
+            <Box key={sidebar.id}>
+              <Button
+                label={sidebar.label}
+                keyName={showKeys ? '\\' : undefined}
+                onClick={sidebar.toggle}
+                clickable={clickable}
+                compact
+              />
+              <Text color={theme.borderControl}>|</Text>
+            </Box>
+          ))}
+        {showControls && onSettings && (
+          <>
+            <Button
+              label="Settings"
+              keyName={showKeys ? ',' : undefined}
+              onClick={onSettings}
+              clickable={actionsClickable}
+              compact
+            />
+            <Text color={theme.borderControl}>|</Text>
+          </>
+        )}
+        {showControls &&
+          actions.map((action) => (
+            <Box key={action.key}>
+              <Button
+                label={action.label}
+                keyName={showKeys ? action.key : undefined}
+                onClick={action.run}
+                clickable={actionsClickable}
+                compact
+              />
+              <Text color={theme.borderControl}>|</Text>
+            </Box>
+          ))}
+        {showControls && boardView && (
+          <>
+            <ViewSwitch view={boardView.view} onChange={boardView.onChange} clickable={clickable} />
+            <Text color={theme.borderControl}>|</Text>
+          </>
+        )}
+        {onNewStory && (
+          <Button
+            label="+ New Story"
+            keyName={showKeys ? 'n' : undefined}
+            onClick={onNewStory}
+            clickable={clickable}
+            compact
+            primary
+          />
+        )}
+      </Box>
+    </Panel>
   );
 }

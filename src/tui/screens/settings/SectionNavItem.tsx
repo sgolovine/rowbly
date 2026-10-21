@@ -21,9 +21,9 @@ export function SectionNavItem({
   useMouse(ref, { onClick }, clickable);
   const filled = selected && focused;
   return (
-    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={filled ? theme.accent : undefined}>
-      <Text wrap="truncate-end" color={filled ? theme.ink : selected ? theme.accent : undefined} bold={selected}>
-        {selected ? '▌ ' : '  '}
+    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={filled ? theme.selection : undefined}>
+      <Text wrap="truncate-end" color={theme.ink} bold={selected}>
+        <Text color={filled ? theme.accent : theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
         {label}
       </Text>
     </Box>

@@ -20,12 +20,14 @@ export function SidebarItem({
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick }, clickable);
   return (
-    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.accent : undefined}>
-      <Text wrap="truncate-end" color={selected ? theme.ink : undefined} bold={selected}>
-        {selected ? '▌ ' : '  '}
-        <Text color={theme.inkMuted}>{index === undefined ? '' : index < 9 ? `${index + 1} ` : '  '}</Text>
-        {name}
-      </Text>
+    <Box ref={ref} width="100%" paddingRight={1}>
+      <Text color={theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
+      <Box flexGrow={1} flexShrink={1}>
+        <Text wrap="truncate-end" color={theme.ink} bold={selected}>
+          {name}
+        </Text>
+      </Box>
+      {index !== undefined && <Text color={theme.inkFaint}>{index < 9 ? index + 1 : ' '}</Text>}
     </Box>
   );
 }

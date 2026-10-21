@@ -12,6 +12,7 @@ export * from './markdown';
 export * from './Panel';
 export * from './PluginBoundary';
 export * from './PluginSlot';
+export { ScrollBody } from './ScrollBody';
 export * from './SelectList';
 export * from './Spinner';
 export * from './StageBadge';

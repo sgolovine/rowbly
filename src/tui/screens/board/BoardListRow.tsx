@@ -24,7 +24,7 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
   useMouse(ref, { onClick }, active);
   const marker = (
     <Box flexShrink={0}>
-      <Text color={selected && active ? theme.accent : undefined}>{selected ? '› ' : '  '}</Text>
+      <Text color={selected && active ? theme.accent : theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
     </Box>
   );
   const line =
@@ -33,7 +33,9 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
         {marker}
         <Text bold wrap="truncate-end">
           {`${row.collapsed ? '▸' : '▾'} ${row.title} `}
-          <Text color={theme.inkFaint}>({row.count})</Text>
+          <Text color={theme.inkFaint}>
+            ({row.count}){row.count === 0 && !row.collapsed ? '  No Stories' : ''}
+          </Text>
         </Text>
       </Box>
     ) : (
@@ -57,9 +59,13 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
       </Box>
     );
   return (
-    <Box ref={ref} width={width} flexDirection="column">
+    <Box
+      ref={ref}
+      width={width}
+      flexDirection="column"
+      backgroundColor={selected && active ? theme.selection : undefined}
+    >
       {line}
-      <Text color={theme.inkFaint}>{'─'.repeat(Math.max(0, width))}</Text>
     </Box>
   );
 }

@@ -1,6 +1,6 @@
 import { Box, type Key, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
-import type { Slug, Stage, StageCategory, Story } from '../../../schemas';
+import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
@@ -86,7 +86,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
   const [columns, setColumns] = useState<Columns>([]);
   const { view, setView } = useBoardView();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<StageCategory>>(new Set());
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [listCursor, setListCursor] = useState(0);
   const firstListRow = useRef(0);
   const writing = useRef(false);
@@ -207,7 +207,7 @@ export function BoardScreen({ params }: ScreenProps) {
     else setCursor(at);
   };
 
-  const toggleSection = (category: StageCategory, fold?: boolean) =>
+  const toggleSection = (category: string, fold?: boolean) =>
     setCollapsed((current) => {
       const next = new Set(current);
       if (fold ?? !next.has(category)) next.add(category);
@@ -236,9 +236,9 @@ export function BoardScreen({ params }: ScreenProps) {
     const target = stages[from + delta];
     if (at < 0 || !target) return;
     const unfolded = new Set(collapsed);
-    unfolded.delete(target.category);
+    unfolded.delete(target.key);
     const next = listRows(stages, moveCard(columns, from, at, from + delta, target.key), unfolded);
-    toggleSection(target.category, false);
+    toggleSection(target.key, false);
     setListCursor(next.findIndex((r) => r.kind === 'story' && r.story.key === story.key));
     moveTo(from + delta, { col: from, row: at });
   };
@@ -346,7 +346,7 @@ export function BoardScreen({ params }: ScreenProps) {
   };
 
   const stageFor = (at: ListRow | undefined) =>
-    at?.kind === 'story' ? at.stage.key : stages.find((s) => s.category === at?.category)?.key;
+    at?.kind === 'story' ? at.stage.key : stages.find((s) => s.key === at?.category)?.key;
 
   useInput(
     (input, key) => {
@@ -390,7 +390,6 @@ export function BoardScreen({ params }: ScreenProps) {
   const label = scope.data && {
     title: scope.data.choices.board.name,
     detail: [
-      scope.data.boardId,
       scrolled ? `Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : '',
       viewing && !inContext ? 'viewing only (context unchanged)' : '',
       summary ? `filter: ${summary}` : '',

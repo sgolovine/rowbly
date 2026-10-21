@@ -1,4 +1,4 @@
-import { Text } from 'ink';
+import { Box, Text } from 'ink';
 import { useEffect } from 'react';
 import { type Toast, useToast } from '../hooks';
 import { theme } from '../theme';
@@ -13,9 +13,11 @@ export function ToastLine({ toast }: { toast: Toast }) {
     return () => clearTimeout(timer);
   }, [store, toast]);
   return (
-    <Text color={TOAST_COLORS[toast.kind]}>
-      {toast.kind === 'info' ? '' : `${toast.kind}: `}
-      {toast.message}
-    </Text>
+    <Box borderStyle="round" borderColor={theme.border} backgroundColor={theme.overlay} paddingX={1}>
+      <Text color={TOAST_COLORS[toast.kind]}>
+        {toast.kind === 'info' ? '✓ ' : toast.kind === 'warning' ? '! ' : '✕ '}
+        {toast.message}
+      </Text>
+    </Box>
   );
 }

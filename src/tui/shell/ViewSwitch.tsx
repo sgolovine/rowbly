@@ -14,21 +14,24 @@ export function ViewSwitch({
   clickable: boolean;
 }) {
   return (
-    <Box flexShrink={0} gap={1} borderStyle="round" borderColor={theme.accent}>
+    <Box flexShrink={0} gap={1} paddingX={1}>
       <ViewSwitchOption
         label="Stages"
         selected={view === 'stages'}
         onClick={() => onChange('stages')}
         clickable={clickable}
       />
-      <Text color={theme.inkFaint}>│</Text>
+      <Text color={theme.borderControl}>/</Text>
       <ViewSwitchOption
         label="List"
         selected={view === 'list'}
         onClick={() => onChange('list')}
         clickable={clickable}
       />
-      <Text color={theme.inkFaint}>v</Text>
+      <Text backgroundColor={theme.keycap} color={theme.inkMuted}>
+        {' '}
+        v{' '}
+      </Text>
     </Box>
   );
 }

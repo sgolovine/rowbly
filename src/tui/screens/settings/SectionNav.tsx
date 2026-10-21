@@ -4,7 +4,7 @@ import { SectionNavItem } from './SectionNavItem';
 import type { SettingsGroup } from './sections';
 
 /** Width of the settings sidebar, including its right border. */
-export const SECTION_NAV_WIDTH = 20;
+export const SECTION_NAV_WIDTH = 22;
 
 export function SectionNav({
   groups,
@@ -30,11 +30,11 @@ export function SectionNav({
       borderTop={false}
       borderBottom={false}
       borderLeft={false}
-      borderColor={focused ? theme.accent : undefined}
+      borderColor={theme.border}
     >
       {groups.map((group) => (
         <Box key={group.title} flexDirection="column">
-          <Text bold color={theme.inkFaint} wrap="truncate-end">
+          <Text color={theme.inkFaint} wrap="truncate-end">
             {group.title}
           </Text>
           {group.sections.length === 0 && group.empty && (

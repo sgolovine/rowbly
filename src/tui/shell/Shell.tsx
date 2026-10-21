@@ -20,12 +20,10 @@ import {
   useScreenHints,
   useScreenLabel,
   useToast,
-  useToasts,
 } from '../hooks';
 import { globalAction, type KeyHint } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
-import { theme } from '../theme';
 import { bindAction } from './actionFocus';
 import { boardKey } from './boardKey';
 import { Footer } from './Footer';
@@ -57,7 +55,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const { columns, rows } = useWindowSize();
   // Fill the terminal only on a real one, so test frames stay compact.
   const fullscreen = (useStdout().stdout as NodeJS.WriteStream).isTTY === true;
-  const toastCount = useToasts().length;
+
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const mainOverlay = useMemo<MainOverlay>(
     () => ({
@@ -139,7 +137,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
   const openSettings = () => {
-    if (services && !router.stack.some((route) => route.screen === 'settings')) router.push('settings');
+    if (services && !router.stack.some((route) => route.screen === 'settings')) {
+      if (router.current.screen === 'story') router.replace('settings');
+      else router.push('settings');
+    }
   };
 
   useInput((input, key) => {
@@ -173,7 +174,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const sidebarWidth = services ? SIDEBAR_WIDTH * (pluginSidebars.shown ? 2 : 1) : 0;
   // The main panel's border takes a column on each side.
   const mainWidth = Math.max(20, columns - sidebarWidth - 2);
-  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT - toastCount) : undefined;
+  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay !== null && overlay.kind !== 'confirm';
   const top = router.stack[depth];
@@ -246,19 +247,41 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                         left={0}
                         width="100%"
                       >
-                        <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
-                          {router.stack.slice(1).map((route, i) => (
-                            <ScreenSlot
-                              // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
-                              key={`${i + 1}:${route.screen}`}
-                              route={route}
-                              depth={i + 1}
-                              top={i + 1 === depth}
-                              active={i + 1 === depth && overlay === null}
-                              screens={screens}
-                            />
-                          ))}
-                        </Modal>
+                        {router.stack.slice(1).map((route, i) => {
+                          const routeDepth = i + 1;
+                          const screen = route.screen === 'story' || route.screen === 'settings';
+                          const visible =
+                            routeDepth === depth ||
+                            (screen &&
+                              !router.stack
+                                .slice(routeDepth + 1)
+                                .some((next) => next.screen === 'story' || next.screen === 'settings'));
+                          const focused = routeDepth === depth && overlay === null;
+                          return (
+                            <Box
+                              key={`${routeDepth}:${route.screen}`}
+                              display={visible ? 'flex' : 'none'}
+                              flexDirection="column"
+                              position={fullscreen ? 'absolute' : 'relative'}
+                              top={0}
+                              left={0}
+                              width="100%"
+                            >
+                              <Modal
+                                title={router.stack
+                                  .slice(0, routeDepth + 1)
+                                  .map(routeTitle)
+                                  .join(' › ')}
+                                size={screen ? 'screen' : 'panel'}
+                                focused={focused}
+                                onClose={focused ? back : undefined}
+                                hints={modalHints(focused ? hints : [])}
+                              >
+                                <ScreenSlot route={route} depth={routeDepth} top active={focused} screens={screens} />
+                              </Modal>
+                            </Box>
+                          );
+                        })}
                       </Box>
                     )}
                     {overlay?.kind === 'help' && (

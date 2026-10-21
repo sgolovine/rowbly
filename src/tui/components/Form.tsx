@@ -225,6 +225,9 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
   const roomy = layout.height !== undefined && layout.height >= lines + 3;
   return (
     <Box flexDirection="column" gap={roomy ? 1 : 0}>
+      <Text color={theme.inkFaint} wrap="truncate-end">
+        {busy ? 'Saving…' : field ? FIELD_HELP[field.kind] : 'ctrl+s save'}
+      </Text>
       {fields.map((f, i) => (
         <FieldRow
           key={f.name}
@@ -249,14 +252,6 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
             {message}
           </Text>
         ))}
-        <Box gap={2} marginLeft={labelWidth}>
-          <Text color={theme.inkFaint} wrap="truncate-end">
-            {field
-              ? `${FIELD_HELP[field.kind]} · ${field.kind === 'multiline' ? 'tab' : 'enter/tab'} next`
-              : 'enter save'}
-            {' · ctrl+enter/ctrl+s save'}
-          </Text>
-        </Box>
       </Box>
     </Box>
   );

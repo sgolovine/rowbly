@@ -1,13 +1,15 @@
 import { Box, Text, useInput } from 'ink';
 import { useContext, useMemo, useState } from 'react';
 import { UsageError } from '../../../core';
-import { Loading } from '../../components';
+import { Loading, ScrollBody } from '../../components';
 import {
   ActiveContext,
   LayoutContext,
   ShellContext,
   useAsync,
+  useEscape,
   useIsActive,
+  useKeyCapture,
   useKeyHints,
   useLayout,
   usePlugins,
@@ -54,13 +56,15 @@ export function SettingsScreen() {
   const section = sections[selected];
   const Section = section ? sectionScreen(section) : undefined;
 
+  useKeyCapture(active && focus === 'section', { escape: true });
+  useEscape(active && focus === 'section', () => setFocus('nav'));
   useKeyHints(
     focus === 'nav'
       ? [
           { key: '↑/↓', description: 'section' },
-          { key: 'enter/tab', description: 'focus section' },
+          { key: 'enter/tab', description: 'open section' },
         ]
-      : [...sectionHints, { key: 'tab', description: 'sections' }],
+      : [...sectionHints, { key: 'esc', description: 'back to sections' }, { key: 'tab', description: 'sections' }],
   );
   useInput(
     (input, key) => {
@@ -77,7 +81,10 @@ export function SettingsScreen() {
   );
 
   if (board.data === undefined && board.loading) return <Loading label="Loading settings…" />;
-  const sectionLayout = { width: Math.max(20, layout.width - SECTION_NAV_WIDTH - 2), height: layout.height };
+  const sectionLayout = {
+    width: Math.max(20, layout.width - SECTION_NAV_WIDTH - 2),
+    height: layout.height === undefined ? undefined : Math.max(1, layout.height - 3),
+  };
   return (
     <Box height={layout.height} gap={2}>
       <SectionNav
@@ -91,14 +98,22 @@ export function SettingsScreen() {
         }}
       />
       <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden">
+        <Box backgroundColor={theme.overlayRaised} flexDirection="column" paddingX={1} flexShrink={0} marginBottom={1}>
+          <Text color={theme.ink} bold>
+            {section?.label ?? 'Settings'}
+          </Text>
+          <Text color={theme.inkFaint}>Manage {section?.label ?? 'settings'}.</Text>
+        </Box>
         <ShellContext.Provider value={childShell}>
           <ActiveContext.Provider value={active && focus === 'section'}>
             <LayoutContext.Provider value={sectionLayout}>
-              {Section && section ? (
-                <Section key={section.id} params={section.params ?? {}} />
-              ) : (
-                <Text color={theme.inkFaint}>Nothing to show.</Text>
-              )}
+              <ScrollBody height={sectionLayout.height}>
+                {Section && section ? (
+                  <Section key={section.id} params={section.params ?? {}} />
+                ) : (
+                  <Text color={theme.inkFaint}>Nothing to show.</Text>
+                )}
+              </ScrollBody>
             </LayoutContext.Provider>
           </ActiveContext.Provider>
         </ShellContext.Provider>
