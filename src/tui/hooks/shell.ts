@@ -13,8 +13,8 @@ export interface HeaderLabel {
  * dirty form, and each screen's key hints and header label. Screens are identified by their depth in the router stack.
  */
 export interface ShellRegistry {
-  /** Stops the shell from handling printable keys (and `esc` too when `escape` is set) until released. */
-  capture(withEscape: boolean): () => void;
+  /** Stops the shell from handling printable keys (when `text` is set) and `esc` (when `escape` is set) until released. */
+  capture(keys: CaptureKeys): () => void;
   captured(): { text: boolean; escape: boolean };
   setDirty(depth: number, id: string, dirty: boolean): void;
   /** Whether the screen at `depth` (or any screen when omitted) holds a dirty form. */
@@ -35,6 +35,12 @@ export interface ShellRegistry {
   version(): number;
 }
 
+/** Which keys a capture takes from the shell. */
+export interface CaptureKeys {
+  text: boolean;
+  escape: boolean;
+}
+
 export function createShellRegistry(): ShellRegistry {
   let text = 0;
   let escapes = 0;
@@ -49,15 +55,15 @@ export function createShellRegistry(): ShellRegistry {
     for (const listener of listeners) listener();
   };
   return {
-    capture(withEscape) {
-      text += 1;
-      if (withEscape) escapes += 1;
+    capture(keys) {
+      if (keys.text) text += 1;
+      if (keys.escape) escapes += 1;
       let released = false;
       return () => {
         if (released) return;
         released = true;
-        text -= 1;
-        if (withEscape) escapes -= 1;
+        if (keys.text) text -= 1;
+        if (keys.escape) escapes -= 1;
       };
     },
     captured: () => ({ text: text > 0, escape: escapes > 0 }),
@@ -135,11 +141,19 @@ export function useIsActive(): boolean {
   return useContext(ActiveContext);
 }
 
-/** While `active`, the shell ignores printable keys (and `esc` when `escape` is set) so this component gets them. */
-export function useKeyCapture(active: boolean, options: { escape?: boolean } = {}): void {
+/**
+ * While `active`, the shell ignores printable keys (unless `text` is false) and `esc` (when `escape` is
+ * set) so this component gets them. `{ text: false, escape: true }` takes only `esc`, leaving letter keys
+ * to the shell and to screens that check `captured().text`.
+ */
+export function useKeyCapture(active: boolean, options: { text?: boolean; escape?: boolean } = {}): void {
   const shell = useContext(ShellContext);
+  const withText = options.text ?? true;
   const withEscape = options.escape ?? false;
-  useEffect(() => (active ? shell.capture(withEscape) : undefined), [shell, active, withEscape]);
+  useEffect(
+    () => (active ? shell.capture({ text: withText, escape: withEscape }) : undefined),
+    [shell, active, withText, withEscape],
+  );
 }
 
 /** Marks the current screen as holding unsaved input, so `q` and `esc` ask before discarding it. */

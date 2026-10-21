@@ -56,7 +56,8 @@ export function SettingsScreen() {
   const section = sections[selected];
   const Section = section ? sectionScreen(section) : undefined;
 
-  useKeyCapture(active && focus === 'section', { escape: true });
+  // Only `esc`: the section's own letter keys and `tab` back to the sidebar still need printable keys.
+  useKeyCapture(active && focus === 'section', { text: false, escape: true });
   // An open form or dialog in the section takes `esc` for itself; only then does `esc` leave the section.
   useEscape(active && focus === 'section', () => {
     if (!childShell.holdsEscape()) setFocus('nav');

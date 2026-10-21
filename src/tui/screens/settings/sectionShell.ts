@@ -17,9 +17,9 @@ export function sectionShell(shell: ShellRegistry, onHints: (hints: readonly Key
   const hints = createShellRegistry();
   return {
     ...shell,
-    capture(withEscape) {
-      const release = shell.capture(withEscape);
-      if (!withEscape) return release;
+    capture(keys) {
+      const release = shell.capture(keys);
+      if (!keys.escape) return release;
       escapes += 1;
       let released = false;
       return () => {
