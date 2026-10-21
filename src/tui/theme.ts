@@ -49,18 +49,18 @@ const background = Number(process.env.COLORFGBG?.split(';').at(-1) ?? 0);
 export const theme = themes[[7, 15].includes(background) ? 'light' : 'dark'];
 export const stageColors = { backlog: theme.stageBacklog, board: theme.stageBoard, done: theme.stageDone };
 
-/** Human dates are local to the terminal; storage and CLI JSON retain ISO timestamps. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Human dates are local to the terminal, as `20 Oct 2026, 23:03`, with a fixed three-letter month
+ * whatever the locale data says (`en-GB` writes `Sept`); storage and CLI JSON retain ISO timestamps.
+ */
 export function formatDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
+  const day = `${pad(date.getDate())} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  return `${day}, ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 /** A compact elapsed-time label for a screen header. */

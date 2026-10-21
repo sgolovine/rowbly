@@ -1,16 +1,17 @@
+import chalk from 'chalk';
 import type { MarkedExtension } from 'marked';
 import { theme } from '../theme';
 import { markdownToPlain } from './DetailView';
 
-/** Preserve semantic ink even when marked-terminal emits ANSI styles. */
+/**
+ * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours
+ * its own text, so the colour level of the terminal and `NO_COLOR` apply here too.
+ */
 function tint(color: string): (text: string) => string {
-  const rgb = color
-    .slice(1)
-    .match(/../g)
-    ?.map((part) => Number.parseInt(part, 16))
-    .join(';');
-  return (text) => `\u001b[38;2;${rgb}m${text}\u001b[39m`;
+  return (text) => chalk.hex(color)(text);
 }
+
+const strong = (color: string) => (text: string) => chalk.bold(tint(color)(text));
 
 /** Lays out markdown for the terminal: the rows it takes at `width`. */
 export type MarkdownRenderer = (text: string, width: number) => string[];
@@ -38,8 +39,8 @@ export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
               width,
               reflowText: true,
               tab: 2,
-              heading: (text: string) => `\u001b[1m${tint(theme.ink)(text)}\u001b[22m`,
-              firstHeading: (text: string) => `\u001b[1m${tint(theme.ink)(text)}\u001b[22m`,
+              heading: strong(theme.ink),
+              firstHeading: strong(theme.ink),
               code: tint(theme.inkMuted),
               codespan: tint(theme.inkMuted),
               blockquote: tint(theme.inkMuted),
