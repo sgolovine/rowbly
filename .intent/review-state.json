@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "e8a47ba577803f69dd2e06ac4833199f6dcb5ee158874d70ecf9917c288d5db7",
+      "fingerprint": "f037e7682a82a37b988a83f3762449f1ee760926b2f575a356419a08fa1880c4",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,19 +14,19 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "732cedc4b74b4f35afd3481fb6ca5ba7a5d1433423549a3f7dfa7df527243482",
+      "fingerprint": "907827b6cfc2312e475d21a4cf7ae36c24b2348272002e874fd011386ee69d2f",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
@@ -36,19 +36,19 @@
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "31f284230d7091ec2449b93e1149fdb7298fd4c88f980bf47a5fc449d4602cf8",
+      "fingerprint": "41c6316078e9f90b0f762574c4d96a9f3ca5d021e360f6a24447fd9f19af6511",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
         "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
@@ -68,19 +68,19 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "5809d186f14dc970a7a0960b9035a66a526081d21c56af53c154332d270174b3",
+      "fingerprint": "79e8c840e764cf23acda81144499a5e217974c01bfa3185581442c2dbcb51f41",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -89,19 +89,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "d542deffa0017ce85f2162c21c1006327c428f92b6c052e27d4b2c9475215ea2",
+      "fingerprint": "c01c542ae1cefcc142be43c90ed553f8119ada7c8dd4008811ca3d77e80dd0ff",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -110,19 +110,19 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "da76cb0116d15ba721835a9a42760380f59a2f818c19bb4a14f25851884b4a7b",
+      "fingerprint": "53860a73c3cf59c3a8a106999658a4362a7d7a5d3ce2ea8de728b6c3c67083df",
       "snapshot": {
-        "README.md": "c4c4b8bba39fa1ba4bb1086aa3f20ea2941f7a83d16260a2388dceff4a2b6388",
+        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
@@ -167,13 +167,13 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "updated",
-      "reason": "Reconciled domain_map.yaml, skill_spec.md and skill_tree.yaml with the TUI redesign while preserving all command-mode tasks, source mappings and maintainer decisions.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "no-change",
+      "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml stay accurate: this TUI correction pass changes no command, flag, output, exit code, doctor finding or Data Root behavior and adds no skill.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -638,17 +638,17 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "6d2b9219a989c44b772a3045354caff5d8ad33d46117708ce6dcc9185ca6cd1a",
+      "fingerprint": "efbcf433f90bfaa601f4d45922b4acc3a22e2619aff1e6a262db911719cc97cd",
       "snapshot": {
-        "docs/plugins/api.md": "baac19833b943c00db64ea1d4175e7a3be4ec443c46692f3e8affd96ea2080cd"
+        "docs/plugins/api.md": "f59a42718e1f3829ab0eabbf4df1729623ea7c61f84f03a9dd486e997df18f31"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1714,17 +1714,17 @@
       ]
     },
     "source:src/tui/components/Modal.tsx": {
-      "fingerprint": "39bb9a0b309f796d1c2f32b36953d44fbff3ccb5ff3a0ad4b9e7e8bf023e8641",
+      "fingerprint": "99fa2a8868538dc54070274e9372cddf5b1a253d73ad9cf0d75035e3e1a1048e",
       "snapshot": {
-        "src/tui/components/Modal.tsx": "ad18bc5cfe78da495af1d9228ccb4fdf4cbbec7159c2772dc01e79523efe6184"
+        "src/tui/components/Modal.tsx": "7488b62fc4500e16441b008b66d5320221ce13728edaca2991c200f707e1042b"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/Panel.tsx": {
@@ -1822,44 +1822,45 @@
       ]
     },
     "source:src/tui/keymap.ts": {
-      "fingerprint": "82a7d2862d89821fc8a403653f64225c511662903cb95a646b8e44bdaf1d9d22",
+      "fingerprint": "e72fdf314f694ffdd47ddbce34f52a9eac75a8882be944585bad23ff18029abc",
       "snapshot": {
-        "src/tui/keymap.ts": "f57e91a82eb792d557c2c0b48eb11954f6dc01d0f0837661cdfaa3d06adf1caa"
+        "src/tui/keymap.ts": "485c2a8bc2e68a6894199e176bb92c9d78fa2396148717fc606bd1063da61b66"
       },
-      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
       "outcome": "out-of-scope",
-      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
-        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "6d66e951e44f1d969faa1af8e3c8727fa7d758e314b4c97ff6de1fddcb36a0a2",
+      "fingerprint": "b4e6527cf712b869211fc5e44682f0e2c8ee2ec4011d7cd1825560d2aa0af807",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "77defbcc656e112cf8dda5d67f01ba3a6fe50f4916b3971bddfcf8f94aef91fc"
+        "src/tui/screens/board/BoardScreen.tsx": "84d4c5cbb2c426c6887a5fe1a958990a7b7ae8127525f98f54c5dc090793c414"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
-      "fingerprint": "a68160bd3003d63e1c13744dfb0d98a6321fee6c9326f0b47c646b73ecf2612e",
+      "fingerprint": "4666d7487cca59226d88ff9999ccc1adb6c0d4fa26ef09b8a9e81e3ae726839d",
       "snapshot": {
-        "src/tui/screens/stages/index.tsx": "17009950e8744d909279cb178f0f985c0d3d731271f783ee9345d33951cb646b"
+        "src/tui/screens/stages/index.tsx": "fb59692e90f34a0182e4b4e3815a0224be1ddb75d36d1fc8822b01fdcdd1d4fc"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
@@ -2109,17 +2110,17 @@
       ]
     },
     "source:src/plugins/comments/CommentsTab.tsx": {
-      "fingerprint": "bb964f65cdef1ea8b194607cdb4716643fbd785e91e1432e992a23ed5d1b35f7",
+      "fingerprint": "345ddbfd91d17c23f6145d95e685faf38117b2c077a2daac5cd8628b8f09d315",
       "snapshot": {
-        "src/plugins/comments/CommentsTab.tsx": "32deda0c041051296bc5b71994091aa7158fc49f64a1538b8b6dc1847fd84449"
+        "src/plugins/comments/CommentsTab.tsx": "d9ee3bd4336b49ffc1fcdd2ff94d37d89530560f15b79a1bc21fa3a95cd66094"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/plugins/comments/comments.ts": {
@@ -2212,17 +2213,17 @@
       ]
     },
     "source:src/plugins/tasks/TaskScreen.tsx": {
-      "fingerprint": "30ddab64b6cf662e7d720e94281d9a2e7fedd2dd8ca49733f3fbeae81adef48d",
+      "fingerprint": "32ff454d331f739b303d8a5755a653c780c2e2366ed2777a20ffa2231f220ae6",
       "snapshot": {
-        "src/plugins/tasks/TaskScreen.tsx": "c219ddc9e091cc44a121763039badb8b2e286c8be2126a032e9694c13c207bba"
+        "src/plugins/tasks/TaskScreen.tsx": "1e7d66319e7ec88829ef3d617ba4dbef01dafd42377ec78452cc7debf4a5ed88"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/plugins/tasks/TaskStage.tsx": {
@@ -2240,17 +2241,17 @@
       ]
     },
     "source:src/plugins/tasks/TasksTab.tsx": {
-      "fingerprint": "a2f889ee836b5658740f3fe875b2eeef9865f7c5ab9d06affdf7ba5793df9bf4",
+      "fingerprint": "a021cacbce8e23e55039131d8e83a10a845be848270bc57f477cd11551ebb319",
       "snapshot": {
-        "src/plugins/tasks/TasksTab.tsx": "45d97a638f48624a52679736c871b80289346f7ecf85e138f12edb252ea53692"
+        "src/plugins/tasks/TasksTab.tsx": "fea752358a896982980802c95e92334a7814e267fb4901d14a11248c6a6fba81"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/plugins/tasks/index.ts": {
@@ -2512,17 +2513,17 @@
       ]
     },
     "source:src/tui/screens/stories/StoryDetailScreen.tsx": {
-      "fingerprint": "45434ca616388054dda6dbd7171a330d56e3f7f71213b5b995c5aa4db18efbc8",
+      "fingerprint": "36e26ae853f38ee2f02daa25cba55f109fc43e7dfefc5afb40c3d50b3439629a",
       "snapshot": {
-        "src/tui/screens/stories/StoryDetailScreen.tsx": "2176735fc86cc11044760faa98cddb4fd5f544cb1b874da5b2b53d6a4b5b9397"
+        "src/tui/screens/stories/StoryDetailScreen.tsx": "d9474872da6fbe9e48821058230c432cea35237d8e0fd0f5717439a07d83f614"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/tasks/StoryTasksTab.tsx": {
@@ -3117,17 +3118,17 @@
       ]
     },
     "source:test/tui/stories.test.tsx": {
-      "fingerprint": "c1773a31530b1310f7718408b195eb230d8a477bc040b63d0c4c73e365f1e7cb",
+      "fingerprint": "0725d38c212803fdbc1ecf2139d8ba1640cb3e7e1522c60f878ee9b7c4122d5a",
       "snapshot": {
-        "test/tui/stories.test.tsx": "d562e7a1bad52ae094822484fbcf30b4946e2b82f750dd6bacaaa3eeac1ebe40"
+        "test/tui/stories.test.tsx": "d8ef7bbc7ffc0c00ae8229e2e62072a0b8ae81a9b682bfea22f4345b77321796"
       },
-      "head": "9ee41d2cab145a8b4dc507d64cc008a324d67f70",
-      "outcome": "no-change",
-      "reason": "Development of Rowbly itself (its test suite, test helpers, the test policy in AGENTS.md, ADR-0025 and the development and Plugin-author docs), which Batch 1 left to AGENTS.md and docs/development/README.md; it changes no command, flag, output, exit code, doctor finding or Data Root behavior that the skills describe.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "PR #62 merge resolution against origin/main; retained main Git/Specs sources and skill guidance, preserved PR test pruning, retained refused-upward-move regression and Git audit exceptions.",
-        "Merged tree: pnpm typecheck passed; pnpm lint passed; pnpm test:unit 65 tests passed; pnpm test:cli 20 tests passed; intent validate skills: 5 passed. Fresh consumer session not run; operating guidance unchanged.",
-        "Reviewed test/tui/stories.test.tsx against origin/main and PR head 9ee41d2."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:test/tui/tasks.test.tsx": {
@@ -3196,17 +3197,17 @@
       ]
     },
     "source:src/plugins/assignees/AssigneeList.tsx": {
-      "fingerprint": "0dca0e38cc62b7f3c3eb4e88a7ea84fcbb6ced5649d9afcc3480403805426a51",
+      "fingerprint": "ea925f5950853c3d9b2f240e7f10d93a179f22b68c9b8d6ed33765c6c92a1d03",
       "snapshot": {
-        "src/plugins/assignees/AssigneeList.tsx": "a4b183da461e5291829301e7c8eb5623ba269d6fd04e6728de87a41d0a9f557b"
+        "src/plugins/assignees/AssigneeList.tsx": "98bafdacba55f7899ac7e0fadcab19b665e671c59e99a3084bbe188a551b41e8"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/plugins/assignees/CONTEXT.md": {
@@ -3406,31 +3407,31 @@
       ]
     },
     "source:src/tui/screens/stories/StoryFormScreen.tsx": {
-      "fingerprint": "0aa035e26ae309d82db64fcfce43d903bc6813be62757790f7f9ae23063a2740",
+      "fingerprint": "97707e03cd8998b4c2e1986995a42f482107e44be18fa79b95f4a903e0f1f214",
       "snapshot": {
-        "src/tui/screens/stories/StoryFormScreen.tsx": "79a97db44092cc27066c3c4267e0e2c413da2dbc96b36e2c0e0ae44f85d1e164"
+        "src/tui/screens/stories/StoryFormScreen.tsx": "9a895fa58c0525ef57d5c03e601ade6f0dfdd478e3575eb62a6efa8203aa7157"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
-      "fingerprint": "11266a57560772ef972cf7336b241fc1f0ff0c554c059d5b39c6000daee50cd4",
+      "fingerprint": "99bce88fcbe6622cc01f45c0be504655e98ca45a4d890b92c911785cdb5aede9",
       "snapshot": {
-        "src/tui/screens/stories/StoryListScreen.tsx": "5005c720415c48f7bda17a02f2521b433e7220a7dc1686aeddbf5d03df392d05"
+        "src/tui/screens/stories/StoryListScreen.tsx": "8853f2751b08002119e450312188613e121e9f09a07ab25cc893995bc647ffa2"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/stories/filter.ts": {
@@ -4029,31 +4030,31 @@
       ]
     },
     "source:src/tui/shell/Header.tsx": {
-      "fingerprint": "35f583293d56376af6c8d17d6915042bfca4ac85b28114bd4d51f870de22f7e8",
+      "fingerprint": "ed47e5bc2d8df0525de0be6cb1fb73afada047700b0c1e43f397851b18d7308a",
       "snapshot": {
-        "src/tui/shell/Header.tsx": "7504f04cbe8e7697ed2fd284b02c793ceff4d10d9287865e60a650541301b26f"
+        "src/tui/shell/Header.tsx": "d7aebc17264eb01b6e64d3ac65b74135a6e7f36bbbca4fb69775720aab955a6e"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "ca59f55acf0a7847dcbc4e77bb0205aaf2b1e2f891b6b6557040b5dd95a08190",
+      "fingerprint": "d59d3ab840005d98928f23b1e634741770499d5e80948f411f6685acd5e4d0bb",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "e007ccaa8b27e554fd0ce0a87fbe54c34c1c7985f268bd943327f7dbd21334b0"
+        "src/tui/shell/Shell.tsx": "16741e0dd256bc06fa9490887a25702a84e18050b220baf47235527d8d7a8547"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -4183,17 +4184,17 @@
       ]
     },
     "source:src/tui/components/Form.tsx": {
-      "fingerprint": "a2207a8a1cdff634de233fb7ac8349ed61ace03de948a64761d4c8061f033b7d",
+      "fingerprint": "ec515af5754dfb8a9be95c72388e4b9657a8b444afa66559f8c29af293bd7857",
       "snapshot": {
-        "src/tui/components/Form.tsx": "54d642c5f330896b35b7e2dc9efc695587e2008ff64055fb1eef1f80cd3e6c9d"
+        "src/tui/components/Form.tsx": "0b57b5813cebe2b8b9caef7a9d82bfe4099c41ca181baac2c2da98faafe72904"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/FullScreenButton.tsx": {
@@ -4211,17 +4212,17 @@
       ]
     },
     "source:src/tui/components/TextArea.tsx": {
-      "fingerprint": "589c82340298fccd39d6c4ed88ac45f560991d26a3d9d9ac17b1e5cab01bda53",
+      "fingerprint": "5db5cb0e353b5b430ae8e58ff07aef6316d76f3f3d21530c3fb00140769c45d1",
       "snapshot": {
-        "src/tui/components/TextArea.tsx": "dec58237d388b132a710b5f28cd2e429d82f2ed9cbdb68a46be437ec5f3369f4"
+        "src/tui/components/TextArea.tsx": "18f5e93d5e25ea38ce1d077a4bb3e16630389814dcb3eb86bdd55d033e708611"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/TextAreaModal.tsx": {
@@ -4238,17 +4239,17 @@
       ]
     },
     "source:src/tui/components/index.ts": {
-      "fingerprint": "61b9da661fb59b538fbea0a2269385d0fa6ae8d27e3fc43cdad757ba68dbaf72",
+      "fingerprint": "a24f518c2d506c9d57bd47b36fe6b0d731602280109d591a03ce7da972006981",
       "snapshot": {
-        "src/tui/components/index.ts": "c3c54290c8c0409702ebd957c865244c4fe0935bd39ed9af3c9e2786620d2484"
+        "src/tui/components/index.ts": "712dddf051327f9b0af65d6296c7be9ff64cf23fa28546578bae542570e17c3a"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:test/tui/__snapshots__/demo.test.tsx.snap": {
@@ -5463,17 +5464,17 @@
       ]
     },
     "source:src/tui/components/markdown.ts": {
-      "fingerprint": "2e74664a17d200b5c80faedb9dab649b45370f9e87c704157d4c5e364c6a0cb8",
+      "fingerprint": "6f45ea8b85e2eff5fca08df09d1fba7c540800be692153981df1a6435fc623bd",
       "snapshot": {
-        "src/tui/components/markdown.ts": "e76c7e0cea7b8ff1b79230794b5bb67f916efeda2a136d83f06dbe489f724675"
+        "src/tui/components/markdown.ts": "2b61d63598cab9ac9e423d2fdeef72daa779db324b1c60d1b3b50ddfb5db779d"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/useFullScreenEditor.tsx": {
@@ -5901,31 +5902,31 @@
       ]
     },
     "source:src/tui/components/FieldValue.tsx": {
-      "fingerprint": "97016d6002b8cf428da05be46b627507b088f4cad3e3474ba1ea191f85e57f55",
+      "fingerprint": "e7ea8ea0f6c8e43b94f7733e0a6ff14dc3664a544192fe37504b5be695366e52",
       "snapshot": {
-        "src/tui/components/FieldValue.tsx": "5eb2ac6426fa95323b1fd7da1f4b6695754554ffea569b099428a6aee0dfc4e6"
+        "src/tui/components/FieldValue.tsx": "523df32ab07b69b16f6b5acb14d674828a3b2d797a6f95321c4ba65873c594dd"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/KeyHints.tsx": {
-      "fingerprint": "8bdfc5eb4ee9ea2825b180fcd419bcacd2ecff8add2807bcef47c76a4f41ced1",
+      "fingerprint": "ba9bee071ebee19ebb842bdc30e9e7bb6f7cd9bfe9537b5923ecd528991f1f4d",
       "snapshot": {
-        "src/tui/components/KeyHints.tsx": "68a0b97d498a075349e60937a4f43c729614622a2717cc6a3e9599bacfd22d71"
+        "src/tui/components/KeyHints.tsx": "b92f7385e2996946ca7e79a8bfe5aa0c3327eae69eea98ec9a8ccdb19fc9a5d8"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/PluginBoundary.tsx": {
@@ -6041,17 +6042,17 @@
       ]
     },
     "source:src/tui/components/modalLayer.ts": {
-      "fingerprint": "09f153a7591f4728fd1d06cfb93c01b1e80830aa26ac7456e90f270bb889bab1",
+      "fingerprint": "817198055cd7b4cd082e13922a90e80d5dc86015fea2aced526ce2672d302e40",
       "snapshot": {
-        "src/tui/components/modalLayer.ts": "d176338856affd5ff589ab9db087a9f9fe4617d78b6cc00eb65898d7e9531eb6"
+        "src/tui/components/modalLayer.ts": "7421d185e541d940e84f0e58ef2510e06769e8ceabeaf61d5b5805b5575cf342"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/components/scrollFocus.ts": {
@@ -6125,17 +6126,17 @@
       ]
     },
     "source:src/tui/screens/board/StoryCard.tsx": {
-      "fingerprint": "4e12c2f952e5d44db6fafc2f3e163591555b408e594ee2560b1317ad4d55346f",
+      "fingerprint": "02651faea87a249968e6e5cd4450638014230d61fb3f8315a188b25b32998361",
       "snapshot": {
-        "src/tui/screens/board/StoryCard.tsx": "74641cab666194437a260e98b5ad2bc3273363b27932c36c2762b2857d5f191e"
+        "src/tui/screens/board/StoryCard.tsx": "967d26761a7c8bb11e3c281ab70c99c56670721fe1e8825c37eb167df8f32e99"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/boards/BoardDetailScreen.tsx": {
@@ -6167,17 +6168,17 @@
       ]
     },
     "source:src/tui/screens/boards/index.tsx": {
-      "fingerprint": "c5f4bb5320c62ef148b3999ce776d99dd9655db3833781f6261a6b30db5084d0",
+      "fingerprint": "6bc70abfbb8754c21a0537bea86d7b669af5a96c1582e51a77930e59b8b9dcf7",
       "snapshot": {
-        "src/tui/screens/boards/index.tsx": "b7a8b471b6188ac590ea3500d76768fa28a839deff1cb85b862f06f71f8653c1"
+        "src/tui/screens/boards/index.tsx": "cd866adb04f8a9220c522124e2fc3a386859d8e2f08f8513eaa26ccc2567f1bb"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/doctor/DoctorScreen.tsx": {
@@ -6195,31 +6196,31 @@
       ]
     },
     "source:src/tui/screens/fields/index.tsx": {
-      "fingerprint": "f70a65e1a78208ab55acb4dffba707978dd33d62ef3a98ba2f90924557cb8ccc",
+      "fingerprint": "e2b3ad0c2e0330a1c37c5a81a32cd502eba63420bf6a99c9276a2ecab81c5503",
       "snapshot": {
-        "src/tui/screens/fields/index.tsx": "028dd75ef5da76fff60ea7784e849990606c5af906869ff89faaac1416fff113"
+        "src/tui/screens/fields/index.tsx": "2a0aea814a7f9ae9e7f41dbf409379ae4afcdd939d63c3f1ff5707e5b8ef0245"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/plugins/PluginScreenHost.tsx": {
-      "fingerprint": "8eadb92311a27af81a056583939c0ae4a5c0cce5b588eeb191eee3b88d1cf7af",
+      "fingerprint": "26dd1d43869c40c0a1430872c262756dafa5c33f8b08347dbb8e3c617c40ee2b",
       "snapshot": {
-        "src/tui/screens/plugins/PluginScreenHost.tsx": "e98837420d2d81cd7eeffa53fe72fce865fa74b269434047aba5060c81f29e3e"
+        "src/tui/screens/plugins/PluginScreenHost.tsx": "ab13c9758f5c53d7e7bcac097b72700be067b2ce46dfe8737cb77147fb3e2f38"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/plugins/PluginsScreen.tsx": {
@@ -6265,17 +6266,17 @@
       ]
     },
     "source:src/tui/screens/settings/SettingsScreen.tsx": {
-      "fingerprint": "f0c5d916334c5f704a85f50cca2ab2c54f7663352ca22eb8f17d1cc7ab696836",
+      "fingerprint": "328e2dcbb8f0299d6f968d6f023918d45080020ed665999c636ecf6fe8ba50e6",
       "snapshot": {
-        "src/tui/screens/settings/SettingsScreen.tsx": "3aa162487982ca6db8a9a1cdd00b4ebea32061a236eb52988b86fd3116218f09"
+        "src/tui/screens/settings/SettingsScreen.tsx": "356e437351db050c75a35d7436f153c4f61586d5b8f09fcc5f4d95124a9a13ba"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     },
     "source:src/tui/screens/setup/SetupScreen.tsx": {
@@ -6419,17 +6420,129 @@
       ]
     },
     "source:src/tui/theme.ts": {
-      "fingerprint": "945fb9f7e6c4f388657fbfd1e973e3586d9550915c14475e11b913795455443e",
+      "fingerprint": "e40d6c47b2d97c082de47ac5f39b8f0d74222b6fc1cb845fa1e28670116d5f1a",
       "snapshot": {
-        "src/tui/theme.ts": "a17796e46e3bf6d1a0bd2c9836867db1a611b9466d84b2f4c7e47f270c0f3d37"
+        "src/tui/theme.ts": "7316816917cdbc8e72df8a94af9a04a1196f9a8b39db0f36af4bb66c73a7d473"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/LayerOutlet.tsx": {
+      "fingerprint": "bc39e541d21d0325f3cdda906c658844fb092ce051bc67100190b9c6a99b2870",
+      "snapshot": {
+        "src/tui/components/LayerOutlet.tsx": "5312e6d67b2d4f86089254158f71bee1d2a7060941bce4cfd1e263fc2fbc6282"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/ModalFrame.tsx": {
+      "fingerprint": "9a067fb1314a3f269b99abb60bb4efad5cefd022ea0213ac5c43312156028996",
+      "snapshot": {
+        "src/tui/components/ModalFrame.tsx": "8003e5059657fe578088a8cacdd474bd9c6f4690c9068e693d29c8e6aed94f4d"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/PluginLayerScope.tsx": {
+      "fingerprint": "3d9aeefd599dc37e4c0d7e4bc96f1ed58a9ceef0028487e49d2ba8c8ab3adf17",
+      "snapshot": {
+        "src/tui/components/PluginLayerScope.tsx": "ee5ece3a871e71f6cdb31ca1544e65d14ecc3d4533a7df887beb12edd8eb740a"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/PluginSlot.tsx": {
+      "fingerprint": "babd9725c849e23bc411a2f8e3aa42cfe2363a0da14126bbccfd034dd406eb6c",
+      "snapshot": {
+        "src/tui/components/PluginSlot.tsx": "65d5ef00f58e0c96d8703ac4edf43f4d89ba37e03365b808b544780a668301ea"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/fitHints.ts": {
+      "fingerprint": "e0954a949d38bc4318b192ff8ccb0f842cf074e5740b392c90beee738bd37b26",
+      "snapshot": {
+        "src/tui/components/fitHints.ts": "e9ff0746ed5f810c6f52952234bcb1a9ce935e51384b828ce473c1164f3b655c"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/components/modalSize.ts": {
+      "fingerprint": "ab5d02ed13ff39d4e455827cfc20d42311d9b6bd79f33209872d1e8cd303461d",
+      "snapshot": {
+        "src/tui/components/modalSize.ts": "5bd1141623cdcf24d98fbd3b618d610bc465ebed718569d5fae3cab1c0d382d0"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/router/index.tsx": {
+      "fingerprint": "54c855019fe4dfa964929727975a01e81294ddfc003deef9bed374f2dafa3d87",
+      "snapshot": {
+        "src/tui/router/index.tsx": "916eb92b367f116987fb6faf2d164c2d4c1f470a8fde0c0e42e19327c11a426c"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+      ]
+    },
+    "source:src/tui/screens/settings/sectionShell.ts": {
+      "fingerprint": "47924761afefb9a9eaf2f766ba5fe5c3ab1c8447a5f99928c70003a82d025a96",
+      "snapshot": {
+        "src/tui/screens/settings/sectionShell.ts": "7b4ebb366ca404ff654c3f3b7d7581d4fb6da761f0f62691f33928c0c160ed83"
+      },
+      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "evidence": [
+        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
       ]
     }
   }
