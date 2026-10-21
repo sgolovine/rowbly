@@ -3,19 +3,17 @@ import { Box, Text, useInput } from 'ink';
 import { useContext } from 'react';
 import { ConflictError } from '../../../core';
 import { assertInitTarget, initTarget } from '../../../services/setup';
-import { Form, Loading, SelectList } from '../../components';
+import { Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
-import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 /**
- * The context switcher: pick the Board in context. The `whoami` view (`params.view`) sets Me. While
- * `~/.rowbly` does not exist, it also offers to create it, like `init --global`. `params.home`
- * overrides the home directory (for tests).
+ * The context switcher: pick the Board in context. While `~/.rowbly` does not exist, it also offers to
+ * create it, like `init --global`. `params.home` overrides the home directory (for tests). Me is set in
+ * the Me section of the settings.
  */
 export function ContextScreen({ params }: ScreenProps) {
-  if (params.view === 'whoami') return <WhoamiPicker />;
   return <BoardPicker home={typeof params.home === 'string' ? params.home : homedir()} />;
 }
 
@@ -43,14 +41,12 @@ function BoardPicker({ home }: { home: string }) {
   }, [globalRoot.path, active]);
   useKeyHints([
     { key: 'enter', description: 'use board' },
-    { key: 'm', description: 'who am I' },
     { key: 'c', description: 'clear context' },
   ]);
   useInput(
     (input) => {
       if (shell.captured().text) return;
-      if (input === 'm') router.push('context', { view: 'whoami', title: 'Who am I' });
-      else if (input === 'c') {
+      if (input === 'c') {
         services.context.clearUse().then(() => {
           toast.push('info', 'Cleared the current Board');
           router.pop();
@@ -88,30 +84,6 @@ function BoardPicker({ home }: { home: string }) {
           } catch (err) {
             toast.error(err);
           }
-        }}
-      />
-    </Box>
-  );
-}
-
-/** Claims Me: a handle, or nothing to clear it. */
-function WhoamiPicker() {
-  const services = useServices();
-  const ctx = useRowblyContext();
-  const router = useRouter();
-  const toast = useToast();
-  const me = ctx?.me ?? null;
-  return (
-    <Box flexDirection="column" gap={1}>
-      <Text>Me: {me ? <Text bold>{me}</Text> : <Text color={theme.inkFaint}>not set</Text>}</Text>
-      <Form
-        fields={[{ name: 'handle', label: 'Handle (empty clears Me)', kind: 'text' }]}
-        initialValues={{ handle: me ?? '' }}
-        onSubmit={async (values) => {
-          const handle = String(values.handle ?? '').trim() || null;
-          await services.context.setMe(handle);
-          toast.push('info', handle ? `You are ${handle}` : 'Cleared Me');
-          router.pop();
         }}
       />
     </Box>
