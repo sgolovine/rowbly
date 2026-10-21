@@ -12,7 +12,8 @@ export interface SidebarEntry {
 
 /**
  * A list beside the main area, with a button at the bottom: the Boards, or a Plugin Sidebar. `numbered`
- * shows the `1`–`9` keys that pick a Board.
+ * shows the `1`–`9` keys that pick a Board. A click in it calls `onFocus`; while `focused`, its border
+ * lights up and the shell gives it `↑`/`↓` and `n`, which the button shows.
  */
 export function Sidebar({
   title,
@@ -21,7 +22,9 @@ export function Sidebar({
   emptyText,
   numbered = false,
   height,
+  focused,
   clickable,
+  onFocus,
   onSelect,
   button,
 }: {
@@ -31,12 +34,20 @@ export function Sidebar({
   emptyText?: string;
   numbered?: boolean;
   height?: number;
+  focused: boolean;
   clickable: boolean;
+  onFocus(): void;
   onSelect(id: string): void;
-  button?: Pick<ButtonProps, 'label' | 'keyName' | 'onClick'>;
+  button?: Pick<ButtonProps, 'label' | 'onClick'>;
 }) {
   return (
-    <Panel title={title} width={SIDEBAR_WIDTH} height={height}>
+    <Panel
+      title={title}
+      width={SIDEBAR_WIDTH}
+      height={height}
+      focused={focused}
+      onClick={clickable ? onFocus : undefined}
+    >
       <Box flexDirection="column" flexShrink={1} overflow="hidden">
         {entries.length === 0 && emptyText && (
           <Box paddingX={1}>
@@ -50,12 +61,15 @@ export function Sidebar({
             name={entry.label}
             selected={i === current}
             clickable={clickable}
-            onClick={() => onSelect(entry.id)}
+            onClick={() => {
+              onFocus();
+              onSelect(entry.id);
+            }}
           />
         ))}
       </Box>
       <Box flexGrow={1} minHeight={1} />
-      {button && <Button {...button} clickable={clickable} />}
+      {button && <Button {...button} keyName={focused ? 'n' : undefined} clickable={clickable} />}
     </Panel>
   );
 }

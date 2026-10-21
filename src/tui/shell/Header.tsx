@@ -24,6 +24,7 @@ export interface HeaderAction {
 export function Header({
   label,
   onNewStory,
+  newStoryKey = true,
   onSettings,
   clickable,
   actions = [],
@@ -33,6 +34,8 @@ export function Header({
 }: {
   label: HeaderLabel | null;
   onNewStory?: () => void;
+  /** Whether `n` makes a new Story: not while a sidebar has focus, where it creates there. */
+  newStoryKey?: boolean;
   /** Opens the settings, like `,`. */
   onSettings?: () => void;
   clickable: boolean;
@@ -114,7 +117,14 @@ export function Header({
           </>
         )}
         {onNewStory && (
-          <Button label="+ New Story" keyName="n" onClick={onNewStory} clickable={clickable} compact primary />
+          <Button
+            label="+ New Story"
+            keyName={newStoryKey ? 'n' : undefined}
+            onClick={onNewStory}
+            clickable={clickable}
+            compact
+            primary
+          />
         )}
       </Box>
     </Panel>
