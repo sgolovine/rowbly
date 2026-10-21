@@ -36,7 +36,7 @@ rowbly stories create --name "Login page" --priority P1
 rowbly                               # open the board in the TUI
 ```
 
-`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
+`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` (or use the **Me** section of the TUI's settings) to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
 
 ## Concepts
 
@@ -126,9 +126,9 @@ rowbly config show [--board <id>]
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
-  The **Context** section of the settings (`,`) switches the Board; press `m` there to set Me, or `c` to
-  clear the current Board. While `~/.rowbly` does not exist,
-  Context also lists **Create global Data Root**, which runs the same form as the first-run screen
+  The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
+  Me. The **Context** section switches the Board; press `c` there to clear the current Board. While
+  `~/.rowbly` does not exist, Context also lists **Create global Data Root**, which runs the same form as the first-run screen
   (`init --global`) and then returns to the Data Root you are using.
 - The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
@@ -435,7 +435,8 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
 | Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
 | Fields | `n` new Custom Field, `e` edit, `d` remove, `l` switch level |
-| Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` set Me, `c` clear the current Board |
+| Me | type a handle, `ctrl+s` save it as Me (empty clears Me) |
+| Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 

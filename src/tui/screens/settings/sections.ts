@@ -3,6 +3,7 @@ import { pluginRoute, type TuiPlugin } from '../../hooks';
 import { boardsScreens } from '../boards';
 import { doctorScreens } from '../doctor';
 import { fieldsScreens } from '../fields';
+import { meScreens } from '../me';
 import { pluginsScreens } from '../plugins';
 import { setupScreens } from '../setup';
 import { stagesScreens } from '../stages';
@@ -38,6 +39,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'boards', label: 'Boards', screen: 'boards' },
         { id: 'global-stages', label: 'Stages', screen: 'stages', params: { global: true } },
         { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
+        { id: 'me', label: 'Me', screen: 'me' },
         { id: 'context', label: 'Context', screen: 'context' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
@@ -70,6 +72,7 @@ const SECTION_SCREENS: ScreenRegistry = {
   ...stagesScreens,
   ...fieldsScreens,
   ...setupScreens,
+  ...meScreens,
   ...doctorScreens,
   ...pluginsScreens,
 };
