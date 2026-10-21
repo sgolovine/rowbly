@@ -284,44 +284,43 @@ export function BoardScreen({ params }: ScreenProps) {
 
   useKeyCapture(active && mode === 'filter', { escape: true });
   useEscape(active && mode === 'filter', () => setMode('view'));
+  // The filter and delete Modals show their own keys; only the top layer's keys show.
   useKeyHints(
-    saving
+    saving || mode !== 'view'
       ? []
-      : mode !== 'view'
-        ? [{ key: 'esc', description: 'cancel' }]
-        : view === 'list'
-          ? [
-              { key: '↑/↓', description: 'select' },
-              { key: 'enter', description: 'open/fold' },
-              { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
-              { key: '←/→', description: 'fold/unfold section', secondary: true },
-              { key: 'n', description: 'new Story' },
-              { key: 'e', description: 'edit', secondary: true },
-              { key: 'd', description: 'delete', secondary: true },
-              { key: '/', description: 'filter' },
-              { key: 'c', description: 'clear filter', secondary: true },
-              { key: 'v', description: 'Stages view' },
-              { key: 'r', description: 'reload', secondary: true },
-              { key: 'j/k', description: 'select (vim keys)', secondary: true },
-              { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
-            ]
-          : [
-              { key: '←/→ ↑/↓', description: 'select' },
-              { key: 'enter', description: 'open' },
-              { key: 'shift+←/→', description: 'move Stage', secondary: true },
-              { key: 'shift+↑/↓', description: 'reorder', secondary: true },
-              { key: 'T/B', description: 'to top/bottom', secondary: true },
-              { key: 'n', description: 'new Story' },
-              { key: 'e', description: 'edit', secondary: true },
-              { key: 'd', description: 'delete', secondary: true },
-              { key: '/', description: 'filter' },
-              { key: 'c', description: 'clear filter', secondary: true },
-              { key: 'v', description: 'list view' },
-              { key: 'r', description: 'reload', secondary: true },
-              { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
-              { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
-              { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
-            ],
+      : view === 'list'
+        ? [
+            { key: '↑/↓', description: 'select' },
+            { key: 'enter', description: 'open/fold' },
+            { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
+            { key: '←/→', description: 'fold/unfold section', secondary: true },
+            { key: 'n', description: 'new Story' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'Stages view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'j/k', description: 'select (vim keys)', secondary: true },
+            { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
+          ]
+        : [
+            { key: '←/→ ↑/↓', description: 'select' },
+            { key: 'enter', description: 'open' },
+            { key: 'shift+←/→', description: 'move Stage', secondary: true },
+            { key: 'shift+↑/↓', description: 'reorder', secondary: true },
+            { key: 'T/B', description: 'to top/bottom', secondary: true },
+            { key: 'n', description: 'new Story' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'list view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
+            { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
+            { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
+          ],
   );
 
   /** The list view's keys; `n` adds to the highlighted Story's Stage, or a section's first Stage. */
@@ -479,7 +478,15 @@ export function BoardScreen({ params }: ScreenProps) {
         </Modal>
       )}
       {mode === 'confirm-delete' && focused && (
-        <Modal size="dialog" title="Delete Story" onClose={() => setMode('view')}>
+        <Modal
+          size="dialog"
+          title="Delete Story"
+          hints={[
+            { key: 'y', description: 'delete' },
+            { key: 'esc', description: 'cancel' },
+          ]}
+          onClose={() => setMode('view')}
+        >
           <ConfirmDialog
             message={`Delete ${focused.key} "${focused.name}"?`}
             confirmLabel="Delete"
