@@ -25,6 +25,7 @@ import {
 import { globalAction, type KeyHint } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
+import { theme } from '../theme';
 import { bindAction } from './actionFocus';
 import { boardKey } from './boardKey';
 import { Footer } from './Footer';
@@ -222,7 +223,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 )}
                 <Panel
                   title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-                  color={idle ? 'cyan' : undefined}
+                  focused={idle}
                   flexGrow={1}
                   flexShrink={1}
                   height={mainHeight}

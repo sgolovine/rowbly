@@ -4,6 +4,7 @@ import { UsageError } from '../../../core';
 import type { ConfigLevel, Slug } from '../../../schemas';
 import type { ConfigTarget } from '../../../services';
 import { useAsync, useServices } from '../../hooks';
+import { theme } from '../../theme';
 
 export type LevelName = ConfigTarget['level'];
 
@@ -45,17 +46,17 @@ export function LevelBar({ levels, level, source }: { levels: LevelName[]; level
   return (
     <Box gap={1}>
       <Box flexShrink={0}>
-        <Text dimColor>Level:</Text>
+        <Text color={theme.inkFaint}>Level:</Text>
       </Box>
       {levels.map((name) => (
         <Box key={name} flexShrink={0}>
-          <Text inverse={name === level} color={name === level ? 'cyan' : undefined}>
+          <Text backgroundColor={name === level ? theme.selection : undefined} color={theme.ink}>
             {` ${name} `}
           </Text>
         </Box>
       ))}
       {source && (
-        <Text dimColor wrap="truncate-end">
+        <Text color={theme.inkFaint} wrap="truncate-end">
           {source === level ? '· own list' : `· inherited from ${source} (copied to ${level} on first edit)`}
         </Text>
       )}

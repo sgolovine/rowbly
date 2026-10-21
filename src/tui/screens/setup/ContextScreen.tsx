@@ -6,6 +6,7 @@ import { assertInitTarget, initTarget } from '../../../services/setup';
 import { Form, Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 /**
@@ -102,7 +103,7 @@ function WhoamiPicker() {
   const me = ctx?.me ?? null;
   return (
     <Box flexDirection="column" gap={1}>
-      <Text>Me: {me ? <Text bold>{me}</Text> : <Text dimColor>not set</Text>}</Text>
+      <Text>Me: {me ? <Text bold>{me}</Text> : <Text color={theme.inkFaint}>not set</Text>}</Text>
       <Form
         fields={[{ name: 'handle', label: 'Handle (empty clears Me)', kind: 'text' }]}
         initialValues={{ handle: me ?? '' }}

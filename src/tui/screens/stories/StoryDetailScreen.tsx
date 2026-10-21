@@ -25,6 +25,7 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 const TABS = ['Details'] as const;
@@ -89,7 +90,8 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     { isActive: active && viewing },
   );
 
-  if (!data.data) return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color="red">No Story.</Text>;
+  if (!data.data)
+    return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color={theme.danger}>No Story.</Text>;
   const { story, config, extraRows } = data.data;
 
   const move = async (stage: string) => {
@@ -114,7 +116,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     }
   };
 
-  const none = <Text dimColor>—</Text>;
+  const none = <Text color={theme.inkFaint}>—</Text>;
   const rows: DetailRow[] = [
     { label: 'Stage', value: <StoryStage stages={config.stages} story={story} /> },
     { label: 'Priority', value: story.priority ?? none },
@@ -132,7 +134,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   return (
     <Box flexDirection="column" gap={1}>
       <Text>
-        <Text bold color="cyan">
+        <Text bold color={theme.accent}>
           {story.key}
         </Text>{' '}
         <Text bold>{story.name}</Text>

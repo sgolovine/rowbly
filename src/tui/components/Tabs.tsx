@@ -1,6 +1,5 @@
-import { Box, type DOMElement, Text } from 'ink';
-import { useRef } from 'react';
-import { useMouse } from '../hooks';
+import { Box } from 'ink';
+import { Tab } from './Tab';
 
 /** A row of tab labels; the `selected` one is highlighted. Clicking a tab selects it while `active`. */
 export function Tabs({
@@ -19,28 +18,6 @@ export function Tabs({
       {tabs.map((name, i) => (
         <Tab key={name} label={name} selected={i === selected} active={active} onClick={() => onSelect(i)} />
       ))}
-    </Box>
-  );
-}
-
-function Tab({
-  label,
-  selected,
-  active,
-  onClick,
-}: {
-  label: string;
-  selected: boolean;
-  active: boolean;
-  onClick(): void;
-}) {
-  const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, active);
-  return (
-    <Box ref={ref}>
-      <Text inverse={selected} color={selected ? 'cyan' : undefined}>
-        {` ${label} `}
-      </Text>
     </Box>
   );
 }

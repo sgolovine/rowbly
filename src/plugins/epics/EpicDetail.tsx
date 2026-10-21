@@ -6,6 +6,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -72,7 +73,7 @@ export function EpicDetail({ params, plugin, ui }: PluginScreenProps<Record<stri
     { isActive: active && !confirming && !busy },
   );
   if (!data.data)
-    return data.loading ? <Loading label="Loading Epic…" /> : <Text color="red">Could not load Epic.</Text>;
+    return data.loading ? <Loading label="Loading Epic…" /> : <Text color={theme.danger}>Could not load Epic.</Text>;
   const epic = data.data;
   return (
     <Box flexDirection="column" gap={1}>

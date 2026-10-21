@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useRef } from 'react';
 import { useKeyCapture } from '../hooks';
+import { theme } from '../theme';
 import { FullScreenButton } from './FullScreenButton';
 import { editKey, follow, moveRow, rowOf, useEditState, WithCaret, wrapRows } from './textEditing';
 import { useFullScreenEditor } from './useFullScreenEditor';
@@ -82,7 +83,7 @@ export function TextArea({
   const text = (
     <Box flexDirection="column" height={rows} flexShrink={0} overflow="hidden">
       {!value && !editing ? (
-        <Text dimColor>{placeholder}</Text>
+        <Text color={theme.inkFaint}>{placeholder}</Text>
       ) : (
         wrapped.slice(top.current, top.current + rows).map((row, i) => {
           const text = value.slice(row.start, row.end);
@@ -91,7 +92,7 @@ export function TextArea({
             <Text key={i} wrap="truncate-end">
               {/* An empty Text has no height, so a blank line holds a space to keep its row. */}
               {editing && top.current + i === current ? <WithCaret text={text} at={cursor - row.start} /> : text || ' '}
-              {editing && !value && placeholder && <Text dimColor>{placeholder}</Text>}
+              {editing && !value && placeholder && <Text color={theme.inkFaint}>{placeholder}</Text>}
             </Text>
           );
         })

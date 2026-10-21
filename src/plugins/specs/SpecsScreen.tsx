@@ -5,6 +5,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useEffect,
   useFullScreenEditor,
@@ -105,7 +106,7 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
       <Box flexDirection="column">
         <Text bold>Choose a Board for Specs</Text>
         {boards.error ? (
-          <Text color="red">Could not load Boards.</Text>
+          <Text color={theme.danger}>Could not load Boards.</Text>
         ) : (
           <SelectList
             items={(boards.data ?? []).map((b) => ({ value: b.id, label: b.name }))}
@@ -122,7 +123,7 @@ export function SpecsScreen({ params, plugin, ui }: PluginScreenProps<Record<str
     <Box flexDirection="column">
       <Text bold>{`Board Specs — ${board}`}</Text>
       {!list ? (
-        <Text color="red">Could not load Specs.</Text>
+        <Text color={theme.danger}>Could not load Specs.</Text>
       ) : (
         <SelectList
           items={list.specs.map((s) => ({ value: s.slug, label: specLine(s) }))}

@@ -1,6 +1,7 @@
 import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import { useMouse } from '../hooks';
+import { theme } from '../theme';
 
 /** One choice of the header's board view switch: highlighted when it is the current view, clickable otherwise. */
 export function ViewSwitchOption({
@@ -18,7 +19,7 @@ export function ViewSwitchOption({
   useMouse(ref, { onClick }, clickable && !selected);
   return (
     <Box ref={ref}>
-      <Text bold={selected} color={selected ? 'cyan' : undefined} dimColor={!selected}>
+      <Text bold={selected} color={selected ? theme.accent : undefined}>
         {label}
       </Text>
     </Box>

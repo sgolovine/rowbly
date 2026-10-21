@@ -1,10 +1,10 @@
-import { Box, type DOMElement, type Key, Text, useInput } from 'ink';
-import { useRef, useState } from 'react';
+import { Box, type Key, Text, useInput } from 'ink';
+import { useState } from 'react';
 import { ValidationError } from '../../core';
 import type { PluginFieldKind, PluginFormValue } from '../../services';
-import { useDirty, useIsActive, useLayout, useMouse, useToast } from '../hooks';
-import { TextArea } from './TextArea';
-import { TextInput } from './TextInput';
+import { useDirty, useIsActive, useLayout, useToast } from '../hooks';
+import { theme } from '../theme';
+import { FieldRow } from './FieldRow';
 
 /** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
 export type FieldKind = PluginFieldKind;
@@ -245,13 +245,12 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
       ))}
       <Box flexDirection="column">
         {formErrors.map((message) => (
-          <Text key={message} color="red">
+          <Text key={message} color={theme.danger}>
             {message}
           </Text>
         ))}
         <Box gap={2} marginLeft={labelWidth}>
-          <SaveButton busy={busy} focused={field === undefined} active={active} onClick={() => void submit()} />
-          <Text dimColor wrap="truncate-end">
+          <Text color={theme.inkFaint} wrap="truncate-end">
             {field
               ? `${FIELD_HELP[field.kind]} · ${field.kind === 'multiline' ? 'tab' : 'enter/tab'} next`
               : 'enter save'}
@@ -267,8 +266,6 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 const INPUT_MAX_WIDTH = 64;
 /** Rows a multiline field shows; longer text scrolls inside it. */
 const TEXTAREA_ROWS = 5;
-const INPUT_BACKGROUND = '#30303c';
-const FOCUSED_BACKGROUND = '#3a3a52';
 
 const FIELD_HELP: Record<FieldKind, string> = {
   text: 'type to edit',
@@ -279,147 +276,3 @@ const FIELD_HELP: Record<FieldKind, string> = {
   multiselect: '←/→ pick · space toggles',
   multiline: 'enter new line · ctrl+f full screen',
 };
-
-function FieldRow({
-  field,
-  raw,
-  focused,
-  active,
-  error,
-  labelWidth,
-  inputWidth,
-  optionCursor,
-  onChange,
-  onLeave,
-  onClick,
-}: {
-  field: FormField;
-  raw: Raw;
-  focused: boolean;
-  active: boolean;
-  error?: string;
-  labelWidth: number;
-  inputWidth: number;
-  optionCursor: number;
-  onChange(raw: Raw): void;
-  onLeave(direction: -1 | 1): void;
-  onClick(): void;
-}) {
-  const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, active);
-  const lit = focused && active;
-  return (
-    <Box ref={ref} flexDirection="column" flexShrink={0}>
-      <Box>
-        <Box width={labelWidth} flexShrink={0}>
-          <Text color={lit ? 'cyan' : undefined} bold={lit} dimColor={!focused}>
-            {focused ? '› ' : '  '}
-            {field.label}
-            {field.required ? '*' : ''}
-          </Text>
-        </Box>
-        <Box
-          width={inputWidth}
-          flexShrink={0}
-          paddingX={1}
-          backgroundColor={lit ? FOCUSED_BACKGROUND : INPUT_BACKGROUND}
-        >
-          <FieldValue
-            field={field}
-            raw={raw}
-            focused={lit}
-            optionCursor={optionCursor}
-            width={inputWidth - 2}
-            onChange={onChange}
-            onLeave={onLeave}
-          />
-        </Box>
-      </Box>
-      {error && <Text color="red">{`${' '.repeat(labelWidth)}${error}`}</Text>}
-    </Box>
-  );
-}
-
-function SaveButton({
-  busy,
-  focused,
-  active,
-  onClick,
-}: {
-  busy: boolean;
-  focused: boolean;
-  active: boolean;
-  onClick(): void;
-}) {
-  const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, active && !busy);
-  const lit = focused && active;
-  return (
-    <Box ref={ref} flexShrink={0}>
-      <Text inverse={lit} color="cyan" backgroundColor={lit ? undefined : INPUT_BACKGROUND} bold>
-        {busy ? ' Saving… ' : ' Save '}
-      </Text>
-    </Box>
-  );
-}
-
-function FieldValue({
-  field,
-  raw,
-  focused,
-  optionCursor,
-  width,
-  onChange,
-  onLeave,
-}: {
-  field: FormField;
-  raw: Raw;
-  focused: boolean;
-  optionCursor: number;
-  width: number;
-  onChange(raw: Raw): void;
-  onLeave(direction: -1 | 1): void;
-}) {
-  switch (field.kind) {
-    case 'boolean':
-      return <Text>{raw === true ? '[x] yes' : '[ ] no'}</Text>;
-    case 'select':
-      return <Text>{`‹ ${typeof raw === 'string' ? raw : '—'} ›`}</Text>;
-    case 'multiselect': {
-      const checked = Array.isArray(raw) ? raw : [];
-      return (
-        <Box gap={2} flexWrap="wrap">
-          {(field.options ?? []).map((option, i) => (
-            <Text key={option} underline={focused && i === optionCursor}>
-              {checked.includes(option) ? '[x] ' : '[ ] '}
-              {option}
-            </Text>
-          ))}
-        </Box>
-      );
-    }
-    case 'multiline':
-      return (
-        <TextArea
-          value={typeof raw === 'string' ? raw : ''}
-          onChange={onChange}
-          focus={focused}
-          width={width}
-          rows={TEXTAREA_ROWS}
-          placeholder="(empty)"
-          onLeave={onLeave}
-          title={field.label}
-        />
-      );
-    default:
-      return (
-        <TextInput
-          value={String(raw)}
-          onChange={onChange}
-          focus={focused}
-          width={width}
-          placeholder={field.kind === 'date' ? 'YYYY-MM-DD' : undefined}
-        />
-      );
-  }
-}

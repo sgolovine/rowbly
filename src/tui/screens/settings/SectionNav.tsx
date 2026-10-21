@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink';
+import { theme } from '../../theme';
 import { SectionNavItem } from './SectionNavItem';
 import type { SettingsGroup } from './sections';
 
@@ -29,16 +30,15 @@ export function SectionNav({
       borderTop={false}
       borderBottom={false}
       borderLeft={false}
-      borderColor={focused ? 'cyan' : undefined}
-      borderDimColor={!focused}
+      borderColor={focused ? theme.accent : undefined}
     >
       {groups.map((group) => (
         <Box key={group.title} flexDirection="column">
-          <Text bold dimColor wrap="truncate-end">
+          <Text bold color={theme.inkFaint} wrap="truncate-end">
             {group.title}
           </Text>
           {group.sections.length === 0 && group.empty && (
-            <Text dimColor wrap="truncate-end">
+            <Text color={theme.inkFaint} wrap="truncate-end">
               {`  ${group.empty}`}
             </Text>
           )}

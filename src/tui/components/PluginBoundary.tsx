@@ -2,6 +2,7 @@ import { Box, Text } from 'ink';
 import { Component, type ReactNode } from 'react';
 import { PluginError, type RowblyError } from '../../core';
 import { attributePluginError } from '../../services';
+import { theme } from '../theme';
 
 interface PluginBoundaryProps {
   pluginId: string;
@@ -48,8 +49,8 @@ export class PluginBoundary extends Component<PluginBoundaryProps, PluginBoundar
     const message = error instanceof PluginError ? error.message : `Plugin "${pluginId}": ${error.message}`;
     return (
       <Box flexDirection="column">
-        <Text color="red">{message}</Text>
-        {error.hint && <Text dimColor>{error.hint}</Text>}
+        <Text color={theme.danger}>{message}</Text>
+        {error.hint && <Text color={theme.inkFaint}>{error.hint}</Text>}
       </Box>
     );
   }

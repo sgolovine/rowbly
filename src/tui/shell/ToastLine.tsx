@@ -1,8 +1,9 @@
 import { Text } from 'ink';
 import { useEffect } from 'react';
 import { type Toast, useToast } from '../hooks';
+import { theme } from '../theme';
 
-const TOAST_COLORS = { info: 'cyan', warning: 'yellow', error: 'red' } as const;
+const TOAST_COLORS = { info: theme.accent, warning: theme.stageBoard, error: theme.danger } as const;
 const TOAST_MS = { info: 4000, warning: 6000, error: 8000 } as const;
 
 export function ToastLine({ toast }: { toast: Toast }) {

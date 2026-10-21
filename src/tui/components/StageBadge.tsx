@@ -1,8 +1,8 @@
 import { Text } from 'ink';
-import { colorByCategory } from '../../output';
 import type { Stage } from '../../schemas';
+import { stageColors } from '../theme';
 
-/** A Stage name coloured by its Stage Category: backlog dim, board yellow, done green. */
+/** Stage colour always travels with its name. */
 export function StageBadge({ stage }: { stage: Pick<Stage, 'name' | 'category'> }) {
-  return <Text>{colorByCategory(stage.category, `● ${stage.name}`)}</Text>;
+  return <Text color={stageColors[stage.category]}>● {stage.name}</Text>;
 }

@@ -3,6 +3,7 @@ import { useContext, useState } from 'react';
 import type { DoctorReport } from '../../../services';
 import { Loading, SelectList } from '../../components';
 import { ShellContext, useAsync, useIsActive, useKeyHints, useServices, useToast } from '../../hooks';
+import { theme } from '../../theme';
 
 /** Runs `doctor` on open; `f` applies the safe fixes and `r` checks again. */
 export function DoctorScreen() {
@@ -41,7 +42,7 @@ export function DoctorScreen() {
     <Box flexDirection="column">
       {report.fixed.length > 0 && (
         <Box flexDirection="column" marginBottom={1}>
-          <Text color="green">Fixed ({report.fixed.length})</Text>
+          <Text color={theme.stageDone}>Fixed ({report.fixed.length})</Text>
           {report.fixed.map((fix) => (
             <Text key={`${fix.code}:${fix.path}:${fix.message}`}>
               {'  '}
@@ -51,7 +52,7 @@ export function DoctorScreen() {
         </Box>
       )}
       {report.findings.length === 0 ? (
-        <Text color="green">No problems found</Text>
+        <Text color={theme.stageDone}>No problems found</Text>
       ) : (
         <>
           <Text bold>

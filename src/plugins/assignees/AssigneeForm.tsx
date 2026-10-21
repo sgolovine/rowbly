@@ -1,5 +1,5 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { Box, Form, Loading, Text, useAsync } from '../../plugin-api/tui';
+import { Box, Form, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { listAssignees } from './roster';
 import { addAssignee, editAssignee } from './service';
 
@@ -8,9 +8,13 @@ export function AssigneeForm({ params, plugin, ui }: PluginScreenProps<Record<st
   const handle = typeof params.handle === 'string' ? params.handle : undefined;
   const roster = useAsync(() => listAssignees(plugin), [plugin]);
   if (!roster.data)
-    return roster.loading ? <Loading label="Loading assignee…" /> : <Text color="red">Could not load Assignee.</Text>;
+    return roster.loading ? (
+      <Loading label="Loading assignee…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Assignee.</Text>
+    );
   const current = handle ? roster.data.find((a) => a.handle === handle) : undefined;
-  if (handle && !current) return <Text dimColor>Assignee "{handle}" is no longer in the roster.</Text>;
+  if (handle && !current) return <Text color={theme.inkFaint}>Assignee "{handle}" is no longer in the roster.</Text>;
 
   return (
     <Box flexDirection="column">

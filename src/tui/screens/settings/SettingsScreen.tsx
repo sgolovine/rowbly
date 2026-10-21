@@ -14,6 +14,7 @@ import {
   useServices,
 } from '../../hooks';
 import { type KeyHint, moveDelta } from '../../keymap';
+import { theme } from '../../theme';
 import { SECTION_NAV_WIDTH, SectionNav } from './SectionNav';
 import { sectionShell } from './sectionShell';
 import { sectionScreen, settingsGroups } from './sections';
@@ -96,7 +97,7 @@ export function SettingsScreen() {
               {Section && section ? (
                 <Section key={section.id} params={section.params ?? {}} />
               ) : (
-                <Text dimColor>Nothing to show.</Text>
+                <Text color={theme.inkFaint}>Nothing to show.</Text>
               )}
             </LayoutContext.Provider>
           </ActiveContext.Provider>

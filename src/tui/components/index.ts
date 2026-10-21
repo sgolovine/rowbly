@@ -5,6 +5,7 @@ export * from './CursorRows';
 export * from './DetailView';
 export * from './Form';
 export * from './FullScreenEditor';
+export { KeyHints } from './KeyHints';
 export * from './MarkdownView';
 export * from './Modal';
 export * from './markdown';

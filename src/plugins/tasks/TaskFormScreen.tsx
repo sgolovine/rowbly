@@ -1,5 +1,15 @@
 import { type PluginScreenProps, UsageError } from '../../plugin-api';
-import { Box, FORM_KEYS, Form, type FormValues, Loading, Text, useAsync, useKeyHints } from '../../plugin-api/tui';
+import {
+  Box,
+  FORM_KEYS,
+  Form,
+  type FormValues,
+  Loading,
+  Text,
+  theme,
+  useAsync,
+  useKeyHints,
+} from '../../plugin-api/tui';
 import { createTask, getTask, stagesOf, updateTask } from './tasks';
 
 /** Creates a Task in a Story (`params.storyKey`) or edits one (`params.id`), including its Stage. */
@@ -17,7 +27,7 @@ export function TaskFormScreen({ params, plugin, ui }: PluginScreenProps<Record<
   if (data.loading) return <Loading label="Loading…" />;
   if (!data.data) {
     const reason = data.error instanceof Error ? data.error.message : String(data.error);
-    return <Text color="red">Could not open the Task form: {reason}</Text>;
+    return <Text color={theme.danger}>Could not open the Task form: {reason}</Text>;
   }
   const { story, task, stages } = data.data;
 

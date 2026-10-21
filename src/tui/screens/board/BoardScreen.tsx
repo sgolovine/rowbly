@@ -25,6 +25,7 @@ import {
 } from '../../hooks';
 import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import {
   describeFilters,
   describeWithPlugins,
@@ -401,7 +402,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const inHeader = useHeaderLabel(label);
 
   if (!scope.data || !label) {
-    return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
+    return scope.loading ? <Loading label="Loading Board…" /> : <Text color={theme.danger}>No Board.</Text>;
   }
   const { choices, extra } = scope.data;
   // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
@@ -417,7 +418,7 @@ export function BoardScreen({ params }: ScreenProps) {
       {!inHeader && (
         <Text wrap="truncate-end">
           <Text bold>{label.title}</Text>
-          <Text dimColor>{` ${label.detail}`}</Text>
+          <Text color={theme.inkFaint}>{` ${label.detail}`}</Text>
         </Text>
       )}
       <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
@@ -498,7 +499,7 @@ export function BoardScreen({ params }: ScreenProps) {
 function Gutter({ text }: { text: string }) {
   return (
     <Box width={GUTTER_WIDTH} flexShrink={0}>
-      <Text color="cyan" wrap="truncate-end">
+      <Text color={theme.accent} wrap="truncate-end">
         {text}
       </Text>
     </Box>

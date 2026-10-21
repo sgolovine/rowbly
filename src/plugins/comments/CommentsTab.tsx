@@ -5,6 +5,7 @@ import {
   Loading,
   moveDelta,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -72,26 +73,30 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
   };
 
   if (data.data === null) {
-    return <Text color="red">Comments unavailable: stored Thread is invalid; run `rowbly doctor`.</Text>;
+    return <Text color={theme.danger}>Comments unavailable: stored Thread is invalid; run `rowbly doctor`.</Text>;
   }
   if (!data.data) {
-    return data.loading ? <Loading label="Loading Comments…" /> : <Text color="red">Could not load Comments.</Text>;
+    return data.loading ? (
+      <Loading label="Loading Comments…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Comments.</Text>
+    );
   }
   const now = plugin.now();
 
   return (
     <Box flexDirection="column" gap={1}>
       {comments.length === 0 ? (
-        <Text dimColor>No Comments yet. Press n to add one.</Text>
+        <Text color={theme.inkFaint}>No Comments yet. Press n to add one.</Text>
       ) : (
         <Box flexDirection="column">
           {comments.map((c, i) => (
             <Box key={c.id}>
-              <Text color={i === cursor && viewing ? 'cyan' : undefined}>{i === cursor ? '› ' : '  '}</Text>
+              <Text color={i === cursor && viewing ? theme.accent : undefined}>{i === cursor ? '› ' : '  '}</Text>
               <Box flexDirection="column">
                 <Text>
                   <Text bold>{c.author ?? 'unknown'}</Text>
-                  <Text dimColor>
+                  <Text color={theme.inkFaint}>
                     {' '}
                     · {relativeTime(c.createdAt, now)}
                     {c.updatedAt !== c.createdAt ? ' (edited)' : ''}

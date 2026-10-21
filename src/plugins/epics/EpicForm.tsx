@@ -1,5 +1,5 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { Form, Loading, Text, useAsync, useKeyHints } from '../../plugin-api/tui';
+import { Form, Loading, Text, theme, useAsync, useKeyHints } from '../../plugin-api/tui';
 import { createEpic, editEpic, getEpic } from './service';
 
 export function EpicForm({ params, plugin, ui }: PluginScreenProps<Record<string, unknown>>) {
@@ -10,7 +10,7 @@ export function EpicForm({ params, plugin, ui }: PluginScreenProps<Record<string
     { key: 'esc', description: 'cancel' },
   ]);
   if (data.data === undefined)
-    return data.loading ? <Loading label="Loading Epic…" /> : <Text color="red">Could not load Epic.</Text>;
+    return data.loading ? <Loading label="Loading Epic…" /> : <Text color={theme.danger}>Could not load Epic.</Text>;
   return (
     <Form
       fields={[

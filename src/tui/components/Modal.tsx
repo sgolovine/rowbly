@@ -2,11 +2,12 @@ import { Box, Text } from 'ink';
 import type { ReactNode } from 'react';
 import { type Layout, LayoutContext, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
+import { theme } from '../theme';
 import { CloseButton } from './CloseButton';
 import { Panel } from './Panel';
 
 /** Filled behind the modal so the screen below does not show through. */
-export const MODAL_BACKGROUND = '#202028';
+export const MODAL_BACKGROUND = theme.overlay;
 
 export interface ModalProps {
   title?: string;
@@ -59,7 +60,7 @@ export function Modal({ title, hints, size = 'panel', maxWidth = 96, onClose, ch
     <Panel
       title={title}
       aside={onClose && <CloseButton onClick={onClose} />}
-      color="cyan"
+      focused
       backgroundColor={overlay ? MODAL_BACKGROUND : undefined}
       width={panel ? width : undefined}
       maxWidth={width}
@@ -79,10 +80,9 @@ export function Modal({ title, hints, size = 'panel', maxWidth = 96, onClose, ch
           borderBottom={false}
           borderLeft={false}
           borderRight={false}
-          borderColor="cyan"
-          borderDimColor
+          borderColor={theme.accent}
         >
-          <Text dimColor wrap="truncate-end">
+          <Text color={theme.inkFaint} wrap="truncate-end">
             {footer}
           </Text>
         </Box>

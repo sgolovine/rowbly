@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import { Button, type ButtonProps, Panel } from '../components';
+import { theme } from '../theme';
 import { SIDEBAR_WIDTH } from './layout';
 import { SidebarItem } from './SidebarItem';
 
@@ -39,7 +40,7 @@ export function Sidebar({
       <Box flexDirection="column" flexShrink={1} overflow="hidden">
         {entries.length === 0 && emptyText && (
           <Box paddingX={1}>
-            <Text dimColor>{emptyText}</Text>
+            <Text color={theme.inkFaint}>{emptyText}</Text>
           </Box>
         )}
         {entries.map((entry, i) => (

@@ -7,6 +7,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -63,7 +64,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   if (!data.data) {
     if (data.loading) return <Loading label={`Loading ${id}…`} />;
     const reason = data.error instanceof Error ? data.error.message : 'No Task.';
-    return <Text color="red">{reason}</Text>;
+    return <Text color={theme.danger}>{reason}</Text>;
   }
   const { story, task, stages } = data.data;
 
@@ -104,7 +105,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   return (
     <Box flexDirection="column" gap={1}>
       <Text>
-        <Text bold color="cyan">
+        <Text bold color={theme.accent}>
           {task.id}
         </Text>{' '}
         <Text bold>{task.name}</Text>

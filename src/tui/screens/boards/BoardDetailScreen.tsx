@@ -14,6 +14,7 @@ import {
   useServices,
 } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import { describeField } from '../fields';
 import type { ScreenProps } from '../types';
 
@@ -56,7 +57,8 @@ export function BoardDetailScreen({ params }: ScreenProps) {
     { isActive: active },
   );
 
-  if (!data.data) return data.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
+  if (!data.data)
+    return data.loading ? <Loading label="Loading Board…" /> : <Text color={theme.danger}>No Board.</Text>;
   const { config, counts } = data.data;
   const { board } = config;
   const unknown = Object.keys(counts).filter((key) => !config.stages.some((s) => s.key === key));
@@ -73,16 +75,17 @@ export function BoardDetailScreen({ params }: ScreenProps) {
       />
       <Box flexDirection="column">
         <Text>
-          <Text bold>Stages</Text> <Text dimColor>({describeSource(config.stagesSource)})</Text>
+          <Text bold>Stages</Text> <Text color={theme.inkFaint}>({describeSource(config.stagesSource)})</Text>
         </Text>
         {config.stages.map((s) => (
           <Text key={s.key}>
             {'  '}
-            <StageBadge stage={s} /> <Text dimColor>{`${s.key} · ${s.category}`}</Text> {plural(counts[s.key] ?? 0)}
+            <StageBadge stage={s} /> <Text color={theme.inkFaint}>{`${s.key} · ${s.category}`}</Text>{' '}
+            {plural(counts[s.key] ?? 0)}
           </Text>
         ))}
         {unknown.map((key) => (
-          <Text key={key} color="yellow">
+          <Text key={key} color={theme.stageBoard}>
             {'  '}
             {plural(counts[key] ?? 0)} in unknown Stage "{key}" (run Doctor)
           </Text>
@@ -90,16 +93,17 @@ export function BoardDetailScreen({ params }: ScreenProps) {
       </Box>
       <Box flexDirection="column">
         <Text>
-          <Text bold>Custom Fields</Text> <Text dimColor>({describeSource(config.customFieldsSource)})</Text>
+          <Text bold>Custom Fields</Text>{' '}
+          <Text color={theme.inkFaint}>({describeSource(config.customFieldsSource)})</Text>
         </Text>
         {config.customFields.length === 0 ? (
-          <Text dimColor>{'  '}none</Text>
+          <Text color={theme.inkFaint}>{'  '}none</Text>
         ) : (
           config.customFields.map((f) => (
             <Text key={f.key}>
               {'  '}
               {f.name}
-              {f.required ? '*' : ''} <Text dimColor>{`${f.key} · ${describeField(f)}`}</Text>
+              {f.required ? '*' : ''} <Text color={theme.inkFaint}>{`${f.key} · ${describeField(f)}`}</Text>
             </Text>
           ))
         )}

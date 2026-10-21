@@ -6,6 +6,7 @@ import { Form, type FormField, type FormValue, type FormValues, Loading } from '
 import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
 import { FORM_KEYS } from '../../keymap';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
 import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
@@ -29,7 +30,8 @@ export function StoryFormScreen({ params }: ScreenProps) {
   }, [services, ctx, key, params.boardId, plugins]);
   useKeyHints(FORM_KEYS);
 
-  if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
+  if (!data.data)
+    return data.loading ? <Loading label="Loading…" /> : <Text color={theme.danger}>Cannot open the form.</Text>;
   const { story, boardId, choices, extra } = data.data;
 
   // A Plugin's invalid input shows on that Plugin's fields (DX-07).
@@ -71,7 +73,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         onSubmit={submit}
       />
       <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
-      {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
+      {choices.labels.length > 0 && <Text color={theme.inkFaint}>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>
   );
 }

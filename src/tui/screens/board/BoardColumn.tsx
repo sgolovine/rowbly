@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
 import { type StoryBadges, useMouse } from '../../hooks';
+import { theme } from '../../theme';
 import { truncate } from './layout';
 import { useCardBadges } from './useCardBadges';
 
@@ -50,14 +51,14 @@ export function BoardColumn({
   return (
     <Box ref={ref} flexDirection="column" width={width} paddingRight={1} flexShrink={0}>
       <Text wrap="truncate-end">
-        <StageBadge stage={stage} /> <Text dimColor>({cards.length})</Text>
+        <StageBadge stage={stage} /> <Text color={theme.inkFaint}>({cards.length})</Text>
       </Text>
       {selected === null ? (
-        <Text dimColor>{'─'.repeat(inner)}</Text>
+        <Text color={theme.inkFaint}>{'─'.repeat(inner)}</Text>
       ) : (
-        <Text color={active ? 'cyan' : undefined}>{'━'.repeat(inner)}</Text>
+        <Text color={active ? theme.accent : undefined}>{'━'.repeat(inner)}</Text>
       )}
-      <Text dimColor>{first > 0 ? `↑ ${first} more` : ' '}</Text>
+      <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
       {shown.map((story, i) => (
         <Card
           key={story.key}
@@ -69,8 +70,8 @@ export function BoardColumn({
           onClick={() => onClick?.(first + i)}
         />
       ))}
-      {cards.length === 0 && <Text dimColor>(empty)</Text>}
-      {below > 0 && <Text dimColor>↓ {below} more</Text>}
+      {cards.length === 0 && <Text color={theme.inkFaint}>(empty)</Text>}
+      {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}
     </Box>
   );
 }
@@ -106,17 +107,16 @@ function Card({
       marginBottom={1}
       paddingX={1}
       borderStyle={selected ? 'bold' : 'single'}
-      borderColor={selected && active ? 'cyan' : undefined}
-      borderDimColor={!selected}
+      borderColor={selected && active ? theme.accent : undefined}
     >
       <Text>
-        <Text bold color="cyan">
+        <Text bold color={theme.accent}>
           {truncate(story.key, room)}
         </Text>
-        <Text color="magenta">{truncate(priority, room - story.key.length)}</Text>
+        <Text color={theme.epic}>{truncate(priority, room - story.key.length)}</Text>
       </Text>
       <Text bold={selected}>{truncate(story.name, room)}</Text>
-      <Text dimColor>{truncate(meta, room) || ' '}</Text>
+      <Text color={theme.inkFaint}>{truncate(meta, room) || ' '}</Text>
     </Box>
   );
 }

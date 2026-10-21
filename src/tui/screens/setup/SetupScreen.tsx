@@ -7,6 +7,7 @@ import { assertInitTarget, initTarget, newContext } from '../../../services/setu
 import { Form, type FormValues, SelectList } from '../../components';
 import { useActivate, useKeyHints, useToast } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 /**
@@ -65,7 +66,7 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
   return (
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
-      <Text dimColor>Leave the Board id empty to skip the first Board.</Text>
+      <Text color={theme.inkFaint}>Leave the Board id empty to skip the first Board.</Text>
       <Form
         fields={[
           { name: 'boardId', label: 'Board id', kind: 'text' },

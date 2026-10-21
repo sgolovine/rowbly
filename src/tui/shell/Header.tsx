@@ -4,6 +4,7 @@ import { useContext } from 'react';
 import type { RowblyContext } from '../../services';
 import { Button, Panel } from '../components';
 import { type BoardView, type HeaderLabel, ServicesContext } from '../hooks';
+import { theme } from '../theme';
 import { ViewSwitch } from './ViewSwitch';
 
 /** The project the Data Root belongs to: the folder holding `.rowbly`, or "Global" for `~/.rowbly`. */
@@ -52,12 +53,12 @@ export function Header({
           {label && (
             <Text wrap="truncate-end">
               <Text bold>{label.title}</Text>
-              {label.detail && <Text dimColor>{` ${label.detail}`}</Text>}
+              {label.detail && <Text color={theme.inkFaint}>{` ${label.detail}`}</Text>}
             </Text>
           )}
         </Box>
         <Box flexShrink={0}>
-          <Text dimColor>me: {ctx?.me ?? '—'}</Text>
+          <Text color={theme.inkFaint}>me: {ctx?.me ?? '—'}</Text>
         </Box>
       </Panel>
       {sidebars.map((sidebar) => (

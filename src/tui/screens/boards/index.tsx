@@ -15,6 +15,7 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenRegistry } from '../types';
 import { BoardDetailScreen } from './BoardDetailScreen';
 import { BoardFormScreen } from './BoardForm';
@@ -113,15 +114,15 @@ function BoardsScreen() {
   return (
     <Box flexDirection="column" gap={1}>
       {boards.length === 0 ? (
-        <Text dimColor>No Boards yet. Press n to create one.</Text>
+        <Text color={theme.inkFaint}>No Boards yet. Press n to create one.</Text>
       ) : (
         <CursorRows
           cursor={cursor}
           active={active && listing}
           rows={boards.map((b) => (
             <Text key={b.id}>
-              {b.name} <Text dimColor>{`${b.id} · ${b.keyPrefix}`}</Text>
-              {b.id === currentBoard ? <Text color="green"> (current)</Text> : null}
+              {b.name} <Text color={theme.inkFaint}>{`${b.id} · ${b.keyPrefix}`}</Text>
+              {b.id === currentBoard ? <Text color={theme.stageDone}> (current)</Text> : null}
             </Text>
           ))}
         />

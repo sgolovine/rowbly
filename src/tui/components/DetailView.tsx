@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import type { ReactNode } from 'react';
+import { theme } from '../theme';
 
 export interface DetailRow {
   label: string;
@@ -20,7 +21,7 @@ export function DetailView({ rows, body }: DetailViewProps) {
       {rows.map((row) => (
         <Box key={row.label}>
           <Box width={width} flexShrink={0}>
-            <Text dimColor>{row.label}</Text>
+            <Text color={theme.inkFaint}>{row.label}</Text>
           </Box>
           {typeof row.value === 'string' || typeof row.value === 'number' ? <Text>{row.value}</Text> : row.value}
         </Box>

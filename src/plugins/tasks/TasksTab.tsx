@@ -6,6 +6,7 @@ import {
   moveDelta,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -73,10 +74,10 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
   );
 
   if (data.data?.tasks === null) {
-    return <Text color="red">Tasks unavailable: the stored Tasks are invalid; run `rowbly doctor`.</Text>;
+    return <Text color={theme.danger}>Tasks unavailable: the stored Tasks are invalid; run `rowbly doctor`.</Text>;
   }
   if (!data.data) {
-    return data.loading ? <Loading label="Loading Tasks…" /> : <Text color="red">Could not load Tasks.</Text>;
+    return data.loading ? <Loading label="Loading Tasks…" /> : <Text color={theme.danger}>Could not load Tasks.</Text>;
   }
   const { stages } = data.data;
 
@@ -97,14 +98,14 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
   return (
     <Box flexDirection="column" gap={1}>
       {tasks.length === 0 ? (
-        <Text dimColor>No Tasks yet. Press n to create one.</Text>
+        <Text color={theme.inkFaint}>No Tasks yet. Press n to create one.</Text>
       ) : (
         <Box flexDirection="column">
           {tasks.map((t, i) => (
             <Box key={t.id}>
-              <Text color={i === cursor && viewing ? 'cyan' : undefined}>{i === cursor ? '› ' : '  '}</Text>
+              <Text color={i === cursor && viewing ? theme.accent : undefined}>{i === cursor ? '› ' : '  '}</Text>
               <Text>
-                <Text color="cyan">{t.id}</Text> {t.name} <TaskStage stages={stages} stage={t.stage} />
+                <Text color={theme.accent}>{t.id}</Text> {t.name} <TaskStage stages={stages} stage={t.stage} />
               </Text>
             </Box>
           ))}

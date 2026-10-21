@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
+import { theme } from '../theme';
 
 export interface ConfirmDialogProps {
   message: string;
@@ -38,15 +39,19 @@ export function ConfirmDialog({
     { isActive: active },
   );
 
-  const color = destructive ? 'red' : 'yellow';
+  const color = destructive ? theme.danger : theme.stageBoard;
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor={color} paddingX={1} alignSelf="flex-start">
+    <Box flexDirection="column" alignSelf="flex-start">
       <Text>{message}</Text>
       <Box marginTop={1} gap={2}>
-        <Text inverse={confirmFocused} color={confirmFocused ? color : undefined}>
+        <Text bold={confirmFocused} color={color} backgroundColor={confirmFocused ? theme.selection : undefined}>
           {` ${confirmLabel} (y) `}
         </Text>
-        <Text inverse={!confirmFocused}>{` ${cancelLabel} (n) `}</Text>
+        <Text
+          bold={!confirmFocused}
+          color={theme.ink}
+          backgroundColor={!confirmFocused ? theme.selection : undefined}
+        >{` ${cancelLabel} (n) `}</Text>
       </Box>
     </Box>
   );

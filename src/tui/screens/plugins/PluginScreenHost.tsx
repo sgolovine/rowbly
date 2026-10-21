@@ -2,6 +2,7 @@ import { Text } from 'ink';
 import { useMemo } from 'react';
 import { PluginBoundary } from '../../components';
 import { usePlugins, usePluginUi, useServices } from '../../hooks';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 /** A route param that names something: a nonempty string, or `undefined`. */
@@ -29,14 +30,15 @@ export function PluginScreenHost({ params }: ScreenProps) {
       return null;
     }
   }, [services, id]);
-  if (id === undefined) return <Text color="red">Invalid route: a Plugin screen was opened without a Plugin.</Text>;
+  if (id === undefined)
+    return <Text color={theme.danger}>Invalid route: a Plugin screen was opened without a Plugin.</Text>;
   if (name === undefined) {
-    return <Text color="red">{`Invalid route: Plugin "${id}" opened a screen without a screen name.`}</Text>;
+    return <Text color={theme.danger}>{`Invalid route: Plugin "${id}" opened a screen without a screen name.`}</Text>;
   }
   const loaded = plugins.find((p) => p.id === id);
   const screens = loaded?.tui.screens;
   const Screen = screens && Object.hasOwn(screens, name) ? screens[name] : undefined;
-  if (!Screen || !context) return <Text color="red">{`Plugin "${id}" has no screen "${name}".`}</Text>;
+  if (!Screen || !context) return <Text color={theme.danger}>{`Plugin "${id}" has no screen "${name}".`}</Text>;
   return (
     <PluginBoundary pluginId={id} resetKeys={[id, name, loaded]}>
       <Screen params={rest} plugin={context} ui={ui} />

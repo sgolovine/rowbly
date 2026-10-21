@@ -1,6 +1,7 @@
 import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import { useIsActive, useMouse } from '../hooks';
+import { theme } from '../theme';
 
 /** The button below a `TextArea` that opens its text in a `FullScreenEditor`; `ctrl+f` does the same. */
 export function FullScreenButton({
@@ -16,10 +17,10 @@ export function FullScreenButton({
   useMouse(ref, { onClick }, useIsActive() && clickable);
   return (
     <Box ref={ref} flexShrink={0} gap={1} alignSelf="flex-start">
-      <Text color="cyan" bold={focused} dimColor={!focused}>
+      <Text color={theme.accent} bold={focused}>
         [Full screen]
       </Text>
-      {focused && <Text dimColor>ctrl+f</Text>}
+      {focused && <Text color={theme.inkFaint}>ctrl+f</Text>}
     </Box>
   );
 }
