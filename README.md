@@ -297,7 +297,7 @@ rowbly comments delete <KEY> <comment-id>   # confirms; pass --yes when not inte
 - `list` shows Comments oldest first. `edit` updates the Comment's `updatedAt`.
 - `--json` prints Comment objects: an array for `list`, one Comment for `add` and `edit`, and `{ deleted }` for `delete`.
 - Comments are stored as Plugin Data on their Story (`"plugins": { "comments": { "comments": [ … ] } }`). `stories show` counts them.
-- In the TUI, the Story screen gets a **Comments** tab: `n` new, `e` edit (both open the Comment form), `d` delete.
+- In the TUI, the Story screen gets a **Comments** tab: `n` new Comment, `e` edit (both open the Comment form), `d` delete.
 <!-- END comments -->
 
 <!-- BEGIN doctor -->
