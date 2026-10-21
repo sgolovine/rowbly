@@ -1,5 +1,5 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
-import { type ReactNode, useContext, useMemo, useState } from 'react';
+import { type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { invokePlugin } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
@@ -22,7 +22,7 @@ import {
   useScreenLabel,
   useToast,
 } from '../hooks';
-import { globalAction, type KeyHint } from '../keymap';
+import { globalAction, type KeyHint, moveDelta } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
 import { bindAction } from './actionFocus';
@@ -41,6 +41,9 @@ type Overlay =
   | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
   // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
+
+/** The part of the frame that takes `↑`/`↓` and `n` at the root: the main area or a sidebar. */
+type Pane = 'main' | 'boards' | 'plugin';
 
 /**
  * The frame: a header with the project and its actions, the Board sidebar, the Plugin Sidebar shown
@@ -118,6 +121,13 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   );
 
   const pluginSidebars = usePluginSidebars(depth);
+  // A click in a sidebar focuses it and one in the main area focuses that; `esc` goes back to the main area.
+  const [pane, setPane] = useState<Pane>('main');
+  const pluginShown = pluginSidebars.shown !== null;
+  useEffect(() => {
+    if (!pluginShown) setPane((was) => (was === 'plugin' ? 'main' : was));
+  }, [pluginShown]);
+  const sidebarFocused = idle && pane !== 'main';
   // `depth` reloads the list when a modal closes, e.g. after creating a Board.
   const sidebar = useAsync(async () => (services ? services.boards.list() : null), [services, boardVersion, depth]);
   const boards = sidebar.data ?? [];
@@ -137,6 +147,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   };
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
+  const pluginCreate = pluginSidebars.shown?.button;
   // Two screen modals never stack: Settings replaces an open Story and the tasks opened over it.
   const story = router.stack.findIndex((route) => route.screen === 'story');
   const replaceStory = () => router.replaceAt(story, 'settings');
@@ -159,11 +170,18 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     const pluginAction = actions.find((a) => a.key === input);
     if (pluginAction && !key.ctrl && !key.meta) return pluginAction.run();
     const action = globalAction(input, key);
-    if (action === 'back') back();
+    const delta = sidebarFocused ? moveDelta(input, key) : 0;
+    if (action === 'back' && sidebarFocused) setPane('main');
+    else if (action === 'back') back();
     else if (action === 'quit' && atRoot) quit();
     else if (action === 'help') setOverlay({ kind: 'help' });
     else if (action === 'settings') openSettings();
-    else if (atRoot && services && input === 'N') newBoard();
+    else if (sidebarFocused && pane === 'boards' && delta && boards.length > 0) {
+      const board = boards[boardKey(delta < 0 ? '[' : ']', currentIndex, boards.length) ?? currentIndex];
+      if (board && board.id !== boards[currentIndex]?.id) void selection.select(board.id);
+    } else if (sidebarFocused && pane === 'plugin' && delta) pluginSidebars.step(delta);
+    else if (sidebarFocused && pane === 'boards' && input === 'n') newBoard();
+    else if (sidebarFocused && pane === 'plugin' && input === 'n') pluginCreate?.onClick();
     else if (atRoot && input === '\\') pluginSidebars.cycle();
     else if (atRoot && input === '{') pluginSidebars.step(-1);
     else if (atRoot && input === '}') pluginSidebars.step(1);
@@ -174,7 +192,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     }
   });
 
-  const hints = [...useScreenHints(depth), ...actionHints];
+  const screenHints = useScreenHints(depth);
+  const hints = [...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label) : screenHints), ...actionHints];
   const label = useScreenLabel(0);
   const sidebarWidth = services ? SIDEBAR_WIDTH * (pluginSidebars.shown ? 2 : 1) : 0;
   // The main panel's border takes a column on each side.
@@ -193,6 +212,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
               <Header
                 label={label}
                 onNewStory={services ? newStory : undefined}
+                newStoryKey={!sidebarFocused}
                 onSettings={services ? openSettings : undefined}
                 clickable={idle}
                 actions={actions}
@@ -211,9 +231,11 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                     emptyText="No Boards yet."
                     numbered
                     height={mainHeight}
+                    focused={idle && pane === 'boards'}
                     clickable={idle}
+                    onFocus={() => setPane('boards')}
                     onSelect={(boardId) => void selection.select(boardId)}
-                    button={{ label: '+ New Board', keyName: 'N', onClick: newBoard }}
+                    button={{ label: '+ New Board', onClick: newBoard }}
                   />
                 )}
                 {services && pluginSidebars.shown && (
@@ -222,14 +244,17 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                     entries={pluginSidebars.shown.entries}
                     current={pluginSidebars.shown.current}
                     height={mainHeight}
+                    focused={idle && pane === 'plugin'}
                     clickable={idle}
+                    onFocus={() => setPane('plugin')}
                     onSelect={pluginSidebars.pick}
                     button={pluginSidebars.shown.button}
                   />
                 )}
                 <Panel
                   title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-                  focused={idle}
+                  focused={idle && pane === 'main'}
+                  onClick={idle ? () => setPane('main') : undefined}
                   flexGrow={1}
                   flexShrink={1}
                   height={mainHeight}
@@ -238,7 +263,13 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                   <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
                     {router.stack[0] && (
                       <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
-                        <ScreenSlot route={router.stack[0]} depth={0} top active={idle} screens={screens} />
+                        <ScreenSlot
+                          route={router.stack[0]}
+                          depth={0}
+                          top
+                          active={idle && pane === 'main'}
+                          screens={screens}
+                        />
                       </Box>
                     )}
                     {depth > 0 && top && (
@@ -336,6 +367,18 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       </BoardViewContext.Provider>
     </BoardSelectionContext.Provider>
   );
+}
+
+/** The keys of a focused sidebar, which replace the root screen's; `create` is its button's label. */
+function sidebarHints(pane: Pane, create: string | undefined): KeyHint[] {
+  const hints: KeyHint[] = [{ key: '↑/↓', description: pane === 'boards' ? 'select Board' : 'select' }];
+  if (pane === 'boards') hints.push({ key: 'n', description: 'new Board' });
+  else if (create) hints.push({ key: 'n', description: create.replace(/^\+\s*/, '').replace(/^New\b/, 'new') });
+  hints.push(
+    { key: 'esc', description: 'back to the main area' },
+    { key: 'j/k', description: 'select (vim keys)', secondary: true },
+  );
+  return hints;
 }
 
 /** The keys shown along the bottom of a screen's modal: its own, then `esc` unless it took that over. */
