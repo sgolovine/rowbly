@@ -38,7 +38,7 @@ import { usePluginSidebars } from './usePluginSidebars';
 
 type Overlay =
   | { kind: 'help' }
-  | { kind: 'confirm'; action: 'quit' | 'back' }
+  | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
   // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
 
@@ -137,11 +137,15 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   };
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
+  // Two screen modals never stack: Settings replaces an open Story and the tasks opened over it.
+  const story = router.stack.findIndex((route) => route.screen === 'story');
+  const replaceStory = () => router.replaceAt(story, 'settings');
   const openSettings = () => {
-    if (services && !router.stack.some((route) => route.screen === 'settings')) {
-      if (router.current.screen === 'story') router.replace('settings');
-      else router.push('settings');
-    }
+    if (!services || router.stack.some((route) => route.screen === 'settings')) return;
+    if (story < 0) router.push('settings');
+    else if (router.stack.some((_, at) => at > story && shell.isDirty(at))) {
+      setOverlay({ kind: 'confirm', action: 'settings' });
+    } else replaceStory();
   };
 
   useInput((input, key) => {
@@ -298,7 +302,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                           message={
                             overlay.action === 'quit'
                               ? 'Quit and discard unsaved changes?'
-                              : 'Go back and discard unsaved changes?'
+                              : overlay.action === 'settings'
+                                ? 'Open Settings and discard unsaved changes?'
+                                : 'Go back and discard unsaved changes?'
                           }
                           confirmLabel="Discard"
                           cancelLabel="Keep editing"
@@ -306,6 +312,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                           onConfirm={() => {
                             setOverlay(null);
                             if (overlay.action === 'quit') exit();
+                            else if (overlay.action === 'settings') replaceStory();
                             else router.pop();
                           }}
                           onCancel={() => setOverlay(null)}

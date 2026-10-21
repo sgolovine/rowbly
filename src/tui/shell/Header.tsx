@@ -46,8 +46,17 @@ export function Header({
 }) {
   const { ctx } = useContext(ServicesContext);
   const { columns } = useWindowSize();
-  const showKeys = columns >= 120;
-  const showControls = columns >= 100;
+  const me = `me ${ctx?.me ?? '—'} `;
+  const labelText = label ? `${label.title}${label.detail ? ` ${label.detail}` : ''}` : '';
+  // The panel's border and padding, the gap after the label, and the label itself (it may be cut).
+  const room = columns - 6 - Math.min(labelText.length, 30);
+  const { showKeys, showMe, showExtras, showSettings, showSwitch } = headerFit(room, {
+    me: me.length,
+    extras: [...sidebars.map((s) => ({ label: s.label, key: '\\' })), ...actions],
+    settings: onSettings !== undefined,
+    viewSwitch: boardView !== undefined,
+    newStory: onNewStory !== undefined,
+  });
   return (
     <Panel title={projectName(ctx)} height={3} paddingX={1} flexDirection="row" columnGap={2}>
       <Box flexGrow={1} flexShrink={1} minWidth={8}>
@@ -59,8 +68,8 @@ export function Header({
         )}
       </Box>
       <Box flexShrink={0} alignItems="center">
-        {showControls && <Text color={theme.inkFaint}>me {ctx?.me ?? '—'} </Text>}
-        {showControls &&
+        {showMe && <Text color={theme.inkFaint}>{me}</Text>}
+        {showExtras &&
           sidebars.map((sidebar) => (
             <Box key={sidebar.id}>
               <Button
@@ -73,7 +82,7 @@ export function Header({
               <Text color={theme.borderControl}>|</Text>
             </Box>
           ))}
-        {showControls && onSettings && (
+        {showSettings && onSettings && (
           <>
             <Button
               label="Settings"
@@ -85,7 +94,7 @@ export function Header({
             <Text color={theme.borderControl}>|</Text>
           </>
         )}
-        {showControls &&
+        {showExtras &&
           actions.map((action) => (
             <Box key={action.key}>
               <Button
@@ -98,23 +107,54 @@ export function Header({
               <Text color={theme.borderControl}>|</Text>
             </Box>
           ))}
-        {showControls && boardView && (
+        {showSwitch && boardView && (
           <>
             <ViewSwitch view={boardView.view} onChange={boardView.onChange} clickable={clickable} />
             <Text color={theme.borderControl}>|</Text>
           </>
         )}
         {onNewStory && (
-          <Button
-            label="+ New Story"
-            keyName={showKeys ? 'n' : undefined}
-            onClick={onNewStory}
-            clickable={clickable}
-            compact
-            primary
-          />
+          <Button label="+ New Story" keyName="n" onClick={onNewStory} clickable={clickable} compact primary />
         )}
       </Box>
     </Panel>
   );
+}
+
+/** A header Button's width: its padding, label and key cap. */
+const buttonWidth = (label: string, key?: string) => 2 + label.length + (key ? key.length + 3 : 0);
+// The view switch: `Stages / List` and its key cap, with padding; a `|` follows every control.
+const SWITCH_WIDTH = 19;
+
+/**
+ * Which header controls fit in `room` columns. The quiet Buttons' keys go first (they stay in Help),
+ * then Me, the Plugin Buttons, Settings and the view switch; **+ New Story** and its key always stay.
+ */
+function headerFit(
+  room: number,
+  controls: {
+    me: number;
+    extras: readonly { label: string; key: string }[];
+    settings: boolean;
+    viewSwitch: boolean;
+    newStory: boolean;
+  },
+) {
+  const width = (fit: ReturnType<typeof level>) =>
+    (fit.showMe ? controls.me : 0) +
+    (fit.showExtras
+      ? controls.extras.reduce((sum, c) => sum + buttonWidth(c.label, fit.showKeys ? c.key : undefined) + 1, 0)
+      : 0) +
+    (fit.showSettings && controls.settings ? buttonWidth('Settings', fit.showKeys ? ',' : undefined) + 1 : 0) +
+    (fit.showSwitch && controls.viewSwitch ? SWITCH_WIDTH + 1 : 0) +
+    (controls.newStory ? buttonWidth('+ New Story', 'n') : 0);
+  const level = (n: number) => ({
+    showKeys: n < 1,
+    showMe: n < 2,
+    showExtras: n < 3,
+    showSettings: n < 4,
+    showSwitch: n < 5,
+  });
+  for (let n = 0; n < 5; n += 1) if (width(level(n)) <= room) return level(n);
+  return level(5);
 }
