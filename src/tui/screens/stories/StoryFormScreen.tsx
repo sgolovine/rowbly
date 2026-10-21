@@ -82,7 +82,14 @@ function formFields(choices: StoryChoices): FormField[] {
   return [
     { name: 'name', label: 'Name', kind: 'text', required: true },
     { name: 'description', label: 'Description', kind: 'multiline' },
-    { name: 'stage', label: 'Stage', kind: 'select', required: true, options: choices.stages.map((s) => s.key) },
+    {
+      name: 'stage',
+      label: 'Stage',
+      kind: 'select',
+      required: true,
+      options: choices.stages.map((s) => s.key),
+      optionLabels: Object.fromEntries(choices.stages.map((s) => [s.key, s.name])),
+    },
     { name: 'priority', label: 'Priority', kind: 'select', options: [NONE, ...PrioritySchema.options] },
     { name: 'labels', label: 'Labels (a,b)', kind: 'text' },
     { name: 'dueDate', label: 'Due', kind: 'date' },

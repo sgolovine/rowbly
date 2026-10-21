@@ -17,6 +17,8 @@ export interface FormField {
   required?: boolean;
   /** Choices for `select` and `multiselect`. */
   options?: readonly string[];
+  /** What a choice shows instead of its value, e.g. a Stage's name for its key. */
+  optionLabels?: Readonly<Record<string, string>>;
 }
 
 /** text/multiline: string · number: number | null · boolean · date: `YYYY-MM-DD` | null · select: string | null · multiselect: string[] */

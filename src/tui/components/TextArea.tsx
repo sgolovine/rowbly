@@ -79,19 +79,21 @@ export function TextArea({
   );
 
   const current = rowOf(wrapped, cursor);
-  top.current = follow(top.current, current, rows);
+  // The caret is followed only while editing, so a long text shows from its first line until then.
+  if (editing) top.current = follow(top.current, current, rows);
+  const first = Math.min(top.current, Math.max(0, wrapped.length - rows));
   const text = (
     <Box flexDirection="column" height={rows} flexShrink={0} overflow="hidden">
       {!value && !editing ? (
         <Text color={theme.inkFaint}>{placeholder}</Text>
       ) : (
-        wrapped.slice(top.current, top.current + rows).map((row, i) => {
+        wrapped.slice(first, first + rows).map((row, i) => {
           const text = value.slice(row.start, row.end);
           return (
             // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their position.
             <Text key={i} wrap="truncate-end">
               {/* An empty Text has no height, so a blank line holds a space to keep its row. */}
-              {editing && top.current + i === current ? <WithCaret text={text} at={cursor - row.start} /> : text || ' '}
+              {editing && first + i === current ? <WithCaret text={text} at={cursor - row.start} /> : text || ' '}
               {editing && !value && placeholder && <Text color={theme.inkFaint}>{placeholder}</Text>}
             </Text>
           );
@@ -103,7 +105,14 @@ export function TextArea({
   return (
     <Box flexDirection="column" flexShrink={0}>
       {text}
-      <FullScreenButton focused={focus} clickable={!expanded} onClick={expand} />
+      <Box gap={2}>
+        <FullScreenButton focused={focus} clickable={!expanded} onClick={expand} />
+        {wrapped.length > rows && (
+          <Text color={theme.inkFaint}>
+            ↑↓ {first + 1}–{Math.min(wrapped.length, first + rows)} of {wrapped.length}
+          </Text>
+        )}
+      </Box>
       {/* Outside the shell there is nothing to cover, so the editor shows here. */}
       {editor.inline}
     </Box>

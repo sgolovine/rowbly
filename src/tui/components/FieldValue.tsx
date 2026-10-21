@@ -26,7 +26,7 @@ export function FieldValue({
     case 'boolean':
       return <Text>{raw === true ? '[x] yes' : '[ ] no'}</Text>;
     case 'select':
-      return <Text>{`‹ ${typeof raw === 'string' ? raw : '—'} ›`}</Text>;
+      return <Text>{`‹ ${typeof raw === 'string' ? (field.optionLabels?.[raw] ?? raw) : '—'} ›`}</Text>;
     case 'multiselect': {
       const checked = Array.isArray(raw) ? raw : [];
       return (
@@ -34,7 +34,7 @@ export function FieldValue({
           {(field.options ?? []).map((option, i) => (
             <Text key={option} underline={focused && i === optionCursor}>
               {checked.includes(option) ? '[x] ' : '[ ] '}
-              {option}
+              {field.optionLabels?.[option] ?? option}
             </Text>
           ))}
         </Box>
