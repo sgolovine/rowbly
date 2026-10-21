@@ -1,6 +1,6 @@
 import { Text } from 'ink';
 import { useMemo } from 'react';
-import { PluginBoundary } from '../../components';
+import { PluginBoundary, PluginLayerScope } from '../../components';
 import { usePlugins, usePluginUi, useServices } from '../../hooks';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
@@ -41,7 +41,9 @@ export function PluginScreenHost({ params }: ScreenProps) {
   if (!Screen || !context) return <Text color={theme.danger}>{`Plugin "${id}" has no screen "${name}".`}</Text>;
   return (
     <PluginBoundary pluginId={id} resetKeys={[id, name, loaded]}>
-      <Screen params={rest} plugin={context} ui={ui} />
+      <PluginLayerScope pluginId={id} resetKeys={[id, name, loaded]}>
+        <Screen params={rest} plugin={context} ui={ui} />
+      </PluginLayerScope>
     </PluginBoundary>
   );
 }

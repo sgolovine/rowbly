@@ -54,9 +54,7 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
               ]
             : []),
         ]
-      : isActive && mode === 'move'
-        ? [{ key: 'esc', description: 'cancel' }]
-        : [],
+      : [],
   );
   useKeyCapture(isActive && mode === 'move', { escape: true });
   useInput((_input, key) => key.escape && setMode('view'), { isActive: isActive && mode === 'move' });
@@ -113,21 +111,28 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
         </Box>
       )}
       {mode === 'move' && task && (
-        <Modal title={`${task.id} › Move Stage`} onClose={() => setMode('view')}>
+        <Modal
+          title={`${task.id} › Move Stage`}
+          hints={[
+            { key: 'enter', description: 'move' },
+            { key: 'esc', description: 'back' },
+          ]}
+          onClose={() => setMode('view')}
+        >
           <SelectList
             items={stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === task.stage ? `${s.key} (current)` : s.key,
+              description: s.key === task.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) =>
-              void run(() => moveTask(plugin, task.id, item.value), `Moved ${task.id} to ${item.value}`)
+              void run(() => moveTask(plugin, task.id, item.value), `Moved ${task.id} to ${item.label}`)
             }
           />
         </Modal>
       )}
       {mode === 'confirm-delete' && task && (
-        <Modal title="Delete" onClose={() => setMode('view')}>
+        <Modal title={`${task.id} › Delete`} onClose={() => setMode('view')}>
           <ConfirmDialog
             message={`Delete ${task.id} "${task.name}"?`}
             confirmLabel="Delete"

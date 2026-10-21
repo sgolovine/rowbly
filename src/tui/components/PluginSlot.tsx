@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { PluginContext, PluginUi } from '../../services';
 import { usePlugins } from '../hooks';
 import { PluginBoundary } from './PluginBoundary';
+import { PluginLayerScope } from './PluginLayerScope';
 import { PluginSlotContent } from './PluginSlotContent';
 
 /**
@@ -18,7 +19,9 @@ export function PluginSlot({
   const loaded = usePlugins().plugins.find((plugin) => plugin.id === pluginId);
   return (
     <PluginBoundary pluginId={pluginId} resetKeys={[pluginId, loaded]}>
-      <PluginSlotContent pluginId={pluginId} render={render} />
+      <PluginLayerScope pluginId={pluginId} resetKeys={[pluginId, loaded]}>
+        <PluginSlotContent pluginId={pluginId} render={render} />
+      </PluginLayerScope>
     </PluginBoundary>
   );
 }

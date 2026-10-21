@@ -110,7 +110,7 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
         </Box>
       )}
       {confirming && comment && (
-        <Modal title="Delete" onClose={() => setConfirming(false)}>
+        <Modal title={`${target} › Delete Comment`} onClose={() => setConfirming(false)}>
           <ConfirmDialog
             message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
             confirmLabel="Delete"

@@ -73,7 +73,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
     setBusy(true);
     try {
       await moveTask(plugin, task.id, stage);
-      ui.toast(`Moved ${task.id} to ${stage}`);
+      ui.toast(`Moved ${task.id} to ${stages.find((s) => s.key === stage)?.name ?? stage}`);
       data.reload();
     } catch (err) {
       ui.error(err);
@@ -119,7 +119,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
             items={stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === task.stage ? `${s.key} (current)` : s.key,
+              description: s.key === task.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) => void move(item.value)}
           />

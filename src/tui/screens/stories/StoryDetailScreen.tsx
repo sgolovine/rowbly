@@ -13,6 +13,7 @@ import {
   StageBadge,
   StoryStage,
   Tabs,
+  useCovered,
 } from '../../components';
 import {
   loadStoryBadges,
@@ -46,6 +47,8 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
+  // A task open over the Story, its own or a tab's, takes the keys; the Story takes none until it closes.
+  const covered = useCovered();
   const layout = useLayout();
   const { plugins } = usePlugins();
   const key = String(params.key ?? '');
@@ -71,7 +74,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   useEscape(active && mode === 'move', () => setMode('view'));
   useKeyHints(
     !viewing
-      ? [{ key: 'esc', description: 'cancel' }]
+      ? []
       : tab === 0
         ? [
             { key: 'tab/←/→', description: 'switch tab' },
@@ -94,7 +97,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       else if (input === 'm') setMode('move');
       else if (input === 'd') setMode('confirm-delete');
     },
-    { isActive: active && viewing },
+    { isActive: active && viewing && !covered },
   );
 
   if (!data.data)
@@ -104,7 +107,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const move = async (stage: string) => {
     try {
       await services.stories.move(story.key, stage);
-      toast.push('info', `Moved ${story.key} to ${stage}`);
+      toast.push('info', `Moved ${story.key} to ${config.stages.find((s) => s.key === stage)?.name ?? stage}`);
       data.reload();
     } catch (err) {
       toast.error(err);
@@ -158,11 +161,11 @@ export function StoryDetailScreen({ params }: ScreenProps) {
           <Text color={theme.inkFaint}> · updated {relativeDate(story.updatedAt, ctx?.now())}</Text>
         </Text>
         <Box marginTop={1}>
-          <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />
+          <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing && !covered} />
         </Box>
       </Box>
       <ScrollBody
-        active={active && viewing}
+        active={active && viewing && !covered}
         height={layout.height === undefined ? undefined : Math.max(1, layout.height - 5)}
       >
         {tab === 0 && <DetailView rows={rows} body={story.description} />}
@@ -192,7 +195,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
             items={config.stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === story.stage ? `${s.key} (current)` : s.key,
+              description: s.key === story.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) => void move(item.value)}
           />
