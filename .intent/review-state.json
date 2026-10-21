@@ -1850,17 +1850,17 @@
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
-      "fingerprint": "4666d7487cca59226d88ff9999ccc1adb6c0d4fa26ef09b8a9e81e3ae726839d",
+      "fingerprint": "37b5c802baeed8d0d8513677de1b5f198286415b076d2572e3489ff76c0c0355",
       "snapshot": {
-        "src/tui/screens/stages/index.tsx": "fb59692e90f34a0182e4b4e3815a0224be1ddb75d36d1fc8822b01fdcdd1d4fc"
+        "src/tui/screens/stages/index.tsx": "f027f5b1ee7345b259c3c1819d050689467b371c6e6d9d2c0162c4ef13f3648f"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
@@ -3421,17 +3421,17 @@
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
-      "fingerprint": "99bce88fcbe6622cc01f45c0be504655e98ca45a4d890b92c911785cdb5aede9",
+      "fingerprint": "d3759ef1896840d0d20feecfc908c233b196d4c315c3987ce35f62a4909f862c",
       "snapshot": {
-        "src/tui/screens/stories/StoryListScreen.tsx": "8853f2751b08002119e450312188613e121e9f09a07ab25cc893995bc647ffa2"
+        "src/tui/screens/stories/StoryListScreen.tsx": "a4c4ae18160f17080c4cfc289fa1cf34c4f7aed3aa545625f82cfdf1350ff9ab"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/stories/filter.ts": {
@@ -4002,17 +4002,17 @@
       ]
     },
     "source:src/tui/screens/board/BoardListRow.tsx": {
-      "fingerprint": "d5f8e4d3fff1accc493cd439da87faee404b242ddebec606637b5518b6d14277",
+      "fingerprint": "b86d0a256b10e63512733ce7230f4deae5e15987bce84114aeb4cad01f411e51",
       "snapshot": {
-        "src/tui/screens/board/BoardListRow.tsx": "b9defa6b2f70a574855b25a275ace48ae902bfac0896361e49f7b30f659bc858"
+        "src/tui/screens/board/BoardListRow.tsx": "885f6edb6b3447c0ca270cb93ae740f5ad2c6af6f9b21106906c3d74b52a1944"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/demo/index.tsx": {
@@ -5450,17 +5450,17 @@
       ]
     },
     "source:src/tui/components/SelectListRow.tsx": {
-      "fingerprint": "07966bd751f120845f8a3bfe20b871c39b492191656c0b72394f955caafbce8a",
+      "fingerprint": "ade32bc6850c4ad3b64460ac081f6b85be0edc3ca8a84a127104f97da860bb05",
       "snapshot": {
-        "src/tui/components/SelectListRow.tsx": "babe5b632cc02149e3f4c150cbf2d9d1b81f21130b3f2a04c0e5541f68f3419b"
+        "src/tui/components/SelectListRow.tsx": "c83260205ff173179a1cdd4a40a65baedb5a6f3035fa298c7cdad3323021def9"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/components/markdown.ts": {
@@ -5734,17 +5734,17 @@
       ]
     },
     "source:src/tui/shell/SidebarItem.tsx": {
-      "fingerprint": "11e39370b49ef273ff7778e72865f428dfd5e679d9bf9ca208f15ba15f0430fb",
+      "fingerprint": "5414426ecde00f6f7a528cb14bb77b15b1739a22ce387f307d46f53d2eef69c7",
       "snapshot": {
-        "src/tui/shell/SidebarItem.tsx": "7c83221b7e419d23eb3021a846a1cd553707217d3fa9e790626a31731eda68b6"
+        "src/tui/shell/SidebarItem.tsx": "311cfc691972b38106791164fbb3701cb040fc3626039ffd349f011197add70a"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/shell/usePluginSidebars.ts": {
@@ -5776,17 +5776,16 @@
       ]
     },
     "source:.agents/skills/rowbly-tui-design/SKILL.md": {
-      "fingerprint": "86526b56ad5b8373fbca17e4dc7c4e641ba0dc8c866abadf9a57d530d71474e1",
+      "fingerprint": "9ce7a00ccc4428209ff1814b027a6e7ec390b2e9faedcb599b9b004a767ded9e",
       "snapshot": {
-        ".agents/skills/rowbly-tui-design/SKILL.md": "fc1f25b9361448509637048e39c88ca4b6e937fca161d7368ad2bf45d6971d42"
+        ".agents/skills/rowbly-tui-design/SKILL.md": "b3e40f19f621d6558d0b06d19255fb1549015db6305c5d2e5638fa66170407c4"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "updated",
-      "reason": "The local development design skill now points to the implemented theme and shared controls instead of describing the TUI as unmigrated; explicit theme configuration remains planned.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "Development-only design skill under .agents/skills (not a published Intent skill). Updated to match the user-requested selection and toast changes: selected Story is a solid selection block, selection keeps bar and fill out of focus, overlay-raised is also a Toast fill.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a -- .agents/skills/rowbly-tui-design",
+        "Matches the built TUI rendered in colour via agentic-tui at 140x40"
       ]
     },
     "source:src/plugins/epics/EpicDetail.tsx": {
@@ -5860,17 +5859,17 @@
       ]
     },
     "source:src/tui/components/CursorRows.tsx": {
-      "fingerprint": "c598d3dd51dabeddc93029d660ad43da5fdc395f6ff80622a93465cc49798db7",
+      "fingerprint": "6c21fbd5439ce43c32c47e2bdc2e86b5cdfd53e18eb250ba7d59995efcdd1b0f",
       "snapshot": {
-        "src/tui/components/CursorRows.tsx": "d0ec84e2fad45d097fd9835cc0cae90d4e2d2d977f19a28419a11e37456fd370"
+        "src/tui/components/CursorRows.tsx": "8631e9ebd120f06bf971366fe5f8998043bd0ed9abec1903e38be957339f77c2"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/components/DetailView.tsx": {
@@ -5958,17 +5957,17 @@
       ]
     },
     "source:src/tui/components/SelectionRow.tsx": {
-      "fingerprint": "56cb7f9222ff0f5c9e5f65f74e19b044371cbe65c4d408be8ba6b8629db2321f",
+      "fingerprint": "124971bfb152f3a9fcdf3efae5dbc4efec1f75282d1653b26794677eb9ec1dde",
       "snapshot": {
-        "src/tui/components/SelectionRow.tsx": "ddcbb34b7e4d3f91e2a17ef90a43b5ae85b28b76ff11c8c74ca3eb8580f7982a"
+        "src/tui/components/SelectionRow.tsx": "96625a1ec354db44c9b8b79ebb92d17c19b8206b74fea745c5cde8c2865810d7"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/components/Spinner.tsx": {
@@ -6126,17 +6125,17 @@
       ]
     },
     "source:src/tui/screens/board/StoryCard.tsx": {
-      "fingerprint": "bbd65e679e2edcd54fa9fea3b9545445abf897c53b5fc7725e8298d91a133967",
+      "fingerprint": "11c23803cc7696b7a3d7fbf98eebc8aa4b6ba4d91c2cb8012f0490aa0db19010",
       "snapshot": {
-        "src/tui/screens/board/StoryCard.tsx": "c9529784cde63c68470c40755bcdeb4a7c8ae0b0265994f4cd23e2f43a5621cb"
+        "src/tui/screens/board/StoryCard.tsx": "e73ee440ecef23691173ec925dca169dda8b618ef61dd22db9b6d8cbf9e4402d"
       },
-      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/boards/BoardDetailScreen.tsx": {
@@ -6168,17 +6167,17 @@
       ]
     },
     "source:src/tui/screens/boards/index.tsx": {
-      "fingerprint": "6bc70abfbb8754c21a0537bea86d7b669af5a96c1582e51a77930e59b8b9dcf7",
+      "fingerprint": "0d21e0f1d9ec5eef643e6daad620dd38d0ba5039d646e130ce1581f672e6ef21",
       "snapshot": {
-        "src/tui/screens/boards/index.tsx": "cd866adb04f8a9220c522124e2fc3a386859d8e2f08f8513eaa26ccc2567f1bb"
+        "src/tui/screens/boards/index.tsx": "21db004ad69623ec8f8947365cce8a6be7b143f1f2a107c33d90efc958ea43d9"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/doctor/DoctorScreen.tsx": {
@@ -6196,17 +6195,17 @@
       ]
     },
     "source:src/tui/screens/fields/index.tsx": {
-      "fingerprint": "e2b3ad0c2e0330a1c37c5a81a32cd502eba63420bf6a99c9276a2ecab81c5503",
+      "fingerprint": "2012edfe347adb30c14b53113af3ad640910ce0b2c42ba3ee26ae6456edc6723",
       "snapshot": {
-        "src/tui/screens/fields/index.tsx": "2a0aea814a7f9ae9e7f41dbf409379ae4afcdd939d63c3f1ff5707e5b8ef0245"
+        "src/tui/screens/fields/index.tsx": "1f37248864c06e762b6165317285769652b35c90add7adb070b1604b42f20e6f"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/plugins/PluginScreenHost.tsx": {
@@ -6238,45 +6237,45 @@
       ]
     },
     "source:src/tui/screens/settings/SectionNav.tsx": {
-      "fingerprint": "fc47aba5cd766927a47a58f27cbb82825786349289bd4ea0dbaee1fd7d403e33",
+      "fingerprint": "9e7180ae0a20a13f87dd7432a09eec2abc32ad8c95119a4e80622d3d21a85141",
       "snapshot": {
-        "src/tui/screens/settings/SectionNav.tsx": "93d5293cf23f65d56100f86708bfe8ff6b71a0ad221358300336feb8e04131a5"
+        "src/tui/screens/settings/SectionNav.tsx": "e0028e971127e548e98558ca0c5045469099573ff12b1f83362dd0a22cfbd813"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/settings/SectionNavItem.tsx": {
-      "fingerprint": "d38d7a107608491f0f293c316e8339852305a7d6bfee4bb8e248725e88aded77",
+      "fingerprint": "6783cb723d6ff12c5b0d73fae2c5bf9ea98b3fb869c45d68163cedd225b4d420",
       "snapshot": {
-        "src/tui/screens/settings/SectionNavItem.tsx": "874f11f328454b48767d56caf91b42744aae393d13b924e6baed77477b78440e"
+        "src/tui/screens/settings/SectionNavItem.tsx": "aecb51dc5e9fc0b9ea03fba76dbf59e9963e64d6cd0ace11a1065637e9ef18ac"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/settings/SettingsScreen.tsx": {
-      "fingerprint": "a549378afe382f25d29df623766c78069c2ef59ebb160641a9e894a3bfc7a64f",
+      "fingerprint": "d23732635ed7f55b5210923505fa894baa7520411e3e4223106047420237ba51",
       "snapshot": {
-        "src/tui/screens/settings/SettingsScreen.tsx": "960c23c5ce3988c6eeb5c3e934c3fa353590e63c3b40ecfa6394cd4cb592e0ae"
+        "src/tui/screens/settings/SettingsScreen.tsx": "c57ffe2b52a4f622e0deee4abc7a9d09dea5f3b5986ad7dfe8af9692d59aa7b5"
       },
-      "head": "b4f8dc86ab112dabbce5a160ae16134c05264979",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API wording (Form submitLabel, esc cancel around a ConfirmDialog) from the third redesign correction pass: esc-only key capture for Settings sections, setup form hints, multiselect wrap spacing, Board filter 'ctrl+s apply', confirm dialog 'esc cancel'. No published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
         "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/screens/setup/SetupScreen.tsx": {
@@ -6406,17 +6405,17 @@
       ]
     },
     "source:src/tui/shell/ToastLine.tsx": {
-      "fingerprint": "50fcb6ff04c8135f8b8d1c62d20730aaeb96cd1e11e5c0d863a45b2ed64c9b40",
+      "fingerprint": "edc999a614dbe4158dde0c240bb0075b00457a2040f715ee509a0f2c21afa404",
       "snapshot": {
-        "src/tui/shell/ToastLine.tsx": "852016f9c81b635b58f604357d4c6002801faa99a3adb5af0a34884e7d589e6a"
+        "src/tui/shell/ToastLine.tsx": "0478672490757b4f9866400422c03b8c846e0ed8a1f28cfa7a1c1b9917310607"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
+      "outcome": "out-of-scope",
+      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
+        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
       ]
     },
     "source:src/tui/theme.ts": {
