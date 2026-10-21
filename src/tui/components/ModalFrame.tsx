@@ -39,6 +39,8 @@ export function ModalFrame({
   const screen = size === 'screen';
   const overlay = outer.height !== undefined;
   const covered = nested > 0;
+  // Only the top layer, the one in focus, shows its frame in accent, its `✕` and its keys.
+  const top = focused && active && !covered;
   // A titled modal without hints still says how to close it.
   const footer = hints?.length ? hints : title ? [{ key: 'esc', description: 'close' }] : undefined;
   const { width, room, body } = modalSize(outer, { size, maxWidth, footer: footer !== undefined });
@@ -48,8 +50,8 @@ export function ModalFrame({
     <Panel
       title={title}
       paddingX={0}
-      aside={onClose && !covered && <CloseButton onClick={onClose} />}
-      focused={focused && active && !covered}
+      aside={onClose && top && <CloseButton onClick={onClose} />}
+      focused={top}
       backgroundColor={overlay ? theme.overlay : undefined}
       // A screen modal keeps its size; a generic one fits its content between the bounds.
       width={screen ? width : undefined}
@@ -86,8 +88,8 @@ export function ModalFrame({
           borderRight={false}
           borderColor={theme.border}
         >
-          {/* Only the top layer's keys show; the strip keeps its line so the frame does not jump. */}
-          {covered ? <Text> </Text> : <KeyHints hints={footer} width={width - 6} />}
+          {/* The strip keeps its line under another layer, so the frame does not jump. */}
+          {top ? <KeyHints hints={footer} width={width - 6} /> : <Text> </Text>}
         </Box>
       )}
     </Panel>

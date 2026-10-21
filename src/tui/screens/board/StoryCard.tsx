@@ -27,7 +27,9 @@ export function StoryCard({
   const room = width - 4;
   const meta = badges.join(' · ');
   const priority = story.priority ? ` ${story.priority}` : '';
-  // Both border styles are one cell thick, so selecting a card changes only the border's weight and colour.
+  // Selecting a Story changes only its frame's colour and its fill. Behind a Modal the Board is not
+  // in focus, so the selected Story keeps a quiet `ink-faint` frame and no fill: one accent region.
+  const focused = selected && active;
   return (
     <Box
       ref={ref}
@@ -36,8 +38,8 @@ export function StoryCard({
       marginBottom={1}
       paddingX={1}
       borderStyle="round"
-      borderColor={selected ? theme.accent : theme.border}
-      backgroundColor={selected ? theme.selection : undefined}
+      borderColor={focused ? theme.accent : selected ? theme.inkFaint : theme.border}
+      backgroundColor={focused ? theme.selection : undefined}
     >
       <Box justifyContent="space-between">
         <Text color={theme.accent}>{truncate(story.key, Math.max(1, room - priority.length))}</Text>
