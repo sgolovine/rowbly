@@ -1,7 +1,10 @@
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
 import { theme } from '../theme';
+import { FormKeysContext } from './modalLayer';
+
+const NO_KEYS: readonly [] = [];
 
 export interface ConfirmDialogProps {
   message: string;
@@ -27,6 +30,9 @@ export function ConfirmDialog({
   const active = useIsActive() && isActive;
   const [confirmFocused, setConfirmFocused] = useState(false);
   useKeyCapture(active, { escape: true });
+  // In a Modal, `esc` reads `cancel`, as it does around a Form.
+  const modal = useContext(FormKeysContext);
+  useEffect(() => (active && modal ? modal(NO_KEYS) : undefined), [active, modal]);
 
   useInput(
     (input, key) => {

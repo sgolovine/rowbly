@@ -470,6 +470,7 @@ export function BoardScreen({ params }: ScreenProps) {
           <Form
             fields={[...filterFields({ labels: choices.labels }, { board: true }), ...extra.fields]}
             initialValues={{ ...extra.values, ...filterInitialValues(filters) }}
+            submitLabel="apply"
             onSubmit={(values) => {
               setFilters(values);
               setMode('view');

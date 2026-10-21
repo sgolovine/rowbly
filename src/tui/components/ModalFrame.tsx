@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { LayoutContext, uniqueKeys, useIsActive, useLayout } from '../hooks';
-import { FORM_KEYS } from '../keymap';
+import type { KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { CloseButton } from './CloseButton';
 import { KeyHints } from './KeyHints';
@@ -37,10 +37,11 @@ export function ModalFrame({
     return () => setNested((count) => count - 1);
   }, []);
   useEffect(() => parentLayer?.(), [parentLayer]);
-  const [forms, setForms] = useState(0);
-  const registerForm = useCallback(() => {
-    setForms((count) => count + 1);
-    return () => setForms((count) => count - 1);
+  const [leads, setLeads] = useState<readonly { keys: readonly KeyHint[] }[]>([]);
+  const registerForm = useCallback((keys: readonly KeyHint[]) => {
+    const entry = { keys };
+    setLeads((list) => [...list, entry]);
+    return () => setLeads((list) => list.filter((other) => other !== entry));
   }, []);
   const [host] = useState(createLayerHost);
   const outer = useLayout();
@@ -50,10 +51,16 @@ export function ModalFrame({
   // Only the top layer, the one in focus, shows its frame in accent, its `✕` and its keys.
   const top = focused && active && !covered;
   // A titled modal without hints still says how to close it. A Form inside adds its keys first, and
-  // there `esc` cancels.
+  // there, as in a ConfirmDialog, `esc` cancels.
   const own = hints?.length ? hints : title ? [{ key: 'esc', description: 'close' }] : undefined;
   const footer =
-    forms > 0 ? uniqueKeys([...FORM_KEYS, ...(own ?? []).filter((hint) => hint.key !== 'esc'), FORM_ESC]) : own;
+    leads.length > 0
+      ? uniqueKeys([
+          ...leads.flatMap((lead) => lead.keys),
+          ...(own ?? []).filter((hint) => hint.key !== 'esc'),
+          FORM_ESC,
+        ])
+      : own;
   const { width, room, body } = modalSize(outer, { size, maxWidth, footer: footer !== undefined });
   // Kept stable, so content that reads the layout does not render again whenever a layer shows.
   const bodyLayout = useMemo(() => ({ width: body.width, height: body.height }), [body.width, body.height]);

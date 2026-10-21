@@ -1,9 +1,9 @@
 import { Box, type Key, Text, useInput } from 'ink';
-import { useContext, useEffect, useId, useState } from 'react';
+import { useContext, useEffect, useId, useMemo, useState } from 'react';
 import { ValidationError } from '../../core';
 import type { PluginFieldKind, PluginFormValue } from '../../services';
 import { ScreenDepthContext, ShellContext, useDirty, useIsActive, useLayout, useToast } from '../hooks';
-import { FORM_KEYS } from '../keymap';
+import { FORM_KEYS, formKeys, type KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { FieldRow } from './FieldRow';
 import { FormKeysContext } from './modalLayer';
@@ -33,6 +33,8 @@ export interface FormProps {
   /** May throw: a `ValidationError` shows its issues inline, any other error becomes a toast. */
   onSubmit(values: FormValues): void | Promise<void>;
   isActive?: boolean;
+  /** What the `ctrl+s` hint says the form does: `save` (the default), or e.g. `apply` for a filter. */
+  submitLabel?: string;
 }
 
 type Raw = string | boolean | string[] | null;
@@ -117,18 +119,18 @@ function isSubmitKey(input: string, key: Key): boolean {
  * Shows the Form keys while `active`: in the strip of the Modal around the form, or else with the
  * screen's own hints, so every form says `ctrl+s save` without its screen adding it.
  */
-function useFormKeys(active: boolean): void {
+function useFormKeys(active: boolean, keys: readonly KeyHint[]): void {
   const modal = useContext(FormKeysContext);
   const shell = useContext(ShellContext);
   const depth = useContext(ScreenDepthContext);
   const id = useId();
   useEffect(() => {
     if (!active) return;
-    if (modal) return modal();
+    if (modal) return modal(keys);
     if (depth < 0) return;
-    shell.setHints(depth, id, FORM_KEYS, true);
+    shell.setHints(depth, id, keys, true);
     return () => shell.setHints(depth, id, null);
-  }, [active, modal, shell, depth, id]);
+  }, [active, modal, shell, depth, id, keys]);
 }
 
 /**
@@ -138,7 +140,7 @@ function useFormKeys(active: boolean): void {
  * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
  * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` after the last field submits.
  */
-export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: FormProps) {
+export function Form({ fields, initialValues = {}, onSubmit, isActive = true, submitLabel = 'save' }: FormProps) {
   const active = useIsActive() && isActive;
   const toast = useToast();
   const layout = useLayout();
@@ -152,7 +154,8 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
-  useFormKeys(active);
+  const keys = useMemo(() => (submitLabel === 'save' ? FORM_KEYS : formKeys(submitLabel)), [submitLabel]);
+  useFormKeys(active, keys);
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
 

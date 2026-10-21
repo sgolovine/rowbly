@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext } from 'react';
+import type { KeyHint } from '../keymap';
 
 /** A nested task quiets the frame of the screen or task underneath it. */
 export const ModalLayerContext = createContext<(() => () => void) | null>(null);
@@ -47,8 +48,11 @@ export const LayerHostContext = createContext<LayerHost | null>(null);
  */
 export const LayerWrapContext = createContext<(node: ReactNode) => ReactNode>((node) => node);
 
-/** Inside a modal's content, shows a Form's keys in the modal's hint strip until the returned call. */
-export const FormKeysContext = createContext<(() => () => void) | null>(null);
+/**
+ * Inside a modal's content, shows a Form's keys (or a ConfirmDialog's, none) first in the modal's hint
+ * strip, with `esc cancel`, until the returned call.
+ */
+export const FormKeysContext = createContext<((keys: readonly KeyHint[]) => () => void) | null>(null);
 
 /** True inside a modal's content while a task is open on top of it. */
 export const CoveredContext = createContext(false);
