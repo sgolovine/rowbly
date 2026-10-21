@@ -80,7 +80,7 @@ export function StoryListScreen({ params }: ScreenProps) {
       ? [{ key: 'esc', description: 'cancel' }]
       : [
           { key: 'enter', description: 'open' },
-          { key: 'n', description: 'new' },
+          { key: 'n', description: 'new Story' },
           { key: '/', description: 'filter' },
           { key: 'c', description: 'clear filter' },
           { key: 'A', description: allBoards ? 'this Board only' : 'all Boards' },

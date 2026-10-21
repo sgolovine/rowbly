@@ -21,7 +21,7 @@ export function AssigneeList({ plugin, ui }: PluginScreenProps<Record<string, un
   useReloadOnReturn(roster.reload);
   useKeyHints([
     { key: 'enter', description: 'open' },
-    { key: 'n', description: 'add assignee' },
+    { key: 'n', description: 'new Assignee' },
   ]);
   useInput(
     (input) => {

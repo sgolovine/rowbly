@@ -84,7 +84,7 @@ function BoardsScreen() {
       ? [
           { key: 'enter', description: 'open' },
           { key: 'v', description: 'view board' },
-          { key: 'n', description: 'new' },
+          { key: 'n', description: 'new Board' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'delete' },
           { key: 's', description: 'stages' },

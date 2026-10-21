@@ -74,7 +74,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'n', description: 'add' },
+          { key: 'n', description: 'new Custom Field' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'remove' },
           { key: 'l', description: 'switch level' },

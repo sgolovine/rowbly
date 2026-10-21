@@ -163,8 +163,8 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
   `ASSIGNEES_UNKNOWN_ME` for a Me that is not; `--fix` removes them. A roster file that cannot be
   read is `ASSIGNEES_ROSTER_UNAVAILABLE` (error, fixed by hand).
 - In the TUI, an **Assignees** section in the settings (`,`) lists the roster (`enter` open, then
-  Edit or Remove; `n` add). The Story form has an Assignees choice, the filter has Assignees and
-  "Assigned to me", and board cards, the board's list view and Story list rows show `@handle`.
+  Edit or Remove; `n` new Assignee). The Story form has an Assignees choice, the filter has Assignees
+  and "Assigned to me", and Stories on the board, the board's list view and Story list rows show `@handle`.
 - Rosters and Story Assignees from a Rowbly before this Plugin are not imported: core drops them the
   next time it saves `rowbly.config.json` or the Story.
 <!-- END assignees -->
@@ -275,7 +275,7 @@ Tasks are a Built-in Plugin: run `rowbly plugins enable tasks` first.
 - Tasks are listed in creation order and have no Rank.
 - Every change updates both the Task's and the Story's `updatedAt`.
 - `--json` prints Task objects (the stored fields and `id`): an array for `list`, one Task for `create`, `show`, `edit` and `move`, and `{ deleted }` for `delete`.
-- `stories show` has a Tasks row (`2/5 done`), and the board card and the board's list view show `✓ 2/5`.
+- `stories show` has a Tasks row (`2/5 done`), and the Story on the board and the board's list view show `✓ 2/5`.
 - In the TUI, a Story's **Tasks** tab and the Task screen both edit (`e`), move (`m`) and delete (`d`) a Task.
 <!-- END tasks -->
 
@@ -393,7 +393,7 @@ The header's **Stages / List** switch (or `v` on the board) changes how the boar
 
 A Plugin can add a **Plugin Sidebar** beside the Board sidebar, with a header button that shows and hides it, such as the Epics Plugin's **Epics**. Its first entry, such as **All Epics**, shows every Story; picking another entry shows only the Stories it stands for on the board, in both views, and the header says `filter: Epics: <name>`. The pick applies to every Board, stays while the sidebar is hidden, and lasts until you quit. The button at the bottom, such as **+ New Epic**, creates an entry.
 
-The header keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Story cards have three rows and rounded frames. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
+The header keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
 
 Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
 
@@ -424,24 +424,24 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Screen | Keys |
 | --- | --- |
 | Board | `←`/`→` previous / next Stage, `↑`/`↓` previous / next Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage (bottom), `shift+↑`/`shift+↓` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Labels, Priorities, text and the filters Plugins add (several values per field), `c` clear the filter, `v` list view, `r` reload |
-| Board (list view) | `↑`/`↓` previous / next line, `enter` open the Story or fold / unfold the section, `space` fold / unfold, `←`/`→` fold / unfold, `shift+↑`/`shift+↓` move the Story to the previous / next Stage (bottom; from the first Stage in Board up to Backlog, from the last down to Done), `n` new Story in the highlighted Story's Stage (on a section heading: that Stage), `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` Stages view, `r` reload |
-| Stories | `enter` open, `n` new, `/` filter by Stages, Labels, Priorities, text, Stage Category, open only and the filters Plugins add, and sort, `c` clear the filter, `A` all Boards / this Board only |
+| Board (list view) | `↑`/`↓` previous / next line, `enter` open the Story or fold / unfold the section, `space` fold / unfold, `←`/`→` fold / unfold, `shift+↑`/`shift+↓` move the Story to the previous / next Stage, at its bottom, `n` new Story in the highlighted Story's Stage (on a section heading: that Stage), `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` Stages view, `r` reload |
+| Stories | `enter` open, `n` new Story, `/` filter by Stages, Labels, Priorities, text, Stage Category, open only and the filters Plugins add, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
-| Story › Tasks (Tasks Plugin) | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
+| Story › Tasks (Tasks Plugin) | `enter` open, `n` new Task, `e` edit, `m` move to a Stage, `d` delete |
 | Task (Tasks Plugin) | `e` edit, `m` move to a Stage, `d` delete |
-| Story › Comments (Comments Plugin) | `n` new, `e` edit, `d` delete |
-| Assignees (Plugin) | `enter` open (then: Edit, Remove), `n` add |
-| Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
+| Story › Comments (Comments Plugin) | `n` new Comment, `e` edit, `d` delete |
+| Assignees (Plugin) | `enter` open (then: Edit, Remove), `n` new Assignee |
+| Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new Board, `e` edit, `d` delete |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
-| Stages | `n` add, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
-| Fields | `n` add, `e` edit, `d` remove, `l` switch level |
+| Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
+| Fields | `n` new Custom Field, `e` edit, `d` remove, `l` switch level |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `m` set Me, `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards and the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
 <!-- END tui -->
 
 ## Exit codes

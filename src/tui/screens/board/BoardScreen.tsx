@@ -66,9 +66,9 @@ interface Cursor {
 
 /**
  * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
- * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
+ * the context: one column per Stage, Stories in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them. The list view (`v`, or the header's switch) shows the same Stories as
- * one list in collapsible Backlog, Board and Done sections, where shift+↑/↓ move a Story between Stages.
+ * one list in a collapsible section per Stage, where shift+↑/↓ move a Story between Stages.
  */
 export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -295,7 +295,7 @@ export function BoardScreen({ params }: ScreenProps) {
               { key: 'enter', description: 'open/fold' },
               { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
               { key: '←/→', description: 'fold/unfold section', secondary: true },
-              { key: 'n', description: 'new' },
+              { key: 'n', description: 'new Story' },
               { key: 'e', description: 'edit', secondary: true },
               { key: 'd', description: 'delete', secondary: true },
               { key: '/', description: 'filter' },
@@ -311,7 +311,7 @@ export function BoardScreen({ params }: ScreenProps) {
               { key: 'shift+←/→', description: 'move Stage', secondary: true },
               { key: 'shift+↑/↓', description: 'reorder', secondary: true },
               { key: 'T/B', description: 'to top/bottom', secondary: true },
-              { key: 'n', description: 'new' },
+              { key: 'n', description: 'new Story' },
               { key: 'e', description: 'edit', secondary: true },
               { key: 'd', description: 'delete', secondary: true },
               { key: '/', description: 'filter' },

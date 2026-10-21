@@ -63,7 +63,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'n', description: 'add' },
+          { key: 'n', description: 'new Stage' },
           { key: 'e', description: 'edit' },
           { key: 'shift+↑/↓', description: 'move up/down' },
           { key: 'T/B', description: 'move first/last' },
