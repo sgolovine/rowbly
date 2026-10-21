@@ -242,12 +242,11 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 
   const labelWidth = Math.max(...fields.map((f) => f.label.length + (f.required ? 1 : 0))) + 4;
   const inputWidth = Math.max(16, Math.min(INPUT_MAX_WIDTH, layout.width - labelWidth));
-  // Space the fields out when the room allows: a blank line after each field plus the button row. A
-  // multiline field has its Full screen button below its rows.
-  const lines = fields.reduce((sum, f) => sum + (f.kind === 'multiline' ? TEXTAREA_ROWS + 1 : 1) + 1, 0);
-  const roomy = layout.height !== undefined && layout.height >= lines + 3;
+  // A blank line between fields in a terminal; when they do not fit, the body around the form
+  // scrolls (the focused field stays in view) rather than the fields closing up.
+  const roomy = layout.height !== undefined;
   return (
-    <Box flexDirection="column" gap={roomy ? 1 : 0}>
+    <Box flexDirection="column" gap={roomy ? 1 : 0} flexShrink={0}>
       <Text color={theme.inkFaint} wrap="truncate-end">
         {busy ? 'Saving…' : field ? FIELD_HELP[field.kind] : 'ctrl+s save'}
       </Text>
@@ -282,8 +281,6 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 
 /** Widest an input grows; longer text scrolls inside it. */
 const INPUT_MAX_WIDTH = 64;
-/** Rows a multiline field shows; longer text scrolls inside it. */
-const TEXTAREA_ROWS = 5;
 
 const FIELD_HELP: Record<FieldKind, string> = {
   text: 'type to edit',
