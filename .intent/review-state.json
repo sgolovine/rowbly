@@ -3,9 +3,9 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "f037e7682a82a37b988a83f3762449f1ee760926b2f575a356419a08fa1880c4",
+      "fingerprint": "509b80a814551319e0434ffe03173d30b5b2c51037fd66bf27049d15e3797719",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
@@ -14,44 +14,44 @@
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
-      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
+      "reason": "Second correction pass on the TUI redesign: full-screen editor size, Form key hints, Board delete Modal hints, Form spacing, markdown comment, and TUI-only wording in README.md, docs/plugins/built-in.md and docs/plugins/README.md ('n new Comment', 'n new Task', Story in the board's Stages view instead of 'card'). Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README/docs changes are TUI-only.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "907827b6cfc2312e475d21a4cf7ae36c24b2348272002e874fd011386ee69d2f",
+      "fingerprint": "a04b56ac590d6a03640ae4f20f108113c303debe6a6bfde06abd422be68fd8b9",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
+        "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
-      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
+      "reason": "Second correction pass on the TUI redesign: full-screen editor size, Form key hints, Board delete Modal hints, Form spacing, markdown comment, and TUI-only wording in README.md, docs/plugins/built-in.md and docs/plugins/README.md ('n new Comment', 'n new Task', Story in the board's Stages view instead of 'card'). Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README/docs changes are TUI-only.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "41c6316078e9f90b0f762574c4d96a9f3ca5d021e360f6a24447fd9f19af6511",
+      "fingerprint": "16c206e1d9f44e6d5fa80b57a9c093a3bcd20d52680c08a1d902320985b4f262",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
-        "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
+        "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
+        "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
         "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -68,19 +68,19 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
-      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
+      "reason": "Second correction pass on the TUI redesign: full-screen editor size, Form key hints, Board delete Modal hints, Form spacing, markdown comment, and TUI-only wording in README.md, docs/plugins/built-in.md and docs/plugins/README.md ('n new Comment', 'n new Task', Story in the board's Stages view instead of 'card'). Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README/docs changes are TUI-only.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "79e8c840e764cf23acda81144499a5e217974c01bfa3185581442c2dbcb51f41",
+      "fingerprint": "ef10980c111d28b5f3891d8535d611fef4919a79d3bc88e41bfcc9f1371afcf7",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -89,19 +89,19 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
-      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
+      "reason": "Second correction pass on the TUI redesign: full-screen editor size, Form key hints, Board delete Modal hints, Form spacing, markdown comment, and TUI-only wording in README.md, docs/plugins/built-in.md and docs/plugins/README.md ('n new Comment', 'n new Task', Story in the board's Stages view instead of 'card'). Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README/docs changes are TUI-only.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "c01c542ae1cefcc142be43c90ed553f8119ada7c8dd4008811ca3d77e80dd0ff",
+      "fingerprint": "29057a11a9ec48421e3b606503365f8a50dc6bd682656e35f3f51740bfa26ca9",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
@@ -110,25 +110,25 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
-      "reason": "Correction pass on the TUI redesign: tab Modals layered over the Story, key routing to the top layer, hint strips, Settings esc, header fit, markdown colour, date months, n new hint wording and README TUI wording. Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README changes are TUI-only.",
+      "reason": "Second correction pass on the TUI redesign: full-screen editor size, Form key hints, Board delete Modal hints, Form spacing, markdown comment, and TUI-only wording in README.md, docs/plugins/built-in.md and docs/plugins/README.md ('n new Comment', 'n new Task', Story in the board's Stages view instead of 'card'). Published operating skills cover command mode; their CLI, JSON, exit-code, doctor and Data Root instructions are unaffected, and the README/docs changes are TUI-only.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "53860a73c3cf59c3a8a106999658a4362a7d7a5d3ce2ea8de728b6c3c67083df",
+      "fingerprint": "dd5a4f3d42c96f1687b5008388bcd45331fbfba5e1850bff2f507f1059e33a0e",
       "snapshot": {
-        "README.md": "e5c47053ae61b4492bfb0bc6bca6ad213c28b5001a034f6ed82b1ec24cbbdbb9",
+        "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/plugins/README.md": "702cca39df4953c411f6567ae09d4a3665f5f36cb615f2b555e57ba9dc42b04a",
-        "docs/plugins/built-in.md": "c1950b6e82b91efa2d7a98fd94b5f658ee412b9e46c8c513d062d6dde9119be3",
+        "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
+        "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
         "skills/_artifacts/domain_map.yaml": "0cd3ea4cd163aacca6adabf32fcc417f4d1b2c5257227a0c8302cd2b1922a715",
         "skills/_artifacts/skill_spec.md": "58063482db53d17bec85a5120fe4a9265d0b498e7d845519b90787419c3c27d5",
         "skills/_artifacts/skill_tree.yaml": "f440a3b9e46349c8b2808f8b4d50761803e6d831d08e1c47569ffa6b9cdacf41",
@@ -167,13 +167,13 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "no-change",
       "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml stay accurate: this TUI correction pass changes no command, flag, output, exit code, doctor finding or Data Root behavior and adds no skill.",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -638,17 +638,17 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "efbcf433f90bfaa601f4d45922b4acc3a22e2619aff1e6a262db911719cc97cd",
+      "fingerprint": "c7acbbee871e33cdcce6fc524d923d1b87e436acfc9b5f5a945ff8e28561d4fe",
       "snapshot": {
-        "docs/plugins/api.md": "f59a42718e1f3829ab0eabbf4df1729623ea7c61f84f03a9dd486e997df18f31"
+        "docs/plugins/api.md": "4da80db867df0c7b541fbf6204c49c57014e43c6df5559b74f1d77a9c8786ed1"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1836,17 +1836,17 @@
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
-      "fingerprint": "b4e6527cf712b869211fc5e44682f0e2c8ee2ec4011d7cd1825560d2aa0af807",
+      "fingerprint": "0540e14a47258bedc82503f8c517acdfde86823ca95bbe710de4a8f76b36cc17",
       "snapshot": {
-        "src/tui/screens/board/BoardScreen.tsx": "84d4c5cbb2c426c6887a5fe1a958990a7b7ae8127525f98f54c5dc090793c414"
+        "src/tui/screens/board/BoardScreen.tsx": "72dbaf941b390730e692f3d579fc3708350068ad3759372a64a7f3dc93732f40"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
@@ -2096,17 +2096,17 @@
       ]
     },
     "source:src/plugins/comments/CommentFormScreen.tsx": {
-      "fingerprint": "1d94a0cf3a605c5f4b37832dd6113b7f5f2334f47ca4f6a5820878a35cd909be",
+      "fingerprint": "c888063375b101ee8ee5070701e6e07046b67e71acf0976008b60e74d3e2ced2",
       "snapshot": {
-        "src/plugins/comments/CommentFormScreen.tsx": "f712e7eb4579225729ea15786b59965f1024a192598ce4c76d00af2da0a3cb1a"
+        "src/plugins/comments/CommentFormScreen.tsx": "6e5317da710d76b36cd2806b81ff2f0a2a3fa078f91e7fa4cff40ee9387676e9"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/plugins/comments/CommentsTab.tsx": {
@@ -2199,17 +2199,17 @@
       ]
     },
     "source:src/plugins/tasks/TaskFormScreen.tsx": {
-      "fingerprint": "f52b4ee5549a2547792b1e00973d320e86ffc2514b6935a3c5f11c3a0a9940e1",
+      "fingerprint": "391600803da983e14707334a2ffb709dcc893278fbb5a3826c9bed2644b77b6f",
       "snapshot": {
-        "src/plugins/tasks/TaskFormScreen.tsx": "5b9448cd6f3248f35974fb751ce1b7525db26c32d0702c82f7faf5b72c87b5c6"
+        "src/plugins/tasks/TaskFormScreen.tsx": "1dd839fed8036aceb861c8fe81425800dad5fddc0bff09c63f87fe0bde39efd0"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/plugins/tasks/TaskScreen.tsx": {
@@ -2434,17 +2434,17 @@
       ]
     },
     "source:src/tui/hooks/shell.ts": {
-      "fingerprint": "b9c850c4bcc42222fdc142e6f13164fc502be080b1d69a3824036fe7035b7837",
+      "fingerprint": "730ea803cc0e2bea5d5fa96df305ad8822424298aa06e0346ec17424956deb0b",
       "snapshot": {
-        "src/tui/hooks/shell.ts": "06cb8f4933e3ce9822b57bfac41be8a3ffc8dbee8457d4ac0aa117927d949c7f"
+        "src/tui/hooks/shell.ts": "8038b8159024d12ee5b836607e911c2ab9a5f6055c0c9b5d1d23f31e0dd5804b"
       },
-      "head": "50366d72f259c9a64bdb8687e69f01cf38e40a44",
-      "outcome": "no-change",
-      "reason": "Merge of main into PR #53 (full screen TextArea modal). Resolved conflicts in src/tui/shell/Shell.tsx by nesting MainOverlayContext inside main's BoardViewContext and keeping the Header boardView prop; the merged README carries main's changes plus this PR's TUI form-keys paragraph. Skills teach command-mode operation only and skill_spec.md §Scope lists TUI operation as not assessed; this PR changes no command, flag, output, exit code, doctor finding or Data Root behavior.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff origin/main..HEAD: README.md TUI form paragraph (ctrl+f / [Full screen]), src/tui/** TextArea modal sources and tests",
-        "skills/_artifacts/skill_spec.md §Scope: 'Not assessed: TUI operation'",
-        "pnpm typecheck, pnpm lint, pnpm test:unit (974 passed), pnpm test:cli (156 passed) on the merge commit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/loadPlugins.ts": {
@@ -3407,17 +3407,17 @@
       ]
     },
     "source:src/tui/screens/stories/StoryFormScreen.tsx": {
-      "fingerprint": "97707e03cd8998b4c2e1986995a42f482107e44be18fa79b95f4a903e0f1f214",
+      "fingerprint": "3ca96e92eba2f0a80f83dfd1ea67a906a4b5bd36607d72c34757130988d7f6c6",
       "snapshot": {
-        "src/tui/screens/stories/StoryFormScreen.tsx": "9a895fa58c0525ef57d5c03e601ade6f0dfdd478e3575eb62a6efa8203aa7157"
+        "src/tui/screens/stories/StoryFormScreen.tsx": "fa26eafc34a45c275406a52c72155edef31ed2c5fc044266b9ebdc34e0dab952"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/screens/stories/StoryListScreen.tsx": {
@@ -4184,17 +4184,17 @@
       ]
     },
     "source:src/tui/components/Form.tsx": {
-      "fingerprint": "ec515af5754dfb8a9be95c72388e4b9657a8b444afa66559f8c29af293bd7857",
+      "fingerprint": "51719e2d856b9fe86fdaf9646f19b66cd060c12cf12767c0dbeb56b9be84d845",
       "snapshot": {
-        "src/tui/components/Form.tsx": "0b57b5813cebe2b8b9caef7a9d82bfe4099c41ca181baac2c2da98faafe72904"
+        "src/tui/components/Form.tsx": "127179148b8ba19232ebe739280715a1570bde8f5ae0766c77e6df7caebb1ff7"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/components/FullScreenButton.tsx": {
@@ -5422,17 +5422,17 @@
       ]
     },
     "source:src/tui/components/FullScreenEditor.tsx": {
-      "fingerprint": "7259a2012d477fb02ee0e048c8c016da4eb34b65f2c302af9762bf940a2ed6fd",
+      "fingerprint": "040e84386aeb72723fdaaa761ac95a86eeaf64f132d5e69da9d31a46ece9d772",
       "snapshot": {
-        "src/tui/components/FullScreenEditor.tsx": "6934cb248e887b9f21c39f7b7812b716e688dbf3bf48af03e162d2ce62a05c26"
+        "src/tui/components/FullScreenEditor.tsx": "dc98ef21f8032c34a86c780042eb95b659cb62dba29d74d15e9cd0f9f6a2d78d"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/components/MarkdownView.tsx": {
@@ -5464,17 +5464,17 @@
       ]
     },
     "source:src/tui/components/markdown.ts": {
-      "fingerprint": "6f45ea8b85e2eff5fca08df09d1fba7c540800be692153981df1a6435fc623bd",
+      "fingerprint": "713fc647d4dbc0ebdef9e2e4219101c8fa0a4eab294970c84e46a6bb1b7486d1",
       "snapshot": {
-        "src/tui/components/markdown.ts": "2b61d63598cab9ac9e423d2fdeef72daa779db324b1c60d1b3b50ddfb5db779d"
+        "src/tui/components/markdown.ts": "7abb3c15af37b07d0b8b9b8f97707e7c6e241806c7c3e008fce59079b2a06062"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/components/useFullScreenEditor.tsx": {
@@ -5804,17 +5804,17 @@
       ]
     },
     "source:src/plugins/epics/EpicForm.tsx": {
-      "fingerprint": "73e2059d744b4b57005a5361d610364988c16a14eabd62ce73545e327468847b",
+      "fingerprint": "513605b83647ad2c918465f368063067522b047aba0b59d160c75a6ecc682ec8",
       "snapshot": {
-        "src/plugins/epics/EpicForm.tsx": "a0f423631f0cba8378e888be79f31dcdae1a4498c736fa2760dea5721ed89f49"
+        "src/plugins/epics/EpicForm.tsx": "8f6902f335baf48cee14c506aabde8140a4ec7c831abf4531a4ef60fd6be97ea"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/plugins/epics/EpicList.tsx": {
@@ -6042,17 +6042,17 @@
       ]
     },
     "source:src/tui/components/modalLayer.ts": {
-      "fingerprint": "817198055cd7b4cd082e13922a90e80d5dc86015fea2aced526ce2672d302e40",
+      "fingerprint": "0587351a0a9994497674b7e385e05cee97387ee3aaf33aa8563abce2484672ec",
       "snapshot": {
-        "src/tui/components/modalLayer.ts": "7421d185e541d940e84f0e58ef2510e06769e8ceabeaf61d5b5805b5575cf342"
+        "src/tui/components/modalLayer.ts": "725fb2916da9625765485ddcbb04ef94b105f9c27bceb1e1fc2d2c55946d71c0"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/components/scrollFocus.ts": {
@@ -6126,17 +6126,17 @@
       ]
     },
     "source:src/tui/screens/board/StoryCard.tsx": {
-      "fingerprint": "02651faea87a249968e6e5cd4450638014230d61fb3f8315a188b25b32998361",
+      "fingerprint": "bbd65e679e2edcd54fa9fea3b9545445abf897c53b5fc7725e8298d91a133967",
       "snapshot": {
-        "src/tui/screens/board/StoryCard.tsx": "967d26761a7c8bb11e3c281ab70c99c56670721fe1e8825c37eb167df8f32e99"
+        "src/tui/screens/board/StoryCard.tsx": "c9529784cde63c68470c40755bcdeb4a7c8ae0b0265994f4cd23e2f43a5621cb"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/screens/boards/BoardDetailScreen.tsx": {
@@ -6154,17 +6154,17 @@
       ]
     },
     "source:src/tui/screens/boards/BoardForm.tsx": {
-      "fingerprint": "edf6325c020fa5da19b714de65e55122689d38243b8ad53d44bc3955a11588b7",
+      "fingerprint": "3af70fa6ac154ce5e66f0fdb8889a8629df77002a697cac4ae701652cd7c63f5",
       "snapshot": {
-        "src/tui/screens/boards/BoardForm.tsx": "a7f489e7e508f3109a7c838d1f1223f25961077d97023ada94feeaaec3f7fd7e"
+        "src/tui/screens/boards/BoardForm.tsx": "376684ad6c4ca833c20fb0f96b8734d9e2970a5cdb1249c7b84f7e0236b01950"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
-      "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
+      "outcome": "out-of-scope",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/screens/boards/index.tsx": {
@@ -6448,17 +6448,17 @@
       ]
     },
     "source:src/tui/components/ModalFrame.tsx": {
-      "fingerprint": "9a067fb1314a3f269b99abb60bb4efad5cefd022ea0213ac5c43312156028996",
+      "fingerprint": "1e4486048d834959a6125c8cffcc022b2abd5d23cb7fcbbccb9d193ee9a78265",
       "snapshot": {
-        "src/tui/components/ModalFrame.tsx": "8003e5059657fe578088a8cacdd474bd9c6f4690c9068e693d29c8e6aed94f4d"
+        "src/tui/components/ModalFrame.tsx": "72f39c711b66aac655240b4a541d824333faf99e8ec7bfa9ee84002090c2dc1b"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     },
     "source:src/tui/components/PluginLayerScope.tsx": {
@@ -6532,17 +6532,17 @@
       ]
     },
     "source:src/tui/screens/settings/sectionShell.ts": {
-      "fingerprint": "47924761afefb9a9eaf2f766ba5fe5c3ab1c8447a5f99928c70003a82d025a96",
+      "fingerprint": "bad7142f0e6bcd9f52a14f7e8378e25dab8536d84cb414532823db1e3ad41fb3",
       "snapshot": {
-        "src/tui/screens/settings/sectionShell.ts": "7b4ebb366ca404ff654c3f3b7d7581d4fb6da761f0f62691f33928c0c160ed83"
+        "src/tui/screens/settings/sectionShell.ts": "d3831f1d57b11880e3a41788e027680712d8925ed64140b49364f2f9fdc0221e"
       },
-      "head": "e32a38eeb2335faecfce54e8b2d29dd383dc2421",
+      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
       "outcome": "out-of-scope",
-      "reason": "TUI implementation, TUI-only README/API wording or its test, from the redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
       "evidence": [
-        "git diff be30fb0..e32a38e: src/tui, src/plugins (Tasks, Comments, Assignees TUI), docs/plugins/api.md Modal/Form notes, README.md TUI keys and wording, package.json chalk dependency, one test assertion",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: Tasks/Comments tab Modals layered over the Story, Settings esc, header fit, Settings replacing Story+Edit"
+        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
+        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
       ]
     }
   }
