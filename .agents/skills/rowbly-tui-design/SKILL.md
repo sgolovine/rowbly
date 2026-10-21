@@ -53,8 +53,8 @@ Rowbly's TUI is a keyboard-first Kanban for the terminal. The screen is a grid o
 
 ## Principles
 
-1. **Focus is the only thing in accent.** Exactly one region is in focus at a time; its frame and title are `accent`. Everything else is `border` and `ink-muted`. If two things on screen are `accent`, one of them is wrong. (Today the header Buttons, the sidebar, the Board and the selected Story are all blue at once.)
-2. **Selection looks the same everywhere.** A highlighted row gets the `▌` bar in `accent` and a `selection` fill, with its name in `cell-title`; a Story on the Board becomes a solid `selection` block (its frame takes the fill colour). Sidebar rows, settings sections, the Epics sidebar, list rows and Stories on the Board all use it. It keeps that look when the region loses focus, so you can always see what is selected; the focused region is shown by its `accent` frame.
+1. **Focus is the only thing in accent.** Exactly one region is in focus at a time; its frame and title are `accent`. Everything else is `border` and `ink-muted`. The selected Story's frame is the one exception: it is `accent` too, so the Story stands out without a fill.
+2. **Selection looks the same everywhere.** A highlighted row gets the `▌` bar in `accent` and a `selection` fill, with its name in `cell-title`; a Story on the Board has no fill: its frame turns `accent` instead. Sidebar rows, settings sections, the Epics sidebar and list rows all use it. It keeps that look when the region loses focus, so you can always see what is selected; the focused region is shown by its `accent` frame.
 3. **Colour means something.** The Stage Category colours (`stage-backlog`, `stage-board`, `stage-done`) go on the `●` dot and the Stage name only. `danger` is for errors and deletes. `epic` is the `◆` glyph. Nothing is coloured for decoration.
 4. **Hierarchy is weight and ink, not size.** `ink` for content, `ink-muted` for labels, `ink-faint` for hints and empty values. Do not use Ink's `dimColor`: terminals render it differently (some not at all). Use the tokens.
 5. **Quiet chrome, loud content.** Frames are hairlines. The Story names are the brightest thing on the Board.
@@ -81,7 +81,7 @@ Casing: Title Case for the domain nouns (Board, Story, Stage, Epic, Story Key), 
 
 - `col-1`: one column of padding inside every frame, and between a glyph and its text.
 - `col-2`: two columns between Stage columns, between header groups and between key hints.
-- `row-1`: one blank row between Stories in a Stage, between a Detail header and its Tabs, between Form fields.
+- `row-1`: one blank row between a Detail header and its Tabs, between Form fields.
 - `border-round` (`╭─╮`) is the frame for Panels, Modals and Stories. Header Buttons have no frame. `border-single` (`┌─┐`, `─`) is for rules only.
 - A Panel's title sits in its top edge (`╭─Boards──╮`). A Modal's title is a breadcrumb: `Board › ROW-9`, earlier crumbs `ink-muted`, the last `accent` bold.
 

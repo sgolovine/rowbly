@@ -5,8 +5,8 @@ import type { Stage, Story } from '../../../schemas';
 export const MIN_COLUMN_WIDTH = 24;
 /** Width of the `‹`/`›` gutters shown when columns are scrolled out of view. */
 export const GUTTER_WIDTH = 3;
-/** Lines per card, including its border and the gap below it. */
-export const CARD_HEIGHT = 6;
+/** Lines per card, including its border. Cards stack with no gap between them. */
+export const CARD_HEIGHT = 5;
 /** Lines per row of the compact list view. */
 export const LIST_ROW_HEIGHT = 1;
 /** Lines of the board view that are not cards: column header and rule, scroll markers. */

@@ -274,8 +274,7 @@ body {
   padding: 9px 1ch;
 }
 .story.sel {
-  border-color: var(--selection);
-  background: var(--selection);
+  border-color: var(--accent);
 }
 .story .key {
   color: var(--accent);

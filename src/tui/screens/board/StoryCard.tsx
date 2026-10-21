@@ -23,26 +23,21 @@ export function StoryCard({
 }) {
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick, drag: story.key }, active);
-  // The border takes one column on each side and a space of margin another. Each line is drawn as
-  // a full-width string, and a selected Story paints its frame in the fill colour, so it reads as
-  // one solid block with no gap between frame and fill.
+  // The border takes one column on each side and a space of margin another.
   const room = width - 4;
   const line = (text: string) => ` ${text.padEnd(room)} `;
   const meta = badges.join(' · ');
   const priority = truncate(story.priority ? ` ${story.priority}` : '', room);
   const key = truncate(story.key, Math.max(1, room - priority.length));
-  // Selecting a Story changes only its fill. Behind a Modal or the Story
+  // Selecting a Story changes only its frame colour, to `accent`. Behind a Modal or the Story
   // screen the selected Story keeps that look, so the user can see which Story is open.
   return (
     <Box
       ref={ref}
       flexDirection="column"
       width={width}
-      marginBottom={1}
       borderStyle="round"
-      borderColor={selected ? theme.selection : theme.border}
-      backgroundColor={selected ? theme.selection : undefined}
-      borderBackgroundColor={selected ? theme.selection : undefined}
+      borderColor={selected ? theme.accent : theme.border}
     >
       <Text>
         <Text color={theme.accent}>{` ${key}`}</Text>
