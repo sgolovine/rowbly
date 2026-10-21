@@ -5,7 +5,8 @@ import { markdownToPlain } from './DetailView';
 
 /**
  * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours
- * its own text, so the colour level of the terminal and `NO_COLOR` apply here too.
+ * its own text, so the colour level is the one chalk detects for the terminal (`supports-color`:
+ * `FORCE_COLOR`, `--color`/`--no-color`, a TTY and `TERM`).
  */
 function tint(color: string): (text: string) => string {
   return (text) => chalk.hex(color)(text);
