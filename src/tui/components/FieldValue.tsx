@@ -30,7 +30,7 @@ export function FieldValue({
     case 'multiselect': {
       const checked = Array.isArray(raw) ? raw : [];
       return (
-        <Box gap={2} flexWrap="wrap">
+        <Box columnGap={2} flexWrap="wrap">
           {(field.options ?? []).map((option, i) => (
             <Text key={option} underline={focused && i === optionCursor}>
               {checked.includes(option) ? '[x] ' : '[ ] '}
