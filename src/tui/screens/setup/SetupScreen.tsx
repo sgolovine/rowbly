@@ -23,7 +23,8 @@ export function SetupScreen({ params }: ScreenProps) {
   const [root, setRoot] = useState<DataRoot | null>(() =>
     params.global === true ? initTarget({ cwd, home, global: true }) : null,
   );
-  useKeyHints([{ key: 'enter', description: root ? 'create' : 'choose' }]);
+  // The form shows its own keys (`ctrl+s save`, `enter` next field), so only the picker adds one.
+  useKeyHints(root ? [] : [{ key: 'enter', description: 'choose' }]);
 
   if (!root) {
     const local = initTarget({ cwd, home, global: false });
