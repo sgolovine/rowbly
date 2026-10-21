@@ -1,5 +1,6 @@
-import { Box, type BoxProps, Text } from 'ink';
-import type { ReactNode } from 'react';
+import { Box, type BoxProps, type DOMElement, Text } from 'ink';
+import { type ReactNode, useRef } from 'react';
+import { useMouse } from '../hooks';
 import { theme } from '../theme';
 
 export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' | 'borderColor' | 'borderDimColor'> {
@@ -9,6 +10,8 @@ export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' |
   aside?: ReactNode;
   /** Whether the panel owns focus; all other frames stay quiet. */
   focused?: boolean;
+  /** A click anywhere in the panel that no smaller box inside it takes, such as one that focuses it. */
+  onClick?: () => void;
   children?: ReactNode;
 }
 
@@ -16,10 +19,20 @@ export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' |
  * A box framed by a rounded border with its title in the top edge. Ink draws no titles, so the top
  * edge is a row of its own and the box below it is bordered on the other three sides.
  */
-export function Panel({ title, aside, focused = false, children, flexDirection = 'column', ...box }: PanelProps) {
+export function Panel({
+  title,
+  aside,
+  focused = false,
+  onClick,
+  children,
+  flexDirection = 'column',
+  ...box
+}: PanelProps) {
+  const ref = useRef<DOMElement>(null);
+  useMouse(ref, { onClick }, onClick !== undefined);
   const color = focused ? theme.accent : theme.border;
   return (
-    <Box flexDirection="column" flexShrink={0} {...pick(box)}>
+    <Box ref={ref} flexDirection="column" flexShrink={0} {...pick(box)}>
       <Box height={1} flexShrink={0}>
         <Text color={color}>╭─</Text>
         {title && (

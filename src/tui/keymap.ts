@@ -15,7 +15,6 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: '/', description: 'filter lists' },
   { key: '[/]', description: 'previous/next Board' },
   { key: '1-9', description: 'open Board 1-9 in the sidebar' },
-  { key: 'N', description: 'new Board' },
   { key: '\\', description: 'show the next Plugin Sidebar, or none' },
   { key: '{/}', description: 'previous/next entry in the Plugin Sidebar' },
   { key: 'esc', description: 'back' },
@@ -31,9 +30,9 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
  * starts to handle it: `test/tui/keyReservations.test.ts` fails otherwise (ARCH-13).
  */
 export const CORE_KEYS: readonly string[] = [
-  // The shell: help, settings, quit, new Board, previous/next Board and Boards 1–9 in the sidebar,
-  // and the Plugin Sidebars: show the next one, previous/next entry.
-  ...'?,qN[]123456789\\{}',
+  // The shell: help, settings, quit, previous/next Board and Boards 1–9 in the sidebar, and the
+  // Plugin Sidebars: show the next one, previous/next entry. `n` in a focused sidebar is below.
+  ...'?,q[]123456789\\{}',
   // Moving, as alternatives to the arrow keys: j/k up and down, h/l left and right; with shift
   // (like shift+arrows), moving a Story or a list entry.
   ...'jkhlJKHL',
