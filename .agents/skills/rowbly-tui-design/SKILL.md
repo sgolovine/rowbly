@@ -54,7 +54,7 @@ Rowbly's TUI is a keyboard-first Kanban for the terminal. The screen is a grid o
 ## Principles
 
 1. **Focus is the only thing in accent.** Exactly one region is in focus at a time; its frame and title are `accent`. Everything else is `border` and `ink-muted`. If two things on screen are `accent`, one of them is wrong. (Today the header Buttons, the sidebar, the Board and the selected Story are all blue at once.)
-2. **Selection looks the same everywhere.** A highlighted row or Story gets the `▌` bar in `accent` and a `selection` fill, with its name in `cell-title`. Sidebar rows, settings sections, the Epics sidebar, list rows and Stories on the Board all use it. When the region loses focus, the fill goes and the bar turns `ink-faint`, so you can still see where you were.
+2. **Selection looks the same everywhere.** A highlighted row gets the `▌` bar in `accent` and a `selection` fill, with its name in `cell-title`; a Story on the Board becomes a solid `selection` block (its frame takes the fill colour). Sidebar rows, settings sections, the Epics sidebar, list rows and Stories on the Board all use it. It keeps that look when the region loses focus, so you can always see what is selected; the focused region is shown by its `accent` frame.
 3. **Colour means something.** The Stage Category colours (`stage-backlog`, `stage-board`, `stage-done`) go on the `●` dot and the Stage name only. `danger` is for errors and deletes. `epic` is the `◆` glyph. Nothing is coloured for decoration.
 4. **Hierarchy is weight and ink, not size.** `ink` for content, `ink-muted` for labels, `ink-faint` for hints and empty values. Do not use Ink's `dimColor`: terminals render it differently (some not at all). Use the tokens.
 5. **Quiet chrome, loud content.** Frames are hairlines. The Story names are the brightest thing on the Board.
@@ -62,7 +62,7 @@ Rowbly's TUI is a keyboard-first Kanban for the terminal. The screen is a grid o
 ## Colour
 
 - Write colours as the token's hex in Ink (`<Text color={theme.accent}>`), from one `theme.ts` module that maps these tokens. Ink downsamples hex to 256 or 16 colours on its own; each token's note names the 16-colour ANSI intent so a `NO_COLOR`-free 16-colour terminal still reads right.
-- Rowbly never paints `ground`. The user's terminal background shows through. Only `overlay` (Modals), `field`, `field-focus` and `selection` are fills.
+- Rowbly never paints `ground`. The user's terminal background shows through. Only `overlay` (Modals), `overlay-raised` (Modal header bands, Toasts), `field`, `field-focus` and `selection` are fills.
 - Two themes, picked from the terminal background (`COLORFGBG`; an explicit `tui.theme` setting is planned): **Dark terminal** is the default, **Light terminal** darkens every hue so text keeps ≥4.5:1 on a pale background.
 - Text pairs: `ink`, `ink-muted` and `accent` are ≥4.5:1 on `ground`, `overlay`, `field`, `field-focus` and `selection` in both themes. `ink-faint` is ≥4.5:1 on `ground`, `overlay` and `field`; do not put it on `selection`.
 
@@ -132,7 +132,7 @@ No icon font; Rowbly uses Unicode that every monospace font has.
 | --- | --- | --- |
 | `●` | Stage, coloured by Stage Category | `stage-*` |
 | `◆` | Epic | `epic` |
-| `▌` | highlighted row or Story | `accent` (in focus), `ink-faint` (not) |
+| `▌` | highlighted row or Story | `accent`, in focus or not |
 | `›` | Form field or list cursor | `accent` |
 | `▾` `▸` | folded / open group in list view | `ink-faint` |
 | `↑` `↓` | more above / below | `ink-faint` |

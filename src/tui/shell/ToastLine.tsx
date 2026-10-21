@@ -12,12 +12,17 @@ export function ToastLine({ toast }: { toast: Toast }) {
     const timer = setTimeout(() => store.dismiss(toast.id), TOAST_MS[toast.kind]);
     return () => clearTimeout(timer);
   }, [store, toast]);
+  const glyph = toast.kind === 'info' ? '✓' : toast.kind === 'warning' ? '!' : '✕';
+  // No frame: every row is a full-width string on the `overlay-raised` fill, so the fill has no gaps.
+  const blank = ' '.repeat(toast.message.length + 6);
   return (
-    <Box borderStyle="round" borderColor={theme.border} backgroundColor={theme.overlay} paddingX={1}>
-      <Text color={TOAST_COLORS[toast.kind]}>
-        {toast.kind === 'info' ? '✓ ' : toast.kind === 'warning' ? '! ' : '✕ '}
-        {toast.message}
+    <Box flexDirection="column" marginTop={1}>
+      <Text backgroundColor={theme.overlayRaised}>{blank}</Text>
+      <Text backgroundColor={theme.overlayRaised}>
+        <Text color={TOAST_COLORS[toast.kind]}>{`  ${glyph} `}</Text>
+        <Text color={theme.ink}>{`${toast.message}  `}</Text>
       </Text>
+      <Text backgroundColor={theme.overlayRaised}>{blank}</Text>
     </Box>
   );
 }

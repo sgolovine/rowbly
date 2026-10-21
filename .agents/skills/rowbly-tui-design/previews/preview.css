@@ -243,12 +243,6 @@ body {
   color: var(--ink);
   font-weight: 700;
 }
-.row.sel.blur {
-  background: transparent;
-}
-.row.sel.blur .bar {
-  color: var(--ink-faint);
-}
 .group {
   color: var(--ink-faint);
   padding-left: 2ch;
@@ -280,7 +274,7 @@ body {
   padding: 9px 1ch;
 }
 .story.sel {
-  border-color: var(--accent);
+  border-color: var(--selection);
   background: var(--selection);
 }
 .story .key {
@@ -379,9 +373,8 @@ body {
 .toast {
   display: inline-flex;
   gap: 1ch;
-  border: 1px solid currentColor;
-  border-radius: var(--border-round);
-  padding: 9px 1ch;
+  background: var(--overlay-raised);
+  padding: 20px 2ch;
 }
 .toast .msg {
   color: var(--ink);

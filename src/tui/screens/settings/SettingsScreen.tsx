@@ -96,7 +96,6 @@ export function SettingsScreen() {
       <SectionNav
         groups={groups}
         selected={section?.id ?? ''}
-        focused={focus === 'nav'}
         clickable={active}
         onSelect={(id) => {
           setSelectedId(id);

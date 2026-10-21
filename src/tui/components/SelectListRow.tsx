@@ -20,9 +20,9 @@ export function SelectListRow({
   useScrollFocus(ref, highlighted && active);
   useMouse(ref, { onClick }, active && onClick !== undefined);
   return (
-    <Box ref={ref} backgroundColor={highlighted && active ? theme.selection : undefined}>
+    <Box ref={ref} backgroundColor={highlighted ? theme.selection : undefined}>
       <Text color={theme.ink} bold={highlighted}>
-        <Text color={active ? theme.accent : theme.inkFaint}>{highlighted ? '▌ ' : '  '}</Text>
+        <Text color={theme.accent}>{highlighted ? '▌ ' : '  '}</Text>
         {children}
       </Text>
     </Box>

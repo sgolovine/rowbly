@@ -133,7 +133,6 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && listing}
           rows={stages.map((stage, i) => (
             <Text key={stage.key}>
               {`${i + 1}. `}

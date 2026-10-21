@@ -128,7 +128,6 @@ export function StoryListScreen({ params }: ScreenProps) {
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && !filtering}
           rows={stories.map((s) => {
             const shown = list.data?.badges(s) ?? [];
             return (

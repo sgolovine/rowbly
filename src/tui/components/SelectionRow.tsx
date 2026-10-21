@@ -20,8 +20,8 @@ export function SelectionRow({
   useScrollFocus(ref, selected && active);
   useMouse(ref, { onClick }, active && onClick !== undefined);
   return (
-    <Box ref={ref} backgroundColor={selected && active ? theme.selection : undefined}>
-      <Text color={selected && active ? theme.accent : theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
+    <Box ref={ref} backgroundColor={selected ? theme.selection : undefined}>
+      <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
       <Box flexDirection="column" flexGrow={1} flexShrink={1}>
         {children}
       </Box>

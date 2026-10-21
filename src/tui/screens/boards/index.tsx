@@ -118,7 +118,6 @@ function BoardsScreen() {
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && listing}
           rows={boards.map((b) => (
             <Text key={b.id}>
               {b.name} <Text color={theme.inkFaint}>{`${b.id} · ${b.keyPrefix}`}</Text>

@@ -9,14 +9,12 @@ export const SECTION_NAV_WIDTH = 22;
 export function SectionNav({
   groups,
   selected,
-  focused,
   clickable,
   onSelect,
 }: {
   groups: readonly SettingsGroup[];
   /** The `id` of the selected section. */
   selected: string;
-  focused: boolean;
   clickable: boolean;
   onSelect(id: string): void;
 }) {
@@ -47,7 +45,6 @@ export function SectionNav({
               key={section.id}
               label={section.label}
               selected={section.id === selected}
-              focused={focused}
               clickable={clickable}
               onClick={() => onSelect(section.id)}
             />

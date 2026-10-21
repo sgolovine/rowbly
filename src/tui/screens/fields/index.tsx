@@ -104,7 +104,6 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && listing}
           rows={fields.map((f) => (
             <Text key={f.key}>
               {f.name}

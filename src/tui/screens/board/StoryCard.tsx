@@ -23,11 +23,15 @@ export function StoryCard({
 }) {
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick, drag: story.key }, active);
-  // Border and padding take two columns on each side.
+  // The border takes one column on each side and a space of margin another. Each line is drawn as
+  // a full-width string, and a selected Story paints its frame in the fill colour, so it reads as
+  // one solid block with no gap between frame and fill.
   const room = width - 4;
+  const line = (text: string) => ` ${text.padEnd(room)} `;
   const meta = badges.join(' · ');
-  const priority = story.priority ? ` ${story.priority}` : '';
-  // Selecting a Story changes only its frame's colour and its fill. Behind a Modal or the Story
+  const priority = truncate(story.priority ? ` ${story.priority}` : '', room);
+  const key = truncate(story.key, Math.max(1, room - priority.length));
+  // Selecting a Story changes only its fill. Behind a Modal or the Story
   // screen the selected Story keeps that look, so the user can see which Story is open.
   return (
     <Box
@@ -35,19 +39,19 @@ export function StoryCard({
       flexDirection="column"
       width={width}
       marginBottom={1}
-      paddingX={1}
       borderStyle="round"
-      borderColor={selected ? theme.accent : theme.border}
+      borderColor={selected ? theme.selection : theme.border}
       backgroundColor={selected ? theme.selection : undefined}
+      borderBackgroundColor={selected ? theme.selection : undefined}
     >
-      <Box justifyContent="space-between">
-        <Text color={theme.accent}>{truncate(story.key, Math.max(1, room - priority.length))}</Text>
-        <Text color={theme.inkMuted}>{truncate(priority, room)}</Text>
-      </Box>
-      <Text color={theme.ink} bold={selected}>
-        {truncate(story.name, room)}
+      <Text>
+        <Text color={theme.accent}>{` ${key}`}</Text>
+        <Text color={theme.inkMuted}>{`${' '.repeat(room - key.length - priority.length)}${priority} `}</Text>
       </Text>
-      <Text color={theme.inkMuted}>{truncate(meta, room) || ' '}</Text>
+      <Text color={theme.ink} bold={selected}>
+        {line(truncate(story.name, room))}
+      </Text>
+      <Text color={theme.inkMuted}>{line(truncate(meta, room))}</Text>
     </Box>
   );
 }

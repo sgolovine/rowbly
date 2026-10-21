@@ -24,7 +24,7 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
   useMouse(ref, { onClick }, active);
   const marker = (
     <Box flexShrink={0}>
-      <Text color={selected && active ? theme.accent : theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
+      <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
     </Box>
   );
   const line =
@@ -59,12 +59,7 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
       </Box>
     );
   return (
-    <Box
-      ref={ref}
-      width={width}
-      flexDirection="column"
-      backgroundColor={selected && active ? theme.selection : undefined}
-    >
+    <Box ref={ref} width={width} flexDirection="column" backgroundColor={selected ? theme.selection : undefined}>
       {line}
     </Box>
   );

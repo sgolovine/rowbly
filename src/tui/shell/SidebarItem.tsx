@@ -20,8 +20,8 @@ export function SidebarItem({
   const ref = useRef<DOMElement>(null);
   useMouse(ref, { onClick }, clickable);
   return (
-    <Box ref={ref} width="100%" paddingRight={1}>
-      <Text color={theme.inkFaint}>{selected ? '▌ ' : '  '}</Text>
+    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.selection : undefined}>
+      <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
       <Box flexGrow={1} flexShrink={1}>
         <Text wrap="truncate-end" color={theme.ink} bold={selected}>
           {name}
