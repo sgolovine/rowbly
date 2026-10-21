@@ -45,7 +45,7 @@ describe('story form', () => {
     expect(app.lastFrame()).toContain('No Stories yet. Press n to create one.');
     await app.press('n');
     await waitForFrame(app, (f) => f.includes('New Story on web'));
-    expect(app.lastFrame()).toContain('‹ backlog ›');
+    expect(app.lastFrame()).toContain('‹ Backlog ›');
     // name, description, stage, priority, labels, due, size
     await app.press(...'Login page', KEYS.down, KEYS.down, KEYS.right, KEYS.down);
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);

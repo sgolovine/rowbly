@@ -1,5 +1,5 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { Box, Form, Loading, Text, useAsync } from '../../plugin-api/tui';
+import { Box, Form, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { configure, preferences } from './model';
 
 export function GitSettings({ plugin, ui }: PluginScreenProps) {
@@ -11,7 +11,7 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
     return loaded.loading ? (
       <Loading label="Loading Git settings…" />
     ) : (
-      <Text color="red">Could not load Git settings.</Text>
+      <Text color={theme.danger}>Could not load Git settings.</Text>
     );
   const { prefs, defaults } = loaded.data;
   return (

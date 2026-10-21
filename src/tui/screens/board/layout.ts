@@ -1,14 +1,14 @@
 // Pure helpers for the board view: grouping Stories into columns, optimistic edits and scrolling.
-import type { Stage, StageCategory, Story } from '../../../schemas';
+import type { Stage, Story } from '../../../schemas';
 
 /** A column is never narrower than this; when the Stages do not all fit, the view scrolls. */
 export const MIN_COLUMN_WIDTH = 24;
 /** Width of the `‹`/`›` gutters shown when columns are scrolled out of view. */
 export const GUTTER_WIDTH = 3;
-/** Lines per card, including its border and the gap below it. */
-export const CARD_HEIGHT = 6;
-/** Lines per line of the list view: its text and the rule below it. */
-export const LIST_ROW_HEIGHT = 2;
+/** Lines per card, including its border. Cards stack with no gap between them. */
+export const CARD_HEIGHT = 5;
+/** Lines per row of the compact list view. */
+export const LIST_ROW_HEIGHT = 1;
 /** Lines of the board view that are not cards: column header and rule, scroll markers. */
 const CHROME_HEIGHT = 4;
 
@@ -93,30 +93,21 @@ export function follow(first: number, index: number, size: number, total: number
   return Math.max(0, Math.min(next, total - size));
 }
 
-/** The list view's sections, one per Stage Category, in order. */
-export const LIST_SECTIONS: readonly { category: StageCategory; title: string }[] = [
-  { category: 'backlog', title: 'Backlog' },
-  { category: 'board', title: 'Board' },
-  { category: 'done', title: 'Done' },
-];
-
 /** A line of the list view: a section heading, or a Story with its Stage. */
 export type ListRow =
-  | { kind: 'section'; category: StageCategory; title: string; count: number; collapsed: boolean }
+  | { kind: 'section'; category: string; title: string; count: number; collapsed: boolean }
   | { kind: 'story'; story: Story; stage: Stage };
 
 /**
  * The list view's lines: each section's heading, then, unless it is collapsed, its Stories in Stage order and
  * then Rank order. `columns` is grouped by `stages`, as `groupColumns` returns it.
  */
-export function listRows(stages: readonly Stage[], columns: Columns, collapsed: ReadonlySet<StageCategory>): ListRow[] {
-  return LIST_SECTIONS.flatMap(({ category, title }) => {
-    const stories = stages.flatMap((stage, i) =>
-      stage.category === category ? (columns[i] ?? []).map((story) => ({ kind: 'story' as const, story, stage })) : [],
-    );
-    const folded = collapsed.has(category);
+export function listRows(stages: readonly Stage[], columns: Columns, collapsed: ReadonlySet<string>): ListRow[] {
+  return stages.flatMap((stage, i) => {
+    const stories = (columns[i] ?? []).map((story) => ({ kind: 'story' as const, story, stage }));
+    const folded = collapsed.has(stage.key);
     return [
-      { kind: 'section' as const, category, title, count: stories.length, collapsed: folded },
+      { kind: 'section' as const, category: stage.key, title: stage.name, count: stories.length, collapsed: folded },
       ...(folded ? [] : stories),
     ];
   });

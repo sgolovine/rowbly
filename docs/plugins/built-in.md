@@ -42,7 +42,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 - Adding to or removing from a Story whose Assignees bag is invalid fails with `DATA_INTEGRITY` (exit 6); `--assignee` replaces it.
 - Removing an Assignee from the roster takes the handle off every Story and stamps each Story's `updatedAt`. Me is not cleared.
 
-**TUI:** an **Assignees** section in the settings (`,`) with the roster, an Assignee's detail (Edit, Remove) and form; an Assignees multi-choice in the Story form; Assignees and "Assigned to me" in the filter of the Stories list and the board; `@handle` on board cards, the board's list view and Story list rows; an Assignees row on the Story screen.
+**TUI:** an **Assignees** section in the settings (`,`) with the roster, an Assignee's detail (Edit, Remove) and form; an Assignees multi-choice in the Story form; Assignees and "Assigned to me" in the filter of the Stories list and the board; `@handle` on a Story in the board's Stages view, its line in the board's list view and Story list rows; an Assignees row on the Story screen.
 
 **Doctor**
 
@@ -79,7 +79,7 @@ Task Ids are case-insensitive (`web-42.3`). `stories show` has a Tasks row (`2/5
 - `stages remove` refuses a Stage that Tasks of the affected Boards still use (`CONFLICT`, exit 4, with `details: { tasks, needsMoveTo: true }`). With `--move-to <stage>`, their Tasks move too, with a warning naming how many.
 - A change to the Tasks of a Story whose Tasks bag is invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing. `tasks list` exits 6 for it, `stories show` prints `Tasks: unavailable (invalid)`, and the TUI tab says so.
 
-**TUI:** a **Tasks** tab on the Story screen (`n` new, `enter` open, `m` move Stage, `e` edit, `d` delete), the Task screen and the Task form; a `✓ done/total` badge on the board card and list view line of a Story with Tasks.
+**TUI:** a **Tasks** tab on the Story screen (`n` new Task, `enter` open, `m` move Stage, `e` edit, `d` delete), the Task screen and the Task form; a `✓ done/total` badge on a Story with Tasks in the board's Stages view and on its list view line.
 
 **Doctor:** `TASKS_UNKNOWN_STAGE` (error): a Task is in a Stage its Board does not have; move it with `rowbly tasks move`. `TASKS_COUNTER_BEHIND` (warning): `nextNumber` is not above the highest Task number; `--fix` raises it.
 
@@ -109,7 +109,7 @@ rowbly stories edit … [--epic <id> | --no-epic]
 
 `stories list --epic <id>` takes an Epic ID (a slug); anything else is exit 2. `stories show` has an Epic row.
 
-**TUI:** an **Epics** Plugin Sidebar beside the Board sidebar, shown and hidden with the **Epics** header button (or `\`), listing the open Epics by name after **All Epics**: picking an Epic (click, or `{`/`}`) shows only its Stories on the board, in both views, and **All Epics** shows them all again; its **+ New Epic** button opens the Epic form ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)); an Epics entry in the home menu; the Epic list and Epic detail with Epic Progress, where `enter` on a Story opens the Story screen; an Epic select in the Story form (with `No Epic`); an Epic filter (`All Epics` is apart from "no Epic"); `◆ <Epic name>` on the board card, the board's list view line and the Story list row of a Story of an Epic (its Epic ID when the Epic file is missing or cannot be read); an Epic row on the Story screen.
+**TUI:** an **Epics** Plugin Sidebar beside the Board sidebar, shown and hidden with the **Epics** header button (or `\`), listing the open Epics by name after **All Epics**: picking an Epic (click, or `{`/`}`) shows only its Stories on the board, in both views, and **All Epics** shows them all again; its **+ New Epic** button opens the Epic form ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)); an Epics entry in the home menu; the Epic list and Epic detail with Epic Progress, where `enter` on a Story opens the Story screen; an Epic select in the Story form (with `No Epic`); an Epic filter (`All Epics` is apart from "no Epic"); `◆ <Epic name>` on a Story of an Epic in the board's Stages view, its line in the board's list view and its Story list row (its Epic ID when the Epic file is missing or cannot be read); an Epic row on the Story screen.
 
 **Errors and doctor**
 
@@ -181,7 +181,7 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 - `comments.add` and `comments.update` return the Comment as other Plugins' transforms left it; a transform that removes it fails the operation with `CONFLICT`.
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
-**TUI:** a **Comments** tab on the Story screen (`n` new, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
+**TUI:** a **Comments** tab on the Story screen (`n` new Comment, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
 
 ## Upgrading from before Plugins
 

@@ -1,6 +1,7 @@
 import { Text, useInput } from 'ink';
 import { useRef } from 'react';
 import { useKeyCapture } from '../hooks';
+import { theme } from '../theme';
 import { editKey, follow, useEditState, WithCaret } from './textEditing';
 
 export interface TextInputProps {
@@ -32,7 +33,7 @@ export function TextInput({ value, onChange, focus = true, width, placeholder }:
   );
 
   if (!focus) {
-    return <Text wrap="truncate-end">{value || <Text dimColor>{placeholder}</Text>}</Text>;
+    return <Text wrap="truncate-end">{value || <Text color={theme.inkFaint}>{placeholder}</Text>}</Text>;
   }
   const size = width ?? value.length + 1;
   offset.current = follow(offset.current, cursor, size);
@@ -40,7 +41,7 @@ export function TextInput({ value, onChange, focus = true, width, placeholder }:
   return (
     <Text wrap="truncate-end">
       <WithCaret text={shown} at={cursor - offset.current} />
-      {!value && placeholder && <Text dimColor>{placeholder}</Text>}
+      {!value && placeholder && <Text color={theme.inkFaint}>{placeholder}</Text>}
     </Text>
   );
 }

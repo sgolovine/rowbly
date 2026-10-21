@@ -136,7 +136,7 @@ Option flags are long and lower-kebab-case; `--x` and `--no-x` may pair. Plugin 
 
 Every data change a Plugin offers works in both the CLI and the TUI.
 
-Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, `stories show` rows, Board detail sections, board card badges, and Actions. `stories list` columns and other closed lists open when a Plugin first needs them.
+Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, `stories show` rows, Board detail sections, Story badges on the board, and Actions. `stories list` columns and other closed lists open when a Plugin first needs them.
 
 **Actions** ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
 

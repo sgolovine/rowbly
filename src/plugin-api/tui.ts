@@ -20,7 +20,9 @@ export {
   Form,
   Loading,
   MarkdownView,
+  Modal,
   markdownToPlain,
+  SelectionRow,
   SelectList,
   StageBadge,
   Tabs,
@@ -42,3 +44,5 @@ export {
 // supported way, which also attributes errors (CQ-51).
 export type { KeyHint } from '../tui/keymap';
 export { FORM_KEYS, moveDelta } from '../tui/keymap';
+
+export { formatDate, stageColors, theme, themes } from '../tui/theme';

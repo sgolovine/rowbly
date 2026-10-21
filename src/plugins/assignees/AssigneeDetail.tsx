@@ -6,6 +6,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useKeyHints,
   useReloadOnReturn,
@@ -24,9 +25,13 @@ export function AssigneeDetail({ params, plugin, ui }: PluginScreenProps<Record<
   useKeyHints([{ key: 'enter', description: 'run action' }]);
 
   if (!roster.data)
-    return roster.loading ? <Loading label="Loading assignee…" /> : <Text color="red">Could not load Assignee.</Text>;
+    return roster.loading ? (
+      <Loading label="Loading assignee…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Assignee.</Text>
+    );
   const assignee = roster.data.find((a) => a.handle === handle);
-  if (!assignee) return <Text dimColor>Assignee "{handle}" is no longer in the roster.</Text>;
+  if (!assignee) return <Text color={theme.inkFaint}>Assignee "{handle}" is no longer in the roster.</Text>;
 
   const remove = async () => {
     try {

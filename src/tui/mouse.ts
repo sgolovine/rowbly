@@ -3,13 +3,13 @@
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 
-/** Turns on click reporting (button presses and releases) in SGR encoding. */
-export const MOUSE_ON = '\u001B[?1000h\u001B[?1006h';
-export const MOUSE_OFF = '\u001B[?1006l\u001B[?1000l';
+/** Turns on pointer reporting in SGR encoding for clicks, drag/drop and control hover. */
+export const MOUSE_ON = '\u001B[?1000h\u001B[?1003h\u001B[?1006h';
+export const MOUSE_OFF = '\u001B[?1006l\u001B[?1003l\u001B[?1000l';
 
 /** A press or release of the left button, at a 0-based cell. */
 export interface MouseEvent {
-  kind: 'press' | 'release';
+  kind: 'press' | 'release' | 'move';
   x: number;
   y: number;
 }
@@ -27,7 +27,9 @@ const PARTIAL = /\u001B\[<[\d;]*$/;
 export function extractMouse(input: string): { events: MouseEvent[]; rest: string; pending: string } {
   const events: MouseEvent[] = [];
   let rest = input.replace(SGR, (_all, button: string, x: string, y: string, final: string) => {
-    if ((Number(button) & 0b1100_0011) === 0) {
+    if ((Number(button) & 32) !== 0 && (Number(button) & 64) === 0) {
+      events.push({ kind: 'move', x: Number(x) - 1, y: Number(y) - 1 });
+    } else if ((Number(button) & 0b1100_0011) === 0) {
       events.push({ kind: final === 'M' ? 'press' : 'release', x: Number(x) - 1, y: Number(y) - 1 });
     }
     return '';

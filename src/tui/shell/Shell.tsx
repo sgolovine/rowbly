@@ -3,6 +3,7 @@ import { type ReactNode, useContext, useMemo, useState } from 'react';
 import { invokePlugin } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
+  ActiveContext,
   type BoardSelection,
   BoardSelectionContext,
   type BoardView,
@@ -20,7 +21,6 @@ import {
   useScreenHints,
   useScreenLabel,
   useToast,
-  useToasts,
 } from '../hooks';
 import { globalAction, type KeyHint } from '../keymap';
 import { routeTitle, useRouter } from '../router';
@@ -38,7 +38,7 @@ import { usePluginSidebars } from './usePluginSidebars';
 
 type Overlay =
   | { kind: 'help' }
-  | { kind: 'confirm'; action: 'quit' | 'back' }
+  | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
   // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
 
@@ -56,7 +56,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const { columns, rows } = useWindowSize();
   // Fill the terminal only on a real one, so test frames stay compact.
   const fullscreen = (useStdout().stdout as NodeJS.WriteStream).isTTY === true;
-  const toastCount = useToasts().length;
+
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const mainOverlay = useMemo<MainOverlay>(
     () => ({
@@ -137,8 +137,15 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   };
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
+  // Two screen modals never stack: Settings replaces an open Story and the tasks opened over it.
+  const story = router.stack.findIndex((route) => route.screen === 'story');
+  const replaceStory = () => router.replaceAt(story, 'settings');
   const openSettings = () => {
-    if (services && !router.stack.some((route) => route.screen === 'settings')) router.push('settings');
+    if (!services || router.stack.some((route) => route.screen === 'settings')) return;
+    if (story < 0) router.push('settings');
+    else if (router.stack.some((_, at) => at > story && shell.isDirty(at))) {
+      setOverlay({ kind: 'confirm', action: 'settings' });
+    } else replaceStory();
   };
 
   useInput((input, key) => {
@@ -171,10 +178,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const label = useScreenLabel(0);
   const sidebarWidth = services ? SIDEBAR_WIDTH * (pluginSidebars.shown ? 2 : 1) : 0;
   // The main panel's border takes a column on each side.
-  const mainWidth = Math.max(20, columns - sidebarWidth - 2);
-  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT - toastCount) : undefined;
+  const mainWidth = Math.max(20, columns - sidebarWidth - 4 - (services ? (pluginSidebars.shown ? 2 : 1) : 0));
+  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
-  const screenHidden = overlay !== null && overlay.kind !== 'confirm';
+  const screenHidden = overlay?.kind === 'main';
   const top = router.stack[depth];
 
   return (
@@ -195,7 +202,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 }
                 sidebars={pluginSidebars.buttons}
               />
-              <Box flexGrow={1}>
+              <Box flexGrow={1} columnGap={1}>
                 {services && (
                   <Sidebar
                     title="Boards"
@@ -222,7 +229,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 )}
                 <Panel
                   title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-                  color={idle ? 'cyan' : undefined}
+                  focused={idle}
                   flexGrow={1}
                   flexShrink={1}
                   height={mainHeight}
@@ -245,33 +252,59 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                         left={0}
                         width="100%"
                       >
-                        <Modal title={router.stack.map(routeTitle).join(' › ')} hints={modalHints(hints)}>
-                          {router.stack.slice(1).map((route, i) => (
-                            <ScreenSlot
-                              // biome-ignore lint/suspicious/noArrayIndexKey: a stack position is the screen's identity.
-                              key={`${i + 1}:${route.screen}`}
-                              route={route}
-                              depth={i + 1}
-                              top={i + 1 === depth}
-                              active={i + 1 === depth && overlay === null}
-                              screens={screens}
-                            />
-                          ))}
-                        </Modal>
+                        {router.stack.slice(1).map((route, i) => {
+                          const routeDepth = i + 1;
+                          const screen = route.screen === 'story' || route.screen === 'settings';
+                          const visible =
+                            routeDepth === depth ||
+                            (screen &&
+                              !router.stack
+                                .slice(routeDepth + 1)
+                                .some((next) => next.screen === 'story' || next.screen === 'settings'));
+                          const focused = routeDepth === depth && overlay === null;
+                          return (
+                            <Box
+                              key={`${routeDepth}:${route.screen}`}
+                              display={visible ? 'flex' : 'none'}
+                              flexDirection="column"
+                              position={fullscreen ? 'absolute' : 'relative'}
+                              top={0}
+                              left={0}
+                              width="100%"
+                            >
+                              <ActiveContext.Provider value={focused}>
+                                <Modal
+                                  title={router.stack
+                                    .slice(0, routeDepth + 1)
+                                    .map(routeTitle)
+                                    .join(' › ')}
+                                  size={screen ? 'screen' : 'panel'}
+                                  focused={focused}
+                                  onClose={focused ? back : undefined}
+                                  hints={modalHints(focused ? hints : [])}
+                                >
+                                  <ScreenSlot route={route} depth={routeDepth} top active={focused} screens={screens} />
+                                </Modal>
+                              </ActiveContext.Provider>
+                            </Box>
+                          );
+                        })}
                       </Box>
                     )}
                     {overlay?.kind === 'help' && (
-                      <Modal title="Keys" size="dialog">
+                      <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
                         <HelpOverlay hints={hints} />
                       </Modal>
                     )}
                     {overlay?.kind === 'confirm' && (
-                      <Modal size="dialog">
+                      <Modal size="dialog" title="Discard changes" onClose={() => setOverlay(null)}>
                         <ConfirmDialog
                           message={
                             overlay.action === 'quit'
                               ? 'Quit and discard unsaved changes?'
-                              : 'Go back and discard unsaved changes?'
+                              : overlay.action === 'settings'
+                                ? 'Open Settings and discard unsaved changes?'
+                                : 'Go back and discard unsaved changes?'
                           }
                           confirmLabel="Discard"
                           cancelLabel="Keep editing"
@@ -279,6 +312,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                           onConfirm={() => {
                             setOverlay(null);
                             if (overlay.action === 'quit') exit();
+                            else if (overlay.action === 'settings') replaceStory();
                             else router.pop();
                           }}
                           onCancel={() => setOverlay(null)}

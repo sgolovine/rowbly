@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { type ReactNode, useRef, useState } from 'react';
 import { useIsActive, useKeyCapture, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
+import { theme } from '../theme';
 import { ConfirmDialog } from './ConfirmDialog';
 import { MarkdownView } from './MarkdownView';
 import { Modal, modalSize } from './Modal';
@@ -57,7 +58,7 @@ export function FullScreenEditor({
   const latest = useRef(initial);
   const outer = useLayout();
   const active = useIsActive();
-  const { body } = modalSize(outer, { maxWidth: outer.width, footer: true });
+  const { body } = modalSize(outer, { size: 'screen', maxWidth: outer.width, footer: true });
   const rows = body.height === undefined ? UNBOUNDED_ROWS : Math.max(1, body.height - MODE_ROWS);
   const dirty = onSave !== undefined && value !== saved;
   const keys = active && !confirming && save.kind !== 'saving';
@@ -98,7 +99,7 @@ export function FullScreenEditor({
     { key: 'esc', description: 'close' },
   ];
   return (
-    <Modal title={title} hints={hints} maxWidth={outer.width} onClose={confirming ? undefined : close}>
+    <Modal title={title} hints={hints} size="screen" maxWidth={outer.width} onClose={confirming ? undefined : close}>
       {confirming ? (
         <ConfirmDialog
           message="Close and discard unsaved changes?"
@@ -112,10 +113,10 @@ export function FullScreenEditor({
       ) : (
         <>
           <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
-            <Text bold={mode === 'view'} inverse={mode === 'view'}>
+            <Text bold={mode === 'view'} backgroundColor={mode === 'view' ? theme.selection : undefined}>
               {' View '}
             </Text>
-            <Text bold={mode === 'edit'} inverse={mode === 'edit'}>
+            <Text bold={mode === 'edit'} backgroundColor={mode === 'edit' ? theme.selection : undefined}>
               {' Edit '}
             </Text>
             {saveStatus(save, dirty)}
@@ -153,9 +154,10 @@ export function FullScreenEditor({
 
 /** Whether the text is saved, shown after the mode; nothing until there is something to save. */
 function saveStatus(save: SaveState, dirty: boolean): ReactNode {
-  if (save.kind === 'saving') return <Text dimColor>saving…</Text>;
-  if (save.kind === 'failed') return <Text color="red" wrap="truncate-end">{`not saved: ${save.message}`}</Text>;
-  if (dirty) return <Text color="yellow">unsaved</Text>;
-  if (save.kind === 'saved') return <Text color="green">saved</Text>;
+  if (save.kind === 'saving') return <Text color={theme.inkFaint}>saving…</Text>;
+  if (save.kind === 'failed')
+    return <Text color={theme.danger} wrap="truncate-end">{`not saved: ${save.message}`}</Text>;
+  if (dirty) return <Text color={theme.stageBoard}>unsaved</Text>;
+  if (save.kind === 'saved') return <Text color={theme.stageDone}>saved</Text>;
   return null;
 }

@@ -1,8 +1,9 @@
-import { Text } from 'ink';
+import { Box, Text } from 'ink';
 import { useEffect } from 'react';
 import { type Toast, useToast } from '../hooks';
+import { theme } from '../theme';
 
-const TOAST_COLORS = { info: 'cyan', warning: 'yellow', error: 'red' } as const;
+const TOAST_COLORS = { info: theme.accent, warning: theme.stageBoard, error: theme.danger } as const;
 const TOAST_MS = { info: 4000, warning: 6000, error: 8000 } as const;
 
 export function ToastLine({ toast }: { toast: Toast }) {
@@ -11,10 +12,17 @@ export function ToastLine({ toast }: { toast: Toast }) {
     const timer = setTimeout(() => store.dismiss(toast.id), TOAST_MS[toast.kind]);
     return () => clearTimeout(timer);
   }, [store, toast]);
+  const glyph = toast.kind === 'info' ? '✓' : toast.kind === 'warning' ? '!' : '✕';
+  // No frame: every row is a full-width string on the `overlay-raised` fill, so the fill has no gaps.
+  const blank = ' '.repeat(toast.message.length + 6);
   return (
-    <Text color={TOAST_COLORS[toast.kind]}>
-      {toast.kind === 'info' ? '' : `${toast.kind}: `}
-      {toast.message}
-    </Text>
+    <Box flexDirection="column" marginTop={1}>
+      <Text backgroundColor={theme.overlayRaised}>{blank}</Text>
+      <Text backgroundColor={theme.overlayRaised}>
+        <Text color={TOAST_COLORS[toast.kind]}>{`  ${glyph} `}</Text>
+        <Text color={theme.ink}>{`${toast.message}  `}</Text>
+      </Text>
+      <Text backgroundColor={theme.overlayRaised}>{blank}</Text>
+    </Box>
   );
 }

@@ -1,5 +1,6 @@
 import { type Key, Text } from 'ink';
 import { useReducer, useRef } from 'react';
+import { theme } from '../theme';
 
 /** Text being edited and its caret, an index into `value` (`value.length` is after the last character). */
 export interface EditState {
@@ -91,7 +92,9 @@ export function WithCaret({ text, at }: { text: string; at: number }) {
   return (
     <>
       {text.slice(0, at)}
-      <Text inverse>{text[at] ?? ' '}</Text>
+      <Text backgroundColor={theme.accent} color={theme.onAccent}>
+        {text[at] ?? ' '}
+      </Text>
       {text.slice(at + 1)}
     </>
   );

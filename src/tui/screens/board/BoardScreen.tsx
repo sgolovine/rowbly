@@ -1,6 +1,6 @@
 import { Box, type Key, Text, useInput, useWindowSize } from 'ink';
 import { useEffect, useRef, useState } from 'react';
-import type { Slug, Stage, StageCategory, Story } from '../../../schemas';
+import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
@@ -25,6 +25,7 @@ import {
 } from '../../hooks';
 import { moveDelta } from '../../keymap';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import {
   describeFilters,
   describeWithPlugins,
@@ -38,13 +39,13 @@ import {
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
 import { BoardList } from './BoardList';
+import { Gutter } from './Gutter';
 import {
   type Columns,
   cardsPerColumn,
   columnLayout,
   edgeCard,
   follow,
-  GUTTER_WIDTH,
   groupColumns,
   LIST_ROW_HEIGHT,
   type ListRow,
@@ -65,9 +66,9 @@ interface Cursor {
 
 /**
  * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
- * the context: one column per Stage, cards in Rank order. Moves and reorders show at once and are
+ * the context: one column per Stage, Stories in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them. The list view (`v`, or the header's switch) shows the same Stories as
- * one list in collapsible Backlog, Board and Done sections, where shift+↑/↓ move a Story between Stages.
+ * one list in a collapsible section per Stage, where shift+↑/↓ move a Story between Stages.
  */
 export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -85,7 +86,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
   const [columns, setColumns] = useState<Columns>([]);
   const { view, setView } = useBoardView();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<StageCategory>>(new Set());
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [listCursor, setListCursor] = useState(0);
   const firstListRow = useRef(0);
   const writing = useRef(false);
@@ -206,7 +207,7 @@ export function BoardScreen({ params }: ScreenProps) {
     else setCursor(at);
   };
 
-  const toggleSection = (category: StageCategory, fold?: boolean) =>
+  const toggleSection = (category: string, fold?: boolean) =>
     setCollapsed((current) => {
       const next = new Set(current);
       if (fold ?? !next.has(category)) next.add(category);
@@ -235,9 +236,9 @@ export function BoardScreen({ params }: ScreenProps) {
     const target = stages[from + delta];
     if (at < 0 || !target) return;
     const unfolded = new Set(collapsed);
-    unfolded.delete(target.category);
+    unfolded.delete(target.key);
     const next = listRows(stages, moveCard(columns, from, at, from + delta, target.key), unfolded);
-    toggleSection(target.category, false);
+    toggleSection(target.key, false);
     setListCursor(next.findIndex((r) => r.kind === 'story' && r.story.key === story.key));
     moveTo(from + delta, { col: from, row: at });
   };
@@ -283,44 +284,43 @@ export function BoardScreen({ params }: ScreenProps) {
 
   useKeyCapture(active && mode === 'filter', { escape: true });
   useEscape(active && mode === 'filter', () => setMode('view'));
+  // The filter and delete Modals show their own keys; only the top layer's keys show.
   useKeyHints(
-    saving
+    saving || mode !== 'view'
       ? []
-      : mode !== 'view'
-        ? [{ key: 'esc', description: 'cancel' }]
-        : view === 'list'
-          ? [
-              { key: '↑/↓', description: 'select' },
-              { key: 'enter', description: 'open/fold' },
-              { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
-              { key: '←/→', description: 'fold/unfold section', secondary: true },
-              { key: 'n', description: 'new' },
-              { key: 'e', description: 'edit', secondary: true },
-              { key: 'd', description: 'delete', secondary: true },
-              { key: '/', description: 'filter' },
-              { key: 'c', description: 'clear filter', secondary: true },
-              { key: 'v', description: 'Stages view' },
-              { key: 'r', description: 'reload', secondary: true },
-              { key: 'j/k', description: 'select (vim keys)', secondary: true },
-              { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
-            ]
-          : [
-              { key: '←/→ ↑/↓', description: 'select' },
-              { key: 'enter', description: 'open' },
-              { key: 'shift+←/→', description: 'move Stage', secondary: true },
-              { key: 'shift+↑/↓', description: 'reorder', secondary: true },
-              { key: 'T/B', description: 'to top/bottom', secondary: true },
-              { key: 'n', description: 'new' },
-              { key: 'e', description: 'edit', secondary: true },
-              { key: 'd', description: 'delete', secondary: true },
-              { key: '/', description: 'filter' },
-              { key: 'c', description: 'clear filter', secondary: true },
-              { key: 'v', description: 'list view' },
-              { key: 'r', description: 'reload', secondary: true },
-              { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
-              { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
-              { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
-            ],
+      : view === 'list'
+        ? [
+            { key: '↑/↓', description: 'select' },
+            { key: 'enter', description: 'open/fold' },
+            { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
+            { key: '←/→', description: 'fold/unfold section', secondary: true },
+            { key: 'n', description: 'new Story' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'Stages view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'j/k', description: 'select (vim keys)', secondary: true },
+            { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
+          ]
+        : [
+            { key: '←/→ ↑/↓', description: 'select' },
+            { key: 'enter', description: 'open' },
+            { key: 'shift+←/→', description: 'move Stage', secondary: true },
+            { key: 'shift+↑/↓', description: 'reorder', secondary: true },
+            { key: 'T/B', description: 'to top/bottom', secondary: true },
+            { key: 'n', description: 'new Story' },
+            { key: 'e', description: 'edit', secondary: true },
+            { key: 'd', description: 'delete', secondary: true },
+            { key: '/', description: 'filter' },
+            { key: 'c', description: 'clear filter', secondary: true },
+            { key: 'v', description: 'list view' },
+            { key: 'r', description: 'reload', secondary: true },
+            { key: 'h/l j/k', description: 'select (vim keys)', secondary: true },
+            { key: 'H/L', description: 'move Stage (vim keys)', secondary: true },
+            { key: 'K/J', description: 'reorder (vim keys)', secondary: true },
+          ],
   );
 
   /** The list view's keys; `n` adds to the highlighted Story's Stage, or a section's first Stage. */
@@ -345,7 +345,7 @@ export function BoardScreen({ params }: ScreenProps) {
   };
 
   const stageFor = (at: ListRow | undefined) =>
-    at?.kind === 'story' ? at.stage.key : stages.find((s) => s.category === at?.category)?.key;
+    at?.kind === 'story' ? at.stage.key : stages.find((s) => s.key === at?.category)?.key;
 
   useInput(
     (input, key) => {
@@ -389,7 +389,6 @@ export function BoardScreen({ params }: ScreenProps) {
   const label = scope.data && {
     title: scope.data.choices.board.name,
     detail: [
-      scope.data.boardId,
       scrolled ? `Stages ${hiddenLeft + 1}–${hiddenLeft + shownStages.length} of ${stages.length}` : '',
       viewing && !inContext ? 'viewing only (context unchanged)' : '',
       summary ? `filter: ${summary}` : '',
@@ -401,7 +400,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const inHeader = useHeaderLabel(label);
 
   if (!scope.data || !label) {
-    return scope.loading ? <Loading label="Loading Board…" /> : <Text color="red">No Board.</Text>;
+    return scope.loading ? <Loading label="Loading Board…" /> : <Text color={theme.danger}>No Board.</Text>;
   }
   const { choices, extra } = scope.data;
   // Without a fixed height (tests), size to the terminal less the shell's header and footer, and the
@@ -417,7 +416,7 @@ export function BoardScreen({ params }: ScreenProps) {
       {!inHeader && (
         <Text wrap="truncate-end">
           <Text bold>{label.title}</Text>
-          <Text dimColor>{` ${label.detail}`}</Text>
+          <Text color={theme.inkFaint}>{` ${label.detail}`}</Text>
         </Text>
       )}
       <PluginFailures failures={[...(list.data?.failures ?? []), ...described.failures]} />
@@ -466,11 +465,12 @@ export function BoardScreen({ params }: ScreenProps) {
         </Box>
       )}
       {mode === 'filter' && (
-        <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
+        <Modal title="Filter Stories" onClose={() => setMode('view')} hints={[{ key: 'esc', description: 'cancel' }]}>
           <PluginFailures failures={extra.failures} note="its filter is unavailable" />
           <Form
             fields={[...filterFields({ labels: choices.labels }, { board: true }), ...extra.fields]}
             initialValues={{ ...extra.values, ...filterInitialValues(filters) }}
+            submitLabel="apply"
             onSubmit={(values) => {
               setFilters(values);
               setMode('view');
@@ -479,7 +479,15 @@ export function BoardScreen({ params }: ScreenProps) {
         </Modal>
       )}
       {mode === 'confirm-delete' && focused && (
-        <Modal size="dialog">
+        <Modal
+          size="dialog"
+          title="Delete Story"
+          hints={[
+            { key: 'y', description: 'delete' },
+            { key: 'esc', description: 'cancel' },
+          ]}
+          onClose={() => setMode('view')}
+        >
           <ConfirmDialog
             message={`Delete ${focused.key} "${focused.name}"?`}
             confirmLabel="Delete"
@@ -490,17 +498,6 @@ export function BoardScreen({ params }: ScreenProps) {
           />
         </Modal>
       )}
-    </Box>
-  );
-}
-
-/** The column indicator shown at the edge when Stages are scrolled out of view on that side. */
-function Gutter({ text }: { text: string }) {
-  return (
-    <Box width={GUTTER_WIDTH} flexShrink={0}>
-      <Text color="cyan" wrap="truncate-end">
-        {text}
-      </Text>
     </Box>
   );
 }

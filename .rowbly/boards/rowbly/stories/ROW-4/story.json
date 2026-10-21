@@ -5,16 +5,12 @@
   "name": "Inputs",
   "description": "Better single line and multi-line ",
   "stage": "done",
-  "rank": "a1",
-  "assignees": [],
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T14:31:05.947Z",
-  "updatedAt": "2026-10-13T15:06:41.913Z",
-  "nextTaskNumber": 1,
-  "tasks": [],
-  "comments": []
+  "updatedAt": "2026-10-21T22:57:35.400Z"
 }

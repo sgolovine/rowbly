@@ -4,6 +4,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -20,7 +21,7 @@ export function AssigneeList({ plugin, ui }: PluginScreenProps<Record<string, un
   useReloadOnReturn(roster.reload);
   useKeyHints([
     { key: 'enter', description: 'open' },
-    { key: 'n', description: 'add assignee' },
+    { key: 'n', description: 'new Assignee' },
   ]);
   useInput(
     (input) => {
@@ -30,7 +31,11 @@ export function AssigneeList({ plugin, ui }: PluginScreenProps<Record<string, un
   );
 
   if (!roster.data)
-    return roster.loading ? <Loading label="Loading assignees…" /> : <Text color="red">Could not load Assignees.</Text>;
+    return roster.loading ? (
+      <Loading label="Loading assignees…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Assignees.</Text>
+    );
   return (
     <Box flexDirection="column">
       <Text bold>Assignees</Text>

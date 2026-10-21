@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { useEffect, useMemo, useState } from 'react';
 import { useIsActive } from '../hooks';
 import { moveDelta } from '../keymap';
+import { theme } from '../theme';
 import { loadMarkdownRenderer, markdownRenderer, plainMarkdownRows } from './markdown';
 
 export interface MarkdownViewProps {
@@ -53,7 +54,7 @@ export function MarkdownView({
     },
     { isActive: isActive && max > 0 },
   );
-  if (!text.trim()) return <Text dimColor>{emptyText}</Text>;
+  if (!text.trim()) return <Text color={theme.inkFaint}>{emptyText}</Text>;
   return (
     <Box flexDirection="column" flexShrink={0}>
       {lines.slice(start, start + rows).map((line, i) => (
@@ -64,7 +65,9 @@ export function MarkdownView({
         </Text>
       ))}
       {max > 0 && (
-        <Text dimColor>{`${start + 1}–${Math.min(lines.length, start + rows)} of ${lines.length} · ↑/↓ scroll`}</Text>
+        <Text
+          color={theme.inkFaint}
+        >{`${start + 1}–${Math.min(lines.length, start + rows)} of ${lines.length} · ↑/↓ scroll`}</Text>
       )}
     </Box>
   );

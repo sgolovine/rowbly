@@ -1,4 +1,5 @@
 import { Box, Text } from 'ink';
+import { theme } from '../../theme';
 import { failureMessage, type PluginFieldFailure } from './pluginFields';
 
 /** Names each Plugin form or filter callback that failed, with `note` on what it means here. */
@@ -8,8 +9,8 @@ export function PluginFailures({ failures, note }: { failures: readonly PluginFi
     <Box flexDirection="column">
       {failures.map((failure) => (
         <Box key={`${failure.plugin}:${failure.stage}`} flexDirection="column">
-          <Text color="yellow">{failureMessage(failure)}</Text>
-          {note && <Text dimColor>{`  ${note}`}</Text>}
+          <Text color={theme.stageBoard}>{failureMessage(failure)}</Text>
+          {note && <Text color={theme.inkFaint}>{`  ${note}`}</Text>}
         </Box>
       ))}
     </Box>

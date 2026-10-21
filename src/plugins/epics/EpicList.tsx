@@ -4,6 +4,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -44,7 +45,7 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
     { isActive: active },
   );
   if (!data.data)
-    return data.loading ? <Loading label="Loading Epics…" /> : <Text color="red">Could not load Epics.</Text>;
+    return data.loading ? <Loading label="Loading Epics…" /> : <Text color={theme.danger}>Could not load Epics.</Text>;
   const { summaries, unavailable } = data.data;
   return (
     <Box flexDirection="column">

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { onOff, type PluginStatus } from '../../../services';
 import { Loading, SelectList } from '../../components';
 import { useAsync, useKeyHints, usePlugins, useServices, useToast } from '../../hooks';
+import { theme } from '../../theme';
 
 /** The Plugins section of the settings, like `rowbly plugins`: `enter` turns the selected Plugin on or off. */
 export function PluginsScreen() {
@@ -14,7 +15,8 @@ export function PluginsScreen() {
   useKeyHints([{ key: 'enter', description: 'turn on/off' }]);
 
   if (!list.data) return list.loading ? <Loading label="Loading Plugins…" /> : null;
-  if (list.data.length === 0) return <Text dimColor>This version of Rowbly has no Built-in Plugins.</Text>;
+  if (list.data.length === 0)
+    return <Text color={theme.inkFaint}>This version of Rowbly has no Built-in Plugins.</Text>;
   const plugins = list.data;
 
   const toggle = async (id: string) => {
@@ -44,8 +46,8 @@ export function PluginsScreen() {
       {selected && (
         <Box flexDirection="column">
           {selected.description && <Text>{selected.description}</Text>}
-          {selected.reason && <Text color="red">{`Failed to load: ${selected.reason}`}</Text>}
-          <Text dimColor>Turning a Plugin off keeps its settings and data.</Text>
+          {selected.reason && <Text color={theme.danger}>{`Failed to load: ${selected.reason}`}</Text>}
+          <Text color={theme.inkFaint}>Turning a Plugin off keeps its settings and data.</Text>
         </Box>
       )}
     </Box>

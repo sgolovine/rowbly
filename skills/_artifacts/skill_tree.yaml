@@ -150,3 +150,6 @@ skills:
           interrupted commits, including which findings need a manual fix."
       }
   ]
+
+# 2026-10-21: TUI design-system source review; command-mode tasks, mappings and decisions unchanged.
+# Evidence and scope rationale: skill_spec.md, “Behavior change — TUI design system”.

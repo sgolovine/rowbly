@@ -1,19 +1,22 @@
 import { Box, Text, useInput } from 'ink';
 import { useContext, useMemo, useState } from 'react';
 import { UsageError } from '../../../core';
-import { Loading } from '../../components';
+import { Loading, ScrollBody } from '../../components';
 import {
   ActiveContext,
   LayoutContext,
   ShellContext,
   useAsync,
+  useEscape,
   useIsActive,
+  useKeyCapture,
   useKeyHints,
   useLayout,
   usePlugins,
   useServices,
 } from '../../hooks';
 import { type KeyHint, moveDelta } from '../../keymap';
+import { theme } from '../../theme';
 import { SECTION_NAV_WIDTH, SectionNav } from './SectionNav';
 import { sectionShell } from './sectionShell';
 import { sectionScreen, settingsGroups } from './sections';
@@ -53,13 +56,21 @@ export function SettingsScreen() {
   const section = sections[selected];
   const Section = section ? sectionScreen(section) : undefined;
 
+  // Only `esc`: the section's own letter keys and `tab` back to the sidebar still need printable keys.
+  useKeyCapture(active && focus === 'section', { text: false, escape: true });
+  // An open form or dialog in the section takes `esc` for itself; only then does `esc` leave the section.
+  useEscape(active && focus === 'section', () => {
+    if (!childShell.holdsEscape()) setFocus('nav');
+  });
   useKeyHints(
     focus === 'nav'
       ? [
           { key: '↑/↓', description: 'section' },
-          { key: 'enter/tab', description: 'focus section' },
+          { key: 'enter/tab', description: 'open section' },
         ]
-      : [...sectionHints, { key: 'tab', description: 'sections' }],
+      : sectionHints.some((hint) => hint.key === 'esc')
+        ? sectionHints
+        : [...sectionHints, { key: 'tab', description: 'sections' }, { key: 'esc', description: 'back to sections' }],
   );
   useInput(
     (input, key) => {
@@ -76,13 +87,15 @@ export function SettingsScreen() {
   );
 
   if (board.data === undefined && board.loading) return <Loading label="Loading settings…" />;
-  const sectionLayout = { width: Math.max(20, layout.width - SECTION_NAV_WIDTH - 2), height: layout.height };
+  const sectionLayout = {
+    width: Math.max(20, layout.width - SECTION_NAV_WIDTH - 2),
+    height: layout.height === undefined ? undefined : Math.max(1, layout.height - 3),
+  };
   return (
     <Box height={layout.height} gap={2}>
       <SectionNav
         groups={groups}
         selected={section?.id ?? ''}
-        focused={focus === 'nav'}
         clickable={active}
         onSelect={(id) => {
           setSelectedId(id);
@@ -90,14 +103,22 @@ export function SettingsScreen() {
         }}
       />
       <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden">
+        <Box backgroundColor={theme.overlayRaised} flexDirection="column" paddingX={1} flexShrink={0} marginBottom={1}>
+          <Text color={theme.ink} bold>
+            {section?.label ?? 'Settings'}
+          </Text>
+          <Text color={theme.inkFaint}>Manage {section?.label ?? 'settings'}.</Text>
+        </Box>
         <ShellContext.Provider value={childShell}>
           <ActiveContext.Provider value={active && focus === 'section'}>
             <LayoutContext.Provider value={sectionLayout}>
-              {Section && section ? (
-                <Section key={section.id} params={section.params ?? {}} />
-              ) : (
-                <Text dimColor>Nothing to show.</Text>
-              )}
+              <ScrollBody height={sectionLayout.height}>
+                {Section && section ? (
+                  <Section key={section.id} params={section.params ?? {}} />
+                ) : (
+                  <Text color={theme.inkFaint}>Nothing to show.</Text>
+                )}
+              </ScrollBody>
             </LayoutContext.Provider>
           </ActiveContext.Provider>
         </ShellContext.Provider>

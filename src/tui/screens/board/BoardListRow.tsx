@@ -2,6 +2,7 @@ import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
 import { StageBadge } from '../../components';
 import { useMouse } from '../../hooks';
+import { theme } from '../../theme';
 import type { ListRow } from './layout';
 
 export interface BoardListRowProps {
@@ -23,7 +24,7 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
   useMouse(ref, { onClick }, active);
   const marker = (
     <Box flexShrink={0}>
-      <Text color={selected && active ? 'cyan' : undefined}>{selected ? '› ' : '  '}</Text>
+      <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
     </Box>
   );
   const line =
@@ -32,7 +33,9 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
         {marker}
         <Text bold wrap="truncate-end">
           {`${row.collapsed ? '▸' : '▾'} ${row.title} `}
-          <Text dimColor>({row.count})</Text>
+          <Text color={theme.inkFaint}>
+            ({row.count}){row.count === 0 && !row.collapsed ? '  No Stories' : ''}
+          </Text>
         </Text>
       </Box>
     ) : (
@@ -40,12 +43,12 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
         {marker}
         <Box flexGrow={1} flexShrink={1} minWidth={row.story.key.length + 1}>
           <Text wrap="truncate-end" bold={selected}>
-            <Text color="cyan">{row.story.key}</Text> {row.story.name}
+            <Text color={theme.accent}>{row.story.key}</Text> {row.story.name}
           </Text>
         </Box>
         {badges.length > 0 && (
           <Box flexShrink={1} minWidth={0} maxWidth={Math.floor(width * 0.4)} marginLeft={2}>
-            <Text dimColor wrap="truncate-end">
+            <Text color={theme.inkFaint} wrap="truncate-end">
               {badges.join(' · ')}
             </Text>
           </Box>
@@ -56,9 +59,8 @@ export function BoardListRow({ row, badges, width, selected, active, onClick }: 
       </Box>
     );
   return (
-    <Box ref={ref} width={width} flexDirection="column">
+    <Box ref={ref} width={width} flexDirection="column" backgroundColor={selected ? theme.selection : undefined}>
       {line}
-      <Text dimColor>{'─'.repeat(Math.max(0, width))}</Text>
     </Box>
   );
 }

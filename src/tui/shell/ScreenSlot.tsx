@@ -24,7 +24,7 @@ export function ScreenSlot({
   return (
     <ScreenDepthContext.Provider value={depth}>
       <ActiveContext.Provider value={active}>
-        <Box flexDirection="column" display={top ? 'flex' : 'none'}>
+        <Box flexDirection="column" flexGrow={1} flexShrink={1} display={top ? 'flex' : 'none'}>
           <ScreenBoundary onError={(err) => toast.error(err)}>
             {Screen ? (
               <Screen params={route.params} />

@@ -14,6 +14,7 @@ import {
   TextInput,
 } from '../../components';
 import { useIsActive, useKeyHints, useToast } from '../../hooks';
+import { theme } from '../../theme';
 import type { ScreenRegistry } from '../types';
 
 const SECTIONS = ['SelectList', 'TextInput', 'TextArea', 'Form', 'ConfirmDialog'] as const;
@@ -133,7 +134,7 @@ function DemoScreen() {
 function Panel({ title, focused = false, children }: { title: string; focused?: boolean; children: ReactNode }) {
   return (
     <Box flexDirection="column">
-      <Text bold color={focused ? 'cyan' : undefined}>
+      <Text bold color={focused ? theme.accent : undefined}>
         {focused ? '▸ ' : '  '}
         {title}
       </Text>

@@ -45,12 +45,20 @@ export const CORE_KEYS: readonly string[] = [
   ...'nedmTBcAfvosra',
 ];
 
-/** The keys of a `Form`, for screens that show one. */
-export const FORM_KEYS: readonly KeyHint[] = [
-  { key: 'tab/enter', description: 'next field' },
-  { key: 'shift+tab', description: 'previous field' },
-  { key: 'ctrl+enter/ctrl+s', description: 'save' },
-];
+/**
+ * The keys of a `Form`, for screens that show one: saving first, so a narrow hint strip keeps it.
+ * `ctrl+enter` saves too, where the terminal tells it from `enter` (the README says so).
+ */
+export const FORM_KEYS: readonly KeyHint[] = formKeys('save');
+
+/** `FORM_KEYS` with `ctrl+s` described as `submit`, for a Form that does not save (e.g. `apply` for a filter). */
+export function formKeys(submit: string): readonly KeyHint[] {
+  return [
+    { key: 'ctrl+s', description: submit },
+    { key: 'tab/enter', description: 'next field' },
+    { key: 'shift+tab', description: 'previous field' },
+  ];
+}
 
 /** A place the home menu can open. */
 export interface Destination {

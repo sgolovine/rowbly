@@ -3,9 +3,9 @@ import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story 
 import type { CustomFieldValuesInput, PluginInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
-import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
-import { FORM_KEYS } from '../../keymap';
+import { useAsync, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
 import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
@@ -27,9 +27,9 @@ export function StoryFormScreen({ params }: ScreenProps) {
     const extra = await storyFormFields(plugins, services, { boardId, story });
     return { story, boardId, choices: await storyChoices(ctx, boardId), extra };
   }, [services, ctx, key, params.boardId, plugins]);
-  useKeyHints(FORM_KEYS);
 
-  if (!data.data) return data.loading ? <Loading label="Loading…" /> : <Text color="red">Cannot open the form.</Text>;
+  if (!data.data)
+    return data.loading ? <Loading label="Loading…" /> : <Text color={theme.danger}>Cannot open the form.</Text>;
   const { story, boardId, choices, extra } = data.data;
 
   // A Plugin's invalid input shows on that Plugin's fields (DX-07).
@@ -71,7 +71,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         onSubmit={submit}
       />
       <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
-      {choices.labels.length > 0 && <Text dimColor>Labels in use: {choices.labels.join(', ')}</Text>}
+      {choices.labels.length > 0 && <Text color={theme.inkFaint}>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>
   );
 }
@@ -80,7 +80,14 @@ function formFields(choices: StoryChoices): FormField[] {
   return [
     { name: 'name', label: 'Name', kind: 'text', required: true },
     { name: 'description', label: 'Description', kind: 'multiline' },
-    { name: 'stage', label: 'Stage', kind: 'select', required: true, options: choices.stages.map((s) => s.key) },
+    {
+      name: 'stage',
+      label: 'Stage',
+      kind: 'select',
+      required: true,
+      options: choices.stages.map((s) => s.key),
+      optionLabels: Object.fromEntries(choices.stages.map((s) => [s.key, s.name])),
+    },
     { name: 'priority', label: 'Priority', kind: 'select', options: [NONE, ...PrioritySchema.options] },
     { name: 'labels', label: 'Labels (a,b)', kind: 'text' },
     { name: 'dueDate', label: 'Due', kind: 'date' },

@@ -1,5 +1,18 @@
+import chalk from 'chalk';
 import type { MarkedExtension } from 'marked';
+import { theme } from '../theme';
 import { markdownToPlain } from './DetailView';
+
+/**
+ * Preserve semantic ink even when marked-terminal emits ANSI styles. Through chalk, as Ink colours
+ * its own text, so the colour level is the one chalk detects for the terminal (`supports-color`:
+ * `FORCE_COLOR`, `--color`/`--no-color`, a TTY and `TERM`).
+ */
+function tint(color: string): (text: string) => string {
+  return (text) => chalk.hex(color)(text);
+}
+
+const strong = (color: string) => (text: string) => chalk.bold(tint(color)(text));
 
 /** Lays out markdown for the terminal: the rows it takes at `width`. */
 export type MarkdownRenderer = (text: string, width: number) => string[];
@@ -22,14 +35,33 @@ export function loadMarkdownRenderer(): Promise<MarkdownRenderer> {
         let marked = renderers.get(width);
         if (!marked) {
           // `@types/marked-terminal` types the extension as a renderer class; at run time it is an extension.
-          marked = new Marked(markedTerminal({ width, reflowText: true, tab: 2 }) as unknown as MarkedExtension, {
-            renderer: {
-              // `marked-terminal` prints a tight list item's text raw; render its inline markdown instead.
-              text(token) {
-                return 'tokens' in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
+          marked = new Marked(
+            markedTerminal({
+              width,
+              reflowText: true,
+              tab: 2,
+              heading: strong(theme.ink),
+              firstHeading: strong(theme.ink),
+              code: tint(theme.inkMuted),
+              codespan: tint(theme.inkMuted),
+              blockquote: tint(theme.inkMuted),
+              html: tint(theme.inkMuted),
+              link: tint(theme.accent),
+              href: tint(theme.inkMuted),
+              del: tint(theme.inkMuted),
+            }) as unknown as MarkedExtension,
+            {
+              renderer: {
+                // `marked-terminal` prints a tight list item's text raw; render its inline markdown instead.
+                code(token) {
+                  return `\n${tint(theme.inkMuted)(token.text)}\n`;
+                },
+                text(token) {
+                  return 'tokens' in token && token.tokens ? this.parser.parseInline(token.tokens) : false;
+                },
               },
             },
-          });
+          );
           renderers.set(width, marked);
         }
         return marked;

@@ -3,9 +3,12 @@ import {
   Box,
   ConfirmDialog,
   Loading,
+  Modal,
   moveDelta,
+  SelectionRow,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -51,9 +54,7 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
               ]
             : []),
         ]
-      : isActive && mode === 'move'
-        ? [{ key: 'esc', description: 'cancel' }]
-        : [],
+      : [],
   );
   useKeyCapture(isActive && mode === 'move', { escape: true });
   useInput((_input, key) => key.escape && setMode('view'), { isActive: isActive && mode === 'move' });
@@ -73,10 +74,10 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
   );
 
   if (data.data?.tasks === null) {
-    return <Text color="red">Tasks unavailable: the stored Tasks are invalid; run `rowbly doctor`.</Text>;
+    return <Text color={theme.danger}>Tasks unavailable: the stored Tasks are invalid; run `rowbly doctor`.</Text>;
   }
   if (!data.data) {
-    return data.loading ? <Loading label="Loading Tasks…" /> : <Text color="red">Could not load Tasks.</Text>;
+    return data.loading ? <Loading label="Loading Tasks…" /> : <Text color={theme.danger}>Could not load Tasks.</Text>;
   }
   const { stages } = data.data;
 
@@ -97,44 +98,51 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
   return (
     <Box flexDirection="column" gap={1}>
       {tasks.length === 0 ? (
-        <Text dimColor>No Tasks yet. Press n to create one.</Text>
+        <Text color={theme.inkFaint}>No Tasks yet. Press n to create one.</Text>
       ) : (
         <Box flexDirection="column">
           {tasks.map((t, i) => (
-            <Box key={t.id}>
-              <Text color={i === cursor && viewing ? 'cyan' : undefined}>{i === cursor ? '› ' : '  '}</Text>
+            <SelectionRow key={t.id} selected={i === cursor} active={viewing} onClick={() => setSelected(i)}>
               <Text>
-                <Text color="cyan">{t.id}</Text> {t.name} <TaskStage stages={stages} stage={t.stage} />
+                <Text color={theme.accent}>{t.id}</Text> {t.name} <TaskStage stages={stages} stage={t.stage} />
               </Text>
-            </Box>
+            </SelectionRow>
           ))}
         </Box>
       )}
       {mode === 'move' && task && (
-        <Box flexDirection="column">
-          <Text bold>Move {task.id} to</Text>
+        <Modal
+          title={`${task.id} › Move Stage`}
+          hints={[
+            { key: 'enter', description: 'move' },
+            { key: 'esc', description: 'back' },
+          ]}
+          onClose={() => setMode('view')}
+        >
           <SelectList
             items={stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === task.stage ? `${s.key} (current)` : s.key,
+              description: s.key === task.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) =>
-              void run(() => moveTask(plugin, task.id, item.value), `Moved ${task.id} to ${item.value}`)
+              void run(() => moveTask(plugin, task.id, item.value), `Moved ${task.id} to ${item.label}`)
             }
           />
-        </Box>
+        </Modal>
       )}
       {mode === 'confirm-delete' && task && (
-        <ConfirmDialog
-          message={`Delete ${task.id} "${task.name}"?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          isActive={isActive && !busy}
-          onConfirm={() => void run(() => deleteTask(plugin, task.id), `Deleted ${task.id}`)}
-          onCancel={() => setMode('view')}
-        />
+        <Modal title={`${task.id} › Delete`} onClose={() => setMode('view')}>
+          <ConfirmDialog
+            message={`Delete ${task.id} "${task.name}"?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            isActive={isActive && !busy}
+            onConfirm={() => void run(() => deleteTask(plugin, task.id), `Deleted ${task.id}`)}
+            onCancel={() => setMode('view')}
+          />
+        </Modal>
       )}
     </Box>
   );

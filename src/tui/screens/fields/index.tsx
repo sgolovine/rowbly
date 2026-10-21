@@ -24,6 +24,7 @@ import {
   useServices,
   useToast,
 } from '../../hooks';
+import { theme } from '../../theme';
 import { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from '../stages';
 import type { ScreenProps, ScreenRegistry } from '../types';
 
@@ -41,7 +42,7 @@ function FieldsScreen({ params }: ScreenProps) {
     return scope.loading ? (
       <Loading label="Loading Custom Fields…" />
     ) : (
-      <Text color="red">No Custom Fields to show.</Text>
+      <Text color={theme.danger}>No Custom Fields to show.</Text>
     );
   }
   return <FieldsEditor scope={scope.data} />;
@@ -73,7 +74,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'n', description: 'add' },
+          { key: 'n', description: 'new Custom Field' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'remove' },
           { key: 'l', description: 'switch level' },
@@ -99,15 +100,14 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
       {list.loading && !list.data ? (
         <Loading label="Loading Custom Fields…" />
       ) : fields.length === 0 ? (
-        <Text dimColor>No Custom Fields. Press n to add one.</Text>
+        <Text color={theme.inkFaint}>No Custom Fields. Press n to add one.</Text>
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && listing}
           rows={fields.map((f) => (
             <Text key={f.key}>
               {f.name}
-              {f.required ? '*' : ''} <Text dimColor>{`${f.key} · ${describeField(f)}`}</Text>
+              {f.required ? '*' : ''} <Text color={theme.inkFaint}>{`${f.key} · ${describeField(f)}`}</Text>
             </Text>
           ))}
         />
@@ -138,7 +138,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
       {mode.kind === 'edit' && (
         <Box flexDirection="column">
           <Text bold>
-            Edit {mode.field.key} <Text dimColor>({mode.field.type})</Text>
+            Edit {mode.field.key} <Text color={theme.inkFaint}>({mode.field.type})</Text>
           </Text>
           <Form
             fields={formFields(mode.field.type)}

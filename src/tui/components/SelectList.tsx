@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink';
 import { useEffect, useState } from 'react';
 import { useIsActive, useKeyCapture } from '../hooks';
 import { moveDelta } from '../keymap';
+import { theme } from '../theme';
 import { SelectListRow } from './SelectListRow';
 import { TextInput } from './TextInput';
 
@@ -116,11 +117,13 @@ export function SelectList<T>({
     <Box flexDirection="column">
       {(filtering || filter) && (
         <Box>
-          <Text color="cyan">/</Text>
+          <Text color={theme.accent}>/</Text>
           <TextInput value={filter} onChange={setFilter} focus={active && filtering} />
         </Box>
       )}
-      {visible.length === 0 && <Text dimColor>{items.length === 0 ? emptyText : `No matches for "${filter}".`}</Text>}
+      {visible.length === 0 && (
+        <Text color={theme.inkFaint}>{items.length === 0 ? emptyText : `No matches for "${filter}".`}</Text>
+      )}
       {rows.map((item, i) => {
         const highlighted = start + i === index;
         const checkbox = multi ? (selected.includes(item.value) ? '[x] ' : '[ ] ') : '';
@@ -136,11 +139,11 @@ export function SelectList<T>({
           <SelectListRow key={String(item.value)} highlighted={highlighted} active={active} onClick={pick}>
             {checkbox}
             {item.label}
-            {item.description && <Text dimColor> {item.description}</Text>}
+            {item.description && <Text color={theme.inkFaint}> {item.description}</Text>}
           </SelectListRow>
         );
       })}
-      {visible.length > rows.length && <Text dimColor>{`  ${index + 1}/${visible.length}`}</Text>}
+      {visible.length > rows.length && <Text color={theme.inkFaint}>{`  ${index + 1}/${visible.length}`}</Text>}
     </Box>
   );
 }

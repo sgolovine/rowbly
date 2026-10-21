@@ -3,8 +3,11 @@ import {
   Box,
   ConfirmDialog,
   Loading,
+  Modal,
   moveDelta,
+  SelectionRow,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -72,26 +75,29 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
   };
 
   if (data.data === null) {
-    return <Text color="red">Comments unavailable: stored Thread is invalid; run `rowbly doctor`.</Text>;
+    return <Text color={theme.danger}>Comments unavailable: stored Thread is invalid; run `rowbly doctor`.</Text>;
   }
   if (!data.data) {
-    return data.loading ? <Loading label="Loading Comments…" /> : <Text color="red">Could not load Comments.</Text>;
+    return data.loading ? (
+      <Loading label="Loading Comments…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Comments.</Text>
+    );
   }
   const now = plugin.now();
 
   return (
     <Box flexDirection="column" gap={1}>
       {comments.length === 0 ? (
-        <Text dimColor>No Comments yet. Press n to add one.</Text>
+        <Text color={theme.inkFaint}>No Comments yet. Press n to add one.</Text>
       ) : (
         <Box flexDirection="column">
           {comments.map((c, i) => (
-            <Box key={c.id}>
-              <Text color={i === cursor && viewing ? 'cyan' : undefined}>{i === cursor ? '› ' : '  '}</Text>
+            <SelectionRow key={c.id} selected={i === cursor} active={viewing} onClick={() => setSelected(i)}>
               <Box flexDirection="column">
                 <Text>
                   <Text bold>{c.author ?? 'unknown'}</Text>
-                  <Text dimColor>
+                  <Text color={theme.inkFaint}>
                     {' '}
                     · {relativeTime(c.createdAt, now)}
                     {c.updatedAt !== c.createdAt ? ' (edited)' : ''}
@@ -99,20 +105,22 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
                 </Text>
                 <Text>{c.body}</Text>
               </Box>
-            </Box>
+            </SelectionRow>
           ))}
         </Box>
       )}
       {confirming && comment && (
-        <ConfirmDialog
-          message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          isActive={isActive && !busy}
-          onConfirm={() => void remove(comment.id)}
-          onCancel={() => setConfirming(false)}
-        />
+        <Modal title={`${target} › Delete Comment`} onClose={() => setConfirming(false)}>
+          <ConfirmDialog
+            message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            isActive={isActive && !busy}
+            onConfirm={() => void remove(comment.id)}
+            onCancel={() => setConfirming(false)}
+          />
+        </Modal>
       )}
     </Box>
   );

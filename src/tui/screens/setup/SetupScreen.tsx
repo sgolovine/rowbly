@@ -7,6 +7,7 @@ import { assertInitTarget, initTarget, newContext } from '../../../services/setu
 import { Form, type FormValues, SelectList } from '../../components';
 import { useActivate, useKeyHints, useToast } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 /**
@@ -22,7 +23,8 @@ export function SetupScreen({ params }: ScreenProps) {
   const [root, setRoot] = useState<DataRoot | null>(() =>
     params.global === true ? initTarget({ cwd, home, global: true }) : null,
   );
-  useKeyHints([{ key: 'enter', description: root ? 'create' : 'choose' }]);
+  // The form shows its own keys (`ctrl+s save`, `enter` next field), so only the picker adds one.
+  useKeyHints(root ? [] : [{ key: 'enter', description: 'choose' }]);
 
   if (!root) {
     const local = initTarget({ cwd, home, global: false });
@@ -65,7 +67,7 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
   return (
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
-      <Text dimColor>Leave the Board id empty to skip the first Board.</Text>
+      <Text color={theme.inkFaint}>Leave the Board id empty to skip the first Board.</Text>
       <Form
         fields={[
           { name: 'boardId', label: 'Board id', kind: 'text' },

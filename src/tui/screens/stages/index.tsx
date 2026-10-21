@@ -16,6 +16,7 @@ import {
   useServices,
   useToast,
 } from '../../hooks';
+import { theme } from '../../theme';
 import type { ScreenProps, ScreenRegistry } from '../types';
 import { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from './shared';
 
@@ -33,7 +34,7 @@ type Mode =
 function StagesScreen({ params }: ScreenProps) {
   const scope = useConfigScope(params);
   if (!scope.data)
-    return scope.loading ? <Loading label="Loading Stages…" /> : <Text color="red">No Stages to show.</Text>;
+    return scope.loading ? <Loading label="Loading Stages…" /> : <Text color={theme.danger}>No Stages to show.</Text>;
   return <StagesEditor scope={scope.data} />;
 }
 
@@ -62,7 +63,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   useKeyHints(
     listing
       ? [
-          { key: 'n', description: 'add' },
+          { key: 'n', description: 'new Stage' },
           { key: 'e', description: 'edit' },
           { key: 'shift+↑/↓', description: 'move up/down' },
           { key: 'T/B', description: 'move first/last' },
@@ -132,12 +133,13 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && listing}
           rows={stages.map((stage, i) => (
             <Text key={stage.key}>
               {`${i + 1}. `}
               <StageBadge stage={stage} />{' '}
-              <Text dimColor>{`${stage.key} · ${stage.category}${isFixedStage(stage.key) ? ' · fixed' : ''}`}</Text>
+              <Text
+                color={theme.inkFaint}
+              >{`${stage.key} · ${stage.category}${isFixedStage(stage.key) ? ' · fixed' : ''}`}</Text>
             </Text>
           ))}
         />

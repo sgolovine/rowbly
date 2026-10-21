@@ -78,7 +78,7 @@ tool, hand-drawn screens or `ink-testing-library` frames instead, and do not com
 ## TUI code organization (`src/tui/`)
 
 - **Design system.** Colours, borders, spacing, key hints and modals follow
-  `.agents/skills/rowbly-tui-design/SKILL.md` (planned: the TUI is not moved over yet). New and
+  `.agents/skills/rowbly-tui-design/SKILL.md` (implemented in `src/tui/theme.ts` and shared components). New and
   changed TUI code uses its tokens and component rules.
 - **One component per file.** Each React component lives in its own `PascalCase.tsx` file named after
   the component. Don't add new components to an existing file, and split a file when it starts holding

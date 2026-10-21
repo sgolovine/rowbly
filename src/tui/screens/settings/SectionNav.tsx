@@ -1,21 +1,20 @@
 import { Box, Text } from 'ink';
+import { theme } from '../../theme';
 import { SectionNavItem } from './SectionNavItem';
 import type { SettingsGroup } from './sections';
 
 /** Width of the settings sidebar, including its right border. */
-export const SECTION_NAV_WIDTH = 20;
+export const SECTION_NAV_WIDTH = 22;
 
 export function SectionNav({
   groups,
   selected,
-  focused,
   clickable,
   onSelect,
 }: {
   groups: readonly SettingsGroup[];
   /** The `id` of the selected section. */
   selected: string;
-  focused: boolean;
   clickable: boolean;
   onSelect(id: string): void;
 }) {
@@ -29,16 +28,15 @@ export function SectionNav({
       borderTop={false}
       borderBottom={false}
       borderLeft={false}
-      borderColor={focused ? 'cyan' : undefined}
-      borderDimColor={!focused}
+      borderColor={theme.border}
     >
       {groups.map((group) => (
         <Box key={group.title} flexDirection="column">
-          <Text bold dimColor wrap="truncate-end">
+          <Text color={theme.inkFaint} wrap="truncate-end">
             {group.title}
           </Text>
           {group.sections.length === 0 && group.empty && (
-            <Text dimColor wrap="truncate-end">
+            <Text color={theme.inkFaint} wrap="truncate-end">
               {`  ${group.empty}`}
             </Text>
           )}
@@ -47,7 +45,6 @@ export function SectionNav({
               key={section.id}
               label={section.label}
               selected={section.id === selected}
-              focused={focused}
               clickable={clickable}
               onClick={() => onSelect(section.id)}
             />

@@ -6,6 +6,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useFullScreenEditor,
   useInput,
@@ -97,7 +98,7 @@ export function SpecTab({ story, active, plugin, ui }: PluginStoryTabProps<Recor
     }
   };
   // A reload, e.g. on return from the Spec form, keeps the list on screen, so its keys keep working.
-  if (!data) return documents.loading ? <Loading /> : <Text color="red">Could not load Specs.</Text>;
+  if (!data) return documents.loading ? <Loading /> : <Text color={theme.danger}>Could not load Specs.</Text>;
   // The list stays under the confirmation, so its highlight is kept when the person cancels.
   return (
     <Box flexDirection="column" gap={1}>

@@ -2,18 +2,15 @@
   "version": 1,
   "key": "ROW-7",
   "boardId": "rowbly",
-  "name": "Make story ccomments a plugin",
+  "name": "Make story comments a plugin",
   "description": "",
   "stage": "done",
-  "rank": "a4",
-  "assignees": [],
+  "rank": "a8",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:56:05.303Z",
-  "updatedAt": "2026-10-14T00:51:39.679Z",
-  "nextTaskNumber": 1,
-  "tasks": []
+  "updatedAt": "2026-10-21T22:34:09.572Z"
 }

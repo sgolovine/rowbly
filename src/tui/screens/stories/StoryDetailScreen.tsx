@@ -6,18 +6,24 @@ import {
   type DetailRow,
   DetailView,
   Loading,
+  Modal,
   PluginSlot,
+  ScrollBody,
   SelectList,
+  StageBadge,
   StoryStage,
   Tabs,
+  useCovered,
 } from '../../components';
 import {
+  loadStoryBadges,
   useActionFocus,
   useAsync,
   useEscape,
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useLayout,
   usePlugins,
   useReloadOnReturn,
   useRowblyContext,
@@ -25,6 +31,7 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
+import { formatDate, relativeDate, theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 const TABS = ['Details'] as const;
@@ -40,6 +47,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
+  // A task open over the Story, its own or a tab's, takes the keys; the Story takes none until it closes.
+  const covered = useCovered();
+  const layout = useLayout();
   const { plugins } = usePlugins();
   const key = String(params.key ?? '');
   const [tab, setTab] = useState(0);
@@ -48,8 +58,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     const story = await services.stories.get(key);
     const config = await services.config.effective(story.boardId);
     const extraRows = ctx ? await pluginStoryRows(ctx, services, story) : [];
-    return { story, config, extraRows };
-  }, [services, ctx, key]);
+    const badges = await loadStoryBadges(plugins, services);
+    return { story, config, extraRows, badges: badges(story) };
+  }, [services, ctx, key, plugins]);
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story });
   const viewing = mode === 'view';
@@ -63,7 +74,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   useEscape(active && mode === 'move', () => setMode('view'));
   useKeyHints(
     !viewing
-      ? [{ key: 'esc', description: 'cancel' }]
+      ? []
       : tab === 0
         ? [
             { key: 'tab/←/→', description: 'switch tab' },
@@ -86,16 +97,17 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       else if (input === 'm') setMode('move');
       else if (input === 'd') setMode('confirm-delete');
     },
-    { isActive: active && viewing },
+    { isActive: active && viewing && !covered },
   );
 
-  if (!data.data) return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color="red">No Story.</Text>;
-  const { story, config, extraRows } = data.data;
+  if (!data.data)
+    return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color={theme.danger}>No Story.</Text>;
+  const { story, config, extraRows, badges } = data.data;
 
   const move = async (stage: string) => {
     try {
       await services.stories.move(story.key, stage);
-      toast.push('info', `Moved ${story.key} to ${stage}`);
+      toast.push('info', `Moved ${story.key} to ${config.stages.find((s) => s.key === stage)?.name ?? stage}`);
       data.reload();
     } catch (err) {
       toast.error(err);
@@ -114,7 +126,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     }
   };
 
-  const none = <Text dimColor>—</Text>;
+  const none = <Text color={theme.inkFaint}>—</Text>;
   const rows: DetailRow[] = [
     { label: 'Stage', value: <StoryStage stages={config.stages} story={story} /> },
     { label: 'Priority', value: story.priority ?? none },
@@ -125,52 +137,81 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       label: config.customFields.find((f) => f.key === field)?.name ?? field,
       value: Array.isArray(value) ? value.join(', ') : String(value),
     })),
-    { label: 'Created', value: `${story.createdAt}${story.createdBy ? ` by ${story.createdBy}` : ''}` },
-    { label: 'Updated', value: story.updatedAt },
+    { label: 'Created', value: `${formatDate(story.createdAt)}${story.createdBy ? ` by ${story.createdBy}` : ''}` },
+    { label: 'Updated', value: formatDate(story.updatedAt) },
   ];
 
   return (
-    <Box flexDirection="column" gap={1}>
-      <Text>
-        <Text bold color="cyan">
-          {story.key}
-        </Text>{' '}
-        <Text bold>{story.name}</Text>
-      </Text>
-      <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />
-      {tab === 0 && <DetailView rows={rows} body={story.description} />}
-      {pluginTabs.map(
-        ({ id, plugin, component: PluginTab }, i) =>
-          tab === TABS.length + i && (
-            <PluginSlot
-              key={id}
-              pluginId={plugin}
-              render={(context, ui) => <PluginTab story={story} active={active && viewing} plugin={context} ui={ui} />}
-            />
-          ),
-      )}
+    <Box flexDirection="column" flexGrow={1} height={layout.height}>
+      <Box backgroundColor={theme.overlayRaised} flexDirection="column" flexShrink={0} paddingX={1} marginBottom={1}>
+        <Text wrap="truncate-end">
+          <Text color={theme.accent}>{story.key}</Text>{' '}
+          <Text bold color={theme.ink}>
+            {story.name}
+          </Text>
+        </Text>
+        <Text wrap="truncate-end">
+          <StageBadge
+            stage={
+              config.stages.find((stage) => stage.key === story.stage) ?? { name: story.stage, category: 'backlog' }
+            }
+          />
+          {story.priority && <Text color={theme.inkMuted}> · {story.priority}</Text>}
+          {badges.length > 0 && <Text color={theme.inkMuted}> · {badges.join(' · ')}</Text>}
+          <Text color={theme.inkFaint}> · updated {relativeDate(story.updatedAt, ctx?.now())}</Text>
+        </Text>
+        <Box marginTop={1}>
+          <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing && !covered} />
+        </Box>
+      </Box>
+      <ScrollBody
+        active={active && viewing && !covered}
+        height={layout.height === undefined ? undefined : Math.max(1, layout.height - 5)}
+      >
+        {tab === 0 && <DetailView rows={rows} body={story.description} />}
+        {pluginTabs.map(
+          ({ id, plugin, component: PluginTab }, i) =>
+            tab === TABS.length + i && (
+              <PluginSlot
+                key={id}
+                pluginId={plugin}
+                render={(context, ui) => (
+                  <PluginTab story={story} active={active && viewing} plugin={context} ui={ui} />
+                )}
+              />
+            ),
+        )}
+      </ScrollBody>
       {mode === 'move' && (
-        <Box flexDirection="column">
-          <Text bold>Move {story.key} to</Text>
+        <Modal
+          title={`${story.key} › Move Stage`}
+          hints={[
+            { key: 'enter', description: 'move' },
+            { key: 'esc', description: 'back' },
+          ]}
+          onClose={() => setMode('view')}
+        >
           <SelectList
             items={config.stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === story.stage ? `${s.key} (current)` : s.key,
+              description: s.key === story.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) => void move(item.value)}
           />
-        </Box>
+        </Modal>
       )}
       {mode === 'confirm-delete' && (
-        <ConfirmDialog
-          message={`Delete ${story.key} "${story.name}"?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => void remove()}
-          onCancel={() => setMode('view')}
-        />
+        <Modal title={`${story.key} › Delete`} onClose={() => setMode('view')}>
+          <ConfirmDialog
+            message={`Delete ${story.key} "${story.name}"?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            onConfirm={() => void remove()}
+            onCancel={() => setMode('view')}
+          />
+        </Modal>
       )}
     </Box>
   );

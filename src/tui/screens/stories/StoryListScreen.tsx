@@ -18,6 +18,7 @@ import {
   useServices,
 } from '../../hooks';
 import { useRouter } from '../../router';
+import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { describeFilters, filterFields, filterInitialValues, toFilter } from './filter';
 import { PluginFailures } from './PluginFailures';
@@ -79,7 +80,7 @@ export function StoryListScreen({ params }: ScreenProps) {
       ? [{ key: 'esc', description: 'cancel' }]
       : [
           { key: 'enter', description: 'open' },
-          { key: 'n', description: 'new' },
+          { key: 'n', description: 'new Story' },
           { key: '/', description: 'filter' },
           { key: 'c', description: 'clear filter' },
           { key: 'A', description: allBoards ? 'this Board only' : 'all Boards' },
@@ -101,7 +102,8 @@ export function StoryListScreen({ params }: ScreenProps) {
     { isActive: active && !filtering },
   );
 
-  if (!scope.data) return scope.loading ? <Loading label="Loading Stories…" /> : <Text color="red">No Board.</Text>;
+  if (!scope.data)
+    return scope.loading ? <Loading label="Loading Stories…" /> : <Text color={theme.danger}>No Board.</Text>;
   const { boardId, choices, extra } = scope.data;
   const boards = allBoards ? everyBoard.data : null;
   const stagesOf = new Map<string, readonly Stage[]>(
@@ -114,7 +116,7 @@ export function StoryListScreen({ params }: ScreenProps) {
 
   return (
     <Box flexDirection="column" gap={1}>
-      <Text dimColor>
+      <Text color={theme.inkFaint}>
         {allBoards ? 'All Boards' : `Board ${boardId}`}
         {summary ? ` · filters: ${summary}` : ''}
       </Text>
@@ -122,22 +124,21 @@ export function StoryListScreen({ params }: ScreenProps) {
       {!list.data || (allBoards && !boards) ? (
         <Loading label="Loading Stories…" />
       ) : stories.length === 0 ? (
-        <Text dimColor>{summary ? 'No Stories match.' : 'No Stories yet. Press n to create one.'}</Text>
+        <Text color={theme.inkFaint}>{summary ? 'No Stories match.' : 'No Stories yet. Press n to create one.'}</Text>
       ) : (
         <CursorRows
           cursor={cursor}
-          active={active && !filtering}
           rows={stories.map((s) => {
             const shown = list.data?.badges(s) ?? [];
             return (
               <Text key={s.key}>
-                {allBoards ? <Text dimColor>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}
-                <Text color="cyan">{s.key}</Text> {s.name}{' '}
+                {allBoards ? <Text color={theme.inkFaint}>{`${s.boardId.padEnd(boardWidth)}  `}</Text> : null}
+                <Text color={theme.accent}>{s.key}</Text> {s.name}{' '}
                 <StoryStage stages={stagesOf.get(s.boardId) ?? []} story={s} />
-                {s.priority ? <Text color="magenta"> {s.priority}</Text> : null}
-                {shown.length > 0 ? <Text dimColor> {shown.join(' ')}</Text> : null}
-                {s.labels.length > 0 ? <Text dimColor> #{s.labels.join(' #')}</Text> : null}
-                {s.dueDate ? <Text dimColor> due {s.dueDate}</Text> : null}
+                {s.priority ? <Text color={theme.epic}> {s.priority}</Text> : null}
+                {shown.length > 0 ? <Text color={theme.inkFaint}> {shown.join(' ')}</Text> : null}
+                {s.labels.length > 0 ? <Text color={theme.inkFaint}> #{s.labels.join(' #')}</Text> : null}
+                {s.dueDate ? <Text color={theme.inkFaint}> due {s.dueDate}</Text> : null}
               </Text>
             );
           })}

@@ -1,6 +1,7 @@
 import { Text } from 'ink';
 import { Component, type ReactNode } from 'react';
 import { RowblyError } from '../../core';
+import { theme } from '../theme';
 
 interface BoundaryProps {
   onError(err: RowblyError): void;
@@ -23,6 +24,6 @@ export class ScreenBoundary extends Component<BoundaryProps, { error: unknown }>
     const { error } = this.state;
     if (error === undefined) return this.props.children;
     if (!(error instanceof RowblyError)) throw error;
-    return <Text color="red">This screen could not be shown: {error.message}. Press esc to go back.</Text>;
+    return <Text color={theme.danger}>This screen could not be shown: {error.message}. Press esc to go back.</Text>;
   }
 }

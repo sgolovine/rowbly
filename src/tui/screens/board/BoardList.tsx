@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import type { Stage } from '../../../schemas';
 import type { StoryBadges } from '../../hooks';
+import { theme } from '../../theme';
 import { BoardListRow } from './BoardListRow';
 import type { ListRow } from './layout';
 import { useCardBadges } from './useCardBadges';
@@ -21,14 +22,14 @@ export interface BoardListProps {
   onClick(index: number): void;
 }
 
-/** The list view: the Backlog, Board and Done sections, scrolled to `first`. Story lines show the card's badges. */
+/** The list view: one section per Stage, scrolled to `first`. Story lines show the card's badges. */
 export function BoardList({ rows, stages, storyBadges, width, first, size, cursor, active, onClick }: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;
   const badgesOf = useCardBadges();
   return (
     <Box flexDirection="column" width={width}>
-      <Text dimColor>{first > 0 ? `↑ ${first} more` : ' '}</Text>
+      <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
       {shown.map((row, i) => (
         <BoardListRow
           key={row.kind === 'section' ? `section:${row.category}` : row.story.key}
@@ -40,7 +41,7 @@ export function BoardList({ rows, stages, storyBadges, width, first, size, curso
           onClick={() => onClick(first + i)}
         />
       ))}
-      {below > 0 && <Text dimColor>↓ {below} more</Text>}
+      {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}
     </Box>
   );
 }

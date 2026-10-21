@@ -1,13 +1,14 @@
 import { Box, type BoxProps, Text } from 'ink';
 import type { ReactNode } from 'react';
+import { theme } from '../theme';
 
 export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' | 'borderColor' | 'borderDimColor'> {
   /** Set into the top edge of the border, lazygit style: `╭─Title────╮`. */
   title?: string;
   /** Set into the right of the top edge, after the rule, e.g. a close button. */
   aside?: ReactNode;
-  /** Border and title colour; a panel without one has a dim border. */
-  color?: string;
+  /** Whether the panel owns focus; all other frames stay quiet. */
+  focused?: boolean;
   children?: ReactNode;
 }
 
@@ -15,31 +16,35 @@ export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' |
  * A box framed by a rounded border with its title in the top edge. Ink draws no titles, so the top
  * edge is a row of its own and the box below it is bordered on the other three sides.
  */
-export function Panel({ title, aside, color, children, flexDirection = 'column', ...box }: PanelProps) {
-  const dim = color === undefined;
+export function Panel({ title, aside, focused = false, children, flexDirection = 'column', ...box }: PanelProps) {
+  const color = focused ? theme.accent : theme.border;
   return (
     <Box flexDirection="column" flexShrink={0} {...pick(box)}>
       <Box height={1} flexShrink={0}>
-        <Text color={color} dimColor={dim}>
-          ╭─
-        </Text>
+        <Text color={color}>╭─</Text>
         {title && (
           <Box flexShrink={1} overflow="hidden">
-            <Text color={color ?? 'cyan'} bold={!dim} wrap="truncate-end">
-              {title}
+            <Text color={focused ? theme.accent : theme.inkMuted} bold={focused} wrap="truncate-end">
+              {title.split(' › ').map((crumb, i, crumbs) => (
+                <Text
+                  // biome-ignore lint/suspicious/noArrayIndexKey: breadcrumb identity is its stack position, and names can repeat.
+                  key={`${i}:${crumb}`}
+                  bold={focused && i === crumbs.length - 1}
+                  color={focused && i === crumbs.length - 1 ? theme.accent : theme.inkMuted}
+                >
+                  {i > 0 ? ' › ' : ''}
+                  {crumb}
+                </Text>
+              ))}
             </Text>
           </Box>
         )}
         {/* A long rule cut to the room left; a hard-wrapped Text clipped to one line. */}
         <Box flexGrow={1} flexBasis={0} height={1} overflow="hidden">
-          <Text color={color} dimColor={dim}>
-            {'─'.repeat(400)}
-          </Text>
+          <Text color={color}>{'─'.repeat(400)}</Text>
         </Box>
         {aside}
-        <Text color={color} dimColor={dim}>
-          ╮
-        </Text>
+        <Text color={color}>╮</Text>
       </Box>
       <Box
         flexDirection={flexDirection}
@@ -48,7 +53,7 @@ export function Panel({ title, aside, color, children, flexDirection = 'column',
         borderStyle="round"
         borderTop={false}
         borderColor={color}
-        borderDimColor={dim}
+        paddingX={1}
         {...inner(box)}
       >
         {children}

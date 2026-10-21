@@ -4,9 +4,11 @@ import {
   ConfirmDialog,
   type DetailRow,
   DetailView,
+  formatDate,
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useInput,
   useIsActive,
@@ -63,7 +65,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   if (!data.data) {
     if (data.loading) return <Loading label={`Loading ${id}…`} />;
     const reason = data.error instanceof Error ? data.error.message : 'No Task.';
-    return <Text color="red">{reason}</Text>;
+    return <Text color={theme.danger}>{reason}</Text>;
   }
   const { story, task, stages } = data.data;
 
@@ -71,7 +73,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
     setBusy(true);
     try {
       await moveTask(plugin, task.id, stage);
-      ui.toast(`Moved ${task.id} to ${stage}`);
+      ui.toast(`Moved ${task.id} to ${stages.find((s) => s.key === stage)?.name ?? stage}`);
       data.reload();
     } catch (err) {
       ui.error(err);
@@ -97,14 +99,14 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
   const rows: DetailRow[] = [
     { label: 'Story', value: `${story.key} ${story.name}` },
     { label: 'Stage', value: <TaskStage stages={stages} stage={task.stage} /> },
-    { label: 'Created', value: task.createdAt },
-    { label: 'Updated', value: task.updatedAt },
+    { label: 'Created', value: formatDate(task.createdAt) },
+    { label: 'Updated', value: formatDate(task.updatedAt) },
   ];
 
   return (
     <Box flexDirection="column" gap={1}>
       <Text>
-        <Text bold color="cyan">
+        <Text bold color={theme.accent}>
           {task.id}
         </Text>{' '}
         <Text bold>{task.name}</Text>
@@ -117,7 +119,7 @@ export function TaskScreen({ params, plugin, ui }: PluginScreenProps<Record<stri
             items={stages.map((s) => ({
               value: s.key,
               label: s.name,
-              description: s.key === task.stage ? `${s.key} (current)` : s.key,
+              description: s.key === task.stage ? '(current)' : undefined,
             }))}
             onSelect={(item) => void move(item.value)}
           />
