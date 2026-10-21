@@ -19,7 +19,11 @@ export interface ShellRegistry {
   setDirty(depth: number, id: string, dirty: boolean): void;
   /** Whether the screen at `depth` (or any screen when omitted) holds a dirty form. */
   isDirty(depth?: number): boolean;
-  setHints(depth: number, hints: readonly KeyHint[] | null): void;
+  /**
+   * Sets the hints `id` adds to the screen at `depth`, or removes them with `null`. A `lead` part (a
+   * Form's keys) comes before the screen's own; a key already shown is not repeated.
+   */
+  setHints(depth: number, id: string, hints: readonly KeyHint[] | null, lead?: boolean): void;
   hints(depth: number): readonly KeyHint[];
   setLabel(depth: number, label: HeaderLabel | null): void;
   label(depth: number): HeaderLabel | null;
@@ -35,7 +39,7 @@ export function createShellRegistry(): ShellRegistry {
   let text = 0;
   let escapes = 0;
   const dirty = new Map<string, number>();
-  const hints = new Map<number, readonly KeyHint[]>();
+  const hints = new Map<number, Map<string, { hints: readonly KeyHint[]; lead: boolean }>>();
   const labels = new Map<number, HeaderLabel>();
   const focuses = new Map<number, ActionFocus>();
   const listeners = new Set<() => void>();
@@ -65,12 +69,18 @@ export function createShellRegistry(): ShellRegistry {
       for (const at of dirty.values()) if (depth === undefined || at === depth) return true;
       return false;
     },
-    setHints(depth, next) {
-      if (next) hints.set(depth, next);
+    setHints(depth, id, next, lead = false) {
+      const parts = hints.get(depth) ?? new Map();
+      if (next) parts.set(id, { hints: next, lead });
+      else parts.delete(id);
+      if (parts.size > 0) hints.set(depth, parts);
       else hints.delete(depth);
       changed();
     },
-    hints: (depth) => hints.get(depth) ?? [],
+    hints(depth) {
+      const parts = [...(hints.get(depth)?.values() ?? [])];
+      return uniqueKeys([...parts.filter((p) => p.lead), ...parts.filter((p) => !p.lead)].flatMap((p) => p.hints));
+    },
     setLabel(depth, label) {
       if (label) labels.set(depth, label);
       else labels.delete(depth);
@@ -89,6 +99,11 @@ export function createShellRegistry(): ShellRegistry {
     },
     version: () => version,
   };
+}
+
+/** `hints` without the ones whose key an earlier hint already shows. */
+export function uniqueKeys(hints: readonly KeyHint[]): KeyHint[] {
+  return hints.filter((hint, i) => hints.findIndex((other) => other.key === hint.key) === i);
 }
 
 export const ShellContext = createContext<ShellRegistry>(createShellRegistry());
@@ -142,13 +157,14 @@ export function useDirty(dirty: boolean): void {
 export function useKeyHints(hints: readonly KeyHint[]): void {
   const shell = useContext(ShellContext);
   const depth = useContext(ScreenDepthContext);
+  const id = useId();
   const key = JSON.stringify(hints);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands in for `hints`, which callers usually rebuild each render.
   useEffect(() => {
     if (depth < 0) return;
-    shell.setHints(depth, hints);
-    return () => shell.setHints(depth, null);
-  }, [shell, depth, key]);
+    shell.setHints(depth, id, hints);
+    return () => shell.setHints(depth, id, null);
+  }, [shell, depth, id, key]);
 }
 
 /** The key hints of the screen at `depth`. */

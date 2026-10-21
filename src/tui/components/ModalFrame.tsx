@@ -1,15 +1,18 @@
 import { Box, Text } from 'ink';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { LayoutContext, useIsActive, useLayout } from '../hooks';
+import { LayoutContext, uniqueKeys, useIsActive, useLayout } from '../hooks';
+import { FORM_KEYS } from '../keymap';
 import { theme } from '../theme';
 import { CloseButton } from './CloseButton';
 import { KeyHints } from './KeyHints';
 import { LayerOutlet } from './LayerOutlet';
 import type { ModalProps } from './Modal';
-import { CoveredContext, createLayerHost, LayerHostContext, ModalLayerContext } from './modalLayer';
+import { CoveredContext, createLayerHost, FormKeysContext, LayerHostContext, ModalLayerContext } from './modalLayer';
 import { MODAL_MIN_WIDTH, modalSize } from './modalSize';
 import { Panel } from './Panel';
 import { ScrollBody } from './ScrollBody';
+
+const FORM_ESC = { key: 'esc', description: 'cancel' };
 
 /**
  * Draws a `Modal`: a framed panel centred over the area it is rendered in, the title in its border,
@@ -34,6 +37,11 @@ export function ModalFrame({
     return () => setNested((count) => count - 1);
   }, []);
   useEffect(() => parentLayer?.(), [parentLayer]);
+  const [forms, setForms] = useState(0);
+  const registerForm = useCallback(() => {
+    setForms((count) => count + 1);
+    return () => setForms((count) => count - 1);
+  }, []);
   const [host] = useState(createLayerHost);
   const outer = useLayout();
   const screen = size === 'screen';
@@ -41,8 +49,11 @@ export function ModalFrame({
   const covered = nested > 0;
   // Only the top layer, the one in focus, shows its frame in accent, its `✕` and its keys.
   const top = focused && active && !covered;
-  // A titled modal without hints still says how to close it.
-  const footer = hints?.length ? hints : title ? [{ key: 'esc', description: 'close' }] : undefined;
+  // A titled modal without hints still says how to close it. A Form inside adds its keys first, and
+  // there `esc` cancels.
+  const own = hints?.length ? hints : title ? [{ key: 'esc', description: 'close' }] : undefined;
+  const footer =
+    forms > 0 ? uniqueKeys([...FORM_KEYS, ...(own ?? []).filter((hint) => hint.key !== 'esc'), FORM_ESC]) : own;
   const { width, room, body } = modalSize(outer, { size, maxWidth, footer: footer !== undefined });
   // Kept stable, so content that reads the layout does not render again whenever a layer shows.
   const bodyLayout = useMemo(() => ({ width: body.width, height: body.height }), [body.width, body.height]);
@@ -65,13 +76,15 @@ export function ModalFrame({
           <ModalLayerContext.Provider value={registerLayer}>
             <LayerHostContext.Provider value={host}>
               <CoveredContext.Provider value={covered}>
-                {screen ? (
-                  children
-                ) : (
-                  <ScrollBody active={!covered} height={body.height}>
-                    {children}
-                  </ScrollBody>
-                )}
+                <FormKeysContext.Provider value={registerForm}>
+                  {screen ? (
+                    children
+                  ) : (
+                    <ScrollBody active={!covered} height={body.height}>
+                      {children}
+                    </ScrollBody>
+                  )}
+                </FormKeysContext.Provider>
               </CoveredContext.Provider>
             </LayerHostContext.Provider>
             <LayerOutlet host={host} />

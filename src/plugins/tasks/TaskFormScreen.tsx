@@ -1,15 +1,5 @@
 import { type PluginScreenProps, UsageError } from '../../plugin-api';
-import {
-  Box,
-  FORM_KEYS,
-  Form,
-  type FormValues,
-  Loading,
-  Text,
-  theme,
-  useAsync,
-  useKeyHints,
-} from '../../plugin-api/tui';
+import { Box, Form, type FormValues, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { createTask, getTask, stagesOf, updateTask } from './tasks';
 
 /** Creates a Task in a Story (`params.storyKey`) or edits one (`params.id`), including its Stage. */
@@ -22,7 +12,6 @@ export function TaskFormScreen({ params, plugin, ui }: PluginScreenProps<Record<
     const stages = (await stagesOf(plugin, story)).map((s) => s.key);
     return { story, task: found?.task ?? null, stages };
   }, [plugin, params.storyKey, params.id]);
-  useKeyHints(FORM_KEYS);
 
   if (data.loading) return <Loading label="Loading…" />;
   if (!data.data) {

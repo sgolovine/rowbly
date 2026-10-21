@@ -3,8 +3,7 @@ import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story 
 import type { CustomFieldValuesInput, PluginInput } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
-import { useAsync, useKeyHints, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
-import { FORM_KEYS } from '../../keymap';
+import { useAsync, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
@@ -28,7 +27,6 @@ export function StoryFormScreen({ params }: ScreenProps) {
     const extra = await storyFormFields(plugins, services, { boardId, story });
     return { story, boardId, choices: await storyChoices(ctx, boardId), extra };
   }, [services, ctx, key, params.boardId, plugins]);
-  useKeyHints(FORM_KEYS);
 
   if (!data.data)
     return data.loading ? <Loading label="Loading…" /> : <Text color={theme.danger}>Cannot open the form.</Text>;

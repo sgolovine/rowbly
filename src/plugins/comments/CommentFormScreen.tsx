@@ -1,15 +1,5 @@
 import { type PluginScreenProps, UsageError } from '../../plugin-api';
-import {
-  Box,
-  FORM_KEYS,
-  Form,
-  type FormValues,
-  Loading,
-  Text,
-  theme,
-  useAsync,
-  useKeyHints,
-} from '../../plugin-api/tui';
+import { Box, Form, type FormValues, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { addComment, editComment, getComment } from './comments';
 
 /** Adds a Comment to a Story (`params.target`), or edits one (`params.id`). */
@@ -19,7 +9,6 @@ export function CommentFormScreen({ params, plugin, ui }: PluginScreenProps<Reco
     const { target, id } = formParams(params);
     return { target, comment: id === undefined ? null : await getComment(plugin, target, id) };
   }, [plugin, params.target, params.id]);
-  useKeyHints(FORM_KEYS);
 
   if (data.loading) return <Loading label="Loading…" />;
   if (!data.data) {

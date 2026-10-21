@@ -1,4 +1,4 @@
-import type { ShellRegistry } from '../../hooks';
+import { createShellRegistry, type ShellRegistry } from '../../hooks';
 import type { KeyHint } from '../../keymap';
 
 /** The shell registry as a settings section sees it, and whether the section holds `esc` itself. */
@@ -13,6 +13,8 @@ export interface SectionShell extends ShellRegistry {
  */
 export function sectionShell(shell: ShellRegistry, onHints: (hints: readonly KeyHint[]) => void): SectionShell {
   let escapes = 0;
+  // Collects the parts of the section's hints, as the shell does for a screen.
+  const hints = createShellRegistry();
   return {
     ...shell,
     capture(withEscape) {
@@ -28,6 +30,9 @@ export function sectionShell(shell: ShellRegistry, onHints: (hints: readonly Key
       };
     },
     holdsEscape: () => escapes > 0,
-    setHints: (_depth, hints) => onHints(hints ?? []),
+    setHints(_depth, id, next, lead) {
+      hints.setHints(0, id, next, lead);
+      onHints(hints.hints(0));
+    },
   };
 }

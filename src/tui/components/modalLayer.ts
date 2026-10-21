@@ -47,6 +47,9 @@ export const LayerHostContext = createContext<LayerHost | null>(null);
  */
 export const LayerWrapContext = createContext<(node: ReactNode) => ReactNode>((node) => node);
 
+/** Inside a modal's content, shows a Form's keys in the modal's hint strip until the returned call. */
+export const FormKeysContext = createContext<(() => () => void) | null>(null);
+
 /** True inside a modal's content while a task is open on top of it. */
 export const CoveredContext = createContext(false);
 

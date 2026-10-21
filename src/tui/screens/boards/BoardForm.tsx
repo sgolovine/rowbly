@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import { keyPrefixFromName, slugFromName } from '../../../core';
 import { Form } from '../../components';
-import { useBoardSelection, useKeyHints, useServices, useToast } from '../../hooks';
+import { useBoardSelection, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 
@@ -14,7 +14,6 @@ export function BoardFormScreen() {
   const selection = useBoardSelection();
   const toast = useToast();
   const router = useRouter();
-  useKeyHints([{ key: 'enter', description: 'create' }]);
 
   return (
     <Box flexDirection="column" gap={1}>

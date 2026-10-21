@@ -1,10 +1,12 @@
 import { Box, type Key, Text, useInput } from 'ink';
-import { useState } from 'react';
+import { useContext, useEffect, useId, useState } from 'react';
 import { ValidationError } from '../../core';
 import type { PluginFieldKind, PluginFormValue } from '../../services';
-import { useDirty, useIsActive, useLayout, useToast } from '../hooks';
+import { ScreenDepthContext, ShellContext, useDirty, useIsActive, useLayout, useToast } from '../hooks';
+import { FORM_KEYS } from '../keymap';
 import { theme } from '../theme';
 import { FieldRow } from './FieldRow';
+import { FormKeysContext } from './modalLayer';
 
 /** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
 export type FieldKind = PluginFieldKind;
@@ -112,6 +114,24 @@ function isSubmitKey(input: string, key: Key): boolean {
 }
 
 /**
+ * Shows the Form keys while `active`: in the strip of the Modal around the form, or else with the
+ * screen's own hints, so every form says `ctrl+s save` without its screen adding it.
+ */
+function useFormKeys(active: boolean): void {
+  const modal = useContext(FormKeysContext);
+  const shell = useContext(ShellContext);
+  const depth = useContext(ScreenDepthContext);
+  const id = useId();
+  useEffect(() => {
+    if (!active) return;
+    if (modal) return modal();
+    if (depth < 0) return;
+    shell.setHints(depth, id, FORM_KEYS, true);
+    return () => shell.setHints(depth, id, null);
+  }, [active, modal, shell, depth, id]);
+}
+
+/**
  * A keyboard form with saving in the enclosing Modal hint strip. `enter`, `tab` and `↓` move to the next
  * field and `shift+tab` and `↑` to the previous one; text, number and date fields are `TextInput`s;
  * multiline fields are `TextArea`s, where `enter` starts a new line, `↑/↓` leave the text from its
@@ -132,6 +152,7 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
+  useFormKeys(active);
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
 
