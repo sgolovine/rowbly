@@ -120,7 +120,7 @@
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "dd5a4f3d42c96f1687b5008388bcd45331fbfba5e1850bff2f507f1059e33a0e",
+      "fingerprint": "b7dfe412e726f99f51a00be6ab27c6f121f60d53fe9113aef7bb5722e1b593b7",
       "snapshot": {
         "README.md": "54c278e15864b22883205a45b49fb14c7cded9d4b75bf297c807b9b62a98c076",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
@@ -130,7 +130,7 @@
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
         "skills/_artifacts/domain_map.yaml": "0cd3ea4cd163aacca6adabf32fcc417f4d1b2c5257227a0c8302cd2b1922a715",
-        "skills/_artifacts/skill_spec.md": "58063482db53d17bec85a5120fe4a9265d0b498e7d845519b90787419c3c27d5",
+        "skills/_artifacts/skill_spec.md": "a8cc426dfe496c7bede84a067cdd7abe8848f5d5adb4685917557f841a51e2b3",
         "skills/_artifacts/skill_tree.yaml": "f440a3b9e46349c8b2808f8b4d50761803e6d831d08e1c47569ffa6b9cdacf41",
         "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
         "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
@@ -167,13 +167,14 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
-      "outcome": "no-change",
-      "reason": "domain_map.yaml, skill_spec.md and skill_tree.yaml stay accurate: this TUI correction pass changes no command, flag, output, exit code, doctor finding or Data Root behavior and adds no skill.",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "updated",
+      "reason": "Added the missing-review diagnosis and completion decision to skill_spec.md. domain_map.yaml and skill_tree.yaml remain accurate: five command-mode tasks, source mappings, prerequisites, failure modes and remaining work are unchanged; no new operating skill or guidance change is warranted.",
       "evidence": [
-        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "Read all three planning records; skill_spec.md Maintenance — complete unmapped source reviews records the scope, retained baseline, unchanged map/tree and consumer-check limitation.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -2475,17 +2476,18 @@
       ]
     },
     "source:src/tui/screens/board/layout.ts": {
-      "fingerprint": "d7716791dac5ef6626f70071eb14791a997c2513313d7ac54f2726c25310243e",
+      "fingerprint": "53d0a19ca14397d4776f05cbb387590930da1db374bd649867fe8a1bbeff3ad5",
       "snapshot": {
-        "src/tui/screens/board/layout.ts": "a6606bee300782e54b6bcdd400bf50320d3dd32d63eeee259b634272d8d0aa42"
+        "src/tui/screens/board/layout.ts": "ddc80136c99993303479a037c663048e088f0cf67198fc4c3d99415ea9a35c63"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "Changes card/list row heights and TUI list grouping from Stage Category to individual Stage, retaining Stage and Rank order. It changes no CLI filtering, Stage configuration or stored records; command-mode skills remain accurate.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "git diff 351bfc0..c9093e7 -- src/tui/screens/board/layout.ts; CARD_HEIGHT, LIST_ROW_HEIGHT and listRows are TUI helpers.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     },
     "source:src/tui/screens/board/useCardBadges.ts": {
@@ -3861,15 +3863,18 @@
       ]
     },
     "source:.rowbly/rowbly.config.json": {
-      "fingerprint": "bef727177c221d47c945c60bd325caaf8c6451f4239e84874039e4855a076348",
+      "fingerprint": "af9c4070795bfbf609013cdb2a958f6a1f76bcc697152803387b306a13c61d1a",
       "snapshot": {
-        ".rowbly/rowbly.config.json": "8d749b9e0ba69496e48900d31f7d3fa627110368ce1facb92aa2600d696d7584"
+        ".rowbly/rowbly.config.json": "158eb9d3997ccf7055e3ae79195ad42f02ae865679202ecda1207dc140f1a900"
       },
-      "head": "8ea0d468254bbba076d6c45c05d7b76f0c139c65",
-      "outcome": "updated",
-      "reason": "ADR-0024: Stage Categories become backlog/board/done; Backlog and Done are fixed Stages outside the configured list; stages add/edit lose --category and edit/move/remove refuse backlog and done. Agent-facing guidance changed accordingly in rowbly-setup, rowbly-stories, rowbly-cli and rowbly-plugins.",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
       "evidence": [
-        "Checks on 8ea0d46: pnpm typecheck and pnpm lint passed; pnpm test:unit 970/970 and pnpm test:cli 156/156 passed, including test/skills/agentWorkflows.test.ts (rowbly-setup and rowbly-stories workflows updated for fixed Backlog/Done); intent validate skills: 5 passed. Fresh consumer session not run for this revision."
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/rowbly.config.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     },
     "source:docs/agents/adr/0005-stages-and-fields-are-configuration.md": {
@@ -5776,16 +5781,18 @@
       ]
     },
     "source:.agents/skills/rowbly-tui-design/SKILL.md": {
-      "fingerprint": "9ce7a00ccc4428209ff1814b027a6e7ec390b2e9faedcb599b9b004a767ded9e",
+      "fingerprint": "318f5cc863d720090fa755c63fe5d6279aea9d434f3eee5a98574960f6bb6d7c",
       "snapshot": {
-        ".agents/skills/rowbly-tui-design/SKILL.md": "b3e40f19f621d6558d0b06d19255fb1549015db6305c5d2e5638fa66170407c4"
+        ".agents/skills/rowbly-tui-design/SKILL.md": "ae2a13acf59bf42f96bccb37f4adb9922e53bad9a94a09b7affdf853492de72d"
       },
-      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
-      "outcome": "out-of-scope",
-      "reason": "Development-only design skill under .agents/skills (not a published Intent skill). Updated to match the user-requested selection and toast changes: selected Story is a solid selection block, selection keeps bar and fill out of focus, overlay-raised is also a Toast fill.",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
       "evidence": [
-        "git diff 60ade6e..a439b8a -- .agents/skills/rowbly-tui-design",
-        "Matches the built TUI rendered in colour via agentic-tui at 140x40"
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/SKILL.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     },
     "source:src/plugins/epics/EpicDetail.tsx": {
@@ -6125,17 +6132,18 @@
       ]
     },
     "source:src/tui/screens/board/StoryCard.tsx": {
-      "fingerprint": "11c23803cc7696b7a3d7fbf98eebc8aa4b6ba4d91c2cb8012f0490aa0db19010",
+      "fingerprint": "c79828332ae35b290b7eaaf9e2a7044234ece0d7fff5160002f4f1086c12c178",
       "snapshot": {
-        "src/tui/screens/board/StoryCard.tsx": "e73ee440ecef23691173ec925dca169dda8b618ef61dd22db9b6d8cbf9e4402d"
+        "src/tui/screens/board/StoryCard.tsx": "69c967fb20bbcdd3514a44b876a6be9615223da2ca4e71d7b05df852d084ec3f"
       },
-      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "StoryCard only renders Story key/name/Priority/Plugin badges and handles TUI mouse selection. It changes no command, record mutation, JSON or exit code; published operating guidance remains accurate.",
       "evidence": [
-        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "git diff 351bfc0..c9093e7 -- src/tui/screens/board/StoryCard.tsx; imports use Ink, theme, mouse handling and Story types.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     },
     "source:src/tui/screens/boards/BoardDetailScreen.tsx": {
@@ -6542,6 +6550,771 @@
         "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
         "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
         "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Button.md": {
+      "fingerprint": "3f97d131c15ba060e77455fc78bb42ba8380f14d13f95cdfbefb29947a49c898",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Button.md": "bca6f4062c55b896a2c3235908a97f7c67fba831b06b6a6ac68f8f415a12e78e"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Button.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/ConfirmDialog.md": {
+      "fingerprint": "9cee30dba36e2059f2f665d87fa60d35ae6a5a39f6728fa5704388e0782e4cae",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/ConfirmDialog.md": "27250aad01f01d3b86e763fe2ccba191ca2cb9a0375b18d4473213bb9fa02161"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/ConfirmDialog.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/DetailView.md": {
+      "fingerprint": "cf7c87ebd8c711787a37ef9ddc7666435170dacc3cc13704932d5d9aeeb2e8bb",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/DetailView.md": "f700fcc002f1cb94903971308e501d98ed4ee7b4add4358733c42329a27a284b"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/DetailView.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Form.md": {
+      "fingerprint": "c207bfa86305549974f7003a706a1cc6463fa66c0415ffb436995e9460c42615",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Form.md": "7dce0b8b39370d934d74c34d834942d59a7eca50198315647b5ef6931d0b0581"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Form.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Header.md": {
+      "fingerprint": "a75cbae741b324c04488f0d009d1b7785a4e38e86333cdc5fadecb5986df6b1f",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Header.md": "0111e8ea6a425f7465bce5a93223fadc5762f11a9815f6c18feb294585029ed2"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Header.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/KeyHints.md": {
+      "fingerprint": "891d5d89a523dbe729eac6eaadd671174c854d531c9ccfdbb755439e0a461b54",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/KeyHints.md": "761278319f8183ee1b01504d39c0ed70e013e3eaa6c797cf8be320838cd693ac"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/KeyHints.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/ListRow.md": {
+      "fingerprint": "cd070a4d39d0b00847d9c4e08f8cf01abb5f4ba140f11e34e7720639a2d70157",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/ListRow.md": "14a34de7f2594b3a0bd3b769e1fddd859e82a27e2644614f653d592dca6f2704"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/ListRow.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Modal.md": {
+      "fingerprint": "1f804fbf641d152a656045bf3e544acf32e91d36344d719dc41423b2c58d92bd",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Modal.md": "2930a92411d6c3b3d2a7a0581ee2267717f1c1d339cd9f52f5ae43ebffa6e427"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Modal.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Panel.md": {
+      "fingerprint": "19c180434ae61d0f521c8519ae70194106b0eff5bb84c5418d1ab4ee1d5ca79b",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Panel.md": "4e0f8465c22ee4b85b053824b497168e5a609e967bf7ca7e6fbbb237eb6b8803"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Panel.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/SettingsModal.md": {
+      "fingerprint": "d99ef1b1e9e75a1fab10facdda4aa2066a078cd002f886ff91dfb7a9c760e83c",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/SettingsModal.md": "ad546705bb6db26823d2611cd8a6ecaa9f534de1c4ea8b87289d2889c709c694"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/SettingsModal.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/SidebarList.md": {
+      "fingerprint": "6ea5f4ad9bcaa4744ec4845b66aae4c857c311a0c7dde4ca5b1716fa4d323762",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/SidebarList.md": "2b319f5c9c8cc674d1b4228580afed4f87f1157c8f653f7e1c8b1043a586523a"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/SidebarList.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/StageBadge.md": {
+      "fingerprint": "32bfd35b7942afa4161778f793dae591d52aabfafb802720d0f868d8c6e369fb",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/StageBadge.md": "4510129f53f7519bdf33ff7c2c13836534963fe74c5750622d0a5c7b5fb3aa04"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/StageBadge.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/StageColumn.md": {
+      "fingerprint": "56408e21db3b92d98fa0ee8d8786df299e650a6c8fbaafa349681817ef89669e",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/StageColumn.md": "cd0e557b3a741ca7f23f3831304c3d6e70b1b48dc95fe04fb608bf02822e7454"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/StageColumn.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/StoryCard.md": {
+      "fingerprint": "6738460d82cd8290f89ab7ef69df34f3f99fdc1706f0cce00291fe5e471ec901",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/StoryCard.md": "7fd7a3605a088b3965ab4652f6dc86ac80efd8c3a0cc3b432bd00af77dc82ef3"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/StoryCard.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/StoryModal.md": {
+      "fingerprint": "f51f2dc1fed0baafd9220dd3569e42550d86bc184648e0e889a01d9cc42c26fe",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/StoryModal.md": "a207b0b707323980ee9f9fe8d7f47ad76684df17ba57502cb77000af83b3691c"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/StoryModal.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Tabs.md": {
+      "fingerprint": "97eae19b601d22027156f170195cf9ce21fa855ba36df4a5b7e6451aed7dcba2",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Tabs.md": "c4de8811bdecefc7be0f0326f47b8d93a624a407fc40ba2ef9c74ef7fc96cd1b"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Tabs.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/Toast.md": {
+      "fingerprint": "5d8826028e5a41ef80d57ead8282c7df53f156ccec60d472b31d5892868787e6",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/Toast.md": "e8ca59cd05d15940edd56c2120b3ae87b51aa86130323f889413c0e2f0785e5f"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/Toast.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/components/ViewSwitch.md": {
+      "fingerprint": "f483a521a903c542565ca1978d94b61c57d2ecd9985b1a5551da897e82920b90",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/components/ViewSwitch.md": "b1e39fed1524569d408eddb225492d9012b54d24d38be5e3960a8a3c358422b5"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/components/ViewSwitch.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/BoardScreen.html": {
+      "fingerprint": "0a73e72230ba69786cf1e1bce6c8bf7f9f8a6afda33d5c9cd0da39f2fcf9e4b6",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/BoardScreen.html": "acefc2cf50a9e80f5a7b1202c62149a5bf40c3fd7c5216a76c751ef2b95f795d"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/BoardScreen.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Button.html": {
+      "fingerprint": "59005020d1d7ade36fa35e377d82092bb0868acce9bce89ef3143a802f4f34a7",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Button.html": "d3b014d79aa9bb6c5ac71e97980590be56770f6c023d0d3c3b0ede3ef92a9504"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Button.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/ConfirmDialog.html": {
+      "fingerprint": "ace1523a86af88bb61f882bcb0058ccc164586e99bad58f47293c96027db1858",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/ConfirmDialog.html": "1885130678d395c53ddf496f4f3456cb6c5db5093ebc7fe5d1f56ab52489ca8c"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/ConfirmDialog.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/DetailView.html": {
+      "fingerprint": "4f5ba2b67bcf48991f14f802cd7aac4c420f173f93950853372bfa56526104f4",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/DetailView.html": "ac51996ead16aebaa65918097ef96b35a14c1746a242fe30cac60d348293364c"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/DetailView.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Form.html": {
+      "fingerprint": "06bf8547e6423b5d0acf745342add0191d4f6937e15fdfc2b66a305af63715c0",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Form.html": "da0ade28de0cc668ed02b63f5538833b3e1c89540dcf4e2194291082ec042192"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Form.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Header.html": {
+      "fingerprint": "7a2d6fc554752ce579888fd3cead86bf921c2ede3ffc43f7ba5fb8cb4895cccf",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Header.html": "5bc62226e00ba676e1a65c4b4441fb92de7070d38d19f7262412df685ecd15f2"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Header.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/KeyHints.html": {
+      "fingerprint": "3beafc5e140fd981178685ed5ac7a79c78addc8c7055fc85667c5390be05b0c0",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/KeyHints.html": "6d067a8553f425325aa701fc3edb921055bbfa3d0e4c2a70674a1ae0935fec23"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/KeyHints.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/ListRow.html": {
+      "fingerprint": "72eec5bde57364f33c9bffbca0f520e83570d26f8a24b6e5fda231b36128a8f6",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/ListRow.html": "48392154c6541e8428829a5e65d787ecbc81b5865897a89115aa02074effc72d"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/ListRow.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Modal.html": {
+      "fingerprint": "af733ee45d5f8c2dd371d2be1a032f36c3d664352eb19069f507f224e5cd15f8",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Modal.html": "1037240de98d089378907e4f27bc76964da6065ce2bf59072b2b42cdb36387a7"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Modal.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Panel.html": {
+      "fingerprint": "d55607103421033b81ab7c751c7b3d44a9b1a2977d455cf33bf92a817042349d",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Panel.html": "59160f2a2600e2089a5a2f152f8bbba45778ab539c2b3e051fd24c427949ca2d"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Panel.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/SettingsModal.html": {
+      "fingerprint": "d6c2bd044cee4b2c4c4e3905b43b6920b8c09ed48c01c94f5cb2666e4bd46a14",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/SettingsModal.html": "c1c05a467e63733cd3a7788ea85472bb7d3d9fd390073a1eb9865235505e0853"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/SettingsModal.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/SidebarList.html": {
+      "fingerprint": "932a0e89597a24edef15d1b8058189ff7f9d6216fe5b1c541432ecd4d84b7c68",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/SidebarList.html": "e39dddc26762d9c5db293eab57b0baeddbd083592c48eeeec27b63b947d53867"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/SidebarList.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/StageBadge.html": {
+      "fingerprint": "960e729627ebdd4af8d86cebd6ec5fefa53531e11ed8d470ce09099b35c9d517",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/StageBadge.html": "0c03f481b704bdd6a6d9705f656c72c362231f98bcbf49a9fc61242e1682cb71"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/StageBadge.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/StageColumn.html": {
+      "fingerprint": "2f6e7349a32f0f0c2265a04c6f9f131f8cfd1afb68c00a59dbbbe006a3c8bc3c",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/StageColumn.html": "8ea2152f75786246dca69889e1dbc11ba4164ecd91d340731151802833f7ac6f"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/StageColumn.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/StoryCard.html": {
+      "fingerprint": "63af8a44412c52bee873cba9d204da5719e81a11d931a67349ea87a9121a8e85",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/StoryCard.html": "76e6a7a1ed0257758dbb0ce163e4f3388148668f45bce809ad7737b8c2c6d207"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/StoryCard.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/StoryModal.html": {
+      "fingerprint": "b264094adb74f7990f7225df022992741a67aa17bc5c966b0498439da1ed362f",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/StoryModal.html": "5bcb8b3600fb38b0eade1979b31b8548377a2744cba3de8163d25aaab318c8c9"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/StoryModal.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Tabs.html": {
+      "fingerprint": "817d54a6a744c0dcb1b4867358348984c24ea18eec463f554172bd9da273caca",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Tabs.html": "c59e66ffdc7f7e5e73618fe64d7d031d0b13e1440d007c93984fbb51dd2d6d42"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Tabs.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/Toast.html": {
+      "fingerprint": "c413afcc541022792ab8f55c43a7a7c139e797149f965d9d23b3c0513fcd8ee8",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/Toast.html": "5ee6c9100747fe903aa43ff0e7c9eccacffbc0c1a571f714883f2387477ba8dd"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/Toast.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/ViewSwitch.html": {
+      "fingerprint": "dccd9b0dda4313eb4b534522c6814891f303bd854145707b23cad55a1a0459cc",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/ViewSwitch.html": "f2be0d5f1bd78ad99b3cfa7ffd421b68c4b6fa5a70d28b19a72c8433bb8c73eb"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/ViewSwitch.html; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/previews/preview.css": {
+      "fingerprint": "27b378667abc33f274163c503632f2ec6c6b8fefdc773eb66896954a593dd998",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/previews/preview.css": "348a51ba2fe3dd7aa1a45deb9efe6f20ed023f5a1a4c764ed003c4484ce20153"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/previews/preview.css; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.agents/skills/rowbly-tui-design/tokens.json": {
+      "fingerprint": "43aa9f998ce16adfce4b3019bc55512c1583ff974299987b0fda4392511ce429",
+      "snapshot": {
+        ".agents/skills/rowbly-tui-design/tokens.json": "9696da42950e8cfd903ac99e03eed956e4e8be50c80869a2fc2f5c175ce1de88"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".agents/skills/rowbly-tui-design/tokens.json; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.claude/skills/rowbly-tui-design/SKILL.md": {
+      "fingerprint": "33f054fa89894d72482b364f085a557ff25cae62db4a22fddf468fad930dce5a",
+      "snapshot": {
+        ".claude/skills/rowbly-tui-design/SKILL.md": "25fc020f108c83ebda65eba0313d27600e5aed259bbc21672374b0304c64c3e9"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "Local development design guidance, component specifications, tokens, HTML/CSS previews or the Claude pointer describe Ink TUI presentation. They do not change published command-mode instructions, flags, JSON, exit codes, doctor or Data Root contracts.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".claude/skills/rowbly-tui-design/SKILL.md; AGENTS.md Documentation map distinguishes unpublished development skills from Intent operating skills.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-1/story.json": {
+      "fingerprint": "4327b198bd9f7c2f6f41b62a0c935b18f15ebe7435f6e442a8afa22316518c92",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-1/story.json": "c4f0630e514eeaed9a571b0d3f7fea676e75cc6ac0eb21458fd68bdb60aff4cd"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-1/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-3/story.json": {
+      "fingerprint": "eadadb9a591409b01f5c318b73d65e66cabb474ee6ecab779369dd9c6affb545",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-3/story.json": "9a0e709b564f9d95499d5f3fbf3553eccf6c8c8d45ca7e3d939e367a33059f5a"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-3/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-4/story.json": {
+      "fingerprint": "7fa6c79f9354a451cff2e698c50720188ea52cdfd86854d15d107bdcaadba438",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-4/story.json": "bb837476ccb2055660ee64419f8e72495c6e02e8284f8fa60b6676e5a6dca62f"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-4/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-6/story.json": {
+      "fingerprint": "5b63943152a493ccafbf7eed0940b06bb368970ea435d3026d6c7d0899f3c7fe",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-6/story.json": "5fc96b72a6f5bcc41f8868f483ef1ad6480cd0f1706e8f67f9078bfcecadd4c5"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-6/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-7/story.json": {
+      "fingerprint": "e7ed114e8068d574aefdb707ef12bad4aaaa53e697c8ce3695e3265a0cffa8f1",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-7/story.json": "fd92e1ce84ec8a6087e7b26ba3d030f6d6ce7081ed01a7937a4f54a19a6df167"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-7/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-8/story.json": {
+      "fingerprint": "a7008c3b97ebf2cf429ba96b96b831a7c668d5bf95349b5902c6b6b055f3f4f2",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-8/story.json": "4b9253342c459226c6cbc0280eaee229e72b76b3e4de6121a86ada9e7abaeb84"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-8/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/boards/rowbly/stories/ROW-9/story.json": {
+      "fingerprint": "4218d9d7d2a640d9e9d2332e056284104d2f9515b66eeb6f2b442beadc25e18a",
+      "snapshot": {
+        ".rowbly/boards/rowbly/stories/ROW-9/story.json": "9ddf31ab916ae54bf87d06392be18bceac5560b6f1d45b4f31029ab38d3a4f9a"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/boards/rowbly/stories/ROW-9/story.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:.rowbly/plugins/epics/test-epic-01.json": {
+      "fingerprint": "13bbe74642064c44e1b7c61c8993b063d886565f1e04ae14282f7d272fc55464",
+      "snapshot": {
+        ".rowbly/plugins/epics/test-epic-01.json": "dfc1751678370201fd95aeb7cb83a6d18b5b2e56026c1066bc1ce4094708e931"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "This is repository instance data: Story/Epic content or configured Plugin and Stage values. Changing this instance does not change supported record schemas or configuration commands; operating skills already require reading actual configuration and records.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        ".rowbly/plugins/epics/test-epic-01.json; compared repository Data Root changes against 2e488a8 and 351bfc0; skills/rowbly-setup and skills/rowbly-stories describe configurable Stages and reading actual keys.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:assets/background.png": {
+      "fingerprint": "89820ed6391b1cf4cbf8b9cd2a57748fe9030fee712cf971aba0b0c7ba570608",
+      "snapshot": {
+        "assets/background.png": "ce020938d35ae22d30be9af5d7c01c40528ccc90f6358140eefb82e3ccd366d1"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "PNG presentation asset; it contains no command implementation or published operating guidance and changes no CLI, storage or doctor contract.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "assets/background.png; package.json ships dist and the five operating skill directories, not these presentation assets.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:assets/header.png": {
+      "fingerprint": "313f58787a4492d4aa7bfa37aa3a992cc5b36811db121a8062e10757f26974bb",
+      "snapshot": {
+        "assets/header.png": "6accc06c70fd56caf5507d3d96c963b97545a9886177de8c68cfbc9841f195c0"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "PNG presentation asset; it contains no command implementation or published operating guidance and changes no CLI, storage or doctor contract.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "assets/header.png; package.json ships dist and the five operating skill directories, not these presentation assets.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
+      ]
+    },
+    "source:assets/icon.png": {
+      "fingerprint": "e5f065e9eaeee08009e90fc03e590a1ff557436ead27190eac68775acaffcc8c",
+      "snapshot": {
+        "assets/icon.png": "c4ae6a65e02bf3040eeb5fb00f087c2969f1c3d25506dcecbbcaa426a8e4ade9"
+      },
+      "head": "c9093e774a49f009e9ea3806d3e4c993880f4248",
+      "outcome": "no-change",
+      "reason": "PNG presentation asset; it contains no command implementation or published operating guidance and changes no CLI, storage or doctor contract.",
+      "evidence": [
+        "Reviewed at c9093e774a49f009e9ea3806d3e4c993880f4248; published skills cover CLI operation, not TUI development (skills/rowbly-cli/SKILL.md and skills/_artifacts/skill_spec.md).",
+        "assets/icon.png; package.json ships dist and the five operating skill directories, not these presentation assets.",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit passed 63 tests; pnpm test:cli passed 20 tests; intent validate skills passed all five; intent repair --json reported no repairs, suggestions or problems.",
+        "No fresh consumer session or visual certification: published guidance is unchanged."
       ]
     }
   }
