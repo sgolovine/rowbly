@@ -110,11 +110,11 @@ function isSubmitKey(input: string, key: Key): boolean {
 }
 
 /**
- * A keyboard form, with a Save button after the last field. `enter`, `tab` and `↓` move to the next
+ * A keyboard form with saving in the enclosing Modal hint strip. `enter`, `tab` and `↓` move to the next
  * field and `shift+tab` and `↑` to the previous one; text, number and date fields are `TextInput`s;
  * multiline fields are `TextArea`s, where `enter` starts a new line, `↑/↓` leave the text from its
  * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
- * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` on the Save button submits.
+ * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` after the last field submits.
  */
 export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: FormProps) {
   const active = useIsActive() && isActive;
@@ -128,7 +128,7 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true }: 
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // `focus === fields.length` is the Save button.
+  // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);

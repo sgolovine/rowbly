@@ -54,9 +54,9 @@ export function BoardColumn({
         <StageBadge stage={stage} /> <Text color={theme.inkFaint}>{cards.length}</Text>
       </Text>
       {selected === null ? (
-        <Text color={theme.inkFaint}>{'─'.repeat(inner)}</Text>
+        <Text color={theme.border}>{'─'.repeat(inner)}</Text>
       ) : (
-        <Text color={active ? theme.accent : undefined}>{'━'.repeat(inner)}</Text>
+        <Text color={active ? theme.accent : theme.border}>{'━'.repeat(inner)}</Text>
       )}
       <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
       {shown.map((story, i) => (

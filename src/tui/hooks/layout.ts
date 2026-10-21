@@ -28,7 +28,7 @@ export function useBoardSelection(): BoardSelection {
   return useContext(BoardSelectionContext);
 }
 
-/** How the board shows its Stories: its Stages side by side, or one list in Backlog, Board and Done sections. */
+/** How the board shows its Stories: its Stages side by side, or one list grouped by Stage name. */
 export type BoardView = 'stages' | 'list';
 
 /** The board view picked in the header; it lasts until Rowbly quits and applies to every Board. */

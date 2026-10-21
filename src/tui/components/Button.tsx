@@ -1,5 +1,5 @@
 import { Box, type DOMElement, Text } from 'ink';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useMouse } from '../hooks';
 import { theme } from '../theme';
 
@@ -16,9 +16,18 @@ export interface ButtonProps {
 
 export function Button({ label, keyName, onClick, clickable, compact = false, primary = false }: ButtonProps) {
   const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, clickable);
+  const [hovered, setHovered] = useState(false);
+  useMouse(ref, { onClick, onEnter: () => setHovered(true), onLeave: () => setHovered(false) }, clickable);
   return (
-    <Box ref={ref} width={compact ? undefined : '100%'} flexShrink={0} justifyContent="center" gap={1} paddingX={1}>
+    <Box
+      ref={ref}
+      backgroundColor={hovered && clickable ? theme.selection : undefined}
+      width={compact ? undefined : '100%'}
+      flexShrink={0}
+      justifyContent="center"
+      gap={1}
+      paddingX={1}
+    >
       <Text bold={primary} color={primary ? theme.accent : theme.ink}>
         {label}
       </Text>

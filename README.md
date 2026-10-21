@@ -389,11 +389,15 @@ Run `rowbly` with no command in a terminal to open the full-screen app; global f
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
-The header's **Stages | List** switch (or `v` on the board) changes how the board shows its Stories. **Stages** is the view above, and every launch starts with it. **List** shows one line per Story, with its Story Key, name and Stage, in three sections: **Backlog** (the Backlog Stage), **Board** (every Stage between Backlog and Done, in Stage order) and **Done**. Inside a section, Stories are in Stage order, then Rank order. A section folds and unfolds, and a long list scrolls up and down. The choice lasts until you quit and applies to every Board; the highlighted Story stays highlighted when you switch.
+The header's **Stages / List** switch (or `v` on the board) changes how the board shows its Stories. **Stages** is the view above, and every launch starts with it. **List** shows one line per Story, with its Story Key, name and Stage, grouped under each Stage's name in Stage order. Stories in a section stay in Rank order. A section folds and unfolds, and a long list scrolls up and down. The choice lasts until you quit and applies to every Board; the highlighted Story stays highlighted when you switch.
 
 A Plugin can add a **Plugin Sidebar** beside the Board sidebar, with a header button that shows and hides it, such as the Epics Plugin's **Epics**. Its first entry, such as **All Epics**, shows every Story; picking another entry shows only the Stories it stands for on the board, in both views, and the header says `filter: Epics: <name>`. The pick applies to every Board, stays while the sidebar is hidden, and lasts until you quit. The button at the bottom, such as **+ New Epic**, creates an entry.
 
-Screens and dialogs open in centred modals that fit their content from the first frame, up to the available height. Longer content is clipped while the modal's title and key hints stay visible.
+The header keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Story cards have three rows and rounded frames. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
+
+Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
+
+The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light theme, with dark as the fallback. Rowbly leaves the terminal background visible. Dates in the TUI use local time (for example, `20 Oct 2026, 23:03`); command JSON keeps ISO timestamps.
 
 ### Keys on every screen
 
@@ -403,13 +407,13 @@ Screens and dialogs open in centred modals that fit their content from the first
 | `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
-| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins, and the sections Plugins add) and the Board in context (Config, Stages, Fields). `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
-In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; after the last field comes the Save button, where `enter` saves. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; the focused field scrolls into view, and after the last field `enter` saves. Saving is shown in the modal's key strip, with no separate Save button. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
 The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`) and `page up`/`page down` scroll it. **Edit** shows the raw text in a multi-line text box. `tab` switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
@@ -420,7 +424,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Screen | Keys |
 | --- | --- |
 | Board | `←`/`→` previous / next Stage, `↑`/`↓` previous / next Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage (bottom), `shift+↑`/`shift+↓` move it up / down in its Stage, `T`/`B` move it to the top / bottom of its Stage, `n` new Story in this Stage, `e` edit, `d` delete, `/` filter by Labels, Priorities, text and the filters Plugins add (several values per field), `c` clear the filter, `v` list view, `r` reload |
-| Board (list view) | `↑`/`↓` previous / next line, `enter` open the Story or fold / unfold the section, `space` fold / unfold, `←`/`→` fold / unfold, `shift+↑`/`shift+↓` move the Story to the previous / next Stage (bottom; from the first Stage in Board up to Backlog, from the last down to Done), `n` new Story in the highlighted Story's Stage (on a section heading: its first Stage), `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` Stages view, `r` reload |
+| Board (list view) | `↑`/`↓` previous / next line, `enter` open the Story or fold / unfold the section, `space` fold / unfold, `←`/`→` fold / unfold, `shift+↑`/`shift+↓` move the Story to the previous / next Stage (bottom; from the first Stage in Board up to Backlog, from the last down to Done), `n` new Story in the highlighted Story's Stage (on a section heading: that Stage), `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` Stages view, `r` reload |
 | Stories | `enter` open, `n` new, `/` filter by Stages, Labels, Priorities, text, Stage Category, open only and the filters Plugins add, and sort, `c` clear the filter, `A` all Boards / this Board only |
 | Story | `tab`/`←`/`→` switch between Details and the tabs Plugins add, `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks (Tasks Plugin) | `enter` open, `n` new, `e` edit, `m` move to a Stage, `d` delete |
@@ -435,7 +439,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 
-Long Plugin badges in the board's list view truncate to keep each Story on one line.
+Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
 Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to board cards and the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
 <!-- END tui -->

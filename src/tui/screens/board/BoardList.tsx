@@ -22,7 +22,7 @@ export interface BoardListProps {
   onClick(index: number): void;
 }
 
-/** The list view: the Backlog, Board and Done sections, scrolled to `first`. Story lines show the card's badges. */
+/** The list view: one section per Stage, scrolled to `first`. Story lines show the card's badges. */
 export function BoardList({ rows, stages, storyBadges, width, first, size, cursor, active, onClick }: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;

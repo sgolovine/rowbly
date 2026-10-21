@@ -3,7 +3,9 @@ import {
   Box,
   ConfirmDialog,
   Loading,
+  Modal,
   moveDelta,
+  SelectionRow,
   Text,
   theme,
   useAsync,
@@ -91,8 +93,7 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
       ) : (
         <Box flexDirection="column">
           {comments.map((c, i) => (
-            <Box key={c.id}>
-              <Text color={i === cursor && viewing ? theme.accent : undefined}>{i === cursor ? '› ' : '  '}</Text>
+            <SelectionRow key={c.id} selected={i === cursor} active={viewing} onClick={() => setSelected(i)}>
               <Box flexDirection="column">
                 <Text>
                   <Text bold>{c.author ?? 'unknown'}</Text>
@@ -104,20 +105,22 @@ export function CommentsTab({ story, active, plugin, ui }: PluginStoryTabProps<R
                 </Text>
                 <Text>{c.body}</Text>
               </Box>
-            </Box>
+            </SelectionRow>
           ))}
         </Box>
       )}
       {confirming && comment && (
-        <ConfirmDialog
-          message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          isActive={isActive && !busy}
-          onConfirm={() => void remove(comment.id)}
-          onCancel={() => setConfirming(false)}
-        />
+        <Modal title="Delete" onClose={() => setConfirming(false)}>
+          <ConfirmDialog
+            message={`Delete the Comment by ${comment.author ?? 'unknown'}?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            isActive={isActive && !busy}
+            onConfirm={() => void remove(comment.id)}
+            onCancel={() => setConfirming(false)}
+          />
+        </Modal>
       )}
     </Box>
   );

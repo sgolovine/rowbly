@@ -21,14 +21,18 @@ export function DetailView({ rows, body }: DetailViewProps) {
       {rows.map((row) => (
         <Box key={row.label}>
           <Box width={width} flexShrink={0}>
-            <Text color={theme.inkFaint}>{row.label}</Text>
+            <Text color={theme.inkMuted}>{row.label}</Text>
           </Box>
-          {typeof row.value === 'string' || typeof row.value === 'number' ? <Text>{row.value}</Text> : row.value}
+          {typeof row.value === 'string' || typeof row.value === 'number' ? (
+            <Text color={row.value === '—' ? theme.inkFaint : theme.ink}>{row.value || '—'}</Text>
+          ) : (
+            row.value
+          )}
         </Box>
       ))}
       {body?.trim() && (
         <Box marginTop={rows.length > 0 ? 1 : 0}>
-          <Text>{markdownToPlain(body)}</Text>
+          <Text color={theme.ink}>{markdownToPlain(body)}</Text>
         </Box>
       )}
     </Box>

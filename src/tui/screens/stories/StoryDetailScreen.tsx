@@ -15,6 +15,7 @@ import {
   Tabs,
 } from '../../components';
 import {
+  loadStoryBadges,
   useActionFocus,
   useAsync,
   useEscape,
@@ -29,7 +30,7 @@ import {
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
-import { formatDate, theme } from '../../theme';
+import { formatDate, relativeDate, theme } from '../../theme';
 import type { ScreenProps } from '../types';
 
 const TABS = ['Details'] as const;
@@ -54,8 +55,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     const story = await services.stories.get(key);
     const config = await services.config.effective(story.boardId);
     const extraRows = ctx ? await pluginStoryRows(ctx, services, story) : [];
-    return { story, config, extraRows };
-  }, [services, ctx, key]);
+    const badges = await loadStoryBadges(plugins, services);
+    return { story, config, extraRows, badges: badges(story) };
+  }, [services, ctx, key, plugins]);
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story });
   const viewing = mode === 'view';
@@ -97,7 +99,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
 
   if (!data.data)
     return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color={theme.danger}>No Story.</Text>;
-  const { story, config, extraRows } = data.data;
+  const { story, config, extraRows, badges } = data.data;
 
   const move = async (stage: string) => {
     try {
@@ -152,13 +154,17 @@ export function StoryDetailScreen({ params }: ScreenProps) {
             }
           />
           {story.priority && <Text color={theme.inkMuted}> · {story.priority}</Text>}
-          <Text color={theme.inkFaint}> · updated {formatDate(story.updatedAt)}</Text>
+          {badges.length > 0 && <Text color={theme.inkMuted}> · {badges.join(' · ')}</Text>}
+          <Text color={theme.inkFaint}> · updated {relativeDate(story.updatedAt, ctx?.now())}</Text>
         </Text>
         <Box marginTop={1}>
           <Tabs tabs={tabs} selected={tab} onSelect={setTab} active={active && viewing} />
         </Box>
       </Box>
-      <ScrollBody height={layout.height === undefined ? undefined : Math.max(1, layout.height - 5)}>
+      <ScrollBody
+        active={active && viewing}
+        height={layout.height === undefined ? undefined : Math.max(1, layout.height - 5)}
+      >
         {tab === 0 && <DetailView rows={rows} body={story.description} />}
         {pluginTabs.map(
           ({ id, plugin, component: PluginTab }, i) =>

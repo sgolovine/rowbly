@@ -8,11 +8,10 @@ description: >
 
 # Rowbly TUI design system
 
-**Status: planned.** This is the target design for `src/tui`. The TUI does not follow it yet: today it
-uses Ink's named colours (`cyan`, `red`, `dimColor`) and the constants in `components/Modal.tsx` and
-`components/Form.tsx`. New and changed TUI code follows this system; move older code over when you
-touch it. When a screen is moved over, keep the user-facing keys and layout unless a rule here
-changes them.
+**Status: implemented.** `src/tui/theme.ts` maps the dark and light palettes. Shared controls,
+Board views, shell, Story and Settings frames, and Built-in Plugin screens use the tokens. Preserve
+user-facing keys unless a rule here changes them. Real-terminal evidence is required when changing
+layout; the HTML previews show the design intent.
 
 - `tokens.json` holds every token (two themes: `dark`, the default, and `light`). Map them in one
   `src/tui/theme.ts`; never write a hex value or an Ink colour name in a component.
@@ -64,7 +63,7 @@ Rowbly's TUI is a keyboard-first Kanban for the terminal. The screen is a grid o
 
 - Write colours as the token's hex in Ink (`<Text color={theme.accent}>`), from one `theme.ts` module that maps these tokens. Ink downsamples hex to 256 or 16 colours on its own; each token's note names the 16-colour ANSI intent so a `NO_COLOR`-free 16-colour terminal still reads right.
 - Rowbly never paints `ground`. The user's terminal background shows through. Only `overlay` (Modals), `field`, `field-focus` and `selection` are fills.
-- Two themes, picked from the terminal background (`COLORFGBG`, or a `tui.theme` setting): **Dark terminal** is the default, **Light terminal** darkens every hue so text keeps ≥4.5:1 on a pale background.
+- Two themes, picked from the terminal background (`COLORFGBG`; an explicit `tui.theme` setting is planned): **Dark terminal** is the default, **Light terminal** darkens every hue so text keeps ≥4.5:1 on a pale background.
 - Text pairs: `ink`, `ink-muted` and `accent` are ≥4.5:1 on `ground`, `overlay`, `field`, `field-focus` and `selection` in both themes. `ink-faint` is ≥4.5:1 on `ground`, `overlay` and `field`; do not put it on `selection`.
 
 ## Type

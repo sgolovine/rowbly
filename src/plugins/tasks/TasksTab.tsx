@@ -3,7 +3,9 @@ import {
   Box,
   ConfirmDialog,
   Loading,
+  Modal,
   moveDelta,
+  SelectionRow,
   SelectList,
   Text,
   theme,
@@ -102,18 +104,16 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
       ) : (
         <Box flexDirection="column">
           {tasks.map((t, i) => (
-            <Box key={t.id}>
-              <Text color={i === cursor && viewing ? theme.accent : undefined}>{i === cursor ? '› ' : '  '}</Text>
+            <SelectionRow key={t.id} selected={i === cursor} active={viewing} onClick={() => setSelected(i)}>
               <Text>
                 <Text color={theme.accent}>{t.id}</Text> {t.name} <TaskStage stages={stages} stage={t.stage} />
               </Text>
-            </Box>
+            </SelectionRow>
           ))}
         </Box>
       )}
       {mode === 'move' && task && (
-        <Box flexDirection="column">
-          <Text bold>Move {task.id} to</Text>
+        <Modal title={`${task.id} › Move Stage`} onClose={() => setMode('view')}>
           <SelectList
             items={stages.map((s) => ({
               value: s.key,
@@ -124,18 +124,20 @@ export function TasksTab({ story, active, plugin, ui }: PluginStoryTabProps<Reco
               void run(() => moveTask(plugin, task.id, item.value), `Moved ${task.id} to ${item.value}`)
             }
           />
-        </Box>
+        </Modal>
       )}
       {mode === 'confirm-delete' && task && (
-        <ConfirmDialog
-          message={`Delete ${task.id} "${task.name}"?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          isActive={isActive && !busy}
-          onConfirm={() => void run(() => deleteTask(plugin, task.id), `Deleted ${task.id}`)}
-          onCancel={() => setMode('view')}
-        />
+        <Modal title="Delete" onClose={() => setMode('view')}>
+          <ConfirmDialog
+            message={`Delete ${task.id} "${task.name}"?`}
+            confirmLabel="Delete"
+            cancelLabel="Cancel"
+            destructive
+            isActive={isActive && !busy}
+            onConfirm={() => void run(() => deleteTask(plugin, task.id), `Deleted ${task.id}`)}
+            onCancel={() => setMode('view')}
+          />
+        </Modal>
       )}
     </Box>
   );

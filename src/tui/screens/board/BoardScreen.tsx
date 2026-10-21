@@ -39,13 +39,13 @@ import {
 import type { ScreenProps } from '../types';
 import { BoardColumn } from './BoardColumn';
 import { BoardList } from './BoardList';
+import { Gutter } from './Gutter';
 import {
   type Columns,
   cardsPerColumn,
   columnLayout,
   edgeCard,
   follow,
-  GUTTER_WIDTH,
   groupColumns,
   LIST_ROW_HEIGHT,
   type ListRow,
@@ -466,7 +466,7 @@ export function BoardScreen({ params }: ScreenProps) {
         </Box>
       )}
       {mode === 'filter' && (
-        <Modal title="Filter Stories" hints={[{ key: 'esc', description: 'cancel' }]}>
+        <Modal title="Filter Stories" onClose={() => setMode('view')} hints={[{ key: 'esc', description: 'cancel' }]}>
           <PluginFailures failures={extra.failures} note="its filter is unavailable" />
           <Form
             fields={[...filterFields({ labels: choices.labels }, { board: true }), ...extra.fields]}
@@ -479,7 +479,7 @@ export function BoardScreen({ params }: ScreenProps) {
         </Modal>
       )}
       {mode === 'confirm-delete' && focused && (
-        <Modal size="dialog">
+        <Modal size="dialog" title="Delete Story" onClose={() => setMode('view')}>
           <ConfirmDialog
             message={`Delete ${focused.key} "${focused.name}"?`}
             confirmLabel="Delete"
@@ -490,17 +490,6 @@ export function BoardScreen({ params }: ScreenProps) {
           />
         </Modal>
       )}
-    </Box>
-  );
-}
-
-/** The column indicator shown at the edge when Stages are scrolled out of view on that side. */
-function Gutter({ text }: { text: string }) {
-  return (
-    <Box width={GUTTER_WIDTH} flexShrink={0}>
-      <Text color={theme.accent} wrap="truncate-end">
-        {text}
-      </Text>
     </Box>
   );
 }

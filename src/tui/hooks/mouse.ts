@@ -6,6 +6,8 @@ import type { MouseEvent } from '../mouse';
 /** What a box does when clicked, and what it accepts when something is dragged onto it. */
 export interface MouseHandlers {
   onClick?(): void;
+  onEnter?(): void;
+  onLeave?(): void;
   /** Dragging starts on a press here and carries this value to the box it is released over. */
   drag?: unknown;
   onDrop?(value: unknown): void;
@@ -24,6 +26,7 @@ export interface MouseRegistry {
 
 export function createMouseRegistry(): MouseRegistry {
   const targets = new Set<Target>();
+  let hovered: Target | undefined;
   let dragging: { value: unknown; from: Target } | null = null;
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
@@ -44,10 +47,23 @@ export function createMouseRegistry(): MouseRegistry {
     register(target) {
       targets.add(target);
       return () => {
+        if (hovered === target) {
+          hovered = undefined;
+          target.handlers.current.onLeave?.();
+        }
         targets.delete(target);
       };
     },
     dispatch(event) {
+      if (event.kind === 'move') {
+        const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
+        if (next !== hovered) {
+          hovered?.handlers.current.onLeave?.();
+          hovered = next;
+          hovered?.handlers.current.onEnter?.();
+        }
+        return;
+      }
       if (event.kind === 'press') {
         const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined));
         dragging =

@@ -1,10 +1,11 @@
 import { Box } from 'ink';
-import type { ReactNode } from 'react';
+import { type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { type Layout, LayoutContext, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { CloseButton } from './CloseButton';
 import { KeyHints } from './KeyHints';
+import { ModalLayerContext } from './modalLayer';
 import { Panel } from './Panel';
 import { ScrollBody } from './ScrollBody';
 
@@ -16,8 +17,7 @@ export interface ModalProps {
   /** Shown along the bottom edge, e.g. the keys of the screen inside. */
   hints?: readonly KeyHint[];
   /**
-   * `panel` (the default) takes most of the area for a screen or a form; `dialog` sizes itself to
-   * its content, for confirmations and pickers.
+   * `panel` and `dialog` fit a short task; only core uses `screen` for fixed Story/Settings frames.
    */
   size?: 'panel' | 'dialog' | 'screen';
   focused?: boolean;
@@ -61,6 +61,13 @@ export function Modal({
   focused = true,
   children,
 }: ModalProps) {
+  const parentLayer = useContext(ModalLayerContext);
+  const [nested, setNested] = useState(0);
+  const registerLayer = useCallback(() => {
+    setNested((count) => count + 1);
+    return () => setNested((count) => count - 1);
+  }, []);
+  useEffect(() => parentLayer?.(), [parentLayer]);
   const outer = useLayout();
   const screen = size === 'screen';
   const overlay = outer.height !== undefined;
@@ -70,8 +77,9 @@ export function Modal({
   const frame = (
     <Panel
       title={title}
-      aside={onClose && <CloseButton onClick={onClose} />}
-      focused={focused}
+      paddingX={0}
+      aside={onClose && nested === 0 && <CloseButton onClick={onClose} />}
+      focused={focused && nested === 0}
       backgroundColor={overlay ? MODAL_BACKGROUND : undefined}
       width={width}
       height={screen ? room : undefined}
@@ -80,7 +88,15 @@ export function Modal({
     >
       <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden" paddingX={2} paddingY={1}>
         <LayoutContext.Provider value={body}>
-          {screen ? children : <ScrollBody height={body.height}>{children}</ScrollBody>}
+          <ModalLayerContext.Provider value={registerLayer}>
+            {screen ? (
+              children
+            ) : (
+              <ScrollBody active={nested === 0} height={body.height}>
+                {children}
+              </ScrollBody>
+            )}
+          </ModalLayerContext.Provider>
         </LayoutContext.Provider>
       </Box>
       {footer && (

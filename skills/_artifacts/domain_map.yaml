@@ -271,3 +271,6 @@ gaps:
     question: Should agents ever drive the TUI (e.g. for Actions, which are TUI-only per ADR-0017)?
     context: The batch tells agents to use command mode only; Plugin Actions have no CLI equivalent for non-data behaviour.
     status: open
+
+# 2026-10-21: TUI design-system source review; command-mode tasks, mappings and decisions unchanged.
+# Evidence and scope rationale: skill_spec.md, “Behavior change — TUI design system”.

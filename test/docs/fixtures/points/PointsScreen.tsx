@@ -6,6 +6,7 @@ import {
   Loading,
   SelectList,
   Text,
+  theme,
   useAsync,
   useIsActive,
   useKeyHints,
@@ -27,7 +28,11 @@ export function PointsScreen({ plugin, ui }: PluginScreenProps<PointsSettings>) 
   useReloadOnReturn(data.reload);
   useKeyHints(active ? [{ key: 'enter', description: 'open Story' }] : []);
   if (!data.data) {
-    return data.loading ? <Loading label="Loading Stories…" /> : <Text color="red">Could not load Stories.</Text>;
+    return data.loading ? (
+      <Loading label="Loading Stories…" />
+    ) : (
+      <Text color={theme.danger}>Could not load Stories.</Text>
+    );
   }
   return (
     <Box flexDirection="column">

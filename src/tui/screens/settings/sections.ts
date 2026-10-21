@@ -41,13 +41,6 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'context', label: 'Context', screen: 'context' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
-        ...plugins.flatMap((plugin) =>
-          // The ID is the section's place in the Plugin's list, not its label (ARCH-40).
-          (plugin.tui.settings ?? []).map((link, i) => {
-            const route = pluginRoute(plugin.id, link.screen, link.params);
-            return { id: `plugin:${plugin.id}:${i}`, label: link.label, ...route };
-          }),
-        ),
       ],
     },
     {
@@ -62,6 +55,13 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
           ]
         : [],
     },
+    ...plugins.flatMap((plugin) => {
+      const sections = (plugin.tui.settings ?? []).map((link, i) => {
+        const route = pluginRoute(plugin.id, link.screen, link.params);
+        return { id: `plugin:${plugin.id}:${i}`, label: link.label, ...route };
+      });
+      return sections.length ? [{ title: `Plugins: ${plugin.id}`, sections }] : [];
+    }),
   ];
 }
 

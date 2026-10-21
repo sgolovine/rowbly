@@ -9,9 +9,7 @@ export function CloseButton({ onClick }: { onClick(): void }) {
   useMouse(ref, { onClick }, useIsActive());
   return (
     <Box ref={ref} flexShrink={0}>
-      <Text color={theme.accent} bold>
-        {' ✕ '}
-      </Text>
+      <Text color={theme.inkFaint}>{' ✕ '}</Text>
     </Box>
   );
 }

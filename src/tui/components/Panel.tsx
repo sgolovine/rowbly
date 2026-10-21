@@ -7,7 +7,7 @@ export interface PanelProps extends Omit<BoxProps, 'borderStyle' | 'borderTop' |
   title?: string;
   /** Set into the right of the top edge, after the rule, e.g. a close button. */
   aside?: ReactNode;
-  /** Border and title colour; a panel without one has a dim border. */
+  /** Whether the panel owns focus; all other frames stay quiet. */
   focused?: boolean;
   children?: ReactNode;
 }
@@ -25,7 +25,17 @@ export function Panel({ title, aside, focused = false, children, flexDirection =
         {title && (
           <Box flexShrink={1} overflow="hidden">
             <Text color={focused ? theme.accent : theme.inkMuted} bold={focused} wrap="truncate-end">
-              {title}
+              {title.split(' › ').map((crumb, i, crumbs) => (
+                <Text
+                  // biome-ignore lint/suspicious/noArrayIndexKey: breadcrumb identity is its stack position, and names can repeat.
+                  key={`${i}:${crumb}`}
+                  bold={focused && i === crumbs.length - 1}
+                  color={focused && i === crumbs.length - 1 ? theme.accent : theme.inkMuted}
+                >
+                  {i > 0 ? ' › ' : ''}
+                  {crumb}
+                </Text>
+              ))}
             </Text>
           </Box>
         )}
@@ -43,6 +53,7 @@ export function Panel({ title, aside, focused = false, children, flexDirection =
         borderStyle="round"
         borderTop={false}
         borderColor={color}
+        paddingX={1}
         {...inner(box)}
       >
         {children}

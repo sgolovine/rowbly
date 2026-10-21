@@ -3,6 +3,7 @@ import { type ReactNode, useContext, useMemo, useState } from 'react';
 import { invokePlugin } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
+  ActiveContext,
   type BoardSelection,
   BoardSelectionContext,
   type BoardView,
@@ -173,10 +174,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const label = useScreenLabel(0);
   const sidebarWidth = services ? SIDEBAR_WIDTH * (pluginSidebars.shown ? 2 : 1) : 0;
   // The main panel's border takes a column on each side.
-  const mainWidth = Math.max(20, columns - sidebarWidth - 2);
+  const mainWidth = Math.max(20, columns - sidebarWidth - 4 - (services ? (pluginSidebars.shown ? 2 : 1) : 0));
   const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
-  const screenHidden = overlay !== null && overlay.kind !== 'confirm';
+  const screenHidden = overlay?.kind === 'main';
   const top = router.stack[depth];
 
   return (
@@ -197,7 +198,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 }
                 sidebars={pluginSidebars.buttons}
               />
-              <Box flexGrow={1}>
+              <Box flexGrow={1} columnGap={1}>
                 {services && (
                   <Sidebar
                     title="Boards"
@@ -267,30 +268,32 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                               left={0}
                               width="100%"
                             >
-                              <Modal
-                                title={router.stack
-                                  .slice(0, routeDepth + 1)
-                                  .map(routeTitle)
-                                  .join(' › ')}
-                                size={screen ? 'screen' : 'panel'}
-                                focused={focused}
-                                onClose={focused ? back : undefined}
-                                hints={modalHints(focused ? hints : [])}
-                              >
-                                <ScreenSlot route={route} depth={routeDepth} top active={focused} screens={screens} />
-                              </Modal>
+                              <ActiveContext.Provider value={focused}>
+                                <Modal
+                                  title={router.stack
+                                    .slice(0, routeDepth + 1)
+                                    .map(routeTitle)
+                                    .join(' › ')}
+                                  size={screen ? 'screen' : 'panel'}
+                                  focused={focused}
+                                  onClose={focused ? back : undefined}
+                                  hints={modalHints(focused ? hints : [])}
+                                >
+                                  <ScreenSlot route={route} depth={routeDepth} top active={focused} screens={screens} />
+                                </Modal>
+                              </ActiveContext.Provider>
                             </Box>
                           );
                         })}
                       </Box>
                     )}
                     {overlay?.kind === 'help' && (
-                      <Modal title="Keys" size="dialog">
+                      <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
                         <HelpOverlay hints={hints} />
                       </Modal>
                     )}
                     {overlay?.kind === 'confirm' && (
-                      <Modal size="dialog">
+                      <Modal size="dialog" title="Discard changes" onClose={() => setOverlay(null)}>
                         <ConfirmDialog
                           message={
                             overlay.action === 'quit'
