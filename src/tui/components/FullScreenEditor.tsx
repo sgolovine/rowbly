@@ -4,6 +4,7 @@ import { useIsActive, useKeyCapture, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { ConfirmDialog } from './ConfirmDialog';
+import { EditorModeTab } from './EditorModeTab';
 import { MarkdownView } from './MarkdownView';
 import { Modal, modalSize } from './Modal';
 import { TextArea } from './TextArea';
@@ -37,7 +38,7 @@ type SaveState = { kind: 'idle' | 'saving' | 'saved' } | { kind: 'failed'; messa
 
 /**
  * A text in a modal as large as the area it covers, in two modes: `view` renders the markdown and
- * scrolls, and `edit` shows the raw text. `tab` switches mode (`e` also edits); `esc`, `ctrl+f` and
+ * scrolls, and `edit` shows the raw text. `tab` or a click on a mode switches mode (`e` also edits); `esc`, `ctrl+f` and
  * the `✕` in its border close it. Every edit goes to `onChange`; with `onSave`, `ctrl+s` saves and
  * closing with unsaved changes asks before discarding them.
  */
@@ -113,12 +114,8 @@ export function FullScreenEditor({
       ) : (
         <>
           <Box gap={1} height={1} marginBottom={MODE_ROWS - 1} flexShrink={0}>
-            <Text bold={mode === 'view'} backgroundColor={mode === 'view' ? theme.selection : undefined}>
-              {' View '}
-            </Text>
-            <Text bold={mode === 'edit'} backgroundColor={mode === 'edit' ? theme.selection : undefined}>
-              {' Edit '}
-            </Text>
+            <EditorModeTab label="View" selected={mode === 'view'} active={keys} onClick={() => setMode('view')} />
+            <EditorModeTab label="Edit" selected={mode === 'edit'} active={keys} onClick={() => setMode('edit')} />
             {saveStatus(save, dirty)}
           </Box>
           {mode === 'view' ? (
