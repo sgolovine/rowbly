@@ -2,6 +2,7 @@
 export { cascade, resolveCascade } from './cascade';
 export { type FindDataRootOptions, findDataRoot } from './dataRoot';
 export { type FolderMove, listFilesUnder, moveFolders, preflightMoves, readTextIfExists, removeFile } from './files';
+export * from './homeConfig';
 export { CONFLICT_MARKER_RE, readJson, serializeJson, writeJson } from './jsonStore';
 export * from './lock';
 export { canonicalDataRoot, listPluginFiles, readPluginFile, resolvePluginFile } from './pathPolicy';
