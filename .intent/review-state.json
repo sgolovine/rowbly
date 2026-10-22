@@ -3,55 +3,51 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "ad65c55d987fb3e06ebec51f64dc0ae579bd444765a838862713253dee41b204",
+      "fingerprint": "0fe237ee772e724f515289338a9beb8506f337bdea49107e0c5ec6a908da69d9",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "7230ff64581b896aedf8b34c4a9fdce7a30433e77d1b860132c67f2e83866385",
+      "fingerprint": "6ccd8d032ab04d5542ca37b0bb878cc20ee3102338490efe739c6bdcc5ead6da",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "d7aeb199cbc04141d4f96c8cdaeb880985bd91e794ff10c7d60fe33ab7e5c61c",
+      "fingerprint": "8ddf8e56f2df9c7d6f28a2bf26f82ff01f54df44580722391dc090cd9b17a801",
       "snapshot": {
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/rowbly-plugins/SKILL.md": "b819ad8d7599e7ce956d71ef850e15318522cbaaf020c588164fcd956d0c1d90",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -68,20 +64,18 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "0d3f024e363bafbdade02fd975634c2959fd6c4c81a3d6d5fb12453ffc961ac0",
+      "fingerprint": "9f0cc0573311c3fb5790d432e3e8961b5a16627a81278ad5c62f52dfcb302101",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/rowbly-setup/SKILL.md": "bec372b123ea2d1d7789b4ce45b6583eb1c5f52c436602937fdc589a98b0c383",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
@@ -89,20 +83,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "6ca293d4cd727b80b6c37cac374c78a0fe4b50f6b7df7df07292f36fb2917fef",
+      "fingerprint": "b9b39eb6fa13a560f064efe92df3bc680773b860925f9c778174bcb0335fb31f",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/rowbly-stories/SKILL.md": "83a0d214d1cf4fec7429c1660e9cd388da220203f0fe5a85361961052a04a73e",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
@@ -110,17 +102,15 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "300b84bed629540f5eb68963ab01b39a641d527f07c532f5219b9684c199eb1a",
+      "fingerprint": "d12bbfc56db8eba44640c49c7492f8e3ea6befb1f602488858df78ddfcb6c9eb",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
@@ -128,7 +118,7 @@
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "df8b10ec8d555fb684cae16e867793ef4b9a23077921c08aafe94541b02f143e",
         "skills/_artifacts/domain_map.yaml": "44bc512c724114130aa389b979cfbde05c43b5df6919b72af1366e8d188f3bd6",
         "skills/_artifacts/skill_spec.md": "05c4c6352a0151e3fe816aeb25fb91b63567c1ba5dfa4ca1c29498b60be09fd4",
         "skills/_artifacts/skill_tree.yaml": "76954042de7a582206f5bf4c75e2f0522c593da93f20415f54c6c46e2056298e",
@@ -167,13 +157,11 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "skill_tree.yaml sources synchronized by intent maintainer sync; failure-mode sources in skill_spec.md and domain_map.yaml repointed from README.md#<anchor> to the same anchors in docs/user-guide.md; skill_spec.md gains the history entry “Documentation — README becomes a landing page”. No task, failure mode, prerequisite or decision changed.",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "all three planning documents parse (python yaml.safe_load for both YAML files)",
-        "every docs/user-guide.md#anchor named in the spec and domain map exists",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -6267,17 +6255,15 @@
       ]
     },
     "source:src/tui/screens/setup/SetupScreen.tsx": {
-      "fingerprint": "953fd66d5b7103174dc8eb93030c15b971f6779a6a739b6cc332fbc74fee15c2",
+      "fingerprint": "88da5c76a433fe026ca36d56413a28225cb44dd64ff185cdf92d08f5c5e2954a",
       "snapshot": {
-        "src/tui/screens/setup/SetupScreen.tsx": "1a5d0f0349e4fd7f6bce4fcc2970ce018caeb1282d122f21b3dcc4197b15b274"
+        "src/tui/screens/setup/SetupScreen.tsx": "812c8e152ba421441269c6022ec205ed62b68e35a56a8daa1f45a4fb4744b706"
       },
-      "head": "b4f8dc86ab112dabbce5a160ae16134c05264979",
-      "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API wording (Form submitLabel, esc cancel around a ConfirmDialog) from the third redesign correction pass: esc-only key capture for Settings sections, setup form hints, multiselect wrap spacing, Board filter 'ctrl+s apply', confirm dialog 'esc cancel'. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
+      "outcome": "no-change",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+        "Changed: src/tui/screens/setup/SetupScreen.tsx at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     },
     "source:src/tui/screens/stages/shared.tsx": {
@@ -7322,15 +7308,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
+      "fingerprint": "61d61087a59a1eb77a63d6525e251b526c3c43542d1c1300ea7bc953fc49d518",
       "snapshot": {
-        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
+        "README.md": "c748f0c7bb8123faa48299e218eebb61fd5c86afc3f44f6e1f2cc50eed7eba1d"
       },
-      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
+      "head": "7ba3db424c7b04ae05a7370974f00302e47b6fa3",
       "outcome": "no-change",
-      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
+      "reason": "TUI-only change: the first-run setup screen (SetupScreen) gains an optional Me field that calls context.setMe after setup.init, and docs/user-guide.md says so in one bullet; the only other unreviewed change is a two-line README cut of the pre-1.0 sentence. The skills cover the CLI (init, whoami), Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the TUI setup screen (grep of skills/ for first-run, Welcome, no Data Root). The rowbly-setup whoami guidance is unchanged because the CLI is unchanged. Planning artifacts (domain_map.yaml, skill_spec.md, skill_tree.yaml) list no TUI setup guidance, so all three stay accurate.",
       "evidence": [
-        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
+        "Changed: README.md at 7ba3db424c7b04ae05a7370974f00302e47b6fa3"
       ]
     }
   }
