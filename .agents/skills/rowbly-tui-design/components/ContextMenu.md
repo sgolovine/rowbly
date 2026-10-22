@@ -1,7 +1,8 @@
 # ContextMenu
 
-A framed list of items opened by a right click, at the cell under the pointer. It is drawn over
-everything, Modals and sidebars included, and moved in from the edges so it stays fully on screen.
+A framed list of items opened by a right click, at the cell under the pointer. It is drawn above
+everything else on screen and moved in from the edges so it stays fully on screen. It opens only from
+the active screen: a right click does nothing while a Modal or another overlay covers the screen.
 
 - `border-round` frame in `accent` (it has the focus), `overlay` fill, no title, no `✕`, no hint strip.
   The footer shows its keys instead: `↑/↓ select`, `enter run`, `esc close`.
