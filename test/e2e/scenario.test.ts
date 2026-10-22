@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -57,9 +57,22 @@ describe('end-to-end scenario', () => {
   });
   afterAll(() => rm(dir, { recursive: true, force: true }));
 
-  it('1. init with flags creates the Data Root and a Board, and uses it', async () => {
-    const out = await ok('init', '--board', 'web', '--board-name', 'Web', '--prefix', 'WEB');
-    expect(out).toContain(`Created Data Root ${join(dir, '.rowbly')}`);
+  it('1. init with flags creates the Data Root and a Board, records it as the default, and uses it', async () => {
+    const out = await ok(
+      'init',
+      '--board',
+      'web',
+      '--board-name',
+      'Web',
+      '--prefix',
+      'WEB',
+      '--label',
+      'Web',
+      '--default',
+    );
+    expect(out).toContain(`Created Data Root "Web" ${join(dir, '.rowbly')} (the default)`);
+    const known = { label: 'Web', path: await realpath(join(dir, '.rowbly')), default: true };
+    expect(JSON.parse(await readFile(join(dir, 'home', '.rowblyrc.json'), 'utf8')).dataRoots).toEqual([known]);
     expect(out).toContain('Created Board web (WEB)');
     expect(out).toContain('Now using web');
     await ok('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
