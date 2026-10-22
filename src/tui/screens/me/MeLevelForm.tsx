@@ -38,7 +38,7 @@ export function MeLevelForm({
             await services.context.setMe(next);
           }
           // Activating a copy shows the new Me in the header too.
-          if (ctx) activate({ ...ctx });
+          if (ctx) void activate({ ...ctx });
           onDone();
           toast.push('info', message(level, next, ctx?.me ?? null));
         }}

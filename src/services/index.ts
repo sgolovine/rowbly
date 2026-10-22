@@ -22,6 +22,7 @@ import type { RowblyContext, Services } from './types';
 export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8);
 
 export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from './coordination';
+export { type KnownDataRootChoice, knownDataRoots, openKnownDataRoot } from './dataRoots';
 export {
   applyGlobalMe,
   effectiveMe,

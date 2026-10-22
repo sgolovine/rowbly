@@ -17,6 +17,7 @@ export * from './PluginSlot';
 export { ScrollBody } from './ScrollBody';
 export { SelectionRow } from './SelectionRow';
 export * from './SelectList';
+export * from './SelectListRow';
 export * from './Spinner';
 export * from './StageBadge';
 export * from './StoryStage';

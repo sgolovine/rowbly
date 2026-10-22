@@ -6,8 +6,11 @@ export interface ServicesValue {
   /** `null` when no Data Root exists yet (the setup screen is shown). */
   ctx: RowblyContext | null;
   services: Services | null;
-  /** Switches the app to another context, e.g. the Data Root the setup screen just created. */
-  activate?(ctx: RowblyContext): void;
+  /**
+   * Switches the app to another context, e.g. the Data Root the setup screen just created, once its
+   * Plugins load. Resolves `false` when a later call replaced it before then.
+   */
+  activate?(ctx: RowblyContext): Promise<boolean>;
 }
 
 export const ServicesContext = createContext<ServicesValue>({ ctx: null, services: null });
@@ -24,7 +27,10 @@ export function useRowblyContext(): RowblyContext | null {
   return useContext(ServicesContext).ctx;
 }
 
-/** Switches the whole app to `ctx` and fresh services over it. A no-op outside the App. */
-export function useActivate(): (ctx: RowblyContext) => void {
-  return useContext(ServicesContext).activate ?? (() => {});
+/**
+ * Switches the whole app to `ctx` and fresh services over it. Another Data Root opens on the home
+ * screen with none of the previous one's screens; the same one keeps its screens. A no-op outside the App.
+ */
+export function useActivate(): (ctx: RowblyContext) => Promise<boolean> {
+  return useContext(ServicesContext).activate ?? (async () => false);
 }

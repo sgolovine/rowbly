@@ -76,9 +76,8 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
             router.pop();
             return;
           }
-          activate(ctx);
-          // No screen of the previous Data Root stays below the new one.
-          router.reset('home');
+          // The app opens the new Data Root on the home screen, with no screen of the previous one.
+          await activate(ctx);
         }}
       />
     </Box>

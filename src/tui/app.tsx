@@ -1,6 +1,6 @@
 import type { EventEmitter } from 'node:events';
-import { useCallback, useMemo, useState } from 'react';
-import { createServices, type RowblyContext, type Services } from '../services';
+import { useMemo } from 'react';
+import type { RowblyContext, Services } from '../services';
 import {
   createMouseRegistry,
   createShellRegistry,
@@ -12,9 +12,10 @@ import {
   ToastContext,
   type ToastStore,
   type TuiPlugin,
+  useDataRootSession,
   useMouseSource,
 } from './hooks';
-import { type PluginLoader, withPlugins } from './loadPlugins';
+import type { PluginLoader } from './loadPlugins';
 import { type Route, RouterProvider } from './router';
 import { screens as defaultScreens, type ScreenRegistry } from './screens';
 import { Shell } from './shell';
@@ -49,37 +50,15 @@ export function App({
   const shell = useMemo(createShellRegistry, []);
   const mouseRegistry = useMemo(createMouseRegistry, []);
   useMouseSource(mouseRegistry, mouse);
-  const [current, setCurrent] = useState({ ctx, services, plugins });
-  /** Switches to `next` with fresh services, after loading its Plugins. */
-  const activate = useCallback(
-    async (next: RowblyContext) => {
-      const loaded = await withPlugins(next, loadPlugins, toastStore);
-      setCurrent({ ctx: next, services: createServices(next), plugins: loaded });
-    },
-    [loadPlugins, toastStore],
-  );
-  const servicesValue = useMemo(
-    () => ({ ctx: current.ctx, services: current.services, activate: (next: RowblyContext) => void activate(next) }),
-    [current, activate],
-  );
-  const pluginsValue = useMemo(
-    () => ({
-      plugins: current.plugins,
-      reload: async () => {
-        // A shallow copy, so loading the Plugins into it (`ctx.plugins`) leaves the context that the
-        // screens use now as it is until the new one replaces it. It shares everything else (CQ-78).
-        if (current.ctx) await activate({ ...current.ctx });
-      },
-    }),
-    [current, activate],
-  );
+  const session = useDataRootSession({ ctx, services, plugins, initial, loadPlugins, toasts: toastStore });
   return (
-    <ServicesContext.Provider value={servicesValue}>
-      <PluginsContext.Provider value={pluginsValue}>
+    <ServicesContext.Provider value={session.services}>
+      <PluginsContext.Provider value={session.plugins}>
         <ToastContext.Provider value={toastStore}>
           <ShellContext.Provider value={shell}>
             <MouseContext.Provider value={mouseRegistry}>
-              <RouterProvider initial={initial}>
+              {/* Keyed by the Data Root: switching to another one drops the previous one's screens and picks. */}
+              <RouterProvider key={session.key} initial={session.initial}>
                 <Shell screens={screens} />
               </RouterProvider>
             </MouseContext.Provider>

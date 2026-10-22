@@ -32,7 +32,7 @@ layout; the HTML previews show the design intent.
 | `ConfirmDialog` | A small Modal that asks before an Operation that cannot be undone. | [guide](components/ConfirmDialog.md) · [preview](previews/ConfirmDialog.html) |
 | `DetailView` | Label–value rows for a record, used by the Details tab and by settings screens. | [guide](components/DetailView.md) · [preview](previews/DetailView.html) |
 | `Form` | Labelled fields for creating and editing a record, inside a Modal. | [guide](components/Form.md) · [preview](previews/Form.html) |
-| `Header` | One Panel across the top, three rows tall, titled with the project folder. | [guide](components/Header.md) · [preview](previews/Header.html) |
+| `Header` | One Panel across the top, three rows tall: the Data Root Button far left, then the Board name, the Buttons on the right. | [guide](components/Header.md) · [preview](previews/Header.html) |
 | `KeyHints` | The keys of the screen in focus: the footer, and the strip at the bottom of a Modal. | [guide](components/KeyHints.md) · [preview](previews/KeyHints.html) |
 | `ListRow` | A row of the Board's list view: a Stage heading or a Story. | [guide](components/ListRow.md) · [preview](previews/ListRow.html) |
 | `Modal` | The generic Modal: one short task over the screen. New Board, New Story and edit Forms, Move Stage and other pickers, ConfirmDialog, Help, and every Plugin Modal. | [guide](components/Modal.md) · [preview](previews/Modal.html) |
@@ -88,8 +88,8 @@ Casing: Title Case for the domain nouns (Board, Story, Stage, Epic, Story Key), 
 ## Layout (kept as today)
 
 ```
-╭─rowbly─────────────────────────────────────────────────────────────────────────────────╮
-│ Rowbly · filter Epic: Test Epic 01    me —  Epics [\] | Settings [,] | Stages / List [v] | + New Story [n] │
+╭────────────────────────────────────────────────────────────────────────────────────────╮
+│ rowbly [D] | Rowbly · filter Epic: Test Epic 01    me —  Epics [\] | Settings [,] | Stages / List [v] | + New Story [n] │
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─Boards──╮ ╭─Board──────────────────────────────────────────────────────────────────────╮
 │▌Rowbly  │ │ ● Backlog 1          ● In Progress 0        ● Done 8                         │
@@ -103,7 +103,7 @@ Casing: Title Case for the domain nouns (Board, Story, Stage, Epic, Story Key), 
  ←→↑↓ select  enter open  n new Story  / filter  v list view                   ? help  q quit
 ```
 
-- Header: one Panel, three rows, with the Buttons inside it on the right. Buttons have no frames: label in `ink`, then the key in a key cap (` n ` on `keycap`, `ink-muted`; drawn `[n]` above; every Button that shows a key uses the same cap), every control separated by `|` in `border-control`. The view switch reads `Stages / List` and its key cap, the current view in `accent` bold. **+ New Story** is the one primary Button (`accent` bold). A filter shows as `filter` (`ink-faint`) then its value (`ink`).
+- Header: one Panel, three rows, the Data Root Button far left (it opens the Data Root switcher), with the other Buttons inside it on the right. Buttons have no frames: label in `ink`, then the key in a key cap (` n ` on `keycap`, `ink-muted`; drawn `[n]` above; every Button that shows a key uses the same cap), every control separated by `|` in `border-control`. The view switch reads `Stages / List` and its key cap, the current view in `accent` bold. **+ New Story** is the one primary Button (`accent` bold). A filter shows as `filter` (`ink-faint`) then its value (`ink`).
 - Sidebars: fixed width, a list of rows, a quiet `+ New …` Button at the bottom (label `ink`, key in a key cap, no frame), like the header Buttons.
 - Footer: key hints for the screen in focus on the left; `? help` and `q quit` pinned right.
 

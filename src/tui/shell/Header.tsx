@@ -1,18 +1,12 @@
-import { basename, dirname } from 'node:path';
 import { Box, Text, useWindowSize } from 'ink';
 import { useContext } from 'react';
-import type { RowblyContext } from '../../services';
 import { Button, Panel } from '../components';
 import { type BoardView, type HeaderLabel, ServicesContext } from '../hooks';
 import { theme } from '../theme';
 import { ViewSwitch } from './ViewSwitch';
 
-/** The project the Data Root belongs to: the folder holding `.rowbly`, or "Global" for `~/.rowbly`. */
-export function projectName(ctx: RowblyContext | null): string {
-  if (!ctx) return 'Rowbly';
-  if (ctx.root.kind === 'global') return 'Global';
-  return basename(dirname(ctx.root.path)) || 'Rowbly';
-}
+/** The longest Data Root name the header shows; a longer one is cut with `…`. */
+const ROOT_NAME_MAX = 24;
 
 /** A Plugin Action in focus, shown as a header button (ADR-0017). */
 export interface HeaderAction {
@@ -22,6 +16,7 @@ export interface HeaderAction {
 }
 
 export function Header({
+  root,
   label,
   onNewStory,
   newStoryKey = true,
@@ -32,6 +27,8 @@ export function Header({
   boardView,
   sidebars = [],
 }: {
+  /** The far-left Button naming the Data Root that is open; it opens the Data Root switcher, like `D`. */
+  root: { name: string; onClick(): void; clickable: boolean };
   label: HeaderLabel | null;
   onNewStory?: () => void;
   /** Whether `n` makes a new Story: not while a sidebar has focus, where it creates there. */
@@ -51,17 +48,30 @@ export function Header({
   const { columns } = useWindowSize();
   const me = `me ${ctx?.me ?? '—'} `;
   const labelText = label ? `${label.title}${label.detail ? ` ${label.detail}` : ''}` : '';
-  // The panel's border and padding, the gap after the label, and the label itself (it may be cut).
-  const room = columns - 6 - Math.min(labelText.length, 30);
+  const rootName = root.name.length > ROOT_NAME_MAX ? `${root.name.slice(0, ROOT_NAME_MAX - 1)}…` : root.name;
+  // The panel's border and padding, the gap after the label, the label itself (it may be cut) and the
+  // Data Root Button with its `|`, whose key goes with the other Buttons' keys.
+  const room = columns - 6 - Math.min(labelText.length, 30) - buttonWidth(rootName) - 3;
   const { showKeys, showMe, showExtras, showSettings, showSwitch } = headerFit(room, {
     me: me.length,
     extras: [...sidebars.map((s) => ({ label: s.label, key: '\\' })), ...actions],
     settings: onSettings !== undefined,
     viewSwitch: boardView !== undefined,
     newStory: onNewStory !== undefined,
+    rootKey: buttonWidth('', 'D') - buttonWidth(''),
   });
   return (
-    <Panel title={projectName(ctx)} height={3} paddingX={1} flexDirection="row" columnGap={2}>
+    <Panel height={3} paddingX={1} flexDirection="row" columnGap={2}>
+      <Box flexShrink={0}>
+        <Button
+          label={rootName}
+          keyName={showKeys ? 'D' : undefined}
+          onClick={root.onClick}
+          clickable={root.clickable}
+          compact
+        />
+        <Text color={theme.borderControl}>|</Text>
+      </Box>
       <Box flexGrow={1} flexShrink={1} minWidth={8}>
         {label && (
           <Text color={theme.ink} wrap="truncate-end">
@@ -138,7 +148,8 @@ const SWITCH_WIDTH = 19;
 
 /**
  * Which header controls fit in `room` columns. The quiet Buttons' keys go first (they stay in Help),
- * then Me, the Plugin Buttons, Settings and the view switch; **+ New Story** and its key always stay.
+ * then Me, the Plugin Buttons, Settings and the view switch; **+ New Story** and its key, and the Data Root
+ * Button, always stay.
  */
 function headerFit(
   room: number,
@@ -148,6 +159,8 @@ function headerFit(
     settings: boolean;
     viewSwitch: boolean;
     newStory: boolean;
+    /** The Data Root Button's key cap, shown with the other keys. */
+    rootKey: number;
   },
 ) {
   const width = (fit: ReturnType<typeof level>) =>
@@ -157,7 +170,8 @@ function headerFit(
       : 0) +
     (fit.showSettings && controls.settings ? buttonWidth('Settings', fit.showKeys ? ',' : undefined) + 1 : 0) +
     (fit.showSwitch && controls.viewSwitch ? SWITCH_WIDTH + 1 : 0) +
-    (controls.newStory ? buttonWidth('+ New Story', 'n') : 0);
+    (controls.newStory ? buttonWidth('+ New Story', 'n') : 0) +
+    (fit.showKeys ? controls.rootKey : 0);
   const level = (n: number) => ({
     showKeys: n < 1,
     showMe: n < 2,

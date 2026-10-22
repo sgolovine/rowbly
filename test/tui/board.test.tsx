@@ -1,12 +1,15 @@
 import type { EventEmitter } from 'node:events';
-import { describe, expect, it } from 'vitest';
+import { Text } from 'ink';
+import { describe, expect, it, vi } from 'vitest';
 import { ConflictError } from '../../src/core/errors';
 import type { StageConfig } from '../../src/schemas';
-import { createServices, type RowblyContext, type Services } from '../../src/services';
+import { createServices, type PluginHost, type RowblyContext, type Services } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
-import { createToastStore } from '../../src/tui/hooks';
-import { fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { createToastStore, useActivate } from '../../src/tui/hooks';
+import { useRouter } from '../../src/tui/router';
+import { screens } from '../../src/tui/screens';
+import { deferred, fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
 import { KEYS, type Rendered, renderTui, resize, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
@@ -202,6 +205,74 @@ describe('board view', () => {
       await waitForFrame(app, (f) => /WEB-4 +Dark mode/.test(f) && f.includes(' Details '));
     } finally {
       release();
+      app.unmount();
+    }
+  });
+});
+
+describe('Data Root session', () => {
+  it('opens the Data Root activated last, and a refresh of the same one keeps its screens', async () => {
+    const a = await seed();
+    const b = await tempRoot();
+    await makeBoard(b.path, { id: 'ops', name: 'Operations', keyPrefix: 'OPS' });
+    await makeStory(b.path, { boardId: 'ops', key: 'OPS-1', name: 'Rotate keys', stage: 'backlog', rank: 'a0' });
+    const toasts = createToastStore();
+    const ctxA = contextFor(a, toasts, { version: 1, board: 'web' }).ctx;
+    const ctxB = contextFor(b, toasts, { version: 1, board: 'ops' }).ctx;
+    // Each Plugin load waits until the test releases it, so the loads can finish in any order.
+    const loads: { path: string; release(): void }[] = [];
+    const host: PluginHost = { registry: [], status: () => [], active: () => [], failures: () => [], markFailed() {} };
+    const loadPlugins = async (root: RowblyContext['root'] | null) => {
+      const load = deferred();
+      loads.push({ path: root?.path ?? '', release: () => load.resolve() });
+      await load.promise;
+      return host;
+    };
+    const release = async (path: string) => {
+      await vi.waitFor(() => expect(loads.some((load) => load.path === path)).toBe(true));
+      const at = loads.findIndex((load) => load.path === path);
+      loads.splice(at, 1)[0]?.release();
+    };
+    let session: { activate: ReturnType<typeof useActivate>; push(screen: string): void } | undefined;
+    function Probe({ params }: { params: Record<string, unknown> }) {
+      const activate = useActivate();
+      const router = useRouter();
+      session = { activate, push: (screen) => router.push(screen, { title: 'Marker' }) };
+      return <Text>{`probe ${String(params.title ?? 'root')}`}</Text>;
+    }
+    const app = renderTui(
+      <App
+        ctx={ctxA}
+        services={createServices(ctxA)}
+        initial={{ screen: 'probe', params: {} }}
+        screens={{ ...screens, probe: Probe }}
+        toasts={toasts}
+        loadPlugins={loadPlugins}
+      />,
+    );
+    resize(app, 120, 40);
+    try {
+      await waitForFrame(app, 'probe root');
+      session?.push('probe');
+      await waitForFrame(app, 'probe Marker');
+      // A refresh of the open Data Root (as after turning a Plugin on) keeps the screens open.
+      const refresh = session?.activate({ ...ctxA });
+      await release(a.path);
+      expect(await refresh).toBe(true);
+      expect(app.lastFrame()).toContain('probe Marker');
+
+      // A refresh of A starts, then a switch to B; B loads first, then A's stale load finishes.
+      const stale = session?.activate({ ...ctxA });
+      const toB = session?.activate(ctxB);
+      await release(b.path);
+      expect(await toB).toBe(true);
+      await waitForFrame(app, (f) => f.includes('OPS-1') && !f.includes('probe'));
+      await release(a.path);
+      expect(await stale).toBe(false);
+      expect(app.lastFrame()).toContain('OPS-1');
+      expect(app.lastFrame()).not.toContain('WEB-');
+    } finally {
+      for (const load of loads) load.release();
       app.unmount();
     }
   });

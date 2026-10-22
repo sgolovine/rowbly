@@ -20,6 +20,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: '{/}', description: 'previous/next entry in the Plugin Sidebar' },
   { key: 'esc', description: 'back' },
   { key: ',', description: 'settings' },
+  { key: 'D', description: 'switch Data Root' },
   { key: '?', description: 'help' },
   { key: 'q', description: 'quit (from the root)' },
   { key: 'j/k', description: 'move (vim keys)', secondary: true },
@@ -33,8 +34,8 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 export const CORE_KEYS: readonly string[] = [
   // The shell: help, settings, quit, previous/next Board and Boards 1–9 in the sidebar, and the
   // Plugin Sidebars: show the next one, previous/next entry. `n` in a focused sidebar is below.
-  // `b` is the shell's `ctrl+b`, which hides and shows the Board sidebar.
-  ...'?,q[]123456789\\{}b',
+  // `b` is the shell's `ctrl+b`, which hides and shows the Board sidebar; `D` switches the Data Root.
+  ...'?,q[]123456789\\{}bD',
   // Moving, as alternatives to the arrow keys: j/k up and down, h/l left and right; with shift
   // (like shift+arrows), moving a Story or a list entry.
   ...'jkhlJKHL',
@@ -80,7 +81,7 @@ export const DESTINATIONS: readonly Destination[] = [
   { label: 'Doctor', screen: 'doctor' },
 ];
 
-export type GlobalAction = 'quit' | 'back' | 'help' | 'settings';
+export type GlobalAction = 'quit' | 'back' | 'help' | 'settings' | 'dataRoots';
 
 /** The shell action bound to a key press, if any. */
 export function globalAction(input: string, key: Key): GlobalAction | null {
@@ -89,6 +90,7 @@ export function globalAction(input: string, key: Key): GlobalAction | null {
   if (input === 'q') return 'quit';
   if (input === '?') return 'help';
   if (input === ',') return 'settings';
+  if (input === 'D') return 'dataRoots';
   return null;
 }
 
