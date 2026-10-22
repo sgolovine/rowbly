@@ -1,5 +1,5 @@
 // Me at two levels (ADR-0032): global Me in the Home Config, and a local Me in a Data Root's Local
-// State that overrides it there.
+// State that replaces it there.
 import { isSlug, ValidationError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import { readHomeConfig, updateHomeConfig } from '../storage';
@@ -45,7 +45,7 @@ export async function setGlobalMe(home: string, handle: Slug | null): Promise<Sl
   return saved.me ?? null;
 }
 
-/** Makes `globalMe` the context's global Me; Me follows unless the local Me overrides it. */
+/** Makes `globalMe` the context's global Me; Me follows unless a local Me replaces it. */
 export function applyGlobalMe(ctx: RowblyContext, globalMe: Slug | null): void {
   ctx.globalMe = globalMe;
   ctx.me = effectiveMe(ctx.local, globalMe);

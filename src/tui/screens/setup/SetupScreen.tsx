@@ -3,7 +3,7 @@ import { Box, Text } from 'ink';
 import { useState } from 'react';
 import { isSlug, keyPrefixFromName, slugFromName, ValidationError } from '../../../core';
 import type { DataRoot } from '../../../schemas';
-import { createContext, createServices } from '../../../services';
+import { createContext, createServices, setGlobalMe } from '../../../services';
 import { assertInitTarget, initTarget, newContext } from '../../../services/setup';
 import { Form, type FormValues, SelectList } from '../../components';
 import { useActivate, useKeyHints, useToast } from '../../hooks';
@@ -70,7 +70,8 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
       <Text bold>Create {root.path}</Text>
       <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
       <Text color={theme.inkFaint}>
-        Your handle sets Me (`rowbly whoami`), the creator of your Stories. Leave it empty to set it later.
+        Your handle sets global Me (`rowbly whoami`) in ~/.rowblyrc.json, the creator of your Stories in every Data
+        Root. Leave it empty to keep the one you have or set it later.
       </Text>
       <Form
         fields={[
@@ -101,8 +102,8 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
               }
             : undefined;
           await createServices(newContext(root, warn)).setup.init({ root, board });
+          if (me) await setGlobalMe(home, me);
           const ctx = await createContext({ cwd, env: {}, home, root: root.path, warn });
-          if (me) await createServices(ctx).context.setMe(me);
           toast.push('info', me ? `Created ${root.path}; you are ${me}` : `Created ${root.path}`);
           if (stay) {
             router.pop();
