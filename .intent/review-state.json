@@ -3,51 +3,57 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "a15a3d720f7f588cbcae12fc89925d9515f70e602fd0be6f42a82d4250f00381",
+      "fingerprint": "c8e5078ac40acd8bbaa0c287d8678e750bb1a959f3a2b36bf6453030389b4c78",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "ebedb58264d3f22016090b1466ce0dafdc5a5bdd174803637cb7765ec23d85c7",
+      "fingerprint": "24084a692ca27531209e20895d9468c956318f8ee37309171dd1346cd18fab89",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "93eaacf7e0571a4c7d1e6250e6725f107f5a52da1a3f74558f25ffd184b724be",
+      "fingerprint": "1603a51f7bd7ee21627b5c0fff28069337778091aef79e544d764d3cbb1fd7c1",
       "snapshot": {
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/rowbly-plugins/SKILL.md": "b819ad8d7599e7ce956d71ef850e15318522cbaaf020c588164fcd956d0c1d90",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -64,18 +70,21 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "b2737b30a95f7b82222970bf217ae8486fb9467fc979101fa71a27c5f80f5c68",
+      "fingerprint": "4e5871d201b85c55a63c4dcfd91427a4f424a863cc34f68c4cb7cf0901997a3b",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/rowbly-setup/SKILL.md": "bec372b123ea2d1d7789b4ce45b6583eb1c5f52c436602937fdc589a98b0c383",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
@@ -83,18 +92,21 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "0e54b0d02ecede72b71b0f16a5a9512ee435dd2c68997f33f0845e3c2a56b3da",
+      "fingerprint": "9d75663d60925286d0403b5e1f69e8bd98bfc0004ff0e0bbc98bf5c7f6e5e1f6",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/rowbly-stories/SKILL.md": "83a0d214d1cf4fec7429c1660e9cd388da220203f0fe5a85361961052a04a73e",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
@@ -102,15 +114,18 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "2cfccdfe7d2b896bfeab3f258acd7f3b6203444ed82ec997ac6b7d57ccc54a0f",
+      "fingerprint": "08b9ed75329e06a645bd1d836b2716a3dafb17d72ff0989f4c9834fa0220bfd8",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
@@ -118,7 +133,7 @@
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "e12c3b96ef26eec42d51cd7c77fb19d296b5ab7ed2ab0bfdd8c3d7f202a0c650",
+        "docs/user-guide.md": "bc0fe4c400a0f5ac827010c0d75921c629b856a07733aa85f304c18ac3ad11c9",
         "skills/_artifacts/domain_map.yaml": "44bc512c724114130aa389b979cfbde05c43b5df6919b72af1366e8d188f3bd6",
         "skills/_artifacts/skill_spec.md": "05c4c6352a0151e3fe816aeb25fb91b63567c1ba5dfa4ca1c29498b60be09fd4",
         "skills/_artifacts/skill_tree.yaml": "76954042de7a582206f5bf4c75e2f0522c593da93f20415f54c6c46e2056298e",
@@ -157,11 +172,14 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: docs/user-guide.md at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -4023,15 +4041,18 @@
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "fd99e407c24977ffe37a7514fa1df27f19bf201e462b4410b11d2741db9e87f6",
+      "fingerprint": "edd14bbcf42e6861c23b9208e4475d2571c46c0eec10675d6754dec051df4382",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "e932fae233f9b0ef66d248b32e28ceeec617450c8d9be077c7dbd5b8f732da9c"
+        "src/tui/shell/Shell.tsx": "1977d21b5aed2c46f93055265283442ebfaba08d81a286d3e65855b8d5a102de"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: src/tui/shell/Shell.tsx at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -6129,15 +6150,18 @@
       ]
     },
     "source:src/tui/screens/boards/BoardForm.tsx": {
-      "fingerprint": "d549afa54ed65a0ffcbe9f1d888710b59b98c739ec9e2bc205b3a74bc1703d74",
+      "fingerprint": "3af70fa6ac154ce5e66f0fdb8889a8629df77002a697cac4ae701652cd7c63f5",
       "snapshot": {
-        "src/tui/screens/boards/BoardForm.tsx": "74a22a7dd8bba8029f73e9c4c41a83110a23210aea682faeddb6b62d6c2b5490"
+        "src/tui/screens/boards/BoardForm.tsx": "376684ad6c4ca833c20fb0f96b8734d9e2970a5cdb1249c7b84f7e0236b01950"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: src/tui/screens/boards/BoardForm.tsx at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "source:src/tui/screens/boards/index.tsx": {
@@ -6253,15 +6277,18 @@
       ]
     },
     "source:src/tui/screens/setup/SetupScreen.tsx": {
-      "fingerprint": "50027100265cb53dc06bb1f5169d79733dd82ed6ba67822de359994948581a31",
+      "fingerprint": "953fd66d5b7103174dc8eb93030c15b971f6779a6a739b6cc332fbc74fee15c2",
       "snapshot": {
-        "src/tui/screens/setup/SetupScreen.tsx": "a694c666fbd711a32c0877f0beacb1b87ea23cc0eddfc6bf93599a0d3c46bcfc"
+        "src/tui/screens/setup/SetupScreen.tsx": "1a5d0f0349e4fd7f6bce4fcc2970ce018caeb1282d122f21b3dcc4197b15b274"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: src/tui/screens/setup/SetupScreen.tsx at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "source:src/tui/screens/stages/shared.tsx": {
@@ -7279,15 +7306,18 @@
       ]
     },
     "source:src/tui/screens/me/MeScreen.tsx": {
-      "fingerprint": "40ed2cd4b5934fd88ba7d73babf2972c4df79f5765b85cb2a7af868c5d740b80",
+      "fingerprint": "f66afd131cf921864f715314444abc6b6879ecbf603d0a0f1bc3cc70d2e4c544",
       "snapshot": {
-        "src/tui/screens/me/MeScreen.tsx": "7c5b4c5f4ca8ee15c2b771226c78a141842c35775562f92c530ffcc9a4f0fd75"
+        "src/tui/screens/me/MeScreen.tsx": "979865cb804d69b5da9696a7d294610f77b774f09b9ca40f2bda2229578217a9"
       },
-      "head": "9d57a4d1c96543ed894bafccb7336e7fa7b41d5d",
+      "head": "6346662d21399873cefa836cc39f66906b94e4b8",
       "outcome": "no-change",
-      "reason": "TUI-only change: the Context section is removed from settings (the home menu keeps Context), and the sidebar's New Board form asks which Data Root the Board goes in (Here or Global), creating a missing Data Root first and switching to it. activate() gains a prepare step, and the base screen is keyed by the Data Root. The operating skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI; none mentions the settings sections, the Context screen or the TUI New Board form (grep of skills/ and skills/_artifacts/). README.md changes are from merges already on main. Checks: pnpm typecheck, pnpm lint, pnpm test:unit 63/63, pnpm test:cli 20/20; built TUI driven with agentic-tui against the demo Data Root.",
+      "reason": "PR #76 now only removes Context from the settings navigation and updates its preview and user guide. BoardForm, activate/useActivate, MeScreen, SetupScreen and Shell are restored exactly to PR base e943fdf. The five published skills cover command-mode operation, not settings navigation; their recommendations remain accurate. domain_map.yaml, skill_spec.md and skill_tree.yaml retain accurate tasks, mappings, prerequisites, exclusions and maintainer decisions; no planning rewrite is warranted.",
       "evidence": [
-        "Changed: src/tui/screens/me/MeScreen.tsx at 9d57a4d1c96543ed894bafccb7336e7fa7b41d5d"
+        "git diff e943fdf5286261fb39b942a459a9a781f4a65a96: settings section removal, SettingsModal preview and two user-guide passages only (apart from review records).",
+        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; intent validate skills passed for five skills.",
+        "Built TUI driven with agentic-tui against demo Data Root: Settings lists Me, Doctor and Plugins without Context. No fresh command-mode consumer run: operating guidance unchanged.",
+        "Reviewed all three skills/_artifacts planning records and existing skills; source mappings and assessed command-mode scope are unchanged."
       ]
     },
     "source:src/tui/screens/me/index.ts": {

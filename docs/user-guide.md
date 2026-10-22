@@ -184,10 +184,6 @@ rowbly boards delete <id> [--force]                  # confirms; pass --yes when
 - The key prefix (`WEB` in `WEB-42`) must be unique across the whole Data Root; a clash exits 4. Lower case is accepted and upper-cased.
 - A new Board has no Stage or Custom Field lists of its own: it inherits them through the Configuration Cascade.
 - `delete` refuses a Board that has Stories (exit 4) unless `--force`. Deleting the current Board clears it from Local State.
-- In the TUI, the sidebar's **+ New Board** (or `n` in the Board sidebar) asks which Data Root the Board
-  goes in: **Here**, the Data Root in use (or `.rowbly` in the current directory when you are using the
-  global one), or **Global** (`~/.rowbly`). A Data Root that does not exist yet is created first, like `init`, and
-  the app switches to the chosen Data Root and the new Board. Its id and key prefix come from its name.
 - In the TUI, **Boards** `enter` opens the Board detail (`boards show`): name, key prefix, description, Stories per Stage, and the effective Stages and Custom Fields with their source level. `v` opens a Board's board for viewing only, like `--board` on a read command: the current context and `local.json` do not change.
 <!-- END boards -->
 

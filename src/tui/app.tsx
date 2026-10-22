@@ -52,16 +52,14 @@ export function App({
   const [current, setCurrent] = useState({ ctx, services, plugins });
   /** Switches to `next` with fresh services, after loading its Plugins. */
   const activate = useCallback(
-    async (next: RowblyContext, prepare?: (services: Services) => Promise<void>) => {
+    async (next: RowblyContext) => {
       const loaded = await withPlugins(next, loadPlugins, toastStore);
-      const services = createServices(next);
-      await prepare?.(services);
-      setCurrent({ ctx: next, services, plugins: loaded });
+      setCurrent({ ctx: next, services: createServices(next), plugins: loaded });
     },
     [loadPlugins, toastStore],
   );
   const servicesValue = useMemo(
-    () => ({ ctx: current.ctx, services: current.services, activate }),
+    () => ({ ctx: current.ctx, services: current.services, activate: (next: RowblyContext) => void activate(next) }),
     [current, activate],
   );
   const pluginsValue = useMemo(
