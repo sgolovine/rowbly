@@ -1,6 +1,6 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { invokePlugin } from '../../services';
+import { invokePlugin, knownDataRoots } from '../../services';
 import { ConfirmDialog, Modal, Panel } from '../components';
 import {
   ActiveContext,
@@ -27,6 +27,8 @@ import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
 import { bindAction } from './actionFocus';
 import { boardKey } from './boardKey';
+import { DataRootSwitcher } from './DataRootSwitcher';
+import { dataRootName } from './dataRootName';
 import { Footer } from './Footer';
 import { Header, type HeaderAction } from './Header';
 import { HelpOverlay } from './HelpOverlay';
@@ -38,6 +40,7 @@ import { usePluginSidebars } from './usePluginSidebars';
 
 type Overlay =
   | { kind: 'help' }
+  | { kind: 'dataRoots' }
   | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
   // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
@@ -120,6 +123,15 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     [boardVersion, services, router, toast],
   );
 
+  // The header names the Data Root by its label in the Home Config; read again when the switcher closes.
+  const roots = useAsync(async () => (ctx?.home ? knownDataRoots(ctx.home, ctx.root) : []), [ctx]);
+  const rootName = ctx
+    ? dataRootName(
+        roots.data?.find((root) => root.current) ?? { path: ctx.root.path, global: ctx.root.kind === 'global' },
+      )
+    : 'Rowbly';
+  const openDataRoots = () => setOverlay({ kind: 'dataRoots' });
+
   const pluginSidebars = usePluginSidebars(depth);
   // Dragged with the mouse; like the view, the widths last until Rowbly quits.
   const [boardsWidth, setBoardsWidth] = useState(SIDEBAR_WIDTH);
@@ -186,6 +198,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     else if (action === 'quit' && atRoot) quit();
     else if (action === 'help') setOverlay({ kind: 'help' });
     else if (action === 'settings') openSettings();
+    else if (action === 'dataRoots') openDataRoots();
     else if (sidebarFocused && pane === 'boards' && delta && boards.length > 0) {
       const board = boards[boardKey(delta < 0 ? '[' : ']', currentIndex, boards.length) ?? currentIndex];
       if (board && board.id !== boards[currentIndex]?.id) void selection.select(board.id);
@@ -227,6 +240,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
           <SidebarFilterContext.Provider value={pluginSidebars.filter}>
             <Box flexDirection="column" height={fullscreen ? rows : undefined}>
               <Header
+                root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
                 label={label}
                 onNewStory={services ? newStory : undefined}
                 newStoryKey={!sidebarFocused}
@@ -349,6 +363,14 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                       <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
                         <HelpOverlay hints={hints} />
                       </Modal>
+                    )}
+                    {overlay?.kind === 'dataRoots' && (
+                      <DataRootSwitcher
+                        onClose={() => {
+                          setOverlay(null);
+                          roots.reload();
+                        }}
+                      />
                     )}
                     {overlay?.kind === 'confirm' && (
                       <Modal size="dialog" title="Discard changes" onClose={() => setOverlay(null)}>
