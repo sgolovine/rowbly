@@ -9,15 +9,26 @@ import { useRouter } from '../router';
 import { theme } from '../theme';
 import { DataRootRow } from './DataRootRow';
 import { dataRootName } from './dataRootName';
+import { EditDataRootModal } from './EditDataRootModal';
+import { RemoveDataRootModal } from './RemoveDataRootModal';
 
 /** What a pick does: open a known Data Root, or create a new one. */
 type Target = { kind: 'root'; root: KnownDataRootChoice } | { kind: 'new' };
+/** A known Data Root's entry being edited or removed. */
+type Change = { kind: 'edit' | 'remove'; root: KnownDataRootChoice };
 
 const CLOSE: KeyHint = { key: 'esc', description: 'close' };
-const HINTS: readonly KeyHint[] = [
+const NEW_HINTS: readonly KeyHint[] = [
   { key: '↑/↓', description: 'select' },
   { key: 'enter', description: 'open' },
   { key: 'n', description: 'new Data Root' },
+  CLOSE,
+];
+/** With a known Data Root highlighted rather than **+ New Data Root**. */
+const ROOT_HINTS: readonly KeyHint[] = [
+  ...NEW_HINTS.slice(0, -1),
+  { key: 'e', description: 'edit' },
+  { key: 'd', description: 'delete' },
   CLOSE,
 ];
 
@@ -25,7 +36,8 @@ const HINTS: readonly KeyHint[] = [
  * The known Data Roots of the Home Config, opened from the header's Data Root button or `D`. Picking
  * one opens it in place of the current one, which stays open when it cannot be read; the labels and
  * the default stay as they are. **+ New Data Root** (or `n`) opens setup, which switches to the new one.
- * Either asks first while a form holds unsaved changes.
+ * Either asks first while a form holds unsaved changes. `e` edits the highlighted one's label and
+ * default; `d` forgets it or deletes its folder, asking which, except the one that is open.
  */
 export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   const { ctx } = useContext(ServicesContext);
@@ -39,9 +51,10 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   // Picks wait for the list: before it loads, `enter` would land on **+ New Data Root**.
   const loaded = roots.data !== undefined;
   const [confirm, setConfirm] = useState<Target | null>(null);
+  const [change, setChange] = useState<Change | null>(null);
   // The Data Root being opened; picks wait until it opens or fails.
   const [opening, setOpening] = useState<KnownDataRootChoice | null>(null);
-  const idle = confirm === null && opening === null;
+  const idle = confirm === null && opening === null && change === null;
   const picking = idle && loaded;
   const [cursor, setCursor] = useCursor(choices.length + 1, picking);
 
@@ -89,10 +102,25 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
       else if (!picking) return;
       else if (key.return) pick(cursor);
       else if (input === 'n') choose({ kind: 'new' });
+      else if (input === 'e' || input === 'd') {
+        const root = choices[cursor];
+        if (!root) return;
+        if (input === 'e') setChange({ kind: 'edit', root });
+        else if (root.current) toast.push('warning', 'Open another Data Root before deleting this one');
+        else setChange({ kind: 'remove', root });
+      }
     },
     { isActive: idle },
   );
 
+  if (change) {
+    const done = () => {
+      setChange(null);
+      roots.reload();
+    };
+    const Change = change.kind === 'edit' ? EditDataRootModal : RemoveDataRootModal;
+    return <Change root={change.root} home={home} onDone={done} onCancel={() => setChange(null)} />;
+  }
   if (confirm) {
     return (
       <Modal title="Data Roots" size="dialog" onClose={() => setConfirm(null)}>
@@ -112,7 +140,11 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
     );
   }
   return (
-    <Modal title="Data Roots" hints={picking ? HINTS : idle ? [CLOSE] : []} onClose={idle ? onClose : undefined}>
+    <Modal
+      title="Data Roots"
+      hints={picking ? (cursor < choices.length ? ROOT_HINTS : NEW_HINTS) : idle ? [CLOSE] : []}
+      onClose={idle ? onClose : undefined}
+    >
       <Box flexDirection="column">
         {!loaded && (roots.loading ? <Loading /> : <Text color={theme.danger}>Cannot read the known Data Roots.</Text>)}
         {choices.map((root, i) => (

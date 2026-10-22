@@ -3,8 +3,10 @@ export { cascade, resolveCascade } from './cascade';
 export {
   assertNoRootEnv,
   canonicalDataRootPath,
+  deleteDataRoot,
   type FindDataRootOptions,
   findDataRoot,
+  forgetDataRoot,
   listKnownDataRoots,
   type RegisterDataRootOptions,
   recordOpenedDataRoot,

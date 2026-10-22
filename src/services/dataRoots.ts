@@ -1,8 +1,17 @@
 // The known Data Roots of the Home Config as the TUI's Data Root switcher shows and opens them (ADR-0033 §2).
 import { join } from 'node:path';
-import { DataIntegrityError, DataRootNotFoundError } from '../core';
+import { DataIntegrityError, DataRootNotFoundError, UsageError } from '../core';
 import { type DataRoot, type KnownDataRoot, RowblyConfigSchema } from '../schemas';
-import { canonicalDataRootPath, homeConfigPath, listKnownDataRoots, pathExists, readJson } from '../storage';
+import {
+  canonicalDataRootPath,
+  deleteDataRoot,
+  forgetDataRoot,
+  homeConfigPath,
+  listKnownDataRoots,
+  pathExists,
+  readJson,
+  registerDataRoot,
+} from '../storage';
 import { createContext } from './index';
 import { shellArg } from './setup';
 import type { RowblyContext } from './types';
@@ -66,4 +75,36 @@ export async function openKnownDataRoot(opts: {
       cause: err,
     });
   }
+}
+
+/**
+ * Sets the label and the default of the known Data Root at `path`, as `init --label`/`--default` do:
+ * an empty label removes it, and `default: true` clears the default on every other entry.
+ */
+export async function updateKnownDataRoot(
+  home: string,
+  path: string,
+  changes: { label: string; default: boolean },
+): Promise<void> {
+  const label = changes.label.trim();
+  await registerDataRoot(home, path, { label: label === '' ? null : label, default: changes.default });
+}
+
+/**
+ * Removes the known Data Root at `path` from the Home Config, and with `deleteFolder` deletes its
+ * folder and everything in it as well. The Data Root the app has open is never removed.
+ */
+export async function removeKnownDataRoot(
+  home: string,
+  root: KnownDataRootChoice,
+  opts: { deleteFolder: boolean },
+): Promise<void> {
+  if (root.current) {
+    throw new UsageError('cannot remove the Data Root that is open', {
+      details: { path: root.path },
+      hint: 'open another Data Root first',
+    });
+  }
+  if (opts.deleteFolder) await deleteDataRoot(home, root.path);
+  else await forgetDataRoot(home, root.path);
 }

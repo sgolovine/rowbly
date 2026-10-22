@@ -4,6 +4,7 @@ import { DataRootNotFoundError, UsageError } from '../core';
 import type { DataRoot, HomeConfig, KnownDataRoot } from '../schemas';
 import { homeConfigPath, readHomeConfig, updateHomeConfig } from './homeConfig';
 import { errorCode, io } from './io';
+import { withLock } from './lock';
 
 export interface FindDataRootOptions {
   cwd: string;
@@ -124,7 +125,8 @@ async function knownDataRootsOf(config: HomeConfig, home: string): Promise<Known
 
 /** `label` and `default` given to `registerDataRoot`; a key left out keeps the stored value. */
 export interface RegisterDataRootOptions {
-  label?: string;
+  /** `null` removes the label. */
+  label?: string | null;
   /** `true` makes this the only default; `false` clears it. */
   default?: boolean;
 }
@@ -175,7 +177,8 @@ async function withDataRoot(
   }
   const found = first === undefined ? { path: target } : mergeEntries(matches.map((i) => entries[i] as KnownDataRoot));
   const entry: KnownDataRoot = { ...found };
-  if (options.label !== undefined) entry.label = options.label;
+  if (options.label === null) delete entry.label;
+  else if (options.label !== undefined) entry.label = options.label;
   if (options.default === true) entry.default = true;
   if (options.default === false) delete entry.default;
 
@@ -203,6 +206,42 @@ function mergeEntries(entries: readonly KnownDataRoot[]): KnownDataRoot {
   const merged = Object.assign({}, ...[...entries].reverse()) as KnownDataRoot;
   if (entries.some((e) => e.default === true)) merged.default = true;
   return merged;
+}
+
+/**
+ * Removes every Home Config entry that names the Data Root folder `path`, under any alias. The folder
+ * stays as it is, and opening it again records it again. Nothing is written when no entry names it.
+ */
+export async function forgetDataRoot(home: string, path: string): Promise<void> {
+  const target = await canonicalDataRootPath(resolve(path), home);
+  await updateHomeConfig(home, async (config) => {
+    const entries = config.dataRoots ?? [];
+    const kept: KnownDataRoot[] = [];
+    for (const entry of entries) {
+      if ((await canonicalDataRootPath(entry.path, home)) !== target) kept.push(entry);
+    }
+    return kept.length === entries.length ? config : { ...config, dataRoots: kept };
+  });
+}
+
+/**
+ * Deletes the Data Root folder `path` with every Board, Story and Plugin file in it, and forgets it.
+ * It takes the Data Root lock first, so it fails while another Rowbly process is writing there, and
+ * refuses a folder without a `rowbly.config.json`, so a stray Home Config entry never deletes a folder
+ * that is not a Data Root.
+ */
+export async function deleteDataRoot(home: string, path: string): Promise<void> {
+  if (!(await isFile(join(path, ROOT_CONFIG_FILE)))) {
+    throw new UsageError(`not a Data Root: ${path}`, {
+      details: { path },
+      hint: `it has no ${ROOT_CONFIG_FILE}; delete the folder yourself if you mean to`,
+    });
+  }
+  await withLock(path, { operation: 'data-root.delete' }, async () => {
+    // Forgotten while the folder is there, so an entry that names it through a symlink still matches.
+    await forgetDataRoot(home, path);
+    await io.rm(path);
+  });
 }
 
 /**
