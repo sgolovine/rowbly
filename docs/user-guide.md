@@ -68,6 +68,8 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
       plugins/<id>/                  # files of a Plugin, for this Story
 ```
 
+Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data Root. Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing and never replaces an existing one. Rowbly keeps keys it does not know when it changes the file, and changes a symlinked one at its target. If the file is not valid JSON, Rowbly leaves it alone and a command that needs it fails with exit code 6 naming the file; fix or move it.
+
 Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
 - **Story Keys** are the highest number on the Board plus one. There is no shared counter, so two branches can both create `WEB-7`. After such a merge, run `rowbly doctor --fix`: it keeps the earlier Story as `WEB-7` and renumbers the other one (its Task Ids follow, as they start with the Story Key). Update branch names or commit messages that used the renumbered key.

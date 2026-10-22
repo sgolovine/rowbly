@@ -64,6 +64,10 @@ _Avoid_: current user, login
 Per-developer, never-committed settings in the Data Root (current Board and Me).
 _Avoid_: session, profile
 
+**Home Config**:
+Per-user settings shared by every Data Root on the machine, in `~/.rowblyrc.json` (a global Me and the known Data Roots).
+_Avoid_: rc file, global config, user profile
+
 ### Changes
 
 **Operation**:

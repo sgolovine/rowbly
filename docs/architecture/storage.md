@@ -48,6 +48,15 @@ Each save is one transaction in `.rowbly/.txn/<id>/`:
 
 Context changes (`use`, `whoami`) start from the stored Local State, read under the lock. After a save, the saved Local State becomes the running context's before the reactions run; Me changes only when the stored Me changed.
 
+## Home Config
+
+`~/.rowblyrc.json` ([ADR-0031](../agents/adr/0031-per-user-settings-live-in-a-home-config.md), `src/storage/homeConfig.ts`) is outside every Data Root, so it has its own lock.
+
+- **Created without replacing.** Start-up writes `{ "version": 1 }` to a temporary file beside it and hard-links it into place only if the name is free, so it never overwrites a file, even one another process creates at the same moment. Creating it is best effort.
+- **Changed under a lock.** `updateHomeConfig` takes `~/.rowblyrc.json.lock` (the Data Root lock's code with another file name, and `~/.rowblyrc.json.lock.break` to break a stale one), rereads the file, applies the change and replaces the file atomically. Concurrent Rowbly processes therefore never lose each other's changes. An unchanged result is not written.
+- **Links and permissions.** A symlinked Home Config is replaced at its target, so the link stays. The new file keeps the old one's permissions; a new file gets the default permissions of the umask.
+- **Never replaced when unreadable.** Invalid JSON, a schema failure, conflict markers, a folder or a link to a missing file throws `DATA_INTEGRITY` naming the file and leaves it as it is.
+
 ## Leftovers that doctor reports
 
 | Code | Meaning | `--fix` |

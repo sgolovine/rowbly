@@ -96,6 +96,9 @@ only thing you may edit by hand is a Plugin's settings in `rowbly.config.json`: 
 Never commit `.rowbly/local.json`, `.lock`, `.lock.break` or `.txn/`. The `.gitignore` that `rowbly init`
 writes excludes them. Commit everything else in `.rowbly/` with the code it describes.
 
+Every run of Rowbly creates `~/.rowblyrc.json`, the user's Home Config, outside every Data Root. Leave it
+in place: do not delete, rewrite or commit it.
+
 ## Use Rowbly's words
 
 Rowbly's help, errors and files use these names; use them in commands, commit messages and replies.
