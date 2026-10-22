@@ -356,14 +356,29 @@ export function BoardScreen({ params }: ScreenProps) {
     if (line?.kind !== 'story' || writing.current) return;
     setListCursor(at);
     const { story } = line;
+    // As moveInList: a Story moves past a section's edge into the next Stage, so only the first Story of
+    // the first Stage cannot move up and only the last Story of the last Stage cannot move down.
+    const from = stages.findIndex((s) => s.key === line.stage.key);
+    const index = columns[from]?.findIndex((s) => s.key === story.key) ?? -1;
+    const size = columns[from]?.length ?? 0;
     const act = (run: (now: typeof board) => void) => () => {
       if (!writing.current && latest.current.listStory?.key === story.key) run(latest.current);
     };
     contextMenu.open(x, y, [
       { label: 'Open', key: 'enter', onSelect: act(() => open(story)) },
       { label: 'Edit', key: 'e', onSelect: act(() => edit(story)) },
-      { label: 'Move up', key: 'shift+↑', onSelect: act((now) => now.moveInList(-1)) },
-      { label: 'Move down', key: 'shift+↓', onSelect: act((now) => now.moveInList(1)) },
+      {
+        label: 'Move up',
+        key: 'shift+↑',
+        disabled: index < 0 || (index === 0 && from === 0),
+        onSelect: act((now) => now.moveInList(-1)),
+      },
+      {
+        label: 'Move down',
+        key: 'shift+↓',
+        disabled: index < 0 || (index >= size - 1 && from >= stages.length - 1),
+        onSelect: act((now) => now.moveInList(1)),
+      },
       { label: 'Delete', key: 'd', onSelect: act(() => setMode('confirm-delete')) },
     ]);
   };
