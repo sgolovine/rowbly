@@ -165,6 +165,16 @@ rowbly config show [--board <id>]
   `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
   Data Root**, which runs the same form as the first-run screen (`init --global`) and then returns to the
   Data Root you are using.
+- In the TUI, the button at the far left of the header names the Data Root that is open: its label in
+  `~/.rowblyrc.json`, else **Global** for `~/.rowbly`, else the folder that holds it. Click it, or press
+  `D`, to open the Data Root switcher. It lists the known Data Roots with their paths and marks the
+  `current` one, the `default` one and any that are `missing`. `enter` (or a click) opens the
+  highlighted one with its own Boards, Plugins and Me, on the home screen; the screens, filters and
+  sidebar picks of the previous one close. Switching changes nothing in `~/.rowblyrc.json`: the labels
+  and the default stay as they are, and the next run opens the default as before. A Data Root that
+  cannot be opened (moved, removed or broken) shows an error and the app stays where it was. The last
+  row, **+ New Data Root** (or `n`), runs the setup form and opens the new Data Root. While a form holds
+  unsaved changes, both ask before discarding them; `D` is typed as text while a text field has focus.
 - The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
@@ -445,6 +455,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
+| `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, or create one |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
