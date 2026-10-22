@@ -77,7 +77,7 @@ export function registerSetup(program: Command): void {
     .command('whoami [handle]')
     .description('Show or set Me, the handle you work as: global Me, or a local Me for this Data Root')
     .option('--clear', 'unset Me')
-    .option('--local', "set or clear this Data Root's local Me, which overrides global Me here")
+    .option('--local', "set or clear this Data Root's local Me, which replaces global Me here")
     .action((handle: string | undefined, opts: { clear?: boolean; local?: boolean }, cmd: Command) => {
       if (opts.clear && handle) throw new UsageError('use either a handle or --clear');
       const change = opts.clear ? null : handle;
