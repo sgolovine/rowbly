@@ -1,10 +1,10 @@
-import { Box, type DOMElement, Text } from 'ink';
+import { Box, type DOMElement, measureElement, Text } from 'ink';
 import { useRef } from 'react';
 import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
 import { type StoryBadges, useMouse } from '../../hooks';
 import { theme } from '../../theme';
-import { CARD_HEIGHT, CHROME_HEIGHT } from './layout';
+import { CARD_HEIGHT, CHROME_HEIGHT, dropSlot, follow } from './layout';
 import { StoryCard } from './StoryCard';
 import { StoryShadow } from './StoryShadow';
 import { useCardBadges } from './useCardBadges';
@@ -26,14 +26,22 @@ export interface BoardColumnProps {
   active: boolean;
   /** A card clicked, by its index in `cards`, or `-1` for an empty spot in the column. */
   onClick?(index: number): void;
-  /** A card (its Story Key) dragged onto this column. */
-  onDrop?(key: unknown): void;
-  /** A card (its Story Key) dragged over this column, and dragged off it again. */
-  onDragOver?(key: unknown): void;
+  /**
+   * A card (its Story Key) dropped on this column, at `slot`: its index among the column's cards without it.
+   */
+  onDrop?(key: unknown, slot: number): void;
+  /** A card (its Story Key) dragged over this column, to `slot`, and dragged off it again. */
+  onDragOver?(key: unknown, slot: number): void;
   onDragLeave?(): void;
-  /** Shows the drop shadow below the last card, where a dragged card will land. */
-  shadow?: boolean;
+  /**
+   * A card dragged over this column: the drop shadow shows at `slot`, the cards from there on move down, and the
+   * dragged card itself, when it is in this column, is left out.
+   */
+  drag?: { key: string; slot: number } | null;
 }
+
+/** The column's list while a card is dragged over it: its cards, with `null` for the drop shadow. */
+type Item = Story | null;
 
 /** One Stage: header with name, Stage Category colour and count, then its cards, scrolled to `first`. */
 export function BoardColumn({
@@ -50,16 +58,34 @@ export function BoardColumn({
   onDrop,
   onDragOver,
   onDragLeave,
-  shadow = false,
+  drag = null,
 }: BoardColumnProps) {
-  // The shadow takes a card's place below the last card, so the column scrolls to its end to show it.
-  const top = shadow ? Math.max(0, cards.length - size + 1) : first;
-  const shown = cards.slice(top, top + size - (shadow ? 1 : 0));
-  const below = cards.length - top - shown.length;
+  const others = drag ? cards.filter((s) => s.key !== drag.key) : cards;
+  const items: readonly Item[] = drag ? [...others.slice(0, drag.slot), null, ...others.slice(drag.slot)] : cards;
+  // While dragging, the column scrolls as little as it can from where it was to show the shadow.
+  const shownTop = useRef(first);
+  const top = drag ? follow(shownTop.current, drag.slot, size, items.length) : first;
+  shownTop.current = top;
+  const shown = items.slice(top, top + size);
+  const below = items.length - top - shown.length;
   const inner = width - 2;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
-  useMouse(ref, { onClick: () => onClick?.(-1), onDrop, onDragOver, onDragLeave }, active);
+  // The pointer's line picks the slot, measured against what is on screen; the dragged card does not count.
+  const slotAt = (key: unknown, y: number) => {
+    const count = cards.filter((s) => s.key !== key).length;
+    return ref.current ? dropSlot(y, measureElement(ref.current).y, shownTop.current, count) : count;
+  };
+  useMouse(
+    ref,
+    {
+      onClick: () => onClick?.(-1),
+      onDrop: (key, _x, y) => onDrop?.(key, slotAt(key, y)),
+      onDragOver: (key, _x, y) => onDragOver?.(key, slotAt(key, y)),
+      onDragLeave,
+    },
+    active,
+  );
   return (
     // The column is as tall as `size` cards, so the space below its last card still takes clicks and drops.
     <Box
@@ -79,19 +105,22 @@ export function BoardColumn({
         <Text color={active ? theme.accent : theme.border}>{'━'.repeat(inner)}</Text>
       )}
       <Text color={theme.inkFaint}>{top > 0 ? `↑ ${top} more` : ' '}</Text>
-      {shown.map((story, i) => (
-        <StoryCard
-          key={story.key}
-          story={story}
-          badges={[...storyBadges(story), ...badgesOf(story, stages)]}
-          width={inner}
-          selected={selected === top + i}
-          active={active}
-          onClick={() => onClick?.(top + i)}
-        />
-      ))}
-      {shadow && <StoryShadow width={inner} />}
-      {cards.length === 0 && !shadow && <Text color={theme.inkFaint}>No Stories</Text>}
+      {shown.map((story) => {
+        if (!story) return <StoryShadow key="shadow" width={inner} />;
+        const index = cards.indexOf(story);
+        return (
+          <StoryCard
+            key={story.key}
+            story={story}
+            badges={[...storyBadges(story), ...badgesOf(story, stages)]}
+            width={inner}
+            selected={selected === index}
+            active={active}
+            onClick={() => onClick?.(index)}
+          />
+        );
+      })}
+      {items.length === 0 && <Text color={theme.inkFaint}>No Stories</Text>}
       {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}
     </Box>
   );

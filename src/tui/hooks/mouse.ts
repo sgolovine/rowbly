@@ -14,9 +14,10 @@ export interface MouseHandlers {
    * to another cell while the button is held is a drag.
    */
   drag?: unknown;
-  onDrop?(value: unknown): void;
-  /** A drag has moved over this drop target (one with `onDrop`), carrying `value`. */
-  onDragOver?(value: unknown): void;
+  /** Dragged `value` released over this box, at cell `x`, `y`. */
+  onDrop?(value: unknown, x: number, y: number): void;
+  /** A drag carrying `value` has entered or moved over this drop target (one with `onDrop`), at cell `x`, `y`. */
+  onDragOver?(value: unknown, x: number, y: number): void;
   /** The drag has left this drop target: moved off it, been dropped or ended elsewhere. */
   onDragLeave?(): void;
   /** A press here holds the box: each pointer move until the release reports the pointer's cell, e.g. to resize. */
@@ -46,7 +47,6 @@ export function createMouseRegistry(): MouseRegistry {
     if (next === over) return;
     over?.handlers.current.onDragLeave?.();
     over = next;
-    if (dragging) over?.handlers.current.onDragOver?.(dragging.value);
   };
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
@@ -79,7 +79,10 @@ export function createMouseRegistry(): MouseRegistry {
       if (event.kind === 'move') {
         if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
         if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
-        if (dragging?.moved) setOver(hit(event, (h) => Boolean(h.onDrop)));
+        if (dragging?.moved) {
+          setOver(hit(event, (h) => Boolean(h.onDrop)));
+          over?.handlers.current.onDragOver?.(dragging.value, event.x, event.y);
+        }
         const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
         if (next !== hovered) {
           hovered?.handlers.current.onLeave?.();
@@ -111,7 +114,7 @@ export function createMouseRegistry(): MouseRegistry {
         return;
       }
       const target = hit(event, (h) => Boolean(h.onDrop));
-      if (target && target !== drop.from) target.handlers.current.onDrop?.(drop.value);
+      if (target && target !== drop.from) target.handlers.current.onDrop?.(drop.value, event.x, event.y);
     },
   };
 }

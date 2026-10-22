@@ -51,6 +51,7 @@ import {
   type ListRow,
   listRows,
   moveCard,
+  placeCard,
   removeCard,
   replaceCard,
   swapCard,
@@ -92,8 +93,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const writing = useRef(false);
   // Mirrors `writing` for rendering: the keys are ignored while a write runs, so their hints are hidden too.
   const [saving, setSaving] = useState(false);
-  /** The column a card is dragged over with the mouse, which shows the drop shadow; never the card's own. */
-  const [dragOver, setDragOver] = useState<number | null>(null);
+  /** The column a card (its Story Key) is dragged over with the mouse, and the slot its drop shadow shows at. */
+  const [dragOver, setDragOver] = useState<{ col: number; key: string; slot: number } | null>(null);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
   // A Board opened for viewing only; picking a Board in the sidebar drops it.
@@ -193,12 +194,28 @@ export function BoardScreen({ params }: ScreenProps) {
     void write(next, { col: to, row: (next[to]?.length ?? 1) - 1 }, () => services.stories.move(moved.key, stage.key));
   };
 
-  /** A card dragged with the mouse onto column `to`. */
-  const drop = (to: number, key: unknown) => {
-    if (writing.current) return;
+  /**
+   * A card dragged with the mouse onto column `to`, at `slot` among its cards: moved to that Stage if it is
+   * another, then ranked before the card it lands above (or after the last one).
+   */
+  const drop = (to: number, key: unknown, slot: number) => {
+    setDragOver(null);
+    const stage = stages[to];
     const from = columns.findIndex((cards) => cards.some((s) => s.key === key));
-    if (from < 0) return;
-    moveTo(to, { col: from, row: columns[from]?.findIndex((s) => s.key === key) ?? 0 });
+    const at = columns[from]?.findIndex((s) => s.key === key) ?? -1;
+    const moved = columns[from]?.[at];
+    if (writing.current || !stage || !moved || (from === to && slot === at)) return;
+    const others = (columns[to] ?? []).filter((s) => s.key !== moved.key);
+    const next = placeCard(columns, from, at, to, slot, stage.key);
+    const below = others[slot];
+    const above = others[slot - 1];
+    void write(next, { col: to, row: slot }, async () => {
+      if (from !== to) {
+        const saved = await services.stories.move(moved.key, stage.key, { top: slot === 0 });
+        if (slot === 0 || !below) return saved;
+      }
+      return services.stories.rank(moved.key, below ? { before: below.key } : above ? { after: above.key } : 'bottom');
+    });
   };
 
   /** A click selects a card (or a column, at row `-1`); a click on the selected card opens it. */
@@ -459,10 +476,16 @@ export function BoardScreen({ params }: ScreenProps) {
                 selected={index === col ? row : null}
                 active={active && mode === 'view'}
                 onClick={(at) => click({ col: index, row: at })}
-                onDrop={(key) => drop(index, key)}
-                onDragOver={(key) => setDragOver(cards.some((s) => s.key === key) ? null : index)}
-                onDragLeave={() => setDragOver((over) => (over === index ? null : over))}
-                shadow={dragOver === index}
+                onDrop={(key, slot) => drop(index, key, slot)}
+                onDragOver={(key, slot) =>
+                  setDragOver((over) =>
+                    typeof key !== 'string' || (over?.col === index && over.key === key && over.slot === slot)
+                      ? over
+                      : { col: index, key, slot },
+                  )
+                }
+                onDragLeave={() => setDragOver((over) => (over?.col === index ? null : over))}
+                drag={dragOver?.col === index ? dragOver : null}
               />
             );
           })}

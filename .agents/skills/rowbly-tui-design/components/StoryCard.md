@@ -6,4 +6,4 @@ A Story on the Board: three rows inside a `border-round` frame. Never wraps; lon
 - Row 2: the Story name in `ink` (`cell-title` when selected).
 - Row 3: Plugin badges in `ink-muted`, each led by its Plugin's glyph (`◆` Epic). Kept blank when there are none, so every Story is the same height.
 - Selected: the frame lights up in `accent`; no fill. Not selected: `border` frame, no fill. Today's grey-white frame on the selected Story in a Modal's background is dropped; behind a Modal the selected Story keeps its look.
-- Dragged with the mouse: while the button is held over another Stage, a drop shadow (a `drop-target` fill the size of a StoryCard, no frame) sits at the bottom of that Stage's Stories, where the Story lands on release. The dragged Story stays in place until then.
+- Dragged with the mouse: while the button is held over a Stage, a drop shadow (a `drop-target` fill the size of a StoryCard, no frame) takes the slot under the pointer, and the Stories from there on move down to make room; the Story lands there on release. Over another Stage the dragged Story stays in place until then; over its own Stage it is left out and the shadow shows where it will go.

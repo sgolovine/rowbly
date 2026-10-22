@@ -20,15 +20,41 @@ export function groupColumns(stages: readonly Stage[], stories: readonly Story[]
   return stages.map((stage) => stories.filter((s) => s.stage === stage.key));
 }
 
+/** Lines of a column above its first card: header, rule and the `↑ more` marker. */
+export const CARDS_TOP = 3;
+
 /** Moves the card at `from[col][row]` to the bottom of column `to`, in Stage `stage`. */
 export function moveCard(columns: Columns, col: number, row: number, to: number, stage: string): Columns {
+  return placeCard(columns, col, row, to, Number.POSITIVE_INFINITY, stage);
+}
+
+/**
+ * Moves the card at `from[col][row]` to index `slot` of column `to`, in Stage `stage`. `slot` counts the
+ * column's cards without the moved one, so in its own column it reorders the card.
+ */
+export function placeCard(
+  columns: Columns,
+  col: number,
+  row: number,
+  to: number,
+  slot: number,
+  stage: string,
+): Columns {
   const card = columns[col]?.[row];
-  if (!card) return columns;
-  return columns.map((cards, i) => {
-    if (i === col) return cards.filter((_, j) => j !== row);
-    if (i === to) return [...cards, { ...card, stage }];
-    return cards;
-  });
+  if (!card || !columns[to]) return columns;
+  const next = columns.map((cards) => [...cards]);
+  next[col]?.splice(row, 1);
+  next[to]?.splice(slot, 0, { ...card, stage });
+  return next;
+}
+
+/**
+ * The slot a card dragged over a column lands in: the one under the pointer's line `y`, for a column whose box
+ * starts at line `columnY` and shows its list from index `top`. Clamped to `0`–`count`.
+ */
+export function dropSlot(y: number, columnY: number, top: number, count: number): number {
+  const at = top + Math.floor((y - columnY - CARDS_TOP) / CARD_HEIGHT);
+  return Math.max(0, Math.min(count, at));
 }
 
 /** Swaps the card at `row` with its neighbour `row + delta` in the same column. */
