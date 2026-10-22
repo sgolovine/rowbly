@@ -1,6 +1,6 @@
 {
   "name": "rowbly",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A developer-focused, file-backed Kanban tracker for the terminal.",
   "type": "module",
   "license": "MIT",
