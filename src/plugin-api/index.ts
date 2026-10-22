@@ -26,6 +26,7 @@ export {
   parseRepeatable,
   parseStoryKey,
   RowblyError,
+  slugFromName,
   toTimestamp,
   UsageError,
   ValidationError,

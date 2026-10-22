@@ -128,9 +128,10 @@ rowbly config show [--board <id>]
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists,
   then asks for the first Board and your handle (Me); leave either empty to skip it.
   The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
-  Me. The **Context** section switches the Board; press `c` there to clear the current Board. While
-  `~/.rowbly` does not exist, Context also lists **Create global Data Root**, which runs the same form as the first-run screen
-  (`init --global`) and then returns to the Data Root you are using.
+  Me. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
+  `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
+  Data Root**, which runs the same form as the first-run screen (`init --global`) and then returns to the
+  Data Root you are using.
 - The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
@@ -410,7 +411,12 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
+<<<<<<< HEAD
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
+=======
+| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+>>>>>>> 2c615e0
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
 | `?` | the keys of the current screen |

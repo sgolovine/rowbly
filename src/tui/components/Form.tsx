@@ -21,6 +21,11 @@ export interface FormField {
   options?: readonly string[];
   /** What a choice shows instead of its value, e.g. a Stage's name for its key. */
   optionLabels?: Readonly<Record<string, string>>;
+  /**
+   * Fills this text field from another field's text when focus leaves that field, e.g. a key from a
+   * name: `{ field: 'name', format: slugFromName }`. A value typed here is never replaced.
+   */
+  fillFrom?: { field: string; format(text: string): string };
 }
 
 /** text/multiline: string · number: number | null · boolean · date: `YYYY-MM-DD` | null · select: string | null · multiselect: string[] */
@@ -151,6 +156,8 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // The values `fillFrom` last put in each field, so a field still holding one is filled again.
+  const [filled, setFilled] = useState<Record<string, string>>({});
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
@@ -164,11 +171,31 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
     setErrors(({ [name]: _cleared, ...rest }) => rest);
   };
 
+  /** Fills the fields that take their text from `source` when focus leaves it, and returns the values. */
+  const fill = (source: string | undefined): Record<string, Raw> => {
+    const text = source === undefined ? '' : String(values[source] ?? '').trim();
+    if (!text) return values;
+    const fills: Record<string, string> = {};
+    for (const f of fields) {
+      const from = f.fillFrom;
+      if (!from || from.field !== source) continue;
+      const current = values[f.name] ?? '';
+      if (current === '' || current === filled[f.name]) fills[f.name] = from.format(text);
+    }
+    if (Object.keys(fills).length === 0) return values;
+    const next = { ...values, ...fills };
+    setValues((prev) => ({ ...prev, ...fills }));
+    setFilled((prev) => ({ ...prev, ...fills }));
+    setErrors((prev) => Object.fromEntries(Object.entries(prev).filter(([name]) => !(name in fills))));
+    return next;
+  };
+
   const submit = async () => {
+    const current = fill(field?.name);
     const parsed: FormValues = {};
     const found: Record<string, string> = {};
     for (const f of fields) {
-      const result = parse(f, values[f.name] ?? null);
+      const result = parse(f, current[f.name] ?? null);
       if ('error' in result) found[f.name] = result.error;
       else parsed[f.name] = result.value;
     }
@@ -190,6 +217,7 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
   };
 
   const moveFocus = (delta: number) => {
+    fill(field?.name);
     setFocus((f) => Math.max(0, Math.min(fields.length, f + delta)));
     setOptionCursor(0);
   };

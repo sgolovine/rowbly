@@ -1,4 +1,4 @@
-import type { PluginScreenProps } from '../../plugin-api';
+import { type PluginScreenProps, slugFromName } from '../../plugin-api';
 import { Form, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { createSpec, parseSpecFormParams, titledText } from './specs';
 
@@ -11,8 +11,14 @@ export function SpecFormScreen({ params, plugin, ui }: PluginScreenProps<Record<
   return (
     <Form
       fields={[
-        { name: 'slug', label: 'Slug', kind: 'text', required: true },
         { name: 'title', label: 'Title', kind: 'text', required: true },
+        {
+          name: 'slug',
+          label: 'Slug',
+          kind: 'text',
+          required: true,
+          fillFrom: { field: 'title', format: (title) => slugFromName(title) },
+        },
         { name: 'text', label: 'Spec', kind: 'multiline' },
       ]}
       onSubmit={async (values) => {

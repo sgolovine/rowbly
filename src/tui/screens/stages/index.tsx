@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ConflictError } from '../../../core';
+import { ConflictError, slugFromName } from '../../../core';
 import { isFixedStage, type Stage, withFixedStages } from '../../../schemas';
 import type { Position } from '../../../services';
 import { readLevel } from '../../../services/_configTarget';
@@ -149,8 +149,14 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
           <Text bold>Add a Stage</Text>
           <Form
             fields={[
-              { name: 'key', label: 'Key', kind: 'text', required: true },
               { name: 'name', label: 'Name', kind: 'text', required: true },
+              {
+                name: 'key',
+                label: 'Key',
+                kind: 'text',
+                required: true,
+                fillFrom: { field: 'name', format: (name) => slugFromName(name, new Set(stages.map((s) => s.key))) },
+              },
               { name: 'position', label: 'Position', kind: 'select', options: positionOptions(current) },
             ]}
             initialValues={{ position: positionOptions(current)[0] ?? 'last' }}

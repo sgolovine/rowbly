@@ -1,4 +1,4 @@
-import type { PluginScreenProps } from '../../plugin-api';
+import { type PluginScreenProps, slugFromName } from '../../plugin-api';
 import { Form, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { createEpic, editEpic, getEpic } from './service';
 
@@ -10,8 +10,18 @@ export function EpicForm({ params, plugin, ui }: PluginScreenProps<Record<string
   return (
     <Form
       fields={[
-        ...(!id ? [{ name: 'id', label: 'Epic', kind: 'text' as const, required: true }] : []),
         { name: 'name', label: 'Name', kind: 'text', required: true },
+        ...(!id
+          ? [
+              {
+                name: 'id',
+                label: 'Epic',
+                kind: 'text' as const,
+                required: true,
+                fillFrom: { field: 'name', format: (name: string) => slugFromName(name) },
+              },
+            ]
+          : []),
         { name: 'description', label: 'Description', kind: 'multiline' },
       ]}
       initialValues={{ id: id ?? '', name: data.data?.name ?? '', description: data.data?.description ?? '' }}
