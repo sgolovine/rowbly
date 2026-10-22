@@ -1,6 +1,6 @@
 # Doctor finding codes
 
-Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative to `.rowbly/`), `message`,
+Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative to `.rowbly/`, or the Home Config's own path), `message`,
 `fixable` and sometimes `details.hint`. Follow the hint when there is one.
 
 | Code | Severity | Detects | `--fix` does | Manual repair |
@@ -26,6 +26,7 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write, or a `.moving` folder from an older Rowbly | Removes a temporary file; only reports a `.moving` folder | Move that Story's folder back by hand |
 | `ORPHAN_FOLDER` | warning | A Board or Story folder with Plugin files but no `board.config.json` / `story.json`. A Story folder still reserves its key | nothing | Restore the missing file from git, or delete the folder with the user's approval |
 | `LEGACY_DATA` | warning | Comments, an `epicId`, Story Assignees, Epic files or an Assignee roster from a Rowbly before Plugins. The next save of that Story or `rowbly.config.json` drops them | nothing | Back up first; recreate them with the Assignees, Epics and Comments Plugins |
+| `MULTIPLE_DEFAULT_DATA_ROOTS` | error | More than one `dataRoots` entry in `~/.rowblyrc.json` marked `"default": true`, even two naming one folder; `details.defaults` lists each entry's index, path and label | nothing | Ask the user which Data Root stays the default; remove `"default": true` from the others |
 | `ASSIGNEES_UNKNOWN_ASSIGNEE` | warning | A Story Assignee that is not in the Assignees Plugin's roster | Removes it | Or add the Assignee: `rowbly assignees add` |
 | `ASSIGNEES_UNKNOWN_ME` | warning | The local Me (`local.json`) is not in the Assignees Plugin's roster; global Me is not checked | Clears the local Me | Or add Me: `rowbly assignees add <handle>` |
 | `ASSIGNEES_ROSTER_UNAVAILABLE` | error | `plugins/assignees/roster.json` has conflict markers, is not valid JSON or fails its schema | nothing | Merge or correct the file by hand |

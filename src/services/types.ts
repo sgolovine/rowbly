@@ -204,7 +204,8 @@ export type CoreDoctorCode =
   | 'TEMP_FILE_LEFTOVER'
   | 'GITIGNORE_INCOMPLETE'
   | 'ORPHAN_FOLDER'
-  | 'LEGACY_DATA';
+  | 'LEGACY_DATA'
+  | 'MULTIPLE_DEFAULT_DATA_ROOTS';
 
 /**
  * A core code, or a Plugin's code prefixed with its id, such as `EPICS_MISSING_EPIC`. `(string & {})`

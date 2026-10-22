@@ -13,9 +13,11 @@ import {
 import {
   CONFLICT_MARKER_RE,
   cascade,
+  homeConfigPath,
   listDataRootFiles,
   type Repositories,
   readDataRootFile,
+  readHomeConfig,
   recoverTransactions,
   removeDataRootFile,
   writeTextFile,
@@ -59,6 +61,7 @@ const SEVERITY: Record<CoreDoctorCode, DoctorSeverity> = {
   GITIGNORE_INCOMPLETE: 'info',
   ORPHAN_FOLDER: 'warning',
   LEGACY_DATA: 'warning',
+  MULTIPLE_DEFAULT_DATA_ROOTS: 'error',
 };
 
 /** Repairs that change which file or key a Story has; they run as a pass of their own (RES-09). */
@@ -146,6 +149,11 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     if (recovery.failure !== undefined) {
       add('TRANSACTION_PENDING', ...pendingTransaction(recovery.failure));
       return { findings, boards: [], local };
+    }
+    // The Home Config is outside the Data Root; a context without `home` (an injected one) skips it.
+    if (ctx.home !== undefined) {
+      const defaults = await defaultDataRootEntries(ctx.home);
+      if (defaults) add('MULTIPLE_DEFAULT_DATA_ROOTS', ...defaults);
     }
     const pluginData: PluginDataSeen = new Map();
     /** Story files that hold data of an older Rowbly: doctor never saves them (VER-03). */
@@ -879,6 +887,32 @@ function pendingTransaction(failure: unknown): [path: string, message: string, e
         pending,
         cause,
         hint: 'fix the cause (for example file permissions), then run `rowbly doctor --fix`',
+      },
+    },
+  ];
+}
+
+/**
+ * The finding for more than one `dataRoots` entry marked `default` in the Home Config, or `null`.
+ * Entries are counted as stored, so two naming one folder still conflict (ADR-0033 §1). There is no
+ * fix: which default to keep is the user's choice.
+ */
+async function defaultDataRootEntries(
+  home: string,
+): Promise<[path: string, message: string, extra: Partial<Finding>] | null> {
+  const defaults = ((await readHomeConfig(home)).dataRoots ?? []).flatMap((entry, index) =>
+    entry.default === true ? [{ index, path: entry.path, ...(entry.label ? { label: entry.label } : {}) }] : [],
+  );
+  if (defaults.length < 2) return null;
+  const path = homeConfigPath(home);
+  const named = defaults.map((entry) => (entry.label ? `${entry.path} ("${entry.label}")` : entry.path));
+  return [
+    path,
+    `${defaults.length} known Data Roots are marked default: ${named.join(', ')}; Rowbly opens none of them without \`--data-root\``,
+    {
+      details: {
+        defaults,
+        hint: `keep one \`"default": true\` in ${path} and remove the others`,
       },
     },
   ];
