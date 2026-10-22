@@ -5528,17 +5528,15 @@
       ]
     },
     "source:src/plugins/git/GitSettings.tsx": {
-      "fingerprint": "2c3bb8c3b535a1f95d023dd337ce993614162cfb17a10e662a79c87b8e7bee3e",
+      "fingerprint": "306a8fa3e99592f147ff6712accd893fb4c0d16e3186eb525e07e9cd61b3de77",
       "snapshot": {
-        "src/plugins/git/GitSettings.tsx": "d4427970dfffc2cab39a483ef319e25bd42572c64a7cc8e231f037b4cdbd93ba"
+        "src/plugins/git/GitSettings.tsx": "eae0d54172c07c7ecb33b38f09dd7f037ada61f4c0c3501c412e3bbb3c3cdd0e"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "e943fdf5286261fb39b942a459a9a781f4a65a96",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "GitSettings.tsx only adds blank rows (gap={1}) between the Git settings screen's text sections and the Form; no command, option, label, behavior or stored data changed, and no skill describes this screen's layout. README.md's pending change (70e0c82) only drops one sentence from the intro about the project being pre-1.0 and self-tracked; no skill cites it.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Changed: src/plugins/git/GitSettings.tsx at e943fdf5286261fb39b942a459a9a781f4a65a96"
       ]
     },
     "source:src/plugins/git/index.ts": {
@@ -7322,15 +7320,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
+      "fingerprint": "61d61087a59a1eb77a63d6525e251b526c3c43542d1c1300ea7bc953fc49d518",
       "snapshot": {
-        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
+        "README.md": "c748f0c7bb8123faa48299e218eebb61fd5c86afc3f44f6e1f2cc50eed7eba1d"
       },
-      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
+      "head": "e943fdf5286261fb39b942a459a9a781f4a65a96",
       "outcome": "no-change",
-      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
+      "reason": "GitSettings.tsx only adds blank rows (gap={1}) between the Git settings screen's text sections and the Form; no command, option, label, behavior or stored data changed, and no skill describes this screen's layout. README.md's pending change (70e0c82) only drops one sentence from the intro about the project being pre-1.0 and self-tracked; no skill cites it.",
       "evidence": [
-        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
+        "Changed: README.md at e943fdf5286261fb39b942a459a9a781f4a65a96"
       ]
     }
   }
