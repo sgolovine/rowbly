@@ -80,7 +80,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
-- `me` is the locally chosen Me, a handle, or `null`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
+- `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
 - `warn` shows a warning after the command, or a toast in the TUI.
 
 ## Stages and capabilities

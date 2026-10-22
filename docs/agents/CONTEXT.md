@@ -57,11 +57,11 @@ _Avoid_: property, attribute, metadata
 ### People
 
 **Me**:
-The handle the local developer has claimed with `rowbly whoami`, recorded as a Story's creator and used by Plugins that record who did something.
+The handle the local developer has claimed with `rowbly whoami`, recorded as a Story's creator and used by Plugins that record who did something. It is the **local Me** in Local State when the Data Root has one, else **global Me** in the Home Config.
 _Avoid_: current user, login
 
 **Local State**:
-Per-developer, never-committed settings in the Data Root (current Board and Me).
+Per-developer, never-committed settings in the Data Root (current Board and the local Me).
 _Avoid_: session, profile
 
 **Home Config**:

@@ -1,6 +1,6 @@
 # ADR-0023: Assignees are a Built-in Plugin
 
-**Status:** Accepted. Built. Amended by ADR-0028 (`PluginTui.loadStoryBadges`).
+**Status:** Accepted. Built. Amended by ADR-0028 (`PluginTui.loadStoryBadges`) and ADR-0032 (Me is global, with a local Me in Local State).
 
 Assignees were part of core: a roster in `rowbly.config.json`, an `assignees` list on every Story, an Assignees service with the `assignees.*` operations, the `rowbly assignees` commands, `--assignee` options on Story commands, and an Assignees screen. Not every Data Root has more than one person, and Assignees did not need anything a Plugin cannot have, so they move into the Assignees Built-in Plugin, like Epics (ADR-0014) and Comments (ADR-0018). Core no longer has an Assignee schema, a roster, Assignee bags, `story.assignees` or `assignees.*` core operations, and no Assignee code outside `src/plugins/assignees/`.
 
