@@ -13,6 +13,7 @@ export function StoryCard({
   selected,
   active,
   onClick,
+  onContextMenu,
 }: {
   story: Story;
   badges: readonly string[];
@@ -20,9 +21,11 @@ export function StoryCard({
   selected: boolean;
   active: boolean;
   onClick(): void;
+  /** A right click on the Story, at cell `x`, `y`. */
+  onContextMenu?(x: number, y: number): void;
 }) {
   const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick, drag: story.key }, active);
+  useMouse(ref, { onClick, drag: story.key, onContextMenu }, active);
   // The border takes one column on each side and a space of margin another.
   const room = width - 4;
   const line = (text: string) => ` ${text.padEnd(room)} `;

@@ -13,15 +13,17 @@ export interface BoardListRowProps {
   selected: boolean;
   active: boolean;
   onClick(): void;
+  /** A right click on the line, at cell `x`, `y`. */
+  onContextMenu?(x: number, y: number): void;
 }
 
 /**
  * One line of the list view: a section heading with its count, or a Story's key and name with its Plugin badges
  * and Stage, above a dim rule that spaces the lines apart.
  */
-export function BoardListRow({ row, badges, width, selected, active, onClick }: BoardListRowProps) {
+export function BoardListRow({ row, badges, width, selected, active, onClick, onContextMenu }: BoardListRowProps) {
   const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, active);
+  useMouse(ref, { onClick, onContextMenu }, active);
   const marker = (
     <Box flexShrink={0}>
       <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
