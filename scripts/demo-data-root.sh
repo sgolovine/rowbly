@@ -13,7 +13,7 @@ rowbly() {
 }
 
 rowbly init --board launch --board-name "Rowbly Launch" --prefix ROW
-rowbly whoami alex
+rowbly whoami --local alex   # local Me, so the demo leaves ~/.rowblyrc.json alone
 for plugin in assignees tasks comments; do
   rowbly plugins enable "$plugin"
 done

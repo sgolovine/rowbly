@@ -19,7 +19,8 @@ export function MeScreen() {
   if (!ctx) return null;
   const home = ctx.home ?? homedir();
   const { me, source, global, local } = identity(ctx.local, ctx.globalMe ?? null);
-  const value = (handle: string | null) => handle ?? '—';
+  // The level names padded to one width, so the handles line up.
+  const row = (name: string, handle: string | null) => `${name.padEnd(16)}${handle ?? '—'}`;
   const from = source === 'local' ? '(local Me)' : source === 'global' ? '(global Me)' : '';
   return (
     <Box flexDirection="column" gap={1}>
@@ -34,10 +35,10 @@ export function MeScreen() {
       <SelectList<MeLevel>
         isActive={editing === null}
         items={[
-          { value: 'global', label: `Global  ${value(global)}`, description: '~/.rowblyrc.json · every Data Root' },
+          { value: 'global', label: row('Global', global), description: '~/.rowblyrc.json · every Data Root' },
           {
             value: 'local',
-            label: `This Data Root  ${value(local)}`,
+            label: row('This Data Root', local),
             description: 'local.json · never committed',
           },
         ]}
