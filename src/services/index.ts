@@ -6,6 +6,7 @@ import { createContextService } from './context';
 import { coordinated, coordinatedRepositories, coordinatedServices, mutationCoordinator } from './coordination';
 import { createDoctorService } from './doctor';
 import { createFieldsService } from './fields';
+import { effectiveMe, readGlobalMe } from './identity';
 import type { PluginHost } from './plugins/host';
 import { createOperationRunner } from './plugins/runtime';
 import { createPluginsService } from './plugins/service';
@@ -21,6 +22,15 @@ import type { RowblyContext, Services } from './types';
 export const newId = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8);
 
 export { coordinated, type RecoveryOutcome, withMutation, withRecovery } from './coordination';
+export {
+  applyGlobalMe,
+  effectiveMe,
+  type Identity,
+  identity,
+  type MeSource,
+  readGlobalMe,
+  setGlobalMe,
+} from './identity';
 export { pluginReadServices, pluginServices } from './plugins/capabilities';
 export {
   type ActivePlugin,
@@ -92,16 +102,23 @@ export interface CreateContextOptions {
 
 /**
  * Resolves the Data Root, Local State and Me (contracts §4) and builds a `RowblyContext` with the
- * real clock and id generator. Shared by the Command Layer and the TUI.
+ * real clock and id generator. Shared by the Command Layer and the TUI. Me is the local Me, else
+ * global Me from the Home Config (ADR-0032); a Home Config that cannot be read only warns.
  */
 export async function createContext(opts: CreateContextOptions): Promise<RowblyContext> {
   const root = await findDataRoot({ cwd: opts.cwd, flag: opts.root, env: opts.env, home: opts.home });
   // Opening the Data Root finishes any interrupted commit before the first read (ADR-0019 §2).
   const local = await coordinated(root, 'open', () => createRepositories(root).localState.get());
+  const globalMe = await readGlobalMe(opts.home).catch((err: unknown) => {
+    opts.warn(`global Me not read: ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  });
   const ctx: RowblyContext = {
     root,
     local,
-    me: local.me ?? null,
+    me: effectiveMe(local, globalMe),
+    globalMe,
+    home: opts.home,
     now: () => new Date(),
     newId,
     warn: opts.warn,
