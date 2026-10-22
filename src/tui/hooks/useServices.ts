@@ -7,10 +7,10 @@ export interface ServicesValue {
   ctx: RowblyContext | null;
   services: Services | null;
   /**
-   * Switches the app to another context, e.g. the Data Root the setup screen just created, and
-   * resolves to its services once its Plugins are loaded.
+   * Switches the app to another context, e.g. the Data Root the setup screen just created. `prepare`
+   * runs on its services, with its Plugins loaded, before the switch; if it throws, nothing switches.
    */
-  activate?(ctx: RowblyContext): Promise<Services>;
+  activate?(ctx: RowblyContext, prepare?: (services: Services) => Promise<void>): Promise<void>;
 }
 
 export const ServicesContext = createContext<ServicesValue>({ ctx: null, services: null });
@@ -27,10 +27,7 @@ export function useRowblyContext(): RowblyContext | null {
   return useContext(ServicesContext).ctx;
 }
 
-/**
- * Switches the whole app to `ctx` and fresh services over it, and resolves to those services.
- * Outside the App it only makes the services.
- */
-export function useActivate(): (ctx: RowblyContext) => Promise<Services> {
-  return useContext(ServicesContext).activate ?? (async (ctx) => createServices(ctx));
+/** Switches the whole app to `ctx` and fresh services over it. Outside the App it only runs `prepare`. */
+export function useActivate(): NonNullable<ServicesValue['activate']> {
+  return useContext(ServicesContext).activate ?? (async (ctx, prepare) => prepare?.(createServices(ctx)));
 }

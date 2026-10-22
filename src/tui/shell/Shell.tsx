@@ -263,7 +263,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                   <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
                     {router.stack[0] && (
                       <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
+                        {/* Keyed by the Data Root, so switching to another one starts the screen again. */}
                         <ScreenSlot
+                          key={ctx?.root.path}
                           route={router.stack[0]}
                           depth={0}
                           top

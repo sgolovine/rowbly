@@ -52,11 +52,11 @@ export function App({
   const [current, setCurrent] = useState({ ctx, services, plugins });
   /** Switches to `next` with fresh services, after loading its Plugins. */
   const activate = useCallback(
-    async (next: RowblyContext) => {
+    async (next: RowblyContext, prepare?: (services: Services) => Promise<void>) => {
       const loaded = await withPlugins(next, loadPlugins, toastStore);
       const services = createServices(next);
+      await prepare?.(services);
       setCurrent({ ctx: next, services, plugins: loaded });
-      return services;
     },
     [loadPlugins, toastStore],
   );

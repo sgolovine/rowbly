@@ -1,4 +1,5 @@
 import { homedir } from 'node:os';
+import { sep } from 'node:path';
 import { Box, Text } from 'ink';
 import { keyPrefixFromName, slugFromName } from '../../../core';
 import type { DataRoot } from '../../../schemas';
@@ -20,6 +21,11 @@ async function createBoard(services: Services, name: string, description: string
     keyPrefix: keyPrefixFromName(name, new Set(boards.map((b) => b.keyPrefix))),
     description,
   });
+}
+
+/** `path` with the home directory shown as `~`. */
+function shortPath(path: string, home: string): string {
+  return path.startsWith(home + sep) ? `~${path.slice(home.length)}` : path;
 }
 
 /**
@@ -59,7 +65,10 @@ export function BoardFormScreen({ params }: ScreenProps) {
             kind: 'select',
             required: true,
             options: ['local', 'global'],
-            optionLabels: { local: `Here (${roots.local.path})`, global: `Global (${roots.global.path})` },
+            optionLabels: {
+              local: `Here (${shortPath(roots.local.path, home)})`,
+              global: `Global (${shortPath(roots.global.path, home)})`,
+            },
           },
           { name: 'name', label: 'Name', kind: 'text', required: true },
           { name: 'description', label: 'Description', kind: 'text' },
@@ -80,11 +89,13 @@ export function BoardFormScreen({ params }: ScreenProps) {
             await createServices(newContext(root, warn)).setup.init({ root, board: undefined });
             toast.push('info', `Created ${root.path}`);
           }
-          // Switch first, so the Board is created with the Plugins that Data Root has on.
-          const next = await activate(await createContext({ cwd, env: {}, home, root: root.path, warn }));
-          const board = await createBoard(next, name, description);
-          await next.context.use(board.id);
-          toast.push('info', `Created ${board.name} (${board.keyPrefix}) in ${root.path}`);
+          // Created with the Plugins that Data Root has on, and in context there before the app switches.
+          const next = await createContext({ cwd, env: {}, home, root: root.path, warn });
+          await activate(next, async (target) => {
+            const board = await createBoard(target, name, description);
+            await target.context.use(board.id);
+            toast.push('info', `Created ${board.name} (${board.keyPrefix}) in ${root.path}`);
+          });
           router.reset('board');
         }}
       />
