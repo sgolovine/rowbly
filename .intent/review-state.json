@@ -3,55 +3,51 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "ad65c55d987fb3e06ebec51f64dc0ae579bd444765a838862713253dee41b204",
+      "fingerprint": "7eaedc1dce845c89c9d0bb5cfc0e7e568768fae59231ec6efc1b52c6400d63fb",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "7230ff64581b896aedf8b34c4a9fdce7a30433e77d1b860132c67f2e83866385",
+      "fingerprint": "e1bfb2fc3ff1d56c8175b89b05dc2621f7135496dbbf042948bfb4b898302459",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "d7aeb199cbc04141d4f96c8cdaeb880985bd91e794ff10c7d60fe33ab7e5c61c",
+      "fingerprint": "3b6a89319371750e74bd4812dcfeacdfe75de70065f6795e647411e06b2055f2",
       "snapshot": {
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/rowbly-plugins/SKILL.md": "b819ad8d7599e7ce956d71ef850e15318522cbaaf020c588164fcd956d0c1d90",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
@@ -68,20 +64,18 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "0d3f024e363bafbdade02fd975634c2959fd6c4c81a3d6d5fb12453ffc961ac0",
+      "fingerprint": "f944bc8907af41038605b0ed54c633ddebaf98ad86add874112d0548f83541d3",
       "snapshot": {
         "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/rowbly-setup/SKILL.md": "bec372b123ea2d1d7789b4ce45b6583eb1c5f52c436602937fdc589a98b0c383",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
@@ -89,20 +83,18 @@
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "6ca293d4cd727b80b6c37cac374c78a0fe4b50f6b7df7df07292f36fb2917fef",
+      "fingerprint": "0b22e94788787fa30991309cbd0bed97c2af6ee024bd2f81e22eec3cd2cffbac",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/rowbly-stories/SKILL.md": "83a0d214d1cf4fec7429c1660e9cd388da220203f0fe5a85361961052a04a73e",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
@@ -110,17 +102,15 @@
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
-        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "300b84bed629540f5eb68963ab01b39a641d527f07c532f5219b9684c199eb1a",
+      "fingerprint": "829b9d0d9effaa2710a1ecb5a5c6046db3d4950f66b5e900f6b8e56bee2929d5",
       "snapshot": {
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
@@ -128,9 +118,9 @@
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "docs/user-guide.md": "d2201aa5d9cec1b1d514d572d3b158e928f6a13cad3347457ca321d8332b73b6",
         "skills/_artifacts/domain_map.yaml": "44bc512c724114130aa389b979cfbde05c43b5df6919b72af1366e8d188f3bd6",
-        "skills/_artifacts/skill_spec.md": "05c4c6352a0151e3fe816aeb25fb91b63567c1ba5dfa4ca1c29498b60be09fd4",
+        "skills/_artifacts/skill_spec.md": "6b928ad79514d2a8885f92f0996dfef11ffcdf16d63bd6784960446f43837c48",
         "skills/_artifacts/skill_tree.yaml": "76954042de7a582206f5bf4c75e2f0522c593da93f20415f54c6c46e2056298e",
         "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
         "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
@@ -167,13 +157,11 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
-      "outcome": "updated",
-      "reason": "skill_tree.yaml sources synchronized by intent maintainer sync; failure-mode sources in skill_spec.md and domain_map.yaml repointed from README.md#<anchor> to the same anchors in docs/user-guide.md; skill_spec.md gains the history entry “Documentation — README becomes a landing page”. No task, failure mode, prerequisite or decision changed.",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "all three planning documents parse (python yaml.safe_load for both YAML files)",
-        "every docs/user-guide.md#anchor named in the spec and domain map exists",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: docs/user-guide.md, skills/_artifacts/skill_spec.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -4035,15 +4023,15 @@
       ]
     },
     "source:src/tui/shell/Shell.tsx": {
-      "fingerprint": "edd14bbcf42e6861c23b9208e4475d2571c46c0eec10675d6754dec051df4382",
+      "fingerprint": "925fbf1693796ed05eee7103c63567b4819635b3d00b7f59825fafa560b4f7ef",
       "snapshot": {
-        "src/tui/shell/Shell.tsx": "1977d21b5aed2c46f93055265283442ebfaba08d81a286d3e65855b8d5a102de"
+        "src/tui/shell/Shell.tsx": "61e02dc3cc93384d284fe02c97619e36f850570a178290ea6b21bfdc67954e92"
       },
-      "head": "cde81e4b2ab0c219129265faf7989a4eb899784f",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
       "outcome": "no-change",
-      "reason": "TUI-only change (sidebar focus by click, ↑/↓ and n in a focused sidebar, N removed). The README gains one TUI paragraph; the skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI, and none mentions sidebar keys, N or New Board (grep of skills/). Planning artifacts list no TUI key guidance.",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "Changed: src/tui/shell/Shell.tsx at cde81e4b2ab0c219129265faf7989a4eb899784f"
+        "Changed: src/tui/shell/Shell.tsx at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "source:src/tui/shell/ViewSwitch.tsx": {
@@ -5709,15 +5697,15 @@
       ]
     },
     "source:src/tui/shell/Sidebar.tsx": {
-      "fingerprint": "591ee360ec5108ee82efb0306322358900e7fe014a695e76037ae7813fe46a7e",
+      "fingerprint": "b190738de9def15ec502a7f07dc5888bbee51e5b163ed77e86609ae7e5267dd1",
       "snapshot": {
-        "src/tui/shell/Sidebar.tsx": "773ab7ec75ab131ad90b5d57d105aa07ac60e5a19289412f58f98bf7c9b02e35"
+        "src/tui/shell/Sidebar.tsx": "998dfcfe09d27cab9dae2591d4598f15ec58d2e8f5e349da29d5e062457bf06f"
       },
-      "head": "cde81e4b2ab0c219129265faf7989a4eb899784f",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
       "outcome": "no-change",
-      "reason": "TUI-only change (sidebar focus by click, ↑/↓ and n in a focused sidebar, N removed). The README gains one TUI paragraph; the skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI, and none mentions sidebar keys, N or New Board (grep of skills/). Planning artifacts list no TUI key guidance.",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "Changed: src/tui/shell/Sidebar.tsx at cde81e4b2ab0c219129265faf7989a4eb899784f"
+        "Changed: src/tui/shell/Sidebar.tsx at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "source:src/tui/shell/SidebarItem.tsx": {
@@ -6072,15 +6060,15 @@
       ]
     },
     "source:src/tui/hooks/mouse.ts": {
-      "fingerprint": "1a4f770955e51aa680933355f5417b2f4aab658c17ba0883f5477d24b93a4c0f",
+      "fingerprint": "bf3ea432c628bf8adc316482edb4d94104e6e6bbad27b5733ac4d37cafe61e89",
       "snapshot": {
-        "src/tui/hooks/mouse.ts": "2de9ea09c108298b7194ce626e4df44e25b36fb4fcc95c14c19da2b1e9b6bbc1"
+        "src/tui/hooks/mouse.ts": "b80b157bfc8bb45fa946ca25ff556248626c614ff2df2480cbdb07090121fa53"
       },
-      "head": "2e01fe36c0b68f6d1ae61ac79274104530f43f50",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
       "outcome": "no-change",
-      "reason": "TUI-only mouse handling in src/tui/hooks/mouse.ts (a press on a draggable Story card clicks on release in the same cell, drags otherwise); outside the skills' assessed scope (skill_spec.md §Scope). No command, output, exit code or Data Root behavior changed; skill_spec.md logs the change.",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "Changed: src/tui/hooks/mouse.ts at 2e01fe36c0b68f6d1ae61ac79274104530f43f50"
+        "Changed: src/tui/hooks/mouse.ts at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     },
     "source:src/tui/mouse.ts": {
@@ -7322,15 +7310,27 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
+      "fingerprint": "2455980ec12d1e58213bba141c451e57137d5bbb7382f6e8336b96a768dea85f",
       "snapshot": {
-        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
+        "README.md": "182aeac30cccff31fce88004d295b5252d7f2a2e80be26af9e89054f351d5bc6"
       },
-      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
       "outcome": "no-change",
-      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
       "evidence": [
-        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
+        "Changed: README.md at 2c8fccf4c029c33963f172747b7716702c0b0968"
+      ]
+    },
+    "source:src/tui/shell/layout.ts": {
+      "fingerprint": "ab289ab428b8f3e935ee3b4344870118faff879af3318addd71a1046e24ba0ae",
+      "snapshot": {
+        "src/tui/shell/layout.ts": "b047f6e2588176e1f899a3802cd4537a9251efdc83dfff05a4aa0d9f27240200"
+      },
+      "head": "2c8fccf4c029c33963f172747b7716702c0b0968",
+      "outcome": "no-change",
+      "reason": "TUI-only change: dragging a sidebar's edge resizes it. No command, flag, output, exit code, doctor finding or Data Root behavior changed; skill_spec.md records the review (2026-10-22).",
+      "evidence": [
+        "Changed: src/tui/shell/layout.ts at 2c8fccf4c029c33963f172747b7716702c0b0968"
       ]
     }
   }
