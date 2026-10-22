@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -222,6 +222,29 @@ describe('end-to-end scenario', () => {
     expect(result.exitCode).toBe(0);
     const report = await json('doctor');
     expect(report.findings).toEqual([]);
+
+    // Two entries marked default, even naming one folder, are an error that --fix leaves to the user.
+    const rc = join(dir, 'home', '.rowblyrc.json');
+    const saved = await readFile(rc, 'utf8');
+    const root = join(dir, '.rowbly');
+    const conflicted = `${JSON.stringify({
+      ...JSON.parse(saved),
+      dataRoots: [
+        { path: root, default: true },
+        { path: `${root}/`, default: true },
+      ],
+    })}\n`;
+    await writeFile(rc, conflicted);
+    try {
+      const fixed = await rowbly('--data-root', root, 'doctor', '--fix', '--json');
+      expect(fixed.exitCode).toBe(6);
+      expect(JSON.parse(fixed.stdout).findings).toEqual([
+        expect.objectContaining({ code: 'MULTIPLE_DEFAULT_DATA_ROOTS', severity: 'error', path: rc, fixable: false }),
+      ]);
+      expect(await readFile(rc, 'utf8')).toBe(conflicted);
+    } finally {
+      await writeFile(rc, saved);
+    }
   });
 
   it('10. --json from every list command round-trips the files on disk', async () => {
