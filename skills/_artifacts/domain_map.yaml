@@ -274,3 +274,4 @@ gaps:
 
 # 2026-10-21: TUI design-system source review; command-mode tasks, mappings and decisions unchanged.
 # Evidence and scope rationale: skill_spec.md, “Behavior change — TUI design system”.
+# 2026-10-21: README.md moved to docs/user-guide.md; failure-mode sources repointed to the same anchors (skill_spec.md, “Documentation — README becomes a landing page”).
