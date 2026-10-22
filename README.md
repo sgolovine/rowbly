@@ -255,6 +255,12 @@ pnpm test
 The [development guide](docs/development/README.md) covers the checks, tests and tracing, and
 [`AGENTS.md`](AGENTS.md) has the rules for anyone, person or agent, changing the code.
 
+## Contributing
+
+At this time, I am only accepting Issues and not accepting PR's. If you have an issue with the app, please submit an issue [here](https://github.com/sgolovine/rowbly/issues).
+
+But I want to be clear, I absolutley will welcome contributions in the future. The reason I am not accepting them at this time is that Rowbly still needs alot of internal architecture work to make it ready to accept contributions.
+
 ## License
 
 [MIT](LICENSE.md)
