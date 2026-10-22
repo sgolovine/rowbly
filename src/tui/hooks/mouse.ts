@@ -15,6 +15,8 @@ export interface MouseHandlers {
    */
   drag?: unknown;
   onDrop?(value: unknown): void;
+  /** A press here holds the box: each pointer move until the release reports the pointer's cell, e.g. to resize. */
+  onPull?(x: number, y: number): void;
 }
 
 interface Target {
@@ -32,6 +34,7 @@ export function createMouseRegistry(): MouseRegistry {
   const targets = new Set<Target>();
   let hovered: Target | undefined;
   let dragging: { value: unknown; from: Target; x: number; y: number; moved: boolean } | null = null;
+  let pulling: Target | null = null;
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
     let best: { target: Target; area: number } | undefined;
@@ -60,6 +63,7 @@ export function createMouseRegistry(): MouseRegistry {
     },
     dispatch(event) {
       if (event.kind === 'move') {
+        if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
         if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
         const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
         if (next !== hovered) {
@@ -70,7 +74,9 @@ export function createMouseRegistry(): MouseRegistry {
         return;
       }
       if (event.kind === 'press') {
-        const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined));
+        const target = hit(event, (h) => Boolean(h.onClick || h.drag !== undefined || h.onPull));
+        pulling = target?.handlers.current.onPull ? target : null;
+        if (pulling) return;
         if (target && target.handlers.current.drag !== undefined) {
           dragging = { value: target.handlers.current.drag, from: target, x: event.x, y: event.y, moved: false };
           return;
@@ -79,6 +85,7 @@ export function createMouseRegistry(): MouseRegistry {
         target?.handlers.current.onClick?.();
         return;
       }
+      pulling = null;
       const drop = dragging;
       dragging = null;
       if (!drop) return;

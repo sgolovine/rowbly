@@ -142,6 +142,7 @@ and name.
 | `q` | quit |
 
 The mouse works too: click a Story to select it, click again to open it, or drag it onto another Stage.
+Drag the right edge of the Boards sidebar or a Plugin Sidebar, such as Epics, to make it wider or narrower.
 Descriptions are Markdown, with a full-screen editor that shows them rendered.
 
 ## On the command line
