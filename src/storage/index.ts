@@ -1,6 +1,15 @@
 // Storage & Configuration Layer (contracts §9). The only layer allowed to touch `node:fs`.
 export { cascade, resolveCascade } from './cascade';
-export { type FindDataRootOptions, findDataRoot } from './dataRoot';
+export {
+  assertNoRootEnv,
+  canonicalDataRootPath,
+  type FindDataRootOptions,
+  findDataRoot,
+  listKnownDataRoots,
+  type RegisterDataRootOptions,
+  recordOpenedDataRoot,
+  registerDataRoot,
+} from './dataRoot';
 export { type FolderMove, listFilesUnder, moveFolders, preflightMoves, readTextIfExists, removeFile } from './files';
 export * from './homeConfig';
 export { CONFLICT_MARKER_RE, readJson, serializeJson, writeJson } from './jsonStore';

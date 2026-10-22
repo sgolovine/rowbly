@@ -2,7 +2,7 @@ import { homedir } from 'node:os';
 import { Command, CommanderError } from 'commander';
 import pkg from '../package.json' with { type: 'json' };
 import { attachPlugins, pluginCliStager, registerCommands } from './commands';
-import { ExitCode, exitCodeFor, UsageError } from './core';
+import { DataRootNotFoundError, ExitCode, exitCodeFor, UsageError } from './core';
 import { printError, printWarnings } from './output';
 import {
   type AnyPluginDefinition,
@@ -23,12 +23,14 @@ import { drainGitQueue } from './services/plugins/git';
 import { ensureHomeConfig, findDataRoot } from './storage';
 import { CORE_KEYS } from './tui/keymap';
 
+const DATA_ROOT_FLAG = '--data-root';
+
 /** The program with every core command, and the commands and options of the Plugins in `host`. */
 export function createProgram(host?: PluginHost): Command {
   const program = new Command('rowbly')
     .description('A developer-focused, file-backed Kanban tracker.')
     .version(pkg.version, '-V, --version', 'output the version number')
-    .option('--root <path>', 'use this Data Root instead of discovering one')
+    .option('--data-root <path>', 'use this Data Root folder (the `.rowbly` folder itself)')
     .option('--json', 'machine-readable JSON output')
     .option('--yes', 'skip confirmations')
     .option('--no-prompt', 'never prompt; fail when input is missing')
@@ -90,7 +92,7 @@ function handleError(err: unknown, json: boolean, registry: readonly AnyPluginDe
 }
 
 /**
- * The global options when `argv` has no command, i.e. only `--root <path>`, `--json`, `--yes` and
+ * The global options when `argv` has no command, i.e. only `--data-root <path>`, `--json`, `--yes` and
  * `--no-prompt` (or nothing at all); otherwise `null`. `--help` and `--version` are left to commander.
  */
 export function globalsOnly(argv: readonly string[]): { root?: string } | null {
@@ -98,8 +100,8 @@ export function globalsOnly(argv: readonly string[]): { root?: string } | null {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i] as string;
     if (arg === '--json' || arg === '--yes' || arg === '--no-prompt') continue;
-    if (arg.startsWith('--root=')) globals.root = arg.slice('--root='.length);
-    else if (arg === '--root' && i + 1 < argv.length) globals.root = argv[++i];
+    if (arg.startsWith(`${DATA_ROOT_FLAG}=`)) globals.root = arg.slice(DATA_ROOT_FLAG.length + 1);
+    else if (arg === DATA_ROOT_FLAG && i + 1 < argv.length) globals.root = argv[++i];
     else return null;
   }
   return globals;
@@ -111,21 +113,31 @@ export function globalsOnly(argv: readonly string[]): { root?: string } | null {
  */
 export function versionOnly(argv: readonly string[]): boolean {
   const flags = argv.flatMap((arg, i) =>
-    (arg === '--version' || arg === '-V') && argv[i - 1] !== '--root' ? [i] : [],
+    (arg === '--version' || arg === '-V') && argv[i - 1] !== DATA_ROOT_FLAG ? [i] : [],
   );
   if (flags.length !== 1) return false;
   return globalsOnly(argv.filter((_, i) => i !== flags[0])) !== null;
 }
 
-/** `--root <path>` or `--root=<path>` anywhere in `argv`. */
+/**
+ * `--data-root <path>` or `--data-root=<path>` anywhere in `argv`, as commander reads it, so that the
+ * Plugins loaded before parsing are those of the Data Root the command opens.
+ */
 function rootFlag(argv: readonly string[]): string | undefined {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i] as string;
     if (arg === '--') break;
-    if (arg.startsWith('--root=')) return arg.slice('--root='.length);
-    if (arg === '--root') return argv[i + 1];
+    if (arg.startsWith(`${DATA_ROOT_FLAG}=`)) return arg.slice(DATA_ROOT_FLAG.length + 1);
+    if (arg === DATA_ROOT_FLAG) return argv[i + 1];
   }
   return undefined;
+}
+
+/** Commander's error for a command or option that the program does not have. */
+function unknownName(err: unknown): boolean {
+  return (
+    err instanceof CommanderError && (err.code === 'commander.unknownCommand' || err.code === 'commander.unknownOption')
+  );
 }
 
 /**
@@ -172,20 +184,28 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
   }
   // Each event goes to stderr as it happens, so `--json` output on stdout stays parseable (OBS-01).
   setTraceSink(traceRequested(process.env) ? (event) => process.stderr.write(`${formatTrace(event)}\n`) : undefined);
+  // Why the Data Root could not be opened, other than finding none: a Plugin command or option is
+  // unknown then because no Plugin loaded, so that is the error to report (ADR-0033 §1).
+  let preload: unknown;
   try {
+    // The same resolution as the command's own context, so the Plugins loaded are the ones of the
+    // Data Root it opens. A failure loads none here; the command reports it when it needs the root.
     const root = await findDataRoot({
       cwd: process.cwd(),
       flag: rootFlag(argv),
       env: process.env,
       home: homedir(),
-    }).catch(() => null);
+    }).catch((err: unknown) => {
+      if (!(err instanceof DataRootNotFoundError && err.details.path === undefined)) preload = err;
+      return null;
+    });
     const { program, host } = await loadProgram(root, registry);
     printWarnings(host.failures().map(failureWarning), { json });
     await program.parseAsync(argv, { from: 'user' });
     // A command may set its own exit code without throwing (e.g. `doctor` with errors).
     return Number(process.exitCode ?? ExitCode.ok);
   } catch (err) {
-    return handleError(err, json, registry);
+    return handleError(preload !== undefined && unknownName(err) ? preload : err, json, registry);
   } finally {
     await drainGitQueue();
     setTraceSink(undefined);

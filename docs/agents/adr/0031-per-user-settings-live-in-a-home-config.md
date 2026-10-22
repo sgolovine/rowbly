@@ -1,6 +1,6 @@
 # ADR-0031: Per-user settings live in a Home Config, `~/.rowblyrc.json`
 
-**Status:** Accepted. Implements the maintainer's request for a per-user configuration file. The file, its schema and its safe writes are built; global Me and the list of known Data Roots are read and written by nothing yet, and will amend ADR-0002 and Local State's Me when they are. Amended by ADR-0032: global Me is read and written.
+**Status:** Accepted. Implements the maintainer's request for a per-user configuration file. The file, its schema and its safe writes are built. Amended by ADR-0032: global Me is read and written. Extended by [ADR-0033](0033-known-data-roots-select-the-data-root.md): the list of known Data Roots is read and written, and its default selects the Data Root.
 
 Every setting Rowbly keeps today belongs to one Data Root: its configuration in `rowbly.config.json` and the developer's Local State in `local.json`. Settings that belong to the person rather than to a Data Root, such as the handle they work as everywhere or the Data Roots they use, have nowhere to live.
 

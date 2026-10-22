@@ -15,7 +15,7 @@ const builds: ProvidedContext['cliBuilds'] | undefined = inject('cliBuilds');
 export const CLI_PATH = builds?.cli ?? NOT_BUILT;
 
 export interface RunCliOptions {
-  /** Data Root path, passed as `ROWBLY_ROOT`. */
+  /** Data Root path, passed as `--data-root` before `args`. */
   root?: string;
   /** Extra environment; merged over the isolated defaults. */
   env?: NodeJS.ProcessEnv;
@@ -45,11 +45,11 @@ export async function runCli(args: string[], opts: RunCliOptions = {}): Promise<
     PATH: process.env.PATH,
     HOME: isolated,
     NO_COLOR: '1',
-    ...(opts.root ? { ROWBLY_ROOT: opts.root } : {}),
     ...opts.env,
   };
   try {
-    return await run(cli, args, opts.cwd ?? isolated, env, opts.stdin ?? '');
+    const argv = opts.root ? ['--data-root', opts.root, ...args] : args;
+    return await run(cli, argv, opts.cwd ?? isolated, env, opts.stdin ?? '');
   } finally {
     await rm(isolated, { recursive: true, force: true });
   }

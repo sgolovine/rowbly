@@ -539,7 +539,7 @@ it('rejects malformed input before anything is saved', async () => {
 - It returns `services`, every core service, **for the test only**: set up data and check results as a person would. `context(id)` is the context that the Plugin's own commands, screens and Actions get. A Plugin that fails to load is in `warnings` and `status()`.
 - `validatePluginDefinition(definition)` lists the problems Rowbly would refuse the Plugin for when it loads (names, options, Action keys, replacements and hooks); empty when it is fine.
 - **TUI.** Render a screen, tab or section with `ink-testing-library`, passing `host.context(id)` and a `PluginUi` whose methods record calls. Wait for what the screen shows once its data has loaded before you press keys: reads are async, and an early key may reach a screen that is still loading. The header of `src/plugin-api/testing.ts` has the recipe. Navigation between screens needs the whole TUI: `openPluginApp` in `test/plugins/tuiHelpers.tsx` renders it with your Plugins.
-- **Commands.** Run the CLI in the test process with `main(['--root', host.root.path, …], [points])` from `src/main.ts`.
+- **Commands.** Run the CLI in the test process with `main(['--data-root', host.root.path, …], [points])` from `src/main.ts`.
 - Test failure paths: malformed input saves nothing, a refusal saves nothing, and invalid stored data is kept.
 - `ROWBLY_DEBUG=trace` prints every Plugin callback with its stage, time and outcome to stderr (see [Tracing](api.md#tracing)).
 

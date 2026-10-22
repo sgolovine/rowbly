@@ -85,7 +85,7 @@ export interface StartTuiOptions {
   proc?: GuardedProcess;
   env?: NodeJS.ProcessEnv;
   cwd?: string;
-  /** `--root`. Unlike a discovered Data Root, a missing one fails instead of opening setup. */
+  /** `--data-root`. Like the default Data Root, a missing one fails instead of opening setup. */
   root?: string;
   /** Loads the Plugins that a Data Root turns on; without it no Plugin runs. */
   loadPlugins?: PluginLoader;
@@ -139,7 +139,10 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
   }
 }
 
-/** The demo needs no data, and a missing Data Root routes to setup unless `--root` named it. */
+/**
+ * The demo needs no data. Finding no Data Root routes to setup; a named one (`--data-root`, or the
+ * Home Config's default) that is missing fails, so setup never hides it (ADR-0033 §1).
+ */
 async function resolveContext(
   env: NodeJS.ProcessEnv,
   cwd: string,
@@ -150,7 +153,7 @@ async function resolveContext(
   try {
     return await createContext({ cwd, env, home: homedir(), root, warn: (message) => toasts.push('warning', message) });
   } catch (err) {
-    if (err instanceof DataRootNotFoundError && !root) return null;
+    if (err instanceof DataRootNotFoundError && !root && err.details.path === undefined) return null;
     throw err;
   }
 }

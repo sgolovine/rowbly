@@ -10,7 +10,7 @@ import type { RowblyContext, SetupService } from './types';
 const DATA_ROOT_DIR = '.rowbly';
 
 /**
- * Where `init` creates the Data Root: an explicit `--root` / `ROWBLY_ROOT` path, else `~/.rowbly`
+ * Where `init` creates the Data Root: an explicit `--data-root` path, else `~/.rowbly`
  * with `global`, else `<cwd>/.rowbly`. Unlike `findDataRoot`, the path need not exist yet.
  */
 export function initTarget(opts: { cwd: string; home: string; explicit?: string; global: boolean }): DataRoot {

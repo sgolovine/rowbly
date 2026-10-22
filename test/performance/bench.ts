@@ -198,14 +198,14 @@ async function benchSize(stories: number, options: Options, work: string, cli: s
       await measure(
         `CLI stories list --json (Plugins ${mode})`,
         n,
-        () => runCli(cli, ['--root', root.path, 'stories', 'list', '--json']),
+        () => runCli(cli, ['--data-root', root.path, 'stories', 'list', '--json']),
         () => undefined,
       );
     }
     await measure(
       'CLI doctor --json (Plugins on)',
       n,
-      () => runCli(cli, ['--root', on.path, 'doctor', '--json']),
+      () => runCli(cli, ['--data-root', on.path, 'doctor', '--json']),
       () => undefined,
     );
   }

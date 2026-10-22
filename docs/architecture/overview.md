@@ -56,7 +56,7 @@ The source is in layers. Each layer imports only the layers listed for it, and `
 ## How a command runs
 
 1. `src/cli.ts` hands the Plugin registry to `main` in `src/main.ts`.
-2. `main` finds the Data Root (`--root`, `ROWBLY_ROOT`, then `.rowbly/` in the current directory or a parent, then `~/.rowbly`), loads the Plugins it turns on, and builds the Commander program (or starts the TUI) over one set of services. Plugins load before the program is built, because their commands and options are part of it.
+2. `main` finds the Data Root (`--data-root`, then the Home Config's default Data Root, then `.rowbly/` in the current directory or a parent, then `~/.rowbly`; [ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)), loads the Plugins it turns on, and builds the Commander program (or starts the TUI) over one set of services. Plugins load before the program is built, because their commands and options are part of it.
 3. A command or screen calls a service. Every change is an **operation**: the service runs its body through `OperationRunner.run`, which fills a Change Set, lets Plugins transform and guard it, saves it once, then runs reactions. See [Operations](operations.md).
 4. The save is one journaled commit under the Data Root lock. See [Storage and commits](storage.md).
 
