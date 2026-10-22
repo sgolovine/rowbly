@@ -25,7 +25,17 @@ rowbly init --board web --board-name Website --prefix WEB --json --no-prompt
 - This creates `.rowbly/` with `rowbly.config.json` (the default Stages), a `.gitignore`, and the Board
   `web`. It also makes `web` the current Board. Its Stories are keyed `WEB-1`, `WEB-2`, ….
 - `--global` creates `~/.rowbly` instead. Use it only when the user asks for one tracker for all
-  their projects.
+  their repositories. `--data-root <path>` creates the Data Root at that folder (the `.rowbly` folder
+  itself); never pass both. With neither, and with `--no-prompt`, `init` creates `.rowbly/` in the
+  current directory; it asks only in an interactive terminal.
+- `init` records the Data Root in `~/.rowblyrc.json`. `--label <label>` names it there. `--default`
+  makes it the default Data Root, which every directory then opens ahead of its own `.rowbly/`, and
+  unmarks any other default. Pass `--default` only when the user asks for it. Without it, a warning
+  says when another default Data Root is opened ahead of the new one; tell the user, and pass
+  `--data-root <path>` to work in the new one.
+- `init` checks the location, the Board and `~/.rowblyrc.json` before it writes anything, so a failed
+  `init` usually leaves nothing to clean up. If the error's hint says the Data Root was created, follow
+  that hint; do not delete the folder unless the user agrees.
 - An existing Data Root exits 4. Do not delete it to start again.
 - `init` turns on no Plugins. Turn one on with `rowbly plugins enable <id>` only when the user wants
   its feature; it changes the Data Root for everyone.

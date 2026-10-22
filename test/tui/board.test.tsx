@@ -1,5 +1,5 @@
 import type { EventEmitter } from 'node:events';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ConflictError } from '../../src/core/errors';
 import type { StageConfig } from '../../src/schemas';
 import { createServices, type RowblyContext, type Services } from '../../src/services';
@@ -92,20 +92,41 @@ const story = (t: TempRoot, key: string) => createRepositories(t.root).stories.f
 /** The lines of the frame between the board title and the footer. */
 const frameLines = (app: Rendered) => (app.lastFrame() ?? '').split('\n');
 
+/** A promise and the function that resolves it. */
+function arrival(): { promise: Promise<void>; resolve(): void } {
+  let resolve = () => {};
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
 describe('board view', () => {
   it('moves a card to the next Stage with shift+→, at the bottom, and on disk', async () => {
     const t = await seed();
     // The move is on disk before the service call returns; the barrier holds the call open in that window.
-    // Each held call, in order; the test releases one once it has arrived.
+    // Each held call, in order; the test releases one once it has arrived. It awaits the arrival of call
+    // `n` rather than polling for it with a deadline: the commit before it may take any time.
     const held: (() => void)[] = [];
+    const arrivals = [arrival(), arrival()];
+    const arrived = (n: number) => arrivals[n - 1]?.promise;
+    // The first commit waits until the test has seen the move on screen, so the screen cannot rely on it.
+    let commit = () => {};
+    const committing = new Promise<void>((resolve) => {
+      commit = resolve;
+    });
     const app = await open(t, {
       patch: (services) => ({
         ...services,
         stories: {
           ...services.stories,
           move: async (...args: Parameters<Services['stories']['move']>) => {
+            await committing;
             const saved = await services.stories.move(...args);
-            await new Promise<void>((resolve) => held.push(resolve));
+            await new Promise<void>((resolve) => {
+              held.push(resolve);
+              arrivals[held.length - 1]?.resolve();
+            });
             return saved;
           },
         },
@@ -113,9 +134,13 @@ describe('board view', () => {
     });
     try {
       await app.press(KEYS.right, KEYS.shiftRight);
-      await vi.waitFor(() => expect(held).toHaveLength(1));
+      // Shown at once, before the commit; the keys are ignored while it writes, so their hints are hidden.
+      await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && !f.includes('n new'));
+      expect((await story(t, 'WEB-4')).stage).toBe('todo');
+      commit();
+      await arrived(1);
       expect((await story(t, 'WEB-4')).stage).toBe('doing');
-      // Saved on disk but still writing: the keys are ignored, so their hints are hidden.
+      // Saved on disk but still writing: the keys are still ignored.
       expect(app.lastFrame()).not.toContain('n new');
       held[0]?.();
       await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && f.includes('n new'));
@@ -124,11 +149,12 @@ describe('board view', () => {
       expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
       // The cursor follows the card: shift+← moves it back.
       await app.press(KEYS.shiftLeft);
-      await vi.waitFor(() => expect(held).toHaveLength(2));
+      await arrived(2);
       expect((await story(t, 'WEB-4')).stage).toBe('todo');
       held[1]?.();
       await waitForFrame(app, (f) => f.includes('● Todo 1') && f.includes('n new'));
     } finally {
+      commit();
       for (const release of held) release();
       app.unmount();
     }

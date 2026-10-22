@@ -1,118 +1,72 @@
 import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
 import { useState } from 'react';
-import { isSlug, keyPrefixFromName, slugFromName, ValidationError } from '../../../core';
 import type { DataRoot } from '../../../schemas';
-import { createContext, createServices, setGlobalMe } from '../../../services';
-import { assertInitTarget, initTarget, newContext } from '../../../services/setup';
-import { Form, type FormValues, SelectList } from '../../components';
-import { useActivate, useKeyHints, useToast } from '../../hooks';
-import { useRouter } from '../../router';
-import { theme } from '../../theme';
+import { type SetupLocation, setupTarget } from '../../../services/setup';
+import { useEscape, useIsActive, useKeyCapture, useKeyHints, useRowblyContext } from '../../hooks';
 import type { ScreenProps } from '../types';
+import { CustomPathForm } from './CustomPathForm';
+import { InitForm } from './InitForm';
+import { LocationPicker } from './LocationPicker';
+
+/** The `setup` route's params; `cwd` and `home` override the process values (for tests). */
+export interface SetupParams {
+  /** Skip the location choice: `here`, `home`, or `custom` to go straight to the path. */
+  location?: SetupLocation;
+  /** Keep the current Data Root and go back afterwards, instead of opening the app on the new one. */
+  stay?: boolean;
+  cwd?: string;
+  home?: string;
+}
+
+type Step = { kind: 'pick' } | { kind: 'path' } | { kind: 'form'; root: DataRoot };
+
+function firstStep(location: SetupLocation | undefined, at: { cwd: string; home: string }): Step {
+  if (location === 'custom') return { kind: 'path' };
+  if (location) return { kind: 'form', root: setupTarget(location, at) };
+  return { kind: 'pick' };
+}
 
 /**
- * First run, when no Data Root exists: pick where to create one, then the same flow as `rowbly init`.
- * With `params.global` (from the Context screen) it goes straight to the form for `~/.rowbly`, like
- * `init --global`, and returns afterwards without leaving the current Data Root.
- * `params.cwd` and `params.home` override the process values (for tests).
+ * Creates a Data Root, as `rowbly init` does: the first-run screen when no Data Root is found, and
+ * what other screens open (`router.push('setup', params)`, see `SetupParams`) to create another.
+ * It asks where (this directory, the home folder or a custom path), then for the label, the default
+ * choice, the first Board and global Me.
  */
 export function SetupScreen({ params }: ScreenProps) {
-  const cwd = typeof params.cwd === 'string' ? params.cwd : process.cwd();
-  const home = typeof params.home === 'string' ? params.home : homedir();
-  const toast = useToast();
-  const [root, setRoot] = useState<DataRoot | null>(() =>
-    params.global === true ? initTarget({ cwd, home, global: true }) : null,
-  );
+  const p = params as SetupParams;
+  const at = { cwd: p.cwd ?? process.cwd(), home: p.home ?? homedir() };
+  const location = p.location === 'here' || p.location === 'home' || p.location === 'custom' ? p.location : undefined;
+  const [step, setStep] = useState<Step>(() => firstStep(location, at));
+  const active = useIsActive();
+  // Opened from a running Data Root, it creates another one rather than greeting a first run.
+  const another = useRowblyContext() !== null;
+  // Without a preset location, `esc` from the path or the form goes back to the choice.
+  const canGoBack = location === undefined && step.kind !== 'pick';
+  useKeyCapture(active && canGoBack, { escape: true, text: false });
+  useEscape(active && canGoBack, () => setStep({ kind: 'pick' }));
   // The form shows its own keys (`ctrl+s save`, `enter` next field), so only the picker adds one.
-  useKeyHints(root ? [] : [{ key: 'enter', description: 'choose' }]);
+  useKeyHints(
+    step.kind === 'pick'
+      ? [{ key: 'enter', description: 'choose' }]
+      : canGoBack
+        ? [{ key: 'esc', description: 'back' }]
+        : [],
+  );
 
-  if (!root) {
-    const local = initTarget({ cwd, home, global: false });
-    const global = initTarget({ cwd, home, global: true });
+  if (step.kind === 'pick') {
     return (
       <Box flexDirection="column" gap={1}>
-        <Text bold>Welcome to Rowbly</Text>
-        <Text>No Data Root found. Where should Rowbly keep its data?</Text>
-        <SelectList
-          items={[
-            { value: 'local', label: 'Here', description: local.path },
-            { value: 'global', label: 'Globally', description: global.path },
-          ]}
-          onSelect={async (item) => {
-            const target = item.value === 'global' ? global : local;
-            try {
-              // Refuse an existing Data Root before showing the form.
-              await assertInitTarget(target);
-              setRoot(target);
-            } catch (err) {
-              toast.error(err);
-            }
-          }}
-        />
+        <Text bold>{another ? 'New Data Root' : 'Welcome to Rowbly'}</Text>
+        <Text>
+          {another
+            ? 'Where should Rowbly create the new Data Root?'
+            : 'No Data Root found. Where should Rowbly keep its data?'}
+        </Text>
+        <LocationPicker {...at} onChoose={(root) => setStep(root ? { kind: 'form', root } : { kind: 'path' })} />
       </Box>
     );
   }
-  return <InitForm root={root} cwd={cwd} home={home} stay={params.global === true} />;
-}
-
-const text = (value: FormValues[string] | undefined) => (typeof value === 'string' ? value.trim() : '');
-
-/** `stay`: keep the current Data Root and go back, instead of opening the app on the new one. */
-function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home: string; stay: boolean }) {
-  const toast = useToast();
-  const router = useRouter();
-  const activate = useActivate();
-  const warn = (message: string) => toast.push('warning', message);
-
-  return (
-    <Box flexDirection="column">
-      <Text bold>Create {root.path}</Text>
-      <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
-      <Text color={theme.inkFaint}>
-        Your handle sets global Me (`rowbly whoami`) in ~/.rowblyrc.json, the creator of your Stories in every Data
-        Root. Leave it empty to keep the one you have or set it later.
-      </Text>
-      <Form
-        fields={[
-          { name: 'boardName', label: 'Board name', kind: 'text' },
-          { name: 'boardId', label: 'Board id', kind: 'text', fillFrom: { field: 'boardName', format: slugFromName } },
-          {
-            name: 'prefix',
-            label: 'Key prefix',
-            kind: 'text',
-            fillFrom: { field: 'boardName', format: keyPrefixFromName },
-          },
-          { name: 'me', label: 'Your handle (Me)', kind: 'text' },
-        ]}
-        onSubmit={async (values) => {
-          const me = text(values.me) || null;
-          // Checked before `init`, so a bad handle does not leave a Data Root behind.
-          if (me && !isSlug(me)) {
-            const message = 'must be a lower-kebab-case slug';
-            throw new ValidationError(`me: ${message}`, { details: { issues: [{ path: ['me'], message }] } });
-          }
-          const boardId = text(values.boardId);
-          // The name defaults to the id, and the prefix to the Board id upper-cased.
-          const board = boardId
-            ? {
-                id: boardId,
-                name: text(values.boardName) || boardId,
-                keyPrefix: text(values.prefix) || boardId.toUpperCase(),
-              }
-            : undefined;
-          await createServices(newContext(root, warn)).setup.init({ root, board });
-          if (me) await setGlobalMe(home, me);
-          const ctx = await createContext({ cwd, env: {}, home, root: root.path, warn });
-          toast.push('info', me ? `Created ${root.path}; you are ${me}` : `Created ${root.path}`);
-          if (stay) {
-            router.pop();
-            return;
-          }
-          activate(ctx);
-          router.replace('home');
-        }}
-      />
-    </Box>
-  );
+  if (step.kind === 'path') return <CustomPathForm {...at} onChoose={(root) => setStep({ kind: 'form', root })} />;
+  return <InitForm root={step.root} {...at} stay={p.stay === true} />;
 }

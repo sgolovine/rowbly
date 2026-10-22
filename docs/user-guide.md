@@ -117,17 +117,29 @@ Long text such as a description takes `--description <text>`, `--description-fil
 ### Setup: `init`, `use`, `whoami`, `config`
 
 ```sh
-rowbly init [--global] [--board <id> --board-name <name> --prefix <P>]
+rowbly init [--global] [--label <label>] [--default] [--board <id> --board-name <name> --prefix <P>]
 rowbly use [<board>] [--clear]
 rowbly whoami [<handle>] [--clear] [--local]
 rowbly config show [--board <id>]
 ```
 
-- `init` creates `.rowbly/` in the current directory (`~/.rowbly` with `--global`, or the
-  `--data-root` path) and adds it to the Home Config's known Data Roots. It writes `rowbly.config.json` with the default Stages and a `.gitignore` that
-  keeps `local.json` out of git. An existing Data Root exits 4. With the Board flags it also creates
-  the Board and makes it the current context, so later commands need no flags. In an
-  interactive terminal it asks for them instead (suggesting the Board id upper-cased as the prefix).
+- `init` creates `.rowbly/` in the current directory, `~/.rowbly` with `--global`, or the folder that
+  `--data-root <path>` names (the Data Root folder itself). In an interactive terminal without
+  `--global` or `--data-root` it asks which of the three: this directory, the home folder, or another
+  folder whose path you type (`~/` is your home folder). It writes `rowbly.config.json` with the default
+  Stages and a `.gitignore` that keeps `local.json` out of git. An existing Data Root exits 4. With the
+  Board flags it also creates the Board and makes it the current context, so later commands need no
+  flags. In an interactive terminal it asks for them instead (suggesting the Board id upper-cased as the
+  prefix).
+- `init` records the new Data Root in the `dataRoots` of `~/.rowblyrc.json`. `--label <label>` names it
+  there. `--default` makes it the default Data Root, opened from every directory unless `--data-root`
+  names another; any other Data Root marked default stops being the default in the same write. In an
+  interactive terminal `init` asks for the label (leave it empty for none) and whether to make it the
+  default. Without `--default` the defaults stay as they are, and `init` warns when another default
+  Data Root is opened ahead of the new one. `init` checks the location, the Board and
+  `~/.rowblyrc.json` before it writes anything. If it fails after the Data Root exists, the error names
+  the Data Root and how to finish setting it up. With `--json` it prints `{ root, board, known }`,
+  `known` being the Data Root's `dataRoots` entry.
 - `use web` stores the current Board in `local.json`. Without a target it prints the current context
   and where it came from: a flag, the environment (`ROWBLY_BOARD`), `local.json`, or the only Board
   there is. A Board is resolved in that order: `--board`, `ROWBLY_BOARD`, `local.json`, the only Board.
@@ -142,11 +154,14 @@ rowbly config show [--board <id>]
 - `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
-- In the TUI, a first-run screen offers to create the Data Root here or globally when none exists,
-  then asks for the first Board and your handle, which becomes global Me; leave either empty to skip
-  it. The **Me** section of the settings (`,`) shows Me and lists its two levels, **Global**
-  (`~/.rowblyrc.json`) and **This Data Root** (`local.json`): `enter` edits the highlighted one; save
-  a handle, or save it empty to clear that level. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
+- In the TUI, a first-run screen opens when no Data Root is found. It offers the same three locations
+  as `init` (this directory, the home folder, or another folder whose path you type; `esc` goes back to
+  the choice), then asks for the label, whether to make it the default Data Root, the first Board and
+  your handle, which becomes global Me (`~/.rowblyrc.json`). Leave the label, the Board or the handle
+  empty to skip it; an empty handle keeps the global Me you have. The **Me** section of the settings
+  (`,`) shows Me and lists its two levels, **Global** (`~/.rowblyrc.json`) and **This Data Root**
+  (`local.json`): `enter` edits the highlighted one; save a handle, or save it empty to clear that
+  level. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
   `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
   Data Root**, which runs the same form as the first-run screen (`init --global`) and then returns to the
   Data Root you are using.
