@@ -635,17 +635,17 @@
       ]
     },
     "source:docs/plugins/api.md": {
-      "fingerprint": "0892423a8c42067e86944ac8b653fe01da20e24ecae2cd09b10361f6167b0e10",
+      "fingerprint": "32ce1b24e0833e14e13d090ab1ded35a98f435f0bac198a380ac7cf689c8e5c0",
       "snapshot": {
-        "docs/plugins/api.md": "c6b6219b10d9fbe65b31d43cc140a92c5d1da156f86e2767f6a54396f51f9b43"
+        "docs/plugins/api.md": "a464d3f29540fe7f0fb9c6801735002cdcf556bb49ab2d25ee6216c85a079922"
       },
-      "head": "b4f8dc86ab112dabbce5a160ae16134c05264979",
-      "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API wording (Form submitLabel, esc cancel around a ConfirmDialog) from the third redesign correction pass: esc-only key capture for Settings sections, setup form hints, multiselect wrap spacing, Board filter 'ctrl+s apply', confirm dialog 'esc cancel'. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+        "Changed: docs/plugins/api.md at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:docs/plugins/compatibility.md": {
@@ -1518,16 +1518,17 @@
       ]
     },
     "source:src/plugin-api/index.ts": {
-      "fingerprint": "bb1a97ae50c4cca4e3167f3f57e74889e6d6237e5d8685fb392799d5d7570a0c",
+      "fingerprint": "2fafc83ffacb094080171cfec56b3b87e79a8d15c0210024e5a86139f2264c01",
       "snapshot": {
-        "src/plugin-api/index.ts": "0806106f5492c70f398d0f45b8afcea578e512b3d2dab28cb406d0464f659ee9"
+        "src/plugin-api/index.ts": "670a8cb39191ff0417da2a7b1dff1de50447077df32116bc3473eeb6dd7f3f45"
       },
-      "head": "e46e569d250cbe0e3f0da56c2348f558bef224a9",
-      "outcome": "out-of-scope",
-      "reason": "Reviewed during integration of all four PRs. These changes from #63/#66 implement loaded Story badges and Plugin Sidebars in TUI hooks, render components, key reservations, TUI validation and type exports; ADR-0023 gains its amendment status. The existing skills explicitly cover CLI operation and exclude TUI operation and Plugin authoring. No corresponding command-mode skill guidance is needed; the existing planning scope and open Plugin-authoring gap remain accurate.",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 3a64cef..e46e569 -- docs/agents/adr/0023-assignees-are-a-built-in-plugin.md src/plugin-api/index.ts src/tui/hooks/layout.ts src/tui/hooks/plugins.ts src/tui/keymap.ts src/tui/loadPlugins.ts src/tui/screens/board/BoardColumn.tsx src/tui/screens/board/BoardList.tsx src/tui/screens/board/BoardScreen.tsx src/tui/screens/stories/StoryListScreen.tsx src/tui/shell/Header.tsx src/tui/shell/Shell.tsx inspected.",
-        "Combined tree typecheck and lint passed; 22 unit files / 68 tests and 4 CLI files / 20 tests passed. All five skills validate. Three planning documents preserve CLI-only scope and prior decisions. No changed consumer recommendation; fresh consumer not rerun."
+        "Changed: src/plugin-api/index.ts at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:test/architecture.test.ts": {
@@ -1843,17 +1844,17 @@
       ]
     },
     "source:src/tui/screens/stages/index.tsx": {
-      "fingerprint": "37b5c802baeed8d0d8513677de1b5f198286415b076d2572e3489ff76c0c0355",
+      "fingerprint": "5346962432418be873645cea09789a703965d58ca6bf207e552cb29b7b9eb04d",
       "snapshot": {
-        "src/tui/screens/stages/index.tsx": "f027f5b1ee7345b259c3c1819d050689467b371c6e6d9d2c0162c4ef13f3648f"
+        "src/tui/screens/stages/index.tsx": "9bb586566142a4ddbfec26b7299387c69ad28d7daea3b3bb732c5d99819f8ae6"
       },
-      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
+        "Changed: src/tui/screens/stages/index.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:test/tui/__snapshots__/board.test.tsx.snap": {
@@ -2051,15 +2052,17 @@
       ]
     },
     "source:src/core/ids.ts": {
-      "fingerprint": "28f340f7ebb50f36b620202d9e5b41f7694fe750726b074067d15d3cf5c1d4bf",
+      "fingerprint": "c0c26bb9536e4171151ac805b64eb131383c1797edee32f23204d74da3485fdc",
       "snapshot": {
-        "src/core/ids.ts": "1cbfd319a77d7970fda3b59fb684564e5405cc7b00a710310e12a8d2fd4295ed"
+        "src/core/ids.ts": "4ce7158d986640260d07207eeb678bea269a6c6ea1e4b7775598911768615323"
       },
-      "head": "011ff9183efd28836312097277e55a20f784567e",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
       "outcome": "no-change",
-      "reason": "Reviewed the combined source/docs/tests change for the two Plugin extractions and the inherited Specs reload, arrow-navigation and modal fixes. Revised existing CLI skills own the consumer effects. Internal implementation and TUI behavior need no additional command-mode skill.",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "PRs #51 and #52 diffs; src/plugins/{assignees,tasks}; src/services/plugins/{types,runtime,capabilities}.ts; README.md; docs/plugins/built-in.md; docs/agents/adr/002{2-tasks,3-assignees}-are-a-built-in-plugin.md. Typecheck and lint pass. Intent validates all five skills. test/plugins/assigneesTui.test.tsx passes all nine tests, including combined @sam and Task progress badges. Full combined suite remains in progress; earlier task-row assertion was retired with the Task row API removed by #51. No fresh consumer session was run."
+        "Changed: src/core/ids.ts at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/plugin-api/testing.ts": {
@@ -3177,17 +3180,17 @@
       ]
     },
     "source:src/plugins/assignees/AssigneeForm.tsx": {
-      "fingerprint": "3182a058d234805d4a3b47ebf2ffe3e70e280d953fd09b12003085ee1fdf2985",
+      "fingerprint": "b634516a6e8a00eae82254d2dc5f2b4c3d69eb7c0895bb023a9aeeeff95a62ac",
       "snapshot": {
-        "src/plugins/assignees/AssigneeForm.tsx": "12052b0aebd63f400d920f780c9ca439dec238adfb6819d4c2856fb47cfb067b"
+        "src/plugins/assignees/AssigneeForm.tsx": "436d6647fe8e0dcd82391a131ea4c4ad34163bdbaa8301d5f3d49232edf8abc4"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Changed: src/plugins/assignees/AssigneeForm.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/plugins/assignees/AssigneeList.tsx": {
@@ -4173,17 +4176,17 @@
       ]
     },
     "source:src/tui/components/Form.tsx": {
-      "fingerprint": "2b46879bbf08a5361527db05e751dd551b63e9cc500ba1fb381007ccba3bd2ba",
+      "fingerprint": "7b169272e68c7c7c3edfb825025d99832c3cb59963158eb0360653b24635f21d",
       "snapshot": {
-        "src/tui/components/Form.tsx": "1e83238638c129e9c5895174c1244d2fd068b6c264a14e75e4704c11bb41f79f"
+        "src/tui/components/Form.tsx": "2b9685cc005dfa8326c269ea976888ac1fa38e625a6ff6d5d797553e8479629f"
       },
-      "head": "b4f8dc86ab112dabbce5a160ae16134c05264979",
-      "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API wording (Form submitLabel, esc cancel around a ConfirmDialog) from the third redesign correction pass: esc-only key capture for Settings sections, setup form hints, multiselect wrap spacing, Board filter 'ctrl+s apply', confirm dialog 'esc cancel'. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+        "Changed: src/tui/components/Form.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/tui/components/FullScreenButton.tsx": {
@@ -5320,17 +5323,17 @@
       ]
     },
     "source:src/plugins/specs/SpecFormScreen.tsx": {
-      "fingerprint": "1d470417a78768c317d9782c656844ad2e89cff9b565fad4fb712ce568d4df11",
+      "fingerprint": "372e12fbe9a500ef6fb26a992b15f2f31131916c81a20fc5485564b7ec18ef72",
       "snapshot": {
-        "src/plugins/specs/SpecFormScreen.tsx": "f1d32b576cd7a080f4b645b71f25878a10867dc5fbb02ee33e100d7fb3e00e4e"
+        "src/plugins/specs/SpecFormScreen.tsx": "bd059b8bfe78b753edeb87e3665c90337b6ee183deefcf3f94ee2dad196e8916"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Changed: src/plugins/specs/SpecFormScreen.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/plugins/specs/SpecText.tsx": {
@@ -5792,17 +5795,17 @@
       ]
     },
     "source:src/plugins/epics/EpicForm.tsx": {
-      "fingerprint": "513605b83647ad2c918465f368063067522b047aba0b59d160c75a6ecc682ec8",
+      "fingerprint": "8f54839778e133000332811a52218063aaf3ca0f58e0a5ea404530d97d7eee57",
       "snapshot": {
-        "src/plugins/epics/EpicForm.tsx": "8f6902f335baf48cee14c506aabde8140a4ec7c831abf4531a4ef60fd6be97ea"
+        "src/plugins/epics/EpicForm.tsx": "678f0085999d8118721168b0f7ebc05f89a28df5ec64ba7668b388451fad14e5"
       },
-      "head": "a2941e9c314cc617882eba15c28ec5146d2b93c9",
-      "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API/README wording from the second redesign correction pass; no published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 62b9c3b..a2941e9 (plus StoryCard.tsx from 62b9c3b): full-screen editor size, Form keys shown by the Form (Modal strip or screen hints), Board delete Modal hints, Form spacing with a scrolling body, markdown tint comment, README/built-in.md/api.md/plugins README TUI wording ('n new Comment/Task', no 'card')",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed; intent validate skills: 5 passed; git diff --check clean",
-        "Built TUI driven with agentic-tui at 140x40 and 90x28: full-screen editor fills the terminal, Story/New Board/New Story/Stage/Custom Field forms and the Board filter show 'ctrl+s save ... esc cancel', Board delete Modal shows 'y delete esc cancel' with no footer duplicate, New Story at 90x28 keeps spacing and scrolls"
+        "Changed: src/plugins/epics/EpicForm.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/plugins/epics/EpicList.tsx": {
@@ -6058,17 +6061,17 @@
       ]
     },
     "source:src/tui/components/textEditing.tsx": {
-      "fingerprint": "197b35afd47ace10bc98b475db94316853528fbb446bd2c5ffd2510c669eea57",
+      "fingerprint": "67900fa05f1f655aab745fbfe1a017d3218e4f0d87ba924d8225c8c34e260c66",
       "snapshot": {
-        "src/tui/components/textEditing.tsx": "c1fed29a82faf0f40b834a6967cbe88245090290b07addfc3ded1bd147001b3f"
+        "src/tui/components/textEditing.tsx": "7b7efd007d2568c76e200bbc83c4db4abc18a9d928458c4ca63832af9afb0181"
       },
-      "head": "d973ea8c1dbf60bdca372c6c480469ece9305d57",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
       "outcome": "no-change",
-      "reason": "Compared the task diff against base 351bfc0. Changes affect TUI presentation, interaction and Plugin authoring only; published operating skills deliberately cover command mode and their CLI, JSON, exit-code, doctor and Data Root instructions remain accurate. New UI implementation does not justify a new published operating skill.",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 351bfc0ff957ef51461277a233dda3bd85270642: src/tui, src/plugins, src/plugin-api/tui.ts, README.md TUI section and docs/plugins API/tutorial",
-        "pnpm typecheck and pnpm lint passed; unit 63/63 and CLI 20/20 passed; pnpm build and git diff --check passed; intent validate skills passed all five skills",
-        "Real built TUI driven through agentic-tui at 140x38 and 90x28: Board, Story, nested edit, focused Due field scrolling and Settings focus navigation. Independent screenshots/workflow validation assigned next; fresh command-mode consumer session not run because operating guidance is unchanged."
+        "Changed: src/tui/components/textEditing.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/tui/hooks/mouse.ts": {
@@ -6155,17 +6158,17 @@
       ]
     },
     "source:src/tui/screens/boards/index.tsx": {
-      "fingerprint": "0d21e0f1d9ec5eef643e6daad620dd38d0ba5039d646e130ce1581f672e6ef21",
+      "fingerprint": "af1146b93eaccdf7471971eb2e6a9ece35a7dabc5a52f7c048002b02b25f4e82",
       "snapshot": {
-        "src/tui/screens/boards/index.tsx": "21db004ad69623ec8f8947365cce8a6be7b143f1f2a107c33d90efc958ea43d9"
+        "src/tui/screens/boards/index.tsx": "f101597a0ff030d33f26df6d7ee791f80b097b44e4f4aff8f4333d1419f942fc"
       },
-      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
+        "Changed: src/tui/screens/boards/index.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/tui/screens/doctor/DoctorScreen.tsx": {
@@ -6183,17 +6186,17 @@
       ]
     },
     "source:src/tui/screens/fields/index.tsx": {
-      "fingerprint": "2012edfe347adb30c14b53113af3ad640910ce0b2c42ba3ee26ae6456edc6723",
+      "fingerprint": "1f4a8d8af61aa09cc314670f676498c70811d24a7404b648cb50718e2e11c93e",
       "snapshot": {
-        "src/tui/screens/fields/index.tsx": "1f37248864c06e762b6165317285769652b35c90add7adb070b1604b42f20e6f"
+        "src/tui/screens/fields/index.tsx": "6ed3e301ca3c5a803c0544aedd83b90f6eea692fb6b68725e737a95b7353a0e3"
       },
-      "head": "a439b8a633d9a7adeb76f14c21d62f2041a997c6",
-      "outcome": "out-of-scope",
-      "reason": "TUI-only styling from the user-requested selection and toast pass: selected Story as a solid selection block, selected rows keep accent bar and fill out of focus, borderless toasts on overlay-raised. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff 60ade6e..a439b8a: src/tui (StoryCard, SidebarItem, SectionNav/SectionNavItem, SelectionRow, SelectListRow, CursorRows, BoardListRow, ToastLine) and the rowbly-tui-design skill",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI rendered in colour via agentic-tui at 140x40: selected Story is a solid fill block, Boards sidebar and Settings section list keep bar and fill out of focus, toast shows over the Story Modal with a full fill"
+        "Changed: src/tui/screens/fields/index.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/tui/screens/plugins/PluginScreenHost.tsx": {
@@ -6267,17 +6270,17 @@
       ]
     },
     "source:src/tui/screens/setup/SetupScreen.tsx": {
-      "fingerprint": "953fd66d5b7103174dc8eb93030c15b971f6779a6a739b6cc332fbc74fee15c2",
+      "fingerprint": "a3d490dab23f1535ab4f8e0b021b4a648272f872b38c1a841b130e8a5086d17a",
       "snapshot": {
-        "src/tui/screens/setup/SetupScreen.tsx": "1a5d0f0349e4fd7f6bce4fcc2970ce018caeb1282d122f21b3dcc4197b15b274"
+        "src/tui/screens/setup/SetupScreen.tsx": "19b0962f0edd0a53f799b14271dbcbbf606d63cb7220e01b7a1df66ce97ffab0"
       },
-      "head": "b4f8dc86ab112dabbce5a160ae16134c05264979",
-      "outcome": "out-of-scope",
-      "reason": "TUI implementation or TUI-only Plugin API wording (Form submitLabel, esc cancel around a ConfirmDialog) from the third redesign correction pass: esc-only key capture for Settings sections, setup form hints, multiselect wrap spacing, Board filter 'ctrl+s apply', confirm dialog 'esc cancel'. No published operating skill maps or should map it (the skills cover command mode).",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+      "outcome": "no-change",
+      "reason": "TUI create forms now put the name first and fill the id, key, handle or slug from it (Form `fillFrom`); the Plugin API exports `slugFromName`. The skills cover the CLI, Data Root, doctor and Plugins, not TUI forms, and the CLI's ids and validation are unchanged, so no skill guidance changes.",
       "evidence": [
-        "git diff ad890fc..b4f8dc8: src/tui (hooks/shell.ts, settings, setup, components Form/ModalFrame/modalLayer/ConfirmDialog/FieldValue, keymap.ts, board filter) and one docs/plugins/api.md sentence",
-        "pnpm typecheck and pnpm lint passed; pnpm test:unit 63/63 and pnpm test:cli 20/20 passed; pnpm build passed",
-        "Built TUI driven with agentic-tui at 140x38: Settings > Context m opens Who am I and tab returns to sections; Doctor r re-runs (finds an added invalid story.json); Stages n then esc closes only the form; Board filter Labels wrap with no blank rows and show 'ctrl+s apply'; Board, Story, Task, Comment and Settings Board delete dialogs show 'esc cancel'; setup form shows no 'enter create'"
+        "Changed: src/tui/screens/setup/SetupScreen.tsx at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for form/TUI guidance found none",
+        "typecheck, lint, test:unit (63) and test:cli (20) passed"
       ]
     },
     "source:src/tui/screens/stages/shared.tsx": {
@@ -7322,15 +7325,16 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
+      "fingerprint": "61d61087a59a1eb77a63d6525e251b526c3c43542d1c1300ea7bc953fc49d518",
       "snapshot": {
-        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
+        "README.md": "c748f0c7bb8123faa48299e218eebb61fd5c86afc3f44f6e1f2cc50eed7eba1d"
       },
-      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
+      "head": "ec0507b3765c3df3572d50ceb2ea74cd84bff450",
       "outcome": "no-change",
-      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
+      "reason": "README.md was rewritten on main as a landing page (icon, badges, links, a shorter intro) before this branch. It lists no TUI form fields and no command, flag, key or doctor finding changed, so no skill guidance changes.",
       "evidence": [
-        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
+        "Changed: README.md at ec0507b3765c3df3572d50ceb2ea74cd84bff450",
+        "grep of skills/*/SKILL.md for README-only claims found none that the rewrite contradicts"
       ]
     }
   }
