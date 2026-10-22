@@ -46,7 +46,7 @@ Each save is one transaction in `.rowbly/.txn/<id>/`:
 
 ## Local State
 
-Context changes (`use`, `whoami`) start from the stored Local State, read under the lock. After a save, the saved Local State becomes the running context's before the reactions run; Me changes only when the stored Me changed.
+Context changes (`use`, `whoami --local`) start from the stored Local State, read under the lock. After a save, the saved Local State becomes the running context's before the reactions run; Me changes only when the stored local Me changed, and a cleared local Me falls back to global Me, reread just before the change ([ADR-0032](../agents/adr/0032-me-is-global-with-a-local-me-per-data-root.md)). `whoami` without `--local` changes the Home Config instead.
 
 ## Home Config
 

@@ -21,7 +21,7 @@ erDiagram
 ```text
 .rowbly/
   rowbly.config.json            # optional Stages / Custom Fields, Plugin entries
-  local.json                    # Local State: current Board and Me; never committed
+  local.json                    # Local State: current Board and the local Me; never committed
   .gitignore                    # local.json, .lock, .lock.break, .txn/
   .lock, .lock.break, .txn/     # the lock and the commit journal (see storage.md); never committed
   plugins/<id>/…                # Plugin files for the whole Data Root (Epics, the Assignee roster)
@@ -44,7 +44,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Record | File | Holds |
 | --- | --- | --- |
 | Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
-| Local State | `local.json` | optional `board` (the current Board) and `me` (Me, a handle) |
+| Local State | `local.json` | optional `board` (the current Board) and `me` (the local Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
 | Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
 
@@ -53,7 +53,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 - **Board:** a lower-kebab-case slug, which is also its folder name. Its `keyPrefix` is unique in the Data Root, so a Story Key alone names its Board.
 - **Story Key:** the Board's key prefix and a number (`WEB-42`), which is also the Story's folder name. A new Story takes the highest number on the Board plus one; there is no counter file, because a shared counter would conflict on every merge. Two branches can therefore create the same key, and `rowbly doctor --fix` renumbers the later Story. A key freed by deleting the highest Story may be reused ([ADR-0003](../agents/adr/0003-story-keys.md)). A Story never moves to another Board.
 - **Rank:** a fractional index (a string) that orders Stories inside one Stage.
-- **Me:** `local.json`'s `me`, a slug claimed with `rowbly whoami`.
+- **Me:** `local.json`'s `me` (the local Me, `rowbly whoami --local`), else the Home Config's `me` (global Me, `rowbly whoami`), else no one ([ADR-0032](../agents/adr/0032-me-is-global-with-a-local-me-per-data-root.md)).
 
 ## Home Config
 
@@ -62,7 +62,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Key | Holds |
 | --- | --- |
 | `version` | `1`; a file without it is read as version 1 |
-| `me` | optional, a handle: Me for every Data Root (planned: nothing reads it yet) |
+| `me` | optional, a handle: global Me, Me in every Data Root without a local Me |
 | `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
 
 Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.

@@ -36,7 +36,7 @@ rowbly stories create --name "Login page" --priority P1
 rowbly                               # open the board in the TUI
 ```
 
-`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` (or use the **Me** section of the TUI's settings) to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on).
+`init` creates `.rowbly/` in the current directory with a Board `web` whose Stories are keyed `WEB-1`, `WEB-2`, …. In a terminal, `rowbly init` with no flags asks for the same values. Run `rowbly whoami <handle>` once (or use the **Me** section of the TUI's settings) to set Me, the creator of your Stories (and the author of your Comments, with the Comments Plugin on), in every Data Root.
 
 ## Concepts
 
@@ -47,7 +47,7 @@ The exact meaning of each term is in [`CONTEXT.md`](agents/CONTEXT.md). In short
 - A Story has a name, a markdown description, a **Priority** (`P0` most urgent to `P4`), **Labels**, a due date, **Custom Field** values, and, with the Tasks Plugin on, **Tasks** (`WEB-42.1`).
 - Every Board starts with the **Backlog** Stage and ends with the **Done** Stage. Both are fixed: they cannot be edited, moved or removed. The Stages you configure sit between them.
 - Each Stage belongs to a **Stage Category**: `backlog` (Backlog), `board` (every configured Stage) or `done` (Done).
-- **Me** is the handle you claim with `rowbly whoami`. It and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
+- **Me** is the handle you claim with `rowbly whoami`. It is **global Me**, kept in `~/.rowblyrc.json` and used in every Data Root, unless a Data Root has a **local Me** (`rowbly whoami --local <handle>`), which replaces it there. The local Me and the current Board are **Local State**, kept in `.rowbly/local.json`, which is never committed.
 - **Plugins** add optional features; a Data Root turns each one on or off for everyone who uses it. See [Plugins](#plugins).
 
 ## Data Root and git workflow
@@ -119,7 +119,7 @@ Long text such as a description takes `--description <text>`, `--description-fil
 ```sh
 rowbly init [--global] [--board <id> --board-name <name> --prefix <P>]
 rowbly use [<board>] [--clear]
-rowbly whoami [<handle>] [--clear]
+rowbly whoami [<handle>] [--clear] [--local]
 rowbly config show [--board <id>]
 ```
 
@@ -131,15 +131,22 @@ rowbly config show [--board <id>]
 - `use web` stores the current Board in `local.json`. Without a target it prints the current context
   and where it came from: a flag, the environment (`ROWBLY_BOARD`), `local.json`, or the only Board
   there is. A Board is resolved in that order: `--board`, `ROWBLY_BOARD`, `local.json`, the only Board.
-- `whoami` prints Me. `whoami <handle>` claims a handle (a lower-kebab-case slug) and stores it in
-  `local.json`; `--clear` unsets it.
+- `whoami` prints Me and where it comes from: the local Me of the Data Root in context, else global
+  Me, else nothing. `whoami <handle>` claims a handle (a lower-kebab-case slug) as global Me in
+  `~/.rowblyrc.json`, and `--clear` unsets global Me; neither needs a Data Root. With `--local`
+  they set or clear the local Me in this Data Root's `local.json` instead, which replaces global Me
+  here; clear it to use global Me again. `--json` prints `{ "me", "source", "global", "local" }`:
+  `me` is Me, `source` is `local`, `global` or `null`, and `local` is `null` outside a Data Root. A
+  `~/.rowblyrc.json` that cannot be read fails every command that opens a Data Root (exit 6) rather
+  than leave out global Me.
 - `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists,
-  then asks for the first Board and your handle (Me); leave either empty to skip it.
-  The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
-  Me. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
+  then asks for the first Board and your handle, which becomes global Me; leave either empty to skip
+  it. The **Me** section of the settings (`,`) shows Me and lists its two levels, **Global**
+  (`~/.rowblyrc.json`) and **This Data Root** (`local.json`): `enter` edits the highlighted one; save
+  a handle, or save it empty to clear that level. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
   `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
   Data Root**, which runs the same form as the first-run screen (`init --global`) and then returns to the
   Data Root you are using.
@@ -173,7 +180,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 - `remove` also takes the handle off every Story in the Data Root and warns with the count, e.g.
   `warning: Assignee "sam" removed from 1 story`.
 - `doctor` reports `ASSIGNEES_UNKNOWN_ASSIGNEE` for a Story Assignee that is not in the roster and
-  `ASSIGNEES_UNKNOWN_ME` for a Me that is not; `--fix` removes them. A roster file that cannot be
+  `ASSIGNEES_UNKNOWN_ME` for a local Me that is not (global Me is not checked); `--fix` removes them. A roster file that cannot be
   read is `ASSIGNEES_ROSTER_UNAVAILABLE` (error, fixed by hand).
 - In the TUI, an **Assignees** section in the settings (`,`) lists the roster (`enter` open, then
   Edit or Remove; `n` new Assignee). The Story form has an Assignees choice, the filter has Assignees
@@ -451,7 +458,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
 | Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
 | Fields | `n` new Custom Field, `e` edit, `d` remove, `l` switch level |
-| Me | type a handle, `ctrl+s` save it as Me (empty clears Me) |
+| Me | `enter` edit the highlighted level (Global or This Data Root); in the form, `ctrl+s` saves the handle (empty clears that level) |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
