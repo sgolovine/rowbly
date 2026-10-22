@@ -15,6 +15,7 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
   { key: '/', description: 'filter lists' },
   { key: '[/]', description: 'previous/next Board' },
   { key: '1-9', description: 'open Board 1-9 in the sidebar' },
+  { key: 'ctrl+b', description: 'show or hide the Board sidebar' },
   { key: '\\', description: 'show the next Plugin Sidebar, or none' },
   { key: '{/}', description: 'previous/next entry in the Plugin Sidebar' },
   { key: 'esc', description: 'back' },
@@ -32,7 +33,8 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 export const CORE_KEYS: readonly string[] = [
   // The shell: help, settings, quit, previous/next Board and Boards 1–9 in the sidebar, and the
   // Plugin Sidebars: show the next one, previous/next entry. `n` in a focused sidebar is below.
-  ...'?,q[]123456789\\{}',
+  // `b` is the shell's `ctrl+b`, which hides and shows the Board sidebar.
+  ...'?,q[]123456789\\{}b',
   // Moving, as alternatives to the arrow keys: j/k up and down, h/l left and right; with shift
   // (like shift+arrows), moving a Story or a list entry.
   ...'jkhlJKHL',

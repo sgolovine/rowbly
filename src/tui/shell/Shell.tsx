@@ -127,6 +127,12 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   useEffect(() => {
     if (!pluginShown) setPane((was) => (was === 'plugin' ? 'main' : was));
   }, [pluginShown]);
+  // `ctrl+b` hides and shows the Board sidebar; it shows at every launch.
+  const [boardsShown, setBoardsShown] = useState(true);
+  const toggleBoards = () => {
+    if (boardsShown) setPane((was) => (was === 'boards' ? 'main' : was));
+    setBoardsShown(!boardsShown);
+  };
   const sidebarFocused = idle && pane !== 'main';
   // `depth` reloads the list when a modal closes, e.g. after creating a Board.
   const sidebar = useAsync(async () => (services ? services.boards.list() : null), [services, boardVersion, depth]);
@@ -167,6 +173,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       return;
     }
     if (captured.text && !key.escape) return;
+    if (atRoot && key.ctrl && input === 'b') return toggleBoards();
     const pluginAction = actions.find((a) => a.key === input);
     if (pluginAction && !key.ctrl && !key.meta) return pluginAction.run();
     const action = globalAction(input, key);
@@ -195,9 +202,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const screenHints = useScreenHints(depth);
   const hints = [...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label) : screenHints), ...actionHints];
   const label = useScreenLabel(0);
-  const sidebarWidth = services ? SIDEBAR_WIDTH * (pluginSidebars.shown ? 2 : 1) : 0;
-  // The main panel's border takes a column on each side.
-  const mainWidth = Math.max(20, columns - sidebarWidth - 4 - (services ? (pluginSidebars.shown ? 2 : 1) : 0));
+  const sidebarCount = services ? (boardsShown ? 1 : 0) + (pluginSidebars.shown ? 1 : 0) : 0;
+  // The main panel's border takes a column on each side, and each sidebar a column gap.
+  const mainWidth = Math.max(20, columns - SIDEBAR_WIDTH * sidebarCount - 4 - sidebarCount);
   const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay?.kind === 'main';
@@ -223,7 +230,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 sidebars={pluginSidebars.buttons}
               />
               <Box flexGrow={1} columnGap={1}>
-                {services && (
+                {services && boardsShown && (
                   <Sidebar
                     title="Boards"
                     entries={boards.map((board) => ({ id: board.id, label: board.name }))}

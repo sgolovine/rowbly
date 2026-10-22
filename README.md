@@ -164,6 +164,7 @@ and name.
 | `n` | new Story |
 | `/` | filter by Label, Priority or text |
 | `v` | switch between the Stages view and a list view |
+| `ctrl` + `b` | hide or show the Board sidebar |
 | `,` | settings: Boards, Stages, Custom Fields, Plugins and Doctor |
 | `?` | every key on the current screen |
 | `q` | quit |
