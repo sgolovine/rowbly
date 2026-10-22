@@ -127,6 +127,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 - **MEDIUM: `--data-root` pointed at the code folder.** `--data-root ~/code/app` is treated as an
   empty Data Root and reports missing Boards. Point at `~/code/app/.rowbly`.
 - **MEDIUM: several default Data Roots.** Without `--data-root`, every command exits 2 listing the
-  `~/.rowblyrc.json` entries marked default. Pass `--data-root <path>`; ask the user which default to
-  keep before editing the file.
+  `~/.rowblyrc.json` entries marked default; `rowbly doctor --data-root <path>` reports them as
+  `MULTIPLE_DEFAULT_DATA_ROOTS`. Pass `--data-root <path>`; ask the user which default to keep before
+  editing the file.
 - **MEDIUM: parsing table output.** Tables change with terminal width and colour. Parse `--json` only.

@@ -59,7 +59,7 @@ Each run opens the first of:
 3. `.rowbly/` in the current directory or the nearest parent, like git looks for `.git`.
 4. `~/.rowbly` (create it with `rowbly init --global`).
 
-With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to create one. If the Data Root named by `--data-root` or by the default is missing, Rowbly exits 5 naming it rather than opening another one. If several known Data Roots are marked default, commands without `--data-root` exit 2 listing them; keep one, or pass `--data-root` (for example to run `rowbly doctor`). `ROWBLY_ROOT` and `--root` are no longer supported: a run with `ROWBLY_ROOT` set exits 2 asking you to unset it.
+With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to create one. If the Data Root named by `--data-root` or by the default is missing, Rowbly exits 5 naming it rather than opening another one. If several known Data Roots are marked default, commands without `--data-root` exit 2 listing them; keep one, or pass `--data-root`. `rowbly doctor --data-root <path>` reports them as `MULTIPLE_DEFAULT_DATA_ROOTS` and never picks one for you. `ROWBLY_ROOT` and `--root` are no longer supported: a run with `ROWBLY_ROOT` set exits 2 asking you to unset it.
 
 ```text
 .rowbly/
@@ -361,6 +361,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |
 | `ORPHAN_FOLDER` | warning | A Board or Story folder with Plugin files but no `board.config.json` / `story.json`; a Story folder still reserves its key | — (restore the file or delete the folder) |
 | `LEGACY_DATA` | warning | Comments, an `epicId`, Story Assignees, Epic files or an Assignee roster from a Rowbly before Plugins; nothing imports them, and the next save of that Story or `rowbly.config.json` drops them | — (back up first) |
+| `MULTIPLE_DEFAULT_DATA_ROOTS` | error | More than one `dataRoots` entry in `~/.rowblyrc.json` marked `"default": true`, even two naming one folder; its path is the Home Config and `details.defaults` lists the entries. Without `--data-root` every command refuses to start, so run `rowbly doctor --data-root <path>` | — (keep one default by hand) |
 | `GITIGNORE_INCOMPLETE` | info | A Data Root `.gitignore` that does not list `local.json`, `.lock`, `.lock.break` and `.txn/` | Adds the missing lines |
 | `<PLUGIN>_…` | any | The checks of a Plugin that is on, such as `EPICS_MISSING_EPIC` or `TASKS_COUNTER_BEHIND` | As the Plugin says |
 

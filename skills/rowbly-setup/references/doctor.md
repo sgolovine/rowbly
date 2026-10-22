@@ -13,7 +13,8 @@ rowbly doctor --json --no-prompt
 ```
 
 The result is a DoctorReport, `{ findings, fixed, summary: { errors, warnings, info } }`. Each finding has a
-`code`, a `severity`, a `path` relative to `.rowbly/`, a message, and whether it is fixable. Doctor exits 0
+`code`, a `severity`, a `path` relative to `.rowbly/` (the Home Config's own path for a Home Config
+finding), a message, and whether it is fixable. Doctor exits 0
 when there are no errors, and 6 while errors remain. Warnings and info do not change the exit code.
 
 ## 2. Fix what is safe
@@ -47,6 +48,9 @@ Each finding's message says what is wrong. The common codes that `--fix` leaves:
   `rowbly stories edit <KEY> --field key=value`.
 - `PLUGIN_FAILED`: a Plugin that is on failed to load. `rowbly plugins list --json --no-prompt` shows the
   reason; its data is kept. Do not turn the Plugin off to silence the finding.
+- `MULTIPLE_DEFAULT_DATA_ROOTS`: more than one `dataRoots` entry in `~/.rowblyrc.json` is marked
+  `"default": true` (`details.defaults` lists them). `--fix` never chooses one. Ask the user which Data
+  Root stays the default, then remove `"default": true` from the other entries.
 
 ## After a merge with a Story Key conflict
 

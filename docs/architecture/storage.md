@@ -56,6 +56,7 @@ Context changes (`use`, `whoami`) start from the stored Local State, read under 
 - **Changed under a lock.** `updateHomeConfig` takes `~/.rowblyrc.json.lock` (the Data Root lock's code with another file name, and `~/.rowblyrc.json.lock.break` to break a stale one), rereads the file, applies the change and replaces the file atomically. Concurrent Rowbly processes therefore never lose each other's changes. An unchanged result is not written.
 - **Links and permissions.** A symlinked Home Config is replaced at its target, so the link stays. The new file keeps the old one's permissions; a new file gets the default permissions of the umask.
 - **A home folder Rowbly may not use.** Start-up creation ignores the failure. `readHomeConfig` and `updateHomeConfig` turn a refused, read-only or missing path into `USAGE` (exit 2) naming the file and its folder.
+- **Several defaults are reported, not repaired.** Doctor reads the Home Config and reports more than one `dataRoots` entry marked `default` as `MULTIPLE_DEFAULT_DATA_ROOTS`; `--fix` leaves the file unchanged.
 - **Never replaced when unreadable.** Invalid JSON, a schema failure, conflict markers, a folder or a link to a missing file throws `DATA_INTEGRITY` naming the file and leaves it as it is.
 
 ## Leftovers that doctor reports
