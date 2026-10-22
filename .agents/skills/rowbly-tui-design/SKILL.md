@@ -30,6 +30,7 @@ layout; the HTML previews show the design intent.
 | `BoardScreen` | The whole Board screen at its default size: header, Boards sidebar, Board panel, footer. | [preview](previews/BoardScreen.html) |
 | `Button` | A clickable label with its key beside it in a key cap: the header controls and the `+ New …` foot of each sidebar. No frame of its own. | [guide](components/Button.md) · [preview](previews/Button.html) |
 | `ConfirmDialog` | A small Modal that asks before an Operation that cannot be undone. | [guide](components/ConfirmDialog.md) · [preview](previews/ConfirmDialog.html) |
+| `ContextMenu` | A framed list of items opened by a right click at the pointer, over everything; each item names the key that does the same. | [guide](components/ContextMenu.md) |
 | `DetailView` | Label–value rows for a record, used by the Details tab and by settings screens. | [guide](components/DetailView.md) · [preview](previews/DetailView.html) |
 | `Form` | Labelled fields for creating and editing a record, inside a Modal. | [guide](components/Form.md) · [preview](previews/Form.html) |
 | `Header` | One Panel across the top, three rows tall: the Data Root Button far left, then the Board's state, the Buttons on the right. | [guide](components/Header.md) · [preview](previews/Header.html) |
@@ -115,6 +116,8 @@ Two kinds, and nothing else:
 - **Generic Modal** — `Modal`, for one short task: Forms, pickers (Move Stage), ConfirmDialog, Help, and everything a Plugin opens. Sized to its content, 48–72 columns, no band, no Tabs.
 
 All Modals share the `overlay` fill, the `accent` frame, the breadcrumb title, the `✕` and the `KeyHints` strip. A generic Modal can stack on a screen Modal; the one on top has the focus and the frame below drops to `border`. Never stack two screen Modals: opening Settings from a Story closes the Story.
+
+A `ContextMenu` is not a Modal: it has no title, no `✕` and no hint strip, and it opens at the pointer rather than centred.
 
 ## Content
 

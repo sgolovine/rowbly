@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 
-/** One action in a context menu. */
+/** One item of a context menu: what it runs when picked. */
 export interface ContextMenuItem {
   label: string;
   onSelect(): void;

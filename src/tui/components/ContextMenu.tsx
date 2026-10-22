@@ -22,7 +22,7 @@ function step(items: readonly ContextMenuItem[], from: number, delta: number): n
 }
 
 /**
- * A framed list of actions drawn over the whole terminal with its top-left corner at `x`, `y`, moved
+ * A framed list of items drawn over the whole terminal with its top-left corner at `x`, `y`, moved
  * in so that it stays on screen. `↑/↓` (or `j/k`) highlight an item, `enter` or a click runs it and
  * `esc` closes the menu. A click or right click outside the menu only closes it: the box underneath
  * does not get it.
