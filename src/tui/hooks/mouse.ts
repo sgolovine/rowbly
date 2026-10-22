@@ -15,6 +15,10 @@ export interface MouseHandlers {
    */
   drag?: unknown;
   onDrop?(value: unknown): void;
+  /** A drag has moved over this drop target (one with `onDrop`), carrying `value`. */
+  onDragOver?(value: unknown): void;
+  /** The drag has left this drop target: moved off it, been dropped or ended elsewhere. */
+  onDragLeave?(): void;
   /** A press here holds the box: each pointer move until the release reports the pointer's cell, e.g. to resize. */
   onPull?(x: number, y: number): void;
 }
@@ -35,6 +39,15 @@ export function createMouseRegistry(): MouseRegistry {
   let hovered: Target | undefined;
   let dragging: { value: unknown; from: Target; x: number; y: number; moved: boolean } | null = null;
   let pulling: Target | null = null;
+  // The drop target under a drag that has moved, told on entering and leaving.
+  let over: Target | undefined;
+
+  const setOver = (next: Target | undefined) => {
+    if (next === over) return;
+    over?.handlers.current.onDragLeave?.();
+    over = next;
+    if (dragging) over?.handlers.current.onDragOver?.(dragging.value);
+  };
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
     let best: { target: Target; area: number } | undefined;
@@ -58,6 +71,7 @@ export function createMouseRegistry(): MouseRegistry {
           hovered = undefined;
           target.handlers.current.onLeave?.();
         }
+        if (over === target) setOver(undefined);
         targets.delete(target);
       };
     },
@@ -65,6 +79,7 @@ export function createMouseRegistry(): MouseRegistry {
       if (event.kind === 'move') {
         if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
         if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;
+        if (dragging?.moved) setOver(hit(event, (h) => Boolean(h.onDrop)));
         const next = hit(event, (handlers) => Boolean(handlers.onEnter || handlers.onLeave));
         if (next !== hovered) {
           hovered?.handlers.current.onLeave?.();
@@ -82,10 +97,12 @@ export function createMouseRegistry(): MouseRegistry {
           return;
         }
         dragging = null;
+        setOver(undefined);
         target?.handlers.current.onClick?.();
         return;
       }
       pulling = null;
+      setOver(undefined);
       const drop = dragging;
       dragging = null;
       if (!drop) return;

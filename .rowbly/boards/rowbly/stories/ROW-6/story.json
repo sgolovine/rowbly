@@ -5,12 +5,12 @@
   "name": "Make \"Assignees\" a plugin",
   "description": "Make the concept of assignees a plugin.",
   "stage": "done",
-  "rank": "a5",
+  "rank": "aD",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:55:48.635Z",
-  "updatedAt": "2026-10-21T22:34:20.804Z"
+  "updatedAt": "2026-10-22T21:21:16.664Z"
 }

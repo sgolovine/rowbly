@@ -10,7 +10,7 @@ export const CARD_HEIGHT = 5;
 /** Lines per row of the compact list view. */
 export const LIST_ROW_HEIGHT = 1;
 /** Lines of the board view that are not cards: column header and rule, scroll markers. */
-const CHROME_HEIGHT = 4;
+export const CHROME_HEIGHT = 4;
 
 /** One list of Stories per Stage, in Stage order. Stories in an unknown Stage (drift) are left out. */
 export type Columns = Story[][];

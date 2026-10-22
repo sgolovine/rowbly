@@ -92,6 +92,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const writing = useRef(false);
   // Mirrors `writing` for rendering: the keys are ignored while a write runs, so their hints are hidden too.
   const [saving, setSaving] = useState(false);
+  /** The column a card is dragged over with the mouse, which shows the drop shadow; never the card's own. */
+  const [dragOver, setDragOver] = useState<number | null>(null);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
   // A Board opened for viewing only; picking a Board in the sidebar drops it.
@@ -458,6 +460,9 @@ export function BoardScreen({ params }: ScreenProps) {
                 active={active && mode === 'view'}
                 onClick={(at) => click({ col: index, row: at })}
                 onDrop={(key) => drop(index, key)}
+                onDragOver={(key) => setDragOver(cards.some((s) => s.key === key) ? null : index)}
+                onDragLeave={() => setDragOver((over) => (over === index ? null : over))}
+                shadow={dragOver === index}
               />
             );
           })}

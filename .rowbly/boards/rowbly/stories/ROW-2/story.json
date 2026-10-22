@@ -5,16 +5,12 @@
   "name": "Plugin architecture",
   "description": "There are many features that COULD be added to rowbly but that probably shouldn't be included in the main package. For this we want to develop a plugin architecture. For now only support \"first party\" plugins\n",
   "stage": "done",
-  "rank": "a3",
-  "assignees": [],
+  "rank": "aF",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T02:59:05.624Z",
-  "updatedAt": "2026-10-13T18:56:06.529Z",
-  "nextTaskNumber": 1,
-  "tasks": [],
-  "comments": []
+  "updatedAt": "2026-10-22T21:25:55.677Z"
 }

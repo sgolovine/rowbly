@@ -4,7 +4,9 @@ import type { Stage, Story } from '../../../schemas';
 import { StageBadge } from '../../components';
 import { type StoryBadges, useMouse } from '../../hooks';
 import { theme } from '../../theme';
+import { CARD_HEIGHT, CHROME_HEIGHT } from './layout';
 import { StoryCard } from './StoryCard';
+import { StoryShadow } from './StoryShadow';
 import { useCardBadges } from './useCardBadges';
 
 export interface BoardColumnProps {
@@ -26,6 +28,11 @@ export interface BoardColumnProps {
   onClick?(index: number): void;
   /** A card (its Story Key) dragged onto this column. */
   onDrop?(key: unknown): void;
+  /** A card (its Story Key) dragged over this column, and dragged off it again. */
+  onDragOver?(key: unknown): void;
+  onDragLeave?(): void;
+  /** Shows the drop shadow below the last card, where a dragged card will land. */
+  shadow?: boolean;
 }
 
 /** One Stage: header with name, Stage Category colour and count, then its cards, scrolled to `first`. */
@@ -41,15 +48,28 @@ export function BoardColumn({
   active,
   onClick,
   onDrop,
+  onDragOver,
+  onDragLeave,
+  shadow = false,
 }: BoardColumnProps) {
-  const shown = cards.slice(first, first + size);
-  const below = cards.length - first - shown.length;
+  // The shadow takes a card's place below the last card, so the column scrolls to its end to show it.
+  const top = shadow ? Math.max(0, cards.length - size + 1) : first;
+  const shown = cards.slice(top, top + size - (shadow ? 1 : 0));
+  const below = cards.length - top - shown.length;
   const inner = width - 2;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
-  useMouse(ref, { onClick: () => onClick?.(-1), onDrop }, active);
+  useMouse(ref, { onClick: () => onClick?.(-1), onDrop, onDragOver, onDragLeave }, active);
   return (
-    <Box ref={ref} flexDirection="column" width={width} paddingRight={2} flexShrink={0}>
+    // The column is as tall as `size` cards, so the space below its last card still takes clicks and drops.
+    <Box
+      ref={ref}
+      flexDirection="column"
+      width={width}
+      minHeight={CHROME_HEIGHT + size * CARD_HEIGHT}
+      paddingRight={2}
+      flexShrink={0}
+    >
       <Text wrap="truncate-end">
         <StageBadge stage={stage} /> <Text color={theme.inkFaint}>{cards.length}</Text>
       </Text>
@@ -58,19 +78,20 @@ export function BoardColumn({
       ) : (
         <Text color={active ? theme.accent : theme.border}>{'━'.repeat(inner)}</Text>
       )}
-      <Text color={theme.inkFaint}>{first > 0 ? `↑ ${first} more` : ' '}</Text>
+      <Text color={theme.inkFaint}>{top > 0 ? `↑ ${top} more` : ' '}</Text>
       {shown.map((story, i) => (
         <StoryCard
           key={story.key}
           story={story}
           badges={[...storyBadges(story), ...badgesOf(story, stages)]}
           width={inner}
-          selected={selected === first + i}
+          selected={selected === top + i}
           active={active}
-          onClick={() => onClick?.(first + i)}
+          onClick={() => onClick?.(top + i)}
         />
       ))}
-      {cards.length === 0 && <Text color={theme.inkFaint}>No Stories</Text>}
+      {shadow && <StoryShadow width={inner} />}
+      {cards.length === 0 && !shadow && <Text color={theme.inkFaint}>No Stories</Text>}
       {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}
     </Box>
   );
