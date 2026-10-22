@@ -40,7 +40,6 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'global-stages', label: 'Stages', screen: 'stages', params: { global: true } },
         { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
         { id: 'me', label: 'Me', screen: 'me' },
-        { id: 'context', label: 'Context', screen: 'context' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
       ],
