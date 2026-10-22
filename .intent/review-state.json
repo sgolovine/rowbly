@@ -7322,15 +7322,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
+      "fingerprint": "d378aa47d85191459d1c8944322d355f7f74436ce12a41181c7eb64c15636f99",
       "snapshot": {
-        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
+        "README.md": "fc0eaec418a0819d037411194167ebe230143ffcb108bade4b69509233a61181"
       },
-      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
+      "head": "a4c2151918458cf2f183ed6852f445654814788b",
       "outcome": "no-change",
-      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
+      "reason": "README only: the install steps for the agent skills move from 'For coding agents' to a new 'Set up your coding agent' subsection of Install, which adds the per-repository .claude/skills option and re-copying after an upgrade. The skills describe running Rowbly and say nothing about how they are installed (grep of skills/ for npm root, .claude/skills, install), so no guidance changes.",
       "evidence": [
-        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
+        "Changed: README.md at a4c2151918458cf2f183ed6852f445654814788b"
       ]
     }
   }
