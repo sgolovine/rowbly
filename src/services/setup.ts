@@ -125,6 +125,7 @@ export interface CreateDataRootResult extends InitResult {
  */
 export async function createDataRoot(opts: CreateDataRootOptions): Promise<CreateDataRootResult> {
   const { root, home } = opts;
+  const arg = shellArg(root.path);
   const label = opts.label?.trim() || undefined;
   await assertInitTarget(root);
   // A Home Config that cannot be read would refuse the entry; fail before the Data Root exists.
@@ -139,7 +140,7 @@ export async function createDataRoot(opts: CreateDataRootOptions): Promise<Creat
     throw withHint(
       err,
       `${root.path} was created but is not recorded in ${homeConfigPath(home)}; fix that file, then run ` +
-        `\`rowbly --data-root ${root.path} use\` to record it and set its label or default there`,
+        `\`rowbly --data-root ${arg} use\` to record it and set its label or default there`,
     );
   }
   if (!known.default) await warnOtherDefault(home, root, opts.warn);
@@ -152,10 +153,11 @@ async function finishing(root: DataRoot, init: () => Promise<InitResult>): Promi
     return await init();
   } catch (err) {
     if (!(await pathExists(root.path))) throw err;
+    const arg = shellArg(root.path);
     throw withHint(
       err,
-      `${root.path} was created but setup did not finish; run \`rowbly --data-root ${root.path} doctor\` ` +
-        `and finish with \`rowbly --data-root ${root.path} boards create\`, or remove ${root.path} and set it up again`,
+      `${root.path} was created but setup did not finish; run \`rowbly --data-root ${arg} doctor\` ` +
+        `and finish with \`rowbly --data-root ${arg} boards create\`, or remove ${root.path} and set it up again`,
     );
   }
 }
@@ -166,8 +168,13 @@ async function warnOtherDefault(home: string, root: DataRoot, warn: (message: st
   const other = (await listKnownDataRoots(home)).find((known) => known.default && known.path !== path);
   if (!other) return;
   warn(
-    `the default Data Root ${other.path} is opened ahead of ${root.path}; pass \`--data-root ${root.path}\` to use it`,
+    `the default Data Root ${other.path} is opened ahead of ${root.path}; pass \`--data-root ${shellArg(root.path)}\` to use it`,
   );
+}
+
+/** `path` as one shell word in a command a hint suggests: as it is when that is safe, else single-quoted. */
+function shellArg(path: string): string {
+  return /^[\w@%+=:,./~-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`;
 }
 
 /** `err` with `hint`, keeping its class, message and details; any other error unchanged. */

@@ -83,7 +83,7 @@ rowbly
 
 1. `init` creates `.rowbly/` with one Board, `web`, whose Stories are keyed `WEB-1`, `WEB-2`, and so on.
    Run `rowbly init` without flags to be asked for these values instead.
-2. `whoami` sets Me, the handle Rowbly records as the creator of your Stories. Use your own.
+2. `whoami` sets Me, the handle Rowbly records as the creator of your Stories, in `~/.rowblyrc.json` for every Data Root. Use your own.
 3. `stories create` adds `WEB-1` to the Backlog.
 4. `rowbly` with no command opens the board.
 
@@ -93,7 +93,7 @@ rowbly
 .rowbly/
   rowbly.config.json            # Stages, Custom Fields and Plugins for every Board
   .gitignore                    # keeps local.json out of git
-  local.json                    # your Me and current Board
+  local.json                    # your current Board (and a local Me, if you set one)
   boards/web/
     board.config.json           # the Board's name and key prefix
     stories/WEB-1/story.json    # one Story
@@ -106,7 +106,7 @@ git add .rowbly
 git commit -m "Track work with Rowbly"
 ```
 
-Anyone who pulls gets the same Board. Each person runs `rowbly whoami <handle>` once.
+Anyone who pulls gets the same Board. Each person runs `rowbly whoami <handle>` once on their machine.
 
 ## Rowbly and git
 

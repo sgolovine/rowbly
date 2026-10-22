@@ -48,7 +48,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 
 - `ASSIGNEES_ROSTER_UNAVAILABLE` (error): the roster file has conflict markers, is not valid JSON, is from a newer Rowbly or fails its schema. Never fixed automatically; every roster change fails with `DATA_INTEGRITY` (exit 6) until it is fixed by hand.
 - `ASSIGNEES_UNKNOWN_ASSIGNEE` (warning): a Story has Assignees that are not in the roster; `--fix` removes them and stamps the Story's `updatedAt`.
-- `ASSIGNEES_UNKNOWN_ME` (warning): Me is not in the roster; `--fix` clears Me from Local State.
+- `ASSIGNEES_UNKNOWN_ME` (warning): the local Me in Local State is not in the roster; `--fix` clears it from Local State. Global Me is not checked.
 
 ## Tasks
 

@@ -22,7 +22,8 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
 | [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
 | [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
-| [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; extended by 0033 |
+| [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; amended by 0032, extended by 0033 |
+| [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
 | [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted |
 
 ### Plugins
@@ -49,7 +50,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0016](0016-git-automation-design.md) | Git automation uses reactions, the `git` capability and hook commands | Partially built by 0026; amended by 0024 |
 | [0018](0018-comments-are-a-built-in-plugin.md) | Comments are a Built-in Plugin | Accepted; amended by 0022 |
 | [0022](0022-tasks-are-a-built-in-plugin.md) | Tasks are a Built-in Plugin | Accepted |
-| [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted; amended by 0028 |
+| [0023](0023-assignees-are-a-built-in-plugin.md) | Assignees are a Built-in Plugin | Accepted; amended by 0028 and 0032 |
 | [0025](0025-a-story-has-many-story-specs.md) | A Story has any number of Story Specs, each named by a slug | Accepted |
 | [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted; amended by 0030 |
 | [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
