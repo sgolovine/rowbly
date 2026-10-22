@@ -1,4 +1,4 @@
-import type { PluginScreenProps } from '../../plugin-api';
+import { type PluginScreenProps, slugFromName } from '../../plugin-api';
 import { Box, Form, Loading, Text, theme, useAsync } from '../../plugin-api/tui';
 import { listAssignees } from './roster';
 import { addAssignee, editAssignee } from './service';
@@ -13,6 +13,7 @@ export function AssigneeForm({ params, plugin, ui }: PluginScreenProps<Record<st
     ) : (
       <Text color={theme.danger}>Could not load Assignee.</Text>
     );
+  const handles = new Set(roster.data.map((a) => a.handle));
   const current = handle ? roster.data.find((a) => a.handle === handle) : undefined;
   if (handle && !current) return <Text color={theme.inkFaint}>Assignee "{handle}" is no longer in the roster.</Text>;
 
@@ -21,8 +22,18 @@ export function AssigneeForm({ params, plugin, ui }: PluginScreenProps<Record<st
       <Text bold>{current ? `Edit Assignee ${current.handle}` : 'New Assignee'}</Text>
       <Form
         fields={[
-          ...(current ? [] : [{ name: 'handle', label: 'Handle', kind: 'text' as const, required: true }]),
           { name: 'name', label: 'Name', kind: 'text', required: true },
+          ...(current
+            ? []
+            : [
+                {
+                  name: 'handle',
+                  label: 'Handle',
+                  kind: 'text' as const,
+                  required: true,
+                  fillFrom: { field: 'name', format: (name: string) => slugFromName(name, handles) },
+                },
+              ]),
           { name: 'email', label: 'Email', kind: 'text' },
         ]}
         initialValues={current ? { name: current.name, email: current.email ?? '' } : {}}

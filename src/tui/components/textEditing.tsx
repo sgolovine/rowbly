@@ -109,7 +109,9 @@ export function useEditState(value: string, onChange: (value: string) => void) {
   const latest = useRef<EditState>({ value, cursor: value.length });
   const [, rerender] = useReducer((n: number) => n + 1, 0);
   if (latest.current.value !== value) {
-    latest.current = { value, cursor: Math.min(latest.current.cursor, value.length) };
+    // A cursor at the end stays there when the text is set from outside, such as a key a Form fills from a name.
+    const { cursor, value: old } = latest.current;
+    latest.current = { value, cursor: cursor === old.length ? value.length : Math.min(cursor, value.length) };
   }
   const apply = (next: EditState) => {
     const changed = next.value !== latest.current.value;

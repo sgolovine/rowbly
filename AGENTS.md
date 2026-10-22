@@ -1,15 +1,3 @@
-<!-- intent-maintainer:start -->
-## Library Skill Maintenance
-
-Use the repository’s installed Intent. If it is unavailable, report the missing dependency instead of downloading a replacement.
-Before substantial library source, documentation, examples, tests, or skill work, run `pnpm exec intent meta generate-skill` and follow the packaged maintainer procedure.
-Use the current request and repository evidence. For initial skills, propose a useful batch and reuse any scope already agreed with the maintainer.
-Before handing off a skill batch or library change, run `pnpm exec intent maintainer review --json`. Follow the maintainer procedure to update affected guidance, run task checks, and record completed review outcomes. Report an evidence-backed no-op or missing evidence explicitly.
-Create and incrementally maintain domain_map.yaml, skill_spec.md, and skill_tree.yaml in the established artifact location for every skill batch. Preserve prior tasks, maintainer decisions, and remaining work.
-Keep maintainer decisions and changes in the repository; do not require the user to repeat the procedure in later sessions.
-Use intent maintainer setup to initialize missing records, maintainer add to register skills, maintainer status to identify work, and maintainer sync to update generated metadata. Finish with intent maintainer check.
-<!-- intent-maintainer:end -->
-
 # Agent guide
 
 Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <verb>`) and an Ink TUI
@@ -33,8 +21,8 @@ explains how it is built. Start at `docs/README.md`.
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `docs/user-guide.md` |
 | What Rowbly is, install and a first Board (the landing page) | `README.md` |
-| Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published and not Intent skills |
+| Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, published in the npm package; each skill folder is self-contained (see Agent skills below) |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published |
 
 ## Domain language and decisions
 
@@ -69,6 +57,19 @@ Update the page that describes a behavior in the same change as the behavior:
   introduction and link to the guide rather than repeating it.
 - Describe what is built; mark anything planned as planned. Do not add work plans, specs or review
   reports to `docs/`.
+
+## Agent skills
+
+The skills in `skills/` are published in the npm package and installed by copying one folder into an
+agent's skills folder (`README.md`, Install). Keep each one self-contained:
+
+- Frontmatter has only `name` and `description`. The description names no other skill or file.
+- A skill links only to files inside its own folder. When it needs another skill's guidance (such as
+  the shared CLI rules in `rowbly-cli`), copy that text into its `references/` folder instead of
+  pointing at the other skill, `docs/` or the source.
+- The shared copies are `references/cli-rules.md` (the rules sections of `rowbly-cli`) and
+  `references/doctor.md` (the steps of `rowbly-doctor`), with links to other skills written out as
+  commands. When you change the original, update every copy in the same change.
 
 ## Screenshots
 

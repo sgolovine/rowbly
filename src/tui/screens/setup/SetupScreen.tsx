@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
 import { useState } from 'react';
+import { keyPrefixFromName, slugFromName } from '../../../core';
 import type { DataRoot } from '../../../schemas';
 import { createContext, createServices } from '../../../services';
 import { assertInitTarget, initTarget, newContext } from '../../../services/setup';
@@ -67,12 +68,17 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
   return (
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
-      <Text color={theme.inkFaint}>Leave the Board id empty to skip the first Board.</Text>
+      <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
       <Form
         fields={[
-          { name: 'boardId', label: 'Board id', kind: 'text' },
           { name: 'boardName', label: 'Board name', kind: 'text' },
-          { name: 'prefix', label: 'Key prefix', kind: 'text' },
+          { name: 'boardId', label: 'Board id', kind: 'text', fillFrom: { field: 'boardName', format: slugFromName } },
+          {
+            name: 'prefix',
+            label: 'Key prefix',
+            kind: 'text',
+            fillFrom: { field: 'boardName', format: keyPrefixFromName },
+          },
         ]}
         onSubmit={async (values) => {
           const boardId = text(values.boardId);

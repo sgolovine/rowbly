@@ -15,10 +15,12 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
     );
   const { prefs, defaults } = loaded.data;
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" gap={1}>
       <Text bold>Git automatic commits</Text>
-      <Text>Git directory: {defaults.root}</Text>
-      <Text>Commit message: chore: update Rowbly data</Text>
+      <Box flexDirection="column">
+        <Text>Git directory: {defaults.root}</Text>
+        <Text>Commit message: chore: update Rowbly data</Text>
+      </Box>
       <Text>Interval commits run while Rowbly is open; pending changes resume on the next run.</Text>
       <Text>
         Blank author fields use Git configuration: {defaults.authorName} &lt;{defaults.authorEmail}&gt;
