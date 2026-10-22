@@ -30,7 +30,7 @@ import { boardKey } from './boardKey';
 import { Footer } from './Footer';
 import { Header, type HeaderAction } from './Header';
 import { HelpOverlay } from './HelpOverlay';
-import { FOOTER_HEIGHT, HEADER_HEIGHT, SIDEBAR_WIDTH } from './layout';
+import { FOOTER_HEIGHT, HEADER_HEIGHT, MAIN_MIN_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_WIDTH } from './layout';
 import { ScreenSlot } from './ScreenSlot';
 import { Sidebar } from './Sidebar';
 import { ToastArea } from './ToastArea';
@@ -121,6 +121,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   );
 
   const pluginSidebars = usePluginSidebars(depth);
+  // Dragged with the mouse; like the view, the widths last until Rowbly quits.
+  const [boardsWidth, setBoardsWidth] = useState(SIDEBAR_WIDTH);
+  const [pluginWidth, setPluginWidth] = useState(SIDEBAR_WIDTH);
   // A click in a sidebar focuses it and one in the main area focuses that; `esc` goes back to the main area.
   const [pane, setPane] = useState<Pane>('main');
   const pluginShown = pluginSidebars.shown !== null;
@@ -202,9 +205,16 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const screenHints = useScreenHints(depth);
   const hints = [...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label) : screenHints), ...actionHints];
   const label = useScreenLabel(0);
-  const sidebarCount = services ? (boardsShown ? 1 : 0) + (pluginSidebars.shown ? 1 : 0) : 0;
-  // The main panel's border takes a column on each side, and each sidebar a column gap.
-  const mainWidth = Math.max(20, columns - SIDEBAR_WIDTH * sidebarCount - 4 - sidebarCount);
+  const gaps = services ? Number(boardsShown) + Number(pluginShown) : 0;
+  // The sidebars can grow until the main panel would be narrower than `MAIN_MIN_WIDTH`; a narrower
+  // terminal takes the room back from the Plugin Sidebar first.
+  const room = columns - gaps - MAIN_MIN_WIDTH;
+  const fitWidth = (width: number, max: number) => Math.max(SIDEBAR_MIN_WIDTH, Math.min(max, width));
+  const besideBoards = services && pluginShown ? SIDEBAR_MIN_WIDTH : 0;
+  const boardsShownWidth = services && boardsShown ? fitWidth(boardsWidth, room - besideBoards) : 0;
+  const pluginShownWidth = services && pluginShown ? fitWidth(pluginWidth, room - boardsShownWidth) : 0;
+  // The main panel's border takes a column on each side.
+  const mainWidth = Math.max(20, columns - boardsShownWidth - pluginShownWidth - 4 - gaps);
   const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay?.kind === 'main';
@@ -238,6 +248,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                     emptyText="No Boards yet."
                     numbered
                     height={mainHeight}
+                    width={boardsShownWidth}
+                    maxWidth={room - pluginShownWidth}
+                    onResize={setBoardsWidth}
                     focused={idle && pane === 'boards'}
                     clickable={idle}
                     onFocus={() => setPane('boards')}
@@ -251,6 +264,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                     entries={pluginSidebars.shown.entries}
                     current={pluginSidebars.shown.current}
                     height={mainHeight}
+                    width={pluginShownWidth}
+                    maxWidth={room - boardsShownWidth}
+                    onResize={setPluginWidth}
                     focused={idle && pane === 'plugin'}
                     clickable={idle}
                     onFocus={() => setPane('plugin')}
