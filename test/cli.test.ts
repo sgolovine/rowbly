@@ -35,13 +35,13 @@ function runInTty(args: string[], cwd: string, ready: string): Promise<{ output:
 }
 
 describe.skipIf(!hasScript)('rowbly in a terminal', () => {
-  it('opens the TUI on the --root Data Root when only global flags are given', async () => {
+  it('opens the TUI on the --data-root Data Root when only global flags are given', async () => {
     const t = await tempRoot();
     await makeBoard(t.path, { id: 'web', keyPrefix: 'WEB', name: 'Web' });
-    // The cwd has no Data Root of its own, so the board can only come from --root.
+    // The cwd has no Data Root of its own, so the board can only come from --data-root.
     const cwd = await mkdtemp(join(tmpdir(), 'rowbly-tty-'));
     onTestFinished(() => rm(cwd, { recursive: true, force: true }));
-    const { output, exitCode } = await runInTty(['--root', t.path, '--json'], cwd, '● Backlog 0');
+    const { output, exitCode } = await runInTty(['--data-root', t.path, '--json'], cwd, '● Backlog 0');
     expect(exitCode).toBe(0);
     expect(output).toContain('● Backlog 0');
     expect(output).not.toContain('No Data Root found');
