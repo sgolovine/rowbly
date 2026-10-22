@@ -3,52 +3,56 @@
   "baseline": "2e488a8f01b2cc5f4a77c72d33337d067f2c9445",
   "items": {
     "skill:skills/rowbly-cli/SKILL.md": {
-      "fingerprint": "58927485d649179e88ecf1809dae40d67da13d0bfdde36ffe52a3a9ddc666aa0",
+      "fingerprint": "ad65c55d987fb3e06ebec51f64dc0ae579bd444765a838862713253dee41b204",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
-        "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/core/errors.ts": "807790e60d6ed5457e35debedb691d857412524733f62f1c8fdbf1e46784ca44",
         "src/main.ts": "0f5648743fd3ca48afde43bf7c307461f4c9890e632fb1036d3d49b056e3784a"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
+        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "skill:skills/rowbly-doctor/SKILL.md": {
-      "fingerprint": "9249b9db38f59b97216db5bfc9261f8721051dcf7182f78fe4a0d60d7571043f",
+      "fingerprint": "7230ff64581b896aedf8b34c4a9fdce7a30433e77d1b860132c67f2e83866385",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
-        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
+        "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
         "src/commands/doctor.ts": "f8987e6356bfd3b51823297594c3f582504742fc0ef2acef1fa2f153d1c4223d",
         "src/services/doctor.ts": "dc5df802b0d0d2129d23a00520fe13aed0b4c7e719e969d6e7250446e1fe06c4",
         "src/services/plugins/git.ts": "2c2c883ca5cd434eb0176dbe42b67b8a6fa632256295f5c468251e9c999c88bf"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
+        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "skill:skills/rowbly-plugins/SKILL.md": {
-      "fingerprint": "98bc91ea2a844c334beed78744373544663b6fa6b52a2e09b5e5d127511dfe91",
+      "fingerprint": "d7aeb199cbc04141d4f96c8cdaeb880985bd91e794ff10c7d60fe33ab7e5c61c",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/rowbly-plugins/SKILL.md": "b819ad8d7599e7ce956d71ef850e15318522cbaaf020c588164fcd956d0c1d90",
         "src/commands/plugins.ts": "f95f48c68176e93e3aad2c168999898aa13f855cb643174c4938945248d9ecb8",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87",
         "src/plugins/comments/commands.ts": "621b2a096a95754dfdd99d42b6f90bc51d469ee89b662befafa4e2e6508b7876",
@@ -64,70 +68,76 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
+        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "skill:skills/rowbly-setup/SKILL.md": {
-      "fingerprint": "18b5818c4914c564150c8256b24d4eab5eab3b3c7674883370e21ed4a0b26bae",
+      "fingerprint": "0d3f024e363bafbdade02fd975634c2959fd6c4c81a3d6d5fb12453ffc961ac0",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
-        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
-        "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
+        "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/rowbly-setup/SKILL.md": "bec372b123ea2d1d7789b4ce45b6583eb1c5f52c436602937fdc589a98b0c383",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
         "src/commands/fields.ts": "e7036313dbb8a4412b9e1d08abd308f433ab70bd893e3ec5b6844748ed5e0d09",
         "src/commands/setup.ts": "0c13f3531752dc561d05358a05a417939d096e9b1150a91ec205803529c7b4f7",
         "src/commands/stages.ts": "e9ad67ffaf2c9c764dc98d5092c437f6dd5816bc26c7344cfa5aea078cde7eaf",
         "src/plugins/assignees/commands.ts": "12ad0591036c3b1012c6e14270ec7647ac28e82f7ef10842867a713b4e371b87"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
+        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "skill:skills/rowbly-stories/SKILL.md": {
-      "fingerprint": "d34480c2ae4c5844542b993cc8751c16aec2f15a5b6992a49c1b362e0dbcb6f5",
+      "fingerprint": "6ca293d4cd727b80b6c37cac374c78a0fe4b50f6b7df7df07292f36fb2917fef",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
-        "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/rowbly-stories/SKILL.md": "83a0d214d1cf4fec7429c1660e9cd388da220203f0fe5a85361961052a04a73e",
         "src/commands/stories.ts": "3371722686ea9b485ad3d6764159737c499f587623fcf9d551c634759c4340b0",
         "src/plugins/assignees/index.ts": "4ef1db9bf9c2be089d4f823467498124fb69381d83aa99f6527b7882d785c6ec",
         "src/plugins/tasks/commands.ts": "bb48db4364d7dc1fd2d37cf03a8ad8900a6a649dc6b8ad4981c2fdabfa06e1c5",
         "src/plugins/tasks/tasks.ts": "81b6447051d44241977bfc3392c9641f9e282c6cfd13930e3e33958c374bf14b",
         "src/services/stories.ts": "e55d8b3be8a2984b3cc06e7a3a563e6db88d57791cccff46afd7819c83adaaeb"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "The command reference that was README.md moved unchanged (git mv, every heading and anchor kept) to docs/user-guide.md, so the skill’s sources entry README.md now names docs/user-guide.md. The skill body, description and purpose are unchanged and still match the moved text; no command, flag, output, exit code or doctor finding changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "sources repointed at 45c68eebc4d866e030a5ea7861a07889d522f4ab",
+        "git diff -M origin/main: README.md => docs/user-guide.md rename; guide changes limited to title/intro, Node.js line, link depths and one TUI mouse sentence",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "planning:skills/_artifacts": {
-      "fingerprint": "353f922683d35be1f0529e84d31c8b8b5ed254f7a31b59f23d076daa84945292",
+      "fingerprint": "300b84bed629540f5eb68963ab01b39a641d527f07c532f5219b9684c199eb1a",
       "snapshot": {
-        "README.md": "32b3de89279db59538f3891f9291fb7cf04ff1675f5366c66253945a79868338",
         "docs/agents/CONTEXT.md": "44e65d006f0c097cba6a8865a8191abe1a4136fa8d5e0cf681d855710623902e",
         "docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md": "6760cec6640e0f795cf17dd6da7618fc652819ae86facc366c73a1ca9b881161",
-        "docs/architecture/data-model.md": "41d47f0422bbc4a260619424acb08423b4c1bea8020dea7b91dcff8bb2ac05d2",
+        "docs/architecture/data-model.md": "7da7a4b82c67268ddbc09063c65a4237100e47a65748d6c55ac45175369ac42d",
         "docs/architecture/storage.md": "6baf7c5acc584ab344a8b4abd023c50924b3fdcf0be778df4e1cacc4fca26917",
         "docs/plugins/README.md": "41b3b357b7e55e61d90035b7d3a669a1fd979acba35c0344c10f12a41760bc75",
         "docs/plugins/built-in.md": "fc26e405f92186c6b88f3e72fa5dcfa8daa5512e76aaa951193faf3e82d9a19b",
-        "skills/_artifacts/domain_map.yaml": "0cd3ea4cd163aacca6adabf32fcc417f4d1b2c5257227a0c8302cd2b1922a715",
-        "skills/_artifacts/skill_spec.md": "8dc853849d7b2583e026a0b5e93071fcfa97c27cf77e5d4b3eb525e49ce86020",
-        "skills/_artifacts/skill_tree.yaml": "f440a3b9e46349c8b2808f8b4d50761803e6d831d08e1c47569ffa6b9cdacf41",
-        "skills/rowbly-cli/SKILL.md": "f351a2c32ed661f957d856edbf3a821628fae19fa8b58a44fd1e73ba6a200596",
-        "skills/rowbly-doctor/SKILL.md": "b0dad9012d2df0248b678f4f2b4a1e179588849a4190f2ae18ea925048afdda6",
+        "docs/user-guide.md": "b713bab68c99429e65c76cf97199dff4d5e9c3a9545d855ead9395e458153899",
+        "skills/_artifacts/domain_map.yaml": "44bc512c724114130aa389b979cfbde05c43b5df6919b72af1366e8d188f3bd6",
+        "skills/_artifacts/skill_spec.md": "05c4c6352a0151e3fe816aeb25fb91b63567c1ba5dfa4ca1c29498b60be09fd4",
+        "skills/_artifacts/skill_tree.yaml": "76954042de7a582206f5bf4c75e2f0522c593da93f20415f54c6c46e2056298e",
+        "skills/rowbly-cli/SKILL.md": "0d7e053c2ac4ccf6c3ec2e77260d897221a61b9f73185cb55ae916a131bfd165",
+        "skills/rowbly-doctor/SKILL.md": "09fd1f077ccb2a9b71cd4190859188a1d76965f5b09714e6b252baddf3b3bcdb",
         "skills/rowbly-doctor/references/finding-codes.md": "b682455a06aead59ae68ac71961a85eab8d6596e65cf0da9a11bee509bf28cac",
-        "skills/rowbly-plugins/SKILL.md": "ad1ef2aaa844c229170ecc12c8c8c456de01d0d6c63aa5a266d7f767b9ffc5a6",
-        "skills/rowbly-setup/SKILL.md": "4b56fc1864d1cb32f2cbe536d6330b7ecb1eae1677508e37baab7d5fe0e7125b",
-        "skills/rowbly-stories/SKILL.md": "3eeabc5f10b7f7b3c4e821fdceab168c0692ed1f4d023c24a10853a0c35b697a",
+        "skills/rowbly-plugins/SKILL.md": "b819ad8d7599e7ce956d71ef850e15318522cbaaf020c588164fcd956d0c1d90",
+        "skills/rowbly-setup/SKILL.md": "bec372b123ea2d1d7789b4ce45b6583eb1c5f52c436602937fdc589a98b0c383",
+        "skills/rowbly-stories/SKILL.md": "83a0d214d1cf4fec7429c1660e9cd388da220203f0fe5a85361961052a04a73e",
         "src/cli.ts": "e7b578224c3d317273c8ed2320d8829a7da2fe084128ad394be8b5e8b610fea3",
         "src/commands/_shared.ts": "4b2a88193d2fc5715a71d8c3e15840a04cd53f86d8775a275dca46def5e2c2e9",
         "src/commands/boards.ts": "5d7fb7729a2121ea06c174c44202d110290a8960fbee9140603c750b6e89c56d",
@@ -157,11 +167,13 @@
         "test/skills/cases/git-automation.md": "62a4626414892815d4d199aa39666b4b8afc923b7213e6b194e377ec898891f5",
         "test/skills/checkGitConsumer.mjs": "620f982aac1f6636ae54dae764aad5c2ec4f8b865e90a52ccebc3b751b7a1efe"
       },
-      "head": "182b21e083fcab5e55d7f6e5fc716590720c7ead",
-      "outcome": "no-change",
-      "reason": "Merge of main into the Me settings section branch: README.md combines two TUI-only changes (the Me settings section replacing the Context section m key, and sidebar focus/n keys). Skills and planning artifacts describe CLI use and tell agents not to open the TUI; none covers these keys, so no guidance changes.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "updated",
+      "reason": "skill_tree.yaml sources synchronized by intent maintainer sync; failure-mode sources in skill_spec.md and domain_map.yaml repointed from README.md#<anchor> to the same anchors in docs/user-guide.md; skill_spec.md gains the history entry “Documentation — README becomes a landing page”. No task, failure mode, prerequisite or decision changed.",
       "evidence": [
-        "Changed: README.md at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+        "all three planning documents parse (python yaml.safe_load for both YAML files)",
+        "every docs/user-guide.md#anchor named in the spec and domain map exists",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "source:docs/ARCHITECTURE.md": {
@@ -225,18 +237,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "f6b119088d5d0e4d359e1c3fabc5d7a7c84417a45188f08b389d15d4925bb2a5",
+      "fingerprint": "ef95c3cba5ad086ec1dd47d103003d80b718e4d11490693fe1647a254f1072a7",
       "snapshot": {
-        "docs/README.md": "f6ede174e5f045447dcccd03257223a20ba6eff2c37428ea365864d2c792405c"
+        "docs/README.md": "10125c63a83b834f7ded28f38de1aed743bce2dd8486b9f8a4add178af0a6b4a"
       },
-      "head": "3410688cc5a1892e2af08eefa99a6aedd0a881a4",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
       "outcome": "no-change",
-      "reason": "Reviewed docs/README.md against merged Git behavior: registry/glossary, documented git.configure inventory and test expectations match six Built-in Plugins and personal preferences. Existing operating guidance covers the behavior; no separate skill or additional command instructions are needed. Inventory/language/skills checks pass in the full suites.",
+      "reason": "The docs index now points at docs/user-guide.md as the user guide and lists it in the contents tree. Navigation only; no operating behavior described here.",
       "evidence": [
-        "Validated source tree1233bd5: pnpm typecheck and pnpm lint passed; unit103 suites/1006 tests and CLI22 suites/159 tests passed with2 workers. Later integration3410688 changes only .intent/review-state.json.",
-        "intent validate skills:5 skills passed. Independent worker reviewed Git paths/staging/interval/reaction implementation; another verified approved ADR0026 rename without section/decision changes.",
-        "Existing skill_spec.md records prior successful copied-CLI Git consumer and its wrong-frequency negative control; no new consumer run in this merge review. Normal Intent-installed discovery and a fresh doctor-specific consumer remain unverified.",
-        "Reviewed docs/README.md; changed files: docs/README.md"
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     },
     "source:docs/TECHNICAL_DETAILS.md": {
@@ -1808,15 +1817,15 @@
       ]
     },
     "source:src/tui/keymap.ts": {
-      "fingerprint": "69609b11b61c8e0ba3c4b2412c4fa56f729b5295d362fa0a6460d1f90e9b114e",
+      "fingerprint": "71493cd6446a31e82fc628dac27b57f5decdc6addb99120d1526c197c343c351",
       "snapshot": {
-        "src/tui/keymap.ts": "63d85e91427bed1e42c75d16a114e33869e3a47f9e3c4e551de3494dc9db1c25"
+        "src/tui/keymap.ts": "8b526bd15572f281e5fe5d6431b4cf1735065b3f09c2004059b2409a30f1483f"
       },
-      "head": "cde81e4b2ab0c219129265faf7989a4eb899784f",
-      "outcome": "no-change",
-      "reason": "TUI-only change (sidebar focus by click, ↑/↓ and n in a focused sidebar, N removed). The README gains one TUI paragraph; the skills cover the CLI, Data Root, doctor and Plugins and tell agents not to open the TUI, and none mentions sidebar keys, N or New Board (grep of skills/). Planning artifacts list no TUI key guidance.",
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "out-of-scope",
+      "reason": "A source comment now cites the user guide instead of the README for ctrl+enter saving in TUI forms. Comment only, TUI operation, outside the assessed command-mode scope.",
       "evidence": [
-        "Changed: src/tui/keymap.ts at cde81e4b2ab0c219129265faf7989a4eb899784f"
+        "comment-only change; typecheck and lint passed"
       ]
     },
     "source:src/tui/screens/board/BoardScreen.tsx": {
@@ -7310,6 +7319,20 @@
       "reason": "TUI implementation of the Me settings section; published operating skills cover command mode, so no skill maps or should map it.",
       "evidence": [
         "Changed: src/tui/screens/me/index.ts at 182b21e083fcab5e55d7f6e5fc716590720c7ead"
+      ]
+    },
+    "source:README.md": {
+      "fingerprint": "4a46d8160d36c5da916d58a1e225460bc19764a87566659112e8e00122f764cf",
+      "snapshot": {
+        "README.md": "41d4d7f11377e1bd7136f973f7426cd90ee45120a8e408bca76c9fce40b399ad"
+      },
+      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "outcome": "no-change",
+      "reason": "README.md is now a short landing page (install, quick start, git workflow, board keys, command mode, agent skills, Built-in Plugins, doc map). It repeats a subset of docs/user-guide.md and agrees with the skills (--json, --no-prompt, doctor after merges); its examples were captured from the CLI built at this revision. No skill guidance needs to change, and it is not added as a skill source.",
+      "evidence": [
+        "examples captured from dist/cli.js 0.4.0 in scratch Data Roots: init, whoami, create, move, list, a Story Key clash merged and repaired by doctor --fix",
+        "npm install -g rowbly into an isolated prefix and the README skills copy command verified",
+        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
       ]
     }
   }

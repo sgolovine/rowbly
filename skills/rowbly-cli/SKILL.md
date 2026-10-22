@@ -14,7 +14,7 @@ metadata:
   library: rowbly
   library_version: 0.1.0
 sources:
-  - README.md
+  - docs/user-guide.md
   - docs/agents/CONTEXT.md
   - docs/architecture/storage.md
   - src/cli.ts

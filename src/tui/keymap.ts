@@ -46,7 +46,7 @@ export const CORE_KEYS: readonly string[] = [
 
 /**
  * The keys of a `Form`, for screens that show one: saving first, so a narrow hint strip keeps it.
- * `ctrl+enter` saves too, where the terminal tells it from `enter` (the README says so).
+ * `ctrl+enter` saves too, where the terminal tells it from `enter` (the user guide says so).
  */
 export const FORM_KEYS: readonly KeyHint[] = formKeys('save');
 

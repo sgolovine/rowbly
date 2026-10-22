@@ -18,7 +18,7 @@ skills:
           not to open the TUI. Other rowbly-* skills build on it.",
         sources:
           [
-            README.md,
+            docs/user-guide.md,
             docs/agents/CONTEXT.md,
             docs/architecture/storage.md,
             src/cli.ts,
@@ -45,7 +45,7 @@ skills:
           (rowbly-stories).",
         sources:
           [
-            README.md,
+            docs/user-guide.md,
             docs/architecture/data-model.md,
             src/commands/setup.ts,
             src/commands/boards.ts,
@@ -71,7 +71,7 @@ skills:
           configuration (rowbly-setup).",
         sources:
           [
-            README.md,
+            docs/user-guide.md,
             docs/agents/CONTEXT.md,
             src/commands/stories.ts,
             src/plugins/tasks/commands.ts,
@@ -98,7 +98,7 @@ skills:
           is off, or a Plugin failed to load. Not for writing a new Plugin.",
         sources:
           [
-            README.md,
+            docs/user-guide.md,
             docs/plugins/README.md,
             docs/plugins/built-in.md,
             src/commands/plugins.ts,
@@ -135,7 +135,7 @@ skills:
           hand.",
         sources:
           [
-            README.md,
+            docs/user-guide.md,
             docs/architecture/data-model.md,
             docs/architecture/storage.md,
             src/commands/doctor.ts,

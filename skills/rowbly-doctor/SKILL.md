@@ -16,7 +16,7 @@ metadata:
 requires:
   - rowbly-cli
 sources:
-  - README.md
+  - docs/user-guide.md
   - docs/architecture/data-model.md
   - docs/architecture/storage.md
   - src/commands/doctor.ts

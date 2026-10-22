@@ -48,14 +48,14 @@ skills:
         mechanism: Rowbly prompts when stdin and stdout are terminals, so a missing value waits forever.
         wrong_pattern: rowbly stories create --board web
         correct_pattern: rowbly stories create --board web --name "Login" --json --no-prompt
-        source: README.md#global-flags
+        source: docs/user-guide.md#global-flags
         priority: HIGH
         status: active
       - mistake: Retrying a deterministic failure unchanged
         mechanism: Exit 2/3/4 come from the input; details lists valid choices.
         wrong_pattern: rerun the same command after exit 2
         correct_pattern: read error.details (validStages, validHandles) and change the input
-        source: README.md#exit-codes
+        source: docs/user-guide.md#exit-codes
         priority: HIGH
         status: active
       - mistake: Pointing --root at the project folder
@@ -69,7 +69,7 @@ skills:
         mechanism: Bare rowbly and --edit wait for a person.
         wrong_pattern: rowbly stories edit WEB-1 --edit
         correct_pattern: rowbly stories edit WEB-1 --description-file - --json --no-prompt
-        source: README.md#global-flags
+        source: docs/user-guide.md#global-flags
         priority: HIGH
         status: active
 
@@ -92,21 +92,21 @@ skills:
         mechanism: The default level is board when a Board resolves; the first board-level edit copies the list and stops inheriting global changes.
         wrong_pattern: rowbly stages add blocked --name Blocked
         correct_pattern: rowbly stages add blocked --name Blocked --level global
-        source: README.md#configuration-cascade; docs/architecture/data-model.md#configuration-cascade
+        source: docs/user-guide.md#configuration-cascade; docs/architecture/data-model.md#configuration-cascade
         priority: HIGH
         status: active
       - mistake: Running init under an existing Data Root
         mechanism: Discovery walks up; a nested .rowbly/ hides the parent one.
         wrong_pattern: cd app/sub && rowbly init
         correct_pattern: rowbly use --json --no-prompt  # exit 5 means none exists
-        source: README.md#data-root-and-git-workflow
+        source: docs/user-guide.md#data-root-and-git-workflow
         priority: HIGH
         status: active
       - mistake: Removing a Custom Field or option that Stories use
         mechanism: fields remove/edit strips values that no longer fit from every affected Story.
         wrong_pattern: rowbly fields remove area
         correct_pattern: confirm with the user first
-        source: README.md#custom-fields
+        source: docs/user-guide.md#custom-fields
         priority: MEDIUM
         status: active
 
@@ -129,14 +129,14 @@ skills:
         mechanism: Those flags replace the list.
         wrong_pattern: rowbly stories edit WEB-1 --label needs-docs
         correct_pattern: rowbly stories edit WEB-1 --add-label needs-docs
-        source: README.md#stories; test/skills/agentWorkflows.test.ts
+        source: docs/user-guide.md#stories; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active
       - mistake: Hard-coding in-progress or todo Stage keys
         mechanism: Only backlog and done are fixed on every Board (ADR-0024); the Stages between them are configured per Board, so choose the start Stage by Stage Category board.
         wrong_pattern: rowbly stories move WEB-1 in-progress
         correct_pattern: read config show .stages and pick the first category board Stage
-        source: README.md#stages; test/skills/agentWorkflows.test.ts
+        source: docs/user-guide.md#stages; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active
       - mistake: Title Case or spaced Labels
@@ -150,7 +150,7 @@ skills:
         mechanism: Keys are highest plus one and may be reused or collide across branches.
         wrong_pattern: assume the new Story is WEB-8
         correct_pattern: read key from the create output
-        source: README.md#stories
+        source: docs/user-guide.md#stories
         priority: MEDIUM
         status: active
 
@@ -223,21 +223,21 @@ skills:
         mechanism: One of the two Stories is lost; doctor --fix keeps both and renumbers.
         wrong_pattern: git checkout --ours .rowbly/boards/web/stories/WEB-7/story.json
         correct_pattern: rowbly doctor --fix --json --no-prompt
-        source: README.md#doctor; test/skills/agentWorkflows.test.ts
+        source: docs/user-guide.md#doctor; test/skills/agentWorkflows.test.ts
         priority: HIGH
         status: active
       - mistake: Deleting a Story folder or .txn/ to clear an error
         mechanism: A folder without story.json still reserves its key; .txn/ may hold an interrupted commit.
         wrong_pattern: rm -rf .rowbly/.txn
         correct_pattern: rowbly doctor --fix
-        source: docs/architecture/storage.md; README.md#doctor
+        source: docs/architecture/storage.md; docs/user-guide.md#doctor
         priority: CRITICAL
         status: active
       - mistake: Committing a merge before doctor exits 0
         mechanism: The conflict reaches everyone who pulls and blocks their commands with exit 6.
         wrong_pattern: git commit after an add/add conflict in .rowbly/
         correct_pattern: rowbly doctor --fix, then rowbly doctor (exit 0), then git add .rowbly && git commit
-        source: README.md#data-root-and-git-workflow
+        source: docs/user-guide.md#data-root-and-git-workflow
         priority: HIGH
         status: active
 
@@ -274,3 +274,4 @@ gaps:
 
 # 2026-10-21: TUI design-system source review; command-mode tasks, mappings and decisions unchanged.
 # Evidence and scope rationale: skill_spec.md, “Behavior change — TUI design system”.
+# 2026-10-21: README.md moved to docs/user-guide.md; failure-mode sources repointed to the same anchors (skill_spec.md, “Documentation — README becomes a landing page”).

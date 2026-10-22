@@ -13,8 +13,9 @@ Use intent maintainer setup to initialize missing records, maintainer add to reg
 # Agent guide
 
 Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <verb>`) and an Ink TUI
-(`rowbly`) over JSON and Markdown files in a `.rowbly/` Data Root. `README.md` is the user guide;
-`docs/` explains how it is built. Start at `docs/README.md`.
+(`rowbly`) over JSON and Markdown files in a `.rowbly/` Data Root. `README.md` is the landing page
+(what Rowbly is, install, a first Board); `docs/user-guide.md` is the user guide; the rest of `docs/`
+explains how it is built. Start at `docs/README.md`.
 
 ## Documentation map
 
@@ -30,7 +31,8 @@ Rowbly is a file-backed Kanban tracker for the terminal: a CLI (`rowbly <noun> <
 | Plugin versions, data formats and migrations; trust model | `docs/plugins/compatibility.md`; `docs/plugins/trust.md` |
 | Commands, test projects, helpers, tracing, CI | `docs/development/README.md` |
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
-| Commands, flags, keys, doctor findings, exit codes (user facing) | `README.md` |
+| Commands, flags, keys, doctor findings, exit codes (user facing) | `docs/user-guide.md` |
+| What Rowbly is, install and a first Board (the landing page) | `README.md` |
 | Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, with planning records in `skills/_artifacts/` (maintained with Intent; see Library Skill Maintenance above) |
 | Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published and not Intent skills |
 
@@ -62,7 +64,9 @@ Update the page that describes a behavior in the same change as the behavior:
   `CONTEXT.md` linked from `docs/agents/CONTEXT-MAP.md`, its section in `docs/plugins/built-in.md`, its
   operations in `docs/architecture/operations.md`).
 - Storage, locking or doctor behavior: `docs/architecture/storage.md` or `data-model.md`.
-- Anything a user sees (commands, flags, TUI keys, doctor codes, exit codes): `README.md`.
+- Anything a user sees (commands, flags, TUI keys, doctor codes, exit codes): `docs/user-guide.md`.
+  `README.md` too when the change breaks its install, quick start or examples; keep it a short
+  introduction and link to the guide rather than repeating it.
 - Describe what is built; mark anything planned as planned. Do not add work plans, specs or review
   reports to `docs/`.
 

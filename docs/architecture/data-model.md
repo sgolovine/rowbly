@@ -75,7 +75,7 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 
 ## Integrity and doctor
 
-Git merges and hand edits can leave the Data Root in a state no Rowbly command would write. `rowbly doctor` finds it, and `--fix` repairs what is safe to repair. Run it after every merge that touched `.rowbly/`. The full list of findings is in the [README](../../README.md#doctor).
+Git merges and hand edits can leave the Data Root in a state no Rowbly command would write. `rowbly doctor` finds it, and `--fix` repairs what is safe to repair. Run it after every merge that touched `.rowbly/`. The full list of findings is in the [user guide](../user-guide.md#doctor).
 
 - Doctor reads the Data Root under the lock. Its checks cover conflict markers, invalid JSON and schemas, ids that do not match their paths, duplicate Story Keys and key prefixes, references to Stages or Custom Fields that no longer exist, Rank ties, stale Local State, unknown files, Plugin load failures and Plugin Data, and leftovers of interrupted commits.
 - `--fix` repairs in passes: structural repairs (duplicate Story Keys) first, then a fresh check, then the other fixes, at most 5 passes. Each pass is a `doctor.fix` [operation](operations.md), planned and saved under the lock. A failed pass saves nothing, and its error lists the passes that did save (`details.committed`).
