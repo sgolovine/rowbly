@@ -6,10 +6,14 @@
   "keyPrefix": "ROW",
   "stages": [
     {
+      "key": "todo",
+      "name": "TODO"
+    },
+    {
       "key": "in-progress",
       "name": "In Progress"
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-13T02:54:41.933Z"
+  "updatedAt": "2026-10-22T22:58:41.404Z"
 }
