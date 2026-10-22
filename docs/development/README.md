@@ -100,4 +100,3 @@ binary; its build script stays off, since the binaries it ships load without it.
 | --- | --- | --- |
 | `.github/workflows/ci.yml` | Pull requests and pushes to `main` | Three parallel jobs, each installing with the frozen lockfile: **Verify** (typecheck, lint, build, verify the packed package), **Unit tests** (`pnpm test:unit`) and **CLI tests** (`pnpm test:cli`) |
 | `.github/workflows/release.yml` | Run by hand with a version bump | Create a GitHub release from `main`, then publish to npm |
-| `.github/workflows/check-skills.yml` | Pull requests and releases | Validate the Intent skills in `skills/` (see the Library Skill Maintenance section of [`AGENTS.md`](../../AGENTS.md)) |

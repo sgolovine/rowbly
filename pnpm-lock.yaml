@@ -57,9 +57,6 @@ importers:
       '@codebolt/agentic-tui':
         specifier: 0.3.2
         version: 0.3.2
-      '@tanstack/intent':
-        specifier: ^0.5.5
-        version: 0.5.5
       '@types/marked-terminal':
         specifier: ^6.1.1
         version: 6.1.1
@@ -815,11 +812,6 @@ packages:
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
-
-  '@tanstack/intent@0.5.5':
-    resolution: {integrity: sha512-Ei5RqUWgV96HrezTEyDbScy0wZN+17dNo59Am8/3ncv0YIaIxApkiX5LkM488wxe4a1Imdi09nhjFxblxwLMSQ==}
-    engines: {node: '>=20.12.0'}
-    hasBin: true
 
   '@types/cardinal@2.1.1':
     resolution: {integrity: sha512-/xCVwg8lWvahHsV2wXZt4i64H1sdL+sN1Uoq7fAc8/FA6uYHjuIveDwPwvGUYp4VZiv85dVl6J/Bum3NDAOm8g==}
@@ -2180,8 +2172,6 @@ snapshots:
     optional: true
 
   '@sindresorhus/is@4.6.0': {}
-
-  '@tanstack/intent@0.5.5': {}
 
   '@types/cardinal@2.1.1': {}
 
