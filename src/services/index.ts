@@ -103,16 +103,15 @@ export interface CreateContextOptions {
 /**
  * Resolves the Data Root, Local State and Me (contracts §4) and builds a `RowblyContext` with the
  * real clock and id generator. Shared by the Command Layer and the TUI. Me is the local Me, else
- * global Me from the Home Config (ADR-0032); a Home Config that cannot be read only warns.
+ * global Me from the Home Config (ADR-0032); a Home Config that cannot be read throws.
  */
 export async function createContext(opts: CreateContextOptions): Promise<RowblyContext> {
   const root = await findDataRoot({ cwd: opts.cwd, flag: opts.root, env: opts.env, home: opts.home });
   // Opening the Data Root finishes any interrupted commit before the first read (ADR-0019 §2).
   const local = await coordinated(root, 'open', () => createRepositories(root).localState.get());
-  const globalMe = await readGlobalMe(opts.home).catch((err: unknown) => {
-    opts.warn(`global Me not read: ${err instanceof Error ? err.message : String(err)}`);
-    return null;
-  });
+  // A Home Config that cannot be read fails the command rather than drop global Me, which would
+  // change who Rowbly records as the creator or author (ADR-0032 §2).
+  const globalMe = await readGlobalMe(opts.home);
   const ctx: RowblyContext = {
     root,
     local,
