@@ -22,16 +22,17 @@
   <a href="docs/README.md">How it's built</a>
 </p>
 
-Rowbly keeps your Boards and Stories as JSON files in a `.rowbly/` folder in your repository. Commit the
-folder, and changes to Stories go through the same branches, reviews and merges as your code. There is no
-server to run and no account to create.
+Rowbly keeps all of its data in your repository, committed just like your code. Changes to Stories go
+through the same branches, reviews and merges as everything else, with no server to run and no account to
+create. It is easy for people to use, and even easier for agents.
 
 Work on a full-screen Kanban board in the terminal, or run one command at a time. Both do the same things,
 and every list and show command can print JSON, so scripts and coding agents can use Rowbly too.
 
-Rowbly is meant for one person or a small team that already shares a repository. It has no accounts,
-permissions or web interface: anyone who can read the repository can read the Board. It is pre-1.0, and
-its own development is tracked with it in this repository's [`.rowbly/`](.rowbly) folder.
+Rowbly is meant for one person or a small team that already shares a repository, and it works just as well
+for one person working with a team of agents. It has no accounts, permissions or web interface: anyone who
+can read the repository can read the Board. It is pre-1.0, and its own development is tracked with it in
+this repository's [`.rowbly/`](.rowbly) folder.
 
 ## Install
 
