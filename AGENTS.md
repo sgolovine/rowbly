@@ -21,7 +21,7 @@ explains how it is built. Start at `docs/README.md`.
 | Decisions | `docs/agents/adr/README.md` (index) and `docs/agents/adr/NNNN-*.md` |
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `docs/user-guide.md` |
 | What Rowbly is, install and a first Board (the landing page) | `README.md` |
-| Agent skills for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/<name>/SKILL.md`, published in the npm package; each skill folder is self-contained (see Agent skills below) |
+| The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
 | Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published |
 
 ## Domain language and decisions
@@ -60,16 +60,15 @@ Update the page that describes a behavior in the same change as the behavior:
 
 ## Agent skills
 
-The skills in `skills/` are published in the npm package and installed by copying one folder into an
-agent's skills folder (`README.md`, Install). Keep each one self-contained:
+`skills/rowbly/` is the one skill for operating Rowbly. It is published in the npm package and installed
+by copying the folder into an agent's skills folder (`README.md`, Install). Keep it self-contained:
 
 - Frontmatter has only `name` and `description`. The description names no other skill or file.
-- A skill links only to files inside its own folder. When it needs another skill's guidance (such as
-  the shared CLI rules in `rowbly-cli`), copy that text into its `references/` folder instead of
-  pointing at the other skill, `docs/` or the source.
-- The shared copies are `references/cli-rules.md` (the rules sections of `rowbly-cli`) and
-  `references/doctor.md` (the steps of `rowbly-doctor`), with links to other skills written out as
-  commands. When you change the original, update every copy in the same change.
+- `SKILL.md` holds the rules for every `rowbly` call and a table that routes each task to a page in
+  `references/`. It links only to files inside its own folder, never to `docs/` or the source.
+- `references/` has one page per area (setup, Stories, Plugins, doctor, Data Root layout, TUI) and one
+  `plugin-<id>.md` per Built-in Plugin. A new Built-in Plugin, or a change to a command, flag, exit code
+  or doctor finding, updates the matching page in the same change.
 
 ## Screenshots
 

@@ -9,11 +9,7 @@
   },
   "files": [
     "dist",
-    "skills/rowbly-cli",
-    "skills/rowbly-setup",
-    "skills/rowbly-stories",
-    "skills/rowbly-plugins",
-    "skills/rowbly-doctor"
+    "skills/rowbly"
   ],
   "engines": {
     "node": ">=22"

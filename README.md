@@ -43,32 +43,33 @@ npm install -g rowbly
 
 With pnpm, use `pnpm add -g rowbly`. Check the install with `rowbly --version`.
 
-### Agent skills
+### Agent skill
 
-Rowbly ships five skills that teach coding agents to run it from a shell (see
-[For coding agents](#for-coding-agents)). Each skill is one self-contained folder in `skills/`: it
-needs no other skill and no file outside its folder, so you can install any of them on its own.
+Rowbly ships one skill, `rowbly`, that teaches coding agents to run it from a shell (see
+[For coding agents](#for-coding-agents)). It is one self-contained folder, `skills/rowbly`: its
+`SKILL.md` holds the rules for every command, and its `references/` cover setup, Stories, doctor, the
+Data Root layout and each Built-in Plugin.
 
-With the [`skills`](https://github.com/vercel-labs/skills) CLI, install them from GitHub into your
-project, or add `-g` to install them for your user:
+With the [`skills`](https://github.com/vercel-labs/skills) CLI, install it from GitHub into your
+project, or add `-g` to install it for your user:
 
 ```sh
-npx skills add sgolovine/rowbly --skill rowbly-cli rowbly-setup rowbly-stories rowbly-plugins rowbly-doctor
+npx skills add sgolovine/rowbly --skill rowbly
 ```
 
-Name the skills: the repository also holds skills for developing Rowbly, which you do not need. Add
+Name the skill: the repository also holds skills for developing Rowbly, which you do not need. Add
 `--agent claude-code` (or another agent) to skip the agent prompt.
 
-Or copy them from the npm package. After `npm install -g rowbly` they are in
-`$(npm root -g)/rowbly/skills`. For Claude Code:
+Or copy it from the npm package. After `npm install -g rowbly` it is in
+`$(npm root -g)/rowbly/skills/rowbly`. For Claude Code:
 
 ```sh
 mkdir -p ~/.claude/skills
-cp -r "$(npm root -g)"/rowbly/skills/rowbly-* ~/.claude/skills/
+cp -r "$(npm root -g)"/rowbly/skills/rowbly ~/.claude/skills/
 ```
 
-For another agent, copy the same folders wherever it loads skills from. Copy them again after you
-upgrade Rowbly, so they match the CLI.
+For another agent, copy the same folder wherever it loads skills from. Copy it again after you
+upgrade Rowbly, so it matches the CLI.
 
 ## Quick start
 
@@ -198,17 +199,12 @@ shape, `{"error":{"code","message","details"}}`, with a [documented exit code](d
 
 ### For coding agents
 
-The npm package includes five skills for coding agents that run Rowbly from a shell:
+The npm package includes the [`rowbly`](skills/rowbly/SKILL.md) skill for coding agents that run
+Rowbly from a shell. It covers the shared rules (`--json`, `--no-prompt`, exit codes and JSON errors)
+and, in its references, `init`, Boards, Me, Stages and Custom Fields; finding, creating, moving and
+finishing Stories; every Built-in Plugin; and checking and repairing a Data Root after a merge.
 
-| Skill | Covers |
-| --- | --- |
-| [`rowbly-cli`](skills/rowbly-cli/SKILL.md) | The shared rules: `--json`, `--no-prompt`, exit codes and JSON errors |
-| [`rowbly-setup`](skills/rowbly-setup/SKILL.md) | `init`, Boards, Me, Stages and Custom Fields |
-| [`rowbly-stories`](skills/rowbly-stories/SKILL.md) | Finding, creating, moving and finishing Stories and Tasks |
-| [`rowbly-plugins`](skills/rowbly-plugins/SKILL.md) | Turning Plugins on and using their commands |
-| [`rowbly-doctor`](skills/rowbly-doctor/SKILL.md) | Checking and repairing a Data Root after a merge |
-
-To install them, see [Agent skills](#agent-skills).
+To install it, see [Agent skill](#agent-skill).
 
 ## Plugins
 

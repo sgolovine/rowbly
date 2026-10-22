@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { type RunCliResult, runCli, tempRoot } from '../helpers';
 
 /**
- * Task checks for the agent skills in skills/: each test runs a skill's documented workflow through
- * the built CLI, as an agent would (no TTY, `--json --no-prompt`), and checks the claims and the
- * mistakes the skill warns about.
+ * Task checks for the agent skill in skills/rowbly: each test runs a documented workflow from its
+ * SKILL.md or a page of its references/ through the built CLI, as an agent would (no TTY,
+ * `--json --no-prompt`), and checks the claims and the mistakes the skill warns about.
  */
 
-/** A project directory with a Data Root and Board `web`, made the way rowbly-setup says. */
+/** A project directory with a Data Root and Board `web`, made the way references/setup.md says. */
 async function project() {
   const tmp = await tempRoot();
   const rowbly = (...args: string[]) => runCli([...args, '--no-prompt'], { cwd: tmp.dir });
@@ -28,7 +28,7 @@ function jsonError(result: RunCliResult): { code: string; details: Record<string
   return JSON.parse(result.stderr).error;
 }
 
-describe('rowbly-cli', () => {
+describe('rowbly skill: SKILL.md', () => {
   it('fails fast instead of prompting, with exit codes and JSON errors on stderr', async () => {
     const { rowbly, json } = await project();
     const story = await json('stories', 'create', '--board', 'web', '--name', 'Login page');
@@ -52,7 +52,7 @@ describe('rowbly-cli', () => {
   });
 });
 
-describe('rowbly-setup', () => {
+describe('rowbly skill: references/setup.md', () => {
   it('edits Stages at the level asked for, and a Board-level edit stops inheriting global changes', async () => {
     const { json } = await project();
     await json('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
@@ -88,7 +88,7 @@ describe('rowbly-setup', () => {
   });
 });
 
-describe('rowbly-stories', () => {
+describe('rowbly skill: references/stories.md', () => {
   it('picks up and finishes a Story by Stage Category, with Tasks', async () => {
     const { json } = await project();
     await json('stages', 'add', 'doing', '--name', 'Doing', '--after', 'backlog', '--board', 'web', '--level', 'board');
@@ -139,7 +139,7 @@ describe('rowbly-stories', () => {
   });
 });
 
-describe('rowbly-plugins', () => {
+describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
   it('turns Plugins on and uses Epics, Specs and Comments as documented', async () => {
     const { rowbly, json } = await project();
     const off = await rowbly('epics', 'list');
@@ -195,7 +195,7 @@ describe('rowbly-plugins', () => {
   });
 });
 
-describe('rowbly-doctor', () => {
+describe('rowbly skill: references/doctor.md', () => {
   it('blocks commands with exit 6 on a merge conflict until doctor --fix renumbers the later Story', async () => {
     const { tmp, rowbly, json } = await project();
     const git = (...args: string[]) =>
