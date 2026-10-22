@@ -3,7 +3,7 @@ import { Box, Text } from 'ink';
 import { useState } from 'react';
 import type { DataRoot } from '../../../schemas';
 import { type SetupLocation, setupTarget } from '../../../services/setup';
-import { useEscape, useIsActive, useKeyCapture, useKeyHints } from '../../hooks';
+import { useEscape, useIsActive, useKeyCapture, useKeyHints, useRowblyContext } from '../../hooks';
 import type { ScreenProps } from '../types';
 import { CustomPathForm } from './CustomPathForm';
 import { InitForm } from './InitForm';
@@ -39,6 +39,8 @@ export function SetupScreen({ params }: ScreenProps) {
   const location = p.location === 'here' || p.location === 'home' || p.location === 'custom' ? p.location : undefined;
   const [step, setStep] = useState<Step>(() => firstStep(location, at));
   const active = useIsActive();
+  // Opened from a running Data Root, it creates another one rather than greeting a first run.
+  const another = useRowblyContext() !== null;
   // Without a preset location, `esc` from the path or the form goes back to the choice.
   const canGoBack = location === undefined && step.kind !== 'pick';
   useKeyCapture(active && canGoBack, { escape: true, text: false });
@@ -55,8 +57,12 @@ export function SetupScreen({ params }: ScreenProps) {
   if (step.kind === 'pick') {
     return (
       <Box flexDirection="column" gap={1}>
-        <Text bold>Welcome to Rowbly</Text>
-        <Text>No Data Root found. Where should Rowbly keep its data?</Text>
+        <Text bold>{another ? 'New Data Root' : 'Welcome to Rowbly'}</Text>
+        <Text>
+          {another
+            ? 'Where should Rowbly create the new Data Root?'
+            : 'No Data Root found. Where should Rowbly keep its data?'}
+        </Text>
         <LocationPicker {...at} onChoose={(root) => setStep(root ? { kind: 'form', root } : { kind: 'path' })} />
       </Box>
     );

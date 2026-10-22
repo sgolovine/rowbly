@@ -77,7 +77,8 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
             return;
           }
           activate(ctx);
-          router.replace('home');
+          // No screen of the previous Data Root stays below the new one.
+          router.reset('home');
         }}
       />
     </Box>
