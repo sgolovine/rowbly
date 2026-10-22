@@ -7322,17 +7322,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "4a46d8160d36c5da916d58a1e225460bc19764a87566659112e8e00122f764cf",
+      "fingerprint": "ba55150bd6ec85d9f1f1c1fd8a4d560eb04bae1a342fe7140b32a9a77b6b92ea",
       "snapshot": {
-        "README.md": "41d4d7f11377e1bd7136f973f7426cd90ee45120a8e408bca76c9fce40b399ad"
+        "README.md": "89320a6123c92eb187a26ed2eda767c04ded0d88456361e3922062e047c7b230"
       },
-      "head": "45c68eebc4d866e030a5ea7861a07889d522f4ab",
+      "head": "a95b25f4ec0df818bc791e801ae03ceac8a42fe0",
       "outcome": "no-change",
-      "reason": "README.md is now a short landing page (install, quick start, git workflow, board keys, command mode, agent skills, Built-in Plugins, doc map). It repeats a subset of docs/user-guide.md and agrees with the skills (--json, --no-prompt, doctor after merges); its examples were captured from the CLI built at this revision. No skill guidance needs to change, and it is not added as a skill source.",
+      "reason": "README intro wording only: the first paragraph drops the .rowbly/ JSON detail and the third adds one person working with a team of agents. No command, flag, key, Data Root rule or doctor finding changed; the skills already describe the .rowbly/ Data Root, so no guidance changes.",
       "evidence": [
-        "examples captured from dist/cli.js 0.4.0 in scratch Data Roots: init, whoami, create, move, list, a Story Key clash merged and repaired by doctor --fix",
-        "npm install -g rowbly into an isolated prefix and the README skills copy command verified",
-        "typecheck, lint, test:unit (63 tests) and test:cli (20 tests) passed; intent validate skills passed for all five skills; every relative link and anchor in the changed pages resolves"
+        "Changed: README.md at a95b25f4ec0df818bc791e801ae03ceac8a42fe0"
       ]
     }
   }
