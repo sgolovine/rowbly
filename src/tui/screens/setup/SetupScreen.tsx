@@ -1,7 +1,7 @@
 import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
 import { useState } from 'react';
-import { keyPrefixFromName, slugFromName } from '../../../core';
+import { isSlug, keyPrefixFromName, slugFromName, ValidationError } from '../../../core';
 import type { DataRoot } from '../../../schemas';
 import { createContext, createServices } from '../../../services';
 import { assertInitTarget, initTarget, newContext } from '../../../services/setup';
@@ -69,6 +69,9 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
       <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
+      <Text color={theme.inkFaint}>
+        Your handle sets Me (`rowbly whoami`), the creator of your Stories. Leave it empty to set it later.
+      </Text>
       <Form
         fields={[
           { name: 'boardName', label: 'Board name', kind: 'text' },
@@ -79,8 +82,15 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
             kind: 'text',
             fillFrom: { field: 'boardName', format: keyPrefixFromName },
           },
+          { name: 'me', label: 'Your handle (Me)', kind: 'text' },
         ]}
         onSubmit={async (values) => {
+          const me = text(values.me) || null;
+          // Checked before `init`, so a bad handle does not leave a Data Root behind.
+          if (me && !isSlug(me)) {
+            const message = 'must be a lower-kebab-case slug';
+            throw new ValidationError(`me: ${message}`, { details: { issues: [{ path: ['me'], message }] } });
+          }
           const boardId = text(values.boardId);
           // The name defaults to the id, and the prefix to the Board id upper-cased.
           const board = boardId
@@ -91,12 +101,14 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
               }
             : undefined;
           await createServices(newContext(root, warn)).setup.init({ root, board });
-          toast.push('info', `Created ${root.path}`);
+          const ctx = await createContext({ cwd, env: {}, home, root: root.path, warn });
+          if (me) await createServices(ctx).context.setMe(me);
+          toast.push('info', me ? `Created ${root.path}; you are ${me}` : `Created ${root.path}`);
           if (stay) {
             router.pop();
             return;
           }
-          activate(await createContext({ cwd, env: {}, home, root: root.path, warn }));
+          activate(ctx);
           router.replace('home');
         }}
       />

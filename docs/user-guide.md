@@ -125,7 +125,8 @@ rowbly config show [--board <id>]
 - `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
-- In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
+- In the TUI, a first-run screen offers to create the Data Root here or globally when none exists,
+  then asks for the first Board and your handle (Me); leave either empty to skip it.
   The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
   Me. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
   `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
