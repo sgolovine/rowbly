@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Make story comments a plugin",
   "description": "",
-  "stage": "done",
-  "rank": "a8",
+  "stage": "in-progress",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T19:56:05.303Z",
-  "updatedAt": "2026-10-21T22:34:09.572Z"
+  "updatedAt": "2026-10-22T21:50:53.796Z"
 }

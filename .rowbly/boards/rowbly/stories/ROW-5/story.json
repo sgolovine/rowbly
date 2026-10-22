@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Better settings screen",
   "description": "A better settings screen",
-  "stage": "done",
-  "rank": "aE",
+  "stage": "backlog",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": null,
   "createdAt": "2026-10-13T16:04:08.626Z",
-  "updatedAt": "2026-10-22T21:25:37.267Z"
+  "updatedAt": "2026-10-22T21:50:49.332Z"
 }

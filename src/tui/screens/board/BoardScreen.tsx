@@ -69,7 +69,8 @@ interface Cursor {
  * The Kanban board for the Board in context (the sidebar switches it), or for `params.boardId` without changing
  * the context: one column per Stage, Stories in Rank order. Moves and reorders show at once and are
  * reverted if the service refuses them. The list view (`v`, or the header's switch) shows the same Stories as
- * one list in a collapsible section per Stage, where shift+↑/↓ move a Story between Stages.
+ * one list in a collapsible section per Stage, where shift+↑/↓ reorder a Story and, at a section's edge, move
+ * it to the next Stage.
  */
 export function BoardScreen({ params }: ScreenProps) {
   const services = useServices();
@@ -244,22 +245,37 @@ export function BoardScreen({ params }: ScreenProps) {
   };
 
   /**
-   * Moves the list's highlighted Story to the previous or next Stage, at the bottom: from the first Stage in
-   * Board up to Backlog, from the last down to Done. The cursor follows it, unfolding the section it lands in.
+   * Moves the list's highlighted Story one place up or down within its Stage; past the top or bottom it moves
+   * to the previous Stage's bottom or the next Stage's top (from the first Stage in Board up to Backlog, from
+   * the last down to Done). The cursor follows it, unfolding the section it lands in.
    */
-  const moveStage = (delta: -1 | 1) => {
+  const moveInList = (delta: -1 | 1) => {
     if (listRow?.kind !== 'story') return;
     const { story } = listRow;
     const from = stages.findIndex((s) => s.key === listRow.stage.key);
     const at = columns[from]?.findIndex((s) => s.key === story.key) ?? -1;
-    const target = stages[from + delta];
-    if (at < 0 || !target) return;
+    if (at < 0) return;
+    const neighbour = columns[from]?.[at + delta];
+    if (neighbour) {
+      const next = swapCard(columns, from, at, delta);
+      setListCursor(
+        listRows(stages, next, collapsed).findIndex((r) => r.kind === 'story' && r.story.key === story.key),
+      );
+      const position = delta < 0 ? { before: neighbour.key } : { after: neighbour.key };
+      void write(next, { col: from, row: at + delta }, () => services.stories.rank(story.key, position));
+      return;
+    }
+    const to = from + delta;
+    const target = stages[to];
+    if (!target) return;
+    const slot = delta < 0 ? Number.POSITIVE_INFINITY : 0;
+    const next = placeCard(columns, from, at, to, slot, target.key);
     const unfolded = new Set(collapsed);
     unfolded.delete(target.key);
-    const next = listRows(stages, moveCard(columns, from, at, from + delta, target.key), unfolded);
     toggleSection(target.key, false);
-    setListCursor(next.findIndex((r) => r.kind === 'story' && r.story.key === story.key));
-    moveTo(from + delta, { col: from, row: at });
+    setListCursor(listRows(stages, next, unfolded).findIndex((r) => r.kind === 'story' && r.story.key === story.key));
+    const landed = delta < 0 ? (next[to]?.length ?? 1) - 1 : 0;
+    void write(next, { col: to, row: landed }, () => services.stories.move(story.key, target.key, { top: delta > 0 }));
   };
 
   const reorder = (delta: -1 | 1) => {
@@ -311,7 +327,7 @@ export function BoardScreen({ params }: ScreenProps) {
         ? [
             { key: '↑/↓', description: 'select' },
             { key: 'enter', description: 'open/fold' },
-            { key: 'shift+↑/↓', description: 'move Stage', secondary: true },
+            { key: 'shift+↑/↓', description: 'move', secondary: true },
             { key: '←/→', description: 'fold/unfold section', secondary: true },
             { key: 'n', description: 'new Story' },
             { key: 'e', description: 'edit', secondary: true },
@@ -321,7 +337,7 @@ export function BoardScreen({ params }: ScreenProps) {
             { key: 'v', description: 'Stages view' },
             { key: 'r', description: 'reload', secondary: true },
             { key: 'j/k', description: 'select (vim keys)', secondary: true },
-            { key: 'K/J', description: 'move Stage (vim keys)', secondary: true },
+            { key: 'K/J', description: 'move (vim keys)', secondary: true },
           ]
         : [
             { key: '←/→ ↑/↓', description: 'select' },
@@ -346,9 +362,10 @@ export function BoardScreen({ params }: ScreenProps) {
   const listInput = (input: string, key: Key, boardId: Slug) => {
     const delta = moveDelta(input, key);
     const section = listRow?.kind === 'section' ? listRow : undefined;
-    // shift+↑/↓ (or K/J) move the Story to the previous / next Stage; plain ↑/↓ (or k/j) move the cursor.
-    if (input === 'K' || (key.shift && key.upArrow)) moveStage(-1);
-    else if (input === 'J' || (key.shift && key.downArrow)) moveStage(1);
+    // shift+↑/↓ (or K/J) move the Story up / down, across Stages at a section's edge; plain ↑/↓ (or k/j) move
+    // the cursor.
+    if (input === 'K' || (key.shift && key.upArrow)) moveInList(-1);
+    else if (input === 'J' || (key.shift && key.downArrow)) moveInList(1);
     else if (delta) setListCursor(Math.max(0, Math.min(rows.length - 1, listAt + delta)));
     else if (section && (key.return || input === ' ')) toggleSection(section.category);
     else if (section && key.leftArrow) toggleSection(section.category, true);
