@@ -16,7 +16,7 @@ metadata:
 requires:
   - rowbly-cli
 sources:
-  - README.md
+  - docs/user-guide.md
   - docs/agents/CONTEXT.md
   - src/commands/stories.ts
   - src/plugins/tasks/commands.ts

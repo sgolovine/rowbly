@@ -1,6 +1,6 @@
-# Rowbly
+# Rowbly user guide
 
-A developer-focused, file-backed Kanban tracker for the terminal.
+Every command, flag, key, doctor finding and exit code. To install Rowbly and create a first Board, start with the [README](../README.md). How Rowbly is built is in the [documentation index](README.md).
 
 Rowbly keeps Boards and Stories as pretty-printed JSON files in a `.rowbly/` folder, so a small team can keep its tracker inside a code repository and share it through git, with no server and no database. Use it in two ways, with the same features in both:
 
@@ -9,7 +9,7 @@ Rowbly keeps Boards and Stories as pretty-printed JSON files in a `.rowbly/` fol
 
 ## Install
 
-Requires the Node.js version in [`.nvmrc`](.nvmrc).
+Requires Node.js 22.12 or newer.
 
 ```sh
 npm install -g rowbly   # or: pnpm add -g rowbly
@@ -40,7 +40,7 @@ rowbly                               # open the board in the TUI
 
 ## Concepts
 
-The exact meaning of each term is in [`CONTEXT.md`](docs/agents/CONTEXT.md). In short:
+The exact meaning of each term is in [`CONTEXT.md`](agents/CONTEXT.md). In short:
 
 - A **Data Root** (`.rowbly/`) holds everything: its **Boards**, and the data of its Plugins.
 - A **Board** holds **Stories**. Each Story has a **Story Key** made of the Board's key prefix and a number (`WEB-42`), sits in one **Stage**, and has a **Rank** inside that Stage. A Story never moves to another Board.
@@ -344,7 +344,7 @@ In the TUI, open **Doctor** from the settings (`,`): `f` fixes and `r` checks ag
 <!-- BEGIN plugins -->
 ### Plugins
 
-Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [the plugin system](docs/plugins/README.md) and the [Built-in Plugins](docs/plugins/built-in.md) page; to write one, follow [Writing a Plugin](docs/plugins/writing-a-plugin.md) and the [Plugin API reference](docs/plugins/api.md).
+Plugins add optional features to Rowbly. Every Plugin ships with Rowbly (a Built-in Plugin) and is off until the Data Root turns it on, for everyone who uses it. The design is in [the plugin system](plugins/README.md) and the [Built-in Plugins](plugins/built-in.md) page; to write one, follow [Writing a Plugin](plugins/writing-a-plugin.md) and the [Plugin API reference](plugins/api.md).
 
 ```text
 rowbly plugins list            # every Built-in Plugin, whether it is on, and any that failed to load
@@ -353,7 +353,7 @@ rowbly plugins enable <id>
 rowbly plugins disable <id>    # keeps its settings and data
 ```
 
-- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). Edit settings by hand and keep `enabled`; a Plugin that needs a setting refuses `plugins enable` until it is there ([Settings](docs/plugins/README.md#settings)). `rowbly init` turns no Plugins on. Command mode reads the configuration on every run; the TUI when it starts and when you turn a Plugin on or off.
+- A Plugin is on when its entry in `rowbly.config.json` has `"enabled": true`; its settings sit beside it, and a Board can change them in its own `board.config.json` (`"plugins": { "<id>": { … } }`). Edit settings by hand and keep `enabled`; a Plugin that needs a setting refuses `plugins enable` until it is there ([Settings](plugins/README.md#settings)). `rowbly init` turns no Plugins on. Command mode reads the configuration on every run; the TUI when it starts and when you turn a Plugin on or off.
 - A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
 - A Plugin that fails to load (its settings are invalid, it throws while it starts, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning, and `plugins list` and `doctor` report it. Its data is kept.
 - A Plugin can refuse a change (exit 4). An expected error from a Plugin keeps its own code, such as `VALIDATION` (exit 2) for bad input. If a Plugin fails unexpectedly while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, these errors carry `details.plugin` and `details.stage`.
@@ -380,14 +380,14 @@ Saved changes enter a Git queue. The TUI stays usable while commits run; rapid e
 
 Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git pauses waiting work until re-enabled; an already running commit may finish.
 
-Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](docs/plugins/built-in.md#git).
+Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](plugins/built-in.md#git).
 
 
 ## Interactive mode (TUI)
 
 Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
 
-The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
+The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. With the mouse, a click selects a Story, a click on the selected Story opens it, and dragging a Story onto another Stage moves it to the bottom of that Stage. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
 The header's **Stages / List** switch (or `v` on the board) changes how the board shows its Stories. **Stages** is the view above, and every launch starts with it. **List** shows one line per Story, with its Story Key, name and Stage, grouped under each Stage's name in Stage order. Stories in a section stay in Rank order. A section folds and unfolds, and a long list scrolls up and down. The choice lasts until you quit and applies to every Board; the highlighted Story stays highlighted when you switch.
 
@@ -475,8 +475,8 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | `pnpm test:unit` | Run the suites that need no CLI build (storage, Plugins, TUI, rule checks) |
 | `pnpm test:cli` | Run the suites that spawn a built CLI; builds the CLI into `.test-dist/run-*` first |
 | `pnpm test:watch` | vitest in watch mode |
-| `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](test/performance/README.md)) |
+| `pnpm bench:plugins` | Opt-in Plugin benchmark (see [`test/performance/README.md`](../test/performance/README.md)) |
 
-How Rowbly is built is in [`docs/`](docs/README.md): the [architecture](docs/architecture/overview.md), the [plugin system](docs/plugins/README.md), the [development guide](docs/development/README.md) and the [decisions](docs/agents/adr/README.md). Use the terms in [`CONTEXT.md`](docs/agents/CONTEXT.md).
+How Rowbly is built is in [`docs/`](README.md): the [architecture](architecture/overview.md), the [plugin system](plugins/README.md), the [development guide](development/README.md) and the [decisions](agents/adr/README.md). Use the terms in [`CONTEXT.md`](agents/CONTEXT.md).
 
-The test projects, helpers and rules are in the [development guide](docs/development/README.md#tests).
+The test projects, helpers and rules are in the [development guide](development/README.md#tests).

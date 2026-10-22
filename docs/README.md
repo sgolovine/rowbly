@@ -1,11 +1,12 @@
 # Rowbly documentation
 
-Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. The [project README](../README.md) is the user guide: install, commands, the TUI, doctor findings and exit codes. The pages below explain how Rowbly is built and how to extend it.
+Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. The [project README](../README.md) introduces it: install and a first Board. The [user guide](user-guide.md) covers every command, the TUI, doctor findings and exit codes. The other pages explain how Rowbly is built and how to extend it.
 
 ## Where to start
 
 | You want to… | Read |
 | --- | --- |
+| Use Rowbly: commands, flags, keys, doctor findings, exit codes | [User guide](user-guide.md) |
 | Learn the words Rowbly uses | [Glossary](agents/CONTEXT.md) and the [context map](agents/CONTEXT-MAP.md) |
 | Understand how the code is put together | [Architecture overview](architecture/overview.md) |
 | Know what is stored where | [Data model](architecture/data-model.md) |
@@ -19,6 +20,7 @@ Rowbly is a developer-focused, file-backed Kanban tracker for the terminal. The 
 ```text
 docs/
   README.md                  this page
+  user-guide.md              using Rowbly: every command, flag, key, doctor finding and exit code
   agents/
     CONTEXT.md               the core glossary: the only names to use for core concepts
     CONTEXT-MAP.md           the glossaries of each Built-in Plugin, and how they relate to core

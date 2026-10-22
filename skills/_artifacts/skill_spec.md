@@ -30,24 +30,24 @@ See `domain_map.yaml` for mechanisms and patterns.
 
 | Skill | Mistake | Priority | Source |
 | --- | --- | --- | --- |
-| rowbly-cli | Omitting `--no-prompt` in a pseudo-terminal | HIGH | README.md#global-flags |
-| rowbly-cli | Retrying a deterministic failure unchanged | HIGH | README.md#exit-codes |
-| rowbly-cli | Opening the TUI or `$EDITOR` | HIGH | README.md#global-flags |
+| rowbly-cli | Omitting `--no-prompt` in a pseudo-terminal | HIGH | docs/user-guide.md#global-flags |
+| rowbly-cli | Retrying a deterministic failure unchanged | HIGH | docs/user-guide.md#exit-codes |
+| rowbly-cli | Opening the TUI or `$EDITOR` | HIGH | docs/user-guide.md#global-flags |
 | rowbly-cli | `--root` at the project folder | MEDIUM | observed |
-| rowbly-setup | Wrong Configuration Cascade level | HIGH | README.md#configuration-cascade |
-| rowbly-setup | `init` under an existing Data Root | HIGH | README.md#data-root-and-git-workflow |
-| rowbly-setup | Removing a used Custom Field/option | MEDIUM | README.md#custom-fields |
-| rowbly-stories | `--label`/`--assignee` replace the list | HIGH | README.md#stories; test/skills |
+| rowbly-setup | Wrong Configuration Cascade level | HIGH | docs/user-guide.md#configuration-cascade |
+| rowbly-setup | `init` under an existing Data Root | HIGH | docs/user-guide.md#data-root-and-git-workflow |
+| rowbly-setup | Removing a used Custom Field/option | MEDIUM | docs/user-guide.md#custom-fields |
+| rowbly-stories | `--label`/`--assignee` replace the list | HIGH | docs/user-guide.md#stories; test/skills |
 | rowbly-stories | Hard-coded Stage keys | HIGH | test/skills |
 | rowbly-stories | Non-kebab-case Labels | HIGH | docs/agents/CONTEXT.md |
-| rowbly-stories | Predicting the next key | MEDIUM | README.md#stories |
+| rowbly-stories | Predicting the next key | MEDIUM | docs/user-guide.md#stories |
 | rowbly-plugins | Story Spec named by slug | HIGH | docs/plugins/built-in.md#specs |
 | rowbly-plugins | `--spec` replaces links | HIGH | docs/plugins/built-in.md#specs |
 | rowbly-plugins | Second Story Spec without a slug | MEDIUM | docs/plugins/built-in.md#specs |
 | rowbly-plugins | Disabling a Plugin to silence an error | MEDIUM | docs/plugins/README.md |
 | rowbly-doctor | Deleting a Story folder or `.txn/` | CRITICAL | docs/architecture/storage.md |
-| rowbly-doctor | Picking one side of a key conflict | HIGH | README.md#doctor |
-| rowbly-doctor | Committing before doctor exits 0 | HIGH | README.md#data-root-and-git-workflow |
+| rowbly-doctor | Picking one side of a key conflict | HIGH | docs/user-guide.md#doctor |
+| rowbly-doctor | Committing before doctor exits 0 | HIGH | docs/user-guide.md#data-root-and-git-workflow |
 
 ## Tensions
 
