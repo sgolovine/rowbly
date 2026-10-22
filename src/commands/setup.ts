@@ -1,16 +1,25 @@
 import { homedir } from 'node:os';
-import { confirm, isCancel } from '@clack/prompts';
+import { confirm, isCancel, select, text } from '@clack/prompts';
 import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, printWarnings, renderTable } from '../output';
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
-import { createServices, type InitOptions, type InitResult, type RowblyContext, type Services } from '../services';
-import { assertInitTarget, initTarget, newContext } from '../services/setup';
-import { assertNoRootEnv, registerDataRoot } from '../storage';
+import type { InitOptions, RowblyContext, Services } from '../services';
+import {
+  assertInitTarget,
+  type CreateDataRootResult,
+  createDataRoot,
+  initTarget,
+  type SetupLocation,
+  setupTarget,
+} from '../services/setup';
+import { assertNoRootEnv } from '../storage';
 import { boardFlag, type ContextFlags, globalOptions, isInteractive, promptIfMissing, withContext } from './_shared';
 
 interface InitFlags {
   global?: boolean;
+  label?: string;
+  default?: boolean;
   board?: string;
   boardName?: string;
   prefix?: string;
@@ -26,8 +35,10 @@ interface CurrentContext {
 export function registerSetup(program: Command): void {
   program
     .command('init')
-    .description('Create a Data Root, optionally with a first Board')
+    .description('Create a Data Root, optionally with a first Board, and record it in ~/.rowblyrc.json')
     .option('--global', 'create ~/.rowbly instead of .rowbly in the current directory')
+    .option('--label <label>', 'a name for the Data Root in ~/.rowblyrc.json')
+    .option('--default', 'make it the default Data Root, opened from every directory')
     .option('--board <id>', 'first Board id')
     .option('--board-name <name>', 'first Board name')
     .option('--prefix <PREFIX>', 'first Board Story Key prefix (default suggestion: the Board id upper-cased)')
@@ -94,25 +105,74 @@ async function runInit(opts: InitFlags, cmd: Command): Promise<void> {
   const warnings: string[] = [];
   try {
     assertNoRootEnv(process.env);
-    const root = initTarget({
-      cwd: process.cwd(),
-      home: homedir(),
-      explicit: globals.root,
-      global: opts.global ?? false,
-    });
-    const ctx = newContext(root, (message) => warnings.push(message));
+    if (opts.global && globals.root) throw new UsageError('use either --global or --data-root');
+    const cwd = process.cwd();
+    const home = homedir();
+    const root = await initRoot(opts, globals, { cwd, home });
     // Fail before any prompt rather than after the last one.
     await assertInitTarget(root);
     const board = await firstBoard(opts, globals);
-    const result = await createServices(ctx).setup.init({ root, ...(board ? { board } : {}) });
-    // The new Data Root is known from now on (ADR-0033 §2); the Data Root itself is already made.
-    await registerDataRoot(homedir(), root.path).catch((err: unknown) =>
-      warnings.push(`Data Root not recorded in the Home Config: ${err instanceof Error ? err.message : String(err)}`),
-    );
+    const label = await askLabel(opts, globals);
+    const makeDefault = await askDefault(opts, globals);
+    const result = await createDataRoot({
+      root,
+      home,
+      ...(board ? { board } : {}),
+      ...(label ? { label } : {}),
+      default: makeDefault,
+      warn: (message) => warnings.push(message),
+    });
     printResult(result, { json: globals.json, human: renderInit });
   } finally {
     printWarnings(warnings, { json: globals.json });
   }
+}
+
+/**
+ * Where `init` creates the Data Root: `--data-root`, `--global`, or asked when interactive (the
+ * current directory, the home folder or a custom path); `<cwd>/.rowbly` otherwise.
+ */
+async function initRoot(opts: InitFlags, globals: ReturnType<typeof globalOptions>, at: { cwd: string; home: string }) {
+  if (globals.root || opts.global || !isInteractive(globals)) {
+    return initTarget({ ...at, explicit: globals.root, global: opts.global ?? false });
+  }
+  const here = setupTarget('here', at);
+  const homeRoot = setupTarget('home', at);
+  const location = await select<SetupLocation>({
+    message: 'Where should Rowbly keep this Data Root?',
+    options: [
+      { value: 'here', label: 'This directory', hint: here.path },
+      { value: 'home', label: 'Home folder', hint: homeRoot.path },
+      { value: 'custom', label: 'Another folder', hint: 'type the path of the Data Root folder' },
+    ],
+  });
+  if (isCancel(location)) throw new UsageError('cancelled');
+  if (location !== 'custom') return location === 'home' ? homeRoot : here;
+  const path = await text({
+    message: 'Data Root folder (e.g. ~/work/.rowbly)',
+    validate: (input) => (input?.trim() ? undefined : 'a path is required'),
+  });
+  if (isCancel(path)) throw new UsageError('cancelled');
+  return setupTarget('custom', { ...at, path });
+}
+
+/** `--label`, or asked when interactive; empty means none. */
+async function askLabel(opts: InitFlags, globals: ReturnType<typeof globalOptions>): Promise<string | undefined> {
+  if (opts.label !== undefined || !isInteractive(globals)) return opts.label;
+  const answer = await text({ message: 'Label (optional, e.g. Work)', placeholder: 'leave empty for none' });
+  if (isCancel(answer)) throw new UsageError('cancelled');
+  return answer?.trim() || undefined;
+}
+
+/** `--default`, or asked when interactive. */
+async function askDefault(opts: InitFlags, globals: ReturnType<typeof globalOptions>): Promise<boolean> {
+  if (opts.default || !isInteractive(globals)) return opts.default ?? false;
+  const answer = await confirm({
+    message: 'Make it the default Data Root, opened from every directory?',
+    initialValue: false,
+  });
+  if (isCancel(answer)) throw new UsageError('cancelled');
+  return answer;
 }
 
 /** The first Board from the flags, asking for the rest through Clack when interactive. */
@@ -177,8 +237,9 @@ function renderMe({ me }: { me: string | null }): string {
   return colors.bold(me);
 }
 
-function renderInit(result: InitResult): string {
-  const lines = [`Created Data Root ${result.root.path}`];
+function renderInit(result: CreateDataRootResult): string {
+  const name = result.known.label ? ` "${result.known.label}"` : '';
+  const lines = [`Created Data Root${name} ${result.root.path}${result.known.default ? ' (the default)' : ''}`];
   if (result.board) {
     lines.push(`Created Board ${result.board.id} (${result.board.keyPrefix})`, `Now using ${result.board.id}`);
   } else {

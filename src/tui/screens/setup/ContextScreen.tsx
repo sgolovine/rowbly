@@ -74,7 +74,7 @@ function BoardPicker({ home }: { home: string }) {
         emptyText="No Boards yet. Create one from Boards."
         onSelect={async (item) => {
           if (item.value === CREATE_GLOBAL) {
-            router.push('setup', { global: true, home, title: 'Global Data Root' });
+            router.push('setup', { location: 'home', stay: true, home, title: 'Global Data Root' });
             return;
           }
           try {
