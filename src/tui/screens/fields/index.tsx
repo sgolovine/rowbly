@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ValidationError } from '../../../core';
+import { slugFromName, ValidationError } from '../../../core';
 import { type CustomFieldDef, type CustomFieldType, CustomFieldTypeSchema } from '../../../schemas';
 import type { CustomFieldPatch } from '../../../services';
 import { readLevel } from '../../../services/_configTarget';
@@ -125,7 +125,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
         <Box flexDirection="column">
           <Text bold>Add a {mode.type} field</Text>
           <Form
-            fields={[{ name: 'key', label: 'Key', kind: 'text', required: true }, ...formFields(mode.type)]}
+            fields={withKey(formFields(mode.type), new Set(fields.map((f) => f.key)))}
             initialValues={{ required: false, integer: false }}
             onSubmit={async (values) => {
               const def = { key: String(values.key), type: mode.type, ...toProps(mode.type, values, false) };
@@ -190,6 +190,18 @@ function formFields(type: CustomFieldType): FormField[] {
     );
   }
   return fields;
+}
+
+/** Puts the Key field after Name, filled from the name. */
+function withKey([name, ...rest]: FormField[], taken: ReadonlySet<string>): FormField[] {
+  const key: FormField = {
+    name: 'key',
+    label: 'Key',
+    kind: 'text',
+    required: true,
+    fillFrom: { field: 'name', format: (text) => slugFromName(text, taken) },
+  };
+  return name ? [name, key, ...rest] : [key];
 }
 
 function initialValues(field: CustomFieldDef): FormValues {

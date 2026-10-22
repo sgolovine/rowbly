@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { ConflictError } from '../../../core';
+import { ConflictError, keyPrefixFromName, slugFromName } from '../../../core';
 import type { BoardConfig } from '../../../schemas';
 import { ConfirmDialog, CursorRows, Form, Loading } from '../../components';
 import {
@@ -131,9 +131,24 @@ function BoardsScreen() {
           <Text bold>New Board</Text>
           <Form
             fields={[
-              { name: 'id', label: 'Id', kind: 'text', required: true },
               { name: 'name', label: 'Name', kind: 'text', required: true },
-              { name: 'keyPrefix', label: 'Key prefix', kind: 'text', required: true },
+              {
+                name: 'id',
+                label: 'Id',
+                kind: 'text',
+                required: true,
+                fillFrom: { field: 'name', format: (name) => slugFromName(name, new Set(boards.map((b) => b.id))) },
+              },
+              {
+                name: 'keyPrefix',
+                label: 'Key prefix',
+                kind: 'text',
+                required: true,
+                fillFrom: {
+                  field: 'name',
+                  format: (name) => keyPrefixFromName(name, new Set(boards.map((b) => b.keyPrefix))),
+                },
+              },
               { name: 'description', label: 'Description', kind: 'text' },
             ]}
             onSubmit={async (values) => {
