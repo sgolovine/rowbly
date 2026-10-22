@@ -145,15 +145,15 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
       });
     };
     const local = { state: { version: 1 } as LocalState, dirty: false };
-    // The Home Config is outside the Data Root; a context without `home` (an injected one) skips it.
-    if (ctx.home !== undefined) {
-      const defaults = await defaultDataRootEntries(ctx.home);
-      if (defaults) add('MULTIPLE_DEFAULT_DATA_ROOTS', ...defaults);
-    }
     // A transaction that recovery cannot finish is the one thing doctor reports (ADR-0019 §2).
     if (recovery.failure !== undefined) {
       add('TRANSACTION_PENDING', ...pendingTransaction(recovery.failure));
       return { findings, boards: [], local };
+    }
+    // The Home Config is outside the Data Root; a context without `home` (an injected one) skips it.
+    if (ctx.home !== undefined) {
+      const defaults = await defaultDataRootEntries(ctx.home);
+      if (defaults) add('MULTIPLE_DEFAULT_DATA_ROOTS', ...defaults);
     }
     const pluginData: PluginDataSeen = new Map();
     /** Story files that hold data of an older Rowbly: doctor never saves them (VER-03). */
