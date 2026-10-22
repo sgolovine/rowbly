@@ -33,7 +33,7 @@ function firstFree(base: string, taken: ReadonlySet<string>, max: number, join: 
   }
 }
 
-/** Infers a Board id from its name: `slugFromName('My Web App')` → `my-web-app`, numbered when taken. */
+/** Infers a slug, such as a Board id or Stage key, from a name: `slugFromName('My Web App')` → `my-web-app`, numbered when taken. */
 export function slugFromName(name: string, taken: ReadonlySet<string> = new Set()): string {
   const base = nameWords(name).join('-').toLowerCase().slice(0, SLUG_MAX_LENGTH).replace(/-+$/, '') || 'board';
   return firstFree(base, taken, SLUG_MAX_LENGTH, '-');

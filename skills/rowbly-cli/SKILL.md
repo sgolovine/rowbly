@@ -3,24 +3,7 @@ name: rowbly-cli
 description: "Use first whenever an agent runs the rowbly command for a
   file-backed Kanban tracker (.rowbly/ folder): how Rowbly finds its Data Root
   and Board, how to run it non-interactively with --json, --no-prompt and --yes,
-  how to read exit codes and JSON errors, and why not to open the TUI. Other
-  rowbly-* skills build on it."
-metadata:
-  purpose: >-
-    Teach an agent the shared rules for operating the Rowbly CLI safely from a
-    script or agent shell: Data Root and Board resolution, non-interactive
-    flags, JSON output and errors, exit codes, and the vocabulary Rowbly uses.
-  type: core
-  library: rowbly
-  library_version: 0.1.0
-sources:
-  - docs/user-guide.md
-  - docs/agents/CONTEXT.md
-  - docs/architecture/storage.md
-  - src/cli.ts
-  - src/main.ts
-  - src/commands/_shared.ts
-  - src/core/errors.ts
+  how to read exit codes and JSON errors, and why not to open the TUI."
 ---
 
 # Operate the Rowbly CLI as an agent
@@ -29,12 +12,7 @@ Rowbly is a Kanban tracker that keeps its data as JSON files in a `.rowbly/` fol
 in the code repository. It has two modes: `rowbly` with no command opens a full-screen TUI, and
 `rowbly <noun> <verb> …` runs one command and exits. **Agents use only command mode.**
 
-Follow these rules for every `rowbly` call. The task skills build on them:
-
-- `rowbly-setup`: create the Data Root, Boards, Me, Assignees, Stages and Custom Fields.
-- `rowbly-stories`: find, create, edit and move Stories and Tasks.
-- `rowbly-plugins`: Epics, Specs, Comments, and turning Plugins on or off.
-- `rowbly-doctor`: check and repair the Data Root, mainly after git merges.
+Follow these rules for every `rowbly` call.
 
 ## 1. Check that Rowbly can run
 
@@ -91,13 +69,13 @@ stderr even when the command succeeds.
 | Exit | `error.code` | Meaning | What to do |
 | --- | --- | --- | --- |
 | 0 | — | Success | — |
-| 1 | `INTERNAL` | A bug, an unreadable file, or a Plugin that failed during a change. Nothing was saved | Report it with the message; if `details.plugin` is set, see `rowbly-plugins` |
+| 1 | `INTERNAL` | A bug, an unreadable file, or a Plugin that failed during a change. Nothing was saved | Report it with the message; if `details.plugin` is set, check `rowbly plugins list --json --no-prompt` |
 | 2 | `USAGE` | Bad flags, a missing value, no Board in context, or no `--yes` | Fix the command line; the `hint` says how |
 | 2 | `VALIDATION` | Input that breaks a rule (unknown Stage, Assignee or Custom Field, bad Label) | Use a valid value from `details` |
 | 3 | `NOT_FOUND` | Unknown Board, Story, Task, Comment, Stage, Custom Field or Assignee | List the records and check the id |
 | 4 | `CONFLICT` | The id or key prefix exists, a deletion is refused, a Plugin refused the change, or the Data Root lock stayed busy for 10 s | Read the message; do not force a refusal without the user's approval |
-| 5 | `NO_DATA_ROOT` | No `.rowbly/` found | Check the directory; create one only if the user wants it (`rowbly-setup`) |
-| 6 | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it | Use `rowbly-doctor` |
+| 5 | `NO_DATA_ROOT` | No `.rowbly/` found | Check the directory; create one only if the user wants it (`rowbly init`) |
+| 6 | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it | Follow [Check and repair a Data Root](references/doctor.md) |
 
 ## 4. Know which Data Root and Board a command acts on
 
@@ -120,8 +98,8 @@ it reports the Data Root and Board that you expect.
 
 Every command takes the Data Root lock, validates its input, and saves through a journal that survives a
 crash. Editing files under `.rowbly/` by hand bypasses all of that. Use commands for every change. The
-only file you may edit by hand is a Plugin's settings in `rowbly.config.json`, as `rowbly-plugins`
-describes. After a hand edit or a git merge, run `rowbly doctor`.
+only thing you may edit by hand is a Plugin's settings in `rowbly.config.json`: the keys beside its
+`enabled` key, never `enabled` itself. After a hand edit or a git merge, run `rowbly doctor`.
 
 Never commit `.rowbly/local.json`, `.lock`, `.lock.break` or `.txn/`. The `.gitignore` that `rowbly init`
 writes excludes them. Commit everything else in `.rowbly/` with the code it describes.
@@ -148,7 +126,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 - **HIGH: retrying a failed command unchanged.** An exit of 2, 3 or 4 is deterministic. Read
   `error.details` and `hint`, then change the input.
 - **HIGH: assuming Stage keys.** Stages are configured per Board; `done` or `in-progress` may not exist.
-  Read them with `rowbly config show --board <id> --json --no-prompt` (see `rowbly-stories`).
+  Read them with `rowbly config show --board <id> --json --no-prompt`.
 - **MEDIUM: `--root` pointed at the project folder.** `--root ~/code/app` is treated as an empty Data
   Root and reports missing Boards. Point at `~/code/app/.rowbly`.
 - **MEDIUM: parsing table output.** Tables change with terminal width and colour. Parse `--json` only.
