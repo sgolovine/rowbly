@@ -238,4 +238,4 @@ The [development guide](docs/development/README.md) covers the checks, tests and
 
 ## License
 
-MIT
+[MIT](LICENSE.md)
