@@ -22,6 +22,13 @@ export interface MouseHandlers {
   onDragLeave?(): void;
   /** A press here holds the box: each pointer move until the release reports the pointer's cell, e.g. to resize. */
   onPull?(x: number, y: number): void;
+  /** A right click here, at cell `x`, `y`: open a context menu there. */
+  onContextMenu?(x: number, y: number): void;
+  /**
+   * Boxes on a higher layer hide the ones below them: the pointer reaches only the boxes of the highest
+   * layer under it. The default is 0; an open context menu and the backdrop around it use 1.
+   */
+  layer?: number;
 }
 
 interface Target {
@@ -29,7 +36,11 @@ interface Target {
   handlers: RefObject<MouseHandlers>;
 }
 
-/** The clickable boxes on screen. A press goes to the smallest box under the pointer. */
+/**
+ * The clickable boxes on screen. A press goes to the smallest box under the pointer, on the highest
+ * layer there. A right click (`menu`) goes to the smallest such box with `onContextMenu`, and ends a drag
+ * or pull in progress.
+ */
 export interface MouseRegistry {
   register(target: Target): () => void;
   dispatch(event: MouseEvent): void;
@@ -50,17 +61,22 @@ export function createMouseRegistry(): MouseRegistry {
   };
 
   const hit = (event: MouseEvent, wants: (h: MouseHandlers) => boolean): Target | undefined => {
-    let best: { target: Target; area: number } | undefined;
+    let best: { target: Target; area: number; layer: number } | undefined;
+    let top = Number.NEGATIVE_INFINITY;
     for (const target of targets) {
       const node = target.ref.current;
-      if (!node || !wants(target.handlers.current)) continue;
+      if (!node) continue;
       const box = measureElement(node);
       const inside =
         event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
       const area = box.width * box.height;
-      if (inside && area > 0 && (!best || area < best.area)) best = { target, area };
+      if (!inside || area === 0) continue;
+      const layer = target.handlers.current.layer ?? 0;
+      top = Math.max(top, layer);
+      if (!wants(target.handlers.current)) continue;
+      if (!best || layer > best.layer || (layer === best.layer && area < best.area)) best = { target, area, layer };
     }
-    return best?.target;
+    return best && best.layer === top ? best.target : undefined;
   };
 
   return {
@@ -76,6 +92,13 @@ export function createMouseRegistry(): MouseRegistry {
       };
     },
     dispatch(event) {
+      if (event.kind === 'menu') {
+        pulling = null;
+        dragging = null;
+        setOver(undefined);
+        hit(event, (h) => Boolean(h.onContextMenu))?.handlers.current.onContextMenu?.(event.x, event.y);
+        return;
+      }
       if (event.kind === 'move') {
         if (pulling) return pulling.handlers.current.onPull?.(event.x, event.y);
         if (dragging && (event.x !== dragging.x || event.y !== dragging.y)) dragging.moved = true;

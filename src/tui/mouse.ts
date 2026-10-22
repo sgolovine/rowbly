@@ -7,9 +7,12 @@ import { PassThrough } from 'node:stream';
 export const MOUSE_ON = '\u001B[?1000h\u001B[?1003h\u001B[?1006h';
 export const MOUSE_OFF = '\u001B[?1006l\u001B[?1003l\u001B[?1000l';
 
-/** A press or release of the left button, at a 0-based cell. */
+/**
+ * A press or release of the left button, a pointer move, or a press of the right button (`menu`, which
+ * asks for a context menu), at a 0-based cell.
+ */
 export interface MouseEvent {
-  kind: 'press' | 'release' | 'move';
+  kind: 'press' | 'release' | 'move' | 'menu';
   x: number;
   y: number;
 }
@@ -20,8 +23,9 @@ const SGR = /\u001B\[<(\d+);(\d+);(\d+)([Mm])/g;
 const PARTIAL = /\u001B\[<[\d;]*$/;
 
 /**
- * Takes the SGR mouse reports out of `input`. Only the left button is reported; wheel and other
- * buttons are dropped. `rest` is the remaining text, `pending` an unfinished report to prepend to
+ * Takes the SGR mouse reports out of `input`. The left button's presses and releases, pointer moves
+ * and right-button presses are reported; the right button's release, the wheel and other buttons are
+ * dropped. `rest` is the remaining text, `pending` an unfinished report to prepend to
  * the next chunk.
  */
 export function extractMouse(input: string): { events: MouseEvent[]; rest: string; pending: string } {
@@ -31,6 +35,8 @@ export function extractMouse(input: string): { events: MouseEvent[]; rest: strin
       events.push({ kind: 'move', x: Number(x) - 1, y: Number(y) - 1 });
     } else if ((Number(button) & 0b1100_0011) === 0) {
       events.push({ kind: final === 'M' ? 'press' : 'release', x: Number(x) - 1, y: Number(y) - 1 });
+    } else if ((Number(button) & 0b1100_0011) === 2 && final === 'M') {
+      events.push({ kind: 'menu', x: Number(x) - 1, y: Number(y) - 1 });
     }
     return '';
   });
