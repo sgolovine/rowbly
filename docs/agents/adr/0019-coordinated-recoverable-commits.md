@@ -10,7 +10,7 @@ We rejected these alternatives: SQLite or another database (ADR-0001), a lock he
 
 **Mechanism.** A lock file, `.lock`, at the top of the Data Root (beside `rowbly.config.json`). It is created with exclusive create (`open(path, 'wx')`). Its content is JSON: `{ "pid": number, "host": string, "startedAt": ISO timestamp, "token": random string, "operation": string }`. The process that created the file holds the lock. Release means that the holder unlinks the file after checking that `token` is still its own.
 
-**Canonical root.** The Data Root is canonicalized with `realpath` once, when it is opened. The lock file, the journal and all physical paths in a plan come from the canonical path. Because the lock file lives inside the Data Root, aliases (a symlinked Data Root, `--root` given with `..`, a different working directory) always share one lock. The in-process lock table is keyed by the canonical path.
+**Canonical root.** The Data Root is canonicalized with `realpath` once, when it is opened. The lock file, the journal and all physical paths in a plan come from the canonical path. Because the lock file lives inside the Data Root, aliases (a symlinked Data Root, `--data-root` given with `..`, a different working directory) always share one lock. The in-process lock table is keyed by the canonical path.
 
 **In-process queue.** Inside one process, acquisitions for the same canonical root first wait in a FIFO promise queue. Then the file is created, so that one process never polls against itself. A TUI Action that runs while a background step is pending waits in this queue. It is not rejected.
 

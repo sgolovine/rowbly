@@ -7,9 +7,12 @@ set -eu
 
 root=${1:?usage: scripts/demo-data-root.sh <new-directory>}
 cli="$(cd "$(dirname "$0")/.." && pwd)/dist/cli.js"
+# A throwaway home folder, so the demo is not recorded in your ~/.rowblyrc.json.
+home=$(mktemp -d)
+trap 'rm -rf "$home"' EXIT
 
 rowbly() {
-  node "$cli" --root "$root" --no-prompt "$@" >/dev/null
+  HOME="$home" node "$cli" --data-root "$root" --no-prompt "$@" >/dev/null
 }
 
 rowbly init --board launch --board-name "Rowbly Launch" --prefix ROW

@@ -123,7 +123,7 @@ The stage table, the error table and the input rules are in the [reference](api.
 Clashes are found when the Plugins load. The later Plugin in the registry fails to load when it has:
 
 - an id that is a core command or an earlier Plugin's id (a Plugin's commands are under one top-level command named after its id, `rowbly <id> …`);
-- an option flag that a core command or an earlier Plugin has (by name, ignoring `no-`), or either polarity of a global option (`--root`, `--json`, `--yes`, `--prompt`, `--version`, `--help`);
+- an option flag that a core command or an earlier Plugin has (by name, ignoring `no-`), or either polarity of a global option (`--data-root`, `--json`, `--yes`, `--prompt`, `--version`, `--help`);
 - an Action key that a core screen uses ([`CORE_KEYS`](../../src/tui/keymap.ts)) or an earlier Plugin uses;
 - a second replacement of an operation, or a `replaces` key that is not a core operation;
 - a hook key in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `plugins`, `doctor`) that is not a core operation;

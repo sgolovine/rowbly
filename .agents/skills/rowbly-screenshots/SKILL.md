@@ -24,7 +24,8 @@ out="$(mktemp -d)"            # captures and the demo Data Root stay outside the
 pnpm build
 scripts/demo-data-root.sh "$out/rowbly-demo/.rowbly"   # the header shows `rowbly-demo`
 t() { pnpm -s exec agentic-tui --session-namespace rowbly-screenshots "$@"; }
-t run node "$repo/dist/cli.js" --cwd "$repo" --cols 140 --rows 38 --env ROWBLY_ROOT="$out/rowbly-demo/.rowbly"
+mkdir "$out/home"              # a home folder of its own, so ~/.rowblyrc.json is not touched
+t run node "$repo/dist/cli.js" --cwd "$out/rowbly-demo" --cols 140 --rows 38 --env HOME="$out/home"
 t wait "v list view" --timeout 10000
 ```
 

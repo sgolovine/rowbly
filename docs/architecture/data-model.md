@@ -63,9 +63,11 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | --- | --- |
 | `version` | `1`; a file without it is read as version 1 |
 | `me` | optional, a handle: Me for every Data Root (planned: nothing reads it yet) |
-| `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; several `default` entries are accepted by the schema (planned: nothing reads or writes it yet) |
+| `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
 
 Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.
+
+**Known Data Roots** (`src/storage/dataRoot.ts`, ADR-0033). `findDataRoot` opens `--data-root`, else the one `default` entry, else the nearest `.rowbly/`, else `~/.rowbly`; a named Data Root that is missing fails with `NO_DATA_ROOT` and `details.path` instead of falling back, and more than one entry marked `default` (even two naming one folder) fails with `USAGE` unless the flag is given; a Plugin command that is unknown because no Plugin could load then reports that error. Opening a Data Root that has a `rowbly.config.json` (in `createContext`) and `init` record it with `registerDataRoot`, which compares paths canonically (`~/` expanded, relative to the home folder, real path when the folder exists), leaves a folder that is already known exactly as stored, appends a new folder with its canonical path, and writes nothing (taking no lock) when nothing changes. Recording never changes a label or the default; `registerDataRoot(home, path, { label, default })` does, first merging the entries that name the folder into the first without losing a label, `default` or an unknown key, and `default: true` clears it on every other entry. `listKnownDataRoots` returns the merged list without writing.
 
 ## Configuration Cascade
 

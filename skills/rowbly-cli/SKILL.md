@@ -74,15 +74,17 @@ stderr even when the command succeeds.
 | 2 | `VALIDATION` | Input that breaks a rule (unknown Stage, Assignee or Custom Field, bad Label) | Use a valid value from `details` |
 | 3 | `NOT_FOUND` | Unknown Board, Story, Task, Comment, Stage, Custom Field or Assignee | List the records and check the id |
 | 4 | `CONFLICT` | The id or key prefix exists, a deletion is refused, a Plugin refused the change, or the Data Root lock stayed busy for 10 s | Read the message; do not force a refusal without the user's approval |
-| 5 | `NO_DATA_ROOT` | No `.rowbly/` found | Check the directory; create one only if the user wants it (`rowbly init`) |
+| 5 | `NO_DATA_ROOT` | No `.rowbly/` found, or the Data Root named by `--data-root` or the default is missing (`details.path`) | Check the directory or the path; create one only if the user wants it (`rowbly init`) |
 | 6 | `DATA_INTEGRITY` | A file is not valid JSON, fails its schema, has git conflict markers, or an interrupted commit could not finish; `details.path` names it | Follow [Check and repair a Data Root](references/doctor.md) |
 
 ## 4. Know which Data Root and Board a command acts on
 
-- **Data Root.** Rowbly looks for `.rowbly/` in the current directory, then in each parent directory,
-  like git looks for `.git`. If it finds none it uses `~/.rowbly` when that exists. `--root <path>` or
-  `ROWBLY_ROOT` sets it directly. The path is the `.rowbly` folder itself, not the project
-  folder: `--root ~/code/app/.rowbly`.
+- **Data Root.** Rowbly opens the first of: `--data-root <path>`; the Data Root marked
+  `"default": true` in `~/.rowblyrc.json`; `.rowbly/` in the current directory or the nearest parent,
+  like git looks for `.git`; `~/.rowbly`. The path is the `.rowbly` folder itself, not the code
+  folder: `--data-root ~/code/app/.rowbly`. A default in `~/.rowblyrc.json` wins over the current
+  directory, so pass `--data-root` whenever the user names a Data Root. `--root` and `ROWBLY_ROOT` no
+  longer exist; a run with `ROWBLY_ROOT` set exits 2.
 - **Board.** A command that needs a Board takes the first of: `--board <id>`, `ROWBLY_BOARD`, the current
   Board in `.rowbly/local.json` (set with `rowbly use <id>`), or the only Board in the Data Root.
   When there is none, the command exits 2 with `board required`. A Story Key or Task id never needs
@@ -130,8 +132,11 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
   `error.details` and `hint`, then change the input.
 - **HIGH: assuming Stage keys.** Stages are configured per Board; `done` or `in-progress` may not exist.
   Read them with `rowbly config show --board <id> --json --no-prompt`.
-- **MEDIUM: `--root` pointed at the project folder.** `--root ~/code/app` is treated as an empty Data
-  Root and reports missing Boards. Point at `~/code/app/.rowbly`.
+- **MEDIUM: `--data-root` pointed at the code folder.** `--data-root ~/code/app` is treated as an
+  empty Data Root and reports missing Boards. Point at `~/code/app/.rowbly`.
+- **MEDIUM: several default Data Roots.** Without `--data-root`, every command exits 2 listing the
+  `~/.rowblyrc.json` entries marked default. Pass `--data-root <path>`; ask the user which default to
+  keep before editing the file.
 - **MEDIUM: parsing table output.** Tables change with terminal width and colour. Parse `--json` only.
 
 ## Completion
