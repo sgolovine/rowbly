@@ -5,29 +5,11 @@ description: "Use when a Rowbly Data Root may be inconsistent: after a git
   (DATA_INTEGRITY), when two branches created the same Story Key, or when files
   under .rowbly/ were edited by hand. Covers rowbly doctor, doctor --fix, its
   finding codes, and what must be repaired by hand."
-metadata:
-  purpose: >-
-    Guide an agent through checking and repairing a Rowbly Data Root with
-    rowbly doctor: after merges, Story Key conflicts, integrity errors and
-    interrupted commits, including which findings need a manual fix.
-  type: sub-skill
-  library: rowbly
-  library_version: 0.1.0
-requires:
-  - rowbly-cli
-sources:
-  - docs/user-guide.md
-  - docs/architecture/data-model.md
-  - docs/architecture/storage.md
-  - src/commands/doctor.ts
-  - src/services/doctor.ts
-  - docs/plugins/built-in.md
-  - src/services/plugins/git.ts
 ---
 
 # Check and repair a Rowbly Data Root
 
-Read `rowbly-cli` first.
+Read [the Rowbly CLI rules](references/cli-rules.md) first.
 
 Run doctor:
 
@@ -75,7 +57,8 @@ For each remaining finding, look up its code in [finding codes](references/findi
   it with git (`git diff`, `git log -p -- <path>`) and restore or correct it.
 - `MISSING_REQUIRED_FIELD` / `INVALID_FIELD_VALUE`: set a valid value with
   `rowbly stories edit <KEY> --field key=value`.
-- `PLUGIN_FAILED`: see `rowbly plugins list --json --no-prompt` and the `rowbly-plugins` skill.
+- `PLUGIN_FAILED`: a Plugin that is on failed to load. `rowbly plugins list --json --no-prompt` shows the
+  reason; its data is kept. Do not turn the Plugin off to silence the finding.
 
 ## After a merge with a Story Key conflict
 
