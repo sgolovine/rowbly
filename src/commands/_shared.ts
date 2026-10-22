@@ -1,7 +1,7 @@
 import { homedir } from 'node:os';
 import { confirm, isCancel, select, text } from '@clack/prompts';
 import type { Command } from 'commander';
-import { UsageError } from '../core';
+import { DataRootNotFoundError, UsageError } from '../core';
 import { printWarnings } from '../output';
 import type { PluginHost, PluginInput, PluginOptionValues, RowblyContext, Services } from '../services';
 import { createContext, createServices, invokePluginSync } from '../services';
@@ -107,7 +107,30 @@ export interface CommandEnv {
  * Resolves the Data Root, Local State and Me, builds the `RowblyContext` and services, and runs
  * `fn`. Warnings collected through `ctx.warn` are printed afterwards, even when `fn` throws.
  */
-export async function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Promise<T>): Promise<T> {
+export function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Promise<T>): Promise<T> {
+  return runWithContext(cmd, false, (env) => fn(env as CommandEnv));
+}
+
+export interface OptionalCommandEnv {
+  /** `null` when no Data Root was found and none was named. */
+  ctx: RowblyContext | null;
+  services: Services | null;
+  globals: GlobalOptions;
+}
+
+/**
+ * `withContext` for a command that also works without a Data Root, such as `whoami` (global Me
+ * lives in the Home Config). A named Data Root that does not exist still fails.
+ */
+export function withOptionalContext<T>(cmd: Command, fn: (env: OptionalCommandEnv) => Promise<T>): Promise<T> {
+  return runWithContext(cmd, true, fn);
+}
+
+async function runWithContext<T>(
+  cmd: Command,
+  optional: boolean,
+  fn: (env: OptionalCommandEnv) => Promise<T>,
+): Promise<T> {
   const globals = globalOptions(cmd);
   const warnings: string[] = [];
   try {
@@ -118,8 +141,14 @@ export async function withContext<T>(cmd: Command, fn: (env: CommandEnv) => Prom
       root: globals.root,
       warn: (message) => warnings.push(message),
       plugins: pluginsOf(cmd)?.host,
+    }).catch((err: unknown) => {
+      // Only finding no Data Root: a named one (`--data-root` or the default) that is missing fails (ADR-0033 §1).
+      if (optional && err instanceof DataRootNotFoundError && !globals.root && err.details.path === undefined) {
+        return null;
+      }
+      throw err;
     });
-    return await fn({ ctx, services: createServices(ctx), globals });
+    return await fn({ ctx, services: ctx && createServices(ctx), globals });
   } finally {
     printWarnings(warnings, { json: globals.json });
   }

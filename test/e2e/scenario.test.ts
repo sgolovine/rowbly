@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -30,9 +30,12 @@ describe('end-to-end scenario', () => {
   let dir: string;
   const repos = () => createRepositories({ path: join(dir, '.rowbly'), kind: 'local' });
 
-  /** Runs `rowbly …` in the project directory, so the Data Root is discovered from cwd. */
+  /**
+   * Runs `rowbly …` in the project directory, so the Data Root is discovered from cwd, with one home
+   * folder for the whole scenario, so global Me in its Home Config lasts from step to step.
+   */
   async function rowbly(...args: string[]): Promise<RunCliResult> {
-    const result = await runCli(args, { cwd: dir, env: { NO_COLOR: '1' } });
+    const result = await runCli(args, { cwd: dir, env: { NO_COLOR: '1', HOME: join(dir, 'home') } });
     // biome-ignore lint/suspicious/noControlCharactersInRegex: no colour codes with NO_COLOR.
     expect(result.stdout + result.stderr).not.toMatch(/\u001B\[/);
     return result;
@@ -50,6 +53,7 @@ describe('end-to-end scenario', () => {
 
   beforeAll(async () => {
     dir = await mkdtemp(join(tmpdir(), 'rowbly-e2e-'));
+    await mkdir(join(dir, 'home'));
   });
   afterAll(() => rm(dir, { recursive: true, force: true }));
 
@@ -66,8 +70,13 @@ describe('end-to-end scenario', () => {
     await ok('plugins', 'enable', 'assignees');
     await ok('assignees', 'add', 'alice', '--name', 'Alice', '--email', 'alice@example.com');
     await ok('assignees', 'add', 'bob', '--name', 'Bob');
+    // Global Me, in the Home Config; a local Me overrides it in this Data Root until it is cleared.
     expect(await ok('whoami', 'alice')).toBe('You are alice\n');
-    expect(await ok('whoami')).toBe('alice\n');
+    expect(JSON.parse(await readFile(join(dir, 'home', '.rowblyrc.json'), 'utf8'))).toMatchObject({ me: 'alice' });
+    await ok('whoami', '--local', 'bob');
+    expect(await json('whoami')).toEqual({ me: 'bob', source: 'local', global: 'alice', local: 'bob' });
+    await ok('whoami', '--local', '--clear');
+    expect(await json('whoami')).toEqual({ me: 'alice', source: 'global', global: 'alice', local: null });
   });
 
   it('3. adds a board-level Stage and a select Custom Field', async () => {
@@ -172,7 +181,11 @@ describe('end-to-end scenario', () => {
     await ok('tasks', 'move', 'WEB-2.1', 'done');
     await ok('plugins', 'enable', 'comments');
     await ok('comments', 'add', 'WEB-2', '--body', 'Looks good');
-    const piped = await runCli(['comments', 'add', 'WEB-2', '--body-file', '-'], { cwd: dir, stdin: 'From stdin\n' });
+    const piped = await runCli(['comments', 'add', 'WEB-2', '--body-file', '-'], {
+      cwd: dir,
+      env: { HOME: join(dir, 'home') },
+      stdin: 'From stdin\n',
+    });
     expect(piped.exitCode).toBe(0);
 
     const saved = await story('WEB-2');
