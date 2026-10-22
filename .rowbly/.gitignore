@@ -1,1 +1,4 @@
 local.json
+.lock
+.lock.break
+.txn/
