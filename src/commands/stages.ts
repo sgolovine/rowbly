@@ -4,7 +4,7 @@ import { colorByCategory, colors, printResult, renderTable } from '../output';
 import { type ConfigLevel, type Slug, type Stage, withFixedStages } from '../schemas';
 import type { ConfigTarget, Position, RowblyContext, Services } from '../services';
 import { affectedBoards, type ConfigListKey, readLevel } from '../services/_configTarget';
-import { boardFlag, type ContextFlags, promptIfMissing, withContext } from './_shared';
+import { boardFlag, type ContextFlags, promptIfMissing, withContext } from './shared';
 
 const LEVELS = ['board', 'global'] as const;
 

@@ -32,7 +32,7 @@ import {
   promptIfMissing,
   withContext,
   withOptionalContext,
-} from './_shared';
+} from './shared';
 
 interface InitFlags {
   global?: boolean;

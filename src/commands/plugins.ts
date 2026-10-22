@@ -24,7 +24,7 @@ import {
   readLongText,
   setProgramPlugins,
   withContext,
-} from './_shared';
+} from './shared';
 
 export function registerPlugins(program: Command): void {
   const plugins = program
