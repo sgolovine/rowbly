@@ -99,7 +99,9 @@ Never commit `.rowbly/local.json`, `.lock`, `.lock.break` or `.txn/`. The `.giti
 writes excludes them. Commit everything else in `.rowbly/` with the code it describes.
 
 Every run of Rowbly creates `~/.rowblyrc.json`, the user's Home Config, outside every Data Root. Leave it
-in place: do not delete, rewrite or commit it.
+in place: do not delete, rewrite or commit it. It holds global Me: `rowbly whoami <handle>` and
+`whoami --clear` change Me in every Data Root on the machine, while `whoami --local` changes only the
+Data Root in context. Change global Me only when the user asks.
 
 ## Use Rowbly's words
 

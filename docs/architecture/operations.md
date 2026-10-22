@@ -68,6 +68,8 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `plugins.disable` | `{ id }` | `{ id, enabled }` |
 | `doctor.fix` | `{ findings }` | `DoctorFix[]` |
 
+`context.setMe` sets or clears (`handle: null`) the local Me in Local State. Global Me in `~/.rowblyrc.json` is outside every Data Root, so changing it (`rowbly whoami` without `--local`) is not an operation ([ADR-0032](../agents/adr/0032-me-is-global-with-a-local-me-per-data-root.md)).
+
 ## Built-in Plugin operations
 
 | Operation | Input | Result |
