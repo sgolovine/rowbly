@@ -21,6 +21,7 @@ import {
   initTarget,
   type SetupLocation,
   setupTarget,
+  shellArg,
 } from '../services/setup';
 import { assertNoRootEnv } from '../storage';
 import {
@@ -281,7 +282,10 @@ function renderInit(result: CreateDataRootResult): string {
   if (result.board) {
     lines.push(`Created Board ${result.board.id} (${result.board.keyPrefix})`, `Now using ${result.board.id}`);
   } else {
-    lines.push('Next: `rowbly boards create <id> --name <name> --prefix <PREFIX>`');
+    // It names the new Data Root, since a default Data Root would otherwise be opened ahead of it.
+    lines.push(
+      `Next: \`rowbly --data-root ${shellArg(result.root.path)} boards create <id> --name <name> --prefix <PREFIX>\``,
+    );
   }
   return lines.join('\n');
 }

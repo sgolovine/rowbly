@@ -60,14 +60,18 @@ rowbly boards list --json --no-prompt
 ## 3. Set up Me and Assignees
 
 ```sh
-rowbly whoami sam
+rowbly whoami --json --no-prompt     # Me may already be set globally: {"me", "source", "global", "local"}
+rowbly whoami sam                    # global Me, for every Data Root; --local sam for this Data Root only
 rowbly plugins enable assignees      # only if the team assigns Stories; it changes the Data Root for everyone
 rowbly assignees add sam --name "Sam Lee" --email sam@example.com
 ```
 
-- Me is a handle (a slug), the creator of new Stories (and the author of Comments). It is Local State
-  in `local.json`, so it is per developer and is never committed. Only set Me to the person you work
-  for; do not invent a handle for yourself unless the user asks.
+- Me is a handle (a slug), the creator of new Stories (and the author of Comments). Global Me is in
+  `~/.rowblyrc.json` and applies to every Data Root on the machine; a local Me (`whoami --local`) is
+  Local State in `local.json`, replaces global Me in that Data Root, and is never committed. Check
+  `whoami` first: when Me is already set, leave it. Only set Me to the person you work for; do not
+  invent a handle for yourself unless the user asks, and do not change an existing global Me without
+  asking, since it changes every Data Root.
 - Assignees are the Assignees Plugin, off until the Data Root turns it on. Ask the user before you
   turn it on. With it on, `rowbly assignees` keeps the roster in
   `.rowbly/plugins/assignees/roster.json`: a handle is a slug, unique in the Data Root, and an email is

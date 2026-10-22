@@ -20,7 +20,7 @@ rowbly boards list --json --no-prompt               # Board ids and key prefixes
 rowbly config show --board web --json --no-prompt   # .stages[] {key,name,category}, .customFields[]
 rowbly plugins list --json --no-prompt              # which Plugins (Assignees, Epics, …) are on
 rowbly assignees list --json --no-prompt            # valid handles, with the Assignees Plugin on
-rowbly whoami --json --no-prompt                    # {"me": "sam" | null}
+rowbly whoami --json --no-prompt                    # {"me": "sam" | null, "source", "global", "local"}
 ```
 
 Assignees are the Assignees Plugin. While it is off, `--assignee` is an unknown option (exit 2) and

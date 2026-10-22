@@ -1,6 +1,6 @@
 # ADR-0033: Known Data Roots in the Home Config, and `--data-root`, select the Data Root
 
-**Status:** Accepted. Amends [ADR-0002](0002-data-root-discovery.md) and builds the `dataRoots` list of [ADR-0031](0031-per-user-settings-live-in-a-home-config.md) §2. Choosing where setup creates a Data Root, setting labels and the default, and the TUI switcher are planned and will use the helpers below. Doctor reports several defaults as `MULTIPLE_DEFAULT_DATA_ROOTS`.
+**Status:** Accepted. Amends [ADR-0002](0002-data-root-discovery.md) and builds the `dataRoots` list of [ADR-0031](0031-per-user-settings-live-in-a-home-config.md) §2. Setup chooses where to create a Data Root and sets its label and the default, and doctor reports several defaults as `MULTIPLE_DEFAULT_DATA_ROOTS`; the TUI switcher is planned and will use the helpers below.
 
 ADR-0002 found the Data Root like `.git`, and let `--root` or the `ROWBLY_ROOT` environment variable name one directly. A person who keeps a Data Root outside every project folder had to repeat the flag or keep the variable set, and an exported variable silently decided where every later command in that shell wrote. The Home Config now lists the Data Roots a person uses, so Rowbly can remember them and one of them can be the default.
 

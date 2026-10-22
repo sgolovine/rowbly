@@ -21,7 +21,7 @@ erDiagram
 ```text
 .rowbly/
   rowbly.config.json            # optional Stages / Custom Fields, Plugin entries
-  local.json                    # Local State: current Board and Me; never committed
+  local.json                    # Local State: current Board and the local Me; never committed
   .gitignore                    # local.json, .lock, .lock.break, .txn/
   .lock, .lock.break, .txn/     # the lock and the commit journal (see storage.md); never committed
   plugins/<id>/…                # Plugin files for the whole Data Root (Epics, the Assignee roster)
@@ -44,7 +44,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Record | File | Holds |
 | --- | --- | --- |
 | Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
-| Local State | `local.json` | optional `board` (the current Board) and `me` (Me, a handle) |
+| Local State | `local.json` | optional `board` (the current Board) and `me` (the local Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
 | Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
 
@@ -53,7 +53,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 - **Board:** a lower-kebab-case slug, which is also its folder name. Its `keyPrefix` is unique in the Data Root, so a Story Key alone names its Board.
 - **Story Key:** the Board's key prefix and a number (`WEB-42`), which is also the Story's folder name. A new Story takes the highest number on the Board plus one; there is no counter file, because a shared counter would conflict on every merge. Two branches can therefore create the same key, and `rowbly doctor --fix` renumbers the later Story. A key freed by deleting the highest Story may be reused ([ADR-0003](../agents/adr/0003-story-keys.md)). A Story never moves to another Board.
 - **Rank:** a fractional index (a string) that orders Stories inside one Stage.
-- **Me:** `local.json`'s `me`, a slug claimed with `rowbly whoami`.
+- **Me:** `local.json`'s `me` (the local Me, `rowbly whoami --local`), else the Home Config's `me` (global Me, `rowbly whoami`), else no one ([ADR-0032](../agents/adr/0032-me-is-global-with-a-local-me-per-data-root.md)).
 
 ## Home Config
 
@@ -62,12 +62,12 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Key | Holds |
 | --- | --- |
 | `version` | `1`; a file without it is read as version 1 |
-| `me` | optional, a handle: Me for every Data Root (planned: nothing reads it yet) |
+| `me` | optional, a handle: global Me, Me in every Data Root without a local Me |
 | `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
 
 Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.
 
-**Known Data Roots** (`src/storage/dataRoot.ts`, ADR-0033). `findDataRoot` opens `--data-root`, else the one `default` entry, else the nearest `.rowbly/`, else `~/.rowbly`; a named Data Root that is missing fails with `NO_DATA_ROOT` and `details.path` instead of falling back, and more than one entry marked `default` (even two naming one folder) fails with `USAGE` unless the flag is given (so `rowbly doctor --data-root <path>` can report it); a Plugin command that is unknown because no Plugin could load then reports that error. Opening a Data Root that has a `rowbly.config.json` (in `createContext`) and `init` record it with `registerDataRoot`, which compares paths canonically (`~/` expanded, relative to the home folder, real path when the folder exists), leaves a folder that is already known exactly as stored, appends a new folder with its canonical path, and writes nothing (taking no lock) when nothing changes. Recording never changes a label or the default; `registerDataRoot(home, path, { label, default })` does, first merging the entries that name the folder into the first without losing a label, `default` or an unknown key, and `default: true` clears it on every other entry. `listKnownDataRoots` returns the merged list without writing.
+**Known Data Roots** (`src/storage/dataRoot.ts`, ADR-0033). `findDataRoot` opens `--data-root`, else the one `default` entry, else the nearest `.rowbly/`, else `~/.rowbly`; a named Data Root that is missing fails with `NO_DATA_ROOT` and `details.path` instead of falling back, and more than one entry marked `default` (even two naming one folder) fails with `USAGE` unless the flag is given (so `rowbly doctor --data-root <path>` can report it); a Plugin command that is unknown because no Plugin could load then reports that error. Opening a Data Root that has a `rowbly.config.json` (in `createContext`) and `init` record it with `registerDataRoot`, which compares paths canonically (`~/` expanded, relative to the home folder, real path when the folder exists), leaves a folder that is already known exactly as stored, appends a new folder with its canonical path, and writes nothing (taking no lock) when nothing changes. Recording never changes a label or the default; setup (`createDataRoot` in `src/services/setup.ts`, behind `init --label`/`--default` and the TUI's setup screen) sets them with `registerDataRoot(home, path, { label, default })`, which does so first merging the entries that name the folder into the first without losing a label, `default` or an unknown key, and `default: true` clears it on every other entry. `listKnownDataRoots` returns the merged list without writing.
 
 ## Configuration Cascade
 
@@ -93,7 +93,7 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 
 Git merges and hand edits can leave the Data Root in a state no Rowbly command would write. `rowbly doctor` finds it, and `--fix` repairs what is safe to repair. Run it after every merge that touched `.rowbly/`. The full list of findings is in the [user guide](../user-guide.md#doctor).
 
-- Doctor reads the Data Root under the lock. Its checks cover conflict markers, invalid JSON and schemas, ids that do not match their paths, duplicate Story Keys and key prefixes, references to Stages or Custom Fields that no longer exist, Rank ties, stale Local State, unknown files, Plugin load failures and Plugin Data, and leftovers of interrupted commits. Outside the Data Root it reads the Home Config of the run's home folder and reports more than one `dataRoots` entry marked `default` (`MULTIPLE_DEFAULT_DATA_ROOTS`, an error whose path is the Home Config), counting the entries as stored, so two that name one folder still count twice. `--fix` never changes the Home Config: which default to keep is the user's choice. A context built without a home folder (an injected one in tests) skips this check.
+- Doctor reads the Data Root under the lock. Its checks cover conflict markers, invalid JSON and schemas, ids that do not match their paths, duplicate Story Keys and key prefixes, references to Stages or Custom Fields that no longer exist, Rank ties, stale Local State, unknown files, Plugin load failures and Plugin Data, and leftovers of interrupted commits. Outside the Data Root, once recovery has finished (a `TRANSACTION_PENDING` finding is still reported alone), it reads the Home Config of the run's home folder and reports more than one `dataRoots` entry marked `default` (`MULTIPLE_DEFAULT_DATA_ROOTS`, an error whose path is the Home Config), counting the entries as stored, so two that name one folder still count twice. `--fix` never changes the Home Config: which default to keep is the user's choice. A context built without a home folder (an injected one in tests) skips this check.
 - `--fix` repairs in passes: structural repairs (duplicate Story Keys) first, then a fresh check, then the other fixes, at most 5 passes. Each pass is a `doctor.fix` [operation](operations.md), planned and saved under the lock. A failed pass saves nothing, and its error lists the passes that did save (`details.committed`).
 - A Plugin that is on adds checks and fixes for its own data, with codes prefixed by its id (`EPICS_MISSING_EPIC`).
 - Doctor never removes `.moving` folders or orphan folders (`ORPHAN_FOLDER`) by itself.
