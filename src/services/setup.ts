@@ -173,7 +173,7 @@ async function warnOtherDefault(home: string, root: DataRoot, warn: (message: st
 }
 
 /** `path` as one shell word in a command a hint suggests: as it is when that is safe, else single-quoted. */
-function shellArg(path: string): string {
+export function shellArg(path: string): string {
   return /^[\w@%+=:,./~-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`;
 }
 
