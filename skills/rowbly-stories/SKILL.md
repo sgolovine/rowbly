@@ -4,30 +4,12 @@ description: "Use when tracking work in a Rowbly Data Root: finding, creating,
   editing, moving, ranking or deleting Stories (keys like WEB-42) and their
   Tasks (WEB-42.1), filtering stories list, setting Assignees, Priority, Labels,
   due dates and Custom Field values, or picking up and finishing a Story as an
-  agent. Not for Board, Stage or Custom Field configuration (rowbly-setup)."
-metadata:
-  purpose: >-
-    Show an agent how to do day-to-day work tracking with the Rowbly CLI:
-    find and read Stories, create Stories and Tasks with valid values, and
-    move them through a Board's Stages as work progresses.
-  type: sub-skill
-  library: rowbly
-  library_version: 0.1.0
-requires:
-  - rowbly-cli
-sources:
-  - docs/user-guide.md
-  - docs/agents/CONTEXT.md
-  - src/commands/stories.ts
-  - src/plugins/tasks/commands.ts
-  - src/services/stories.ts
-  - src/plugins/tasks/tasks.ts
-  - src/plugins/assignees/index.ts
+  agent. Not for Board, Stage or Custom Field configuration."
 ---
 
 # Track work with Stories and Tasks
 
-Read `rowbly-cli` first. Every command below takes `--json --no-prompt`, and a delete also needs `--yes`.
+Read [the Rowbly CLI rules](references/cli-rules.md) first. Every command below takes `--json --no-prompt`, and a delete also needs `--yes`.
 
 ## 1. Learn the Board before you change it
 
@@ -43,7 +25,7 @@ rowbly whoami --json --no-prompt                    # {"me": "sam" | null}
 
 Assignees are the Assignees Plugin. While it is off, `--assignee` is an unknown option (exit 2) and
 `rowbly assignees` is an unknown command. Do not turn it on to assign one Story: it changes the Data
-Root for everyone, so ask the user first (`rowbly-plugins`).
+Root for everyone, so ask the user first, then run `rowbly plugins enable assignees`.
 
 Pick Stages by **category**, not by name. Every Board starts with `backlog` (category `backlog`) and
 ends with `done` (category `done`). The Stage to start work is the first Stage whose category is
@@ -114,7 +96,7 @@ rowbly stories rank WEB-42 --before WEB-40 --json --no-prompt      # or --after 
 ## 6. Work with Tasks
 
 Tasks are a Built-in Plugin, off by default. If `tasks` is an unknown command, turn it on with
-`rowbly plugins enable tasks` (see `rowbly-plugins`), and tell the user, since that changes shared
+`rowbly plugins enable tasks`, and tell the user, since that changes shared
 configuration.
 
 ```sh
@@ -139,7 +121,7 @@ rowbly tasks delete WEB-42.1 --yes --json --no-prompt
    `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
    wants it.
    To leave a progress note, use `rowbly comments add <KEY> --body "…"`. Comments is a Plugin and
-   is off by default. If `comments` is an unknown command, turn it on as `rowbly-plugins` describes,
+   is off by default. If `comments` is an unknown command, turn it on with `rowbly plugins enable comments`,
    and tell the user, since that changes shared configuration. The author is Me, or `null` when Me is
    not set.
 3. As each part is done: `rowbly tasks move <KEY>.<n> done --json --no-prompt`.
@@ -162,14 +144,12 @@ highest-numbered Story is deleted, its key goes to the next new Story.
   Board's Stages and choose the start Stage by category `board`.
 - **HIGH: Title Case or spaced Labels.** A Label must be lower-kebab-case, or the command exits 2.
 - **MEDIUM: guessing the next key** when creating several Stories. Read `key` from each `create`
-  output. Two branches can both create `WEB-7`; `rowbly-doctor` fixes that after the merge.
+  output. Two branches can both create `WEB-7`; `rowbly doctor --fix` fixes that after the merge ([Check and repair a Data Root](references/doctor.md)).
 - **MEDIUM: listing without a Board.** With several Boards and no current Board, `stories list` exits 2
   (`board required`). Pass `--board` or `--all-boards`.
 
 ## Completion
 
 Each change returned the record you expected (exit 0), and `rowbly stories show <KEY> --json --no-prompt`
-confirms its final Stage, Assignees and Tasks. If a command exits 6, follow `rowbly-doctor` before you
-try again.
-
-For turning the Tasks Plugin on, and for Epics, Specs and Comments on Stories (`--epic`, `--spec`, `rowbly comments`), see `rowbly-plugins`.
+confirms its final Stage, Assignees and Tasks. If a command exits 6, follow [Check and repair a Data Root](references/doctor.md)
+before you try again.
