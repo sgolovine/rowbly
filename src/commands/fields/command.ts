@@ -1,33 +1,13 @@
 import type { Command } from 'commander';
-import { UsageError } from '../core';
-import { colors, printResult } from '../output';
-import { type CustomFieldDef, type CustomFieldInput, CustomFieldTypeSchema } from '../schemas';
-import type { ConfigTarget } from '../services';
-import { affectedBoards, readLevel } from '../services/_configTarget';
-import { renderFieldTable } from './boards';
-import { collect, parseRepeatable, promptIfMissing, withContext } from './shared';
-import {
-  affectsLine,
-  describeTarget,
-  type LevelFlags,
-  type MutationResult,
-  mutationResult,
-  resolveConfigTarget,
-  withLevelOptions,
-} from './stages';
-
-interface FieldOptions extends LevelFlags {
-  name?: string;
-  type?: string;
-  description?: string;
-  options?: string[];
-  required?: boolean;
-  /** `--optional` sets `required` to false on `edit`. */
-  optional?: boolean;
-  min?: string;
-  max?: string;
-  integer?: boolean;
-}
+import { UsageError } from '../../core';
+import { printResult } from '../../output';
+import { type CustomFieldInput, CustomFieldTypeSchema } from '../../schemas';
+import { affectedBoards, readLevel } from '../../services/_configTarget';
+import { collect, parseRepeatable, promptIfMissing, withContext } from '../shared';
+import { mutationResult, resolveConfigTarget, withLevelOptions } from '../stages';
+import { renderFieldRemoved, renderFields, renderMutation } from './render';
+import type { FieldOptions } from './types';
+import { parseNumber } from './util';
 
 export function registerFields(program: Command): void {
   const fields = program.command('fields').description('Manage the Custom Fields of a Board');
@@ -41,11 +21,7 @@ export function registerFields(program: Command): void {
           { level: target.level, fields: items, source },
           {
             json: globals.json,
-            human: (d) =>
-              [
-                colors.dim(`${describeTarget(target)}; from ${d.source}`),
-                d.fields.length === 0 ? colors.dim('No Custom Fields.') : renderFieldTable(d.fields),
-              ].join('\n'),
+            human: (d) => renderFields(target, d.fields, d.source),
           },
         );
       }),
@@ -84,12 +60,10 @@ export function registerFields(program: Command): void {
         ...(opts.integer ? { integer: true } : {}),
       } as CustomFieldInput;
       const list = await services.fields.add(target, def);
-      printMutation(
-        await mutationResult(ctx, target, 'customFields', list),
-        globals.json,
-        target,
-        `Added Custom Field ${key}`,
-      );
+      printResult(await mutationResult(ctx, target, 'customFields', list), {
+        json: globals.json,
+        human: (result) => renderMutation(result, target, key, 'Added'),
+      });
     }),
   );
 
@@ -122,12 +96,10 @@ export function registerFields(program: Command): void {
       }
       const target = await resolveConfigTarget(services, opts);
       const list = await services.fields.update(target, key, patch);
-      printMutation(
-        await mutationResult(ctx, target, 'customFields', list),
-        globals.json,
-        target,
-        `Updated Custom Field ${key}`,
-      );
+      printResult(await mutationResult(ctx, target, 'customFields', list), {
+        json: globals.json,
+        human: (result) => renderMutation(result, target, key, 'Updated'),
+      });
     }),
   );
 
@@ -143,31 +115,9 @@ export function registerFields(program: Command): void {
         { level: target.level, items, affectedBoards: affected, valuesStripped },
         {
           json: globals.json,
-          human: (r) =>
-            [
-              `Removed Custom Field ${key}; stripped ${r.valuesStripped} values`,
-              affectsLine(target, r.affectedBoards),
-            ].join('\n'),
+          human: (r) => renderFieldRemoved(target, key, r),
         },
       );
     }),
   );
-}
-
-function printMutation(
-  result: MutationResult<CustomFieldDef>,
-  json: boolean,
-  target: ConfigTarget,
-  done: string,
-): void {
-  printResult(result, {
-    json,
-    human: (r) => [done, renderFieldTable(r.items), affectsLine(target, r.affectedBoards)].join('\n'),
-  });
-}
-
-function parseNumber(flag: string, value: string): number {
-  const n = Number(value);
-  if (value.trim() === '' || !Number.isFinite(n)) throw new UsageError(`${flag} must be a number, got "${value}"`);
-  return n;
 }

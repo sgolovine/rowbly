@@ -1,16 +1,10 @@
 import type { Command } from 'commander';
-import { UsageError } from '../core';
-import { colorByCategory, colors, describeSource, printResult, renderTable } from '../output';
-import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../schemas';
-import { storyCountsByStage } from '../services/boards';
-import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from './shared';
-
-interface BoardOptions {
-  name?: string;
-  prefix?: string;
-  description?: string;
-  force?: boolean;
-}
+import { UsageError } from '../../core';
+import { printResult } from '../../output';
+import { storyCountsByStage } from '../../services/boards';
+import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from '../shared';
+import { renderBoardCreated, renderBoardDeleted, renderBoardShow, renderBoards, renderBoardUpdated } from './render';
+import type { BoardOptions } from './types';
 
 export function registerBoards(program: Command): void {
   const boards = program.command('boards').description('Manage Boards');
@@ -46,7 +40,7 @@ export function registerBoards(program: Command): void {
         });
         printResult(board, {
           json: globals.json,
-          human: (b) => `Created Board ${b.id} (${b.keyPrefix})`,
+          human: renderBoardCreated,
         });
       }),
     );
@@ -79,7 +73,7 @@ export function registerBoards(program: Command): void {
           description: opts.description,
           ...operationOptions,
         });
-        printResult(board, { json: globals.json, human: (b) => `Updated Board ${b.id}` });
+        printResult(board, { json: globals.json, human: renderBoardUpdated });
       }),
     );
 
@@ -95,58 +89,7 @@ export function registerBoards(program: Command): void {
           globals,
         );
         await services.boards.remove(boardId, { force: opts.force ?? false, ...pluginOptions(cmd) });
-        printResult({ deleted: boardId }, { json: globals.json, human: () => `Deleted Board ${boardId}` });
+        printResult({ deleted: boardId }, { json: globals.json, human: renderBoardDeleted });
       }),
     );
-}
-
-function renderBoards(boards: BoardConfig[]): string {
-  if (boards.length === 0) return colors.dim('No Boards yet. Create one with `rowbly boards create <id>`.');
-  return renderTable(
-    ['ID', 'PREFIX', 'NAME', 'DESCRIPTION'],
-    boards.map((b) => [b.id, b.keyPrefix, b.name, b.description]),
-  );
-}
-
-function renderBoardShow(data: EffectiveBoardConfig & { storyCounts: Record<string, number> }): string {
-  const { board, storyCounts } = data;
-  const lines = [`${colors.bold(board.name)} ${colors.dim(board.id)}`, `Key prefix: ${board.keyPrefix}`];
-  if (board.description) lines.push(board.description);
-  lines.push(
-    '',
-    colors.bold(`Stages (${describeSource(data.stagesSource)})`),
-    renderTable(
-      ['KEY', 'NAME', 'CATEGORY', 'STORIES'],
-      data.stages.map((s) => [s.key, colorByCategory(s.category, s.name), s.category, String(storyCounts[s.key] ?? 0)]),
-    ),
-  );
-  const unknown = Object.keys(storyCounts).filter((key) => !data.stages.some((s) => s.key === key));
-  for (const key of unknown) {
-    lines.push(colors.yellow(`${storyCounts[key]} Stories are in unknown Stage "${key}" (run \`rowbly doctor\`)`));
-  }
-  lines.push('', colors.bold(`Custom Fields (${describeSource(data.customFieldsSource)})`));
-  lines.push(data.customFields.length === 0 ? colors.dim('none') : renderFieldTable(data.customFields));
-  return lines.join('\n');
-}
-
-/** KEY, NAME, TYPE, REQUIRED and the type-specific settings of each Custom Field. */
-export function renderFieldTable(fields: readonly CustomFieldDef[]): string {
-  return renderTable(
-    ['KEY', 'NAME', 'TYPE', 'REQUIRED', 'SETTINGS'],
-    fields.map((f) => [f.key, f.name, f.type, f.required ? 'yes' : 'no', fieldSettings(f)]),
-  );
-}
-
-function fieldSettings(f: CustomFieldDef): string {
-  if (f.type === 'select' || f.type === 'multiselect') return f.options.join(', ');
-  if (f.type === 'number') {
-    return [
-      f.integer ? 'integer' : '',
-      f.min !== undefined ? `min ${f.min}` : '',
-      f.max !== undefined ? `max ${f.max}` : '',
-    ]
-      .filter(Boolean)
-      .join(', ');
-  }
-  return '';
 }

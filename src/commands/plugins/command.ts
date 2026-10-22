@@ -1,18 +1,15 @@
 import { Command, Option } from 'commander';
-import { errorMessage as messageOf } from '../core';
-import { colors, printResult, renderTable } from '../output';
+import { errorMessage as messageOf } from '../../core';
+import { printResult } from '../../output';
 import {
-  type ActivePlugin,
   type AnyPluginDefinition,
   invokePlugin,
-  onOff,
   type PluginCli,
   type PluginCommandOptions,
   type PluginHost,
-  type PluginStatus,
   pluginServices,
-} from '../services';
-import { editTextInEditor } from '../storage';
+} from '../../services';
+import { editTextInEditor } from '../../storage';
 import {
   type AttachedPluginOptions,
   boardFlag,
@@ -24,7 +21,9 @@ import {
   readLongText,
   setProgramPlugins,
   withContext,
-} from './shared';
+} from '../shared';
+import { renderPlugin, renderPluginDisabled, renderPluginEnabled, renderPlugins } from './render';
+import type { PluginCliStager, StagedCli } from './types';
 
 export function registerPlugins(program: Command): void {
   const plugins = program
@@ -56,7 +55,7 @@ export function registerPlugins(program: Command): void {
     .action((id: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const result = await services.plugins.enable(id);
-        printResult(result, { json: globals.json, human: () => `Turned on Plugin ${id}` });
+        printResult(result, { json: globals.json, human: () => renderPluginEnabled(id) });
       }),
     );
 
@@ -66,23 +65,9 @@ export function registerPlugins(program: Command): void {
     .action((id: string, _opts: unknown, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
         const result = await services.plugins.disable(id);
-        printResult(result, { json: globals.json, human: () => `Turned off Plugin ${id}; its data is kept` });
+        printResult(result, { json: globals.json, human: () => renderPluginDisabled(id) });
       }),
     );
-}
-
-/** Stages each Plugin's CLI part while it loads, and attaches the complete part of each that loaded. */
-export interface PluginCliStager {
-  /** For `LoadPluginsOptions.stage`: builds the Plugin's command group and options off the program. */
-  stage(plugin: ActivePlugin): void;
-  /** Attaches, in registry order, what was staged for each Plugin that is on in `host`. */
-  attach(host: PluginHost): void;
-}
-
-/** One Plugin's commands and core command options, built off the program and attached in one step. */
-interface StagedCli {
-  group?: Command;
-  options: { path: string; command: Command; options: Option[]; attached: AttachedPluginOptions }[];
 }
 
 /**
@@ -199,36 +184,4 @@ function pluginCli(id: string): PluginCli<unknown> {
     collect,
     parseRepeatable,
   };
-}
-
-const ON_OFF_COLORS = { on: colors.green, off: colors.dim, failed: colors.red } as const;
-
-function onOffText(plugin: PluginStatus): string {
-  const word = onOff(plugin);
-  return ON_OFF_COLORS[word](word);
-}
-
-function renderPlugins(plugins: PluginStatus[]): string {
-  if (plugins.length === 0) return colors.dim('This version of Rowbly has no Built-in Plugins.');
-  const table = renderTable(
-    ['ID', 'ON', 'NAME', 'DESCRIPTION'],
-    plugins.map((p) => [p.id, onOffText(p), p.name, p.known ? p.description : '(not in this version)']),
-  );
-  const failed = plugins.filter((p) => p.enabled && !p.loaded);
-  return [table, ...failed.map((p) => colors.red(`${p.id} failed to load: ${p.reason}`))].join('\n');
-}
-
-function renderPlugin(plugin: PluginStatus & { settings: Record<string, unknown> }): string {
-  const lines = [
-    `${colors.bold(plugin.name)} ${colors.dim(plugin.id)}`,
-    `On: ${onOffText(plugin)}${plugin.known ? '' : ' (not in this version of Rowbly)'}`,
-  ];
-  if (plugin.reason) lines.push(colors.red(`Failed to load: ${plugin.reason}`));
-  if (plugin.description) lines.push(plugin.description);
-  const settings = Object.entries(plugin.settings);
-  lines.push('', colors.bold('Settings'));
-  lines.push(
-    ...(settings.length === 0 ? [colors.dim('none')] : settings.map(([k, v]) => `${k}: ${JSON.stringify(v)}`)),
-  );
-  return lines.join('\n');
 }

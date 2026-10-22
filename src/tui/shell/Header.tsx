@@ -47,7 +47,8 @@ export function Header({
   const { ctx } = useContext(ServicesContext);
   const { columns } = useWindowSize();
   const me = `me ${ctx?.me ?? '—'} `;
-  const labelText = label ? `${label.title}${label.detail ? ` ${label.detail}` : ''}` : '';
+  const title = label?.title === root.name ? '' : (label?.title ?? '');
+  const labelText = [title, label?.detail].filter(Boolean).join(' ');
   const rootName = root.name.length > ROOT_NAME_MAX ? `${root.name.slice(0, ROOT_NAME_MAX - 1)}…` : root.name;
   // The panel's border and padding, the gap after the label, the label itself (it may be cut) and the
   // Data Root Button with its `|`, whose key goes with the other Buttons' keys.
@@ -73,10 +74,15 @@ export function Header({
         <Text color={theme.borderControl}>|</Text>
       </Box>
       <Box flexGrow={1} flexShrink={1} minWidth={8}>
-        {label && (
+        {labelText && (
           <Text color={theme.ink} wrap="truncate-end">
-            <Text bold>{label.title}</Text>
-            {label.detail && <Text color={theme.inkMuted}> {label.detail}</Text>}
+            {title && <Text bold>{title}</Text>}
+            {label?.detail && (
+              <Text color={theme.inkMuted}>
+                {title ? ' ' : ''}
+                {label.detail}
+              </Text>
+            )}
           </Text>
         )}
       </Box>

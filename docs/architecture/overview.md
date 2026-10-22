@@ -53,6 +53,11 @@ The source is in layers. Each layer imports only the layers listed for it, and `
 | Program | `src/main.ts` | core, storage, services, commands, output, TUI |
 | Entry point | `src/cli.ts`, the only reader of the Plugin registry `src/plugins/index.ts` | program, Plugins |
 
+Each command area under `src/commands/` has a `command.ts` for Commander registration and handlers,
+a `render.ts` for human-readable output (functions named `renderThing`), and optional `util.ts` and
+`types.ts` files. Each area's `index.ts` exports its public interface. The top-level `command.ts`
+registers every area; the top-level `index.ts` exports the command API.
+
 ## How a command runs
 
 1. `src/cli.ts` hands the Plugin registry to `main` in `src/main.ts`.
