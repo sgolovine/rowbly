@@ -8,3 +8,6 @@ coverage/
 .rowbly/.lock.break
 .rowbly/.lock.*.tmp
 .rowbly/.txn/
+
+.claude
+.claude/
