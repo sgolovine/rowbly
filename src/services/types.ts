@@ -28,7 +28,12 @@ export interface RowblyContext {
   /** Resolved path + kind ('local' | 'global'). */
   root: DataRoot;
   local: LocalState;
+  /** Me: Local State's `me`, else `globalMe`, else `null` (ADR-0032). */
   me: Slug | null;
+  /** Global Me from the Home Config, the fallback when Local State has no `me`; none when omitted. */
+  globalMe?: Slug | null;
+  /** The home folder whose Home Config holds global Me; `os.homedir()` when omitted. */
+  home?: string;
   /** Injectable clock. */
   now(): Date;
   /** Injectable nanoid(8). */

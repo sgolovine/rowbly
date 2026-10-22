@@ -1,6 +1,7 @@
 import { isSlug, NotFoundError, UsageError, ValidationError } from '../core';
 import type { LocalState, Slug } from '../schemas';
 import type { Repositories } from '../storage';
+import { applyGlobalMe, readGlobalMe } from './identity';
 import type { CoreChangeSet } from './plugins/changeSet';
 import { latestLocalState, type OperationRunner } from './plugins/runtime';
 import type { ContextService, RowblyContext } from './types';
@@ -54,6 +55,10 @@ export function createContextService(ctx: RowblyContext, repos: Repositories, op
       if (handle !== null && !isSlug(handle)) {
         throw new ValidationError(`invalid handle "${handle}": must be a lower-kebab-case slug`);
       }
+      // The latest global Me, so that clearing the local Me falls back to it (ADR-0032 §2). Me is
+      // recomputed now too: the runtime only does so when the stored local Me changes, which
+      // clearing a local Me that is already unset does not.
+      if (ctx.home !== undefined) applyGlobalMe(ctx, await readGlobalMe(ctx.home));
       return ops.run(
         'context.setMe',
         { handle, ...opts },
