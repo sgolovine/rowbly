@@ -1,13 +1,16 @@
-import { readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { readdir, readFile, realpath, rename, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { DataIntegrityError } from '../../src/core';
+import { DataIntegrityError, DataRootNotFoundError, UsageError } from '../../src/core';
 import { BoardConfigSchema } from '../../src/schemas';
 import {
   ensureHomeConfig,
+  findDataRoot,
   HOME_CONFIG_FILE,
   readHomeConfig,
   readJson,
+  recordOpenedDataRoot,
+  registerDataRoot,
   updateHomeConfig,
   writeJson,
 } from '../../src/storage';
@@ -134,5 +137,60 @@ describe('updateHomeConfig', () => {
       DataIntegrityError,
     );
     expect(await readFile(path, 'utf8')).toBe('{ "me": "sam",');
+  });
+});
+
+// ADR-0033: the Data Root a run opens, and the known Data Roots it records.
+describe('findDataRoot and the known Data Roots', () => {
+  it('opens --data-root, then the one default, then the nearest .rowbly/; recording never repairs the file', async () => {
+    const home = (await tempRoot()).dir;
+    const rc = join(home, HOME_CONFIG_FILE);
+    const project = await tempRoot();
+    const other = await tempRoot();
+    const otherPath = await realpath(other.path);
+    const find = (flag?: string, env: NodeJS.ProcessEnv = {}) => findDataRoot({ cwd: project.dir, flag, env, home });
+    expect((await find()).path).toBe(project.path);
+
+    const alias = join(other.dir, 'alias');
+    await symlink(other.path, alias);
+    await writeFile(rc, JSON.stringify({ dataRoots: [{ path: alias, label: 'Other', default: true, note: 'kept' }] }));
+    expect(await find()).toEqual({ path: otherPath, kind: 'local' });
+    expect((await find(project.path)).path).toBe(project.path);
+
+    // A known folder, under any alias, is left as stored; a folder that is not a Data Root is not recorded.
+    const before = await readFile(rc, 'utf8');
+    await recordOpenedDataRoot(home, { path: otherPath, kind: 'local' });
+    await recordOpenedDataRoot(home, { path: project.dir, kind: 'local' });
+    expect(await readFile(rc, 'utf8')).toBe(before);
+    await recordOpenedDataRoot(home, project.root);
+    expect((await readHomeConfig(home)).dataRoots?.map((root) => root.path)).toEqual([
+      alias,
+      await realpath(project.path),
+    ]);
+
+    // Two entries marked default fail, even for one folder, unless --data-root names the Data Root.
+    const config = await readHomeConfig(home);
+    await writeFile(
+      rc,
+      JSON.stringify({ ...config, dataRoots: [...(config.dataRoots ?? []), { path: otherPath, default: true }] }),
+    );
+    await expect(find()).rejects.toBeInstanceOf(UsageError);
+    expect((await find(project.path)).path).toBe(project.path);
+    await recordOpenedDataRoot(home, other.root);
+    expect((await readHomeConfig(home)).dataRoots).toHaveLength(3);
+
+    // Choosing the default merges the folder's entries without losing a label or an unknown key.
+    await registerDataRoot(home, other.path, { default: true });
+    expect((await readHomeConfig(home)).dataRoots).toEqual([
+      { label: 'Other', path: alias, default: true, note: 'kept' },
+      { path: await realpath(project.path) },
+    ]);
+
+    // A named Data Root that is missing fails rather than fall back; ROWBLY_ROOT is refused.
+    await writeFile(rc, JSON.stringify({ dataRoots: [{ path: join(home, 'gone'), default: true }] }));
+    const missing = await find().catch((err: unknown) => err);
+    expect(missing).toBeInstanceOf(DataRootNotFoundError);
+    expect((missing as DataRootNotFoundError).details.path).toBe(join(home, 'gone'));
+    await expect(find(project.path, { ROWBLY_ROOT: project.path })).rejects.toBeInstanceOf(UsageError);
   });
 });

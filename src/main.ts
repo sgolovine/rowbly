@@ -2,7 +2,7 @@ import { homedir } from 'node:os';
 import { Command, CommanderError } from 'commander';
 import pkg from '../package.json' with { type: 'json' };
 import { attachPlugins, pluginCliStager, registerCommands } from './commands';
-import { ExitCode, exitCodeFor, UsageError } from './core';
+import { DataRootNotFoundError, ExitCode, exitCodeFor, UsageError } from './core';
 import { printError, printWarnings } from './output';
 import {
   type AnyPluginDefinition,
@@ -133,6 +133,13 @@ function rootFlag(argv: readonly string[]): string | undefined {
   return undefined;
 }
 
+/** Commander's error for a command or option that the program does not have. */
+function unknownName(err: unknown): boolean {
+  return (
+    err instanceof CommanderError && (err.code === 'commander.unknownCommand' || err.code === 'commander.unknownOption')
+  );
+}
+
 /**
  * Runs Rowbly with the Plugins of `registry` and returns the exit code. The Plugins that the Data
  * Root turns on load first, because their commands and options are part of the program; each that
@@ -177,6 +184,9 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
   }
   // Each event goes to stderr as it happens, so `--json` output on stdout stays parseable (OBS-01).
   setTraceSink(traceRequested(process.env) ? (event) => process.stderr.write(`${formatTrace(event)}\n`) : undefined);
+  // Why the Data Root could not be opened, other than finding none: a Plugin command or option is
+  // unknown then because no Plugin loaded, so that is the error to report (ADR-0033 §1).
+  let preload: unknown;
   try {
     // The same resolution as the command's own context, so the Plugins loaded are the ones of the
     // Data Root it opens. A failure loads none here; the command reports it when it needs the root.
@@ -185,14 +195,17 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
       flag: rootFlag(argv),
       env: process.env,
       home: homedir(),
-    }).catch(() => null);
+    }).catch((err: unknown) => {
+      if (!(err instanceof DataRootNotFoundError && err.details.path === undefined)) preload = err;
+      return null;
+    });
     const { program, host } = await loadProgram(root, registry);
     printWarnings(host.failures().map(failureWarning), { json });
     await program.parseAsync(argv, { from: 'user' });
     // A command may set its own exit code without throwing (e.g. `doctor` with errors).
     return Number(process.exitCode ?? ExitCode.ok);
   } catch (err) {
-    return handleError(err, json, registry);
+    return handleError(preload !== undefined && unknownName(err) ? preload : err, json, registry);
   } finally {
     await drainGitQueue();
     setTraceSink(undefined);

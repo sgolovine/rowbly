@@ -32,7 +32,10 @@ export async function findDataRoot(opts: FindDataRootOptions): Promise<DataRoot>
   if (opts.flag) {
     const path = resolve(opts.cwd, opts.flag);
     if (!(await namedDirectory(path))) {
-      throw new DataRootNotFoundError(`Data Root not found: ${path}`, { details: { path }, hint: FLAG_HINT });
+      throw new DataRootNotFoundError(`Data Root not found: ${path}`, {
+        details: { path },
+        hint: 'check the path; `--data-root` names the `.rowbly` folder itself',
+      });
     }
     return toRoot(path);
   }
@@ -70,17 +73,21 @@ export function assertNoRootEnv(env: NodeJS.ProcessEnv): void {
   });
 }
 
-/** The default Data Root's path, `null` when none is marked; several distinct defaults throw `USAGE`. */
+/**
+ * The default Data Root's canonical path, `null` when none is marked. More than one entry marked
+ * `default` throws `USAGE`, even entries that name one folder: the file says two things.
+ */
 async function defaultDataRoot(home: string): Promise<string | null> {
-  const roots = await knownDataRootsOf(await readHomeConfig(home), home);
-  const defaults = roots.filter((root) => root.default === true).map((root) => root.path);
-  if (defaults.length > 1) {
+  const entries = ((await readHomeConfig(home)).dataRoots ?? []).filter((entry) => entry.default === true);
+  if (entries.length > 1) {
+    const defaults = entries.map((entry) => entry.path);
     throw new UsageError(`several known Data Roots are marked default: ${defaults.join(', ')}`, {
       details: { config: homeConfigPath(home), defaults },
       hint: `keep one \`"default": true\` in ${homeConfigPath(home)}, or pass \`--data-root <path>\``,
     });
   }
-  return defaults[0] ?? null;
+  const [entry] = entries;
+  return entry ? canonicalDataRootPath(entry.path, home) : null;
 }
 
 /**
@@ -123,11 +130,12 @@ export interface RegisterDataRootOptions {
 }
 
 /**
- * Records the Data Root folder `path` in the Home Config's `dataRoots` and returns its entry. A
- * folder already known, under any alias, keeps its entry: entries naming it are merged into the
- * first, keeping its stored path, the first label, `default` if any had it, and every unknown key.
- * A new folder is appended with its canonical path. Opening a Data Root passes no options, so it
- * never changes a label or the default. Nothing is written, and no lock is taken, when nothing
+ * Records the Data Root folder `path` in the Home Config's `dataRoots` and returns its entry. A new
+ * folder is appended with its canonical path. Without options, a folder already known under any
+ * alias is left exactly as stored (the merged entry is returned), so opening a Data Root never
+ * repairs the file, several defaults included. With `label` or `default`, entries naming the folder
+ * are merged into the first, keeping its stored path, the first label, `default` if any had it, and
+ * every unknown key, then the options apply. Nothing is written, and no lock is taken, when nothing
  * changes, so a home folder Rowbly may not write only fails when there is something to record.
  */
 export async function registerDataRoot(
@@ -161,6 +169,10 @@ async function withDataRoot(
     if ((await canonicalDataRootPath(entry.path, home)) === target) matches.push(i);
   }
   const first = matches[0];
+  const explicit = options.label !== undefined || options.default !== undefined;
+  if (first !== undefined && !explicit) {
+    return { config, entry: mergeEntries(matches.map((i) => entries[i] as KnownDataRoot)) };
+  }
   const found = first === undefined ? { path: target } : mergeEntries(matches.map((i) => entries[i] as KnownDataRoot));
   const entry: KnownDataRoot = { ...found };
   if (options.label !== undefined) entry.label = options.label;

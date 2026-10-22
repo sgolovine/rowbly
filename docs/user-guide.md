@@ -52,7 +52,14 @@ The exact meaning of each term is in [`CONTEXT.md`](agents/CONTEXT.md). In short
 
 ## Data Root and git workflow
 
-Rowbly looks for `.rowbly/` in the current directory and then in each parent, like git looks for `.git`. If it finds none it uses `~/.rowbly` (create it with `rowbly init --global`). `--root <path>` or `ROWBLY_ROOT` names a Data Root directly.
+Each run opens the first of:
+
+1. `--data-root <path>`, the `.rowbly` folder itself (`--data-root ~/notes/.rowbly`, not `~/notes`).
+2. The known Data Root marked `"default": true` in the Home Config, `~/.rowblyrc.json` (see below).
+3. `.rowbly/` in the current directory or the nearest parent, like git looks for `.git`.
+4. `~/.rowbly` (create it with `rowbly init --global`).
+
+With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to create one. If the Data Root named by `--data-root` or by the default is missing, Rowbly exits 5 naming it rather than opening another one. If several known Data Roots are marked default, commands without `--data-root` exit 2 listing them; keep one, or pass `--data-root` (for example to run `rowbly doctor`). `ROWBLY_ROOT` and `--root` are no longer supported: a run with `ROWBLY_ROOT` set exits 2 asking you to unset it.
 
 ```text
 .rowbly/
@@ -69,6 +76,8 @@ Rowbly looks for `.rowbly/` in the current directory and then in each parent, li
 ```
 
 Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data Root. Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing and never replaces an existing one. Rowbly keeps keys it does not know when it changes the file, and changes a symlinked one at its target. If the file is not valid JSON, Rowbly leaves it alone and a command that needs it fails with exit code 6 naming the file; fix or move it.
+
+Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to open it from any folder. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
 
 Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
@@ -91,7 +100,7 @@ A Board uses the most specific level that defines the list; the lists are not me
 
 | Flag | Meaning |
 | --- | --- |
-| `--root <path>` | Use this Data Root instead of discovering one (also `ROWBLY_ROOT`) |
+| `--data-root <path>` | Use this Data Root folder (the `.rowbly` folder itself) instead of the default or a discovered one |
 | `--json` | Machine-readable output on stdout; errors as `{"error":{"code","message","details"}}` on stderr |
 | `--yes` | Skip confirmations |
 | `--no-prompt` | Never prompt; fail when input is missing |
@@ -142,7 +151,8 @@ rowbly config show [--board <id>]
 - In the TUI, a first-run screen opens when no Data Root is found. It offers the same three locations
   as `init` (this directory, the home folder, or another folder whose path you type; `esc` goes back to
   the choice), then asks for the label, whether to make it the default Data Root, the first Board and
-  your handle (Me). Leave the label, the Board or the handle empty to skip it.
+  your handle (global Me, kept in `~/.rowblyrc.json`). Leave the label, the Board or the handle empty
+  to skip it; an empty handle keeps the global Me you have.
   The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
   Me. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
   `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
@@ -403,7 +413,7 @@ Git failures warn without undoing a saved Rowbly change; pending work is retried
 
 ## Interactive mode (TUI)
 
-Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
+Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. With the mouse, a click selects a Story, a click on the selected Story opens it, and dragging a Story onto another Stage moves it to the bottom of that Stage. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
@@ -476,7 +486,7 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 | 2 | Validation error: input that breaks a schema or reference rule; `details.issues` lists them | `VALIDATION` |
 | 3 | Not found: an unknown Board, Story, Task, Comment, Stage, Custom Field or Assignee | `NOT_FOUND` |
 | 4 | Conflict: an id or key prefix that exists, a refused deletion, or a change a Plugin refused | `CONFLICT` |
-| 5 | No Data Root found (run `rowbly init`) | `NO_DATA_ROOT` |
+| 5 | No Data Root found (run `rowbly init`), or the Data Root named by `--data-root` or the default is missing | `NO_DATA_ROOT` |
 | 6 | Data integrity: a file that is not valid JSON, fails its schema, or whose id does not match its path; `details.path` names it | `DATA_INTEGRITY` |
 
 `rowbly doctor` also exits 6 while errors remain.

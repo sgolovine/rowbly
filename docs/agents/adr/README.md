@@ -13,7 +13,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | ADR | Decision | Status |
 | --- | --- | --- |
 | [0001](0001-json-files-not-sqlite.md) | JSON files in a folder tree are the only storage | Accepted; amended by 0015 |
-| [0002](0002-data-root-discovery.md) | The Data Root is discovered like `.git`, with a global fallback | Accepted |
+| [0002](0002-data-root-discovery.md) | The Data Root is discovered like `.git`, with a global fallback | Accepted; amended by 0033 |
 | [0003](0003-story-keys.md) | Stories are identified by sequential keys | Accepted |
 | [0004](0004-epic-link-on-story.md) | The Story holds the Epic link | Superseded by 0008 |
 | [0005](0005-stages-and-fields-are-configuration.md) | Stages and Custom Fields are configuration; the most specific level replaces the levels above | Accepted; amended by 0024 |
@@ -22,7 +22,8 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
 | [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
 | [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
-| [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted |
+| [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; extended by 0033 |
+| [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted |
 
 ### Plugins
 

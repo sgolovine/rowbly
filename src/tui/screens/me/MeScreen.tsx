@@ -1,35 +1,57 @@
+import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
-import { Form } from '../../components';
-import { useActivate, useRowblyContext, useServices, useToast } from '../../hooks';
+import { useState } from 'react';
+import { identity } from '../../../services';
+import { SelectList } from '../../components';
+import { useEscape, useKeyHints, useRowblyContext } from '../../hooks';
 import { theme } from '../../theme';
+import { type MeLevel, MeLevelForm } from './MeLevelForm';
 
-/** Claims Me (`whoami`): a handle, or nothing to clear it. */
+/**
+ * Me at its two levels (`whoami`, ADR-0032): global Me in `~/.rowblyrc.json`, and this Data Root's
+ * local Me in `local.json`, which replaces global Me here. `enter` edits the highlighted level.
+ */
 export function MeScreen() {
-  const services = useServices();
   const ctx = useRowblyContext();
-  const toast = useToast();
-  const activate = useActivate();
-  const me = ctx?.me ?? null;
+  const [editing, setEditing] = useState<MeLevel | null>(null);
+  useEscape(editing !== null, () => setEditing(null));
+  useKeyHints(editing ? [] : [{ key: 'enter', description: 'edit' }]);
+  if (!ctx) return null;
+  const home = ctx.home ?? homedir();
+  const { me, source, global, local } = identity(ctx.local, ctx.globalMe ?? null);
+  // The level names padded to one width, so the handles line up.
+  const row = (name: string, handle: string | null) => `${name.padEnd(16)}${handle ?? '—'}`;
+  const from = source === 'local' ? '(local Me)' : source === 'global' ? '(global Me)' : '';
   return (
     <Box flexDirection="column" gap={1}>
-      <Text>Me: {me ? <Text bold>{me}</Text> : <Text color={theme.inkFaint}>not set</Text>}</Text>
-      <Text color={theme.inkFaint}>
-        The handle you work as: the creator of your Stories and the author of your Comments. Kept in local.json, never
-        committed.
+      <Text>
+        Me: {me ? <Text bold>{me}</Text> : <Text color={theme.inkFaint}>not set</Text>}{' '}
+        <Text color={theme.inkFaint}>{from}</Text>
       </Text>
-      {/* Keyed by Me, so the form starts again from the saved handle and is no longer dirty. */}
-      <Form
-        key={me ?? ''}
-        fields={[{ name: 'handle', label: 'Handle (empty clears Me)', kind: 'text' }]}
-        initialValues={{ handle: me ?? '' }}
-        onSubmit={async (values) => {
-          const handle = String(values.handle ?? '').trim() || null;
-          await services.context.setMe(handle);
-          // Saving sets Me on the context in place; activating a copy shows it in the header too.
-          if (ctx) activate({ ...ctx });
-          toast.push('info', handle ? `You are ${handle}` : 'Cleared Me');
-        }}
+      <Text color={theme.inkFaint}>
+        The handle you work as: the creator of your Stories and the author of your Comments. A local Me replaces global
+        Me in this Data Root; clear it to use global Me here.
+      </Text>
+      <SelectList<MeLevel>
+        isActive={editing === null}
+        items={[
+          { value: 'global', label: row('Global', global), description: '~/.rowblyrc.json · every Data Root' },
+          {
+            value: 'local',
+            label: row('This Data Root', local),
+            description: 'local.json · never committed',
+          },
+        ]}
+        onSelect={(item) => setEditing(item.value)}
       />
+      {editing && (
+        <MeLevelForm
+          level={editing}
+          handle={editing === 'global' ? global : local}
+          home={home}
+          onDone={() => setEditing(null)}
+        />
+      )}
     </Box>
   );
 }

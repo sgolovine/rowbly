@@ -4,7 +4,17 @@ import type { Command } from 'commander';
 import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, printWarnings, renderTable } from '../output';
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
-import type { InitOptions, RowblyContext, Services } from '../services';
+import {
+  applyGlobalMe,
+  createServices,
+  type Identity,
+  type InitOptions,
+  identity,
+  type RowblyContext,
+  readGlobalMe,
+  type Services,
+  setGlobalMe,
+} from '../services';
 import {
   assertInitTarget,
   type CreateDataRootResult,
@@ -14,7 +24,15 @@ import {
   setupTarget,
 } from '../services/setup';
 import { assertNoRootEnv } from '../storage';
-import { boardFlag, type ContextFlags, globalOptions, isInteractive, promptIfMissing, withContext } from './_shared';
+import {
+  boardFlag,
+  type ContextFlags,
+  globalOptions,
+  isInteractive,
+  promptIfMissing,
+  withContext,
+  withOptionalContext,
+} from './_shared';
 
 interface InitFlags {
   global?: boolean;
@@ -68,24 +86,32 @@ export function registerSetup(program: Command): void {
 
   program
     .command('whoami [handle]')
-    .description('Show or set Me, the handle you work as')
+    .description('Show or set Me, the handle you work as: global Me, or a local Me for this Data Root')
     .option('--clear', 'unset Me')
-    .action((handle: string | undefined, opts: { clear?: boolean }, cmd: Command) =>
-      withContext(cmd, async ({ ctx, services, globals }) => {
-        if (opts.clear) {
-          if (handle) throw new UsageError('use either a handle or --clear');
-          await services.context.setMe(null);
-          printResult({ me: null }, { json: globals.json, human: () => 'Cleared Me' });
-          return;
+    .option('--local', "set or clear this Data Root's local Me, which replaces global Me here")
+    .action((handle: string | undefined, opts: { clear?: boolean; local?: boolean }, cmd: Command) => {
+      if (opts.clear && handle) throw new UsageError('use either a handle or --clear');
+      const change = opts.clear ? null : handle;
+      if (opts.local) {
+        return withContext(cmd, async ({ ctx, services, globals }) => {
+          if (change !== undefined) await services.context.setMe(change);
+          const result = identity(ctx.local, ctx.globalMe ?? null);
+          printResult(result, { json: globals.json, human: (r) => renderSetLocal(r, change) });
+        });
+      }
+      return withOptionalContext(cmd, async ({ ctx, globals }) => {
+        let globalMe: string | null;
+        if (change !== undefined) {
+          globalMe = await setGlobalMe(ctx?.home ?? homedir(), change);
+          if (ctx) applyGlobalMe(ctx, globalMe);
+        } else {
+          globalMe = ctx ? (ctx.globalMe ?? null) : await readGlobalMe(homedir());
         }
-        if (handle) {
-          await services.context.setMe(handle);
-          printResult({ me: handle }, { json: globals.json, human: () => `You are ${handle}` });
-          return;
-        }
-        printResult({ me: ctx.me }, { json: globals.json, human: renderMe });
-      }),
-    );
+        const result = identity(ctx?.local ?? null, globalMe);
+        const human = change === undefined ? renderIdentity : (r: Identity) => renderSetGlobal(r, change);
+        printResult(result, { json: globals.json, human });
+      });
+    });
 
   const config = program.command('config').description('Show configuration');
   config
@@ -232,9 +258,22 @@ function renderCurrentContext({ board }: CurrentContext): string {
   return `Board  ${board ? `${colors.bold(board.id)}  ${colors.dim(`(${SOURCE_LABELS[board.source]})`)}` : colors.dim('(none)')}`;
 }
 
-function renderMe({ me }: { me: string | null }): string {
+function renderIdentity({ me, source, global }: Identity): string {
   if (me === null) return 'Me is not set. Claim a handle with `rowbly whoami <handle>`.';
-  return colors.bold(me);
+  if (source === 'global') return `${colors.bold(me)}  ${colors.dim('(global Me)')}`;
+  return `${colors.bold(me)}  ${colors.dim(global ? `(local Me; global Me is ${global})` : '(local Me)')}`;
+}
+
+function renderSetGlobal({ me, local }: Identity, change: string | null): string {
+  if (local === null) return change === null ? 'Cleared global Me' : `You are ${change}`;
+  const first = change === null ? 'Cleared global Me' : `Global Me is ${change}`;
+  return `${first}\nIn this Data Root you are ${me}, its local Me (\`rowbly whoami --local --clear\` removes it)`;
+}
+
+function renderSetLocal(result: Identity, change: string | null | undefined): string {
+  if (change === undefined) return renderIdentity(result);
+  if (change !== null) return `You are ${change} in this Data Root`;
+  return result.me === null ? 'Cleared the local Me; Me is not set' : `Cleared the local Me; you are ${result.me}`;
 }
 
 function renderInit(result: CreateDataRootResult): string {

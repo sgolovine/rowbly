@@ -11,6 +11,7 @@ import {
 import { formatIssues, type LocalState, type Story } from '../../schemas';
 import type { Repositories } from '../../storage';
 import { coordinated, outsideCoordination } from '../coordination';
+import { effectiveMe } from '../identity';
 import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
 import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
@@ -312,14 +313,14 @@ export function createOperationRunner(
 
   /**
    * After a save, before reactions: the saved Local State becomes the context's (ADR-0019 §8). Me
-   * follows it only when the stored Me changed, so a Me inferred from the git email stays. A
-   * rejected or failed operation never gets here.
+   * follows it only when the stored Me changed; a cleared local Me falls back to global Me
+   * (ADR-0032). A rejected or failed operation never gets here.
    */
   function syncContext(changes: CoreChangeSet): void {
     const local = changes.changes.find((c): c is LocalStateChange => c.type === 'localState');
     if (!local) return;
     ctx.local = structuredClone(local.after);
-    if (local.before.me !== local.after.me) ctx.me = local.after.me ?? null;
+    if (local.before.me !== local.after.me) ctx.me = effectiveMe(local.after, ctx.globalMe);
   }
 
   /**

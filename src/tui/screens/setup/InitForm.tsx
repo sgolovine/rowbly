@@ -1,7 +1,7 @@
 import { Box, Text } from 'ink';
 import { isSlug, keyPrefixFromName, slugFromName, ValidationError } from '../../../core';
 import type { DataRoot } from '../../../schemas';
-import { createContext, createServices } from '../../../services';
+import { createContext, setGlobalMe } from '../../../services';
 import { createDataRoot } from '../../../services/setup';
 import { Form, type FormValues } from '../../components';
 import { useActivate, useToast } from '../../hooks';
@@ -12,7 +12,7 @@ const text = (value: FormValues[string] | undefined) => (typeof value === 'strin
 
 /**
  * The rest of `rowbly init` for `root`: its label, whether it is the default, the first Board and
- * Me. `stay`: keep the current Data Root and go back, instead of opening the app on the new one.
+ * global Me. `stay`: keep the current Data Root and go back, instead of opening the app on the new one.
  */
 export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home: string; stay: boolean }) {
   const toast = useToast();
@@ -28,7 +28,8 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
       </Text>
       <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
       <Text color={theme.inkFaint}>
-        Your handle sets Me (`rowbly whoami`), the creator of your Stories. Leave it empty to set it later.
+        Your handle sets global Me (`rowbly whoami`) in ~/.rowblyrc.json, the creator of your Stories in every Data
+        Root. Leave it empty to keep the one you have or set it later.
       </Text>
       <Form
         fields={[
@@ -68,8 +69,8 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
             default: values.default === true,
             warn,
           });
+          if (me) await setGlobalMe(home, me);
           const ctx = await createContext({ cwd, env: {}, home, root: root.path, warn });
-          if (me) await createServices(ctx).context.setMe(me);
           toast.push('info', me ? `Created ${root.path}; you are ${me}` : `Created ${root.path}`);
           if (stay) {
             router.pop();
