@@ -6,6 +6,7 @@ import { colorByCategory, colors, describeSource, printResult, printWarnings, re
 import type { CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { createServices, type InitOptions, type InitResult, type RowblyContext, type Services } from '../services';
 import { assertInitTarget, initTarget, newContext } from '../services/setup';
+import { assertNoRootEnv, registerDataRoot } from '../storage';
 import { boardFlag, type ContextFlags, globalOptions, isInteractive, promptIfMissing, withContext } from './_shared';
 
 interface InitFlags {
@@ -92,10 +93,11 @@ async function runInit(opts: InitFlags, cmd: Command): Promise<void> {
   const globals = globalOptions(cmd);
   const warnings: string[] = [];
   try {
+    assertNoRootEnv(process.env);
     const root = initTarget({
       cwd: process.cwd(),
       home: homedir(),
-      explicit: globals.root || process.env.ROWBLY_ROOT || undefined,
+      explicit: globals.root,
       global: opts.global ?? false,
     });
     const ctx = newContext(root, (message) => warnings.push(message));
@@ -103,6 +105,10 @@ async function runInit(opts: InitFlags, cmd: Command): Promise<void> {
     await assertInitTarget(root);
     const board = await firstBoard(opts, globals);
     const result = await createServices(ctx).setup.init({ root, ...(board ? { board } : {}) });
+    // The new Data Root is known from now on (ADR-0033 §2); the Data Root itself is already made.
+    await registerDataRoot(homedir(), root.path).catch((err: unknown) =>
+      warnings.push(`Data Root not recorded in the Home Config: ${err instanceof Error ? err.message : String(err)}`),
+    );
     printResult(result, { json: globals.json, human: renderInit });
   } finally {
     printWarnings(warnings, { json: globals.json });

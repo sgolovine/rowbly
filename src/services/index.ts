@@ -1,5 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import { createRepositories, findDataRoot } from '../storage';
+import { createRepositories, findDataRoot, recordOpenedDataRoot } from '../storage';
 import { createBoardsService } from './boards';
 import { createConfigService } from './config';
 import { createContextService } from './context';
@@ -81,7 +81,7 @@ export interface CreateContextOptions {
   cwd: string;
   env: NodeJS.ProcessEnv;
   home: string;
-  /** `--root`. */
+  /** `--data-root`. */
   root?: string;
   warn(message: string): void;
   /** The Plugins loaded for this Data Root. */
@@ -98,6 +98,11 @@ export async function createContext(opts: CreateContextOptions): Promise<RowblyC
   const root = await findDataRoot({ cwd: opts.cwd, flag: opts.root, env: opts.env, home: opts.home });
   // Opening the Data Root finishes any interrupted commit before the first read (ADR-0019 §2).
   const local = await coordinated(root, 'open', () => createRepositories(root).localState.get());
+  // Every Data Root opened is a known Data Root (ADR-0033 §2); a Home Config that cannot take it
+  // only warns, since the command does not need it.
+  await recordOpenedDataRoot(opts.home, root).catch((err: unknown) =>
+    opts.warn(`Data Root not recorded in the Home Config: ${err instanceof Error ? err.message : String(err)}`),
+  );
   const ctx: RowblyContext = {
     root,
     local,

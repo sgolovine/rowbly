@@ -9,6 +9,7 @@ import { editTextInEditor, readTextFile } from '../storage';
 
 /** Global flags (contracts §5). */
 export interface GlobalOptions {
+  /** `--data-root`. */
   root?: string;
   json: boolean;
   yes: boolean;
@@ -17,8 +18,8 @@ export interface GlobalOptions {
 }
 
 export function globalOptions(cmd: Command): GlobalOptions {
-  const opts = cmd.optsWithGlobals<Partial<GlobalOptions>>();
-  return { root: opts.root, json: opts.json ?? false, yes: opts.yes ?? false, prompt: opts.prompt ?? true };
+  const opts = cmd.optsWithGlobals<{ dataRoot?: string; json?: boolean; yes?: boolean; prompt?: boolean }>();
+  return { root: opts.dataRoot, json: opts.json ?? false, yes: opts.yes ?? false, prompt: opts.prompt ?? true };
 }
 
 /** Prompting is allowed only with TTY stdin and stdout, and neither `--json` nor `--no-prompt`. */
