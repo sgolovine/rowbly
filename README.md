@@ -43,6 +43,21 @@ npm install -g rowbly
 
 With pnpm, use `pnpm add -g rowbly`. Check the install with `rowbly --version`.
 
+### Set up your coding agent
+
+The npm package includes [skills](#for-coding-agents) that teach a coding agent to run Rowbly from a shell.
+After the global install they are in `$(npm root -g)/rowbly/skills`.
+Copy them to where your agent loads skills from. For Claude Code, that is `~/.claude/skills`:
+
+```sh
+mkdir -p ~/.claude/skills
+cp -r "$(npm root -g)"/rowbly/skills/rowbly-* ~/.claude/skills/
+```
+
+To share them with everyone who works in one repository, copy them into that repository's
+`.claude/skills` folder instead and commit them. For another agent, copy the same folders wherever it loads
+skills from. The copies do not update themselves: run the copy again after you upgrade Rowbly.
+
 ## Quick start
 
 In the repository you want to track:
@@ -179,15 +194,7 @@ The npm package includes five skills for coding agents that run Rowbly from a sh
 | [`rowbly-plugins`](skills/rowbly-plugins/SKILL.md) | Turning Plugins on and using their commands |
 | [`rowbly-doctor`](skills/rowbly-doctor/SKILL.md) | Checking and repairing a Data Root after a merge |
 
-After `npm install -g rowbly` they are in `$(npm root -g)/rowbly/skills`. For Claude Code, copy them into
-your skills folder:
-
-```sh
-mkdir -p ~/.claude/skills
-cp -r "$(npm root -g)"/rowbly/skills/rowbly-* ~/.claude/skills/
-```
-
-For another agent, copy the same folders wherever it loads skills from.
+[Set up your coding agent](#set-up-your-coding-agent) shows how to install them.
 
 ## Plugins
 
