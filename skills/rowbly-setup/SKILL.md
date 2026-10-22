@@ -4,30 +4,12 @@ description: "Use when setting up or configuring Rowbly in a repository:
   creating the .rowbly/ Data Root with rowbly init, adding Boards and key
   prefixes, Me (whoami) and the Assignee roster, the current Board (use), and
   changing Stages or Custom Fields at Board or global level through the
-  Configuration Cascade. Not for day-to-day Story work (rowbly-stories)."
-metadata:
-  purpose: >-
-    Guide an agent through creating and configuring a Rowbly Data Root:
-    init, Boards, Me and the Assignee roster, and Stages and Custom Fields
-    edited at the correct Configuration Cascade level.
-  type: lifecycle
-  library: rowbly
-  library_version: 0.1.0
-requires:
-  - rowbly-cli
-sources:
-  - docs/user-guide.md
-  - docs/architecture/data-model.md
-  - src/commands/setup.ts
-  - src/commands/boards.ts
-  - src/plugins/assignees/commands.ts
-  - src/commands/stages.ts
-  - src/commands/fields.ts
+  Configuration Cascade. Not for day-to-day Story work."
 ---
 
 # Set up and configure Rowbly
 
-Read `rowbly-cli` first. Every command below also takes `--json --no-prompt`. They are left out here
+Read [the Rowbly CLI rules](references/cli-rules.md) first. Every command below also takes `--json --no-prompt`. They are left out here
 to keep the examples short.
 
 ## 1. Create the Data Root and the first Board
@@ -45,7 +27,8 @@ rowbly init --board web --board-name Website --prefix WEB --json --no-prompt
 - `--global` creates `~/.rowbly` instead. Use it only when the user asks for one tracker for all
   their projects.
 - An existing Data Root exits 4. Do not delete it to start again.
-- `init` turns on no Plugins; see `rowbly-plugins`.
+- `init` turns on no Plugins. Turn one on with `rowbly plugins enable <id>` only when the user wants
+  its feature; it changes the Data Root for everyone.
 
 Check: `ls .rowbly` shows `rowbly.config.json`, `.gitignore` and `boards/web/board.config.json`. Commit
 `.rowbly/`; `local.json` stays out because of the `.gitignore`.
@@ -152,4 +135,4 @@ rowbly fields remove estimate --board web
 
 `rowbly config show --board <id> --json --no-prompt` shows the Stages and Custom Fields you intended,
 from the level you intended, and `rowbly doctor --json --no-prompt` exits 0. If doctor reports
-findings, follow `rowbly-doctor`.
+findings, follow [Check and repair a Data Root](references/doctor.md).

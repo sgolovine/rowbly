@@ -5,43 +5,14 @@ description: "Use when turning Rowbly Plugins on or off for a Data Root, editing
   assignees, --assignee), Tasks (rowbly tasks), Epics (rowbly epics, --epic), Specs (rowbly specs,
   --spec, Story and Board Specs) and Comments (rowbly comments), and configuring automatic Git commits (rowbly git). Also when a rowbly command is unknown because its Plugin is
   off, or a Plugin failed to load. Not for writing a new Plugin."
-metadata:
-  purpose: >-
-    Explain how an agent turns Rowbly's Built-in Plugins on and off, handles
-    Plugin settings and load failures, and uses the Assignees, Tasks, Epics, Specs and
-    Comments commands and Story options.
-  type: sub-skill
-  library: rowbly
-  library_version: 0.1.0
-requires:
-  - rowbly-cli
-sources:
-  - docs/user-guide.md
-  - docs/plugins/README.md
-  - docs/plugins/built-in.md
-  - src/commands/plugins.ts
-  - src/plugins/assignees/commands.ts
-  - src/plugins/tasks/commands.ts
-  - src/plugins/epics/commands.ts
-  - src/plugins/specs/commands.ts
-  - src/plugins/comments/commands.ts
-  - src/plugins/git/commands.ts
-  - src/plugins/git/model.ts
-  - src/services/plugins/git.ts
-  - src/storage/git.ts
-  - docs/agents/adr/0030-git-work-runs-outside-the-data-root-lock.md
-  - test/plugins/git.test.ts
-  - test/plugins/gitCli.test.ts
-  - test/skills/cases/git-automation.md
-  - test/skills/checkGitConsumer.mjs
 ---
 
 # Use Rowbly Plugins
 
-Read `rowbly-cli` first. Every command below takes `--json --no-prompt`.
+Read [the Rowbly CLI rules](references/cli-rules.md) first. Every command below takes `--json --no-prompt`.
 
 Plugins add optional features. Rowbly ships six Built-in Plugins: **Assignees**, **Tasks**, **Epics**, **Specs**,
-**Comments** and **Git**. The Tasks commands are in `rowbly-stories`. Each is off until the Data Root turns it on. Turning a Plugin on applies to
+**Comments** and **Git**. Each is off until the Data Root turns it on. Turning a Plugin on applies to
 everyone who uses that Data Root, because the setting is in the committed `rowbly.config.json`.
 
 ## 1. See and change which Plugins are on
@@ -164,7 +135,22 @@ rowbly assignees remove sam --json --no-prompt                            # also
 - Doctor reports `ASSIGNEES_UNKNOWN_ASSIGNEE` and `ASSIGNEES_UNKNOWN_ME` (fixable) and
   `ASSIGNEES_ROSTER_UNAVAILABLE` for a roster file that cannot be read (fix it by hand).
 
-## 6. Git: automatically commit Rowbly changes
+## 6. Tasks: smaller items inside a Story
+
+```sh
+rowbly tasks create WEB-42 --name "Build the form" --json --no-prompt    # → WEB-42.1, first Stage
+rowbly tasks list WEB-42 --json --no-prompt
+rowbly tasks move WEB-42.1 done --json --no-prompt
+rowbly tasks edit WEB-42.1 --name "Build the sign-in form" --json --no-prompt
+rowbly tasks delete WEB-42.1 --yes --json --no-prompt
+```
+
+- Tasks live in their Story's file, as Plugin Data, and use the Board's Stages. They have no Assignees,
+  Priority or Rank; they are listed in creation order.
+- Task numbers are never reused: after deleting `WEB-42.3`, the next Task is `WEB-42.4`.
+- Moving every Task to a done Stage does **not** move the Story. Move the Story yourself.
+
+## 7. Git: automatically commit Rowbly changes
 
 Enable Git only when requested: future Rowbly writes will create commits. The Data Root must be inside a Git repository; otherwise `plugins enable git` exits 2 with a clear explanation and leaves it off. An enabled Plugin loaded outside Git is failed in `plugins list`. Establish a clean Data Root baseline first.
 
