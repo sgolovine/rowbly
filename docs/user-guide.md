@@ -127,9 +127,10 @@ rowbly config show [--board <id>]
   an `EffectiveBoardConfig`.
 - In the TUI, a first-run screen offers to create the Data Root here or globally when none exists.
   The **Me** section of the settings (`,`) sets Me: type a handle and save, or save it empty to clear
-  Me. The **Context** section switches the Board; press `c` there to clear the current Board. While
-  `~/.rowbly` does not exist, Context also lists **Create global Data Root**, which runs the same form as the first-run screen
-  (`init --global`) and then returns to the Data Root you are using.
+  Me. The Board sidebar switches the Board. The home menu's **Context** entry also switches it; press
+  `c` there to clear the current Board. While `~/.rowbly` does not exist, Context also lists **Create global
+  Data Root**, which runs the same form as the first-run screen (`init --global`) and then returns to the
+  Data Root you are using.
 - The **Config** section of the settings is the TUI's `config show`: the Board detail for the Board
   in context, with its effective Stages and Custom Fields and the level each list comes from.
 <!-- END setup -->
@@ -183,6 +184,10 @@ rowbly boards delete <id> [--force]                  # confirms; pass --yes when
 - The key prefix (`WEB` in `WEB-42`) must be unique across the whole Data Root; a clash exits 4. Lower case is accepted and upper-cased.
 - A new Board has no Stage or Custom Field lists of its own: it inherits them through the Configuration Cascade.
 - `delete` refuses a Board that has Stories (exit 4) unless `--force`. Deleting the current Board clears it from Local State.
+- In the TUI, the sidebar's **+ New Board** (or `n` in the Board sidebar) asks which Data Root the Board
+  goes in: **Here**, the Data Root in use (or `.rowbly` in the current directory when you are using the
+  global one), or **Global** (`~/.rowbly`). A Data Root that does not exist yet is created first, like `init`, and
+  the app switches to the chosen Data Root and the new Board. Its id and key prefix come from its name.
 - In the TUI, **Boards** `enter` opens the Board detail (`boards show`): name, key prefix, description, Stories per Stage, and the effective Stages and Custom Fields with their source level. `v` opens a Board's board for viewing only, like `--board` on a read command: the current context and `local.json` do not change.
 <!-- END boards -->
 
@@ -409,7 +414,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `enter` | select or open; a click on an item in a list does the same |
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
-| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Context, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
 | `?` | the keys of the current screen |

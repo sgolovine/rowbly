@@ -54,12 +54,14 @@ export function App({
   const activate = useCallback(
     async (next: RowblyContext) => {
       const loaded = await withPlugins(next, loadPlugins, toastStore);
-      setCurrent({ ctx: next, services: createServices(next), plugins: loaded });
+      const services = createServices(next);
+      setCurrent({ ctx: next, services, plugins: loaded });
+      return services;
     },
     [loadPlugins, toastStore],
   );
   const servicesValue = useMemo(
-    () => ({ ctx: current.ctx, services: current.services, activate: (next: RowblyContext) => void activate(next) }),
+    () => ({ ctx: current.ctx, services: current.services, activate }),
     [current, activate],
   );
   const pluginsValue = useMemo(

@@ -90,7 +90,7 @@ function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: string; home
             router.pop();
             return;
           }
-          activate(await createContext({ cwd, env: {}, home, root: root.path, warn }));
+          void activate(await createContext({ cwd, env: {}, home, root: root.path, warn }));
           router.replace('home');
         }}
       />

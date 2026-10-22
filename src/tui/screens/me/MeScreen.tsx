@@ -26,7 +26,7 @@ export function MeScreen() {
           const handle = String(values.handle ?? '').trim() || null;
           await services.context.setMe(handle);
           // Saving sets Me on the context in place; activating a copy shows it in the header too.
-          if (ctx) activate({ ...ctx });
+          if (ctx) void activate({ ...ctx });
           toast.push('info', handle ? `You are ${handle}` : 'Cleared Me');
         }}
       />
