@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.package.outputs.tag }}
+      version_commit: ${{ steps.commit.outputs.sha }}
 
     steps:
       - name: Checkout main
@@ -79,12 +80,14 @@ jobs:
         run: pnpm build
 
       - name: Commit package version
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json
           git commit -m "chore(release): ${TAG}"
           git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
         env:
           TAG: ${{ steps.package.outputs.tag }}
 
@@ -132,3 +135,26 @@ jobs:
         run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  revert-version:
+    name: Revert version commit
+    needs: [create-release, publish]
+    # Runs only when a later step fails after the version commit reached main.
+    if: ${{ (failure() || cancelled()) && needs.create-release.outputs.version_commit != '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Revert version commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git revert --no-edit "${VERSION_COMMIT}"
+          git push origin HEAD:main
+        env:
+          VERSION_COMMIT: ${{ needs.create-release.outputs.version_commit }}

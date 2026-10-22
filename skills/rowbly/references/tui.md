@@ -17,7 +17,7 @@ with commands show when the user reloads (`r`) or returns to a screen.
 | `enter` | select or open (a click does the same) |
 | `/` | filter (on the board and the Stories list: the filter form) |
 | `esc` | back, or cancel the open form |
-| `D` | switch Data Root (or click its name at the left of the header) |
+| `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
 | `,` | settings: Boards, Stages, Fields, Me, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
 | `ctrl+b` | hide or show the Board sidebar |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |

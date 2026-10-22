@@ -24,12 +24,12 @@ const NEW_HINTS: readonly KeyHint[] = [
   { key: 'n', description: 'new Data Root' },
   CLOSE,
 ];
-/** With a known Data Root highlighted rather than **+ New Data Root**. */
+/** With a known Data Root highlighted rather than **+ New Data Root**, which shows its own `n`. */
 const ROOT_HINTS: readonly KeyHint[] = [
-  ...NEW_HINTS.slice(0, -1),
+  ...NEW_HINTS.slice(0, 2),
   { key: 'e', description: 'edit' },
   { key: 'd', description: 'delete' },
-  CLOSE,
+  ...NEW_HINTS.slice(2),
 ];
 
 /**
