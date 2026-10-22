@@ -32,7 +32,10 @@ export async function findDataRoot(opts: FindDataRootOptions): Promise<DataRoot>
   if (opts.flag) {
     const path = resolve(opts.cwd, opts.flag);
     if (!(await namedDirectory(path))) {
-      throw new DataRootNotFoundError(`Data Root not found: ${path}`, { details: { path }, hint: FLAG_HINT });
+      throw new DataRootNotFoundError(`Data Root not found: ${path}`, {
+        details: { path },
+        hint: 'check the path; `--data-root` names the `.rowbly` folder itself',
+      });
     }
     return toRoot(path);
   }
@@ -76,14 +79,15 @@ export function assertNoRootEnv(env: NodeJS.ProcessEnv): void {
  */
 async function defaultDataRoot(home: string): Promise<string | null> {
   const entries = ((await readHomeConfig(home)).dataRoots ?? []).filter((entry) => entry.default === true);
-  const defaults = await Promise.all(entries.map((entry) => canonicalDataRootPath(entry.path, home)));
-  if (defaults.length > 1) {
+  if (entries.length > 1) {
+    const defaults = entries.map((entry) => entry.path);
     throw new UsageError(`several known Data Roots are marked default: ${defaults.join(', ')}`, {
       details: { config: homeConfigPath(home), defaults },
       hint: `keep one \`"default": true\` in ${homeConfigPath(home)}, or pass \`--data-root <path>\``,
     });
   }
-  return defaults[0] ?? null;
+  const [entry] = entries;
+  return entry ? canonicalDataRootPath(entry.path, home) : null;
 }
 
 /**
