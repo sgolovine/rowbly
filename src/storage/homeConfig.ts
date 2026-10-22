@@ -2,7 +2,7 @@
 // replaced atomically under its own lock and never replaced while Rowbly cannot read it.
 import { randomBytes } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
-import { DataIntegrityError, NotFoundError } from '../core';
+import { DataIntegrityError, NotFoundError, RowblyError, UsageError } from '../core';
 import { type HomeConfig, HomeConfigSchema } from '../schemas';
 import { entryExists, errorCode, io } from './io';
 import { readJson, serializeJson } from './jsonStore';
@@ -42,7 +42,8 @@ export async function ensureHomeConfig(home: string): Promise<boolean> {
 
 /**
  * The Home Config. A missing file is `{ version: 1 }`. A file that is not valid JSON, does not match
- * the schema or is not a file throws `DataIntegrityError` naming it.
+ * the schema or is not a file throws `DataIntegrityError` naming it; one Rowbly may not read throws
+ * `UsageError`.
  */
 export async function readHomeConfig(home: string): Promise<HomeConfig> {
   const path = homeConfigPath(home);
@@ -52,7 +53,7 @@ export async function readHomeConfig(home: string): Promise<HomeConfig> {
     if (err instanceof NotFoundError) return HomeConfigSchema.parse({});
     if (err instanceof DataIntegrityError) throw unreadable(path, err.message, err.details, err);
     if (errorCode(err) === 'EISDIR') throw unreadable(path, `${path} is not a file`, { path }, err);
-    throw err;
+    throw inaccessible(path, err);
   }
 }
 
@@ -66,7 +67,8 @@ export interface UpdateHomeConfigOptions {
  * that concurrent updates from Rowbly processes each start from the last one's result. Keys Rowbly
  * does not know are kept. Nothing is written when the result is unchanged, or when the stored file
  * cannot be read (that error is thrown). A symlinked Home Config is updated at its target, keeping
- * the link; the new file keeps the old one's permissions. Returns the saved Home Config.
+ * the link; the new file keeps the old one's permissions. A home folder or file that Rowbly may not
+ * write throws `UsageError` naming it. Returns the saved Home Config.
  */
 export async function updateHomeConfig(
   home: string,
@@ -75,15 +77,19 @@ export async function updateHomeConfig(
 ): Promise<HomeConfig> {
   const path = homeConfigPath(home);
   const lock = { file: HOME_CONFIG_LOCK_FILE, subject: 'Home Config', operation: 'home-config.update', ...options };
-  return withLock(dirname(path), lock, async () => {
-    const current = await readHomeConfig(home);
-    const text = serializeJson(path, HomeConfigSchema, await change(structuredClone(current)));
-    const saved = HomeConfigSchema.parse(JSON.parse(text));
-    if (text === serializeJson(path, HomeConfigSchema, current) && (await entryExists(path))) return saved;
-    const target = await writeTarget(path);
-    await writeFileAtomic(target.path, text, target.mode);
-    return saved;
-  });
+  try {
+    return await withLock(dirname(path), lock, async () => {
+      const current = await readHomeConfig(home);
+      const text = serializeJson(path, HomeConfigSchema, await change(structuredClone(current)));
+      const saved = HomeConfigSchema.parse(JSON.parse(text));
+      if (text === serializeJson(path, HomeConfigSchema, current) && (await entryExists(path))) return saved;
+      const target = await writeTarget(path);
+      await writeFileAtomic(target.path, text, target.mode);
+      return saved;
+    });
+  } catch (err) {
+    throw inaccessible(path, err);
+  }
 }
 
 /** Where an update writes: the Home Config, or the file it links to, with that file's permissions. */
@@ -108,6 +114,22 @@ async function linkTarget(path: string): Promise<string> {
     if (errorCode(err) === 'ENOENT') throw unreadable(path, `${path} links to a file that does not exist`, { path });
     throw err;
   }
+}
+
+const ACCESS_CODES = new Set(['EACCES', 'EPERM', 'EROFS', 'ENOENT', 'ENOTDIR']);
+
+/**
+ * A filesystem refusal (start-up creation ignores it, so this is where it surfaces) as a
+ * `UsageError` naming the Home Config; any other error unchanged.
+ */
+function inaccessible(path: string, err: unknown): unknown {
+  const code = errorCode(err);
+  if (err instanceof RowblyError || !code || !ACCESS_CODES.has(code)) return err;
+  return new UsageError(`cannot use the Home Config ${path}: ${(err as Error).message}`, {
+    details: { path, errno: code },
+    hint: `check that ${dirname(path)} exists and you may read and write it`,
+    cause: err,
+  });
 }
 
 function unreadable(path: string, message: string, details: Record<string, unknown>, cause?: unknown) {

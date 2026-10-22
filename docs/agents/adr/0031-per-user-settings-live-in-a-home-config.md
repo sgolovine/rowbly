@@ -4,7 +4,7 @@
 
 Every setting Rowbly keeps today belongs to one Data Root: its configuration in `rowbly.config.json` and the developer's Local State in `local.json`. Settings that belong to the person rather than to a Data Root, such as the handle they work as everywhere or the Data Roots they use, have nowhere to live.
 
-**§1 The file.** The Home Config is `~/.rowblyrc.json`, in the home folder that Node's `os.homedir()` reports. Every run of `rowbly`, including `--version`, `--help` and the TUI, creates it as `{ "version": 1 }` when nothing is at that path. Creating it is best effort: when the home folder cannot be written, the command runs without it. Creation never replaces anything: the file is written in full beside the destination and hard-linked into place only if the name is still free.
+**§1 The file.** The Home Config is `~/.rowblyrc.json`, in the home folder that Node's `os.homedir()` reports. Every run of `rowbly`, including `--version`, `--help` and the TUI, creates it as `{ "version": 1 }` when nothing is at that path. Creating it is best effort: when the home folder cannot be written, the command runs without it, silently. A later read or change of the Home Config that the filesystem refuses fails with `USAGE` (exit 2) naming the file and the folder to check. Creation never replaces anything: the file is written in full beside the destination and hard-linked into place only if the name is still free.
 
 **§2 The schema.** A JSON object (`src/schemas/homeConfig.ts`):
 

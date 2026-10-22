@@ -3,7 +3,14 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { DataIntegrityError } from '../../src/core';
 import { BoardConfigSchema } from '../../src/schemas';
-import { readJson, writeJson } from '../../src/storage';
+import {
+  ensureHomeConfig,
+  HOME_CONFIG_FILE,
+  readHomeConfig,
+  readJson,
+  updateHomeConfig,
+  writeJson,
+} from '../../src/storage';
 import { FIXED_NOW, tempRoot } from '../helpers';
 
 vi.mock('node:fs/promises', async (importOriginal) => {
@@ -60,5 +67,36 @@ describe('readJson', () => {
     const err = (await readJson(path, BoardConfigSchema).catch((e: unknown) => e)) as DataIntegrityError;
     expect(err).toBeInstanceOf(DataIntegrityError);
     expect(err.details).toEqual({ path, conflict: true });
+  });
+});
+
+// ADR-0031: the Home Config, `~/.rowblyrc.json`.
+describe('updateHomeConfig', () => {
+  it('keeps every concurrent update and unknown keys, and never replaces a file it cannot read', async () => {
+    const home = (await tempRoot()).dir;
+    const path = join(home, HOME_CONFIG_FILE);
+    await writeFile(path, '{ "editor": "vim", "dataRoots": [{ "path": "/a", "note": "kept" }] }\n');
+    expect(await ensureHomeConfig(home)).toBe(false);
+
+    // Each change yields between its read and its write, so unlocked updates would lose entries.
+    await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        updateHomeConfig(home, async (config) => {
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          return { ...config, dataRoots: [...(config.dataRoots ?? []), { path: `/root-${i}` }] };
+        }),
+      ),
+    );
+    const saved = await readHomeConfig(home);
+    expect(saved).toMatchObject({ version: 1, editor: 'vim' });
+    expect(saved.dataRoots).toHaveLength(9);
+    expect(saved.dataRoots?.[0]).toEqual({ path: '/a', note: 'kept' });
+    expect((await readdir(home)).sort()).toEqual(['.rowbly', HOME_CONFIG_FILE]);
+
+    await writeFile(path, '{ "me": "sam",');
+    await expect(updateHomeConfig(home, (config) => ({ ...config, me: 'kim' }))).rejects.toBeInstanceOf(
+      DataIntegrityError,
+    );
+    expect(await readFile(path, 'utf8')).toBe('{ "me": "sam",');
   });
 });
