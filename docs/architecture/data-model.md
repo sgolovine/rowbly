@@ -35,6 +35,8 @@ erDiagram
 
 Each Story is its own folder, so most changes touch one small file and merge cleanly. Every record file carries `version: 1`. A record whose `version` is not 1 is not read and not written.
 
+The [Home Config](#home-config), `~/.rowblyrc.json`, sits outside every Data Root.
+
 ## Records
 
 The schemas are in `src/schemas/`. Every record may also carry Plugin Data under `plugins` ([below](#plugin-data-and-plugin-files)).
@@ -52,6 +54,18 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 - **Story Key:** the Board's key prefix and a number (`WEB-42`), which is also the Story's folder name. A new Story takes the highest number on the Board plus one; there is no counter file, because a shared counter would conflict on every merge. Two branches can therefore create the same key, and `rowbly doctor --fix` renumbers the later Story. A key freed by deleting the highest Story may be reused ([ADR-0003](../agents/adr/0003-story-keys.md)). A Story never moves to another Board.
 - **Rank:** a fractional index (a string) that orders Stories inside one Stage.
 - **Me:** `local.json`'s `me`, a slug claimed with `rowbly whoami`.
+
+## Home Config
+
+`~/.rowblyrc.json` holds per-user settings shared by every Data Root on the machine ([ADR-0031](../agents/adr/0031-per-user-settings-live-in-a-home-config.md)). Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing; an existing file is never replaced at start-up. Its schema (`HomeConfigSchema` in `src/schemas/homeConfig.ts`):
+
+| Key | Holds |
+| --- | --- |
+| `version` | `1`; a file without it is read as version 1 |
+| `me` | optional, a handle: Me for every Data Root (planned: nothing reads it yet) |
+| `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; several `default` entries are accepted by the schema (planned: nothing reads or writes it yet) |
+
+Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.
 
 ## Configuration Cascade
 

@@ -31,11 +31,12 @@ export const io = {
 
   /**
    * Writes `text` to `path` and fsyncs it. `flag` is `'wx'` (the default: the file must not exist
-   * yet) or `'w'`.
+   * yet) or `'w'`. `mode`, when given, is set exactly (not masked by the umask).
    */
-  async writeFile(path: string, text: string, flag: 'w' | 'wx' = 'wx'): Promise<void> {
+  async writeFile(path: string, text: string, flag: 'w' | 'wx' = 'wx', mode?: number): Promise<void> {
     const handle = await open(path, flag);
     try {
+      if (mode !== undefined) await handle.chmod(mode);
       await handle.writeFile(text, 'utf8');
       await handle.sync();
     } finally {

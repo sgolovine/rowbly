@@ -1,6 +1,7 @@
 export * from './config';
 export * from './customField';
 export * from './formatIssues';
+export * from './homeConfig';
 export * from './localState';
 export * from './primitives';
 export * from './refs';

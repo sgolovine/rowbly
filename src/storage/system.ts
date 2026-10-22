@@ -43,13 +43,13 @@ export async function writeTextFile(path: string, text: string): Promise<void> {
  * Replaces `path` with `text` atomically (ADR-0019 §3): writes and fsyncs `.<name>.<8 hex>.tmp` in
  * the same folder, renames it over `path` and fsyncs the folder. On failure the temporary file is
  * removed, best effort, and the original error is rethrown; the destination keeps its old bytes.
- * The folder must exist.
+ * The folder must exist. `mode` gives the new file those permissions, for example the old file's.
  */
-export async function writeFileAtomic(path: string, text: string): Promise<void> {
+export async function writeFileAtomic(path: string, text: string, mode?: number): Promise<void> {
   const dir = dirname(path);
   const temp = join(dir, `.${basename(path)}.${randomBytes(4).toString('hex')}.tmp`);
   try {
-    await io.writeFile(temp, text);
+    await io.writeFile(temp, text, 'wx', mode);
     await io.rename(temp, path);
   } catch (err) {
     try {

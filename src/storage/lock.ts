@@ -1,6 +1,5 @@
 // The Data Root lock of ADR-0019 §1: one exclusive lock file per canonical Data Root, shared by
-// every Rowbly process. Nothing in services takes it yet; WP02C wires operations, reads and
-// recovery onto it and keeps the held handle in the operation's execution scope.
+// every Rowbly process. The same lock, under another file name, guards the Home Config (ADR-0031 §3).
 import { randomBytes } from 'node:crypto';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
@@ -8,7 +7,7 @@ import { ConflictError } from '../core';
 import { errorCode, io } from './io';
 
 export const LOCK_FILE = '.lock';
-export const LOCK_BREAK_FILE = '.lock.break';
+export const LOCK_BREAK_FILE = `${LOCK_FILE}.break`;
 /** How long `acquireLock` waits by default. */
 export const LOCK_TIMEOUT_MS = 10_000;
 /** A lock older than this is stale, whoever holds it. */
@@ -27,7 +26,7 @@ export interface LockHolder {
 
 /** A held lock. Release it on every path: `withLock`, `try … finally`, or `await using`. */
 export interface LockHandle {
-  /** The canonical (realpath) Data Root. */
+  /** The canonical (realpath) folder of the lock file: the Data Root, or the home folder. */
   readonly root: string;
   /** The lock file. */
   readonly path: string;
@@ -54,9 +53,13 @@ export interface AcquireOptions {
    * the lock never recognizes its holder by itself (ADR-0019 §1, "Reentrancy").
    */
   held?: LockHandle;
+  /** The lock file's name in the folder; `LOCK_FILE` by default. Its break file adds `.break`. */
+  file?: string;
+  /** What the lock guards, named when it is busy; `Data Root` by default. */
+  subject?: string;
 }
 
-/** Waiters in this process, per canonical Data Root, in FIFO order. */
+/** Waiters in this process, per lock file (canonical folder and file name), in FIFO order. */
 const queues = new Map<string, Promise<void>>();
 /**
  * Canonicalizing the root is asynchronous, so queue places are handed out through this chain, in
@@ -74,20 +77,21 @@ interface QueuePlace {
   leave: () => void;
 }
 
-/** Takes the next place in the in-process queue for `root`'s canonical path, in call order. */
-function enqueue(root: string): Promise<QueuePlace> {
+/** Takes the next place in the in-process queue for `file` in `root`'s canonical path, in call order. */
+function enqueue(root: string, file: string): Promise<QueuePlace> {
   const resolving = io.realpath(root);
   const place = entries.then(async () => {
     const canonical = await resolving;
-    const previous = queues.get(canonical) ?? Promise.resolve();
+    const key = join(canonical, file);
+    const previous = queues.get(key) ?? Promise.resolve();
     let leave!: () => void;
     const mine = new Promise<void>((resolve) => {
       leave = resolve;
     });
     const tail = previous.then(() => mine);
-    queues.set(canonical, tail);
+    queues.set(key, tail);
     void tail.then(() => {
-      if (queues.get(canonical) === tail) queues.delete(canonical);
+      if (queues.get(key) === tail) queues.delete(key);
     });
     return { canonical, previous, leave };
   });
@@ -102,11 +106,13 @@ function enqueue(root: string): Promise<QueuePlace> {
  * throws `ConflictError` naming the holder.
  */
 export async function acquireLock(root: string, options: AcquireOptions = {}): Promise<LockHandle> {
-  if (options.held) return reuse(options.held, await io.realpath(root));
+  const file = options.file ?? LOCK_FILE;
+  if (options.held) return reuse(options.held, join(await io.realpath(root), file));
 
   const deadline = Date.now() + (options.timeoutMs ?? LOCK_TIMEOUT_MS);
-  const { canonical, previous, leave } = await enqueue(root);
-  const path = join(canonical, LOCK_FILE);
+  const subject = options.subject ?? 'Data Root';
+  const { canonical, previous, leave } = await enqueue(root, file);
+  const path = join(canonical, file);
   const holder: LockHolder = {
     pid: process.pid,
     host: hostname(),
@@ -115,8 +121,8 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
     operation: options.operation ?? 'unknown',
   };
   try {
-    if (!(await settlesBefore(previous, deadline))) throw busy(path, (await readLock(path))?.holder);
-    await createLock(canonical, holder, deadline);
+    if (!(await settlesBefore(previous, deadline))) throw busy(subject, path, (await readLock(path))?.holder);
+    await createLock(path, holder, deadline, subject);
   } catch (err) {
     leave();
     throw err;
@@ -164,9 +170,9 @@ export async function withLock<T>(
   }
 }
 
-function reuse(held: LockHandle, canonical: string): LockHandle {
-  if (held.released || held.root !== canonical) {
-    throw new Error(`cannot reuse a lock handle that is ${held.released ? 'released' : `for ${held.root}`}`);
+function reuse(held: LockHandle, path: string): LockHandle {
+  if (held.released || held.path !== path) {
+    throw new Error(`cannot reuse a lock handle that is ${held.released ? 'released' : `for ${held.path}`}`);
   }
   let released = false;
   return {
@@ -187,17 +193,16 @@ function reuse(held: LockHandle, canonical: string): LockHandle {
   };
 }
 
-/** Creates the lock file, waiting for its holder or breaking it when stale, until `deadline`. */
-async function createLock(canonical: string, holder: LockHolder, deadline: number): Promise<void> {
-  const path = join(canonical, LOCK_FILE);
+/** Creates the lock file `path`, waiting for its holder or breaking it when stale, until `deadline`. */
+async function createLock(path: string, holder: LockHolder, deadline: number, subject: string): Promise<void> {
   let delay = 25;
   for (;;) {
     if (await createExclusive(path, holder)) return;
     const current = await readLock(path);
     if (!current) continue; // Released meanwhile: try again at once.
-    if (isStale(current) && (await breakStale(canonical, current))) continue;
+    if (isStale(current) && (await breakStale(path, current))) continue;
     const left = deadline - Date.now();
-    if (left <= 0) throw busy(path, current.holder);
+    if (left <= 0) throw busy(subject, path, current.holder);
     await new Promise((resolve) => setTimeout(resolve, Math.min(left, delay * (0.5 + Math.random()))));
     delay = Math.min(delay * 2, 250);
   }
@@ -275,11 +280,12 @@ function isAlive(pid: number): boolean {
 }
 
 /**
- * Removes a stale lock under `.lock.break`, so that two waiters never both break it and then delete
- * a fresh one. Returns false when another waiter is breaking it.
+ * Removes the stale lock `path` under its break file (`.lock.break` for the Data Root), so that two
+ * waiters never both break it and then delete a fresh one. Returns false when another waiter is
+ * breaking it.
  */
-async function breakStale(canonical: string, stale: LockFile): Promise<boolean> {
-  const breakPath = join(canonical, LOCK_BREAK_FILE);
+async function breakStale(path: string, stale: LockFile): Promise<boolean> {
+  const breakPath = `${path}.break`;
   if (
     !(await createExclusive(breakPath, { pid: process.pid, host: hostname(), startedAt: new Date().toISOString() }))
   ) {
@@ -288,9 +294,9 @@ async function breakStale(canonical: string, stale: LockFile): Promise<boolean> 
     return false;
   }
   try {
-    const again = await readLock(join(canonical, LOCK_FILE));
+    const again = await readLock(path);
     if (again && again.raw === stale.raw && again.mtimeMs === stale.mtimeMs) {
-      await io.unlink(join(canonical, LOCK_FILE)).catch((err: unknown) => {
+      await io.unlink(path).catch((err: unknown) => {
         if (errorCode(err) !== 'ENOENT') throw err;
       });
     }
@@ -300,9 +306,9 @@ async function breakStale(canonical: string, stale: LockFile): Promise<boolean> 
   }
 }
 
-function busy(path: string, holder: LockHolder | undefined): ConflictError {
+function busy(subject: string, path: string, holder: LockHolder | undefined): ConflictError {
   const who = holder ? `pid ${holder.pid} on ${holder.host}, since ${holder.startedAt}` : 'holder unknown';
-  return new ConflictError(`Data Root is busy: another Rowbly process (${who}) is saving`, {
+  return new ConflictError(`${subject} is busy: another Rowbly process (${who}) is saving`, {
     details: { lock: path, pid: holder?.pid, host: holder?.host, startedAt: holder?.startedAt },
     hint: `try again; if no Rowbly process is running, delete ${path}`,
   });

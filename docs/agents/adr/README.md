@@ -22,6 +22,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
 | [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
 | [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
+| [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted |
 
 ### Plugins
 

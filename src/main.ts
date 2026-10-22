@@ -20,7 +20,7 @@ import {
   traceRequested,
 } from './services';
 import { drainGitQueue } from './services/plugins/git';
-import { findDataRoot } from './storage';
+import { ensureHomeConfig, findDataRoot } from './storage';
 import { CORE_KEYS } from './tui/keymap';
 
 /** The program with every core command, and the commands and options of the Plugins in `host`. */
@@ -135,6 +135,9 @@ function rootFlag(argv: readonly string[]): string | undefined {
  */
 export async function main(argv: string[], registry: readonly AnyPluginDefinition[] = []): Promise<number> {
   const json = argv.includes('--json');
+  // Every run makes sure `~/.rowblyrc.json` exists (ADR-0031 §1). Best effort: a home folder that
+  // cannot be written must not stop a command that does not need it.
+  await ensureHomeConfig(homedir()).catch(() => undefined);
   if (versionOnly(argv)) {
     try {
       await createProgram().parseAsync(argv, { from: 'user' });
