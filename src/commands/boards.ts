@@ -3,7 +3,7 @@ import { UsageError } from '../core';
 import { colorByCategory, colors, describeSource, printResult, renderTable } from '../output';
 import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../schemas';
 import { storyCountsByStage } from '../services/boards';
-import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from './_shared';
+import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from './shared';
 
 interface BoardOptions {
   name?: string;

@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { ExitCode } from '../core';
 import { colors, printResult } from '../output';
 import type { DoctorFinding, DoctorReport, DoctorSeverity } from '../services';
-import { withContext } from './_shared';
+import { withContext } from './shared';
 
 export function registerDoctor(program: Command): void {
   program

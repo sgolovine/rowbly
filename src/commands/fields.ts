@@ -4,8 +4,8 @@ import { colors, printResult } from '../output';
 import { type CustomFieldDef, type CustomFieldInput, CustomFieldTypeSchema } from '../schemas';
 import type { ConfigTarget } from '../services';
 import { affectedBoards, readLevel } from '../services/_configTarget';
-import { collect, parseRepeatable, promptIfMissing, withContext } from './_shared';
 import { renderFieldTable } from './boards';
+import { collect, parseRepeatable, promptIfMissing, withContext } from './shared';
 import {
   affectsLine,
   describeTarget,

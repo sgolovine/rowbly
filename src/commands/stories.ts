@@ -30,7 +30,7 @@ import {
   promptIfMissing,
   readLongText,
   withContext,
-} from './_shared';
+} from './shared';
 
 const SORTS: readonly StorySort[] = ['rank', 'priority', 'created', 'updated', 'due'];
 

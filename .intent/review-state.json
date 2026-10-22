@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "baseline": "d66355a5be668e0af3fee90110c790faf4f66068",
+  "items": {
+    "source:src/commands/_shared.ts": {
+      "fingerprint": "4ff06b0d8b9b66fc0484af6a2ccf94b793a0bc1988fd35ddd2485ad71bc01b2f",
+      "snapshot": {
+        "src/commands/_shared.ts": null
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/boards.ts": {
+      "fingerprint": "bbe01f934df54e55211a46da8bde6eb7d37cdd8be917b863f74ba7b1f2e7c7c4",
+      "snapshot": {
+        "src/commands/boards.ts": "4804efc50c6cf128225ebae2c37343e58d36c3735475a81f63e5fbed5805c5fe"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/doctor.ts": {
+      "fingerprint": "a7ad2f803f8e0db4e4f55d263daa1956ba92aba8937ae0eb6b8160ca23cb114c",
+      "snapshot": {
+        "src/commands/doctor.ts": "0e5577bd4cec1611e2c62db6fd9dfc0c41e8db56cab6de796cc68162c812cdc5"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/fields.ts": {
+      "fingerprint": "531a7aacc9ad0ecd444235ef113645856649cc89258e8ab5ca7d8dde885115a9",
+      "snapshot": {
+        "src/commands/fields.ts": "b95d2fad995b26cd96d0499288a126fd6c78d1096d9005be049cdf9d1b43f574"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/plugins.ts": {
+      "fingerprint": "3330e96ae14ca7ed58f217569eda3911f9269ec7bd69f9d8ca5b06645e06dbf7",
+      "snapshot": {
+        "src/commands/plugins.ts": "7293c94afd299ed7e91e9a674380752501077a6f463a2a5200dad8f12061bc01"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/setup.ts": {
+      "fingerprint": "137d15c053cba8cf378fa8a5b08a9e58821b8da7ac3398f003bed88dd55b807a",
+      "snapshot": {
+        "src/commands/setup.ts": "d75a1829d2861ebd076eb3c609048d7d8aa48447bd47151fccc42a64ceb2a2ef"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    },
+    "source:src/commands/shared/boardFlag.ts": {
+      "fingerprint": "7149e5e033aee60dca474f4e0d2236c55bd82b68040ce1a93a084e1e9579d087",
+      "snapshot": {
+        "src/commands/shared/boardFlag.ts": "d9f25bd5159fe0fc2a01c392091ad4830e8f6a3236f666c239c2d964f8fc36b9"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/cancelled.ts": {
+      "fingerprint": "cc3b98691a6e8a1e6dc8877566ee17bfe8f8340c1f802a5793e2ac4f5da55f8b",
+      "snapshot": {
+        "src/commands/shared/cancelled.ts": "407a66d72b88ee3456986a3630b7d1a13d5ff812360cea32d80a69a5a6f2c084"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/collect.ts": {
+      "fingerprint": "a58a778f0600abc5e40a8d598a907960dd9583671670c7f209930855f864b93d",
+      "snapshot": {
+        "src/commands/shared/collect.ts": "57f70a50c295b8d164e54da0d2240d1af6e30b07a14f2ce94c74d8ddece3b900"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/commandPath.ts": {
+      "fingerprint": "93991b1216bf42f46bba310a13892e69e7e0b8810766a1340a06542a0de0c9f1",
+      "snapshot": {
+        "src/commands/shared/commandPath.ts": "803955bfe7a822d8df78649410a49b7d2a90fb0d90d34242b747e643b871e921"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/confirmDestructive.ts": {
+      "fingerprint": "71ee7c4e16a15be64159bc6756bdfe85680297660d4c7ac5761e559d5b9c740d",
+      "snapshot": {
+        "src/commands/shared/confirmDestructive.ts": "d2448d9c8bf7a6b544448494a416ad9c5a75631b999b9d7f23302fdd53be9301"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/globalOptions.ts": {
+      "fingerprint": "bd174bb8228a7936d6f4f41e64548dbd3e68b3aa8dc210bdc9f4e9d1e45ba2c7",
+      "snapshot": {
+        "src/commands/shared/globalOptions.ts": "9f61acfed2bb0bc98597150068729ad066556be71082d13574f1da5bb08cbba6"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    },
+    "source:src/commands/shared/index.ts": {
+      "fingerprint": "b319de64863da18d18766bb656a84dd9f3255d691c580eb3f1ee71113d85ec92",
+      "snapshot": {
+        "src/commands/shared/index.ts": "237dba945576ba9ed2c98850dc49a62512f278fae6bbe658d7dd6f437def8eea"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    },
+    "source:src/commands/shared/isInteractive.ts": {
+      "fingerprint": "679e8b6e322af4e8a6488dacb3ce97f11310b703954d87045b1b90a4875ec53e",
+      "snapshot": {
+        "src/commands/shared/isInteractive.ts": "cce248296aa95ca81ad4e80ac496c0409bf10a50e1cb7c47012c2a963b4ad0c5"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/parseFieldAssignments.ts": {
+      "fingerprint": "518de3ec17805f30aff08149dd572d91374ae47e93b9c11ececfca7f5773d28e",
+      "snapshot": {
+        "src/commands/shared/parseFieldAssignments.ts": "a3fb5bab0d65a100c7b172dfd8674280ea25e1e58d4df7635ff0294fc3e2d052"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/parseRepeatable.ts": {
+      "fingerprint": "bd6230aeb39fa99a2713d1db64ac34fb2449e2e42a668943d08a647de0ca0542",
+      "snapshot": {
+        "src/commands/shared/parseRepeatable.ts": "ca575f714883fc654eca359bfa419b90bd132729b817a2f54e614d0850940616"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/pluginInput.ts": {
+      "fingerprint": "9a60b206239b7d1af64c5f853800379f3e4b50489b19424d4ae42251dea9a7b8",
+      "snapshot": {
+        "src/commands/shared/pluginInput.ts": "b0cf63c0b9ec697e722116b5f714da22631742a26f8c5c77c2e1838370fd4ce2"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/pluginOptions.ts": {
+      "fingerprint": "c736f558964162bf3835e0d40f98649f176d97c338facc933d76b1eb871459f9",
+      "snapshot": {
+        "src/commands/shared/pluginOptions.ts": "a42d2eb261154c01838d6ea836f9f724b78a06f64d6df080b55685aea34cb987"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/pluginsOf.ts": {
+      "fingerprint": "bf1b5355e9e58af5b5346efadf0b6c31fa60afe714de6fb59a7899a862609563",
+      "snapshot": {
+        "src/commands/shared/pluginsOf.ts": "649cdd15bc80a6a16b47437c9edbdf2f26f92de0d741f03db8f618b670e4966f"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/programPlugins.ts": {
+      "fingerprint": "b0e87d8a3575031ec9df701c800a964546a2d7d5dcc95ab4666806cf90c9ca01",
+      "snapshot": {
+        "src/commands/shared/programPlugins.ts": "be04d0bb482d9c012d23f350214857b50b0bb720bb5938fcb637a1b50ab9b6ee"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/promptIfMissing.ts": {
+      "fingerprint": "8c8a862e6f10e8ade54a069b6d6049bd45f767bbeed87d8ef4ae42476bac5d7f",
+      "snapshot": {
+        "src/commands/shared/promptIfMissing.ts": "62c792141c51a41e68714ed6244b46cebc50123ce7f7f08aded435e19a3d1a7b"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/readLongText.ts": {
+      "fingerprint": "9820b0c938f87169c5ee86df5bfd40f744c9303c8f759cee8360c021c7c2ae31",
+      "snapshot": {
+        "src/commands/shared/readLongText.ts": "f581bc7698a706771e39a108f84d52c0415db5d65e0d55841bc1845185119b27"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/withContext.ts": {
+      "fingerprint": "06f6e97f4ae6a61e40c9dc6379db07c4cf6a9b3ad8dad761de8e34bc75e7a803",
+      "snapshot": {
+        "src/commands/shared/withContext.ts": "c3a2ed91ffb71f9896569182d98995535d88b9097049e5d944e6a329da9ddf9d"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    },
+    "source:src/commands/stages.ts": {
+      "fingerprint": "89b709c0f0d930595d64041c11075609e695b993faf05383eb3d37dbe0c4b497",
+      "snapshot": {
+        "src/commands/stages.ts": "c78d67779ff7e0e8bc1b361559cd2ba3f43b18131961698e70272fb431e171a3"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/stories.ts": {
+      "fingerprint": "46eaa6cdc62080042fc28b9a769888e37004532f6675f22e1bed5227fa2bc6b1",
+      "snapshot": {
+        "src/commands/stories.ts": "0ad3a629196ef01c9486629178c350d776acfc8ccef76197d4f8a1821d05255b"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed"
+      ]
+    },
+    "source:src/commands/shared/runWithContext.ts": {
+      "fingerprint": "d59660e0cdf62726ccb0e2ac4940ce36cae2bd0d3bd40754b2d195dd38260458",
+      "snapshot": {
+        "src/commands/shared/runWithContext.ts": "f23f05c1ebff0cc180dc62d80705d3d991985eb7c2bce99dd15e768120709ece"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    },
+    "source:src/commands/shared/withOptionalContext.ts": {
+      "fingerprint": "e2ba172c3583125dae620c91f7521635a827c2430aa5fefee6c85d2f42753522",
+      "snapshot": {
+        "src/commands/shared/withOptionalContext.ts": "b02683296a8c133d0582b0da3aa859342c13218098e3571ef7424cb720672b9c"
+      },
+      "head": "d66355a5be668e0af3fee90110c790faf4f66068",
+      "outcome": "no-change",
+      "reason": "This source change extracts existing command helpers into focused files while preserving their behavior.",
+      "evidence": [
+        "src/commands/shared/: helper bodies are relocated without behavior changes",
+        "src/commands/*.ts: command imports resolve through the shared barrel",
+        "pnpm typecheck: passed",
+        "pnpm lint: passed before including the review artifact"
+      ]
+    }
+  }
+}
