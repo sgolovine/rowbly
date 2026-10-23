@@ -15,8 +15,14 @@ rowbly whoami --json --no-prompt                    # {"me": "sam" | null, "sour
 ```
 
 Pick Stages by **category**, not by name. Every Board starts with `backlog` (category `backlog`) and
-ends with `done` (category `done`). The Stage to start work is the first Stage whose category is
-`board`; a Board's configured Stages might be `doing`, `review`, with no `todo` or `in-progress` key.
+ends with `done` (category `done`). A Board's configured Stages might be `doing`, `review`, with no
+`todo` or `in-progress` key. The three Stages an agent uses:
+
+| When | Stage |
+| --- | --- |
+| A new Story | The `backlog` Stage, unless the user names another Stage |
+| Development starts | The in-progress Stage: the `board` Stage whose key or name says work is under way (`in-progress`, `doing`); if none does, the last `board` Stage |
+| The work is complete | The `done` Stage |
 
 ## 2. Find and read Stories
 
@@ -56,7 +62,8 @@ rowbly stories create --board web --name "Login page" \
 ```
 
 - The new Story gets the next key on its Board (the highest number plus one) and goes to the
-  bottom of the first Stage, or of `--stage <key>`. Read the key from the JSON output; do not predict it.
+  bottom of the first Stage (`backlog`), or of `--stage <key>`. Leave out `--stage` unless the user
+  names a Stage. Read the key from the JSON output; do not predict it.
 - Rules (each violation exits 2 with the valid choices in `details`): Priority is `P0`–`P4`; a Label is
   lower-kebab-case (`auth`, not `Auth` or `needs review`); `--due` is `YYYY-MM-DD`; every required
   Custom Field needs a `--field`.
@@ -98,7 +105,8 @@ only if the user asks.
    `rowbly specs list --story <KEY> --json --no-prompt` and the Board Specs it links to; with the
    Comments Plugin on, `rowbly comments list <KEY> --json --no-prompt`. Read them all: this is the
    request.
-2. Start: `rowbly stories move <KEY> <first board Stage> --json --no-prompt`. Add
+2. Start: before you change any code, `rowbly stories move <KEY> <in-progress Stage> --json --no-prompt`
+   (see the table in §1). Add
    `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
    wants it.
 3. To leave a progress note, blocker or decision, use `rowbly comments add <KEY> --body "…"`
@@ -106,9 +114,9 @@ only if the user asks.
    `rowbly plugins enable comments`, and tell the user, since that changes shared configuration.
 4. As each part is done: `rowbly tasks move <KEY>.<n> done --json --no-prompt`
    ([Tasks](plugin-tasks.md)).
-5. Finish: move the Story to the `done` Stage, or to a review Stage if the Board has one and the user
-   reviews work. Moving every Task to `done` does not move the Story. Check: `stories show` reports the
-   expected `stage`, and `tasks list` shows its Tasks done.
+5. Finish: when the work is complete, `rowbly stories move <KEY> done --json --no-prompt`. Do this
+   yourself, as the last step, without waiting to be asked. Moving every Task to `done` does not move
+   the Story. Check: `stories show` reports the `done` Stage, and `tasks list` shows its Tasks done.
 6. Mention the Story Key in branch names and commit messages (`WEB-42: add login form`). Commit the
    `.rowbly/` changes with the code, unless the Git Plugin commits them for you
    ([Git](plugin-git.md)).
@@ -124,7 +132,9 @@ how work is closed. If the highest-numbered Story is deleted, its key goes to th
 - **HIGH: `--label x` or `--assignee x` on `edit` to add one value.** It replaces the list. Use
   `--add-label` / `--add-assignee`.
 - **HIGH: hard-coding `in-progress` or `todo`.** Only `backlog` and `done` exist on every Board. Read the
-  Board's Stages and choose the start Stage by category `board`.
+  Board's Stages and choose the in-progress Stage as the table in §1 says.
+- **HIGH: leaving the Story where it was.** Move it to the in-progress Stage when development starts and
+  to `done` when the work is complete; the Board is how the user sees progress.
 - **HIGH: Title Case or spaced Labels.** A Label must be lower-kebab-case, or the command exits 2.
 - **MEDIUM: guessing the next key** when creating several Stories. Read `key` from each `create`
   output. Two branches can both create `WEB-7`; `rowbly doctor --fix` fixes that after the merge

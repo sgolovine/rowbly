@@ -141,6 +141,22 @@ and so are its options on core commands (`--assignee` exits 2 with `unknown opti
 `rowbly plugins list --json --no-prompt`. Turn a Plugin on only when the user's request needs it, and
 say that you did; ask first for Assignees and Git. See [Plugins](references/plugins.md).
 
+## 7. Keep the Story's Stage current
+
+When you work on a Story, its Stage shows the user where the work is. Move it yourself, without being
+asked:
+
+- **Create** a Story in the `backlog` Stage (the default; leave out `--stage`) unless the user names
+  another Stage.
+- **Start development**: before you change any code, move the Story to the in-progress Stage
+  (`in-progress` on most Boards; see [Stories](references/stories.md) §1 for a Board without one).
+- **Complete the work**: move the Story to `done` as your last step.
+
+```sh
+rowbly stories move WEB-42 in-progress --json --no-prompt
+rowbly stories move WEB-42 done --json --no-prompt
+```
+
 ## Use Rowbly's words
 
 Rowbly's help, errors and files use these names; use them in commands, commit messages and replies.
@@ -179,5 +195,6 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 
 ## Completion
 
-Each call you made exited 0, or you handled its exit code as described in the table above. Report any
+Each call you made exited 0, or you handled its exit code as described in the table above. A Story you
+worked on is in the Stage that matches its work (§7). Report any
 change you could not make, with its `error.code` and message, and any Plugin you turned on.
