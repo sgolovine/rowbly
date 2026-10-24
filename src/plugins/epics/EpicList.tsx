@@ -143,7 +143,7 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
     return data.loading ? <Loading label="Loading Epics…" /> : <Text color={theme.danger}>Could not load Epics.</Text>;
   const { summaries, unavailable } = data.data;
   return (
-    <Box flexDirection="column" gap={confirming ? 1 : 0}>
+    <Box flexDirection="column">
       <Text bold>{`Epics (${mode})`}</Text>
       <SelectList
         items={[
@@ -166,13 +166,16 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
         onContextMenu={({ value }, x, y) => epicMenu(value, x, y)}
       />
       {confirming && (
-        <ConfirmDialog
-          destructive
-          message={`Delete Epic "${confirming.id}"? ${confirming.progress.total} Stories will be unlinked.`}
-          isActive={!busy}
-          onConfirm={() => void remove(confirming)}
-          onCancel={() => setConfirming(null)}
-        />
+        // The margin is the dialog's own, so opening it does not move the title or the rows.
+        <Box marginTop={1}>
+          <ConfirmDialog
+            destructive
+            message={`Delete Epic "${confirming.id}"? ${confirming.progress.total} Stories will be unlinked.`}
+            isActive={!busy}
+            onConfirm={() => void remove(confirming)}
+            onCancel={() => setConfirming(null)}
+          />
+        </Box>
       )}
     </Box>
   );
