@@ -17,6 +17,11 @@ export async function openRebaseBridge(
 ): Promise<{ environment: Record<string, string>; close(): Promise<void> }> {
   const token = randomBytes(16).toString('hex');
   const path = join(directory, 'replay.sock');
+  const source = import.meta.url.endsWith('.ts');
+  const entry = fileURLToPath(new URL(source ? './gitRebaseStrategy.ts' : './gitRebaseStrategy.js', import.meta.url));
+  // Quote only host-owned absolute executable paths. Git finds this fixed name in this private PATH.
+  const quote = (text: string) => `'${text.replaceAll("'", "'\\''")}'`;
+  const launcher = `#!/bin/sh\nexec ${quote(process.execPath)} ${source ? `--import ${quote(import.meta.resolve('tsx'))} ` : ''}${quote(entry)} "$@"\n`;
   const clients = new Set<Socket>();
   const pending = new Set<Promise<void>>();
   let active = false;
@@ -65,27 +70,24 @@ export async function openRebaseBridge(
       resolve();
     });
   });
-  const source = import.meta.url.endsWith('.ts');
-  const entry = fileURLToPath(new URL(source ? './gitRebaseStrategy.ts' : './gitRebaseStrategy.js', import.meta.url));
-  // Quote only host-owned absolute executable paths. Git finds this fixed name in this private PATH.
-  const quote = (text: string) => `'${text.replaceAll("'", "'\\''")}'`;
-  await io.writeFile(
-    join(directory, 'git-merge-rowbly-sync'),
-    `#!/bin/sh\nexec ${quote(process.execPath)} ${source ? `--import ${quote(import.meta.resolve('tsx'))} ` : ''}${quote(entry)} "$@"\n`,
-    'wx',
-    0o700,
-  );
+  const close = async () => {
+    for (const client of clients) client.destroy();
+    await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+    await Promise.allSettled(pending);
+    await io.rm(path);
+  };
+  try {
+    await io.writeFile(join(directory, 'git-merge-rowbly-sync'), launcher, 'wx', 0o700);
+  } catch (error) {
+    await close();
+    throw error;
+  }
   return {
     environment: {
       ROWBLY_REBASE_SOCKET: path,
       ROWBLY_REBASE_TOKEN: token,
       PATH: `${directory}:${process.env.PATH ?? ''}`,
     },
-    async close() {
-      for (const client of clients) client.destroy();
-      await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
-      await Promise.allSettled(pending);
-      await io.rm(path);
-    },
+    close,
   };
 }
