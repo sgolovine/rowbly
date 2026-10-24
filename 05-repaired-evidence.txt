@@ -1,0 +1,38 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  a  D  |  Stages 1–4 of 5                                       me alex  Epics  \  | Settings  ,  | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │    ● Backlog 4               ● Todo 2                  ● In Progress 2           ● Task only 0             1›     │
+│   left Board    2  │ │  ╭─Board › Settings───────────────────────────────────────────────────────────────────────────────────────── ✕ ╮  │
+│   right Board   3  │ │  │                                                                                                             │  │
+│                    │ │  │  Global               │   Git                                                                               │  │
+│                    │ │  │    Boards             │   Manage Git.                                                                       │  │
+│                    │ │  │    Stages             │                                                                                     │  │
+│                    │ │  │    Fields             │                                     Run now  r                                      │  │
+│                    │ │  │    Me                 │                                                                                     │  │
+│                    │ │  │    Preferences        │  Enabled         On                                                                 │  │
+│                    │ │  │    Doctor             │  Merge interval  3600 seconds                                                       │  │
+│                    │ │  │    Plugins            │  Branch          refs/heads/main                                                    │  │
+│                    │ │  │                       │  Upstream        origin/refs/heads/main                                             │  │
+│                    │ │  │  Board: Rowbly Launch │  Next run        24 Oct 2026, 16:24                                                 │  │
+│                    │ │  │    Config             │  Active run      —                                                                  │  │
+│                    │ │  │    Stages             │  Last attempt    24 Oct 2026, 15:24                                                 │  │
+│                    │ │  │    Fields             │  Last result     synchronized: Synchronized with configured upstream                │  │
+│                    │ │  │                       │  Finished        24 Oct 2026, 15:24                                                 │  │
+│                    │ │  │  Plugins: assignees   │  Local commit    3fae05180101                                                       │  │
+│                    │ │  │    Assignees          │  Repairs         39                                                                 │  │
+│                    │ │  │                       │  Evidence        plugins/git/merge-evidence/b4956979053b4f106387ac978f18a7f7358036  │  │
+│                    │ │  │  Plugins: git         │                  43c68a99f761e491d08eaeff67.json                                    │  │
+│                    │ │  │  ▌ Git                │                                                                                     │  │
+│                    │ │  │                       │  Runs while Rowbly is open, including outside settings. One overdue run resumes     │  │
+│                    │ │  │                       │  next time; no daemon.                                                              │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │                       │  Off stops future runs. An admitted run may finish, including push.                 │  │
+│                    │ │  │                       │  ↑↓ 11–30 of 30 · pgup/pgdn scroll                                                  │  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  e edit Automatic Commits  m edit merge preferences  r run now  tab sections  esc back to sections          │  │
+│                    │ │  ╰────────────────────────────────────────────────────────────────────────────────                                │
+│    + New Board     │ │                                                                                     ✓ Synchronized with upstream  │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────────────                                ╯
+                                                                                                                                     ? help

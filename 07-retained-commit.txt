@@ -1,0 +1,28 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  a |  Stages 1–2 of 5           me alex  Epics | Settings | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │    ● Backlog 4                      ● Todo 2                         3›   │
+│   left Board    2  │ │  ╭─Board › Settings───────────────────────────────────────────────── ✕ ╮  │
+│   right Board   3  │ │  │                                                                     │  │
+│                    │ │  │  Global               │   Git                                       │  │
+│                    │ │  │    Stages             │   Manage Git.                               │  │
+│                    │ │  │    Fields             │                                             │  │
+│                    │ │  │    Preferences        │                                             │  │
+│                    │ │  │    Doctor             │  Finished        24 Oct 2026, 15:24         │  │
+│                    │ │  │    Plugins            │  Local commit    edb8d952d540               │  │
+│                    │ │  │                       │  Repairs         2                          │  │
+│                    │ │  │  Board: Rowbly Launch │  Evidence        plugins/git/merge-evidenc  │  │
+│                    │ │  │    Stages             │                  e/8b2f73f8ea8ff634e214f25  │  │
+│                    │ │  │    Fields             │                  46690020fc4ce9ff194bac60c  │  │
+│                    │ │  │  Plugins: assignees   │                  22c594cf6d27ec2a.json      │  │
+│                    │ │  │    Assignees          │                                             │  │
+│                    │ │  │                       │  Runs while Rowbly is open, including       │  │
+│                    │ │  │  Plugins: git         │  ↑↓ 31–40 of 45 · pgup/pgdn scroll          │  │
+│                    │ │  │  ▌ Git                                                              │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  e edit Automatic Commits  esc back to sections                     │  │
+│                    │ │  ╰─────────────────────────────────────────────────────────────────────╯  │
+│    + New Board     │ │                                                                           │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────╯
+                                                                                             ? help

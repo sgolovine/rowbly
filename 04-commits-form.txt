@@ -1,0 +1,38 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  default-demo  D  |                                                         me alex  Settings  ,  | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │ ● Backlog 2                 ● Todo 2                    ● In Progress 2             ● Done 2                      │
+│                    │ │ ━╭─Board › Settings──╭─Board › Settings › Commits──────────────────────────────────────── ✕ ╮──────────────────╮  │
+│                    │ │  │                   │                                                                      │                  │  │
+│                    │ │ ╭│  Global           │  Git automatic commits                                               │                  │  │
+│                    │ │ ││    Boards         │                                                                      │                  │  │
+│                    │ │ ││    Stages         │  Git directory: /tmp/row15-independent-390-validation/default-demo   │                  │  │
+│                    │ │ ││    Fields         │  Commit message: chore: update Rowbly data                           │                  │  │
+│                    │ │ ╰│    Me             │                                                                      │                  │  │
+│                    │ │ ╭│    Preferences    │  Off keeps changes pending; On resumes them at the selected          │                  │  │
+│                    │ │ ││    Doctor         │  frequency.                                                          │                  │  │
+│                    │ │ ││    Plugins        │                                                                      │                  │  │
+│                    │ │ ││                   │  Interval commits run while Rowbly is open or on the next run when   │                  │  │
+│                    │ │ ╰│  Board: Rowbly Lau│  due.                                                                │                  │  │
+│                    │ │  │    Config         │                                                                      │                  │  │
+│                    │ │  │    Stages         │  Blank author fields use Git configuration: Demo Validator           │                  │  │
+│                    │ │  │    Fields         │  <demo@example.test>                                                 │                  │  │
+│                    │ │  │                   │                                                                      │                  │  │
+│                    │ │  │  Plugins: assignee│  ←/→ change                                                          │                  │  │
+│                    │ │  │    Assignees      │                                                                      │                  │  │
+│                    │ │  │                   │  › Automatic Commits*             ‹ On ›                             │                  │  │
+│                    │ │  │  Plugins: git     │                                                                      │                  │  │
+│                    │ │  │  ▌ Git            │    Frequency*                     ‹ Whenever a change is made ›      │                  │  │
+│                    │ │  │                   │                                                                      │eam               │  │
+│                    │ │  │                   │    Interval (seconds, 1–86400)*   300                                │                  │  │
+│                    │ │  │                   │                                                                      │                  │  │
+│                    │ │  │                   │    Author name                                                       │                  │  │
+│                    │ │  │                   │  ↑↓ 1–23 of 26 · pgup/pgdn scroll                                    │                  │  │
+│                    │ │  │                   │                                                                      │                  │  │
+│                    │ │  │───────────────────│──────────────────────────────────────────────────────────────────────│──────────────────│  │
+│                    │ │  │                   │  ctrl+s save  tab/enter next field  esc cancel                       │                  │  │
+│                    │ │  ╰───────────────────╰──────────────────────────────────────────────────────────────────────╯──────────────────╯  │
+│    + New Board     │ │                                                                                                                   │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                                                     ? help

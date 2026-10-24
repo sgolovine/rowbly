@@ -1,0 +1,20 @@
+ROW-15 corrected-state validation | source 390338e5b56aaf194fa91792db98716b44673f93
+Actual built CLI, isolated demo clones and HOME; no actual Board writes.
+
+TASKS: recognized current format, two records sharing one identity
+Input: ["First duplicate Task", "Second duplicate Task distinct bytes"]
+Actual git sync: {"exit": 4, "code": "CONFLICT"}
+Cause: Cannot reconcile Tasks at boards/launch/stories/ROW-2: duplicate Task number 1
+Actual doctor: {"code": "PLUGIN_DATA_INVALID", "severity": "warning", "fixable": false}
+After refusal: 2 records retained; input bytes unchanged; no publication or push.
+Retained: ["First duplicate Task", "Second duplicate Task distinct bytes"]
+
+COMMENTS: recognized current format, two records sharing one identity
+Input: ["First current-format Comment", "Second distinct current-format Comment"]
+Actual git sync: {"exit": 4, "code": "CONFLICT"}
+Cause: Cannot reconcile Comments at boards/launch/stories/ROW-2: duplicate Comment id "duplicate-id"
+Actual doctor: {"code": "PLUGIN_DATA_INVALID", "severity": "warning", "fixable": false}
+After refusal: 2 records retained; input bytes unchanged; no publication or push.
+Retained: ["First current-format Comment", "Second distinct current-format Comment"]
+
+Full raw/index/ref/remote preservation assertions: owners/summary.json and before/after manifests.

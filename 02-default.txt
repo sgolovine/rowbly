@@ -1,0 +1,38 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  default-demo  D  |                                                         me alex  Settings  ,  | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │ ● Backlog 2                 ● Todo 2                    ● In Progress 2             ● Done 2                      │
+│                    │ │ ━╭─Board › Settings───────────────────────────────────────────────────────────────────────────────────────── ✕ ╮  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │ ╭│  Global               │   Git                                                                               │  │
+│                    │ │ ││    Boards             │   Manage Git.                                                                       │  │
+│                    │ │ ││    Stages             │                                                                                     │  │
+│                    │ │ ││    Fields             │  Automatic Commits                                                                  │  │
+│                    │ │ ╰│    Me                 │                                                                                     │  │
+│                    │ │ ╭│    Preferences        │  Automatic Commits  On                                                              │  │
+│                    │ │ ││    Doctor             │  Frequency          Whenever a change is made                                       │  │
+│                    │ │ ││    Plugins            │                                                                                     │  │
+│                    │ │ ││                       │                             Edit Automatic Commits  e                               │  │
+│                    │ │ ╰│  Board: Rowbly Launch │                                                                                     │  │
+│                    │ │  │    Config             │  Automatic Merge Conflict Resolution                                                │  │
+│                    │ │  │    Stages             │                                                                                     │  │
+│                    │ │  │    Fields             │                             Edit merge preferences  m                               │  │
+│                    │ │  │                       │                                    Run now (Off)                                    │  │
+│                    │ │  │  Plugins: assignees   │                                                                                     │  │
+│                    │ │  │    Assignees          │  Enabled         Off                                                                │  │
+│                    │ │  │                       │  Merge interval  300 seconds                                                        │  │
+│                    │ │  │  Plugins: git         │  Branch          —                                                                  │  │
+│                    │ │  │  ▌ Git                │  Upstream        —                                                                  │  │
+│                    │ │  │                       │  Prerequisite    The current branch needs one configured Git upstream               │  │
+│                    │ │  │                       │  Next run        Paused                                                             │  │
+│                    │ │  │                       │  Active run      —                                                                  │  │
+│                    │ │  │                       │  Last attempt    —                                                                  │  │
+│                    │ │  │                       │  ↑↓ 1–20 of 30 · pgup/pgdn scroll                                                   │  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  e edit Automatic Commits  m edit merge preferences  tab sections  esc back to sections                     │  │
+│                    │ │  ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  │
+│    + New Board     │ │                                                                                                                   │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                                                     ? help
