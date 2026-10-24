@@ -24,6 +24,8 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 - [Load, reload and settings](#load-reload-and-settings)
 - [Tracing](#tracing)
 - [Testing](#testing)
+- [Git capability](#git-capability)
+- [Supported-format reconciliation](#supported-format-reconciliation)
 
 ## Modules and exports
 
@@ -43,6 +45,8 @@ The types a Plugin meets at run time, by where it meets them:
 | Options | `PluginOption`, `PluginInputOptions`, `PluginFilterOptions`, `PluginOptionValues`, `PluginOptionCommand` |
 | TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
 | Doctor | `DoctorData`, `PluginFinding` |
+| Git | `PluginGit`, `GitCommitOptions`, `GitOptionsSource`, `GitSyncOptions`, `GitSyncOptionsSource`, `GitSyncStatus` |
+| Reconciliation | `PluginReconciler`, `PluginReconciliation`, `PluginMergeSnapshot`, `MergeFile`, `MergeFiles`, `MergeHelpers`, `IdentityRemap`, `RequiredStory`, `RequiredStage` |
 
 Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring (a Plugin gets `PluginServices` or `PluginReadServices`), `PluginError` (the framework's own attribution error), and the TUI's `useToast` (use `ui.toast` and `ui.error`).
 
@@ -375,16 +379,20 @@ With `automaticCommits: false`, both methods retain pending work and `changed` s
 
 Local State-only changes add no paths. Queue updates and file snapshots serialize with Data Root writes, and workers check that the owning Plugin is still enabled before admitting each job. With a live resolver, they also refresh pending options, adjust the deadline once for any interval change and increment the revision under that lock before deciding whether to pause. Thus a saved Off preference takes effect even before its reaction publishes a queue update; delayed startup and reactions cannot overwrite it with earlier preferences. Timer decisions use the same coordinated options. Admission under this lock marks a job as running. A commit already running may finish; revision acknowledgement retains later edits. Git processes run under a separate queue lock outside the Data Root lock. These effect methods are intended for `start` and reactions; commands and screens change personal preferences through an Operation. There is no arbitrary Git command or filesystem capability.
 
-Git executes argument arrays without a shell, with a 3.5 s limit per local process and 16 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Command-mode Operations and the CLI await due queue work outside reaction deadlines; the TUI does not. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or flush of future interval work on exit. See [Git](built-in.md#git) for the user contract and ADR-0030 for queue ownership.
+Git executes argument arrays without a shell, with a 3.5 s limit per process and 1 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Command-mode Operations and the CLI await due queue work outside reaction deadlines; the TUI does not. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or flush of future interval work on exit. See [Git](built-in.md#git) for the user contract and ADR-0030 for queue ownership.
 
 ## Supported-format reconciliation
 
 ADR-0034 §3 permits one optional synchronous `reconcile` callback during an isolated Git import.
 It receives frozen BASE/left/right snapshots of only its own raw bags and scoped files, core
-source-qualified Board/Story remaps, retained Story Keys and deterministic merge/evidence helpers.
+source-qualified Board/Story remaps, retained Story Keys, effective Stage Keys by Board and
+deterministic merge/evidence helpers.
 Files hold exact base64 bytes and Git modes; `helpers.read` requires lossless UTF-8 and
 `helpers.file` encodes supported text. Missing bags are `undefined`, distinct from JSON null.
-`helpers.value`, `text`, `members`, `same` and `retain` combine supported data and record conflicts.
+`helpers.value` recursively combines structurally safe object edits and retains ambiguous leaves; it
+does not infer text or set semantics from field names. Only an owning supported format selects
+`text` for its text fields and `members` for its sets. `same` compares raw values and `retain` records
+explicit alternatives and repairs.
 No Plugin context, services, filesystem or Git capability is passed. Normal activation and hooks stay
 Off. Unsupported, invalid or future formats must return no override and remain opaque; never parse
 through a schema that drops unknown keys and then save its stripped output.
