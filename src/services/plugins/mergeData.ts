@@ -50,6 +50,11 @@ function json(file: MergeFile | undefined): Record<string, unknown> | undefined 
   if (!isObject(value)) throw new Error('Expected an object in a Rowbly record');
   return value;
 }
+function requiredRecord(file: MergeFile | undefined): Record<string, unknown> {
+  const value = json(file);
+  if (!value) throw new Error('Missing retained Rowbly record');
+  return value;
+}
 function encode(value: unknown): MergeFile {
   return { data: Buffer.from(`${JSON.stringify(value, null, 2)}\n`).toString('base64'), mode: '100644' };
 }
@@ -139,9 +144,9 @@ function mergeOnce(
   stages: RequiredStage[],
 ): DataMergeResult & { requests: RequiredStory[]; stageRequests: RequiredStage[] } {
   // Source ordering is independent of ours/theirs. Equal IDs must actually be equal snapshots.
-  const sources = [a, b].sort((x, y) => (canonicalValue([x.id, x.files]) < canonicalValue([y.id, y.files]) ? -1 : 1));
-  const leftSource = sources[0]!,
-    rightSource = sources[1]!;
+  const sources: [MergeSource, MergeSource] = [a, b];
+  sources.sort((x, y) => (canonicalValue([x.id, x.files]) < canonicalValue([y.id, y.files]) ? -1 : 1));
+  const [leftSource, rightSource] = sources;
   const base = structuredClone(baseSource.files),
     left = structuredClone(leftSource.files),
     right = structuredClone(rightSource.files);
@@ -225,7 +230,7 @@ function mergeOnce(
     const boardPath = `boards/${boardId}/board.config.json`,
       board = json(files[boardPath]);
     if (!board) throw new Error('Required Stage has no retained Board');
-    const root = json(files['rowbly.config.json'])!;
+    const root = requiredRecord(files['rowbly.config.json']);
     const target = board.stages === undefined ? root : board;
     const effective = (target.stages ?? DEFAULT_STAGES) as { key: string; name: string }[];
     if (!effective.some((s) => s.key === request.key)) {
@@ -248,7 +253,7 @@ function mergeOnce(
         Object.entries(snapshot)
           .filter(([p]) => CORE.test(p) && files[p])
           .flatMap(([p, file]) => {
-            const record = json(file)!;
+            const record = requiredRecord(file);
             const bag = isObject(record.plugins) ? record.plugins[definition.id] : undefined;
             return bag === undefined ? [] : [[p === 'rowbly.config.json' ? '' : p.slice(0, p.lastIndexOf('/')), bag]];
           }),
@@ -296,7 +301,7 @@ function mergeOnce(
         file = files[path];
       if (!file || (scope && !/^(boards\/[^/]+)(\/stories\/[^/]+)?$/.test(scope)))
         throw new Error(`Plugin ${definition.id} wrote outside a retained scope`);
-      const record = json(file)!;
+      const record = requiredRecord(file);
       const plugins = isObject(record.plugins) ? record.plugins : {};
       const schema = scope.includes('/stories/') ? definition.bags?.story : undefined;
       if (schema) {
@@ -458,21 +463,23 @@ function remapBoards(
   maps: [IdentityRemap, IdentityRemap],
   helpers: MergeHelpers,
 ) {
-  const sides = [left, right];
+  const sides: [MergeFiles, MergeFiles] = [left, right];
   const boardPaths = (files: MergeFiles) =>
     Object.keys(files)
       .filter((p) => BOARD.test(p))
       .sort();
   const usedIds = new Set(
-    [...boardPaths(base), ...boardPaths(left), ...boardPaths(right)].map((p) => BOARD.exec(p)![1]!),
+    [...boardPaths(base), ...boardPaths(left), ...boardPaths(right)].map((p) => p.split('/')[1] ?? ''),
   );
   const usedPrefixes = new Set([
     ...boardPaths(base).map((p) => json(base[p])?.keyPrefix),
     ...sides.flatMap((s) => boardPaths(s).map((p) => json(s[p])?.keyPrefix)),
   ]);
   function rename(side: number, path: string) {
-    const files = sides[side]!,
-      record = json(files[path])!,
+    const files = sides[side];
+    const map = maps[side];
+    if (!files || !map) throw new Error('Invalid merge source');
+    const record = requiredRecord(files[path]),
       oldId = String(record.id),
       oldPrefix = String(record.keyPrefix);
     const id = unusedSlug(oldId, usedIds);
@@ -486,7 +493,7 @@ function remapBoards(
       }
     }
     if (!prefix) throw new Error('No unused Board key prefix');
-    maps[side]!.boards[oldId] = id;
+    map.boards[oldId] = id;
     helpers.retain(
       path,
       'concurrent Board identity or prefix retained separately',
@@ -500,10 +507,10 @@ function remapBoards(
     record.keyPrefix = prefix;
     files[`boards/${id}/board.config.json`] = encode(record);
     for (const p of Object.keys(files).filter((p) => p.startsWith(`boards/${id}/stories/`) && STORY.test(p))) {
-      const story = json(files[p])!,
+      const story = requiredRecord(files[p]),
         key = String(story.key),
         next = `${prefix}-${key.slice(key.lastIndexOf('-') + 1)}`;
-      maps[side]!.stories[key] = next;
+      map.stories[key] = next;
       renameTree(files, p.slice(0, -11), `boards/${id}/stories/${next}`);
       story.key = next;
       story.boardId = id;
@@ -516,8 +523,8 @@ function remapBoards(
       right[path] &&
       !isDeepStrictEqual(subtree(left, path.slice(0, -18)), subtree(right, path.slice(0, -18)))
     ) {
-      const l = json(left[path])!,
-        r = json(right[path])!;
+      const l = requiredRecord(left[path]),
+        r = requiredRecord(right[path]);
       const loser =
         canonicalValue([l.createdAt, maps[0].source]) < canonicalValue([r.createdAt, maps[1].source]) ? 1 : 0;
       rename(loser, path);
@@ -526,7 +533,7 @@ function remapBoards(
   const seen = new Map<string, string>();
   for (const [n, files] of sides.entries())
     for (const path of boardPaths(files)) {
-      const record = json(files[path])!,
+      const record = requiredRecord(files[path]),
         prefix = String(record.keyPrefix),
         id = String(record.id);
       const prior = seen.get(prefix);
@@ -541,19 +548,19 @@ function remapStories(
   maps: [IdentityRemap, IdentityRemap],
   helpers: MergeHelpers,
 ) {
-  const sides = [left, right];
+  const sides: [MergeFiles, MergeFiles] = [left, right];
   const used = new Map<string, number>();
   for (const files of [base, ...sides])
     for (const path of Object.keys(files)) {
       const match = /^boards\/([^/]+)\/stories\/[^/]+-(\d+)\//.exec(path);
-      if (match) used.set(match[1]!, Math.max(used.get(match[1]!) ?? 0, Number(match[2])));
+      if (match?.[1] && match[2]) used.set(match[1], Math.max(used.get(match[1]) ?? 0, Number(match[2])));
     }
   for (const path of Object.keys(left)
     .filter((p) => STORY.test(p))
     .sort()) {
     if (!right[path]) continue;
-    const l = json(left[path])!,
-      r = json(right[path])!,
+    const l = requiredRecord(left[path]),
+      r = requiredRecord(right[path]),
       old = json(base[path]);
     const recreated = old && (l.createdAt !== old.createdAt || r.createdAt !== old.createdAt);
     if (
@@ -562,18 +569,18 @@ function remapStories(
     ) {
       const loser =
         canonicalValue([l.createdAt, maps[0].source]) < canonicalValue([r.createdAt, maps[1].source]) ? 1 : 0;
-      const side = sides[loser]!,
-        story = json(side[path])!,
+      const side = sides[loser],
+        story = requiredRecord(side[path]),
         board = String(story.boardId),
         oldKey = String(story.key);
-      const boardRecord = json(side[`boards/${board}/board.config.json`])!;
+      const boardRecord = requiredRecord(side[`boards/${board}/board.config.json`]);
       const next = (used.get(board) ?? 0) + 1;
       used.set(board, next);
       const key = `${boardRecord.keyPrefix}-${next}`;
-      maps[loser]!.stories[oldKey] = key;
+      maps[loser].stories[oldKey] = key;
       helpers.retain(path, 'distinct concurrent Story identities', old, l, r, {
         retained: [oldKey, key],
-        source: maps[loser]!.source,
+        source: maps[loser].source,
       });
       renameTree(side, path.slice(0, -11), `boards/${board}/stories/${key}`);
       story.key = key;
@@ -605,9 +612,9 @@ function splitFieldTypes(base: MergeFiles, left: MergeFiles, right: MergeFiles, 
       for (const storyPath of Object.keys(right).filter(
         (p) => STORY.test(p) && (!scope || p.startsWith(`boards/${scope}/`)),
       )) {
-        const board = json(right[`boards/${STORY.exec(storyPath)![1]}/board.config.json`])!;
+        const board = requiredRecord(right[`boards/${storyPath.split('/')[1]}/board.config.json`]);
         if (!scope && board.customFields !== undefined) continue;
-        const story = json(right[storyPath])!;
+        const story = requiredRecord(right[storyPath]);
         if (isObject(story.customFields) && oldKey in story.customFields) {
           story.customFields[key] = story.customFields[oldKey];
           const counterpart = json(left[storyPath]);
@@ -623,11 +630,11 @@ function splitFieldTypes(base: MergeFiles, left: MergeFiles, right: MergeFiles, 
 }
 /** Restore only constraints needed by retained records, without destructive doctor fixes. */
 function repairConfiguration(files: MergeFiles, sources: MergeFiles[], helpers: MergeHelpers) {
-  const root = json(files['rowbly.config.json'])!;
+  const root = requiredRecord(files['rowbly.config.json']);
   for (const path of Object.keys(files)
     .filter((p) => BOARD.test(p))
     .sort()) {
-    const board = json(files[path])!,
+    const board = requiredRecord(files[path]),
       boardId = String(board.id);
     const stories = Object.keys(files)
       .filter((p) => p.startsWith(`boards/${boardId}/stories/`) && STORY.test(p))
@@ -673,7 +680,8 @@ function repairConfiguration(files: MergeFiles, sources: MergeFiles[], helpers: 
           fields = [...fields, definition as unknown as CustomFieldDef];
           changedFields = true;
         }
-        const def = fields.find((f) => f.key === key)!;
+        const def = fields.find((f) => f.key === key);
+        if (!def) throw new Error('Missing retained Custom Field definition');
         if (!fieldValueError(def, value)) continue;
         const repaired = structuredClone(def);
         if (repaired.type === 'select' && typeof value === 'string')
@@ -692,7 +700,7 @@ function repairConfiguration(files: MergeFiles, sources: MergeFiles[], helpers: 
       }
     }
     for (const def of fields)
-      if (def.required && stories.some((p) => !(def.key in (json(files[p])!.customFields as object)))) {
+      if (def.required && stories.some((p) => !(def.key in (requiredRecord(files[p]).customFields as object)))) {
         helpers.retain(
           `${path}/customFields/${def.key}/required`,
           'required relaxed instead of inventing a value',
@@ -710,7 +718,7 @@ function repairConfiguration(files: MergeFiles, sources: MergeFiles[], helpers: 
     // Rank ties are deterministic, retaining all Stories, with the original Rank in evidence.
     const ranks = new Set<string>();
     for (const p of stories) {
-      const story = json(files[p])!,
+      const story = requiredRecord(files[p]),
         pair = `${story.stage}/${story.rank}`;
       if (ranks.has(pair)) {
         const last =

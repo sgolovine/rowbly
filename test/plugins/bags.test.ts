@@ -126,7 +126,7 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     },
   });
   const result = mergeData(base, left, right, [format]);
-  const merged = JSON.parse(Buffer.from(result.files[path]!.data, 'base64').toString());
+  const merged = JSON.parse(Buffer.from(result.files[path]?.data ?? '', 'base64').toString());
   expect(merged.plugins.format).toEqual({ version: 1, count: 3 });
   expect(merged.plugins.future).toMatchObject({ version: 100, raw: null, bytes: 'unchanged' });
   expect(merged.plugins.ghost).toEqual(story.plugins?.ghost);

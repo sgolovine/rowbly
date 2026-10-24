@@ -2,7 +2,7 @@ import type { MergeFiles, PluginMergeSnapshot, PluginReconciler } from '../../pl
 import { EpicBag, EpicSchema } from './model';
 
 export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
-  const sides = [structuredClone(left), structuredClone(right)];
+  const sides: [PluginMergeSnapshot, PluginMergeSnapshot] = [structuredClone(left), structuredClone(right)];
   const files: MergeFiles = {},
     bags: Record<string, unknown> = {};
   const epic = (snapshot: PluginMergeSnapshot, path: string) => {
@@ -25,14 +25,14 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
       target = `plugins/epics/${id}.json`;
     used.add(target);
     replacements[b.id] = id;
-    sides[1]!.files[target] = helpers.file(`${JSON.stringify({ ...b, id }, null, 2)}\n`);
-    delete sides[1]!.files[path];
+    sides[1].files[target] = helpers.file(`${JSON.stringify({ ...b, id }, null, 2)}\n`);
+    delete sides[1].files[path];
     helpers.retain(path, 'distinct concurrent Epics retained separately', undefined, a, b, [a.id, id]);
   }
   for (const path of used) {
     if (!known(path)) continue;
-    const raw = [base.files[path], sides[0]!.files[path], sides[1]!.files[path]];
-    const values = [epic(base, path), epic(sides[0]!, path), epic(sides[1]!, path)];
+    const raw = [base.files[path], sides[0].files[path], sides[1].files[path]];
+    const values = [epic(base, path), epic(sides[0], path), epic(sides[1], path)];
     if (raw.some((file, n) => file && !values[n])) continue;
     const value = helpers.value(values[0], values[1], values[2], path);
     if (value !== undefined && values[0] && values[1] && values[2])

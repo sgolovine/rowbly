@@ -333,7 +333,9 @@ describe('Git local publication', () => {
       const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, target]);
       expect(killed.signal, killed.stderr).toBe('SIGKILL');
       expect(await f.git('rev-parse', 'HEAD')).toBe(target === 'ref-effect' ? f.plan.candidate : f.plan.old);
-      expect(await readPublicationFile(f.repo, f.plan.edits[0]!.path)).toEqual(f.plan.edits[0]!.before);
+      const firstEdit = f.plan.edits[0];
+      if (!firstEdit) throw new Error('Expected publication edit');
+      expect(await readPublicationFile(f.repo, firstEdit.path)).toEqual(firstEdit.before);
       // A different linked worktree shares the publication gate and recovers the recorded owner.
       await coordinated(
         { path: join(peer, '.rowbly'), kind: 'local' },

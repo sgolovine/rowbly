@@ -502,7 +502,7 @@ describe('Git data reconciliation', () => {
       },
     };
     const result = mergeData(base, left, right, builtInPlugins);
-    const record = JSON.parse(Buffer.from(result.files[core]!.data, 'base64').toString());
+    const record = JSON.parse(Buffer.from(result.files[core]?.data ?? '', 'base64').toString());
     expect(record).toMatchObject({
       name: 'Left',
       priority: 'P1',
@@ -513,7 +513,9 @@ describe('Git data reconciliation', () => {
     expect(record.description).toContain('FIVE\n');
     expect(record.description).not.toMatch(/<<<<<<<|>>>>>>>/);
     expect(result.evidence).toHaveLength(1);
-    const evidence = JSON.parse(Buffer.from(result.files[result.evidence[0]!]!.data, 'base64').toString());
+    const evidencePath = result.evidence[0];
+    if (!evidencePath) throw new Error('Expected merge evidence');
+    const evidence = JSON.parse(Buffer.from(result.files[evidencePath]?.data ?? '', 'base64').toString());
     expect(evidence.sources.sides).toEqual([left, right]);
     expect(evidence.decisions.some((d: { reason: string }) => d.reason === 'overlapping text hunks')).toBe(true);
     expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
@@ -522,8 +524,10 @@ describe('Git data reconciliation', () => {
     const nextLeft = { id: 'next-a', files: { ...result.files, [core]: file({ ...record, name: 'Second left' }) } };
     const nextRight = { id: 'next-b', files: { ...result.files, [core]: file({ ...record, name: 'Second right' }) } };
     const successive = mergeData(nextBase, nextLeft, nextRight, builtInPlugins);
-    expect(successive.files[result.evidence[0]!]).toEqual(result.files[result.evidence[0]!]);
-    const nextEvidence = JSON.parse(Buffer.from(successive.files[successive.evidence[0]!]!.data, 'base64').toString());
+    expect(successive.files[evidencePath]).toEqual(result.files[evidencePath]);
+    const nextPath = successive.evidence[0];
+    if (!nextPath) throw new Error('Expected successive merge evidence');
+    const nextEvidence = JSON.parse(Buffer.from(successive.files[nextPath]?.data ?? '', 'base64').toString());
     for (const source of [nextEvidence.sources.base, ...nextEvidence.sources.sides]) {
       expect(Object.keys(source.files).some((p) => p.startsWith('plugins/git/merge-evidence/'))).toBe(false);
       expect(source.evidence).toEqual([{ path: result.evidence[0], digest: expect.any(String) }]);
@@ -611,7 +615,7 @@ describe('Git data reconciliation', () => {
     };
     delete right.files[path(target.key)];
     const result = mergeData(base, left, right, builtInPlugins);
-    const read = (key: string) => JSON.parse(Buffer.from(result.files[path(key)]!.data, 'base64').toString());
+    const read = (key: string) => JSON.parse(Buffer.from(result.files[path(key)]?.data ?? '', 'base64').toString());
     expect(read('WEB-3').name).toBe('Left addition');
     expect(read('WEB-4').name).toBe('Right addition');
     expect(result.files['boards/web/stories/WEB-3/plugins/specs/a.md']).toEqual(
@@ -676,7 +680,7 @@ describe('Git data reconciliation', () => {
       },
     };
     const result = mergeData(base, left, right, []);
-    const read = (p: string) => JSON.parse(Buffer.from(result.files[p]!.data, 'base64').toString());
+    const read = (p: string) => JSON.parse(Buffer.from(result.files[p]?.data ?? '', 'base64').toString());
     expect(read(storyPath).customFields).toEqual({ kind: 'a', 'kind-2': 10 });
     const config = read(boardPath);
     expect(config.customFields.find((f: { key: string }) => f.key === 'new').required).toBe(false);
@@ -719,12 +723,15 @@ describe('Git data reconciliation', () => {
       };
       const merged = mergeData(source, a, b, builtInPlugins);
       const configPath = boardOverride ? boardPath : rootPath;
-      expect(JSON.parse(Buffer.from(merged.files[configPath]!.data, 'base64').toString()).stages).toContainEqual(
+      expect(JSON.parse(Buffer.from(merged.files[configPath]?.data ?? '', 'base64').toString()).stages).toContainEqual(
         retainedStage,
       );
       if (boardOverride)
-        expect(JSON.parse(Buffer.from(merged.files[rootPath]!.data, 'base64').toString())).toEqual(rootConfig);
-      else expect(JSON.parse(Buffer.from(merged.files[boardPath]!.data, 'base64').toString()).stages).toBeUndefined();
+        expect(JSON.parse(Buffer.from(merged.files[rootPath]?.data ?? '', 'base64').toString())).toEqual(rootConfig);
+      else
+        expect(
+          JSON.parse(Buffer.from(merged.files[boardPath]?.data ?? '', 'base64').toString()).stages,
+        ).toBeUndefined();
       expect(merged.decisions.some((d) => d.reason.startsWith('restored effective Stage'))).toBe(true);
       expect(mergeData(source, b, a, builtInPlugins)).toEqual(merged);
     }
