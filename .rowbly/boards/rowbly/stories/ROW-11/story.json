@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Automatically refresh the TUI when Data Root files change",
   "description": "## Problem\nWith the Rowbly TUI open, creating a Story through the CLI does not update the TUI. External changes remain invisible until the affected screen is reloaded or Rowbly is restarted.\n\n## Goal\nAdd a file watcher for the active Data Root so that changes made through the CLI, another Rowbly instance, or an external file update automatically refresh the relevant TUI data.\n\n## Acceptance criteria\n- Creating a Story through the CLI while the TUI is open makes it appear automatically on the relevant Board without manual refresh or restarting.\n- File creation, modification, deletion and renaming anywhere in the active Data Root trigger updates to affected visible data, including Stories, Boards, configuration and enabled Plugin data.\n- Changes to a currently displayed Story or Plugin view appear automatically; deleted records are handled gracefully.\n- Refreshes preserve navigation, selection where the selected record still exists, and unsaved form input.\n- Bursts of filesystem events are coalesced. Rowbly atomic writes and its temporary lock and journal files do not cause refresh loops or expose partially written data.\n- The watcher handles newly created directories, is cleaned up on exit or Data Root changes, and does not accumulate duplicate watchers.\n- Watcher or reload failures are surfaced without crashing the TUI, and subsequent valid changes can refresh successfully.\n\n## Verification\nRun the TUI and mutate the same Data Root with CLI commands: create, edit, move and delete a Story, then change configuration and enabled Plugin data. Confirm updates appear automatically and navigation and unsaved input remain usable. Verify rapid consecutive changes and watcher cleanup.",
-  "stage": "backlog",
-  "rank": "a1",
+  "stage": "todo",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-22T23:18:43.234Z",
-  "updatedAt": "2026-10-22T23:18:43.234Z"
+  "updatedAt": "2026-10-24T16:42:31.724Z"
 }
