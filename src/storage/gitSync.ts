@@ -177,6 +177,7 @@ async function runSynchronization(
   reconcile: (base: GitDataSource, left: GitDataSource, right: GitDataSource) => GitReconciled,
   phase: (name: string) => Promise<void>,
   validate: (files: GitDataFiles) => Promise<void>,
+  expectedTarget?: GitUpstream,
 ): Promise<SyncOutcome> {
   assertGitWorker(repo);
   const started = Date.now(),
@@ -192,6 +193,8 @@ async function runSynchronization(
     await cleanupPreparation(repo);
     await busy(repo);
     const upstream = await configuredUpstream(repo);
+    if (expectedTarget && !isDeepStrictEqual(upstream, expectedTarget))
+      throw new Error('Git branch or upstream changed after synchronization admission');
     await phase('fetching');
     await gitText(
       repo.top,

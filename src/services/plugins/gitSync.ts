@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories } from '../../storage';
@@ -100,6 +101,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
   const done = outsideCoordination(async () => {
     const repo = await requireRepository(resource.root);
     await withGitWorker(repo, async () => {
+      const target = await configuredUpstream(repo);
       const admitted = await coordinated(resource.root, 'git.sync.admit', async () => {
         const current = await preferences(resource);
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
@@ -109,6 +111,12 @@ function enqueue(file: string, resource: Resource): Promise<void> {
           await writeSyncState(file, state);
           return null;
         }
+        if (state.target && !isDeepStrictEqual(state.target, target)) {
+          state.target = target;
+          await writeSyncState(file, state);
+          throw new Error('Git branch or upstream changed since scheduling; next interval uses the current branch');
+        }
+        state.target = target;
         if (state.intervalSeconds !== current.intervalSeconds) {
           state.intervalSeconds = current.intervalSeconds;
           state.nextDue = state.anchor + current.intervalSeconds * 1000;
@@ -167,6 +175,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
               resource.registry,
             );
           },
+          target,
         );
         last = {
           kind: 'synchronized',
@@ -309,6 +318,7 @@ export function createGitSync(
       const found = await setup(source);
       if (!found) return;
       const { file, resource } = found;
+      const target = await configuredUpstream(await requireRepository(root)).catch(() => undefined);
       await coordinated(root, 'git.sync.schedule', async () => {
         if (owner && disposed.has(owner)) return;
         clearTimeout(resource.timer);
@@ -324,6 +334,7 @@ export function createGitSync(
         }
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
         state.intervalSeconds = current.intervalSeconds;
+        state.target = target;
         state.nextDue = state.anchor + current.intervalSeconds * 1000;
         await writeSyncState(file, state);
         if (state.nextDue <= Date.now() || state.requested) enqueue(file, resource);
@@ -338,6 +349,7 @@ export function createGitSync(
       const found = await setup(source);
       if (!found) throw new Error('This Git host has closed');
       const { file, resource } = found;
+      const target = await configuredUpstream(await requireRepository(root)).catch(() => undefined);
       const request = await coordinated(root, 'git.sync.request', async () => {
         if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
         const current = await preferences(resource);
@@ -351,6 +363,7 @@ export function createGitSync(
         )
           delete state.active;
         if (state.active) return false;
+        state.target = target;
         state.requested ??= randomBytes(8).toString('hex');
         await writeSyncState(file, state);
         return true;

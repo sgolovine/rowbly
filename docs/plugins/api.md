@@ -375,7 +375,7 @@ With `automaticCommits: false`, both methods retain pending work and `changed` s
 
 Local State-only changes add no paths. Queue updates and file snapshots serialize with Data Root writes, and workers check that the owning Plugin is still enabled before admitting each job. With a live resolver, they also refresh pending options, adjust the deadline once for any interval change and increment the revision under that lock before deciding whether to pause. Thus a saved Off preference takes effect even before its reaction publishes a queue update; delayed startup and reactions cannot overwrite it with earlier preferences. Timer decisions use the same coordinated options. Admission under this lock marks a job as running. A commit already running may finish; revision acknowledgement retains later edits. Git processes run under a separate queue lock outside the Data Root lock. These effect methods are intended for `start` and reactions; commands and screens change personal preferences through an Operation. There is no arbitrary Git command or filesystem capability.
 
-Git executes argument arrays without a shell, with a 3.5 s limit per process and 1 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Command-mode Operations and the CLI await due queue work outside reaction deadlines; the TUI does not. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or flush of future interval work on exit. See [Git](built-in.md#git) for the user contract and ADR-0030 for queue ownership.
+Git executes argument arrays without a shell, with a 3.5 s limit per local process and 16 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Command-mode Operations and the CLI await due queue work outside reaction deadlines; the TUI does not. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or flush of future interval work on exit. See [Git](built-in.md#git) for the user contract and ADR-0030 for queue ownership.
 
 ## Supported-format reconciliation
 
@@ -431,7 +431,9 @@ export const mergeNotes = definePlugin({
 
 ### Synchronization capability
 
-`PluginGit.syncStatus(liveResolver)` reads current preferences and persisted run details.
+`PluginGit.syncStatus(liveResolver)` reads current preferences and persisted run details, including
+the optional scheduled `target` (`branch`, `remote`, `mergeRef`). A stale timer cannot synchronize a
+changed branch/upstream in that attempt.
 `resumeSync(liveResolver)` schedules persisted work only at start or in a live reaction.
 `requestSync(liveResolver)` requests/coalesces an immediate enabled run only from a command/screen
 boundary, waits outside Data Root coordination and returns its current result. Its live resolver

@@ -1118,6 +1118,19 @@ describe('isolated upstream synchronization', () => {
       hosts.push((await withPlugins(f.t, [git, comments])).host);
       expect((await readSyncState(stateFile))?.nextDue).toBe(completed?.nextDue);
       expect(spy).toHaveBeenCalledTimes(1);
+      const callback = timers.mock.calls.findLast(([, ms]) => typeof ms === 'number' && ms > 7_000_000)?.[0];
+      expect(callback).toBeTypeOf('function');
+      await f.command('checkout', '-b', 'another');
+      await f.command('branch', '--set-upstream-to=origin/main');
+      if (typeof callback === 'function') callback();
+      await drainGitQueue(f.t.root);
+      const changedBranch = await readSyncState(stateFile);
+      expect(changedBranch?.last?.kind).toBe('failed');
+      expect(changedBranch?.last?.message).toContain('changed since scheduling');
+      expect(changedBranch?.target?.branch).toBe('refs/heads/another');
+      expect(changedBranch?.nextDue).toBeGreaterThan(Date.now());
+      expect(spy).toHaveBeenCalledTimes(1);
+      await f.command('checkout', 'main');
       expect((await preferences(plugin)).automaticCommits).toBe(false);
     } finally {
       for (const host of hosts) host.dispose?.();
