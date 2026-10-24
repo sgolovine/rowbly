@@ -10,7 +10,11 @@ import {
 } from '../../../src/storage/gitSyncJournal';
 
 /** A candidate deliberately built with plumbing: no live ref/index/file effects. */
-export async function syncFixture(dir: string, path: string) {
+export async function syncFixture(
+  dir: string,
+  path: string,
+  configAfter = '{"version":1,"plugins":{"future":{"enabled":false,"retained":true}}}\n',
+) {
   await gitText(dir, ['init', '-b', 'main']);
   await gitText(dir, ['config', 'user.name', 'Journal test']);
   await gitText(dir, ['config', 'user.email', 'journal@example.com']);
@@ -32,7 +36,7 @@ export async function syncFixture(dir: string, path: string) {
   const values = [
     {
       path: '.rowbly/rowbly.config.json',
-      after: file('{"version":1,"plugins":{"future":{"enabled":false,"retained":true}}}\n'),
+      after: file(configAfter),
     },
     { path: '.rowbly/plugins/unknown/blob.bin', after: file(new Uint8Array([0, 255, 1, 128])) },
     { path: 'code.txt', after: file('new code\n', '100755') },
