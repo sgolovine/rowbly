@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Make opening a Story after creation configurable",
   "description": "## Problem\nCreating a Story in the TUI currently opens the new Story automatically. Users should be able to choose whether to open it or return to the Board or list they were using.\n\n## Acceptance criteria\n- Add an \"Open Story after creation\" toggle in Settings.\n- The toggle is off by default, including when no preference has been saved.\n- When off, successfully creating a Story returns to the originating Board or list, with the new Story saved and the view refreshed.\n- When on, successfully creating a Story opens the newly created Story, preserving the current behavior.\n- The preference persists across TUI restarts and can be turned on or off again in Settings.\n- The setting applies consistently when creating a Story from either a Board or a list.\n- Update the user guide to describe the setting and its default.\n\n## Verification\nCreate a Story from both Board and list views with the toggle off and on. Confirm the destination after saving, then restart the TUI and confirm the saved preference still applies.",
-  "stage": "todo",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "aL",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-22T23:21:18.161Z",
-  "updatedAt": "2026-10-24T16:42:28.368Z"
+  "updatedAt": "2026-10-24T17:27:43.602Z"
 }
