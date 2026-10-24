@@ -27,6 +27,13 @@ export interface PluginMergeSnapshot {
   /** Paths relative to the Data Root, restricted to this Plugin's scoped folders. */
   files: MergeFiles;
 }
+/** Owner-defined identifiers, keyed by their core scope; never interpreted by core. */
+export type PluginIdentityMap = Record<string, Record<string, string>>;
+export interface PluginReplayProjection {
+  base: PluginIdentityMap;
+  left: PluginIdentityMap;
+  right: PluginIdentityMap;
+}
 export interface MergeDecision {
   path: string;
   reason: string;
@@ -52,11 +59,16 @@ export interface PluginReconciliation {
   /** Final retained core identities; no other Plugin data is exposed. */
   stories: readonly string[];
   stages: Readonly<Record<string, readonly string[]>>;
+  /** Prior identity transport for this owner only, applied simultaneously to original raw sources. */
+  replay?: PluginReplayProjection;
 }
 /** Pure supported-format reconciliation only. Return no entry to keep the host's opaque merge. */
-export type PluginReconciler = (
-  input: PluginReconciliation,
-) => PluginMergeSnapshot & { requiredStories?: readonly RequiredStory[]; requiredStages?: readonly RequiredStage[] };
+export type PluginReconciler = (input: PluginReconciliation) => PluginMergeSnapshot & {
+  requiredStories?: readonly RequiredStory[];
+  requiredStages?: readonly RequiredStage[];
+  /** Source-qualified identity changes created by this reconciliation. */
+  identities?: readonly { source: string; scope: string; from: string; to: string }[];
+};
 
 export function canonicalValue(value: unknown): string {
   if (value === undefined) return 'undefined';

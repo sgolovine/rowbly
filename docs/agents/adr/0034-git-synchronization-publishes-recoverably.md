@@ -1,6 +1,6 @@
 # ADR-0034: Git synchronization prepares isolated merges and publishes recoverably
 
-**Status:** Accepted (ROW-15)
+**Status:** Accepted (ROW-15). [ADR-0035](0035-manual-sync-rebases-before-capturing-pending-data.md) adds a separate manual rebase mode and owner identity continuation during replay.
 
 ## Context
 

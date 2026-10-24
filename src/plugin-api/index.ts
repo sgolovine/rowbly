@@ -155,9 +155,11 @@ export type {
   MergeFile,
   MergeFiles,
   MergeHelpers,
+  PluginIdentityMap,
   PluginMergeSnapshot,
   PluginReconciler,
   PluginReconciliation,
+  PluginReplayProjection,
   RequiredStage,
   RequiredStory,
 } from '../services/plugins/reconciliation';

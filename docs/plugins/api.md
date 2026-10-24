@@ -46,7 +46,7 @@ The types a Plugin meets at run time, by where it meets them:
 | TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
 | Doctor | `DoctorData`, `PluginFinding` |
 | Git | `PluginGit`, `GitCommitOptions`, `GitOptionsSource`, `GitSyncOptions`, `GitSyncOptionsSource`, `GitSyncStatus` |
-| Reconciliation | `PluginReconciler`, `PluginReconciliation`, `PluginMergeSnapshot`, `MergeFile`, `MergeFiles`, `MergeHelpers`, `IdentityRemap`, `RequiredStory`, `RequiredStage` |
+| Reconciliation | `PluginReconciler`, `PluginReconciliation`, `PluginMergeSnapshot`, `PluginIdentityMap`, `PluginReplayProjection`, `MergeFile`, `MergeFiles`, `MergeHelpers`, `IdentityRemap`, `RequiredStory`, `RequiredStage` |
 
 Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring (a Plugin gets `PluginServices` or `PluginReadServices`), `PluginError` (the framework's own attribution error), and the TUI's `useToast` (use `ui.toast` and `ui.error`).
 
@@ -411,6 +411,16 @@ Omitted entries keep the host's opaque reconciliation. An explicit undefined bag
 Output cannot write another Plugin, invent a scope, escape a scoped folder or change core fields.
 A thrown error or invalid output stops preparation before live publication.
 
+For replay, the optional `replay` input carries `base`, `left` and `right` identity maps for this
+owner only. Each map is keyed by core scope, then by the owner's original string identifier, with
+the transported string identifier as its value. The owner checks raw supported-source validity
+before applying these maps simultaneously to BASE and the corresponding side. It must preserve
+unsupported bags unchanged. Core never interprets an owner's identifiers or infers references.
+An owner that splits an identity may return `identities: [{ source, scope, from, to }]`, naming a
+supplied side's source and retained core scope. The host bounds and validates these changes and
+returns them only to that same owner in later replay steps. These transient maps are not persisted
+Plugin Data or a migration API. Merge callers omit replay input and retain their existing behavior.
+
 Only a supported format that understands a retained Story reference may additionally return
 `requiredStories: [{ source, key }]`. Each request must name an existing Story in an immutable
 supplied side snapshot. The host validates the source and key, applies the source-qualified identity
@@ -440,7 +450,13 @@ export const mergeNotes = definePlugin({
       if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
       bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
     }
-    return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
+    return {
+      bags,
+      files: {},
+      requiredStories: [] as RequiredStory[],
+      requiredStages: [] as RequiredStage[],
+      identities: [],
+    };
   },
 });
 ```

@@ -77,7 +77,13 @@ export const mergeNotes = definePlugin({
       if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
       bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
     }
-    return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
+    return {
+      bags,
+      files: {},
+      requiredStories: [] as RequiredStory[],
+      requiredStages: [] as RequiredStage[],
+      identities: [],
+    };
   },
 });
 // #endregion

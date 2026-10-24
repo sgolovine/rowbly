@@ -114,7 +114,7 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     start() {
       started++;
     },
-    reconcile({ left, right, helpers }) {
+    reconcile({ left, right, helpers, replay }) {
       called++;
       expect(Object.keys(left.bags)).toEqual(['boards/web/stories/WEB-1']);
       expect(left.bags['boards/web/stories/WEB-1']).toEqual({ version: 1, count: 1 });
@@ -122,10 +122,21 @@ it('reconciles only supported owned formats while Off, preserves future bags and
         left.bags.bad = 1;
       }).toThrow();
       expect(helpers.same(right.bags['boards/web/stories/WEB-1'], { version: 1, count: 2 })).toBe(true);
-      return { bags: { 'boards/web/stories/WEB-1': { version: 1, count: 3 } }, files: {} };
+      expect(replay?.base).toEqual({});
+      expect(replay?.left).toEqual({ 'boards/web/stories/WEB-1': { old: 'new' } });
+      return {
+        bags: { 'boards/web/stories/WEB-1': { version: 1, count: 3 } },
+        files: {},
+        identities: [{ source: 'right', scope: 'boards/web/stories/WEB-1', from: 'one', to: 'two' }],
+      };
     },
   });
-  const result = mergeData(base, left, right, [format]);
+  const result = mergeData(base, left, right, [format], {
+    left: { format: { 'boards/web/stories/WEB-1': { old: 'new' } }, other: { '': { private: 'other owner' } } },
+  });
+  expect(result.identities).toEqual([
+    { owner: 'format', source: 'right', scope: 'boards/web/stories/WEB-1', from: 'one', to: 'two' },
+  ]);
   const merged = JSON.parse(Buffer.from(result.files[path]?.data ?? '', 'base64').toString());
   expect(merged.plugins.format).toEqual({ version: 1, count: 3 });
   expect(merged.plugins.future).toMatchObject({ version: 100, raw: null, bytes: 'unchanged' });
@@ -138,6 +149,8 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     () => ({ bags: { 'boards/missing/stories/MIS-1': {} }, files: {} }),
     () => ({ bags: {}, files: {}, requiredStories: [{ source: 'left', key: 'WEB-999' }] }),
     () => ({ bags: {}, files: {}, requiredStages: [{ source: 'left', board: 'web', key: 'missing' }] }),
+    () => ({ bags: {}, files: {}, identities: [{ source: 'unknown', scope: '', from: 'a', to: 'b' }] }),
+    () => ({ bags: {}, files: {}, identities: [{ source: 'left', scope: 'boards/missing', from: 'a', to: 'b' }] }),
     () => {
       throw new Error('format failed');
     },

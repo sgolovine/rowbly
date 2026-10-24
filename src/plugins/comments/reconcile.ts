@@ -1,8 +1,9 @@
 import type { PluginReconciler } from '../../plugin-api';
 import { CommentsBag, CommentsBagShape } from './model';
 
-export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
+export const reconcile: PluginReconciler = ({ base, left, right, helpers, remaps, replay }) => {
   const bags: Record<string, unknown> = {};
+  const identities: NonNullable<ReturnType<PluginReconciler>['identities']>[number][] = [];
   for (const scope of new Set([...Object.keys(base.bags), ...Object.keys(left.bags), ...Object.keys(right.bags)])) {
     const raw = [base.bags[scope], left.bags[scope], right.bags[scope]];
     const parsed = raw.map((value) => CommentsBagShape.safeParse(value ?? { comments: [] }));
@@ -13,7 +14,15 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
       if (!valid.success) throw new Error(`Cannot reconcile Comments at ${scope}: ${valid.error.issues[0]?.message}`);
     }
     if (parsed.some((p, n) => !p.success || (raw[n] !== undefined && !helpers.same(p.data, raw[n])))) continue;
-    const [old, a, b] = parsed.map((p) => (p.success ? p.data.comments : []));
+    const [old, a, b] = parsed.map((p, side) => {
+      const map = [replay?.base, replay?.left, replay?.right][side]?.[scope];
+      const comments = (p.success ? p.data.comments : []).map((comment) => ({
+        ...comment,
+        id: map?.[comment.id] ?? comment.id,
+      }));
+      CommentsBag.parse({ comments });
+      return comments;
+    });
     if (!old || !a || !b) continue;
     const comments = [],
       used = new Set([...old, ...a, ...b].map((c) => c.id));
@@ -27,6 +36,7 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
         const second = { ...r, id: `${id}-${n}` };
         used.add(second.id);
         comments.push(l, second);
+        identities.push({ source: remaps[1].source, scope, from: id, to: second.id });
         helpers.retain(
           `${scope}/comments/${id}`,
           'distinct concurrent Comments retained with separate identities',
@@ -46,5 +56,5 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
     }
     bags[scope] = { comments };
   }
-  return { bags, files: {} };
+  return { bags, files: {}, identities };
 };

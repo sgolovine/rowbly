@@ -62,3 +62,4 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0027](0027-tests-guard-only-what-review-cannot-check.md) | Tests guard only what review cannot check | Accepted |
 
 | [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted |
+| [0035](0035-manual-sync-rebases-before-capturing-pending-data.md) | Manual Sync rebases before capturing pending data | Accepted; implementation in progress |

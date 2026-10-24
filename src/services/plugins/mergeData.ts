@@ -13,6 +13,7 @@ import {
   type MergeFiles,
   type MergeHelpers,
   mergeDigest,
+  type PluginIdentityMap,
   type PluginMergeSnapshot,
   type RequiredStage,
   type RequiredStory,
@@ -28,7 +29,9 @@ export interface DataMergeResult {
   remaps: [IdentityRemap, IdentityRemap];
   decisions: MergeDecision[];
   evidence: string[];
+  identities?: { owner: string; source: string; scope: string; from: string; to: string }[];
 }
+export type ReplayOwnerMaps = Readonly<Record<string, Readonly<Record<string, PluginIdentityMap>>>>;
 const BOARD = /^boards\/([^/]+)\/board.config.json$/;
 const STORY = /^boards\/([^/]+)\/stories\/([^/]+)\/story.json$/;
 const PLUGIN = /^(?:(boards\/[^/]+)(?:\/stories\/[^/]+)?\/)?plugins\/([^/]+)\/(.+)$/;
@@ -94,6 +97,7 @@ export function mergeData(
   left: MergeSource,
   right: MergeSource,
   registry: readonly AnyPluginDefinition[],
+  replay?: ReplayOwnerMaps,
 ): DataMergeResult {
   const restores = new Map<string, RequiredStory>();
   const stages = new Map<string, RequiredStage>();
@@ -108,7 +112,7 @@ export function mergeData(
     0,
   );
   for (let pass = 0; pass <= maximum; pass++) {
-    const result = mergeOnce(base, left, right, registry, [...restores.values()], [...stages.values()]);
+    const result = mergeOnce(base, left, right, registry, [...restores.values()], [...stages.values()], replay);
     let changed = false;
     for (const request of result.requests) {
       const source = supplied.find((s) => s.id === request.source);
@@ -142,6 +146,7 @@ function mergeOnce(
   registry: readonly AnyPluginDefinition[],
   restores: RequiredStory[],
   stages: RequiredStage[],
+  replay?: ReplayOwnerMaps,
 ): DataMergeResult & { requests: RequiredStory[]; stageRequests: RequiredStage[] } {
   // Source ordering is independent of ours/theirs. Equal IDs must actually be equal snapshots.
   const sources: [MergeSource, MergeSource] = [a, b];
@@ -160,6 +165,7 @@ function mergeOnce(
   })) as [IdentityRemap, IdentityRemap];
   const requests: RequiredStory[] = [],
     stageRequests: RequiredStage[] = [];
+  const identities: NonNullable<DataMergeResult['identities']> = [];
   for (const request of restores) {
     const source = [leftSource, rightSource].find((s) => s.id === request.source);
     if (!source) throw new Error('Unknown restoration source');
@@ -277,10 +283,42 @@ function mergeOnce(
       stories: Object.keys(files)
         .filter((p) => STORY.test(p))
         .map((p) => String(json(files[p])?.key)),
+      ...(replay
+        ? {
+            replay: {
+              base: structuredClone(replay[baseSource.id]?.[definition.id] ?? {}),
+              left: structuredClone(replay[leftSource.id]?.[definition.id] ?? {}),
+              right: structuredClone(replay[rightSource.id]?.[definition.id] ?? {}),
+            },
+          }
+        : {}),
     });
     const result = definition.reconcile(input);
     if (!result || !isObject(result.bags) || !isObject(result.files))
       throw new Error(`Invalid reconciliation output from ${definition.id}`);
+    const seenIdentities = new Set<string>();
+    if ((result.identities?.length ?? 0) > 4096) throw new Error('Too many replay identity changes');
+    for (const identity of result.identities ?? []) {
+      if (
+        !identity ||
+        ![leftSource.id, rightSource.id].includes(identity.source) ||
+        typeof identity.scope !== 'string' ||
+        !files[scopeRecord(identity.scope)] ||
+        (identity.scope !== '' && !/^(boards\/[^/]+)(\/stories\/[^/]+)?$/.test(identity.scope)) ||
+        ![identity.from, identity.to].every((id) => typeof id === 'string' && id.length > 0 && id.length <= 512)
+      )
+        throw new Error(`Invalid replay identity change from ${definition.id}`);
+      const key = canonicalValue([identity.source, identity.scope, identity.from]);
+      if (seenIdentities.has(key)) throw new Error(`Repeated replay identity change from ${definition.id}`);
+      seenIdentities.add(key);
+      identities.push({
+        owner: definition.id,
+        source: identity.source,
+        scope: identity.scope,
+        from: identity.from,
+        to: identity.to,
+      });
+    }
     for (const request of result.requiredStories ?? []) {
       if (!request || typeof request.source !== 'string' || typeof request.key !== 'string')
         throw new Error('Invalid requiredStories request');
@@ -351,13 +389,14 @@ function mergeOnce(
       version: 1,
       sources: { base: evidenceSource(baseSource), sides: [evidenceSource(leftSource), evidenceSource(rightSource)] },
       remaps,
+      ...(replay ? { replay, identities } : {}),
       decisions: [...decisions].sort((a, b) => (canonicalValue(a) < canonicalValue(b) ? -1 : 1)),
     };
     const path = `plugins/git/merge-evidence/${mergeDigest(record)}.json`;
     files[path] = encode(record);
     evidence.push(path);
   }
-  return { files, decisions, remaps, evidence, requests, stageRequests };
+  return { files, decisions, remaps, evidence, identities, requests, stageRequests };
 }
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') {
