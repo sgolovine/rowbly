@@ -26,6 +26,8 @@ export interface BoardColumnProps {
   active: boolean;
   /** A card clicked, by its index in `cards`, or `-1` for an empty spot in the column. */
   onClick?(index: number): void;
+  /** A card right-clicked, by its index in `cards`, at cell `x`, `y`. */
+  onContextMenu?(index: number, x: number, y: number): void;
   /**
    * A card (its Story Key) dropped on this column, at `slot`: its index among the column's cards without it.
    */
@@ -55,6 +57,7 @@ export function BoardColumn({
   selected,
   active,
   onClick,
+  onContextMenu,
   onDrop,
   onDragOver,
   onDragLeave,
@@ -117,6 +120,7 @@ export function BoardColumn({
             selected={selected === index}
             active={active}
             onClick={() => onClick?.(index)}
+            onContextMenu={onContextMenu && ((x, y) => onContextMenu(index, x, y))}
           />
         );
       })}

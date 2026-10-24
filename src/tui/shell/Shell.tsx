@@ -1,13 +1,16 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { invokePlugin, knownDataRoots } from '../../services';
-import { ConfirmDialog, Modal, Panel } from '../components';
+import { ConfirmDialog, ContextMenu, Modal, Panel } from '../components';
 import {
   ActiveContext,
   type BoardSelection,
   BoardSelectionContext,
   type BoardView,
   BoardViewContext,
+  ContextMenuContext,
+  type ContextMenuControl,
+  type ContextMenuItem,
   LayoutContext,
   type MainOverlay,
   MainOverlayContext,
@@ -42,6 +45,8 @@ type Overlay =
   | { kind: 'help' }
   | { kind: 'dataRoots' }
   | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
+  // A context menu opened by a right click, at a cell of the terminal.
+  | { kind: 'menu'; x: number; y: number; items: readonly ContextMenuItem[] }
   // A node a screen shows over the whole terminal, such as a full-screen editor.
   | { kind: 'main'; id: string; node: ReactNode };
 
@@ -68,6 +73,17 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     () => ({
       open: (id, node) => setOverlay({ kind: 'main', id, node }),
       close: (id) => setOverlay((current) => (current?.kind === 'main' && current.id === id ? null : current)),
+    }),
+    [],
+  );
+  const contextMenu = useMemo<ContextMenuControl>(
+    () => ({
+      // Only over the screens: a right click cannot reach a box under another overlay.
+      open: (x, y, items) =>
+        setOverlay((current) =>
+          current === null || current.kind === 'menu' ? { kind: 'menu', x, y, items } : current,
+        ),
+      close: () => setOverlay((current) => (current?.kind === 'menu' ? null : current)),
     }),
     [],
   );
@@ -237,182 +253,207 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     <BoardSelectionContext.Provider value={selection}>
       <BoardViewContext.Provider value={boardViewChoice}>
         <MainOverlayContext.Provider value={mainOverlay}>
-          <SidebarFilterContext.Provider value={pluginSidebars.filter}>
-            <Box flexDirection="column" height={fullscreen ? rows : undefined}>
-              <Header
-                root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
-                label={label}
-                onNewStory={services ? newStory : undefined}
-                newStoryKey={!sidebarFocused}
-                onSettings={services ? openSettings : undefined}
-                clickable={idle}
-                actions={actions}
-                actionsClickable={overlay === null}
-                boardView={
-                  router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined
-                }
-                sidebars={pluginSidebars.buttons}
-              />
-              <Box flexGrow={1} columnGap={1}>
-                {services && boardsShown && (
-                  <Sidebar
-                    title="Boards"
-                    entries={boards.map((board) => ({ id: board.id, label: board.name }))}
-                    current={currentIndex}
-                    emptyText="No Boards yet."
-                    numbered
+          <ContextMenuContext.Provider value={contextMenu}>
+            <SidebarFilterContext.Provider value={pluginSidebars.filter}>
+              <Box flexDirection="column" height={fullscreen ? rows : undefined}>
+                <Header
+                  root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
+                  label={label}
+                  onNewStory={services ? newStory : undefined}
+                  newStoryKey={!sidebarFocused}
+                  onSettings={services ? openSettings : undefined}
+                  clickable={idle}
+                  actions={actions}
+                  actionsClickable={overlay === null}
+                  boardView={
+                    router.stack[0]?.screen === 'board' ? { view: boardView, onChange: setBoardView } : undefined
+                  }
+                  sidebars={pluginSidebars.buttons}
+                />
+                <Box flexGrow={1} columnGap={1}>
+                  {services && boardsShown && (
+                    <Sidebar
+                      title="Boards"
+                      entries={boards.map((board) => ({ id: board.id, label: board.name }))}
+                      current={currentIndex}
+                      emptyText="No Boards yet."
+                      numbered
+                      height={mainHeight}
+                      width={boardsShownWidth}
+                      maxWidth={room - pluginShownWidth}
+                      onResize={setBoardsWidth}
+                      focused={idle && pane === 'boards'}
+                      clickable={idle}
+                      onFocus={() => setPane('boards')}
+                      onSelect={(boardId) => void selection.select(boardId)}
+                      button={{ label: '+ New Board', onClick: newBoard }}
+                    />
+                  )}
+                  {services && pluginSidebars.shown && (
+                    <Sidebar
+                      title={pluginSidebars.shown.title}
+                      entries={pluginSidebars.shown.entries}
+                      current={pluginSidebars.shown.current}
+                      height={mainHeight}
+                      width={pluginShownWidth}
+                      maxWidth={room - boardsShownWidth}
+                      onResize={setPluginWidth}
+                      focused={idle && pane === 'plugin'}
+                      clickable={idle}
+                      onFocus={() => setPane('plugin')}
+                      onSelect={pluginSidebars.pick}
+                      button={pluginSidebars.shown.button}
+                    />
+                  )}
+                  <Panel
+                    title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
+                    focused={idle && pane === 'main'}
+                    onClick={idle ? () => setPane('main') : undefined}
+                    flexGrow={1}
+                    flexShrink={1}
                     height={mainHeight}
-                    width={boardsShownWidth}
-                    maxWidth={room - pluginShownWidth}
-                    onResize={setBoardsWidth}
-                    focused={idle && pane === 'boards'}
-                    clickable={idle}
-                    onFocus={() => setPane('boards')}
-                    onSelect={(boardId) => void selection.select(boardId)}
-                    button={{ label: '+ New Board', onClick: newBoard }}
-                  />
-                )}
-                {services && pluginSidebars.shown && (
-                  <Sidebar
-                    title={pluginSidebars.shown.title}
-                    entries={pluginSidebars.shown.entries}
-                    current={pluginSidebars.shown.current}
-                    height={mainHeight}
-                    width={pluginShownWidth}
-                    maxWidth={room - boardsShownWidth}
-                    onResize={setPluginWidth}
-                    focused={idle && pane === 'plugin'}
-                    clickable={idle}
-                    onFocus={() => setPane('plugin')}
-                    onSelect={pluginSidebars.pick}
-                    button={pluginSidebars.shown.button}
-                  />
-                )}
-                <Panel
-                  title={router.stack[0] ? routeTitle(router.stack[0]) : undefined}
-                  focused={idle && pane === 'main'}
-                  onClick={idle ? () => setPane('main') : undefined}
-                  flexGrow={1}
-                  flexShrink={1}
-                  height={mainHeight}
-                  overflow="hidden"
-                >
-                  <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
-                    {router.stack[0] && (
-                      <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
-                        <ScreenSlot
-                          route={router.stack[0]}
-                          depth={0}
-                          top
-                          active={idle && pane === 'main'}
-                          screens={screens}
-                        />
-                      </Box>
-                    )}
-                    {depth > 0 && top && (
-                      // Pinned to the top of the main area so the Modal centres there rather than below
-                      // the root screen's content.
-                      <Box
-                        display={screenHidden ? 'none' : 'flex'}
-                        flexDirection="column"
-                        position={fullscreen ? 'absolute' : 'relative'}
-                        top={0}
-                        left={0}
-                        width="100%"
-                      >
-                        {router.stack.slice(1).map((route, i) => {
-                          const routeDepth = i + 1;
-                          const screen = route.screen === 'story' || route.screen === 'settings';
-                          const visible =
-                            routeDepth === depth ||
-                            (screen &&
-                              !router.stack
-                                .slice(routeDepth + 1)
-                                .some((next) => next.screen === 'story' || next.screen === 'settings'));
-                          const focused = routeDepth === depth && overlay === null;
-                          return (
-                            <Box
-                              key={`${routeDepth}:${route.screen}`}
-                              display={visible ? 'flex' : 'none'}
-                              flexDirection="column"
-                              position={fullscreen ? 'absolute' : 'relative'}
-                              top={0}
-                              left={0}
-                              width="100%"
-                            >
-                              <ActiveContext.Provider value={focused}>
-                                <Modal
-                                  title={router.stack
-                                    .slice(0, routeDepth + 1)
-                                    .map(routeTitle)
-                                    .join(' › ')}
-                                  size={screen ? 'screen' : 'panel'}
-                                  focused={focused}
-                                  onClose={focused ? back : undefined}
-                                  hints={modalHints(focused ? hints : [])}
-                                >
-                                  <ScreenSlot route={route} depth={routeDepth} top active={focused} screens={screens} />
-                                </Modal>
-                              </ActiveContext.Provider>
-                            </Box>
-                          );
-                        })}
-                      </Box>
-                    )}
-                    {overlay?.kind === 'help' && (
-                      <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
-                        <HelpOverlay hints={hints} />
-                      </Modal>
-                    )}
-                    {overlay?.kind === 'dataRoots' && (
-                      <DataRootSwitcher
-                        onClose={() => {
-                          setOverlay(null);
-                          roots.reload();
-                        }}
-                      />
-                    )}
-                    {overlay?.kind === 'confirm' && (
-                      <Modal size="dialog" title="Discard changes" onClose={() => setOverlay(null)}>
-                        <ConfirmDialog
-                          message={
-                            overlay.action === 'quit'
-                              ? 'Quit and discard unsaved changes?'
-                              : overlay.action === 'settings'
-                                ? 'Open Settings and discard unsaved changes?'
-                                : 'Go back and discard unsaved changes?'
-                          }
-                          confirmLabel="Discard"
-                          cancelLabel="Keep editing"
-                          destructive
-                          onConfirm={() => {
+                    overflow="hidden"
+                  >
+                    <LayoutContext.Provider value={{ width: mainWidth, height: innerHeight }}>
+                      {router.stack[0] && (
+                        <Box flexDirection="column" display={screenHidden && !fullscreen ? 'none' : 'flex'}>
+                          <ScreenSlot
+                            route={router.stack[0]}
+                            depth={0}
+                            top
+                            active={idle && pane === 'main'}
+                            screens={screens}
+                          />
+                        </Box>
+                      )}
+                      {depth > 0 && top && (
+                        // Pinned to the top of the main area so the Modal centres there rather than below
+                        // the root screen's content.
+                        <Box
+                          display={screenHidden ? 'none' : 'flex'}
+                          flexDirection="column"
+                          position={fullscreen ? 'absolute' : 'relative'}
+                          top={0}
+                          left={0}
+                          width="100%"
+                        >
+                          {router.stack.slice(1).map((route, i) => {
+                            const routeDepth = i + 1;
+                            const screen = route.screen === 'story' || route.screen === 'settings';
+                            const visible =
+                              routeDepth === depth ||
+                              (screen &&
+                                !router.stack
+                                  .slice(routeDepth + 1)
+                                  .some((next) => next.screen === 'story' || next.screen === 'settings'));
+                            const focused = routeDepth === depth && overlay === null;
+                            return (
+                              <Box
+                                key={`${routeDepth}:${route.screen}`}
+                                display={visible ? 'flex' : 'none'}
+                                flexDirection="column"
+                                position={fullscreen ? 'absolute' : 'relative'}
+                                top={0}
+                                left={0}
+                                width="100%"
+                              >
+                                <ActiveContext.Provider value={focused}>
+                                  <Modal
+                                    title={router.stack
+                                      .slice(0, routeDepth + 1)
+                                      .map(routeTitle)
+                                      .join(' › ')}
+                                    size={screen ? 'screen' : 'panel'}
+                                    focused={focused}
+                                    onClose={focused ? back : undefined}
+                                    hints={modalHints(focused ? hints : [])}
+                                  >
+                                    <ScreenSlot
+                                      route={route}
+                                      depth={routeDepth}
+                                      top
+                                      active={focused}
+                                      screens={screens}
+                                    />
+                                  </Modal>
+                                </ActiveContext.Provider>
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                      {overlay?.kind === 'help' && (
+                        <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
+                          <HelpOverlay hints={hints} />
+                        </Modal>
+                      )}
+                      {overlay?.kind === 'dataRoots' && (
+                        <DataRootSwitcher
+                          onClose={() => {
                             setOverlay(null);
-                            if (overlay.action === 'quit') exit();
-                            else if (overlay.action === 'settings') replaceStory();
-                            else router.pop();
+                            roots.reload();
                           }}
-                          onCancel={() => setOverlay(null)}
                         />
-                      </Modal>
-                    )}
+                      )}
+                      {overlay?.kind === 'confirm' && (
+                        <Modal size="dialog" title="Discard changes" onClose={() => setOverlay(null)}>
+                          <ConfirmDialog
+                            message={
+                              overlay.action === 'quit'
+                                ? 'Quit and discard unsaved changes?'
+                                : overlay.action === 'settings'
+                                  ? 'Open Settings and discard unsaved changes?'
+                                  : 'Go back and discard unsaved changes?'
+                            }
+                            confirmLabel="Discard"
+                            cancelLabel="Keep editing"
+                            destructive
+                            onConfirm={() => {
+                              setOverlay(null);
+                              if (overlay.action === 'quit') exit();
+                              else if (overlay.action === 'settings') replaceStory();
+                              else router.pop();
+                            }}
+                            onCancel={() => setOverlay(null)}
+                          />
+                        </Modal>
+                      )}
+                    </LayoutContext.Provider>
+                  </Panel>
+                </Box>
+                <ToastArea />
+                <Footer hints={overlay?.kind === 'menu' ? MENU_HINTS : atRoot ? hints : []} atRoot={atRoot} />
+                {overlay?.kind === 'main' && (
+                  // Over the whole terminal rather than the main area; the Modal keeps its margin to the edges.
+                  <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>
+                    {overlay.node}
                   </LayoutContext.Provider>
-                </Panel>
+                )}
+                {overlay?.kind === 'menu' && (
+                  // Keyed by where it opened, so a menu opened again elsewhere starts at its first item.
+                  <ContextMenu
+                    key={`${overlay.x}:${overlay.y}`}
+                    x={overlay.x}
+                    y={overlay.y}
+                    items={overlay.items}
+                    onClose={contextMenu.close}
+                  />
+                )}
               </Box>
-              <ToastArea />
-              <Footer hints={atRoot ? hints : []} atRoot={atRoot} />
-              {overlay?.kind === 'main' && (
-                // Over the whole terminal rather than the main area; the Modal keeps its margin to the edges.
-                <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>
-                  {overlay.node}
-                </LayoutContext.Provider>
-              )}
-            </Box>
-          </SidebarFilterContext.Provider>
+            </SidebarFilterContext.Provider>
+          </ContextMenuContext.Provider>
         </MainOverlayContext.Provider>
       </BoardViewContext.Provider>
     </BoardSelectionContext.Provider>
   );
 }
+
+/** The keys of an open context menu, in place of the screen's. */
+const MENU_HINTS: KeyHint[] = [
+  { key: '↑/↓', description: 'select' },
+  { key: 'enter', description: 'run' },
+  { key: 'esc', description: 'close' },
+];
 
 /** The keys of a focused sidebar, which replace the root screen's; `create` is its button's label. */
 function sidebarHints(pane: Pane, create: string | undefined): KeyHint[] {

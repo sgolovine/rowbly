@@ -1,3 +1,4 @@
+export * from './contextMenu';
 export * from './layout';
 export * from './mouse';
 export * from './plugins';

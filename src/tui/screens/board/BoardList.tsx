@@ -20,10 +20,23 @@ export interface BoardListProps {
   active: boolean;
   /** A line clicked, by its index in `rows`. */
   onClick(index: number): void;
+  /** A Story line right-clicked, by its index in `rows`, at cell `x`, `y`. */
+  onContextMenu?(index: number, x: number, y: number): void;
 }
 
 /** The list view: one section per Stage, scrolled to `first`. Story lines show the card's badges. */
-export function BoardList({ rows, stages, storyBadges, width, first, size, cursor, active, onClick }: BoardListProps) {
+export function BoardList({
+  rows,
+  stages,
+  storyBadges,
+  width,
+  first,
+  size,
+  cursor,
+  active,
+  onClick,
+  onContextMenu,
+}: BoardListProps) {
   const shown = rows.slice(first, first + size);
   const below = rows.length - first - shown.length;
   const badgesOf = useCardBadges();
@@ -39,6 +52,7 @@ export function BoardList({ rows, stages, storyBadges, width, first, size, curso
           selected={first + i === cursor}
           active={active}
           onClick={() => onClick(first + i)}
+          onContextMenu={row.kind === 'story' && onContextMenu ? (x, y) => onContextMenu(first + i, x, y) : undefined}
         />
       ))}
       {below > 0 && <Text color={theme.inkFaint}>↓ {below} more</Text>}

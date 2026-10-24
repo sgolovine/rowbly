@@ -4,12 +4,14 @@ import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
 import {
+  type ContextMenuItem,
   loadStoryBadges,
   type StoryBadges,
   useActionFocus,
   useAsync,
   useBoardSelection,
   useBoardView,
+  useContextMenu,
   useEscape,
   useHeaderLabel,
   useIsActive,
@@ -83,6 +85,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const selection = useBoardSelection();
   const { plugins } = usePlugins();
   const sidebarFilter = useSidebarFilter();
+  const contextMenu = useContextMenu();
   const [filters, setFilters] = useState<FormValues>({});
   const [mode, setMode] = useState<Mode>('view');
   const [cursor, setCursor] = useState<Cursor>({ col: 0, row: 0 });
@@ -303,6 +306,83 @@ export function BoardScreen({ params }: ScreenProps) {
     });
   };
 
+  /**
+   * The board as last rendered, for a context menu's items: an item runs after the renders that opening
+   * the menu caused, such as the one that moved the cursor to the right-clicked Story.
+   */
+  const board = { card, listStory, moveTo, reorder, rankTo, moveInList };
+  const latest = useRef(board);
+  latest.current = board;
+  const open = (story: Story) => router.push('story', { key: story.key, title: story.key });
+  const edit = (story: Story) => router.push('story-form', { key: story.key, title: `Edit ${story.key}` });
+
+  /** A right click on a card selects it and opens a menu of what its keys do. */
+  const cardMenu = (at: Cursor, x: number, y: number) => {
+    const story = columns[at.col]?.[at.row];
+    if (!story || writing.current) return;
+    setCursor(at);
+    const size = columns[at.col]?.length ?? 0;
+    // Runs only if the cursor is still on the Story and no write is running, as the keys do.
+    const act = (run: (now: typeof board) => void) => () => {
+      if (!writing.current && latest.current.card?.key === story.key) run(latest.current);
+    };
+    const items: ContextMenuItem[] = [
+      { label: 'Open', key: 'enter', onSelect: act(() => open(story)) },
+      { label: 'Edit', key: 'e', onSelect: act(() => edit(story)) },
+      {
+        label: 'Move to previous Stage',
+        key: 'shift+←',
+        disabled: at.col === 0,
+        onSelect: act((now) => now.moveTo(at.col - 1, at)),
+      },
+      {
+        label: 'Move to next Stage',
+        key: 'shift+→',
+        disabled: at.col >= stages.length - 1,
+        onSelect: act((now) => now.moveTo(at.col + 1, at)),
+      },
+      { label: 'Move up', key: 'shift+↑', disabled: at.row === 0, onSelect: act((now) => now.reorder(-1)) },
+      { label: 'Move down', key: 'shift+↓', disabled: at.row >= size - 1, onSelect: act((now) => now.reorder(1)) },
+      { label: 'Move to top', key: 'T', disabled: at.row === 0, onSelect: act((now) => now.rankTo('top')) },
+      { label: 'Move to bottom', key: 'B', disabled: at.row >= size - 1, onSelect: act((now) => now.rankTo('bottom')) },
+      { label: 'Delete', key: 'd', onSelect: act(() => setMode('confirm-delete')) },
+    ];
+    contextMenu.open(x, y, items);
+  };
+
+  /** A right click on a Story line of the list selects it and opens a menu of what its keys do. */
+  const lineMenu = (at: number, x: number, y: number) => {
+    const line = rows[at];
+    if (line?.kind !== 'story' || writing.current) return;
+    setListCursor(at);
+    const { story } = line;
+    // As moveInList: a Story moves past a section's edge into the next Stage, so only the first Story of
+    // the first Stage cannot move up and only the last Story of the last Stage cannot move down.
+    const from = stages.findIndex((s) => s.key === line.stage.key);
+    const index = columns[from]?.findIndex((s) => s.key === story.key) ?? -1;
+    const size = columns[from]?.length ?? 0;
+    const act = (run: (now: typeof board) => void) => () => {
+      if (!writing.current && latest.current.listStory?.key === story.key) run(latest.current);
+    };
+    contextMenu.open(x, y, [
+      { label: 'Open', key: 'enter', onSelect: act(() => open(story)) },
+      { label: 'Edit', key: 'e', onSelect: act(() => edit(story)) },
+      {
+        label: 'Move up',
+        key: 'shift+↑',
+        disabled: index < 0 || (index === 0 && from === 0),
+        onSelect: act((now) => now.moveInList(-1)),
+      },
+      {
+        label: 'Move down',
+        key: 'shift+↓',
+        disabled: index < 0 || (index >= size - 1 && from >= stages.length - 1),
+        onSelect: act((now) => now.moveInList(1)),
+      },
+      { label: 'Delete', key: 'd', onSelect: act(() => setMode('confirm-delete')) },
+    ]);
+  };
+
   // Another Board picked in the sidebar starts from a clean view.
   const seenVersion = useRef(selection.version);
   useEffect(() => {
@@ -470,6 +550,7 @@ export function BoardScreen({ params }: ScreenProps) {
             cursor={listAt}
             active={active && mode === 'view'}
             onClick={clickRow}
+            onContextMenu={lineMenu}
           />
         </Box>
       ) : (
@@ -493,6 +574,7 @@ export function BoardScreen({ params }: ScreenProps) {
                 selected={index === col ? row : null}
                 active={active && mode === 'view'}
                 onClick={(at) => click({ col: index, row: at })}
+                onContextMenu={(at, x, y) => cardMenu({ col: index, row: at }, x, y)}
                 onDrop={(key, slot) => drop(index, key, slot)}
                 onDragOver={(key, slot) =>
                   setDragOver((over) =>
