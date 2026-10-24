@@ -430,13 +430,16 @@ export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
 
 export type { GitCommitOptions } from '../../storage/git';
 
+/** A live resolver receives the owning Plugin's current Local State bag under the Data Root lock. */
+export type GitOptionsSource = GitCommitOptions | ((localData: unknown) => GitCommitOptions);
+
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
   /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
-  resume(options: GitCommitOptions): Promise<void>;
+  resume(options: GitOptionsSource): Promise<void>;
   /** Resolves after persisting the affected paths, before the queued commit finishes. */
-  changed(changes: ChangeSetView, options: GitCommitOptions): Promise<void>;
+  changed(changes: ChangeSetView, options: GitOptionsSource): Promise<void>;
 }
 
 /** What a Plugin gets in every stage. */

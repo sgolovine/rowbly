@@ -21,12 +21,20 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
         <Text>Git directory: {defaults.root}</Text>
         <Text>Commit message: chore: update Rowbly data</Text>
       </Box>
-      <Text>Interval commits run while Rowbly is open; pending changes resume on the next run.</Text>
+      <Text>Off keeps changes pending; On resumes them at the selected frequency.</Text>
+      <Text>Interval commits run while Rowbly is open or on the next run when due.</Text>
       <Text>
         Blank author fields use Git configuration: {defaults.authorName} &lt;{defaults.authorEmail}&gt;
       </Text>
       <Form
         fields={[
+          {
+            name: 'automaticCommits',
+            label: 'Automatic Commits',
+            kind: 'select',
+            options: ['On', 'Off'],
+            required: true,
+          },
           {
             name: 'frequency',
             label: 'Frequency',
@@ -39,6 +47,7 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
           { name: 'authorEmail', label: 'Author email', kind: 'text' },
         ]}
         initialValues={{
+          automaticCommits: prefs.automaticCommits ? 'On' : 'Off',
           frequency: prefs.frequency === 'change' ? 'Whenever a change is made' : 'On an interval',
           intervalSeconds: prefs.intervalSeconds,
           authorName: prefs.authorName ?? '',
@@ -46,6 +55,7 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
         }}
         onSubmit={async (values) => {
           await configure(plugin, {
+            automaticCommits: values.automaticCommits === 'On',
             frequency: values.frequency === 'On an interval' ? 'interval' : 'change',
             intervalSeconds: values.intervalSeconds,
             authorName: values.authorName || undefined,

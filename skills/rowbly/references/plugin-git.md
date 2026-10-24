@@ -20,6 +20,8 @@ rowbly git show --json --no-prompt          # current preferences and the defaul
 ## 2. Configure it
 
 ```sh
+rowbly git configure --automatic-commits off --json --no-prompt             # pause locally; Plugin stays enabled
+rowbly git configure --automatic-commits on --json --no-prompt              # resume saved frequency and author
 rowbly git configure --frequency change --json --no-prompt                  # commit after each change (default)
 rowbly git configure --frequency interval --interval 600 --json --no-prompt # batch, at most every 600 s
 rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com" --json --no-prompt
@@ -27,9 +29,10 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
 ```
 
 - Preferences are personal, under `plugins.git` in Local State (`local.json`): `frequency`
-  (`change` or `interval`), `intervalSeconds` (an integer 1–86400, default 300), `authorName`,
-  `authorEmail`. Do not edit that file by hand; use `git configure`. They take effect at once and are
-  never committed. Enabling the Plugin is still shared Data Root configuration.
+  (`change` or `interval`), `automaticCommits` (boolean, default `true`, also when absent),
+  `intervalSeconds` (an integer 1–86400, default 300), `authorName`, `authorEmail`. Do not edit that file by hand; use `git configure`. They take effect at once and are
+  never committed. `git show` reports Automatic Commits On/Off (`automaticCommits` in JSON). Enabling
+  the Plugin is still shared Data Root configuration. The TUI Git settings offer the same On/Off choice.
 - Blank or omitted author fields use git's effective `user.name` and `user.email`, including
   `.gitconfig`; `git show` reports them.
 
@@ -49,10 +52,15 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
   are due, but not for a future interval deadline.
 - Interval mode starts its deadline at the first pending change and commits only when files changed.
   Timers run only while Rowbly is running: there is no daemon, and nothing is flushed on exit. Pending
-  paths persist in git's own directory and are committed by the next Rowbly run once due. Changing the
-  interval moves the deadline relative to the first pending change.
-- Disabling the Plugin pauses waiting work and keeps the pending paths; a commit already running may
-  finish.
+  paths persist in git's own directory and, while Automatic Commits are On, are committed by the next
+  Rowbly run once due. Changing the interval moves the deadline relative to the first pending change.
+- Turning Automatic Commits Off keeps the Plugin enabled and its settings accessible, cancels waiting
+  timers and prevents commits after changes, at a deadline and on restart. Saved changes still add
+  pending paths. Frequency, interval and author preferences remain saved; editing them does not turn
+  Automatic Commits On. Turning On resumes at the selected frequency: change commits immediately;
+  interval uses the first-pending deadline (adjusted by interval edits) and commits immediately if due.
+- Disabling the Plugin also pauses waiting work and keeps pending paths. A commit already running may
+  finish; later edits stay pending.
 - A git failure (missing author, an index lock, a merge in progress) warns, keeps the Rowbly change
   saved, and leaves the work pending for a later run. Fix the cause, then run Rowbly again.
 
