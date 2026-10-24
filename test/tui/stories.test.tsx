@@ -1,3 +1,4 @@
+import { dirname } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
@@ -25,6 +26,8 @@ async function open(t: TempRoot, screen: string, params: RouteParams = {}, me: s
   const toasts = createToastStore();
   const ctx: RowblyContext = {
     root: t.root,
+    // No Home Config here, so Open Story after creation is off.
+    home: dirname(t.path),
     local: { version: 1 },
     me,
     now: fixedClock().now,
@@ -51,7 +54,8 @@ describe('story form', () => {
     await app.press(KEYS.right, KEYS.right, KEYS.down, ...'ui,auth', KEYS.down, KEYS.down, KEYS.right);
     expect(app.lastFrame()).toContain('‹ s ›');
     await app.press(KEYS.ctrlEnter);
-    await waitForFrame(app, (f) => f.includes('WEB-1 Login page') && f.includes('Details'));
+    // Open Story after creation is off by default: back to the list, which shows the new Story.
+    await waitForFrame(app, (f) => f.includes('WEB-1') && f.includes('Login page') && !f.includes('New Story on web'));
 
     expect(await story(t, 'WEB-1')).toMatchObject({
       name: 'Login page',
@@ -60,7 +64,6 @@ describe('story form', () => {
       labels: ['ui', 'auth'],
       customFields: { size: 's' },
     });
-    expect(app.lastFrame()).toMatch(/Size +s/);
     app.unmount();
   });
 });
