@@ -1,5 +1,5 @@
-import { execFile } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { execFile, fork } from 'node:child_process';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -775,6 +775,10 @@ describe('isolated upstream synchronization', () => {
   }
   it('publishes an isolated valid merge with later writes while preserving unrelated content, and blocks non-Rowbly conflicts and dirty overlap without live effects', async () => {
     const f = await remoteFixture();
+    const abandoned = '0'.repeat(32);
+    await mkdir(join(f.repo.gitDir, 'rowbly'), { recursive: true });
+    await writeFile(join(f.repo.gitDir, 'rowbly', `candidate-${abandoned}`), 'abandoned private index');
+    await f.command('update-ref', `refs/rowbly/fetched/${abandoned}`, 'HEAD');
     await writeFile(join(f.t.dir, 'staged.txt'), 'staged blob');
     await f.command('add', 'staged.txt');
     await writeFile(join(f.t.dir, 'staged.txt'), 'unstaged over staged');
@@ -802,10 +806,41 @@ describe('isolated upstream synchronization', () => {
     try {
       await held.promise;
       expect((await f.services.stories.get(story.key)).name).toBe('Dirty local capture');
-      await f.services.stories.update(story.key, { name: 'Later accepted edit' });
-      release.resolve();
+      const writer = fork(
+        new URL('../storage/fixtures/syncConcurrentWriter.ts', import.meta.url),
+        [f.t.path, story.key],
+        {
+          execArgv: ['--import', 'tsx'],
+          stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+        },
+      );
+      let writerErrors = '';
+      writer.stderr?.on('data', (bytes) => {
+        writerErrors += bytes.toString();
+      });
+      const written = new Promise<void>((resolve, reject) => {
+        writer.once('message', () => resolve());
+        writer.once('error', reject);
+        writer.once('exit', (code) => {
+          if (code !== 0) reject(new Error(writerErrors));
+        });
+      });
+      const exited = new Promise<number | null>((resolve) => writer.once('exit', resolve));
+      try {
+        await written;
+        expect((await f.services.stories.get(story.key)).name).toBe('Later accepted edit');
+        release.resolve();
+        expect(await exited, writerErrors).toBe(0);
+      } finally {
+        release.resolve();
+        if (writer.exitCode === null) writer.kill('SIGKILL');
+        await exited;
+      }
       const result = await running;
+      expect(await readGitPending(await pendingPath(f.t.root, 'git'))).toBeNull();
       expect(result.pushed).toBe(true);
+      expect(await readdir(join(f.repo.gitDir, 'rowbly'))).not.toContain(`candidate-${abandoned}`);
+      expect(await f.command('for-each-ref', '--format=%(refname)', 'refs/rowbly/fetched/')).toBe('');
       expect((await f.services.stories.get(story.key)).name).toBe('Later accepted edit');
       expect(await f.command('rev-parse', ':staged.txt')).toBe(stage);
       expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
@@ -1083,6 +1118,19 @@ describe('isolated upstream synchronization', () => {
       hosts.push((await withPlugins(f.t, [git, comments])).host);
       expect((await readSyncState(stateFile))?.nextDue).toBe(completed?.nextDue);
       expect(spy).toHaveBeenCalledTimes(1);
+      const callback = timers.mock.calls.findLast(([, ms]) => typeof ms === 'number' && ms > 7_000_000)?.[0];
+      expect(callback).toBeTypeOf('function');
+      await f.command('checkout', '-b', 'another');
+      await f.command('branch', '--set-upstream-to=origin/main');
+      if (typeof callback === 'function') callback();
+      await drainGitQueue(f.t.root);
+      const changedBranch = await readSyncState(stateFile);
+      expect(changedBranch?.last?.kind).toBe('failed');
+      expect(changedBranch?.last?.message).toContain('changed since scheduling');
+      expect(changedBranch?.target?.branch).toBe('refs/heads/another');
+      expect(changedBranch?.nextDue).toBeGreaterThan(Date.now());
+      expect(spy).toHaveBeenCalledTimes(1);
+      await f.command('checkout', 'main');
       expect((await preferences(plugin)).automaticCommits).toBe(false);
     } finally {
       for (const host of hosts) host.dispose?.();

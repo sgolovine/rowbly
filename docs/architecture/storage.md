@@ -120,9 +120,15 @@ output 16 MiB and the overall run 120 s; Unix process groups are killed and awai
 
 Synchronization deadlines/results live separately under the worktree Git directory. The feature is
 Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
+Deadlines also retain the exact branch/upstream identity. A stale timer after a branch or upstream
+change records a failed attempt without fetching; the next full interval uses the newly observed
+target. Explicit requests and new scheduling bind the current target, which is checked again before
+fetch and publication.
 Fixed-delay deadlines persist across restarts, including failures, with one overdue attempt and no
 catch-up burst. A failure before admission records a failed attempt when recovery and locking permit,
 then retries from the latest interval; unavailable local recovery uses a 30 s wake-up that rechecks
 saved preferences before admission. A disposed host cannot replace the current host's scheduling lease
 after an awaited setup. An admitted run may finish after Off. Private host leases cancel future timers on
 replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.
+Each new synchronization worker removes abandoned private candidate indexes and fetched pins under
+the common worker lock; prepared publication pins belong to journal recovery and are kept until it completes.

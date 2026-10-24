@@ -19,6 +19,7 @@ const State = z.object({
   nextDue: z.number(),
   intervalSeconds: z.number(),
   requested: z.string().optional(),
+  target: z.object({ branch: z.string(), remote: z.string(), mergeRef: z.string() }).optional(),
   active: z
     .object({ id: z.string(), pid: z.number(), host: z.string(), startedAt: z.number(), phase: z.string() })
     .optional(),
