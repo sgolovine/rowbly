@@ -15,3 +15,10 @@ the active screen: a right click does nothing while a Modal or another overlay c
 - `↑/↓` (or `j/k`) move, `enter` or a click runs the item and closes the menu, `esc` closes it. A
   click or right click outside the menu only closes it; it does not reach the box underneath.
 - Offer only what the screen's keys already do. Open it from a screen with `useContextMenu()`.
+- A right click selects the row it lands on first (a Story, a Board, a `SelectList` item), so the menu
+  and the screen's keys act on the same record. Each item checks when it runs that the record is still
+  the selected one. A Board in the Board sidebar is the exception: the menu acts on it without switching
+  the Board in context.
+- Where it opens: a Story on the board and its line in the list view, a Board in the Boards list and in
+  the Board sidebar, an Epic in the Epics list. A Plugin list opens one with `SelectList`'s
+  `onContextMenu`.
