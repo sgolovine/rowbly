@@ -7,7 +7,7 @@ import { definePlugin } from '../../src/plugin-api';
 import { comments } from '../../src/plugins/comments';
 import { addComment } from '../../src/plugins/comments/comments';
 import { git } from '../../src/plugins/git';
-import { configure } from '../../src/plugins/git/model';
+import { configure, preferences } from '../../src/plugins/git/model';
 import { drainGitQueue } from '../../src/services/plugins/git';
 import * as gitStorage from '../../src/storage/git';
 import { pendingPath, readGitPending } from '../../src/storage/git';
@@ -41,6 +41,7 @@ describe('Git automatic commits', () => {
 
   it('commits new, changed and deleted files, preserves unrelated staged and unstaged changes, and uses Git defaults', async () => {
     const f = await fixture();
+    expect((await preferences(f.services.plugins.context('git'))).automaticCommits).toBe(true);
     await writeFile(join(f.t.dir, 'staged.txt'), 'staged');
     await f.command('add', 'staged.txt');
     await writeFile(join(f.t.dir, 'untracked.txt'), 'untracked');
@@ -92,11 +93,39 @@ describe('Git automatic commits', () => {
     await f.services.stories.update(story.key, { name: 'Second' });
     expect((await readGitPending(pendingFile))?.due).toBe(first?.due);
     expect(await f.command('rev-parse', 'HEAD')).toBe(initial);
-    await writeFile(pendingFile, JSON.stringify({ ...first, due: Date.now() - 1 }));
+    await configure(plugin, {
+      automaticCommits: false,
+      frequency: 'interval',
+      intervalSeconds: 3600,
+      authorName: 'Paused Author',
+      authorEmail: 'paused@example.com',
+    });
+    const pausedStory = await f.services.stories.create('web', { name: 'While off' });
+    expect((await readGitPending(pendingFile))?.due).toBe(first?.due);
+    await withPlugins(f.t, [git, comments]);
+    await drainGitQueue(f.t.root);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(initial);
+    expect((await readGitPending(pendingFile))?.paths).toContain(`boards/web/stories/${pausedStory.key}`);
+    const saved = await preferences(plugin);
+    await configure(plugin, { ...saved, automaticCommits: true });
+    expect(await f.command('rev-parse', 'HEAD')).toBe(initial);
+    // Legacy pending files and capability callers omit the new preference and still resume.
+    await writeFile(
+      pendingFile,
+      JSON.stringify({
+        ...(await readGitPending(pendingFile)),
+        due: Date.now() - 1,
+        options: {
+          frequency: 'interval',
+          intervalSeconds: 3600,
+        },
+      }),
+    );
     await withPlugins(f.t, [git, comments]);
     await drainGitQueue(f.t.root);
     expect(await f.command('rev-parse', 'HEAD')).not.toBe(initial);
     expect(await readGitPending(pendingFile)).toBeNull();
+    expect(await f.command('log', '-1', '--format=%an|%ae')).toBe('Paused Author|paused@example.com');
     const committed = await f.command('rev-parse', 'HEAD');
     await f.services.stories.update(story.key, { name: 'Second' });
     await plugin.git.resume({ frequency: 'change', intervalSeconds: 1 });
@@ -120,7 +149,7 @@ describe('Git automatic commits', () => {
     await drainGitQueue(f.t.root);
     expect(await f.command('show', `HEAD:${path.slice(f.t.dir.length + 1)}`)).toContain('Saved');
   });
-  it('runs a due timer with the latest persisted author and stops timers when disabled', async () => {
+  it('runs a due timer with the latest persisted author and pauses stale timers and restarts while off', async () => {
     const f = await fixture();
     const plugin = f.services.plugins.context('git');
     await configure(plugin, { frequency: 'interval', intervalSeconds: 3600 });
@@ -149,10 +178,30 @@ describe('Git automatic commits', () => {
 
     await f.services.stories.create('web', { name: 'Paused' });
     const before = await f.command('rev-parse', 'HEAD');
+    await configure(plugin, { automaticCommits: false, frequency: 'interval', intervalSeconds: 3600 });
+    const paused = await readGitPending(file);
+    await writeFile(file, JSON.stringify({ ...paused, due: Date.now() - 1 }));
+    // Invoke an already-dispatched callback: clearing its timer alone cannot prevent this work.
+    if (typeof scheduled === 'function') scheduled();
+    await drainGitQueue(f.t.root);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    await withPlugins(f.t, [git, comments]);
+    await drainGitQueue(f.t.root);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    expect((await readGitPending(file))?.paths).toEqual(paused?.paths);
+    expect(f.host.status().find((entry) => entry.id === 'git')).toMatchObject({ enabled: true, loaded: true });
+    await configure(plugin, { ...(await preferences(plugin)), frequency: 'change' });
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    expect((await preferences(plugin)).automaticCommits).toBe(false);
+    await configure(plugin, { ...(await preferences(plugin)), automaticCommits: true });
+    expect(await f.command('rev-parse', 'HEAD')).not.toBe(before);
+    await configure(plugin, { frequency: 'interval', intervalSeconds: 3600 });
+    await f.services.stories.create('web', { name: 'Plugin paused' });
+    const beforeDisable = await f.command('rev-parse', 'HEAD');
     await f.services.plugins.disable('git');
     await plugin.git.resume({ frequency: 'change', intervalSeconds: 3600 });
     await drainGitQueue(f.t.root);
-    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(beforeDisable);
     expect(await readGitPending(file)).not.toBeNull();
   });
 
@@ -205,7 +254,7 @@ describe('Git automatic commits', () => {
     expect(await f.command('log', '-1', '--format=%s')).toBe('chore: update Rowbly data');
   });
 
-  it('keeps reads and edits live during queued Git work and retains same-path edits after a snapshot', async () => {
+  it('keeps reads and edits live during Git work and retains later revisions when paused in flight', async () => {
     const f = await fixture();
     f.ctx.backgroundReactions = true;
     const snapshotted = deferred();
@@ -236,9 +285,22 @@ describe('Git automatic commits', () => {
       const file = await pendingPath(f.t.root, 'git');
       await f.services.stories.update(story.key, { name: 'Latest snapshot' });
       await enqueued.promise;
+      await configure(f.services.plugins.context('git'), { automaticCommits: false });
+      await vi.waitFor(async () => expect((await readGitPending(file))?.options.automaticCommits).toBe(false));
+      const later = await f.services.stories.create('web', { name: 'Created while paused' });
+      await vi.waitFor(async () =>
+        expect((await readGitPending(file))?.paths).toContain(`boards/web/stories/${later.key}`),
+      );
+      const paused = await readGitPending(file);
       release.resolve();
       await drainGitQueue(f.t.root);
       const path = `.rowbly/boards/web/stories/${story.key}/story.json`;
+      expect(await f.command('show', `HEAD:${path}`)).toContain('First snapshot');
+      expect(await readGitPending(file)).toEqual(paused);
+      // The first commit may finish; queued workers must recheck Off before starting another.
+      await configure(f.services.plugins.context('git'), { automaticCommits: true });
+      await vi.waitFor(async () => expect(await readGitPending(file)).toBeNull());
+      await drainGitQueue(f.t.root);
       expect(await f.command('show', `HEAD~1:${path}`)).toContain('First snapshot');
       expect(await f.command('show', `HEAD:${path}`)).toContain('Latest snapshot');
       expect(await readGitPending(file)).toBeNull();

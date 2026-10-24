@@ -74,7 +74,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 
 | Operation | Input | Result |
 | --- | --- | --- |
-| `git.configure` | `{ frequency, intervalSeconds, authorName?, authorEmail? }` | personal Git commit preferences |
+| `git.configure` | `{ automaticCommits, frequency, intervalSeconds, authorName?, authorEmail? }` | personal Git commit preferences |
 | `epics.create` | `{ id, name, description }` | `Epic` |
 | `epics.edit` | `{ id, name?, description? }` | `Epic` |
 | `epics.close` | `{ id }` | `Epic` |

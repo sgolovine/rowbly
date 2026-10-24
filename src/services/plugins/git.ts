@@ -88,13 +88,15 @@ export function createPluginGit(
     const pending = await coordinated(root, `${id}.git.pending`, async () => {
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return null;
-      return readGitPending(file);
+      const pending = await readGitPending(file);
+      if (!pending || pending.options.automaticCommits === false) return null;
+      if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
+        arm(file, pending.due);
+        return null;
+      }
+      return pending;
     });
     if (!pending) return false;
-    if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
-      arm(file, pending.due);
-      return false;
-    }
     await commitGitPaths(root, pending.paths, pending.options, (read) => coordinated(root, `${id}.git.snapshot`, read));
     return coordinated(root, `${id}.git.acknowledge`, async () => {
       const latest = await readGitPending(file);
@@ -109,7 +111,6 @@ export function createPluginGit(
 
   async function schedule(given?: GitCommitOptions, paths: string[] = []) {
     const file = await filePath();
-    let due: number | undefined;
     await coordinated(root, `${id}.git`, async () => {
       clearTimeout(timers.get(file));
       timers.delete(file);
@@ -131,11 +132,11 @@ export function createPluginGit(
       pending.options = options;
       pending.revision = (pending.revision ?? 0) + 1;
       await writeGitPending(file, pending);
-      due = options.frequency === 'change' ? 0 : pending.due;
+      if (options.automaticCommits === false) return;
+      const due = options.frequency === 'change' ? 0 : pending.due;
+      if (due > Date.now()) arm(file, due);
+      else enqueue(file);
     });
-    if (due === undefined) return;
-    if (due > Date.now()) arm(file, due);
-    else enqueue(file);
   }
   function assertEffect() {
     const scope = currentScope();

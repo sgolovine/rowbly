@@ -7,6 +7,7 @@ import {
 } from '../../plugin-api';
 
 export const Preferences = z.strictObject({
+  automaticCommits: z.boolean().default(true),
   frequency: z.enum(['change', 'interval']).default('change'),
   intervalSeconds: z.number().int().min(1).max(86400).default(300),
   authorName: z
