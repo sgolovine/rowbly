@@ -420,17 +420,21 @@ Enable the **Git** Plugin with `rowbly plugins enable git` while the Data Root i
 
 ```sh
 rowbly git show
+rowbly git configure --automatic-commits off  # pause locally; keep the Git Plugin enabled
+rowbly git configure --automatic-commits on   # resume with saved preferences
 rowbly git configure --frequency change
 rowbly git configure --frequency interval --interval 600
 rowbly git configure --author-name "Rowbly Bot" --author-email "bot@example.com"
 rowbly git configure --author-name '' --author-email ''  # restore Git defaults
 ```
 
-When Git is enabled and loaded, settings (`,`) includes **Git**, with frequency, interval in seconds (1–86400, default 300), and author name/email. These are personal preferences in Local State. The default frequency is after each change. Blank author fields use Git's effective `user.name` and `user.email` from repository/global configuration (`.gitconfig`).
+When Git is enabled and loaded, settings (`,`) includes **Git**, with an **Automatic Commits** On/Off choice, frequency, interval in seconds (1–86400, default 300), and author name/email. These are personal preferences in Local State, independent of the shared Plugin enabled setting. Automatic Commits default to On, including when an older saved preference has no on/off setting. The default frequency is after each change. `git show` displays On/Off (the `automaticCommits` boolean in JSON). Blank author fields use Git's effective `user.name` and `user.email` from repository/global configuration (`.gitconfig`).
 
 Saved changes enter a Git queue. The TUI stays usable while commits run; rapid edits may share a commit. Git commits a snapshot of saved files and keeps later edits queued. Command mode waits for due commits, without the reaction's five-second deadline; it does not wait for future interval deadlines.
 
-Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit. Disabling Git pauses waiting work until re-enabled; an already running commit may finish.
+Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit.
+
+Turning Automatic Commits Off keeps Git enabled and its settings accessible, but prevents commits after changes, at interval deadlines and on restart. Saved changes continue to join the pending paths. Frequency, interval and author preferences are preserved; editing them does not turn Automatic Commits back On. Turning On resumes pending work at the selected frequency: change commits immediately, while interval keeps the deadline relative to the first pending change and commits immediately if already due. An already running commit may finish, and later edits remain pending. Disabling the Git Plugin also pauses waiting work until re-enabled.
 
 Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](plugins/built-in.md#git).
 
