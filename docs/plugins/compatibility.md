@@ -60,6 +60,7 @@ These are requirements for the release that first loads code that does not ship 
 | Specs | Markdown files at Board and Story scope | none; Markdown need not carry a version. A release before ADR-0025 reads only the Story Spec `spec.md` and ignores a Story's other Story Specs |
 | Tasks | Story bag `{ "nextNumber": n, "tasks": [ … ] }` | legacy v1 (no `version` key) |
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
+| Story Linking | Story bag `{ "blocks": ["<Story Key>", …] }` on the blocking Story; incoming links are derived | v1 (no `version` key); strict schema refuses unknown fields |
 
 **Existing unversioned built-in bags are legacy v1.** A future reader treats a bag without a `version` key as version 1. Rowbly adds no universal bag version: a bag gets a `version` key only when its Plugin introduces an incompatible shape (§3.4).
 
