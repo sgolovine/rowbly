@@ -23,7 +23,7 @@ import { BoardDeleteDialog } from './BoardDeleteDialog';
 import { BoardDeleteScreen } from './BoardDeleteScreen';
 import { BoardDetailScreen } from './BoardDetailScreen';
 import { BoardEditForm } from './BoardEditForm';
-import { BoardFormScreen } from './BoardForm';
+import { BoardFormScreen } from './BoardFormScreen';
 import { BoardRow } from './BoardRow';
 
 type Mode =
