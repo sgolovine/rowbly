@@ -523,6 +523,13 @@ values and repair decisions remain in the evidence. Supported Plugin formats rec
 references and files, including while the Plugin is Off. Unknown, invalid or unsupported data is
 kept opaque; an unsafe result stops the attempt rather than discarding it.
 
+Repeated Task numbers or Comment ids within a recognized current-format Story bag stop synchronization
+before local publication or push (`CONFLICT`, exit 4), even in BASE, while the owner is Off, or beside
+a future shape on another side. Input files, live branch, index and remote remain unchanged. With
+the owner on, doctor reports `PLUGIN_DATA_INVALID` (warning) and offers no fix; owner reads and
+changes that require the bag fail with `DATA_INTEGRITY` (exit 6). Preserve both records while resolving
+their identity by hand. Valid additions from different sources still retain both records with evidence.
+
 Runs coordinate with other Rowbly processes, writes and Automatic Commits. Unrelated staged, dirty
 and untracked content is preserved. A conflict outside Rowbly data, unsafe overlap with local edits,
 staged Rowbly ambiguity, missing upstream, detached branch or authentication/network failure stops

@@ -325,6 +325,10 @@ The deterministic rules are defined in [ADR-0034](../agents/adr/0034-git-synchro
 - Registered format handlers reconcile only their own supported Plugin Data and files, including
   when their Plugin is Off. Unknown, invalid or future formats remain opaque; unsafe reconciliation
   stops with an explanation and preserves alternatives, rather than stripping or migrating them.
+- Recognized current Tasks or Comments bags with repeated numbers or ids in BASE or either source
+  stop the attempt before local publication or push (`CONFLICT`, exit 4). Inputs, live branch,
+  index and remote stay unchanged. A future shape on another side does not hide a known duplicate.
+  Distinct additions in individually valid sources still retain both records with evidence.
 
 Unrelated staged, dirty and untracked content remains intact. Non-Rowbly conflicts, unsafe local
 path overlap, staged Rowbly ambiguity, detached HEAD, missing upstream and bounded authentication or

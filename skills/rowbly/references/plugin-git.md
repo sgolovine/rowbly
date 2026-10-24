@@ -94,6 +94,12 @@ rowbly git configure --automatic-merge-resolution off --json --no-prompt
 - Supported format handlers reconcile only their own Plugin Data/files, including when their Plugin
   is Off. Unknown, invalid or future data stays opaque; unsafe reconciliation stops with alternatives
   preserved. Do not rewrite unfamiliar bags or apply blanket doctor fixes to make a merge succeed.
+- Repeated Task numbers or Comment ids in a recognized current-format bag in BASE or either source
+  stop synchronization with `CONFLICT` (exit 4) before local publication or push. Raw inputs, live
+  branch, index and remote stay unchanged, including while the owner is Off. Another source's future
+  shape does not hide a known duplicate. With the owner on, doctor reports `PLUGIN_DATA_INVALID`
+  (warning), with no automatic fix. Preserve both records while resolving their identity by hand.
+  Individually valid concurrent additions still retain both records with evidence.
 - Timers run anywhere in the open TUI, including outside settings. The persisted deadline is initial
   scheduling time or last attempt completion plus the interval. Changing the interval recalculates
   from that anchor. Reopening resumes one overdue attempt, then schedules a full interval later.

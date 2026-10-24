@@ -148,6 +148,12 @@ output 16 MiB and the overall run 120 s; Unix process groups are killed and awai
 The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
 bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 
+Tasks and Comments recognize their exact current bag structure before checking unique identities in
+BASE and each source. Repeated Task numbers or Comment ids in a recognized source stop preparation
+before durable publication intent or push, including while the owner is Off and when another source
+is opaque. The live input bytes, branch, index and remote remain unchanged. Unknown fields and future
+or unrecognized shapes retain opaque preservation; no identity repair or migration is inferred.
+
 Synchronization deadlines/results live separately under the worktree Git directory. The feature is
 Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
 Private Git bindings resolve the Data Root with `realpath` before choosing repository-relative paths,

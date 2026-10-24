@@ -592,13 +592,24 @@ describe('Git data reconciliation', () => {
       createdAt: old.createdAt,
       updatedAt: old.updatedAt,
     };
+    const comment = {
+      id: 'same-id',
+      author: null,
+      body: 'Left Comment',
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+    };
     const left = {
       id: 'a',
       files: {
         ...base.files,
         [path(old.key)]: file({
           ...old,
-          plugins: { tasks: { nextNumber: 2, tasks: [task] }, 'story-linking': { blocks: [target.key, 'WEB-3'] } },
+          plugins: {
+            tasks: { nextNumber: 2, tasks: [task] },
+            comments: { comments: [comment] },
+            'story-linking': { blocks: [target.key, 'WEB-3'] },
+          },
         }),
         [path('WEB-3')]: file({ ...old, key: 'WEB-3', name: 'Left addition' }),
         'boards/web/stories/WEB-3/plugins/specs/a.md': text('# Left\n'),
@@ -616,6 +627,7 @@ describe('Git data reconciliation', () => {
           ...old,
           plugins: {
             tasks: { nextNumber: 2, tasks: [{ ...task, name: 'B' }] },
+            comments: { comments: [{ ...comment, body: 'Right Comment' }] },
             'story-linking': { blocks: ['WEB-3'] },
           },
         }),
@@ -644,6 +656,17 @@ describe('Git data reconciliation', () => {
       ],
     });
     expect(result.decisions.some((d) => d.reason.startsWith('restored source Story'))).toBe(true);
+    expect(read(old.key).plugins.comments.comments).toEqual([
+      comment,
+      { ...comment, id: 'same-id-2', body: 'Right Comment' },
+    ]);
+    expect(result.decisions).toContainEqual(
+      expect.objectContaining({
+        reason: 'distinct concurrent Comments retained with separate identities',
+        alternatives: [{ value: comment }, { value: { ...comment, body: 'Right Comment' } }],
+      }),
+    );
+    expect(result.evidence).toHaveLength(1);
     expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
 
     const boardPath = 'boards/web/board.config.json';
@@ -920,6 +943,59 @@ describe('isolated upstream synchronization', () => {
     await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', 'code.txt');
     await command(f.peer, 'commit', '-m', 'peer data and code');
     await command(f.peer, 'push');
+    const storyPath = join(f.t.path, 'boards/web/stories', story.key, 'story.json');
+    const validStoryBytes = await readFile(storyPath);
+    const task = {
+      number: 1,
+      name: 'First duplicate Task',
+      description: '',
+      stage: 'backlog',
+      createdAt: story.createdAt,
+      updatedAt: story.updatedAt,
+    };
+    const comment = {
+      id: 'duplicate-id',
+      author: null,
+      body: 'First current-format Comment',
+      createdAt: story.createdAt,
+      updatedAt: story.updatedAt,
+    };
+    const rootBytes = async () =>
+      Object.fromEntries(
+        await Promise.all(
+          (await readdir(f.t.path, { recursive: true, withFileTypes: true }))
+            .filter((entry) => entry.isFile())
+            .map(async (entry) => [
+              join(entry.parentPath, entry.name),
+              await readFile(join(entry.parentPath, entry.name)),
+            ]),
+        ),
+      );
+    // Supported same-source duplicates must stop before publication, including while Tasks is Off.
+    for (const plugins of [
+      { tasks: { nextNumber: 2, tasks: [task, { ...task, name: 'Second duplicate Task distinct bytes' }] } },
+      { comments: { comments: [comment, { ...comment, body: 'Second distinct current-format Comment' }] } },
+    ]) {
+      await writeFile(storyPath, `${JSON.stringify({ ...story, plugins }, null, 2)}\n`);
+      const bytes = await rootBytes(),
+        index = await readFile(f.repo.index),
+        head = await f.command('rev-parse', 'HEAD');
+      const branches = await f.command('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads/');
+      const upstream = await command(f.remote, 'rev-parse', 'refs/heads/main');
+      await expect(f.run()).rejects.toThrow(/Cannot reconcile (Tasks|Comments).*duplicate/);
+      expect(await rootBytes()).toEqual(bytes);
+      expect(await readFile(f.repo.index)).toEqual(index);
+      expect(await f.command('rev-parse', 'HEAD')).toBe(head);
+      expect(await f.command('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads/')).toBe(branches);
+      expect(await command(f.remote, 'rev-parse', 'refs/heads/main')).toBe(upstream);
+      expect(await f.command('rev-parse', ':staged.txt')).toBe(stage);
+      expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
+      expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
+      expect(await readFile(join(f.repo.gitDir, 'rowbly/publication.json')).catch(() => null)).toBeNull();
+      expect(await readFile(join(f.repo.gitDir, 'MERGE_HEAD')).catch(() => null)).toBeNull();
+      expect(await f.command('ls-files', '--unmerged')).toBe('');
+    }
+    await writeFile(storyPath, validStoryBytes);
     const held = deferred(),
       release = deferred();
     let first = true;
