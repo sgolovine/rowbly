@@ -60,6 +60,7 @@ A Task is a smaller unit of work inside exactly one Story, with its own name, de
 - A Story's Tasks are its bag: `"plugins": { "tasks": { "nextNumber": 4, "tasks": [ … ] } }`. The bag is kept, with `nextNumber`, when the last Task is deleted.
 - Each Task has `number`, `name`, `description`, `stage`, `createdAt` and `updatedAt`. Its Task Id is derived from the Story Key, so a Story that doctor renumbers keeps its Tasks; command output and `--json` add it as `id`.
 - A Task's Stage is one of its Board's effective Stages.
+- Task numbers are unique within a Story. A repeated number makes the bag invalid, even if its records are identical.
 
 **Commands**
 
@@ -83,6 +84,7 @@ Task Ids are case-insensitive (`web-42.3`). `stories show` has a Tasks row (`2/5
 **TUI:** a **Tasks** tab on the Story screen (`n` new Task, `enter` open, `m` move Stage, `e` edit, `d` delete), the Task screen and the Task form; a `✓ done/total` badge on a Story with Tasks in the board's Stages view and on its list view line.
 
 **Doctor:** `TASKS_UNKNOWN_STAGE` (error): a Task is in a Stage its Board does not have; move it with `rowbly tasks move`. `TASKS_COUNTER_BEHIND` (warning): `nextNumber` is not above the highest Task number; `--fix` raises it.
+Duplicate numbers produce `PLUGIN_DATA_INVALID` (warning) while Tasks is on; `--fix` leaves them unchanged.
 
 ## Epics
 
@@ -179,6 +181,7 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 
 - A body is stored as given; a body that is empty or only whitespace is refused. `--body` is kept exactly; `--body-file`, stdin and `--edit` lose trailing whitespace, as every long-text flag does.
 - The author is Me when the Comment is added, read on each add.
+- Comment ids are unique within a Story. A repeated id makes the Thread invalid, even if its records are identical. Doctor reports `PLUGIN_DATA_INVALID` (warning) while Comments is on; `--fix` leaves it unchanged.
 - `comments.add` and `comments.update` return the Comment as other Plugins' transforms left it; a transform that removes it fails the operation with `CONFLICT`.
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 

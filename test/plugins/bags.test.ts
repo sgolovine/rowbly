@@ -144,4 +144,46 @@ it('reconciles only supported owned formats while Off, preserves future bags and
   ])
     expect(() => mergeData(base, left, right, [{ ...format, reconcile }])).toThrow();
   expect(await readJsonFile(t, path)).toEqual(story);
+
+  const { tasks } = await import('../../src/plugins/tasks');
+  const { comments } = await import('../../src/plugins/comments');
+  const task = {
+    number: 1,
+    name: 'First duplicate Task',
+    description: '',
+    stage: 'backlog',
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+  const comment = {
+    id: 'duplicate-id',
+    author: null,
+    body: 'First current-format Comment',
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+  for (const owner of [
+    { definition: tasks, bag: { nextNumber: 2, tasks: [task, { ...task, name: 'Second duplicate Task' }] } },
+    { definition: comments, bag: { comments: [comment, { ...comment, body: 'Second distinct Comment' }] } },
+  ]) {
+    const source = (id: string, bag: unknown) => ({
+      id,
+      files: { ...base.files, [path]: file({ ...story, plugins: { ...story.plugins, [owner.definition.id]: bag } }) },
+    });
+    // BASE and either side must reject known invalid identities, even beside an opaque future shape.
+    for (let position = 0; position < 3; position++) {
+      const inputs = ['base', 'left', 'right'].map((id, index) =>
+        source(id, index === position ? owner.bag : { ...owner.bag, version: 999 }),
+      );
+      const [old, a, b] = inputs;
+      if (!old || !a || !b) throw new Error('Expected three sources');
+      expect(() => mergeData(old, a, b, [owner.definition])).toThrow(/duplicate/i);
+    }
+    const future = source('future', { ...owner.bag, version: 999 });
+    const opaque = mergeData(future, future, future, [owner.definition]);
+    expect(
+      JSON.parse(Buffer.from(opaque.files[path]?.data ?? '', 'base64').toString()).plugins[owner.definition.id],
+    ).toEqual({ ...owner.bag, version: 999 });
+    expect(owner.definition.bags?.story?.safeParse(owner.bag).success).toBe(false);
+  }
 });

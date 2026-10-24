@@ -11,10 +11,19 @@ export const StoredTaskSchema = z.object({
 });
 export type StoredTask = z.infer<typeof StoredTaskSchema>;
 
-/** The bag on a Story: its Tasks in creation order, and the number the next Task gets (never reused). */
-export const TasksBag = z.object({
+/** Recognizes the current structure before reconciliation checks identity validity. */
+export const TasksBagShape = z.object({
   nextNumber: z.int().min(1),
   tasks: z.array(StoredTaskSchema),
+});
+/** The bag on a Story: unique Task numbers in creation order, and the next number (never reused). */
+export const TasksBag = TasksBagShape.superRefine(({ tasks }, ctx) => {
+  const seen = new Set<number>();
+  for (const [index, { number }] of tasks.entries()) {
+    if (seen.has(number))
+      ctx.addIssue({ code: 'custom', path: ['tasks', index, 'number'], message: `duplicate Task number ${number}` });
+    seen.add(number);
+  }
 });
 export type TasksBag = z.infer<typeof TasksBag>;
 
