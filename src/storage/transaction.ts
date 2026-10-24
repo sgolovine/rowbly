@@ -41,6 +41,8 @@ export type TransactionCheckpoint = 'staged' | 'prepared' | `applied:${number}` 
 export interface TransactionOptions {
   /** The operation clock; it stamps the manifest and orders transaction ids. */
   now?: () => Date;
+  /** Publication precondition, checked immediately before a live write or delete. */
+  beforeStep?: (step: TransactionStep) => void | Promise<void>;
   /** Called after each durable checkpoint. For tests. */
   onCheckpoint?: (checkpoint: TransactionCheckpoint) => void | Promise<void>;
 }
@@ -441,7 +443,7 @@ async function commitPrepared(
   } catch {
     // Retry once, as recovery would, while the lock is still held.
     try {
-      await rollForward(canonical, txnDir, manifest, {});
+      await rollForward(canonical, txnDir, manifest, { beforeStep: options.beforeStep });
     } catch (err) {
       throw await partialSave(canonical, txnDir, manifest, err);
     }
@@ -468,7 +470,7 @@ async function rollForward(
       movedOut = true;
     }
     if (movedOut && (step.kind === 'moveOut' || step.kind === 'delete')) continue;
-    await applyStep(ctx, step, touched);
+    await applyStep(ctx, step, touched, options.beforeStep);
     await options.onCheckpoint?.(`applied:${n}`);
   }
   for (const dir of touched) await io.syncDir(dir);
@@ -486,7 +488,12 @@ function stepContext(canonical: string, txnDir: string): StepContext {
 }
 
 /** One step, done only if it is not done yet (ADR-0019 §2, "Recovery policy"). */
-async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<string>): Promise<void> {
+async function applyStep(
+  ctx: StepContext,
+  step: TransactionStep,
+  touched: Set<string>,
+  beforeStep?: TransactionOptions['beforeStep'],
+): Promise<void> {
   switch (step.kind) {
     case 'moveOut': {
       const from = ctx.at(step.from);
@@ -501,6 +508,7 @@ async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<s
       const path = ctx.at(step.path);
       const trash = ctx.at(step.trash);
       if ((await entryExists(path)) && !(await entryExists(trash))) {
+        await beforeStep?.(step);
         await io.rename(path, trash);
         if (!step.path.startsWith('moving/')) touched.add(dirname(path));
       }
@@ -524,6 +532,7 @@ async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<s
       const path = ctx.at(step.path);
       if (!(await entryExists(staged))) return;
       await io.mkdir(dirname(path));
+      await beforeStep?.(step);
       await io.rename(staged, path);
       touched.add(dirname(path));
       return;

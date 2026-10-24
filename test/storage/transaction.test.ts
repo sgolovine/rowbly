@@ -283,6 +283,91 @@ describe('Git local publication', () => {
       await run(n);
       await run(n, true);
     }
+    // External editors and Git do not take Rowbly's locks. Refuse at the actual effect boundary.
+    for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging', 'foreign-lock']) {
+      const t = await tempRoot(),
+        f = await syncFixture(t.dir, t.path);
+      const path =
+        scenario === 'root-step'
+          ? '.rowbly/plugins/unknown/blob.bin'
+          : scenario.startsWith('nonroot')
+            ? 'code.txt'
+            : '.rowbly/rowbly.config.json';
+      const external = 'unexpected editor bytes\n';
+      const { io } = await import('../../src/storage/io');
+      const { stat } = await import('node:fs/promises');
+      let injected = false;
+      let foreignInode: number | undefined;
+      const refuse = {
+        code: 'DATA_INTEGRITY',
+        exitCode: 6,
+        details: { path: f.repo.journal, paths: expect.arrayContaining([path]), indexLock: `${f.repo.index}.lock` },
+      };
+      await withGitWorker(f.repo, () =>
+        withPublication(f.repo, async (hold) => {
+          const originalWrite = io.writeFile;
+          const spy = vi.spyOn(io, 'writeFile').mockImplementation(async (file, ...args) => {
+            await originalWrite(file, ...args);
+            if (scenario === 'nonroot-staging' && file.includes('/.code.txt.') && !injected) {
+              injected = true;
+              await writeFile(join(t.dir, path), external);
+            }
+          });
+          try {
+            await expect(
+              publishPublication(hold, f.plan, {
+                checkpoint: async (point) => {
+                  if (
+                    ((scenario === 'root-ref' || scenario === 'nonroot-ref') && point === 'ref') ||
+                    (scenario === 'root-step' && point === 'root:applied:0')
+                  ) {
+                    injected = true;
+                    await mkdir(join(t.dir, path, '..'), { recursive: true });
+                    await writeFile(join(t.dir, path), external);
+                  }
+                  if (scenario === 'foreign-lock' && point === 'index-effect') {
+                    injected = true;
+                    await writeFile(`${f.repo.index}.lock`, Buffer.from(f.plan.indexAfter, 'base64'), { flag: 'wx' });
+                    foreignInode = (await stat(`${f.repo.index}.lock`)).ino;
+                  }
+                },
+              }),
+            ).rejects.toMatchObject(refuse);
+          } finally {
+            spy.mockRestore();
+          }
+          expect(injected, scenario).toBe(true);
+          await expect(recoverPublication(hold)).rejects.toMatchObject(refuse);
+        }),
+      );
+      let read = false;
+      await expect(
+        coordinated(t.root, 'refuse partial publication read', async () => {
+          read = true;
+        }),
+      ).rejects.toMatchObject(refuse);
+      expect(read).toBe(false);
+      expect(await readFile(f.repo.journal, 'utf8')).toContain(f.plan.candidate);
+      if (scenario === 'foreign-lock') {
+        expect((await stat(`${f.repo.index}.lock`)).ino).toBe(foreignInode);
+        expect((await readFile(`${f.repo.index}.lock`)).toString('base64')).toBe(f.plan.indexAfter);
+        await rm(`${f.repo.index}.lock`); // Only the test, as its owner, removes the foreign lock.
+      } else {
+        expect(await readFile(join(t.dir, path), 'utf8')).toBe(external);
+        const edit = f.plan.edits.find((edit) => edit.path === path);
+        if (!edit) throw new Error('Missing edited publication path');
+        if (edit.before) await writeFile(join(t.dir, path), Buffer.from(edit.before.data, 'base64'));
+        else await rm(join(t.dir, path));
+      }
+      await coordinated(t.root, 'resume after external cause resolved', async () => undefined);
+      expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+      expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+      await coordinated(t.root, 'save after recovery', () => writeFile(join(t.path, 'later.txt'), 'later save'));
+      await coordinated(t.root, 'read after later save', async () => {
+        expect(await readFile(join(t.path, 'later.txt'), 'utf8')).toBe('later save');
+      });
+      await t.cleanup();
+    }
     const t = await tempRoot(),
       f = await syncFixture(t.dir, t.path);
     await withGitWorker(f.repo, () =>
@@ -301,13 +386,30 @@ describe('Git local publication', () => {
           '-m',
           'external ref advance',
         );
-        await expect(
-          publishPublication(hold, f.plan, {
-            checkpoint: async (point) => {
-              if (point === 'before-intent') await f.git('update-ref', f.plan.branch, external, f.plan.old);
-            },
-          }),
-        ).rejects.toThrow('safely discarded');
+        const { io } = await import('../../src/storage/io');
+        const remove = io.rm;
+        let foreignLock = false;
+        const cleanup = vi.spyOn(io, 'rm').mockImplementation(async (path) => {
+          await remove(path);
+          if (path.startsWith(join(t.path, '.txn/')) && !foreignLock) {
+            // Another Git process may reserve the index as soon as our reservation is released.
+            await writeFile(`${f.repo.index}.lock`, Buffer.from(f.plan.indexAfter, 'base64'), { flag: 'wx' });
+            foreignLock = true;
+          }
+        });
+        try {
+          await expect(
+            publishPublication(hold, f.plan, {
+              checkpoint: async (point) => {
+                if (point === 'before-intent') await f.git('update-ref', f.plan.branch, external, f.plan.old);
+              },
+            }),
+          ).rejects.toThrow('safely discarded');
+        } finally {
+          cleanup.mockRestore();
+        }
+        expect(foreignLock).toBe(true);
+        expect((await readFile(`${f.repo.index}.lock`)).toString('base64')).toBe(f.plan.indexAfter);
         expect(await f.git('rev-parse', 'HEAD')).toBe(external);
         expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
         for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.before);
@@ -315,11 +417,24 @@ describe('Git local publication', () => {
     );
   });
 
-  it('recovers a real SIGKILL after ref effect before its phase write through an ordinary read while synchronization is Off', async () => {
+  it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
-    for (const target of ['index-token-ready', 'index-reserved', 'ref-effect']) {
+    for (const target of [
+      'index-token-ready',
+      'index-reserved',
+      'before-intent',
+      'prepared',
+      'ref-effect',
+      'ref',
+      'files',
+      'index-ready',
+      'index-effect',
+      'complete',
+    ]) {
+      const intended = !['index-token-ready', 'index-reserved', 'before-intent'].includes(target);
+      const filesInstalled = ['files', 'index-ready', 'index-effect', 'complete'].includes(target);
       const t = await tempRoot(),
         f = await syncFixture(t.dir, t.path);
       await writeFile(
@@ -332,10 +447,12 @@ describe('Git local publication', () => {
       await writeFile(plan, JSON.stringify(f.plan));
       const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, target]);
       expect(killed.signal, killed.stderr).toBe('SIGKILL');
-      expect(await f.git('rev-parse', 'HEAD')).toBe(target === 'ref-effect' ? f.plan.candidate : f.plan.old);
+      expect(await f.git('rev-parse', 'HEAD')).toBe(intended && target !== 'prepared' ? f.plan.candidate : f.plan.old);
       const firstEdit = f.plan.edits[0];
       if (!firstEdit) throw new Error('Expected publication edit');
-      expect(await readPublicationFile(f.repo, firstEdit.path)).toEqual(firstEdit.before);
+      expect(await readPublicationFile(f.repo, firstEdit.path)).toEqual(
+        filesInstalled ? firstEdit.after : firstEdit.before,
+      );
       // A different linked worktree shares the publication gate and recovers the recorded owner.
       await coordinated(
         { path: join(peer, '.rowbly'), kind: 'local' },
@@ -344,9 +461,7 @@ describe('Git local publication', () => {
       );
       await coordinated(t.root, 'open with synchronization Off', async () => {
         for (const edit of f.plan.edits)
-          expect(await readPublicationFile(f.repo, edit.path)).toEqual(
-            target === 'ref-effect' ? edit.after : edit.before,
-          );
+          expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
       });
       expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
       expect(await f.git('remote')).toBe('');

@@ -1,6 +1,7 @@
 import { isSlug } from '../../core';
 import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
+import { coordinated } from '../coordination';
 import { createPluginGit, disposeGitOwner } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
@@ -96,7 +97,20 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
     }
     return owner;
   };
-  const entries = (root ? await readEntries(root) : null) ?? {};
+  // Admission/recovery errors must escape before staging or starting any Plugin. Keep ordinary
+  // config-read fallback and per-Plugin Local State failures inside the recovered snapshot.
+  const startup = root
+    ? await coordinated(root, 'plugins.load', async () => ({
+        entries: await readEntries(root),
+        local: await createRepositories(root)
+          .localState.get()
+          .then(
+            (value) => ({ value }),
+            (error: unknown) => ({ error }),
+          ),
+      }))
+    : null;
+  const entries = startup?.entries ?? {};
   const statuses: PluginStatus[] = [];
   const active: ActivePlugin[] = [];
   const claims = newClaims(reserved);
@@ -131,7 +145,12 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
           registry,
           gitOwner(definition.id),
         ),
-        localData: async () => (await createRepositories(dataRoot).localState.get()).plugins?.[definition.id],
+        localData: async () => {
+          const local = startup?.local;
+          if (!local) return undefined;
+          if ('error' in local) throw local.error;
+          return structuredClone(local.value.plugins?.[definition.id]);
+        },
       });
       claim();
       status.loaded = true;
