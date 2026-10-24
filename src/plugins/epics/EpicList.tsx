@@ -49,7 +49,8 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
   const [busy, setBusy] = useState(false);
   const epics = data.data?.summaries ?? [];
   const epic = epics.find((e) => e.id === highlighted);
-  const keys = active && !filtering && !confirming && !busy;
+  const idle = !filtering && !confirming && !busy;
+  const keys = active && idle;
   useKeyCapture(active && confirming !== null, { escape: true });
   useKeyHints(
     confirming
@@ -105,16 +106,17 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
   };
 
   // What the keys act on as last rendered, for a context menu's items: an item runs after the renders
-  // that opening the menu caused, such as the one that highlighted the Epic.
-  const latest = useRef({ epic, keys });
-  latest.current = { epic, keys };
+  // that opening the menu caused, such as the one that highlighted the Epic. The open menu makes the
+  // screen inactive, so `idle` leaves that out.
+  const latest = useRef({ epic, idle });
+  latest.current = { epic, idle };
   /** A right click on an Epic highlights it and opens a menu of what its keys do. */
   const epicMenu = (id: string, x: number, y: number) => {
     const target = epics.find((e) => e.id === id);
     if (!target || !keys) return;
     // Runs only if the Epic is still highlighted and the keys still work.
     const act = (run: () => void) => () => {
-      if (latest.current.keys && latest.current.epic?.id === target.id) run();
+      if (latest.current.idle && latest.current.epic?.id === target.id) run();
     };
     const items: ContextMenuItem[] = [
       { label: 'Open', key: 'enter', onSelect: act(() => open(target.id)) },
