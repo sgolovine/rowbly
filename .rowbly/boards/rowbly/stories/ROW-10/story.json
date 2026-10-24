@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Add right-click context menus for Epics and Boards",
   "description": "Add right-click context menus for Epics and Boards in the TUI, using the context menu functionality introduced by ROW-9.\n\nAcceptance criteria:\n- Right-clicking an Epic opens a context menu for that Epic with Edit and Delete actions.\n- Right-clicking a Board opens a context menu for that Board with Edit and Delete actions.\n- Edit opens a form populated with the selected entity's current values and allows changing every non-readonly field. Readonly fields cannot be changed.\n- Saving valid edits persists the changes and refreshes the displayed entity. Cancelling editing leaves it unchanged.\n- Delete opens a confirmation dialog identifying the selected Epic or Board before any deletion occurs.\n- Cancelling or dismissing the confirmation leaves the entity unchanged. Confirming deletes the selected entity, subject to existing deletion rules, and refreshes the UI.\n- Validation errors and refused deletions are shown to the user without losing unsaved input or reporting success.\n\n**IMPORTANT**: This is blocked by ROW-9. Do not start development until ROW-9 is complete",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aM",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-22T23:16:28.723Z",
-  "updatedAt": "2026-10-24T16:24:59.100Z"
+  "updatedAt": "2026-10-24T17:32:31.169Z"
 }
