@@ -12,9 +12,18 @@
   ],
   "plugins": {
     "git": {
-      "enabled": false
+      "enabled": true
     },
     "epics": {
+      "enabled": true
+    },
+    "specs": {
+      "enabled": true
+    },
+    "comments": {
+      "enabled": true
+    },
+    "tasks": {
       "enabled": true
     }
   }
