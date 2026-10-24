@@ -20,7 +20,12 @@ export const Preferences = z.strictObject({
 });
 
 export async function preferences(plugin: Pick<PluginReadContext, 'localData'>): Promise<GitCommitOptions> {
-  const result = Preferences.safeParse((await plugin.localData()) ?? {});
+  return resolvePreferences(await plugin.localData());
+}
+
+/** Parses the current bag supplied by the host at scheduling and worker admission. */
+export function resolvePreferences(localData: unknown): GitCommitOptions {
+  const result = Preferences.safeParse(localData ?? {});
   if (!result.success)
     throw new ValidationError('Git commit preferences are invalid', { details: { issues: result.error.issues } });
   return result.data;

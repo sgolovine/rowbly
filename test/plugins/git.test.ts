@@ -158,18 +158,18 @@ describe('Git automatic commits', () => {
     const scheduled = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 3_500_000)?.[0];
     expect(scheduled).toBeTypeOf('function');
     const file = await pendingPath(f.t.root, 'git');
+    await configure(plugin, {
+      frequency: 'interval',
+      intervalSeconds: 3600,
+      authorName: 'Latest',
+      authorEmail: 'latest@example.com',
+    });
     const pending = await readGitPending(file);
     await writeFile(
       file,
       JSON.stringify({
         ...pending,
         due: Date.now() - 1,
-        options: {
-          frequency: 'interval',
-          intervalSeconds: 3600,
-          authorName: 'Latest',
-          authorEmail: 'latest@example.com',
-        },
       }),
     );
     if (typeof scheduled === 'function') scheduled();

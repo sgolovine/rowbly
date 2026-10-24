@@ -1,6 +1,6 @@
 import { definePlugin, z } from '../../plugin-api';
 import { commands } from './commands';
-import { Preferences, preferences } from './model';
+import { Preferences, resolvePreferences } from './model';
 
 export const git = definePlugin({
   id: 'git',
@@ -9,12 +9,12 @@ export const git = definePlugin({
   settings: z.object({}),
   requiresGit: true,
   bags: { local: Preferences },
-  async start({ git, localData }) {
+  async start({ git }) {
     await git.info();
-    await git.resume(await preferences({ localData }));
+    await git.resume(resolvePreferences);
   },
   async react({ changes, plugin }) {
-    await plugin.git.changed(changes, await preferences(plugin));
+    await plugin.git.changed(changes, resolvePreferences);
   },
   commands,
   tui: () => import('./tui').then((m) => m.tui),
