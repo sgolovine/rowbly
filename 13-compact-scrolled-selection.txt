@@ -1,0 +1,28 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  rowbly-demo |  Stages 1–2 of 4         me alex  Settings | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │    ● Backlog 2                      ● Todo 2                         2›   │
+│                    │ │  ╭─Board › ROW-1──────────────────────────────────────────────────── ✕ ╮  │
+│                    │ │  │                                                                     │  │
+│                    │ │  │   ROW-1 Keyboard navigation audit                                   │  │
+│                    │ │  │   ● Backlog · P2 · @sam · updated just now                          │  │
+│                    │ │  │                                                                     │  │
+│                    │ │  │    Details   Tasks   Comments   Links                               │  │
+│                    │ │  │                                                                     │  │
+│                    │ │  │  directions while navigating a crowded compact terminal and         │  │
+│                    │ │  │  returning to a refreshed list                                      │  │
+│                    │ │  │    Blocked by ROW-5 Long Story 5: preserve clear relationship       │  │
+│                    │ │  │  directions while navigating a crowded compact terminal and         │  │
+│                    │ │  │  returning to a refreshed list                                      │  │
+│                    │ │  │  ▌ Blocked by ROW-6 Long Story 6: preserve clear relationship       │  │
+│                    │ │  │  directions while navigating a crowded compact terminal and         │  │
+│                    │ │  │  returning to a refreshed list                                      │  │
+│                    │ │  │  ↑↓ 8–15 of 25 · pgup/pgdn scroll                                   │  │
+│                    │ │  │                                                                     │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  tab/←/→ switch tab  n new link  d remove link  esc back            │  │
+│                    │ │  ╰─────────────────────────────────────────────────────────────────────╯  │
+│    + New Board     │ │                                                                           │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────╯
+                                                                                             ? help
