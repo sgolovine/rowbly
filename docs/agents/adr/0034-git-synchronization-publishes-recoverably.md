@@ -29,7 +29,9 @@ retain evidence blocks publication. Edit wins over delete, including edited desc
 
 Distinct concurrent additions retain complete subtrees, even with equal timestamps. Exact identical
 additions coalesce. Renumbering uses source-qualified Board/Story maps; ordinary CRUD identities stay
-immutable. Configuration Cascade levels remain separate. Restore referenced definitions, split
+immutable. Replacement with changed immutable creation data retains independent identity subtrees,
+including unchanged descendants of the edited original; its shared base cannot imply their deletion.
+Configuration Cascade levels remain separate. Restore referenced definitions, split
 incompatible field types and relax constraints only to retain valid data, recording original values.
 Do not use unrestricted doctor fixes that strip data.
 

@@ -635,6 +635,90 @@ describe('Git data reconciliation', () => {
     });
     expect(result.decisions.some((d) => d.reason.startsWith('restored source Story'))).toBe(true);
     expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
+
+    const boardPath = 'boards/web/board.config.json';
+    const originalBoard = JSON.parse(Buffer.from(base.files[boardPath]?.data ?? '', 'base64').toString());
+    const opaquePath = 'boards/web/plugins/future/opaque.bin';
+    const retainedStoryFile = `boards/web/stories/${target.key}/plugins/future/retained.bin`;
+    const boardBase = {
+      ...base,
+      files: { ...base.files, [opaquePath]: text('original bytes'), [retainedStoryFile]: text('unchanged descendant') },
+    };
+    const recreatedBoard = {
+      id: 'a',
+      files: {
+        ...boardBase.files,
+        [boardPath]: file({ ...originalBoard, name: 'Recreated Board', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [path(target.key)]: file({
+          ...target,
+          createdAt: '2030-01-01T00:00:00.000Z',
+          plugins: { 'story-linking': { blocks: [old.key] }, future: { key: target.key } },
+        }),
+        [path(old.key)]: file({ ...old, name: 'Recreated Story', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [opaquePath]: { data: Buffer.from([0, 255, 65]).toString('base64'), mode: '100644' as const },
+      },
+    };
+    const editedBoard = {
+      id: 'b',
+      files: {
+        ...boardBase.files,
+        [boardPath]: file({ ...originalBoard, name: 'Edited original Board' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+        [opaquePath]: { data: Buffer.from([0, 255, 66]).toString('base64'), mode: '100644' as const },
+      },
+    };
+    const boards = mergeData(boardBase, recreatedBoard, editedBoard, builtInPlugins);
+    const remap = boards.remaps.find((map) => map.source === recreatedBoard.id);
+    const newBoard = remap?.boards.web,
+      newTarget = remap?.stories[target.key],
+      newOld = remap?.stories[old.key];
+    if (!newBoard || !newTarget || !newOld) throw new Error('Expected recreated Board subtree remapping');
+    const readBoardMerge = (path: string) =>
+      JSON.parse(Buffer.from(boards.files[path]?.data ?? '', 'base64').toString());
+    expect(Object.keys(boards.files).filter((p) => p.endsWith('/board.config.json'))).toHaveLength(2);
+    expect(readBoardMerge(boardPath).name).toBe('Edited original Board');
+    expect(boards.files[path(target.key)]).toBeDefined();
+    expect(readBoardMerge(path(target.key))).toEqual(target);
+    expect(readBoardMerge(`boards/${newBoard}/board.config.json`).name).toBe('Recreated Board');
+    expect(boards.files[opaquePath]).toEqual(editedBoard.files[opaquePath]);
+    expect(boards.files[retainedStoryFile]).toEqual(editedBoard.files[retainedStoryFile]);
+    expect(boards.files[`boards/${newBoard}/plugins/future/opaque.bin`]).toEqual(recreatedBoard.files[opaquePath]);
+    expect(readBoardMerge(path(old.key)).plugins['story-linking'].blocks).toEqual([target.key]);
+    const newStory = readBoardMerge(`boards/${newBoard}/stories/${newTarget}/story.json`);
+    expect(newStory.boardId).toBe(newBoard);
+    expect(newStory.plugins['story-linking'].blocks).toEqual([newOld]);
+    expect(newStory.plugins.future.key).toBe(target.key);
+    expect(mergeData(boardBase, editedBoard, recreatedBoard, builtInPlugins)).toEqual(boards);
+
+    // Story recreation uses the same complete-subtree rule: unchanged descendants belong to
+    // the retained old identity, even though the other source replaced that identity.
+    const recreatedStory = {
+      id: 'a',
+      files: {
+        ...boardBase.files,
+        [path(target.key)]: file({ ...target, name: 'Recreated Story', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+        [retainedStoryFile]: text('recreated descendant'),
+      },
+    };
+    const editedStory = {
+      id: 'b',
+      files: {
+        ...boardBase.files,
+        [path(target.key)]: file({ ...target, name: 'Edited original Story' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+      },
+    };
+    const storyMerge = mergeData(boardBase, recreatedStory, editedStory, builtInPlugins);
+    const replacement = storyMerge.remaps.find((map) => map.source === 'a')?.stories[target.key];
+    if (!replacement) throw new Error('Expected recreated Story remapping');
+    expect(storyMerge.files[retainedStoryFile]).toEqual(editedStory.files[retainedStoryFile]);
+    expect(storyMerge.files[`boards/web/stories/${replacement}/plugins/future/retained.bin`]).toEqual(
+      recreatedStory.files[retainedStoryFile],
+    );
+    const retainedLinks = JSON.parse(Buffer.from(storyMerge.files[path(old.key)]?.data ?? '', 'base64').toString());
+    expect(retainedLinks.plugins['story-linking'].blocks).toEqual([target.key, replacement]);
+    expect(mergeData(boardBase, editedStory, recreatedStory, builtInPlugins)).toEqual(storyMerge);
   });
 
   it('repairs effective constraints while retaining definitions, required-field intent and incompatible types', async () => {

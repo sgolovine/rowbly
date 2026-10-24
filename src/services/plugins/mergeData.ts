@@ -496,7 +496,7 @@ function remapBoards(
     map.boards[oldId] = id;
     helpers.retain(
       path,
-      'concurrent Board identity or prefix retained separately',
+      'distinct Board identity or prefix retained separately',
       undefined,
       record,
       { id, keyPrefix: prefix },
@@ -518,15 +518,29 @@ function remapBoards(
     }
   }
   for (const path of boardPaths(left)) {
+    if (!right[path]) continue;
+    const l = requiredRecord(left[path]),
+      r = requiredRecord(right[path]),
+      old = json(base[path]);
+    const recreated = old && (l.createdAt !== old.createdAt || r.createdAt !== old.createdAt);
     if (
-      !base[path] &&
-      right[path] &&
+      (!old || recreated) &&
       !isDeepStrictEqual(subtree(left, path.slice(0, -18)), subtree(right, path.slice(0, -18)))
     ) {
-      const l = requiredRecord(left[path]),
-        r = requiredRecord(right[path]);
       const loser =
         canonicalValue([l.createdAt, maps[0].source]) < canonicalValue([r.createdAt, maps[1].source]) ? 1 : 0;
+      if (recreated) {
+        const prefix = path.slice(0, -18);
+        helpers.retain(
+          path,
+          'recreated Board keeps independent complete subtrees',
+          subtree(base, prefix),
+          subtree(left, prefix),
+          subtree(right, prefix),
+          { sources: maps.map((map) => map.source) },
+        );
+        for (const p of Object.keys(base)) if (p.startsWith(`${prefix}/`)) delete base[p];
+      }
       rename(loser, path);
     }
   }
@@ -569,6 +583,18 @@ function remapStories(
     ) {
       const loser =
         canonicalValue([l.createdAt, maps[0].source]) < canonicalValue([r.createdAt, maps[1].source]) ? 1 : 0;
+      if (recreated) {
+        const prefix = path.slice(0, -11);
+        helpers.retain(
+          path,
+          'recreated Story keeps independent complete subtrees',
+          subtree(base, prefix),
+          subtree(left, prefix),
+          subtree(right, prefix),
+          { sources: maps.map((map) => map.source) },
+        );
+        for (const p of Object.keys(base)) if (p.startsWith(`${prefix}/`)) delete base[p];
+      }
       const side = sides[loser],
         story = requiredRecord(side[path]),
         board = String(story.boardId),
