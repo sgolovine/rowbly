@@ -20,6 +20,7 @@ import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenRegistry } from '../types';
 import { BoardDeleteDialog } from './BoardDeleteDialog';
+import { BoardDeleteScreen } from './BoardDeleteScreen';
 import { BoardDetailScreen } from './BoardDetailScreen';
 import { BoardEditForm } from './BoardEditForm';
 import { BoardFormScreen } from './BoardForm';
@@ -193,4 +194,5 @@ export const boardsScreens: ScreenRegistry = {
   boards: BoardsScreen,
   'board-detail': BoardDetailScreen,
   'board-form': BoardFormScreen,
+  'board-delete': BoardDeleteScreen,
 };
