@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { definePlugin } from '../../src/plugin-api';
+import { definePlugin, type GitOptionsSource } from '../../src/plugin-api';
 import { comments } from '../../src/plugins/comments';
 import { addComment } from '../../src/plugins/comments/comments';
 import { git } from '../../src/plugins/git';
@@ -28,6 +28,135 @@ async function fixture() {
   await command(t.dir, 'commit', '-m', 'initial');
   const setup = await withPlugins(t, [git, comments]);
   return { t, ...setup, command: (...args: string[]) => command(t.dir, ...args) };
+}
+
+/** Hold the old caller outside coordination, or hold Off's reaction after its save. */
+async function savedPreferenceRace(boundary: 'react' | 'start' | 'worker') {
+  const f = await fixture();
+  const timers = vi.spyOn(globalThis, 'setTimeout');
+  const file = await pendingPath(f.t.root, 'git');
+  if (boundary !== 'react') {
+    await configure(f.services.plugins.context('git'), { frequency: 'interval', intervalSeconds: 3600 });
+    await f.services.stories.create('web', { name: 'Pending before Off' });
+    if (boundary === 'start')
+      await writeFile(file, JSON.stringify({ ...(await readGitPending(file)), due: Date.now() - 7_200_001 }));
+  }
+  let original = await readGitPending(file);
+  const scheduled = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 3_500_000)?.[0];
+  const before = await f.command('rev-parse', 'HEAD');
+  const held = deferred();
+  const release = deferred();
+  const finished = deferred();
+  let starting: ReturnType<typeof withPlugins> | undefined;
+  async function hold(options: GitOptionsSource, localData: () => Promise<unknown>) {
+    const captured = typeof options === 'function' ? options(await localData()) : options;
+    expect(captured.automaticCommits ?? true).toBe(true);
+    held.resolve();
+    await release.promise;
+  }
+  const observed: typeof git = {
+    ...git,
+    async start(args) {
+      await git.start?.({
+        ...args,
+        git: {
+          ...args.git,
+          async resume(options) {
+            if (boundary === 'start') await hold(options, args.localData);
+            await args.git.resume(options);
+            if (boundary === 'start') finished.resolve();
+          },
+        },
+      });
+    },
+    async react(event) {
+      if (boundary === 'worker') {
+        held.resolve();
+        await release.promise;
+      }
+      await git.react?.({
+        ...event,
+        plugin: {
+          ...event.plugin,
+          git: {
+            ...event.plugin.git,
+            async changed(changes, options) {
+              if (boundary === 'react') await hold(options, event.plugin.localData);
+              await event.plugin.git.changed(changes, options);
+            },
+          },
+        },
+      });
+      finished.resolve();
+    },
+  };
+  const off = {
+    automaticCommits: false,
+    frequency: 'interval',
+    intervalSeconds: 7200,
+    authorName: 'Saved Author',
+    authorEmail: 'saved@example.com',
+  };
+  try {
+    if (boundary === 'start') starting = withPlugins(f.t, [observed]);
+    else {
+      const delayed = await withPlugins(f.t, [observed], { backgroundReactions: true });
+      if (boundary === 'react') await delayed.services.stories.create('web', { name: 'Delayed default On' });
+      else {
+        // Load while the deadline is future; only the captured callback may dispatch overdue work.
+        const queued = await readGitPending(file);
+        if (!queued) throw new Error('Expected pending interval work');
+        original = { ...queued, due: Date.now() - 7_200_001 };
+        await writeFile(file, JSON.stringify(original));
+        await configure(delayed.services.plugins.context('git'), off);
+      }
+    }
+    await held.promise;
+    if (boundary !== 'worker') await configure(f.services.plugins.context('git'), off);
+    expect(await preferences(f.services.plugins.context('git'))).toEqual(off);
+    if (boundary === 'worker') {
+      // Off is saved, but its reaction has not updated pending.options yet.
+      expect((await readGitPending(file))?.options.automaticCommits).toBe(true);
+      expect(scheduled).toBeTypeOf('function');
+      if (typeof scheduled === 'function') scheduled();
+      await drainGitQueue(f.t.root);
+      const admitted = await readGitPending(file);
+      expect(admitted?.options).toEqual(off);
+      expect(admitted?.revision).toBe((original?.revision ?? 0) + 1);
+      expect(admitted?.due).toBe((original?.due ?? 0) + 3_600_000);
+      expect(admitted?.paths).toEqual(original?.paths);
+    }
+    const paused = await readGitPending(file);
+    release.resolve();
+    await finished.promise;
+    await starting;
+    await drainGitQueue(f.t.root);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    const pending = await readGitPending(file);
+    expect(pending?.options).toEqual(off);
+    expect(pending?.paths.length).toBeGreaterThan(0);
+    if (original) {
+      expect(pending?.paths).toEqual(original.paths);
+      expect(pending?.due).toBe(original.due + 3_600_000);
+      expect(pending?.due).toBe(paused?.due);
+      expect(pending?.revision).toBe((paused?.revision ?? 0) + 1);
+    }
+    await configure(f.services.plugins.context('git'), { ...off, automaticCommits: true });
+    if (boundary === 'react') {
+      expect((await readGitPending(file))?.due).toBe(pending?.due);
+      expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+      await configure(f.services.plugins.context('git'), { ...off, automaticCommits: true, frequency: 'change' });
+    }
+    expect(await readGitPending(file)).toBeNull();
+    expect(await f.command('rev-parse', 'HEAD')).not.toBe(before);
+    expect(await f.command('log', '-1', '--format=%an|%ae')).toBe('Saved Author|saved@example.com');
+    expect(f.warnings).toEqual([]);
+  } finally {
+    release.resolve();
+    await starting;
+    await drainGitQueue(f.t.root);
+    timers.mockRestore();
+  }
 }
 afterEach(() => vi.restoreAllMocks());
 
@@ -255,6 +384,9 @@ describe('Git automatic commits', () => {
   });
 
   it('keeps reads and edits live during Git work and retains later revisions when paused in flight', async () => {
+    await savedPreferenceRace('react');
+    await savedPreferenceRace('start');
+    await savedPreferenceRace('worker');
     const f = await fixture();
     f.ctx.backgroundReactions = true;
     const snapshotted = deferred();
