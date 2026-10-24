@@ -86,6 +86,8 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `comments.add` | `{ target, body }` | `Comment` |
 | `comments.update` | `{ target, id, body }` | `Comment` |
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
+| `story-linking.add` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
+| `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 

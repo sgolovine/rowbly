@@ -14,6 +14,8 @@ import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
+import { storyLinking } from '../../src/plugins/story-linking';
+import { addLink, removeLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
 import { createTask, deleteTask, moveTask, updateTask } from '../../src/plugins/tasks/tasks';
 import { makeStory } from '../helpers';
@@ -64,6 +66,7 @@ describe('the operation inventory (ARCH-02)', () => {
       epics: true,
       specs: true,
       comments: true,
+      'story-linking': true,
       git: true,
       rec: true,
     });
@@ -72,7 +75,8 @@ describe('the operation inventory (ARCH-02)', () => {
     execFileSync('git', ['config', 'user.name', 'Test'], { cwd: t.dir });
     execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: t.dir });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, git, recorder]);
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1' });
+    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, storyLinking, git, recorder]);
     await configure(services.plugins.context('git'), { frequency: 'interval', intervalSeconds: 86400 });
     const assignee = services.plugins.context('assignees');
     const epic = services.plugins.context('epics');
@@ -100,6 +104,9 @@ describe('the operation inventory (ARCH-02)', () => {
     await updateTask(task, created.id, { name: 'Sign-in form' });
     await moveTask(task, created.id, 'done');
     await deleteTask(task, created.id);
+    const linking = services.plugins.context('story-linking');
+    await addLink(linking, 'WEB-1', 'WEB-2');
+    await removeLink(linking, 'WEB-1', 'WEB-2');
 
     expect(new Set(seen.map((s) => s.name))).toEqual(new Set(listed.keys()));
     for (const { name, keys } of seen) {
