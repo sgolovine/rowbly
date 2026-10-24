@@ -20,6 +20,7 @@ import {
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
@@ -58,6 +59,7 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const target = targetFor(scope, level);
   const list = useAsync(async () => (ctx ? readLevel(ctx, target, 'customFields') : null), [ctx, level, scope]);
+  useReloadOnReturn(list.reload);
   const fields = list.data?.items ?? [];
   const listing = mode.kind === 'list';
   const [cursor, setCursor] = useCursor(fields.length, active && listing);

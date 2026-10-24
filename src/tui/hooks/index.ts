@@ -1,4 +1,5 @@
 export * from './contextMenu';
+export * from './dataRootChanges';
 export * from './layout';
 export * from './mouse';
 export * from './plugins';

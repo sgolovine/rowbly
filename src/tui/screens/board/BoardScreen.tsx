@@ -129,11 +129,24 @@ export function BoardScreen({ params }: ScreenProps) {
   const [shown, setShown] = useState<{ boardId: Slug; stages: Stage[]; badges: StoryBadges } | null>(null);
   const stages = shown?.stages ?? [];
 
+  // The Story highlighted on screen, so that a reload (after a change on disk) keeps it highlighted
+  // where it moved to, and leaves the cursor in place only when the Story is gone.
+  const highlighted = useRef<string | undefined>(undefined);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs only when a load settles.
   useEffect(() => {
     // A load that was already running when a write started may predate it; the write reloads after.
     if (!list.data || writing.current) return;
-    setColumns(groupColumns(list.data.stages, list.data.stories));
+    const next = groupColumns(list.data.stages, list.data.stories);
+    setColumns(next);
     setShown({ boardId: list.data.boardId, stages: list.data.stages, badges: list.data.badges });
+    const key = highlighted.current;
+    if (key === undefined) return;
+    const at = next.findIndex((cards) => cards.some((s) => s.key === key));
+    if (at >= 0) setCursor({ col: at, row: next[at]?.findIndex((s) => s.key === key) ?? 0 });
+    const line = listRows(list.data.stages, next, collapsed).findIndex(
+      (r) => r.kind === 'story' && r.story.key === key,
+    );
+    if (line >= 0) setListCursor(line);
   }, [list.data]);
 
   const col = Math.max(0, Math.min(cursor.col, stages.length - 1));
@@ -145,6 +158,7 @@ export function BoardScreen({ params }: ScreenProps) {
   const listStory = listRow?.kind === 'story' ? listRow.story : undefined;
   // The Story the keys act on: the highlighted card, or the highlighted line of the list.
   const focused = view === 'list' ? listStory : card;
+  highlighted.current = focused?.key;
   useActionFocus({ board: scope.data?.choices.board, story: focused });
 
   // Switching views keeps the same Story highlighted when the other view shows it.

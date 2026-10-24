@@ -5,6 +5,7 @@ import {
   createMouseRegistry,
   createShellRegistry,
   createToastStore,
+  DataRootChangesContext,
   MouseContext,
   PluginsContext,
   ServicesContext,
@@ -13,6 +14,7 @@ import {
   type ToastStore,
   type TuiPlugin,
   useDataRootSession,
+  useDataRootWatch,
   useMouseSource,
 } from './hooks';
 import type { PluginLoader } from './loadPlugins';
@@ -33,6 +35,8 @@ export interface AppProps {
   plugins?: readonly TuiPlugin[];
   /** Loads the Plugins of a context the app switches to, or loads again. */
   loadPlugins?: PluginLoader;
+  /** Watch the open Data Root and reload what is on screen when it changes on disk. */
+  watch?: boolean;
 }
 
 /** The whole TUI: providers around the shell. */
@@ -45,25 +49,32 @@ export function App({
   mouse,
   plugins = [],
   loadPlugins,
+  watch = false,
 }: AppProps) {
   const toastStore = useMemo(() => toasts ?? createToastStore(), [toasts]);
   const shell = useMemo(createShellRegistry, []);
   const mouseRegistry = useMemo(createMouseRegistry, []);
   useMouseSource(mouseRegistry, mouse);
   const session = useDataRootSession({ ctx, services, plugins, initial, loadPlugins, toasts: toastStore });
+  // The Plugins that are on, and their settings, come from `rowbly.config.json` when they load.
+  const changes = useDataRootWatch(watch ? session.services.ctx?.root : undefined, toastStore, (paths) => {
+    if (!paths || paths.includes('rowbly.config.json')) void session.plugins.reload();
+  });
   return (
     <ServicesContext.Provider value={session.services}>
       <PluginsContext.Provider value={session.plugins}>
-        <ToastContext.Provider value={toastStore}>
-          <ShellContext.Provider value={shell}>
-            <MouseContext.Provider value={mouseRegistry}>
-              {/* Keyed by the Data Root: switching to another one drops the previous one's screens and picks. */}
-              <RouterProvider key={session.key} initial={session.initial}>
-                <Shell screens={screens} />
-              </RouterProvider>
-            </MouseContext.Provider>
-          </ShellContext.Provider>
-        </ToastContext.Provider>
+        <DataRootChangesContext.Provider value={changes}>
+          <ToastContext.Provider value={toastStore}>
+            <ShellContext.Provider value={shell}>
+              <MouseContext.Provider value={mouseRegistry}>
+                {/* Keyed by the Data Root: switching to another one drops the previous one's screens and picks. */}
+                <RouterProvider key={session.key} initial={session.initial}>
+                  <Shell screens={screens} />
+                </RouterProvider>
+              </MouseContext.Provider>
+            </ShellContext.Provider>
+          </ToastContext.Provider>
+        </DataRootChangesContext.Provider>
       </PluginsContext.Provider>
     </ServicesContext.Provider>
   );
