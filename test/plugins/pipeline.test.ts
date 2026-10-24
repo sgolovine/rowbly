@@ -2,6 +2,8 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
 import { definePlugin } from '../../src/plugin-api';
+import { storyLinking } from '../../src/plugins/story-linking';
+import { addLink } from '../../src/plugins/story-linking/links';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import { makeStory } from '../helpers';
@@ -37,6 +39,65 @@ describe('transform (ADR-0012)', () => {
 });
 
 describe('guard', () => {
+  it('Story Linking deletion and repair are atomic and preserve other Plugin Data', async () => {
+    let refuse = true;
+    const gate = definePlugin({
+      id: 'gate',
+      name: 'Gate',
+      description: '',
+      hooks: {
+        'stories.remove': { guard: () => (refuse ? { reject: 'hold deletion' } : undefined) },
+        'doctor.fix': { guard: () => (refuse ? { reject: 'hold repair' } : undefined) },
+      },
+    });
+    const t = await pluginRoot({ 'story-linking': true, gate: true });
+    const other = { ghost: { nested: ['kept'] } };
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-1',
+      plugins: {
+        ...other,
+        'story-linking': { blocks: ['WEB-2', 'WEB-99'] },
+      },
+    });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1', plugins: other });
+    const { services } = await withPlugins(t, [storyLinking, gate]);
+    const before = await services.stories.list('web', {});
+    await expect(services.stories.remove('WEB-2')).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    await expect(services.doctor.fix()).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    refuse = false;
+    await services.doctor.fix();
+    expect((await services.stories.get('WEB-1')).plugins).toEqual({ ...other, 'story-linking': { blocks: ['WEB-2'] } });
+    await services.stories.remove('WEB-2');
+    expect((await services.stories.get('WEB-1')).plugins).toEqual(other);
+    await expect(services.stories.get('WEB-2')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('an invalid Story Linking bag rejects mutations and deletion cleanup without saving staged changes', async () => {
+    const t = await pluginRoot({ 'story-linking': true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { 'story-linking': { blocks: ['WEB-3'] } } });
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-2',
+      rank: 'a1',
+      plugins: {
+        ghost: { kept: true },
+        'story-linking': { blocks: 'unknown shape' },
+      },
+    });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-3', rank: 'a2' });
+    const { services } = await withPlugins(t, [storyLinking]);
+    const before = await services.stories.list('web', {});
+    await expect(addLink(services.plugins.context('story-linking'), 'WEB-2', 'WEB-3')).rejects.toMatchObject({
+      code: 'DATA_INTEGRITY',
+    });
+    await expect(services.stories.remove('WEB-3')).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    await services.doctor.fix();
+    expect(await services.stories.list('web', {})).toEqual(before);
+  });
+
   it('rejects: nothing is saved and the error is a CONFLICT naming the Plugin', async () => {
     const t = await pluginRoot({ notes: { blocked: ['Nope'] } });
     const { services, warnings } = await withPlugins(t, [notes]);

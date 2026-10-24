@@ -33,7 +33,7 @@ are marked default, every command without `--data-root` exits 2 listing them.
     board.config.json                # name, key prefix, description, optional Stages / Custom Fields / Plugin settings
     plugins/specs/<slug>.md          # a Board Spec
     stories/<KEY>/
-      story.json                     # one Story, with its Plugin Data (Assignees, Tasks, Epic, Spec links, Comments)
+      story.json                     # one Story, with its Plugin Data (Assignees, Tasks, Epic, Spec links, Comments, Story links)
       plugins/specs/<slug>.md        # a Story Spec
 ```
 
@@ -41,6 +41,8 @@ are marked default, every command without `--data-root` exits 2 listing them.
   without `story.json` still reserves its key.
 - Plugin Data on a record is `"plugins": { "<id>": { … } }`. Rowbly keeps it unchanged while the Plugin
   is off.
+- Story Linking keeps outgoing Story Keys in `plugins["story-linking"].blocks`; incoming links are
+  derived from Stories on the same Board, not stored a second time.
 - Commit `.rowbly/` with the code it describes, except `local.json`, `.lock`, `.lock.break` and `.txn/`.
   `rowbly doctor --fix` restores missing `.gitignore` lines.
 

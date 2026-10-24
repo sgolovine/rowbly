@@ -14,7 +14,7 @@ erDiagram
 
 - There is no container between the Data Root and a Board ([ADR-0007](../agents/adr/0007-no-workspaces.md)).
 - Stages and Custom Fields are **configuration**, not records: ordered lists in the [Configuration Cascade](#configuration-cascade), with no ids of their own ([ADR-0005](../agents/adr/0005-stages-and-fields-are-configuration.md)).
-- Assignees, Tasks, Epics, Specs and Comments are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
+- Assignees, Tasks, Epics, Specs, Comments and Story Linking are not core. They are [Built-in Plugins](../plugins/built-in.md) that keep Plugin Data on these records and Plugin files beside them.
 
 ## Layout
 
@@ -84,6 +84,14 @@ Every Board starts with the fixed Stage `backlog` (Backlog) and ends with the fi
 Plugin settings follow the same two levels, but merge: a Board's bag in `board.config.json` is deep-merged over the Data Root entry (objects merge key by key, lists and other values replace). Only the Data Root turns a Plugin on or off ([Plugin settings](../plugins/README.md#settings)).
 
 ## Plugin Data and Plugin files
+
+Story Linking stores each directed relationship on its blocking Story as
+`"plugins": { "story-linking": { "blocks": ["WEB-2"] } }`. Incoming links are derived from the
+same Board's Stories. Enabled Story deletion removes incoming references in the same Change Set;
+while off, links are preserved even if their target is deleted. Doctor reports missing, cross-Board
+and self targets and can remove them without changing other Plugin Data. Story Key reuse and
+collision renumbering ([ADR-0003](../agents/adr/0003-story-keys.md)) can make the intended target
+ambiguous; inspect and correct those links explicitly after a merge or key reuse.
 
 - **Plugin Data** is a bag per Plugin on a record: `"plugins": { "<id>": { … } }` on the root config, Local State, a Board or a Story ([ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md)). Core never interprets a bag and keeps every bag unchanged when it writes a record, including bags of Plugins that are off or unknown and bags that do not parse.
 - **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)).

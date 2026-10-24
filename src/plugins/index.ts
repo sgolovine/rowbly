@@ -6,6 +6,15 @@ import { comments } from './comments';
 import { epics } from './epics';
 import { git } from './git';
 import { specs } from './specs';
+import { storyLinking } from './story-linking';
 import { tasks } from './tasks';
 
-export const builtInPlugins: readonly AnyPluginDefinition[] = [assignees, tasks, epics, specs, comments, git];
+export const builtInPlugins: readonly AnyPluginDefinition[] = [
+  assignees,
+  tasks,
+  epics,
+  specs,
+  comments,
+  storyLinking,
+  git,
+];
