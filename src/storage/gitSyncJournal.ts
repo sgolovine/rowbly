@@ -360,8 +360,8 @@ async function applyPublication(journal: JournalData, options: PublicationOption
       (await indexLockState(journal)) === 'reservation'
     ) {
       // CAS refused before any live effect: discard only our staged payload and reservation.
-      for (const root of journal.roots) await io.rm(join(root.path, '.txn', root.transaction));
       await io.rm(`${repo.index}.lock`);
+      for (const root of journal.roots) await io.rm(join(root.path, '.txn', root.transaction));
       await io.rm(tokenPath(repo, journal.token));
       await io.rm(ownerPath(repo));
       await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${journal.token}`, journal.candidate]);

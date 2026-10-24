@@ -386,13 +386,30 @@ describe('Git local publication', () => {
           '-m',
           'external ref advance',
         );
-        await expect(
-          publishPublication(hold, f.plan, {
-            checkpoint: async (point) => {
-              if (point === 'before-intent') await f.git('update-ref', f.plan.branch, external, f.plan.old);
-            },
-          }),
-        ).rejects.toThrow('safely discarded');
+        const { io } = await import('../../src/storage/io');
+        const remove = io.rm;
+        let foreignLock = false;
+        const cleanup = vi.spyOn(io, 'rm').mockImplementation(async (path) => {
+          await remove(path);
+          if (path.startsWith(join(t.path, '.txn/')) && !foreignLock) {
+            // Another Git process may reserve the index as soon as our reservation is released.
+            await writeFile(`${f.repo.index}.lock`, Buffer.from(f.plan.indexAfter, 'base64'), { flag: 'wx' });
+            foreignLock = true;
+          }
+        });
+        try {
+          await expect(
+            publishPublication(hold, f.plan, {
+              checkpoint: async (point) => {
+                if (point === 'before-intent') await f.git('update-ref', f.plan.branch, external, f.plan.old);
+              },
+            }),
+          ).rejects.toThrow('safely discarded');
+        } finally {
+          cleanup.mockRestore();
+        }
+        expect(foreignLock).toBe(true);
+        expect((await readFile(`${f.repo.index}.lock`)).toString('base64')).toBe(f.plan.indexAfter);
         expect(await f.git('rev-parse', 'HEAD')).toBe(external);
         expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
         for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.before);
