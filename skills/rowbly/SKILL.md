@@ -27,6 +27,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Group Stories from any Boards (`rowbly epics`, `--epic`) | [Epics Plugin](references/plugin-epics.md) |
 | Markdown documents for Stories and Boards (`rowbly specs`, `--spec`) | [Specs Plugin](references/plugin-specs.md) |
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
+| Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
 | What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
@@ -134,7 +135,7 @@ Data Root in context. Change global Me only when the user asks.
 
 ## 6. Plugins are off until the Data Root turns them on
 
-Rowbly ships six Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments and Git. Each is off until
+Rowbly ships seven Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Story Linking and Git. Each is off until
 the Data Root turns it on, and turning one on changes the Data Root for everyone who uses it. While a
 Plugin is off, its command is unknown (`rowbly tasks` exits 2 with the hint `Plugin "tasks" is off`)
 and so are its options on core commands (`--assignee` exits 2 with `unknown option`). Check with

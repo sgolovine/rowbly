@@ -11,6 +11,7 @@ import {
   type Repositories,
   recoverTransactions,
 } from '../storage';
+import { enterPublication } from '../storage/gitSyncJournal';
 import type { OperationCoordinator } from './plugins/runtime';
 
 /** The lock one coordinated call holds on one Data Root. */
@@ -44,15 +45,43 @@ function canonical(root: DataRoot): Promise<string> {
 }
 
 /** Takes the lock, then recovers interrupted commits before anything is read (ADR-0019 §2). */
-async function lockAndRecover(path: string, operation: string): Promise<LockHandle> {
-  const lock = await acquireLock(path, { operation });
+async function lockAndRecover(path: string, operation: string, recover = true): Promise<LockHandle> {
+  const publication = await enterPublication({ path, kind: 'local' });
+  let lock: LockHandle;
   try {
-    await recoverTransactions(path);
+    lock = await acquireLock(path, { operation });
+  } catch (error) {
+    await publication?.gate.release();
+    throw error;
+  }
+  try {
+    if (recover) await recoverTransactions(path);
   } catch (err) {
     await lock.release();
+    await publication?.gate.release();
     throw err;
   }
-  return lock;
+  if (!publication) return lock;
+  const release = async () => {
+    try {
+      return await lock.release();
+    } finally {
+      await publication.gate.release();
+    }
+  };
+  return {
+    root: lock.root,
+    path: lock.path,
+    token: lock.token,
+    owning: lock.owning,
+    get released() {
+      return lock.released;
+    },
+    release,
+    async [Symbol.asyncDispose]() {
+      await release();
+    },
+  };
 }
 
 async function currentHold(root: DataRoot): Promise<{ path: string; hold: Hold | undefined }> {
@@ -130,10 +159,10 @@ export async function withRecovery<T>(
     // Inside a call that holds the lock, recovery already ran when it was taken.
     if (hold.lock && !hold.lock.released) return fn({});
     // An operation of this call gave the lock up: take it again, for as long as the call lasts.
-    hold.lock = await acquireLock(path, { operation });
+    hold.lock = await lockAndRecover(path, operation, false);
     return fn(await recover());
   }
-  const mine: Hold = { lock: await acquireLock(path, { operation }), open: true, operation };
+  const mine: Hold = { lock: await lockAndRecover(path, operation, false), open: true, operation };
   const map = new Map(holds.getStore() ?? []);
   map.set(path, mine);
   try {

@@ -60,8 +60,21 @@ These are requirements for the release that first loads code that does not ship 
 | Specs | Markdown files at Board and Story scope | none; Markdown need not carry a version. A release before ADR-0025 reads only the Story Spec `spec.md` and ignores a Story's other Story Specs |
 | Tasks | Story bag `{ "nextNumber": n, "tasks": [ … ] }` | legacy v1 (no `version` key) |
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
+| Story Linking | Story bag `{ "blocks": ["<Story Key>", …] }` on the blocking Story; incoming links are derived | v1 (no `version` key); strict schema refuses unknown fields |
 
 **Existing unversioned built-in bags are legacy v1.** A future reader treats a bag without a `version` key as version 1. Rowbly adds no universal bag version: a bag gets a `version` key only when its Plugin introduces an incompatible shape (§3.4).
+
+Within one Story, Task numbers and Comment ids must each be unique, including when repeated records
+have identical contents. Their owning schemas reject duplicates. Doctor reports
+`PLUGIN_DATA_INVALID` (warning) while the Plugin is on and offers no automatic fix; ordinary owner
+reads and mutations that require the bag fail with `DATA_INTEGRITY` without replacing it.
+
+During Git reconciliation, each owner first recognizes its exact current structure without dropping
+unknown fields, then checks identity validity in BASE and both sides. A recognized current bag with
+duplicate identities stops preparation before publication or push, even when another source has an
+opaque future shape or the Plugin is Off. Unrecognized, unknown-field and future shapes keep the
+opaque preservation behavior. This adds no storage version or migration. Distinct concurrent additions
+from individually valid sources still retain both identities and their reconciliation evidence.
 
 JSON Plugin files may carry their own `version`, as Epic files do. Markdown files need not. A Markdown format change, if it is ever needed, is signalled by the Plugin itself (a new file name, or front matter), never by core.
 

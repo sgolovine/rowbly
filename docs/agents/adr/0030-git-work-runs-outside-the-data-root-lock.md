@@ -1,6 +1,6 @@
 # ADR-0030: Git work runs in a queue outside the Data Root lock
 
-**Status:** Accepted. Implements the maintainer's request to queue Git work without blocking the UI; amends ADR-0026 §2 and clarifies §1 and §4.
+**Status:** Accepted. Implements the maintainer's request to queue Git work without blocking the UI; amends ADR-0026 §2 and clarifies §1 and §4. Amended narrowly by [ADR-0034](0034-git-synchronization-publishes-recoverably.md).
 
 Git reactions previously held the Data Root lock across several subprocesses, each with a 3.5 s limit, while a reaction had a total 5 s deadline. Timing out the reaction did not stop that work. A background reaction could also reacquire its saving caller's inherited hold after cleanup, leaving the lock unreleased. The resulting reads and writes failed with `CONFLICT` while the same process remained alive.
 

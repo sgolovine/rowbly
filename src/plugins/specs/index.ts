@@ -8,6 +8,7 @@ import {
   UsageError,
 } from '../../plugin-api';
 import { commands } from './commands';
+import { reconcile } from './reconcile';
 import {
   applySpecs,
   linkedSpecs,
@@ -37,6 +38,7 @@ const setOptions: PluginInputOptions<SpecsInput> = {
 };
 
 export const specs = definePlugin({
+  reconcile,
   id: 'specs',
   name: 'Specs',
   description: 'Spec documents for Stories and Boards',

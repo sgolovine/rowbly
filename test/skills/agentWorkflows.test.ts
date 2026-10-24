@@ -155,6 +155,7 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       ['epics', true, true],
       ['specs', true, true],
       ['comments', true, true],
+      ['story-linking', false, false],
       ['git', false, false],
     ]);
 

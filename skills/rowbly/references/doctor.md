@@ -72,6 +72,10 @@ Doctor keeps the earlier-created Story under the key, and gives the other one th
 moves its folder with its Plugin files; its Task Ids follow the new key. Then update any branch names,
 commit messages or notes that used the renumbered key, and tell the user which key changed.
 
+With Story Linking enabled, inspect links after a key is renumbered: the old key cannot identify
+which of the colliding Stories was intended. Missing targets can be repaired, but ambiguous links
+need correction with `story-linking remove` and `story-linking add`.
+
 Resolve conflicts in other files under `.rowbly/` (code files are not Rowbly's concern) before or after
 running doctor, but run doctor last.
 
@@ -119,6 +123,7 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `PLUGIN_FAILED` | error | A Plugin that is on failed to load | nothing | Read the reason in `rowbly plugins list --json`; fix its settings, or turn it off with the user's approval |
 | `PLUGIN_DATA_INVALID` | warning | Data of a Plugin that is on that does not match its schema | nothing | Correct the `plugins.<id>` value on that record |
 | `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or unknown, reported once per Plugin | nothing | None needed |
+| `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the invalid link, keeping other Plugin Data | Or use `story-linking remove <blocker> --blocks <KEY> --yes` |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again | If it stays, report it; do not delete `.txn/` |
 | `TRANSACTION_LEFTOVER` | warning | A finished or abandoned commit folder in `.txn/` that could not be removed | Removes it | — |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write, or a `.moving` folder from an older Rowbly | Removes a temporary file; only reports a `.moving` folder | Move that Story's folder back by hand |

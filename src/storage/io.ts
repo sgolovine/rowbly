@@ -18,6 +18,7 @@ import {
 
 export const io = {
   readFile: (path: string): Promise<string> => readFile(path, 'utf8'),
+  readBytes: (path: string): Promise<Buffer> => readFile(path),
   readdir: (path: string): Promise<string[]> => readdir(path),
   lstat,
   stat,
@@ -33,11 +34,11 @@ export const io = {
    * Writes `text` to `path` and fsyncs it. `flag` is `'wx'` (the default: the file must not exist
    * yet) or `'w'`. `mode`, when given, is set exactly (not masked by the umask).
    */
-  async writeFile(path: string, text: string, flag: 'w' | 'wx' = 'wx', mode?: number): Promise<void> {
+  async writeFile(path: string, text: string | Uint8Array, flag: 'w' | 'wx' = 'wx', mode?: number): Promise<void> {
     const handle = await open(path, flag);
     try {
       if (mode !== undefined) await handle.chmod(mode);
-      await handle.writeFile(text, 'utf8');
+      await handle.writeFile(text, typeof text === 'string' ? 'utf8' : undefined);
       await handle.sync();
     } finally {
       await handle.close();
