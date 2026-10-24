@@ -1,10 +1,12 @@
 import { Box, Text, useInput } from 'ink';
-import { useState } from 'react';
-import { ConflictError, keyPrefixFromName, slugFromName } from '../../../core';
+import { useRef, useState } from 'react';
+import { keyPrefixFromName, slugFromName } from '../../../core';
 import type { BoardConfig } from '../../../schemas';
-import { ConfirmDialog, CursorRows, Form, Loading } from '../../components';
+import { Form, Loading } from '../../components';
 import {
+  type ContextMenuItem,
   useAsync,
+  useContextMenu,
   useCursor,
   useEscape,
   useIsActive,
@@ -17,31 +19,22 @@ import {
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenRegistry } from '../types';
+import { BoardDeleteDialog } from './BoardDeleteDialog';
 import { BoardDetailScreen } from './BoardDetailScreen';
+import { BoardEditForm } from './BoardEditForm';
 import { BoardFormScreen } from './BoardForm';
+import { BoardRow } from './BoardRow';
 
 type Mode =
   | { kind: 'list' }
   | { kind: 'create' }
   | { kind: 'edit'; board: BoardConfig }
-  | { kind: 'confirm-delete'; board: BoardConfig }
-  | { kind: 'confirm-force'; board: BoardConfig; reason: string };
-
-/**
- * Why `--force` would delete `board` after `err`, or `undefined` when it would not: the Board still
- * has Stories, or a Plugin guard that `--force` gets past (`details.canForce`, UI-01) refused it.
- * Any other refusal is final, so it never offers force.
- */
-function forceReason(err: unknown, board: BoardConfig): string | undefined {
-  if (!(err instanceof ConflictError)) return undefined;
-  if (typeof err.details.stories === 'number') return `${board.name} has ${err.details.stories} Stories.`;
-  if (err.details.canForce === true) return `${err.message}.`;
-  return undefined;
-}
+  | { kind: 'confirm-delete'; board: BoardConfig };
 
 /**
  * Every Board: create, edit, delete, open a Board's detail, Stages or Fields, and view its board
- * without changing the context.
+ * without changing the context. A right click on a Board selects it and opens a menu of what its
+ * keys do.
  */
 function BoardsScreen() {
   const services = useServices();
@@ -49,11 +42,12 @@ function BoardsScreen() {
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
+  const contextMenu = useContextMenu();
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const list = useAsync(() => services.boards.list(), [services]);
   const boards = list.data ?? [];
   const listing = mode.kind === 'list';
-  const [cursor] = useCursor(boards.length, active && listing);
+  const [cursor, setCursor] = useCursor(boards.length, active && listing);
   const current = boards[cursor];
 
   const done = (message: string) => {
@@ -62,19 +56,28 @@ function BoardsScreen() {
     list.reload();
   };
 
-  const remove = async (board: BoardConfig, force: boolean) => {
-    try {
-      await services.boards.remove(board.id, { force });
-      done(`Deleted ${board.name}`);
-    } catch (err) {
-      const reason = force ? undefined : forceReason(err, board);
-      if (reason) {
-        setMode({ kind: 'confirm-force', board, reason });
-      } else {
-        toast.error(err);
-        setMode({ kind: 'list' });
-      }
-    }
+  const open = (board: BoardConfig) => router.push('board-detail', { boardId: board.id, title: board.name });
+
+  // What the screen shows as last rendered, for a context menu's items: an item runs after the
+  // renders that opening the menu caused, such as the one that moved the cursor to the Board.
+  const latest = useRef({ current, listing });
+  latest.current = { current, listing };
+
+  /** A right click on a Board selects it and opens a menu of what its keys do. */
+  const boardMenu = (at: number, x: number, y: number) => {
+    const board = boards[at];
+    if (!board || !listing) return;
+    setCursor(at);
+    // Runs only if the cursor is still on the Board and the list still takes keys.
+    const act = (run: () => void) => () => {
+      if (latest.current.listing && latest.current.current?.id === board.id) run();
+    };
+    const items: ContextMenuItem[] = [
+      { label: 'Open', key: 'enter', onSelect: act(() => open(board)) },
+      { label: 'Edit', key: 'e', onSelect: act(() => setMode({ kind: 'edit', board })) },
+      { label: 'Delete', key: 'd', onSelect: act(() => setMode({ kind: 'confirm-delete', board })) },
+    ];
+    contextMenu.open(x, y, items);
   };
 
   useKeyCapture(active && !listing, { escape: true });
@@ -100,7 +103,7 @@ function BoardsScreen() {
       const boardId = current.id;
       if (input === 'e') setMode({ kind: 'edit', board: current });
       else if (input === 'd') setMode({ kind: 'confirm-delete', board: current });
-      else if (key.return) router.push('board-detail', { boardId, title: current.name });
+      else if (key.return) open(current);
       else if (input === 'v') router.push('board', { boardId });
       else if (input === 's') router.push('stages', { boardId, title: `${current.name} Stages` });
       else if (input === 'f') router.push('fields', { boardId, title: `${current.name} Fields` });
@@ -116,15 +119,19 @@ function BoardsScreen() {
       {boards.length === 0 ? (
         <Text color={theme.inkFaint}>No Boards yet. Press n to create one.</Text>
       ) : (
-        <CursorRows
-          cursor={cursor}
-          rows={boards.map((b) => (
-            <Text key={b.id}>
-              {b.name} <Text color={theme.inkFaint}>{`${b.id} · ${b.keyPrefix}`}</Text>
-              {b.id === currentBoard ? <Text color={theme.stageDone}> (current)</Text> : null}
-            </Text>
+        <Box flexDirection="column">
+          {boards.map((b, i) => (
+            <BoardRow
+              key={b.id}
+              board={b}
+              inContext={b.id === currentBoard}
+              selected={i === cursor}
+              active={active && listing}
+              onClick={() => setCursor(i)}
+              onContextMenu={(x, y) => boardMenu(i, x, y)}
+            />
           ))}
-        />
+        </Box>
       )}
       {mode.kind === 'create' && (
         <Box flexDirection="column">
@@ -166,40 +173,16 @@ function BoardsScreen() {
       {mode.kind === 'edit' && (
         <Box flexDirection="column">
           <Text bold>Edit {mode.board.id}</Text>
-          <Form
-            fields={[
-              { name: 'name', label: 'Name', kind: 'text', required: true },
-              { name: 'description', label: 'Description', kind: 'text' },
-            ]}
-            initialValues={{ name: mode.board.name, description: mode.board.description }}
-            onSubmit={async (values) => {
-              await services.boards.update(mode.board.id, {
-                name: String(values.name),
-                description: String(values.description ?? ''),
-              });
-              done(`Updated ${mode.board.id}`);
-            }}
-          />
+          <BoardEditForm board={mode.board} onSaved={(board) => done(`Updated ${board.id}`)} />
         </Box>
       )}
       {mode.kind === 'confirm-delete' && (
-        <ConfirmDialog
-          message={`Delete Board ${mode.board.name}?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => void remove(mode.board, false)}
-          onCancel={() => setMode({ kind: 'list' })}
-        />
-      )}
-      {mode.kind === 'confirm-force' && (
-        <ConfirmDialog
-          message={`${mode.reason} Delete the Board with all its Stories and Plugin files?`}
-          confirmLabel="Delete all"
-          cancelLabel="Cancel"
-          destructive
-          onConfirm={() => void remove(mode.board, true)}
-          onCancel={() => setMode({ kind: 'list' })}
+        <BoardDeleteDialog
+          board={mode.board}
+          onClose={(deleted) => {
+            setMode({ kind: 'list' });
+            if (deleted) list.reload();
+          }}
         />
       )}
     </Box>

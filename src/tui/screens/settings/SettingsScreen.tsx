@@ -1,5 +1,5 @@
-import { Box, Text, useInput } from 'ink';
-import { useContext, useMemo, useState } from 'react';
+import { Box, type DOMElement, Text, useInput } from 'ink';
+import { useContext, useMemo, useRef, useState } from 'react';
 import { UsageError } from '../../../core';
 import { Loading, ScrollBody } from '../../components';
 import {
@@ -12,6 +12,7 @@ import {
   useKeyCapture,
   useKeyHints,
   useLayout,
+  useMouse,
   usePlugins,
   useServices,
 } from '../../hooks';
@@ -54,6 +55,9 @@ export function SettingsScreen() {
     sections.findIndex((s) => s.id === selectedId),
   );
   const section = sections[selected];
+  // A click in the section while the sidebar has focus moves focus there, so its rows take clicks.
+  const sectionBox = useRef<DOMElement>(null);
+  useMouse(sectionBox, { onClick: () => setFocus('section') }, active && focus === 'nav');
   const Section = section ? sectionScreen(section) : undefined;
 
   // Only `esc`: the section's own letter keys and `tab` back to the sidebar still need printable keys.
@@ -102,7 +106,7 @@ export function SettingsScreen() {
           setFocus('section');
         }}
       />
-      <Box flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden">
+      <Box ref={sectionBox} flexDirection="column" flexGrow={1} flexShrink={1} overflow="hidden">
         <Box backgroundColor={theme.overlayRaised} flexDirection="column" paddingX={1} flexShrink={0} marginBottom={1}>
           <Text color={theme.ink} bold>
             {section?.label ?? 'Settings'}
