@@ -37,7 +37,7 @@ async function main(): Promise<void> {
     client.on('error', reject);
     client.on('close', () => {
       clearTimeout(timer);
-      reject(new Error('Rowbly replay owner disconnected'));
+      reject(new Error('Rowbly replay host disconnected'));
     });
   });
   // This is an owned standalone context, never the user's index or working tree.
