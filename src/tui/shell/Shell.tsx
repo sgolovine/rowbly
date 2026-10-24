@@ -1,5 +1,5 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
-import { type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { invokePlugin, knownDataRoots } from '../../services';
 import { ConfirmDialog, ContextMenu, Modal, Panel } from '../components';
 import {
@@ -190,6 +190,24 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   };
   const newStory = () => router.push('story-form', { title: 'New Story' });
   const newBoard = () => router.push('board-form', { title: 'New Board' });
+  const editBoard = (boardId: string) => router.push('board-form', { boardId, title: `Edit ${boardId}` });
+  const deleteBoard = (boardId: string) => router.push('board-delete', { boardId, title: 'Delete Board' });
+  // The Boards as last rendered, for a context menu's items, which run after the renders that
+  // opening the menu caused.
+  const latestBoards = useRef(boards);
+  latestBoards.current = boards;
+  /** A right click on a Board in the sidebar opens a menu of what the sidebar's keys do to it. */
+  const boardMenu = (boardId: string, x: number, y: number) => {
+    // Runs only if the Board is still in the sidebar.
+    const act = (run: (id: string) => void) => () => {
+      if (latestBoards.current.some((b) => b.id === boardId)) run(boardId);
+    };
+    contextMenu.open(x, y, [
+      { label: 'Edit', key: 'e', onSelect: act(editBoard) },
+      { label: 'Delete', key: 'd', onSelect: act(deleteBoard) },
+    ]);
+  };
+  const focusedBoard = boards[currentIndex];
   const pluginCreate = pluginSidebars.shown?.button;
   // Two screen modals never stack: Settings replaces an open Story and the tasks opened over it.
   const story = router.stack.findIndex((route) => route.screen === 'story');
@@ -226,6 +244,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       if (board && board.id !== boards[currentIndex]?.id) void selection.select(board.id);
     } else if (sidebarFocused && pane === 'plugin' && delta) pluginSidebars.step(delta);
     else if (sidebarFocused && pane === 'boards' && input === 'n') newBoard();
+    else if (sidebarFocused && pane === 'boards' && input === 'e' && focusedBoard) editBoard(focusedBoard.id);
+    else if (sidebarFocused && pane === 'boards' && input === 'd' && focusedBoard) deleteBoard(focusedBoard.id);
     else if (sidebarFocused && pane === 'plugin' && input === 'n') pluginCreate?.onClick();
     else if (atRoot && input === '\\') pluginSidebars.cycle();
     else if (atRoot && input === '{') pluginSidebars.step(-1);
@@ -238,7 +258,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   });
 
   const screenHints = useScreenHints(depth);
-  const hints = [...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label) : screenHints), ...actionHints];
+  const hints = [
+    ...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label, focusedBoard !== undefined) : screenHints),
+    ...actionHints,
+  ];
   const label = useScreenLabel(0);
   const gaps = services ? Number(boardsShown) + Number(pluginShown) : 0;
   // The sidebars can grow until the main panel would be narrower than `MAIN_MIN_WIDTH`; a narrower
@@ -292,6 +315,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                       clickable={idle}
                       onFocus={() => setPane('boards')}
                       onSelect={(boardId) => void selection.select(boardId)}
+                      onContextMenu={boardMenu}
                       button={{ label: '+ New Board', onClick: newBoard }}
                     />
                   )}
@@ -353,6 +377,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                                   .slice(routeDepth + 1)
                                   .some((next) => next.screen === 'story' || next.screen === 'settings'));
                             const focused = routeDepth === depth && overlay === null;
+                            // A context menu over the top modal keeps its hints, so the modal keeps its
+                            // width and the row the menu acts on stays where it was clicked.
+                            const hinted = routeDepth === depth && (overlay === null || overlay.kind === 'menu');
                             return (
                               <Box
                                 key={`${routeDepth}:${route.screen}`}
@@ -372,7 +399,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                                     size={screen ? 'screen' : 'panel'}
                                     focused={focused}
                                     onClose={focused ? back : undefined}
-                                    hints={modalHints(focused ? hints : [])}
+                                    hints={modalHints(hinted ? hints : [])}
                                   >
                                     <ScreenSlot
                                       route={route}
@@ -461,11 +488,16 @@ const MENU_HINTS: KeyHint[] = [
   { key: 'esc', description: 'close' },
 ];
 
-/** The keys of a focused sidebar, which replace the root screen's; `create` is its button's label. */
-function sidebarHints(pane: Pane, create: string | undefined): KeyHint[] {
+/**
+ * The keys of a focused sidebar, which replace the root screen's; `create` is its button's label and
+ * `selected` whether the Board sidebar has a Board selected, which `e` and `d` act on.
+ */
+function sidebarHints(pane: Pane, create: string | undefined, selected: boolean): KeyHint[] {
   const hints: KeyHint[] = [{ key: '↑/↓', description: pane === 'boards' ? 'select Board' : 'select' }];
-  if (pane === 'boards') hints.push({ key: 'n', description: 'new Board' });
-  else if (create) hints.push({ key: 'n', description: create.replace(/^\+\s*/, '').replace(/^New\b/, 'new') });
+  if (pane === 'boards') {
+    hints.push({ key: 'n', description: 'new Board' });
+    if (selected) hints.push({ key: 'e', description: 'edit Board' }, { key: 'd', description: 'delete Board' });
+  } else if (create) hints.push({ key: 'n', description: create.replace(/^\+\s*/, '').replace(/^New\b/, 'new') });
   hints.push(
     { key: 'esc', description: 'back to the main area' },
     { key: 'j/k', description: 'select (vim keys)', secondary: true },

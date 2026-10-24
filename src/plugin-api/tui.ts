@@ -30,9 +30,10 @@ export {
   TextInput,
   useFullScreenEditor,
 } from '../tui/components';
-export type { AsyncState } from '../tui/hooks';
+export type { AsyncState, ContextMenuItem } from '../tui/hooks';
 export {
   useAsync,
+  useContextMenu,
   useDirty,
   useIsActive,
   useKeyCapture,

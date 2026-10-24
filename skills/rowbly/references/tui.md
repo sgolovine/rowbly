@@ -20,7 +20,7 @@ place or what they typed in a form.
 | `esc` | back, or cancel the open form |
 | `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
 | `,` | settings: Boards, Stages, Fields, Me, Preferences, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
-| `ctrl+b` | hide or show the Board sidebar |
+| `ctrl+b` | hide or show the Board sidebar. With the sidebar focused (click it), `n` new Board, `e` edit and `d` delete the selected Board; a right click on a Board opens a menu with Edit and Delete for it |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |
 | `{`/`}` | previous / next entry of the Plugin Sidebar |
 | `?` | the keys of the current screen |
@@ -42,10 +42,11 @@ default; kept in `~/.rowblyrc.json`).
 | Story › Tasks, Task | `enter` open, `n` new Task, `e` edit, `m` move, `d` delete |
 | Story › Comments | `n` new Comment, `e` edit, `d` delete |
 | Specs lists | `enter` open in the full-screen editor, `e` edit, `n` new Spec, `d` delete; `ctrl+s` saves in the editor |
-| Boards | `enter` Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit, `d` delete |
+| Boards | `enter` Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit (id and key prefix cannot change), `d` delete (asks first; a Board with Stories asks again). A right click on a Board opens a menu with Open, Edit and Delete |
 | Stages | `n` new, `e` edit, `shift+↑`/`shift+↓` move, `T`/`B` first / last, `d` remove, `l` switch level |
 | Fields | `n` new, `e` edit, `d` remove, `l` switch level |
 | Me | `enter` edit Global or This Data Root |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
+| Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |

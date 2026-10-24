@@ -5,11 +5,8 @@ import { useBoardSelection, useServices, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 
-/**
- * Creates a Board, then switches to it. Opened from the sidebar's New Board button. The Board's id and
- * key prefix are inferred from its name, numbered when another Board already uses them.
- */
-export function BoardFormScreen() {
+/** The New Board form; it switches to the Board it creates. */
+export function NewBoard() {
   const services = useServices();
   const selection = useBoardSelection();
   const toast = useToast();

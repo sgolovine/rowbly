@@ -4,6 +4,7 @@ import { LayoutContext, uniqueKeys, useIsActive, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { CloseButton } from './CloseButton';
+import { fitHints, hintsWidth } from './fitHints';
 import { KeyHints } from './KeyHints';
 import { LayerOutlet } from './LayerOutlet';
 import type { ModalProps } from './Modal';
@@ -108,8 +109,13 @@ export function ModalFrame({
           borderRight={false}
           borderColor={theme.border}
         >
-          {/* The strip keeps its line under another layer, so the frame does not jump. */}
-          {top ? <KeyHints hints={footer} width={width - 6} /> : <Text> </Text>}
+          {/* Under another layer, such as a context menu, the strip keeps its line and its width, so the
+              frame does not move or resize. */}
+          {top ? (
+            <KeyHints hints={footer} width={width - 6} />
+          ) : (
+            <Text>{' '.repeat(Math.max(1, hintsWidth(fitHints(footer, width - 6))))}</Text>
+          )}
         </Box>
       )}
     </Panel>

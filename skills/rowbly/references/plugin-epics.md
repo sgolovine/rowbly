@@ -28,6 +28,12 @@ rowbly epics delete auth --json --no-prompt                     # unlinks its St
 - `stories list --epic <id>` takes an Epic id (a slug); anything else exits 2. `stories show` has an
   Epic row.
 
+## TUI
+
+- The Epics list (home menu, Epics) takes `e` edit, `c` close or reopen and `d` delete for the highlighted
+  Epic, as the Epic screen does; a right click on an Epic opens a menu of those keys. Delete asks first and
+  says how many Stories it unlinks.
+
 ## Data
 
 - An Epic is `.rowbly/plugins/epics/<id>.json`: `version`, `id`, `name`, `description`, `closed`,

@@ -17,6 +17,7 @@ export interface SidebarEntry {
  * shows the `1`–`9` keys that pick a Board. A click in it calls `onFocus`; while `focused`, its border
  * lights up and the shell gives it `↑`/`↓` and `n`, which the button shows. Dragging its right edge
  * calls `onResize` with the new width, no wider than `maxWidth` nor narrower than `SIDEBAR_MIN_WIDTH`.
+ * A right click on an entry focuses the sidebar and calls `onContextMenu`, to open a menu there.
  */
 export function Sidebar({
   title,
@@ -32,6 +33,7 @@ export function Sidebar({
   clickable,
   onFocus,
   onSelect,
+  onContextMenu,
   button,
 }: {
   title: string;
@@ -47,6 +49,8 @@ export function Sidebar({
   clickable: boolean;
   onFocus(): void;
   onSelect(id: string): void;
+  /** A right click on the entry `id`, at cell `x`, `y`. */
+  onContextMenu?(id: string, x: number, y: number): void;
   button?: Pick<ButtonProps, 'label' | 'onClick'>;
 }) {
   const ref = useRef<DOMElement>(null);
@@ -83,6 +87,14 @@ export function Sidebar({
                 onFocus();
                 onSelect(entry.id);
               }}
+              onContextMenu={
+                onContextMenu
+                  ? (x, y) => {
+                      onFocus();
+                      onContextMenu(entry.id, x, y);
+                    }
+                  : undefined
+              }
             />
           ))}
         </Box>

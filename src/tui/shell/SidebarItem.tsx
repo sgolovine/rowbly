@@ -10,15 +10,18 @@ export function SidebarItem({
   selected,
   clickable,
   onClick,
+  onContextMenu,
 }: {
   index?: number;
   name: string;
   selected: boolean;
   clickable: boolean;
   onClick(): void;
+  /** A right click on the entry, at cell `x`, `y`. */
+  onContextMenu?(x: number, y: number): void;
 }) {
   const ref = useRef<DOMElement>(null);
-  useMouse(ref, { onClick }, clickable);
+  useMouse(ref, { onClick, onContextMenu }, clickable);
   return (
     <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.selection : undefined}>
       <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>

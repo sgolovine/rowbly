@@ -8,4 +8,5 @@ The generic Modal: one short task over the screen. New Board, New Story and edit
 - Body with `col-2` padding; no header band and no Tabs. A task that needs Tabs or a section list is a screen Modal: `StoryModal` or `SettingsModal`, not this.
 - Keys in a `KeyHints` strip inside the frame, under a `border` rule; the confirming key first (`enter move`, `ctrl+s create`), `esc back` last.
 - Opened over a screen Modal (delete from a Story), it takes the focus and the screen Modal below drops to a `border` frame.
+- Under another layer or a `ContextMenu` the strip goes blank but keeps its line and width, so the Modal does not resize or move and a menu opened on a row stays next to that row.
 - Plugins open only this kind.

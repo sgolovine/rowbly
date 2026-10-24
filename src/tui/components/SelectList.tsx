@@ -19,6 +19,11 @@ export interface SelectListProps<T> {
   onSelect?(item: SelectItem<T>): void;
   /** Called with the highlighted item whenever it changes, so a screen's own keys can act on it. */
   onHighlight?(item: SelectItem<T> | undefined): void;
+  /**
+   * A right click on an item, at cell `x`, `y`: the item is highlighted first, so open a context menu
+   * there of what the screen's keys do to it (`useContextMenu`).
+   */
+  onContextMenu?(item: SelectItem<T>, x: number, y: number): void;
   /** Reports whether the list is capturing filter text; false when filtering ends or it unmounts. */
   onFilteringChange?(filtering: boolean): void;
   /** Multi-select mode: `space` toggles, `enter` submits the checked values. */
@@ -36,12 +41,13 @@ export interface SelectListProps<T> {
 
 /**
  * A keyboard list: `↑/↓` (or `j/k`) move, `/` filters by label, `esc` clears the filter. In single mode
- * a click on an item picks it, as `enter` does.
+ * a click on an item picks it, as `enter` does. A right click highlights the item and calls `onContextMenu`.
  */
 export function SelectList<T>({
   items,
   onSelect,
   onHighlight,
+  onContextMenu,
   onFilteringChange,
   multi = false,
   defaultSelected = [],
@@ -135,8 +141,20 @@ export function SelectList<T>({
                 onSelect(item);
               }
             : undefined;
+        const menu = onContextMenu
+          ? (x: number, y: number) => {
+              setCursor(start + i);
+              onContextMenu(item, x, y);
+            }
+          : undefined;
         return (
-          <SelectListRow key={String(item.value)} highlighted={highlighted} active={active} onClick={pick}>
+          <SelectListRow
+            key={String(item.value)}
+            highlighted={highlighted}
+            active={active}
+            onClick={pick}
+            onContextMenu={menu}
+          >
             {checkbox}
             {item.label}
             {item.description && <Text color={theme.inkFaint}> {item.description}</Text>}
