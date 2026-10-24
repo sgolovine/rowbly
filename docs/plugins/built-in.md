@@ -338,3 +338,10 @@ phase. `last` has `kind` (`synchronized`, `failed`, `interrupted`), message, sta
 commit/upstream, evidence paths and repair count. Times are epoch milliseconds. An active/pending run
 can coexist with an older last result; only a completed `synchronized` result proves success. A local
 commit after a rejected push does not. See the [user guide](../user-guide.md#automatic-merge-conflict-resolution).
+
+
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
+retained local commit and evidence paths. It prints no success result on stdout. An active or pending
+run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
+`git show` remains an inspection command and can successfully display a previous failed result.

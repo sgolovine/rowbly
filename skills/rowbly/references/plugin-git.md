@@ -144,3 +144,10 @@ Git first (`rowbly plugins disable git`), remember that it was on, run the repai
   two preferences are independent; inspect and configure each explicitly.
 - **MEDIUM: enabling it with unrelated edits under `.rowbly/`.** They are swept into the next Automatic
   Commit. Start from a clean baseline.
+
+
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
+retained local commit and evidence paths. It prints no success result on stdout. An active or pending
+run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
+`git show` remains an inspection command and can successfully display a previous failed result.

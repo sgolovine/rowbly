@@ -64,5 +64,18 @@ describe('Git Plugin CLI workflow', () => {
     expect(shown.authorName).toBeUndefined();
     expect(shown.synchronizationRun).toMatchObject({ enabled: false, intervalSeconds: 900 });
     expect(git('ls-files', '--', '.rowbly/local.json')).toBe('');
+    expect((await cli('git', 'configure', '--automatic-merge-resolution', 'on')).exitCode).toBe(0);
+    const failed = await cli('git', 'sync');
+    expect(failed.exitCode).toBe(4);
+    expect(failed.stdout).toBe('');
+    expect(JSON.parse(failed.stderr).error).toMatchObject({
+      code: 'CONFLICT',
+      details: {
+        synchronizationRun: {
+          enabled: true,
+          last: { kind: 'failed', commit: git('rev-parse', 'HEAD'), evidence: [] },
+        },
+      },
+    });
   });
 });

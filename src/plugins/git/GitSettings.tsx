@@ -23,22 +23,22 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
   const [requesting, setRequesting] = useState(false);
   const previous = useRef<{ prefs: Awaited<ReturnType<typeof preferences>>; sync: GitSyncStatus }>(undefined);
   const mounted = useRef(true);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
       mounted.current = false;
-    },
-    [],
-  );
+    };
+  }, []);
   const loaded = useAsync(
     async () => ({ prefs: await preferences(plugin), sync: await plugin.git.syncStatus(resolveSyncOptions) }),
     [plugin],
   );
   useReloadOnReturn(loaded.reload);
   useEffect(() => {
-    if (!active) return;
-    const timer = setInterval(loaded.reload, 1000);
-    return () => clearInterval(timer);
-  }, [active, loaded.reload]);
+    if (!active || loaded.loading) return;
+    const timer = setTimeout(loaded.reload, 1000);
+    return () => clearTimeout(timer);
+  }, [active, loaded.loading, loaded.reload]);
   const data = loaded.data ?? previous.current;
   useEffect(() => {
     if (loaded.data) previous.current = loaded.data;

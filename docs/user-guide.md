@@ -539,6 +539,13 @@ and active work end. A local `commit` alone does not prove a push succeeded. Tim
 summaries are epoch milliseconds. See [Git Plugin details](plugins/built-in.md#git).
 
 
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
+retained local commit and evidence paths. It prints no success result on stdout. An active or pending
+run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
+`git show` remains an inspection command and can successfully display a previous failed result.
+
+
 ## Interactive mode (TUI)
 
 Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.

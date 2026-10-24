@@ -1,4 +1,4 @@
-import { type PluginCommands, ValidationError } from '../../plugin-api';
+import { ConflictError, type PluginCommands, ValidationError } from '../../plugin-api';
 import { configure, preferences, resolveSyncOptions } from './model';
 
 export const commands: PluginCommands = (group, cli) => {
@@ -8,6 +8,11 @@ export const commands: PluginCommands = (group, cli) => {
     .action((_opts, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         const result = await plugin.git.requestSync(resolveSyncOptions);
+        if (!result.active && !result.requested && result.last?.kind === 'failed')
+          throw new ConflictError(result.last.message, {
+            details: { synchronizationRun: result },
+            hint: 'Resolve the reported cause, then retry `rowbly git sync`.',
+          });
         print(result, (value) =>
           value.active
             ? `Synchronization ${value.active.phase}`
