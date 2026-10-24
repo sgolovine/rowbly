@@ -5,6 +5,7 @@ import { doctorScreens } from '../doctor';
 import { fieldsScreens } from '../fields';
 import { meScreens } from '../me';
 import { pluginsScreens } from '../plugins';
+import { preferencesScreens } from '../preferences';
 import { setupScreens } from '../setup';
 import { stagesScreens } from '../stages';
 import type { ScreenComponent, ScreenRegistry } from '../types';
@@ -40,6 +41,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'global-stages', label: 'Stages', screen: 'stages', params: { global: true } },
         { id: 'global-fields', label: 'Fields', screen: 'fields', params: { global: true } },
         { id: 'me', label: 'Me', screen: 'me' },
+        { id: 'preferences', label: 'Preferences', screen: 'preferences' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
       ],
@@ -72,6 +74,7 @@ const SECTION_SCREENS: ScreenRegistry = {
   ...fieldsScreens,
   ...setupScreens,
   ...meScreens,
+  ...preferencesScreens,
   ...doctorScreens,
   ...pluginsScreens,
 };

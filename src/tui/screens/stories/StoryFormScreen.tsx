@@ -1,6 +1,7 @@
+import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
 import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
-import type { CustomFieldValuesInput, PluginInput } from '../../../services';
+import { type CustomFieldValuesInput, type PluginInput, readOpenStoryAfterCreation } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
 import { useAsync, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
@@ -12,7 +13,10 @@ import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields'
 import { boardIdFor, NONE } from './shared';
 import { priorityValue } from './storyFormValues';
 
-/** Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one (`params.key`). */
+/**
+ * Creates a Story (`params.boardId`, default: the Board in context; `params.stage` presets the Stage) or edits one
+ * (`params.key`). A new Story opens when Open Story after creation is on in Preferences.
+ */
 export function StoryFormScreen({ params }: ScreenProps) {
   const services = useServices();
   const ctx = useRowblyContext();
@@ -52,7 +56,11 @@ export function StoryFormScreen({ params }: ScreenProps) {
     if (!story) {
       const created = await services.stories.create(boardId, { ...common, stage, customFields: fields });
       toast.push('info', `Created ${created.key}`);
-      router.replace('story', { key: created.key, title: created.key });
+      // Back to the Board or list, which reloads on return, unless the user opens new Stories.
+      // The Story is saved, so an unreadable Home Config counts as off rather than an error.
+      const open = await readOpenStoryAfterCreation(ctx?.home ?? homedir()).catch(() => false);
+      if (open) router.replace('story', { key: created.key, title: created.key });
+      else router.pop();
       return;
     }
     const unsetFields = Object.keys(story.customFields).filter((k) => fields[k] === undefined);
