@@ -83,6 +83,7 @@ export const mergeNotes = definePlugin({
       requiredStories: [] as RequiredStory[],
       requiredStages: [] as RequiredStage[],
       identities: [],
+      removedFiles: [],
     };
   },
 });

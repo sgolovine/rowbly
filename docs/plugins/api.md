@@ -395,6 +395,9 @@ ADR-0034 §3 permits one optional synchronous `reconcile` callback during an iso
 It receives frozen BASE/left/right snapshots of only its own raw bags and scoped files, core
 source-qualified Board/Story remaps, retained Story Keys, effective Stage Keys by Board and
 deterministic merge/evidence helpers.
+During core replay transport, `baseRemap` optionally names BASE's prior core correspondence; the
+side `remaps` include prior core transport as well as this reconciliation's changes. Owners rewrite
+only references their supported format understands.
 Files hold exact base64 bytes and Git modes; `helpers.read` requires lossless UTF-8 and
 `helpers.file` encodes supported text. Missing bags are `undefined`, distinct from JSON null.
 `helpers.value` recursively combines structurally safe object edits and retains ambiguous leaves; it
@@ -420,6 +423,23 @@ An owner that splits an identity may return `identities: [{ source, scope, from,
 supplied side's source and retained core scope. The host bounds and validates these changes and
 returns them only to that same owner in later replay steps. These transient maps are not persisted
 Plugin Data or a migration API. Merge callers omit replay input and retain their existing behavior.
+`from` always names the raw supplied source identifier; `to` names the final output identifier.
+Include earlier transported identifiers as well as newly split identifiers. Apply one simultaneous
+map for a source, never a chain of substitutions. A new original identifier that equals an earlier
+transport destination allocates separately, preserving both records.
+Identifiers remain opaque, including `constructor` and `__proto__`. Build, copy and read maps with
+own-key semantics; do not treat inherited object properties as entries or restrict valid identifiers.
+
+Replay may additionally return `removedFiles: readonly string[]` to remove exact owned paths from
+the immutable candidate. Nonempty removals without replay input are refused. The host requires an
+array of at most 4096 unique normalized relative strings, each in this Plugin's scoped folders and
+present in at least one supplied own snapshot. Empty segments, traversal, backslashes, NUL, core or
+another Plugin's paths, and overlap with `result.files` are refused. Merge Evidence remains append-only.
+This grants no live filesystem authority. For identity transport, return only recognized moved source
+paths absent from the final projected snapshot; never remove opaque, future or invalid files. Return
+a surviving old-path identity explicitly in `files`, without removing its path. The owner alone
+recognizes formats: Specs requires lossless UTF-8 before transporting Markdown and safely refuses an
+unrecognized binary Markdown source. Ordinary merge callers omit replay and retain omission behavior.
 
 Only a supported format that understands a retained Story reference may additionally return
 `requiredStories: [{ source, key }]`. Each request must name an existing Story in an immutable
@@ -456,6 +476,7 @@ export const mergeNotes = definePlugin({
       requiredStories: [] as RequiredStory[],
       requiredStages: [] as RequiredStage[],
       identities: [],
+      removedFiles: [],
     };
   },
 });

@@ -55,6 +55,8 @@ export interface PluginReconciliation {
   left: PluginMergeSnapshot;
   right: PluginMergeSnapshot;
   remaps: readonly [IdentityRemap, IdentityRemap];
+  /** Prior core identity transport for BASE during replay. */
+  baseRemap?: IdentityRemap;
   helpers: MergeHelpers;
   /** Final retained core identities; no other Plugin data is exposed. */
   stories: readonly string[];
@@ -66,8 +68,10 @@ export interface PluginReconciliation {
 export type PluginReconciler = (input: PluginReconciliation) => PluginMergeSnapshot & {
   requiredStories?: readonly RequiredStory[];
   requiredStages?: readonly RequiredStage[];
-  /** Source-qualified identity changes created by this reconciliation. */
+  /** Direct raw-source to final-output identifiers, including prior transport; never sequential substitutions. */
   identities?: readonly { source: string; scope: string; from: string; to: string }[];
+  /** Replay-only exact own paths removed from the immutable candidate, never live files. */
+  removedFiles?: readonly string[];
 };
 
 export function canonicalValue(value: unknown): string {

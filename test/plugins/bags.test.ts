@@ -74,7 +74,12 @@ it('reconciles only supported owned formats while Off, preserves future bags and
   const path = storyFile('WEB-1');
   const base = {
     id: 'base',
-    files: { 'rowbly.config.json': file(root), 'boards/web/board.config.json': file(board), [path]: file(story) },
+    files: {
+      'rowbly.config.json': file(root),
+      'boards/web/board.config.json': file(board),
+      [path]: file(story),
+      'plugins/format/source.bin': file({ exact: 'original' }),
+    },
   };
   const left = {
     id: 'left',
@@ -114,7 +119,7 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     start() {
       started++;
     },
-    reconcile({ left, right, helpers, replay }) {
+    reconcile({ base, left, right, helpers, replay }) {
       called++;
       expect(Object.keys(left.bags)).toEqual(['boards/web/stories/WEB-1']);
       expect(left.bags['boards/web/stories/WEB-1']).toEqual({ version: 1, count: 1 });
@@ -124,9 +129,12 @@ it('reconciles only supported owned formats while Off, preserves future bags and
       expect(helpers.same(right.bags['boards/web/stories/WEB-1'], { version: 1, count: 2 })).toBe(true);
       expect(replay?.base).toEqual({});
       expect(replay?.left).toEqual({ 'boards/web/stories/WEB-1': { old: 'new' } });
+      const moved = base.files['plugins/format/source.bin'];
+      if (!moved) throw new Error('Expected original scoped file');
       return {
         bags: { 'boards/web/stories/WEB-1': { version: 1, count: 3 } },
-        files: {},
+        files: { 'plugins/format/moved.bin': moved },
+        removedFiles: ['plugins/format/source.bin'],
         identities: [{ source: 'right', scope: 'boards/web/stories/WEB-1', from: 'one', to: 'two' }],
       };
     },
@@ -137,6 +145,8 @@ it('reconciles only supported owned formats while Off, preserves future bags and
   expect(result.identities).toEqual([
     { owner: 'format', source: 'right', scope: 'boards/web/stories/WEB-1', from: 'one', to: 'two' },
   ]);
+  expect(result.files['plugins/format/source.bin']).toBeUndefined();
+  expect(result.files['plugins/format/moved.bin']).toEqual(base.files['plugins/format/source.bin']);
   const merged = JSON.parse(Buffer.from(result.files[path]?.data ?? '', 'base64').toString());
   expect(merged.plugins.format).toEqual({ version: 1, count: 3 });
   expect(merged.plugins.future).toMatchObject({ version: 100, raw: null, bytes: 'unchanged' });
@@ -151,11 +161,23 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     () => ({ bags: {}, files: {}, requiredStages: [{ source: 'left', board: 'web', key: 'missing' }] }),
     () => ({ bags: {}, files: {}, identities: [{ source: 'unknown', scope: '', from: 'a', to: 'b' }] }),
     () => ({ bags: {}, files: {}, identities: [{ source: 'left', scope: 'boards/missing', from: 'a', to: 'b' }] }),
+    () => ({ bags: {}, files: {}, removedFiles: ['plugins/format/../source.bin'] }),
+    () => ({ bags: {}, files: {}, removedFiles: ['plugins/other/source.bin'] }),
+    () => ({ bags: {}, files: {}, removedFiles: ['plugins/format/missing.bin'] }),
+    () => ({ bags: {}, files: {}, removedFiles: 'not-an-array' as unknown as string[] }),
+    () => ({ bags: {}, files: {}, removedFiles: [7] as unknown as string[] }),
+    () => ({ bags: {}, files: {}, removedFiles: ['plugins/format/source.bin', 'plugins/format/source.bin'] }),
+    () => ({ bags: {}, files: { 'plugins/format/source.bin': file({}) }, removedFiles: ['plugins/format/source.bin'] }),
     () => {
       throw new Error('format failed');
     },
   ])
-    expect(() => mergeData(base, left, right, [{ ...format, reconcile }])).toThrow();
+    expect(() => mergeData(base, left, right, [{ ...format, reconcile }], {})).toThrow();
+  expect(() =>
+    mergeData(base, left, right, [
+      { ...format, reconcile: () => ({ bags: {}, files: {}, removedFiles: ['plugins/format/source.bin'] }) },
+    ]),
+  ).toThrow('Invalid replay file removals');
   expect(await readJsonFile(t, path)).toEqual(story);
 
   const { tasks } = await import('../../src/plugins/tasks');
@@ -198,5 +220,61 @@ it('reconciles only supported owned formats while Off, preserves future bags and
       JSON.parse(Buffer.from(opaque.files[path]?.data ?? '', 'base64').toString()).plugins[owner.definition.id],
     ).toEqual({ ...owner.bag, version: 999 });
     expect(owner.definition.bags?.story?.safeParse(owner.bag).success).toBe(false);
+    const isTasks = owner.definition.id === 'tasks';
+    const bag = (name: string, extra = false) =>
+      isTasks
+        ? {
+            nextNumber: extra ? 3 : 2,
+            tasks: [{ ...task, name }, ...(extra ? [{ ...task, number: 2, name: 'new original' }] : [])],
+          }
+        : {
+            comments: [
+              { ...comment, body: name },
+              ...(extra ? [{ ...comment, id: 'duplicate-id-2', body: 'new original' }] : []),
+            ],
+          };
+    const collision = mergeData(base, source('a', bag('remote')), source('b', bag('local')), [owner.definition]);
+    const scope = 'boards/web/stories/WEB-1';
+    const prior = Object.fromEntries(
+      (collision.identities ?? []).filter((m) => m.source === 'b').map((m) => [m.from, m.to]),
+    );
+    const maps = { [owner.definition.id]: { [scope]: prior } };
+    const replayed = mergeData(
+      source('b', bag('local')),
+      { id: 'a-current', files: collision.files },
+      source('c', bag('later', true)),
+      [owner.definition],
+      { b: maps, c: maps },
+    );
+    const value = JSON.parse(Buffer.from(replayed.files[path]?.data ?? '', 'base64').toString()).plugins[
+      owner.definition.id
+    ];
+    expect(
+      (isTasks
+        ? value.tasks.map((v: { name: string }) => v.name)
+        : value.comments.map((v: { body: string }) => v.body)
+      ).sort(),
+    ).toEqual(['later', 'new original', 'remote']);
+    expect(replayed.identities?.filter((m) => m.source === 'c')).toHaveLength(2);
+    expect(replayed.evidence).toHaveLength(1);
+    if (!isTasks) {
+      const { transportReplayData, emptyReplayProjection } = await import('../../src/services/plugins/replayData');
+      const original = source('identifiers', {
+        comments: [
+          { ...comment, id: '__proto__', body: 'first' },
+          { ...comment, id: 'constructor', body: 'second' },
+        ],
+      });
+      const projection = emptyReplayProjection();
+      projection.owners.comments = { [scope]: JSON.parse('{"__proto__":"constructor","constructor":"__proto__"}') };
+      const transported = transportReplayData(original, JSON.parse(JSON.stringify(projection)), [comments]);
+      const retained = JSON.parse(Buffer.from(transported.source.files[path]?.data ?? '', 'base64').toString()).plugins
+        .comments.comments;
+      expect(retained).toEqual([
+        { ...comment, id: '__proto__', body: 'second' },
+        { ...comment, id: 'constructor', body: 'first' },
+      ]);
+      expect(Object.hasOwn(transported.projection.owners.comments?.[scope] ?? {}, '__proto__')).toBe(true);
+    }
   }
 });

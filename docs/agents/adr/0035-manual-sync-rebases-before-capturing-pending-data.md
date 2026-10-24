@@ -35,6 +35,15 @@ bounded by the host. Check raw recognized identities before projection or opaque
 future formats retain exact opaque preservation and evidence. No new stored identity or migration
 framework is introduced.
 
+Replay alone may return `removedFiles`, at most 4096 unique normalized exact relative own paths
+present in a supplied own snapshot. The host rejects non-arrays, non-strings, unsafe paths, other
+scopes, duplicate entries and simultaneous add/remove of one path before changing the immutable
+candidate. Empty/absent removals preserve ordinary merge behavior; nonempty removals without replay
+are refused. Owners remove only recognized moved paths absent from their final projected snapshot.
+Opaque/future/invalid bytes and modes remain exact; binary Markdown cannot be transported as text.
+A surviving identity at an old path is returned explicitly rather than removed. No live file or
+append-only Merge Evidence deletion is authorized. Allocation uses stable code-unit ordering.
+
 ### 3. Merge effects and pending work
 
 Inventory unpublished two-parent merges, recompute their original-parent reconciliation baseline and

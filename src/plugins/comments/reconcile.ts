@@ -14,12 +14,38 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers, remaps
       if (!valid.success) throw new Error(`Cannot reconcile Comments at ${scope}: ${valid.error.issues[0]?.message}`);
     }
     if (parsed.some((p, n) => !p.success || (raw[n] !== undefined && !helpers.same(p.data, raw[n])))) continue;
+    const origins: Record<string, string>[] = [];
+    const reserved = new Set(parsed.flatMap((p) => (p.success ? p.data.comments.map((comment) => comment.id) : [])));
+    for (const map of [replay?.base, replay?.left, replay?.right])
+      for (const id of Object.values(map?.[scope] ?? {})) reserved.add(id);
     const [old, a, b] = parsed.map((p, side) => {
-      const map = [replay?.base, replay?.left, replay?.right][side]?.[scope];
-      const comments = (p.success ? p.data.comments : []).map((comment) => ({
-        ...comment,
-        id: map?.[comment.id] ?? comment.id,
-      }));
+      const map: Record<string, string> = Object.assign(
+        Object.create(null),
+        [replay?.base, replay?.left, replay?.right][side]?.[scope] ?? {},
+      );
+      const rawComments = p.success ? p.data.comments : [];
+      const origin: Record<string, string> = Object.create(null);
+      const comments = rawComments.map((comment) => ({ ...comment, id: map?.[comment.id] ?? comment.id }));
+      const occupied = new Set<string>();
+      for (const index of rawComments
+        .map((_, n) => n)
+        .sort(
+          (x, y) => Number(Boolean(map?.[rawComments[y]?.id ?? ''])) - Number(Boolean(map?.[rawComments[x]?.id ?? ''])),
+        )) {
+        const original = rawComments[index],
+          comment = comments[index];
+        if (!original || !comment) continue;
+        if (occupied.has(comment.id)) {
+          if (map?.[original.id]) throw new Error('Ambiguous Comments replay identity correspondence');
+          let n = 2;
+          while (reserved.has(`${original.id}-${n}`)) n++;
+          comment.id = `${original.id}-${n}`;
+          reserved.add(comment.id);
+        }
+        occupied.add(comment.id);
+        origin[original.id] = comment.id;
+      }
+      origins.push(origin);
       CommentsBag.parse({ comments });
       return comments;
     });
@@ -36,7 +62,8 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers, remaps
         const second = { ...r, id: `${id}-${n}` };
         used.add(second.id);
         comments.push(l, second);
-        identities.push({ source: remaps[1].source, scope, from: id, to: second.id });
+        const original = Object.keys(origins[2] ?? {}).find((key) => origins[2]?.[key] === id);
+        if (original !== undefined && origins[2]) origins[2][original] = second.id;
         helpers.retain(
           `${scope}/comments/${id}`,
           'distinct concurrent Comments retained with separate identities',
@@ -55,6 +82,9 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers, remaps
       }
     }
     bags[scope] = { comments };
+    for (const side of [1, 2])
+      for (const [from, to] of Object.entries(origins[side] ?? {}))
+        if (from !== to) identities.push({ source: remaps[side - 1]?.source ?? '', scope, from, to });
   }
   return { bags, files: {}, identities };
 };

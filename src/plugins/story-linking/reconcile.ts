@@ -1,7 +1,7 @@
 import type { PluginReconciler, RequiredStory } from '../../plugin-api';
 import { LinksBag } from './model';
 
-export const reconcile: PluginReconciler = ({ base, left, right, remaps, helpers, stories }) => {
+export const reconcile: PluginReconciler = ({ base, left, right, remaps, baseRemap, helpers, stories }) => {
   const bags: Record<string, unknown> = {},
     requiredStories: RequiredStory[] = [];
   for (const scope of new Set([...Object.keys(base.bags), ...Object.keys(left.bags), ...Object.keys(right.bags)])) {
@@ -14,7 +14,11 @@ export const reconcile: PluginReconciler = ({ base, left, right, remaps, helpers
     const [old, a, b] = parsed.map((p) => (p.success ? p.data.blocks : []));
     const l = (a ?? []).map((key) => remaps[0].stories[key] ?? key),
       r = (b ?? []).map((key) => remaps[1].stories[key] ?? key);
-    const members = helpers.members(old ?? [], l, r) as string[];
+    const members = helpers.members(
+      (old ?? []).map((key) => baseRemap?.stories[key] ?? key),
+      l,
+      r,
+    ) as string[];
     bags[scope] = members.length ? { blocks: members } : undefined;
     for (const [side, originals] of [a, b].entries())
       for (const key of originals ?? []) {

@@ -23,6 +23,8 @@ import type { AnyPluginDefinition } from './types';
 export interface MergeSource {
   id: string;
   files: MergeFiles;
+  /** Core paths already transported; supported owner references still use the original namespace. */
+  projection?: IdentityRemap;
 }
 export interface DataMergeResult {
   files: MergeFiles;
@@ -102,6 +104,8 @@ export function mergeData(
   const restores = new Map<string, RequiredStory>();
   const stages = new Map<string, RequiredStage>();
   const supplied = [left, right];
+  if (left.id === right.id && !isDeepStrictEqual(left.files, right.files))
+    throw new Error('Equal reconciliation source ids must have equal snapshots');
   const maximum = supplied.reduce(
     (n, source) =>
       n +
@@ -116,22 +120,24 @@ export function mergeData(
     let changed = false;
     for (const request of result.requests) {
       const source = supplied.find((s) => s.id === request.source);
+      const sourceKey = source?.projection?.stories[request.key] ?? request.key;
       const path =
-        source && Object.keys(source.files).find((p) => STORY.test(p) && json(source.files[p])?.key === request.key);
+        source && Object.keys(source.files).find((p) => STORY.test(p) && json(source.files[p])?.key === sourceKey);
       if (!source || !path) throw new Error('Plugin requiredStories must name an existing supplied source Story');
       const key = canonicalValue(request);
       if (!restores.has(key)) {
-        restores.set(key, request);
+        restores.set(key, { ...request, key: sourceKey });
         changed = true;
       }
     }
     for (const request of result.stageRequests) {
       const source = supplied.find((s) => s.id === request.source);
-      if (!source || !sourceStages(source.files, request.board).some((s) => s.key === request.key))
+      const sourceBoard = source?.projection?.boards[request.board] ?? request.board;
+      if (!source || !sourceStages(source.files, sourceBoard).some((s) => s.key === request.key))
         throw new Error('Plugin requiredStages must name an existing effective source Stage');
       const key = canonicalValue(request);
       if (!stages.has(key)) {
-        stages.set(key, request);
+        stages.set(key, { ...request, board: sourceBoard });
         changed = true;
       }
     }
@@ -270,7 +276,18 @@ function mergeOnce(
       base: own(base),
       left: own(left),
       right: own(right),
-      remaps: structuredClone(remaps),
+      remaps: structuredClone(
+        remaps.map((map, side) => {
+          const prior = [leftSource, rightSource][side]?.projection;
+          if (!prior) return map;
+          const boards = { ...map.boards },
+            stories = { ...map.stories };
+          for (const [from, to] of Object.entries(prior.boards)) boards[from] = map.boards[to] ?? to;
+          for (const [from, to] of Object.entries(prior.stories)) stories[from] = map.stories[to] ?? to;
+          return { source: map.source, boards, stories };
+        }) as [IdentityRemap, IdentityRemap],
+      ),
+      ...(baseSource.projection ? { baseRemap: structuredClone(baseSource.projection) } : {}),
       helpers,
       stages: Object.fromEntries(
         Object.keys(files)
@@ -296,7 +313,33 @@ function mergeOnce(
     const result = definition.reconcile(input);
     if (!result || !isObject(result.bags) || !isObject(result.files))
       throw new Error(`Invalid reconciliation output from ${definition.id}`);
-    const seenIdentities = new Set<string>();
+    if (result.removedFiles !== undefined) {
+      if (
+        !Array.isArray(result.removedFiles) ||
+        result.removedFiles.length > 4096 ||
+        (!replay && result.removedFiles.length)
+      )
+        throw new Error('Invalid replay file removals');
+      const removed = new Set<string>();
+      for (const path of result.removedFiles) {
+        if (
+          typeof path !== 'string' ||
+          !path ||
+          path.includes('\\') ||
+          path.includes('\0') ||
+          /(?:^|\/)plugins\/git\/merge-evidence\//.test(path) ||
+          path.split('/').some((part) => !part || part === '.' || part === '..') ||
+          PLUGIN.exec(path)?.[2] !== definition.id ||
+          removed.has(path) ||
+          Object.hasOwn(result.files, path) ||
+          ![input.base, input.left, input.right].some((snapshot) => Object.hasOwn(snapshot.files, path))
+        )
+          throw new Error(`Invalid replay file removal from ${definition.id}`);
+        removed.add(path);
+      }
+      for (const path of removed) delete files[path];
+    }
+    const seenIdentities = new Map<string, string>();
     if ((result.identities?.length ?? 0) > 4096) throw new Error('Too many replay identity changes');
     for (const identity of result.identities ?? []) {
       if (
@@ -309,8 +352,11 @@ function mergeOnce(
       )
         throw new Error(`Invalid replay identity change from ${definition.id}`);
       const key = canonicalValue([identity.source, identity.scope, identity.from]);
-      if (seenIdentities.has(key)) throw new Error(`Repeated replay identity change from ${definition.id}`);
-      seenIdentities.add(key);
+      if (seenIdentities.has(key)) {
+        if (leftSource.id === rightSource.id && seenIdentities.get(key) === identity.to) continue;
+        throw new Error(`Repeated replay identity change from ${definition.id}`);
+      }
+      seenIdentities.set(key, identity.to);
       identities.push({
         owner: definition.id,
         source: identity.source,
@@ -384,7 +430,7 @@ function mergeOnce(
   validateInput(files);
   validateReferences(files);
   const evidence: string[] = [];
-  if (decisions.length || remaps.some((r) => Object.keys(r.boards).length || Object.keys(r.stories).length)) {
+  if (replay || decisions.length || remaps.some((r) => Object.keys(r.boards).length || Object.keys(r.stories).length)) {
     const record = {
       version: 1,
       sources: { base: evidenceSource(baseSource), sides: [evidenceSource(leftSource), evidenceSource(rightSource)] },
@@ -850,16 +896,14 @@ function retainEditedParents(base: MergeFiles, left: MergeFiles, right: MergeFil
 }
 
 /** Prior evidence stays additive; never recursively base64-embed its payload in the next record. */
-function evidenceSource(source: MergeSource) {
+export function evidenceSource(source: MergeSource) {
   const files: MergeFiles = {},
     evidence: { path: string; digest: string }[] = [];
   for (const [path, file] of Object.entries(source.files)) {
     if (path.startsWith('plugins/git/merge-evidence/')) evidence.push({ path, digest: mergeDigest(file) });
     else files[path] = file;
   }
-  return evidence.length
-    ? { id: source.id, files, evidence: evidence.sort((a, b) => (a.path < b.path ? -1 : 1)) }
-    : source;
+  return evidence.length ? { ...source, files, evidence: evidence.sort((a, b) => (a.path < b.path ? -1 : 1)) } : source;
 }
 
 function sourceStages(files: MergeFiles, boardId: string): { key: string; name: string }[] {
