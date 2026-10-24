@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Allow disabling Automatic Commits while the Git Plugin is enabled",
   "description": "## Problem\nWhen the Git Plugin is enabled, users must choose Automatic Commits after each change or on an interval. There is no way to keep the Plugin enabled while turning Automatic Commits off.\n\n## Goal\nLet users enable or disable Automatic Commits independently of whether the Git Plugin is enabled.\n\n## Acceptance criteria\n- Expose an explicit Automatic Commits on/off preference in the Git Plugin settings in both the TUI and CLI.\n- With Automatic Commits off, keep the Git Plugin enabled and its settings accessible, but do not create commits after changes, on an interval, or when Rowbly restarts.\n- Turning Automatic Commits off pauses pending work without discarding pending paths; a commit already running may finish. Re-enabling resumes according to the selected frequency.\n- Preserve the selected frequency (change or interval), interval duration and author preferences while Automatic Commits are off, so users can enable them again without reconfiguring.\n- Persist the preference locally alongside the existing personal Git preferences, independently of the shared Plugin enabled setting.\n- Preserve existing behavior when no explicit on/off preference is saved.\n- Clearly show whether Automatic Commits are on or off in the TUI and CLI settings output.\n- Update the user guide and the published Rowbly skill Git reference to describe the preference and pending-work behavior.\n\n## Verification\nWith the Git Plugin enabled, turn Automatic Commits off and make changes through both the CLI and TUI. Confirm no commits occur, including after an interval deadline and restart. Re-enable and confirm both change and interval frequencies work with the saved settings. Also verify disabling with pending interval work and loading existing preferences without the new setting.",
-  "stage": "todo",
+  "stage": "in-progress",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,5 +12,5 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:17:28.774Z",
-  "updatedAt": "2026-10-24T17:50:42.706Z"
+  "updatedAt": "2026-10-24T18:06:40.525Z"
 }
