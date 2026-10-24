@@ -20,7 +20,7 @@ export const TRANSACTIONS_DIR = '.txn';
  */
 export type TransactionChange =
   /** Create or replace a file with `text`. Missing parent folders are created. */
-  | { kind: 'write'; path: string; text: string }
+  | { kind: 'write'; path: string; text: string | Uint8Array; mode?: number }
   /**
    * Delete a file or a whole folder. A missing path is nothing to do. After a file is deleted, its
    * empty parent folders are removed up to, but not including, `pruneTo`.
@@ -113,7 +113,8 @@ export async function prepareTransaction(
   const txnDir = join(canonical, TRANSACTIONS_DIR, id);
   try {
     for (const name of STAGING_DIRS) await io.mkdir(join(txnDir, name));
-    for (const [n, text] of writes.entries()) await io.writeFile(join(txnDir, 'staged', String(n)), text);
+    for (const [n, write] of writes.entries())
+      await io.writeFile(join(txnDir, 'staged', String(n)), write.text, 'wx', write.mode);
   } catch (err) {
     await removeQuietly(txnDir);
     throw err;
@@ -152,8 +153,8 @@ async function planSteps(
   root: string,
   canonical: string,
   plan: TransactionPlan,
-): Promise<{ steps: TransactionStep[]; writes: string[] }> {
-  const writes: { path: string; text: string }[] = [];
+): Promise<{ steps: TransactionStep[]; writes: { text: string | Uint8Array; mode?: number }[] }> {
+  const writes: { path: string; text: string | Uint8Array; mode?: number }[] = [];
   const deletes: { path: string; pruneTo?: string }[] = [];
   const moves: { from: string; to: string }[] = [];
   const seen = new Map<string, string>();
@@ -169,7 +170,7 @@ async function planSteps(
     if (change.kind === 'write') {
       const path = toRelative(root, canonical, change.path);
       claim(path, 'written');
-      writes.push({ path, text: change.text });
+      writes.push({ path, text: change.text, mode: change.mode });
     } else if (change.kind === 'delete') {
       const path = toRelative(root, canonical, change.path);
       const pruneTo = change.pruneTo === undefined ? undefined : toRelative(root, canonical, change.pruneTo, true);
@@ -248,7 +249,7 @@ async function planSteps(
   for (const [n, write] of writes.entries()) {
     steps.push({ kind: 'write', path: write.path, staged: `staged/${n}`, existed: await entryExists(abs(write.path)) });
   }
-  return { steps, writes: writes.map((w) => w.text) };
+  return { steps, writes: writes.map(({ text, mode }) => ({ text, mode })) };
 }
 
 /** A plan path as a normalized `/`-separated path relative to the Data Root; rejects escapes. */

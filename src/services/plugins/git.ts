@@ -1,8 +1,7 @@
-import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
-import { createRepositories, withLock } from '../../storage';
+import { createRepositories } from '../../storage';
 import {
   commitGitPaths,
   type GitPending,
@@ -11,6 +10,7 @@ import {
   readGitPending,
   writeGitPending,
 } from '../../storage/git';
+import { requireRepository, withGitWorker } from '../../storage/gitRepository';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
 import type { ChangeSetView, GitCommitOptions, GitOptionsSource, PluginGit } from './types';
@@ -87,7 +87,7 @@ export function createPluginGit(
   function enqueue(file: string) {
     const previous = queues.get(file)?.done ?? Promise.resolve();
     const done = previous
-      .then(() => outsideCoordination(() => withLock(dirname(file), { operation: `${id}.git` }, () => work(file))))
+      .then(() => outsideCoordination(async () => withGitWorker(await requireRepository(root), () => work(file))))
       .catch(warning);
     queues.set(file, { root: root.path, done });
     void done.then(() => {

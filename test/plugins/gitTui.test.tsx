@@ -43,6 +43,7 @@ it('shows Git settings only when loaded and saves frequency, interval and author
   const local = JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8'));
   expect(local.plugins.git).toEqual({
     automaticCommits: true,
+    synchronization: { enabled: false, intervalSeconds: 300 },
     frequency: 'interval',
     intervalSeconds: 600,
     authorName: 'Robot',

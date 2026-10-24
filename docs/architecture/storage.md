@@ -76,8 +76,35 @@ A stale `.lock` is not a finding: the next acquisition breaks it.
 
 ## Git Automatic Commits
 
-The optional Git capability persists pending paths/deadlines under Git's own directory. Queue updates and a copy of selected saved files take brief Data Root locks with recovery. All Git subprocesses run outside that lock, using the immutable copy as their working tree. A separate lock in the worktree's Git `rowbly/` directory serializes workers, including workers for different Data Roots sharing an index. Each enqueue increments a pending revision; a successful commit acknowledges only its revision, so later edits to the same paths remain pending. Legacy pending files without a revision resume normally. A Git failure leaves the Rowbly save intact and retains pending work.
+The optional Git capability persists pending paths/deadlines under Git's own directory. Queue updates and a copy of selected saved files take brief Data Root locks with recovery. All Git subprocesses run outside that lock, using the immutable copy as their working tree. A separate lock in the canonical common Git directory's `rowbly/worker/` folder serializes workers across Data Roots, processes and linked worktrees. Each enqueue increments a pending revision; a successful commit acknowledges only its revision, so later edits to the same paths remain pending. Legacy pending files without a revision resume normally. A Git failure leaves the Rowbly save intact and retains pending work.
 
 The optional `automaticCommits` option defaults to `true` when absent in legacy pending files. When false, queue updates still retain and add paths, but cancel timers and start no work. Plain-option capability callers keep using persisted pending options. Built-in Git supplies a live resolver: scheduling and worker admission read its current Local State bag under the Data Root lock and resolve preferences there. When worker admission finds changed preferences before their reaction runs, it persists the new options, adjusts the deadline for the interval difference and increments the revision together before deciding whether to pause. Delayed startup, reactions and stale timer callbacks therefore cannot bypass a saved Off preference. Scheduling and timer decisions take the Data Root lock together with pending updates. Turning Automatic Commits back on preserves the first-write deadline (adjusted by interval edits); an overdue interval runs immediately. A job admitted under the Data Root lock is running and may finish; acknowledgement cannot discard later paused revisions.
 
 Only affected record/file paths are selected, never `local.json`, `.lock` or `.txn/`. The TUI returns after enqueueing, and command mode drains due work outside reaction deadlines. External Git and editors do not participate in either Rowbly lock; Git's own index lock still protects its index. See [Git](../plugins/built-in.md#git) and [ADR-0030](../agents/adr/0030-git-work-runs-outside-the-data-root-lock.md).
+
+## Recoverable Git publication
+
+The local publication engine implements ADR-0034 §4–5. Automatic synchronization scheduling and
+upstream push are still planned. All cooperating service calls acquire the common Git publication
+gate before their Data Root lock, and release both before reactions. Git location discovery and every
+Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
+
+A detached candidate supplies an expected branch ref/OID, before/after index bytes and exact changed
+working-file bytes/modes. Publication rechecks the index and each changed path, stages existing
+Data Root transactions (including binary Plugin files and executable modes), reserves the real
+`index.lock` exclusively with a random ownership token, pins the candidate, then atomically persists
+`rowbly/publication.json` under the common Git directory. This durable intent precedes local effects.
+Unrelated staged entries are carried forward in the prepared index; no live whole-tree index is read
+from the candidate. No network operation belongs inside this gate.
+
+Recovery uses expected-ref compare-and-swap, the Data Root transaction journals, idempotent clean
+working-file installation and atomic index replacement. It recognizes ref/index effects that landed
+before their phase write. It runs before the next cooperating read, through any linked worktree,
+including while synchronization is Off. It performs no fetch or push. Pre-intent payloads are
+disposable; prepared payloads roll forward. A pre-application ref refusal discards only owned staging
+and reservation. Unexpected external index/path/ref changes after effects preserve the journal and
+stop recovery instead of overwriting external work. Only a token-owned index reservation is removed.
+
+`test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills a real
+process after the ref effect but before its phase write. It checks complete local recovery, binary
+bytes/modes, unrelated staged blobs/working bytes and recovery through a second linked worktree.

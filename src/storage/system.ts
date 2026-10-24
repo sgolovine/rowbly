@@ -45,7 +45,7 @@ export async function writeTextFile(path: string, text: string): Promise<void> {
  * removed, best effort, and the original error is rethrown; the destination keeps its old bytes.
  * The folder must exist. `mode` gives the new file those permissions, for example the old file's.
  */
-export async function writeFileAtomic(path: string, text: string, mode?: number): Promise<void> {
+export async function writeFileAtomic(path: string, text: string | Uint8Array, mode?: number): Promise<void> {
   const dir = dirname(path);
   const temp = join(dir, `.${basename(path)}.${randomBytes(4).toString('hex')}.tmp`);
   try {

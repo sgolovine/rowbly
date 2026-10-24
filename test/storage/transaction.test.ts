@@ -1,5 +1,5 @@
 // The recoverable commit engine (ADR-0019 §2; RES-01/ARCH-41 engine, RES-04 engine part).
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
@@ -212,5 +212,134 @@ describe('a killed process', () => {
     await recoverTransactions(root);
     expect(await snapshotTree(root)).toEqual(newState);
     expect(await journal(root)).toEqual([]);
+  });
+});
+
+describe('Git local publication', () => {
+  it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', async () => {
+    const { syncFixture } = await import('./fixtures/syncFixture');
+    const { withGitWorker } = await import('../../src/storage/gitRepository');
+    const { publishPublication, recoverPublication, readIndex, readPublicationFile, withPublication } = await import(
+      '../../src/storage/gitSyncJournal'
+    );
+    const { coordinated } = await import('../../src/services/coordination');
+    const { rm } = await import('node:fs/promises');
+    const run = async (failAt?: number, crash = false) => {
+      const t = await tempRoot(),
+        f = await syncFixture(t.dir, t.path);
+      let count = 0,
+        intended = false;
+      await withGitWorker(f.repo, () =>
+        withPublication(f.repo, async (hold) => {
+          const faults = injectFaults();
+          if (failAt !== undefined) {
+            if (crash) faults.crashAt(failAt);
+            else faults.failOnce(failAt);
+          }
+          try {
+            await publishPublication(hold, f.plan);
+          } catch {
+            /* Recover as a reopened process would. */
+          } finally {
+            count = faults.calls;
+            faults.restore();
+          }
+          intended =
+            (await readFile(f.repo.journal, 'utf8').then(
+              () => true,
+              () => false,
+            )) || (await f.git('rev-parse', 'HEAD')) === f.plan.candidate;
+          // Persistent injected I/O emulates death; remove only this test process's abandoned root lock.
+          const lock = join(t.path, '.lock');
+          const owner = await readFile(lock, 'utf8').then(
+            (s) => JSON.parse(s),
+            () => undefined,
+          );
+          if (owner) {
+            expect(owner.pid).toBe(process.pid);
+            await rm(lock);
+          }
+          await recoverPublication(hold);
+          expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
+            intended ? f.plan.indexAfter : f.plan.indexBefore,
+          );
+          expect(await f.git('rev-parse', 'HEAD')).toBe(intended ? f.plan.candidate : f.plan.old);
+          for (const edit of f.plan.edits)
+            expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
+          expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+          expect(await readFile(join(t.dir, 'staged.txt'), 'utf8')).toBe('unstaged bytes over staged blob\n');
+          expect(await readFile(join(t.dir, 'untracked.txt'), 'utf8')).toBe('untracked bytes\n');
+          await recoverPublication(hold);
+        }),
+      );
+      await coordinated(t.root, 'verify recovered publication', async () => undefined);
+      expect(await readdir(join(t.path, '.txn')).catch(() => [])).toEqual([]);
+      expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+      await t.cleanup();
+      return count;
+    };
+    const count = await run();
+    for (let n = 1; n <= count; n++) {
+      await run(n);
+      await run(n, true);
+    }
+    const t = await tempRoot(),
+      f = await syncFixture(t.dir, t.path);
+    await withGitWorker(f.repo, () =>
+      withPublication(f.repo, async (hold) => {
+        await expect(publishPublication(hold, { ...f.plan, indexBefore: 'drift' })).rejects.toThrow('index changed');
+        expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
+        await writeFile(join(t.dir, 'code.txt'), 'external edit');
+        await expect(publishPublication(hold, f.plan)).rejects.toThrow('captured snapshot');
+        expect(await readFile(join(t.dir, 'code.txt'), 'utf8')).toBe('external edit');
+        await writeFile(join(t.dir, 'code.txt'), 'old code\n');
+        const external = await f.git(
+          'commit-tree',
+          await f.git('rev-parse', 'HEAD^{tree}'),
+          '-p',
+          f.plan.old,
+          '-m',
+          'external ref advance',
+        );
+        await expect(
+          publishPublication(hold, f.plan, {
+            checkpoint: async (point) => {
+              if (point === 'before-intent') await f.git('update-ref', f.plan.branch, external, f.plan.old);
+            },
+          }),
+        ).rejects.toThrow('safely discarded');
+        expect(await f.git('rev-parse', 'HEAD')).toBe(external);
+        expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
+        for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.before);
+      }),
+    );
+  });
+
+  it('recovers a real SIGKILL after ref effect before its phase write through an ordinary read while synchronization is Off', async () => {
+    const { syncFixture } = await import('./fixtures/syncFixture');
+    const { coordinated } = await import('../../src/services/coordination');
+    const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
+    const t = await tempRoot(),
+      f = await syncFixture(t.dir, t.path);
+    await writeFile(
+      join(t.path, 'local.json'),
+      JSON.stringify({ version: 1, plugins: { git: { synchronization: { enabled: false, intervalSeconds: 300 } } } }),
+    );
+    const peer = join(t.dir, 'peer');
+    await f.git('worktree', 'add', '--detach', peer, f.plan.old);
+    const plan = join(t.dir, 'publication-plan.json');
+    await writeFile(plan, JSON.stringify(f.plan));
+    const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, 'ref-effect']);
+    expect(killed.signal, killed.stderr).toBe('SIGKILL');
+    expect(await f.git('rev-parse', 'HEAD')).toBe(f.plan.candidate);
+    expect(await readPublicationFile(f.repo, f.plan.edits[0]!.path)).toEqual(f.plan.edits[0]!.before);
+    // A different linked worktree shares the publication gate and recovers the recorded owner.
+    await coordinated({ path: join(peer, '.rowbly'), kind: 'local' }, 'peer read with sync Off', async () => undefined);
+    await coordinated(t.root, 'open with synchronization Off', async () => {
+      for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.after);
+    });
+    expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+    expect(await f.git('remote')).toBe('');
+    expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
   });
 });
