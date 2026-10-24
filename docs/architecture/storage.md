@@ -121,5 +121,8 @@ output 16 MiB and the overall run 120 s; Unix process groups are killed and awai
 Synchronization deadlines/results live separately under the worktree Git directory. The feature is
 Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
 Fixed-delay deadlines persist across restarts, including failures, with one overdue attempt and no
-catch-up burst. An admitted run may finish after Off. Private host leases cancel future timers on
+catch-up burst. A failure before admission records a failed attempt when recovery and locking permit,
+then retries from the latest interval; unavailable local recovery uses a 30 s wake-up that rechecks
+saved preferences before admission. A disposed host cannot replace the current host's scheduling lease
+after an awaited setup. An admitted run may finish after Off. Private host leases cancel future timers on
 replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.

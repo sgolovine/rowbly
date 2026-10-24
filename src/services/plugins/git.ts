@@ -168,8 +168,10 @@ export function createPluginGit(
   async function schedule(given: GitOptionsSource, paths: string[] = []) {
     if (owner && disposedOwners.has(owner)) return;
     const file = await filePath();
+    if (owner && disposedOwners.has(owner)) return;
     if (owner) timerOwners.set(file, owner);
     await coordinated(root, `${id}.git`, async () => {
+      if (owner && disposedOwners.has(owner)) return;
       cancelTimer(file);
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return;

@@ -95,6 +95,8 @@ function arm(file: string, resource: Resource, due: number) {
 function enqueue(file: string, resource: Resource): Promise<void> {
   const prior = jobs.get(file);
   if (prior) return prior;
+  const startedAt = Date.now();
+  let admittedId: string | undefined;
   const done = outsideCoordination(async () => {
     const repo = await requireRepository(resource.root);
     await withGitWorker(repo, async () => {
@@ -136,6 +138,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
         };
         delete state.requested;
         state.active = active;
+        admittedId = active.id;
         await writeSyncState(file, state);
         return { current, active };
       });
@@ -202,7 +205,40 @@ function enqueue(file: string, resource: Resource): Promise<void> {
         if (current.enabled) arm(file, live, state.nextDue);
       });
     });
-  }).catch((err) => resource.warn(`Git synchronization: ${errorText(err)}`));
+  }).catch(async (err) => {
+    resource.warn(`Git synchronization: ${errorText(err)}`);
+    const live = resources.get(file);
+    if (!live) return;
+    try {
+      await coordinated(live.root, 'git.sync.failed', async () => {
+        const current = await preferences(live);
+        const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
+        // Another process may have admitted a run while this worker was waiting.
+        if (!state.active || state.active.id === admittedId) {
+          delete state.active;
+          delete state.requested;
+          state.last = {
+            kind: 'failed',
+            message: errorText(err),
+            startedAt,
+            finishedAt: Date.now(),
+            evidence: [],
+            repairs: 0,
+          };
+          state.anchor = Date.now();
+          state.intervalSeconds = current.intervalSeconds;
+          state.nextDue = state.anchor + Math.max(1000, current.intervalSeconds * 1000);
+          await writeSyncState(file, state);
+        }
+        if (current.enabled) arm(file, live, Math.max(Date.now() + 1000, state.nextDue));
+      });
+    } catch (failure) {
+      // Recovery or storage can itself be unavailable. Retry admission after a bounded pause;
+      // it still reads the latest enabled preference before starting any Git work.
+      live.warn(`Git synchronization recovery: ${errorText(failure)}`);
+      if (!(live.owner && disposed.has(live.owner))) arm(file, live, Date.now() + 30_000);
+    }
+  });
   jobs.set(file, done);
   void done.finally(() => {
     if (jobs.get(file) === done) jobs.delete(file);
@@ -219,8 +255,9 @@ export function createGitSync(
 ) {
   const location = async () =>
     join((await requireRepository(root)).gitDir, 'rowbly', `sync-${id}-${rootGitKey(root)}.json`);
-  async function setup(source: GitSyncOptionsSource): Promise<{ file: string; resource: Resource }> {
+  async function setup(source: GitSyncOptionsSource): Promise<{ file: string; resource: Resource } | null> {
     const file = await location();
+    if (owner && disposed.has(owner)) return null;
     let resource = resources.get(file);
     if (!resource) resource = { root, id, registry, source, warn, owner };
     else {
@@ -269,10 +306,14 @@ export function createGitSync(
       if (scope && (scope.stage !== 'reaction' || scope.ended))
         throw new PluginError('Git scheduling is available only at start or in a live reaction');
       if (owner && disposed.has(owner)) return;
-      const { file, resource } = await setup(source);
+      const found = await setup(source);
+      if (!found) return;
+      const { file, resource } = found;
       await coordinated(root, 'git.sync.schedule', async () => {
+        if (owner && disposed.has(owner)) return;
         clearTimeout(resource.timer);
         const current = await preferences(resource);
+        if (owner && disposed.has(owner)) return;
         if (!current.enabled) {
           const state = await readSyncState(file);
           if (state?.requested) {
@@ -294,9 +335,13 @@ export function createGitSync(
       if (scope && (!['command', 'screen'].includes(scope.stage) || scope.ended))
         throw new PluginError('Git synchronization can be requested only from a command or screen');
       if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
-      const { file, resource } = await setup(source);
+      const found = await setup(source);
+      if (!found) throw new Error('This Git host has closed');
+      const { file, resource } = found;
       const request = await coordinated(root, 'git.sync.request', async () => {
+        if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
         const current = await preferences(resource);
+        if (owner && disposed.has(owner)) throw new Error('This Git host has closed');
         if (!current.enabled) throw new Error('Automatic Merge Conflict Resolution is Off');
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
         if (
