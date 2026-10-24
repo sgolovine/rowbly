@@ -23,5 +23,7 @@ export const HomeConfigSchema = z.looseObject({
   /** Me for every Data Root, a handle (the same form as Local State's `me`). */
   me: SlugSchema.optional(),
   dataRoots: z.array(KnownDataRootSchema).optional(),
+  /** Whether the TUI opens a Story it has just created; missing means off. */
+  openStoryAfterCreation: z.boolean().optional(),
 });
 export type HomeConfig = z.infer<typeof HomeConfigSchema>;
