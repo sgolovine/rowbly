@@ -38,9 +38,10 @@ default; kept in `~/.rowblyrc.json`).
 | --- | --- |
 | Board | `←`/`→` Stage, `↑`/`↓` Story, `enter` open, `shift+←`/`shift+→` move the Story to the previous / next Stage, `shift+↑`/`shift+↓` move it within its Stage, `T`/`B` top / bottom, `n` new Story, `e` edit, `d` delete, `/` filter, `c` clear the filter, `v` list view, `r` reload. The mouse can drag a Story to another Stage or place; a right click on a Story opens a menu of what these keys do (open, edit, move, delete), and `esc` or a click outside closes it |
 | Stories list | `enter` open, `n` new Story, `/` filter and sort, `c` clear, `A` all Boards / this Board |
-| Story | `tab`/`←`/`→` switch between Details and Plugin tabs (Tasks, Specs, Comments), `e` edit, `m` move to a Stage, `d` delete |
+| Story | `tab`/`←`/`→` switch between Details and Plugin tabs (Tasks, Specs, Comments, Links), `e` edit, `m` move to a Stage, `d` delete |
 | Story › Tasks, Task | `enter` open, `n` new Task, `e` edit, `m` move, `d` delete |
 | Story › Comments | `n` new Comment, `e` edit, `d` delete |
+| Story › Links | `↑`/`↓` select, `enter` or a click opens the linked Story, `/` filter, `n` new link (direction and same-Board Story), `d` remove the selected link after confirmation |
 | Specs lists | `enter` open in the full-screen editor, `e` edit, `n` new Spec, `d` delete; `ctrl+s` saves in the editor |
 | Boards | `enter` Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit (id and key prefix cannot change), `d` delete (asks first; a Board with Stories asks again). A right click on a Board opens a menu with Open, Edit and Delete |
 | Stages | `n` new, `e` edit, `shift+↑`/`shift+↓` move, `T`/`B` first / last, `d` remove, `l` switch level |
