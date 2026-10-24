@@ -218,70 +218,108 @@ describe('a killed process', () => {
 describe('Git local publication', () => {
   it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', async () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
-    const { withGitWorker } = await import('../../src/storage/gitRepository');
+    const { requireRepository, withGitWorker } = await import('../../src/storage/gitRepository');
+    const { gitText } = await import('../../src/storage/gitProcess');
     const { publishPublication, recoverPublication, readIndex, readPublicationFile, withPublication } = await import(
       '../../src/storage/gitSyncJournal'
     );
     const { coordinated } = await import('../../src/services/coordination');
-    const { rm } = await import('node:fs/promises');
-    const run = async (failAt?: number, crash = false) => {
-      const t = await tempRoot(),
-        f = await syncFixture(t.dir, t.path);
-      let count = 0,
-        intended = false;
-      await withGitWorker(f.repo, () =>
-        withPublication(f.repo, async (hold) => {
-          const faults = injectFaults();
-          if (failAt !== undefined) {
-            if (crash) faults.crashAt(failAt);
-            else faults.failOnce(failAt);
-          }
-          try {
-            await publishPublication(hold, f.plan);
-          } catch {
-            /* Recover as a reopened process would. */
-          } finally {
-            count = faults.calls;
-            faults.restore();
-          }
-          intended =
-            (await readFile(f.repo.journal, 'utf8').then(
-              () => true,
-              () => false,
-            )) || (await f.git('rev-parse', 'HEAD')) === f.plan.candidate;
-          // Persistent injected I/O emulates death; remove only this test process's abandoned root lock.
-          const lock = join(t.path, '.lock');
-          const owner = await readFile(lock, 'utf8').then(
-            (s) => JSON.parse(s),
-            () => undefined,
+    const { cp, lstat, rm } = await import('node:fs/promises');
+    const seed = await tempRoot();
+    try {
+      const template = await syncFixture(seed.dir, seed.path);
+      // Copy only pristine preparation: no worker/root lock, reservation or publication journal.
+      expect(await readdir(join(template.repo.gitDir, 'rowbly'))).toEqual(['test-index']);
+      expect((await readdir(seed.path)).sort()).toEqual(['.gitignore', 'rowbly.config.json']);
+      const seedIndex = await lstat(template.repo.index);
+      const run = async (failAt?: number, crash = false): Promise<string[]> => {
+        const t = await tempRoot();
+        try {
+          // mode 0 requests ordinary copies, with no hardlinks or copy-on-write clone flags.
+          await cp(seed.dir, t.dir, { recursive: true, mode: 0 });
+          const repo = await requireRepository(t.root);
+          const copiedIndex = await lstat(repo.index);
+          expect({ dev: copiedIndex.dev, ino: copiedIndex.ino }).not.toEqual({
+            dev: seedIndex.dev,
+            ino: seedIndex.ino,
+          });
+          const f = {
+            repo,
+            plan: { ...structuredClone(template.plan), roots: [t.path] },
+            stagedOid: template.stagedOid,
+            git: (...args: string[]) => gitText(t.dir, args),
+          };
+          let calls: string[] = [],
+            intended = false;
+          await withGitWorker(f.repo, () =>
+            withPublication(f.repo, async (hold) => {
+              const faults = injectFaults();
+              if (failAt !== undefined) {
+                if (crash) faults.crashAt(failAt);
+                else faults.failOnce(failAt);
+              }
+              try {
+                await publishPublication(hold, f.plan);
+              } catch {
+                /* Recover as a reopened process would. */
+              } finally {
+                calls = faults.log.map((entry) => entry.split(' ')[0] ?? '');
+                faults.restore();
+              }
+              if (failAt !== undefined)
+                expect(calls.slice(0, failAt), `${crash ? 'persistent crash' : 'single fault'} at ${failAt}`).toEqual(
+                  boundaries.slice(0, failAt),
+                );
+              intended =
+                (await readFile(f.repo.journal, 'utf8').then(
+                  () => true,
+                  () => false,
+                )) || (await f.git('rev-parse', 'HEAD')) === f.plan.candidate;
+              // Persistent injected I/O emulates death; remove only this test process's abandoned root lock.
+              const lock = join(t.path, '.lock');
+              const owner = await readFile(lock, 'utf8').then(
+                (s) => JSON.parse(s),
+                () => undefined,
+              );
+              if (owner) {
+                expect(owner.pid).toBe(process.pid);
+                await rm(lock);
+              }
+              await recoverPublication(hold);
+              expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
+                intended ? f.plan.indexAfter : f.plan.indexBefore,
+              );
+              expect(await f.git('rev-parse', 'HEAD')).toBe(intended ? f.plan.candidate : f.plan.old);
+              for (const edit of f.plan.edits)
+                expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
+              expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+              expect(await readFile(join(t.dir, 'staged.txt'), 'utf8')).toBe('unstaged bytes over staged blob\n');
+              expect(await readFile(join(t.dir, 'untracked.txt'), 'utf8')).toBe('untracked bytes\n');
+              await recoverPublication(hold);
+            }),
           );
-          if (owner) {
-            expect(owner.pid).toBe(process.pid);
-            await rm(lock);
-          }
-          await recoverPublication(hold);
-          expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
-            intended ? f.plan.indexAfter : f.plan.indexBefore,
-          );
-          expect(await f.git('rev-parse', 'HEAD')).toBe(intended ? f.plan.candidate : f.plan.old);
-          for (const edit of f.plan.edits)
-            expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
-          expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
-          expect(await readFile(join(t.dir, 'staged.txt'), 'utf8')).toBe('unstaged bytes over staged blob\n');
-          expect(await readFile(join(t.dir, 'untracked.txt'), 'utf8')).toBe('untracked bytes\n');
-          await recoverPublication(hold);
-        }),
-      );
-      await coordinated(t.root, 'verify recovered publication', async () => undefined);
-      expect(await readdir(join(t.path, '.txn')).catch(() => [])).toEqual([]);
-      expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
-      await t.cleanup();
-      return count;
-    };
-    const count = await run();
-    for (let n = 1; n <= count; n++) {
-      await run(n);
-      await run(n, true);
+          await coordinated(t.root, 'verify recovered publication', async () => undefined);
+          expect(await readdir(join(t.path, '.txn')).catch(() => [])).toEqual([]);
+          expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+          return calls;
+        } finally {
+          await t.cleanup();
+        }
+      };
+      const boundaries = await run();
+      expect(boundaries).toHaveLength(65);
+      for (let n = 1; n <= boundaries.length; n++) {
+        await run(n);
+        await run(n, true);
+      }
+      // Every iteration used independent files and left the pristine seed unchanged.
+      expect(await readIndex(template.repo)).toBe(template.plan.indexBefore);
+      expect(await template.git('rev-parse', 'HEAD')).toBe(template.plan.old);
+      for (const edit of template.plan.edits)
+        expect(await readPublicationFile(template.repo, edit.path)).toEqual(edit.before);
+      expect(await readdir(join(template.repo.gitDir, 'rowbly'))).toEqual(['test-index']);
+    } finally {
+      await seed.cleanup();
     }
     // External editors and Git do not take Rowbly's locks. Refuse at the actual effect boundary.
     for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging', 'foreign-lock']) {
