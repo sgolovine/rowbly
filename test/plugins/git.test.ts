@@ -522,6 +522,15 @@ describe('Git data reconciliation', () => {
     const h = createMergeHelpers(decisions);
     expect(h.value({ v: 1 }, {}, { v: null }, 'opaque')).toEqual({ v: null });
     expect(h.text('a\nb\nc\n', 'z\nleft\nc\n', 'a\nRIGHT\nc\n', 'text')).toBe('z\nRIGHT\nc\n');
+    const opaque = h.value(
+      { labels: ['a'], body: 'one\ntwo\n' },
+      { labels: [], body: 'ONE\ntwo\n' },
+      { labels: ['a', 'b'], body: 'one\nTWO\n' },
+      'story.json/plugins/future',
+    ) as { labels: string[]; body: string };
+    expect([[], ['a', 'b']]).toContainEqual(opaque.labels);
+    expect(['ONE\ntwo\n', 'one\nTWO\n']).toContain(opaque.body);
+    expect(decisions.filter((d) => d.path.startsWith('story.json/plugins/future'))).toHaveLength(2);
     expect(h.members(['old'], ['left'], ['old', 'right'])).toEqual(['left', 'right']);
     expect(decisions[0]).toMatchObject({ base: { value: 1 }, alternatives: [{ missing: true }, { value: null }] });
   });

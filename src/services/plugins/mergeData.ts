@@ -314,8 +314,25 @@ function mergeRecord(
   path: string,
   helpers: MergeHelpers,
 ): unknown {
-  const result = helpers.value(base, left, right, path);
+  const special = ['description', ...(STORY.test(path) ? ['labels'] : ['stages', 'customFields'])];
+  const ordinary = (record: Record<string, unknown> | undefined) =>
+    record === undefined
+      ? undefined
+      : Object.fromEntries(Object.entries(record).filter(([key]) => !special.includes(key)));
+  const result = helpers.value(ordinary(base), ordinary(left), ordinary(right), path);
   if (!isObject(result)) return result;
+  for (const key of special) {
+    const old = base?.[key],
+      a = left?.[key],
+      b = right?.[key];
+    const value =
+      key === 'description' && typeof a === 'string' && typeof b === 'string'
+        ? helpers.text(typeof old === 'string' ? old : '', a, b, `${path}/${key}`)
+        : key === 'labels' && Array.isArray(a) && Array.isArray(b)
+          ? helpers.members(Array.isArray(old) ? old : [], a, b)
+          : helpers.value(old, a, b, `${path}/${key}`);
+    if (value !== undefined) result[key] = value;
+  }
   for (const key of ['stages', 'customFields']) {
     const a = left?.[key],
       b = right?.[key],

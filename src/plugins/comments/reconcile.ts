@@ -31,7 +31,11 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
         );
       } else {
         const value = helpers.value(before, l, r, `${scope}/comments/${id}`);
-        if (value !== undefined) comments.push(value);
+        if (value !== undefined) {
+          if (before && l && r)
+            (value as typeof before).body = helpers.text(before.body, l.body, r.body, `${scope}/comments/${id}/body`);
+          comments.push(value);
+        }
       }
     }
     bags[scope] = { comments };

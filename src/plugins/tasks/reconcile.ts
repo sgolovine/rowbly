@@ -35,7 +35,16 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
         );
       } else {
         const value = helpers.value(before, l, r, `${scope}/tasks/${number}`);
-        if (value !== undefined) tasks.push(value);
+        if (value !== undefined) {
+          if (before && l && r)
+            (value as typeof before).description = helpers.text(
+              before.description,
+              l.description,
+              r.description,
+              `${scope}/tasks/${number}/description`,
+            );
+          tasks.push(value);
+        }
       }
     }
     bags[scope] = { nextNumber: next, tasks };

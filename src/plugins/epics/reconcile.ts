@@ -35,6 +35,13 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
     const values = [epic(base, path), epic(sides[0]!, path), epic(sides[1]!, path)];
     if (raw.some((file, n) => file && !values[n])) continue;
     const value = helpers.value(values[0], values[1], values[2], path);
+    if (value !== undefined && values[0] && values[1] && values[2])
+      (value as { description: string }).description = helpers.text(
+        values[0].description,
+        values[1].description,
+        values[2].description,
+        `${path}/description`,
+      );
     if (value !== undefined) files[path] = helpers.file(`${JSON.stringify(value, null, 2)}\n`);
   }
   const required = new Set<string>();

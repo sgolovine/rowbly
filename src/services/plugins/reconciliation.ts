@@ -114,16 +114,6 @@ export function createMergeHelpers(decisions: MergeDecision[]): MergeHelpers {
         }
         return out;
       }
-      // Only documented text fields use line semantics; arbitrary strings/bags stay opaque.
-      if (
-        typeof base === 'string' &&
-        typeof left === 'string' &&
-        typeof right === 'string' &&
-        /\/(description|body)$/.test(path)
-      )
-        return helpers.text(base, left, right, path);
-      if (Array.isArray(left) && Array.isArray(right) && /\/labels$/.test(path))
-        return helpers.members(Array.isArray(base) ? base : [], left, right);
       const chosen = ordered([left, right])[0];
       helpers.retain(path, 'concurrent scalar, type or opaque value', base, left, right, chosen);
       return structuredClone(chosen);
