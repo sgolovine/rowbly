@@ -683,5 +683,204 @@ describe('Git data reconciliation', () => {
     expect(read(rootPath).customFields.map((f: { key: string }) => f.key)).toEqual(['kind', 'kind-2', 'new']);
     expect(result.decisions.some((d) => d.reason === 'incompatible Custom Field types retained separately')).toBe(true);
     expect(mergeData(base, right, left, [])).toEqual(result);
+    const { builtInPlugins } = await import('../../src/plugins');
+    for (const boardOverride of [false, true]) {
+      const retainedStage = { key: 'task-only', name: 'Task only' };
+      const rootConfig = {
+        ...root,
+        stages: boardOverride ? [{ key: 'global-only', name: 'Global only' }] : [retainedStage],
+      };
+      const boardConfig = { ...board, ...(boardOverride ? { stages: [retainedStage] } : {}) };
+      const source = {
+        id: 'stage-base',
+        files: { [rootPath]: file(rootConfig), [boardPath]: file(boardConfig), [storyPath]: file(story) },
+      };
+      const task = {
+        number: 1,
+        name: 'Retained concurrent Task',
+        description: '',
+        stage: 'task-only',
+        createdAt: story.createdAt,
+        updatedAt: story.updatedAt,
+      };
+      const a = {
+        id: 'stage-a',
+        files: {
+          ...source.files,
+          [storyPath]: file({ ...story, plugins: { tasks: { nextNumber: 2, tasks: [task] } } }),
+        },
+      };
+      const b = {
+        id: 'stage-b',
+        files: {
+          ...source.files,
+          [boardOverride ? boardPath : rootPath]: file({ ...(boardOverride ? boardConfig : rootConfig), stages: [] }),
+        },
+      };
+      const merged = mergeData(source, a, b, builtInPlugins);
+      const configPath = boardOverride ? boardPath : rootPath;
+      expect(JSON.parse(Buffer.from(merged.files[configPath]!.data, 'base64').toString()).stages).toContainEqual(
+        retainedStage,
+      );
+      if (boardOverride)
+        expect(JSON.parse(Buffer.from(merged.files[rootPath]!.data, 'base64').toString())).toEqual(rootConfig);
+      else expect(JSON.parse(Buffer.from(merged.files[boardPath]!.data, 'base64').toString()).stages).toBeUndefined();
+      expect(merged.decisions.some((d) => d.reason.startsWith('restored effective Stage'))).toBe(true);
+      expect(mergeData(source, b, a, builtInPlugins)).toEqual(merged);
+    }
+  });
+});
+
+// Real Git remotes are disposable and never point to the development origin.
+describe('isolated upstream synchronization', () => {
+  async function remoteFixture() {
+    const f = await fixture();
+    const { tempRoot } = await import('../helpers');
+    const holder = await tempRoot();
+    const remote = join(holder.dir, 'remote.git'),
+      peer = join(holder.dir, 'peer');
+    await command(holder.dir, 'init', '--bare', '--initial-branch=main', remote);
+    await f.command('remote', 'add', 'origin', remote);
+    await f.command('push', '-u', 'origin', 'main');
+    await command(holder.dir, 'clone', remote, peer);
+    await command(peer, 'config', 'user.name', 'Peer');
+    await command(peer, 'config', 'user.email', 'peer@example.com');
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const { requireRepository, withGitWorker } = await import('../../src/storage/gitRepository');
+    const { synchronizeGit } = await import('../../src/storage/gitSync');
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const { coordinated } = await import('../../src/services/coordination');
+    const repo = await requireRepository(f.t.root);
+    const run = (phase: (name: string) => Promise<void> = async () => undefined) =>
+      withGitWorker(repo, () =>
+        synchronizeGit(
+          repo,
+          f.t.root,
+          { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
+          (read) => coordinated(f.t.root, 'sync test snapshot', read),
+          (base, left, right) => mergeData(base, left, right, builtInPlugins),
+          phase,
+          async (files) => {
+            mergeData(
+              { id: 'validation', files },
+              { id: 'validation', files },
+              { id: 'validation', files },
+              builtInPlugins,
+            );
+          },
+        ),
+      );
+    return { ...f, remote, peer, repo, run };
+  }
+  it('publishes an isolated valid merge with later writes while preserving unrelated content, and blocks non-Rowbly conflicts and dirty overlap without live effects', async () => {
+    const f = await remoteFixture();
+    await writeFile(join(f.t.dir, 'staged.txt'), 'staged blob');
+    await f.command('add', 'staged.txt');
+    await writeFile(join(f.t.dir, 'staged.txt'), 'unstaged over staged');
+    await writeFile(join(f.t.dir, 'untracked.txt'), 'untracked');
+    const stage = await f.command('rev-parse', ':staged.txt');
+    const story = await f.services.stories.create('web', { name: 'Dirty local capture', description: 'Local' });
+    const boardFile = join(f.peer, '.rowbly/boards/web/board.config.json');
+    const board = JSON.parse(await readFile(boardFile, 'utf8'));
+    board.description = 'Peer Board';
+    await writeFile(boardFile, JSON.stringify(board));
+    await writeFile(join(f.peer, 'code.txt'), 'peer clean code\n');
+    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', 'code.txt');
+    await command(f.peer, 'commit', '-m', 'peer data and code');
+    await command(f.peer, 'push');
+    const held = deferred(),
+      release = deferred();
+    let first = true;
+    const running = f.run(async (phase) => {
+      if (phase === 'validating' && first) {
+        first = false;
+        held.resolve();
+        await release.promise;
+      }
+    });
+    try {
+      await held.promise;
+      expect((await f.services.stories.get(story.key)).name).toBe('Dirty local capture');
+      await f.services.stories.update(story.key, { name: 'Later accepted edit' });
+      release.resolve();
+      const result = await running;
+      expect(result.pushed).toBe(true);
+      expect((await f.services.stories.get(story.key)).name).toBe('Later accepted edit');
+      expect(await f.command('rev-parse', ':staged.txt')).toBe(stage);
+      expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
+      expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
+      expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('peer clean code\n');
+      expect(await f.command('ls-tree', '-r', '--name-only', 'HEAD')).not.toContain('staged.txt');
+      await command(f.peer, 'pull', '--ff-only');
+      expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+        'Later accepted edit',
+      );
+      expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
+    } finally {
+      release.resolve();
+      await running.catch(() => undefined);
+    }
+    // Divergent code changes stop only the isolated merge, preserving live ref, index and bytes.
+    await writeFile(join(f.t.dir, 'code.txt'), 'local committed code\n');
+    await f.command('add', 'code.txt');
+    await f.command('commit', '--only', '-m', 'local code', '--', 'code.txt');
+    await writeFile(join(f.peer, 'code.txt'), 'remote conflicting code\n');
+    await command(f.peer, 'commit', '-am', 'peer conflict');
+    await command(f.peer, 'push');
+    const before = await f.command('rev-parse', 'HEAD'),
+      index = await readFile(f.repo.index);
+    await expect(f.run()).rejects.toThrow('Non-Rowbly conflicts');
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    expect(await readFile(f.repo.index)).toEqual(index);
+    expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('local committed code\n');
+    expect(await f.command('ls-files', '--unmerged')).toBe('');
+    expect(await readFile(join(f.repo.gitDir, 'MERGE_HEAD'), 'utf8').catch(() => null)).toBeNull();
+  });
+
+  it('keeps a locally published merge after rejected or lost-response push, then fetches the advanced upstream and retries normally', async () => {
+    const f = await remoteFixture();
+    const hook = join(f.remote, 'hooks/pre-receive');
+    await writeFile(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const story = await f.services.stories.create('web', { name: 'Saved despite rejection' });
+    await expect(f.run()).rejects.toThrow('push');
+    const local = await f.command('rev-parse', 'HEAD');
+    expect(await f.command('show', `HEAD:.rowbly/boards/web/stories/${story.key}/story.json`)).toContain(
+      'Saved despite rejection',
+    );
+    const { rm } = await import('node:fs/promises');
+    await rm(hook);
+    await writeFile(join(f.peer, 'peer.txt'), 'advance after rejection');
+    await command(f.peer, 'add', 'peer.txt');
+    await command(f.peer, 'commit', '-m', 'advance');
+    await command(f.peer, 'push');
+    const result = await f.run();
+    expect(result.pushed).toBe(true);
+    expect(await f.command('merge-base', '--is-ancestor', local, 'HEAD')).toBe('');
+    // Simulate response loss after server accepted, through the actual host Git execution seam.
+    const process = await import('../../src/storage/gitProcess');
+    const original = process.gitText;
+    let lost = false;
+    const spy = vi.spyOn(process, 'gitText').mockImplementation(async (cwd, args, options) => {
+      const value = await original(cwd, args, options);
+      if (args[0] === 'push' && !lost) {
+        lost = true;
+        throw new Error('push response lost after acceptance');
+      }
+      return value;
+    });
+    try {
+      await f.services.stories.update(story.key, { name: 'Accepted with lost response' });
+      await expect(f.run()).rejects.toThrow('response lost');
+    } finally {
+      spy.mockRestore();
+    }
+    const accepted = await f.command('rev-parse', 'HEAD');
+    expect((await f.run()).commit).toBe(accepted);
+    await command(f.peer, 'pull', '--ff-only');
+    expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+      'Accepted with lost response',
+    );
+    expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
   });
 });

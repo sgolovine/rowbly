@@ -12,6 +12,11 @@ export interface IdentityRemap {
   boards: Record<string, string>;
   stories: Record<string, string>;
 }
+export interface RequiredStage {
+  source: string;
+  board: string;
+  key: string;
+}
 export interface RequiredStory {
   source: string;
   key: string;
@@ -46,11 +51,12 @@ export interface PluginReconciliation {
   helpers: MergeHelpers;
   /** Final retained core identities; no other Plugin data is exposed. */
   stories: readonly string[];
+  stages: Readonly<Record<string, readonly string[]>>;
 }
 /** Pure supported-format reconciliation only. Return no entry to keep the host's opaque merge. */
 export type PluginReconciler = (
   input: PluginReconciliation,
-) => PluginMergeSnapshot & { requiredStories?: readonly RequiredStory[] };
+) => PluginMergeSnapshot & { requiredStories?: readonly RequiredStory[]; requiredStages?: readonly RequiredStage[] };
 
 export function canonicalValue(value: unknown): string {
   if (value === undefined) return 'undefined';

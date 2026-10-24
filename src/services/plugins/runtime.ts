@@ -507,7 +507,7 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       const plugins = bag === undefined ? others : { ...others, [id]: bag };
       return Object.keys(plugins).length > 0 ? { ...rest, plugins } : rest;
     },
-    git: createPluginGit(ctx.root, id, ctx.warn),
+    git: createPluginGit(ctx.root, id, ctx.warn, ctx.plugins?.registry, ctx.plugins?.gitOwner?.(id)),
     localData: async () => (await repos.localState.get()).plugins?.[id],
     files: {
       // Each read is one participating read, under the Data Root lock (ADR-0019 §5).

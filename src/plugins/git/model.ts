@@ -1,5 +1,6 @@
 import {
   type GitCommitOptions,
+  type GitSyncOptions,
   type PluginContext,
   type PluginReadContext,
   ValidationError,
@@ -77,4 +78,9 @@ export async function configure(plugin: PluginContext, input: unknown): Promise<
 export function resolveCommitOptions(localData: unknown): GitCommitOptions {
   const { synchronization: _synchronization, ...options } = resolvePreferences(localData);
   return options;
+}
+
+export function resolveSyncOptions(localData: unknown): GitSyncOptions {
+  const prefs = resolvePreferences(localData);
+  return { ...prefs.synchronization, authorName: prefs.authorName, authorEmail: prefs.authorEmail };
 }

@@ -47,7 +47,12 @@ a retained reference the owning supported format understands. It names an existi
 immutable supplied source, never an invented record. The host validates source/key, source-qualified
 remapping and output scope, and restores that complete Story and required Board subtree with evidence.
 Reruns are monotone/idempotent and bounded by the finite supplied identity set; nonconvergence or
-invalid output blocks publication. No reference is inferred by string matching.
+invalid output blocks publication. The analogous `requiredStages: [{ source, board, key }]` may
+name only an effective source Stage actually referenced by retained own data. The host validates the
+source Board's effective definitions, applies its source-qualified Board remap, and restores into the
+merged Board's effective configuration level, preserving unrelated definitions and Cascade levels.
+Backlog and Done remain fixed. The convergence bound includes finite effective source Stage
+definitions as well as source Stories. No reference is inferred by string matching.
 
 ### 4. Lock order
 

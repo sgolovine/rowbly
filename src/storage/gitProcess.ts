@@ -1,4 +1,13 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawn } from 'node:child_process';
+
+const deadlines = new AsyncLocalStorage<number>();
+export function withGitDeadline<T>(milliseconds: number, fn: () => Promise<T>): Promise<T> {
+  return deadlines.run(Date.now() + milliseconds, fn);
+}
+export function outsideGitDeadline<T>(fn: () => Promise<T>): Promise<T> {
+  return deadlines.run(Infinity, fn);
+}
 
 export interface GitProcessOptions {
   input?: string | Uint8Array;
@@ -12,6 +21,8 @@ export function gitProcess(
   args: readonly string[],
   options: GitProcessOptions = {},
 ): Promise<{ code: number; stdout: Buffer; stderr: string }> {
+  const left = (deadlines.getStore() ?? Infinity) - Date.now();
+  if (left <= 0) return Promise.reject(new Error('Git synchronization exceeded its run deadline'));
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   return new Promise((resolve, reject) => {
     const child = spawn(
@@ -60,7 +71,7 @@ export function gitProcess(
     };
     const timer = setTimeout(
       () => stop(new Error('Git automation exceeded its process deadline')),
-      options.timeoutMs ?? 3500,
+      Math.min(options.timeoutMs ?? 3500, left),
     );
     const collect = (chunks: Buffer[]) => (bytes: Buffer) => {
       size += bytes.length;

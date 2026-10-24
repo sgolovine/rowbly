@@ -39,6 +39,7 @@ import type {
   StoryCreateInput,
   StoryPatch,
 } from '../types';
+import type { GitSyncOptionsSource, GitSyncStatus } from './gitSync';
 import type { PluginReconciler } from './reconciliation';
 
 // ── Change Sets (ADR-0012) ──────────────────────────────────────────────────
@@ -436,6 +437,9 @@ export type GitOptionsSource = GitCommitOptions | ((localData: unknown) => GitCo
 
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {
+  syncStatus(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
+  resumeSync(options: GitSyncOptionsSource): Promise<void>;
+  requestSync(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
   /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
   resume(options: GitOptionsSource): Promise<void>;

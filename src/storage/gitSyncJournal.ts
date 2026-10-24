@@ -7,6 +7,7 @@ import { DataIntegrityError } from '../core';
 import type { DataRoot } from '../schemas';
 import { gitText } from './gitProcess';
 import { assertGitWorker, type GitRepository, repositoryFor, repositoryPath, withGitWorker } from './gitRepository';
+import { type GitDataFiles, readGitDataFiles } from './gitSyncFiles';
 import { entryExists, errorCode, io } from './io';
 import { acquireLock, type LockHandle } from './lock';
 import { writeFileAtomic } from './system';
@@ -53,6 +54,7 @@ export interface PublicationPlan {
   indexAfter: string;
   edits: PublicationEdit[];
   roots: string[];
+  captures?: { root: string; files: GitDataFiles }[];
 }
 export interface PublicationOptions {
   checkpoint?(name: string): void | Promise<void>;
@@ -111,6 +113,18 @@ async function writeJournal(journal: JournalData) {
 function indexToken(token: string): string {
   return Buffer.from(`Rowbly publication ${token}\n`).toString('base64');
 }
+function tokenPath(repo: GitRepository, token: string): string {
+  return join(repo.gitDir, 'rowbly', `index-token-${token}`);
+}
+async function reserveIndex(repo: GitRepository, token: string, options: PublicationOptions = {}) {
+  const payload = tokenPath(repo, token);
+  if (!(await entryExists(payload))) await io.writeFile(payload, Buffer.from(indexToken(token), 'base64'));
+  else if ((await io.readBytes(payload)).toString('base64') !== indexToken(token))
+    throw new Error('Private index token is incomplete');
+  await options.checkpoint?.('index-token-ready');
+  await io.link(payload, `${repo.index}.lock`);
+  await options.checkpoint?.('index-reserved');
+}
 function ownerPath(repo: GitRepository): string {
   return join(repo.common, 'rowbly', 'index-reservation.json');
 }
@@ -146,6 +160,7 @@ async function cleanupReservation(repo: GitRepository) {
   const bytes = await lockBytes(repo);
   if (bytes === indexToken(owner.token)) await io.rm(`${repo.index}.lock`);
   else if (bytes !== null) throw new Error('Git index lock changed outside Rowbly; preserving it');
+  await io.rm(tokenPath(repo, owner.token));
   await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${owner.token}`]).catch(() => undefined);
   await io.rm(ownerPath(repo));
 }
@@ -218,9 +233,9 @@ export async function publishPublication(
   if (await readJournal(repo)) throw new Error('An earlier publication still needs recovery');
   const token = randomBytes(16).toString('hex'),
     transactions: { path: string; tx: Transaction }[] = [];
-  const journal: JournalData = { ...plan, roots: [], version: 1, token, repo, phase: 'prepared' };
-  let reserved = false,
-    prepared = false;
+  const { captures, ...durable } = plan;
+  const journal: JournalData = { ...durable, roots: [], version: 1, token, repo, phase: 'prepared' };
+  let prepared = false;
   try {
     if (
       (await gitText(repo.top, ['symbolic-ref', 'HEAD'])) !== plan.branch ||
@@ -230,6 +245,9 @@ export async function publishPublication(
     if ((await readIndex(repo)) !== plan.indexBefore) throw new Error('Git index changed before publication');
     await rootLocks(plan.roots, async () => {
       await verifyFiles(journal, false);
+      for (const capture of captures ?? [])
+        if (!isDeepStrictEqual(await readGitDataFiles({ path: capture.root, kind: 'local' }), capture.files))
+          throw new Error('Rowbly capture changed; prepare again');
       for (const root of [...new Set(plan.roots)].sort()) {
         const prefix = relative(repo.top, root).split('\\').join('/');
         const edits = plan.edits.filter((e) => !prefix || e.path.startsWith(`${prefix}/`));
@@ -254,8 +272,7 @@ export async function publishPublication(
     await options.checkpoint?.('staged');
     await io.mkdir(dirname(ownerPath(repo)));
     await writeFileAtomic(ownerPath(repo), JSON.stringify({ token, pid: process.pid, host: hostname(), repo }));
-    await io.writeFile(`${repo.index}.lock`, Buffer.from(indexToken(token), 'base64'));
-    reserved = true;
+    await reserveIndex(repo, token, options);
     await io.syncDir(repo.gitDir);
     await gitText(repo.top, ['update-ref', `refs/rowbly/prepared/${token}`, plan.candidate]);
     if ((await readIndex(repo)) !== plan.indexBefore) throw new Error('Git index changed while reserving publication');
@@ -279,7 +296,8 @@ export async function publishPublication(
   } finally {
     if (!prepared) {
       for (const { tx } of transactions) await tx.discard();
-      if (reserved && (await lockBytes(repo)) === indexToken(token)) await io.rm(`${repo.index}.lock`);
+      if ((await lockBytes(repo)) === indexToken(token)) await io.rm(`${repo.index}.lock`);
+      await io.rm(tokenPath(repo, token));
       await io.rm(ownerPath(repo));
       await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${token}`]).catch(() => undefined);
     }
@@ -303,6 +321,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
       // CAS refused before any live effect: discard only our staged payload and reservation.
       for (const root of journal.roots) await io.rm(join(root.path, '.txn', root.transaction));
       await io.rm(`${repo.index}.lock`);
+      await io.rm(tokenPath(repo, journal.token));
       await io.rm(ownerPath(repo));
       await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${journal.token}`, journal.candidate]);
       await io.rm(repo.journal);
@@ -374,7 +393,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   await options.checkpoint?.('files');
   if ((await readIndex(repo)) !== journal.indexAfter) {
     const bytes = await lockBytes(repo);
-    if (bytes === null) await io.writeFile(`${repo.index}.lock`, Buffer.from(indexToken(journal.token), 'base64'));
+    if (bytes === null) await reserveIndex(repo, journal.token);
     const staged = join(repo.gitDir, 'rowbly', `index-${journal.token}`);
     await writeFileAtomic(staged, Buffer.from(journal.indexAfter, 'base64'));
     await io.rename(staged, `${repo.index}.lock`);
@@ -394,6 +413,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   await options.checkpoint?.('complete');
   const finalLock = await lockBytes(repo);
   if (finalLock === indexToken(journal.token) || finalLock === journal.indexAfter) await io.rm(`${repo.index}.lock`);
+  await io.rm(tokenPath(repo, journal.token));
   await io.rm(ownerPath(repo));
   await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${journal.token}`]);
   await io.rm(repo.journal);

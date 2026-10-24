@@ -1,7 +1,7 @@
 import { isSlug } from '../../core';
 import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
-import { createPluginGit } from './git';
+import { createPluginGit, disposeGitOwner } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
 /** Names that core already uses, so a Plugin that takes one fails to load (ADR-0012). */
@@ -46,6 +46,9 @@ export interface ActivePlugin {
 /** The Plugins of one Data Root for this run. */
 export interface PluginHost {
   readonly registry: readonly AnyPluginDefinition[];
+  /** Private Git scheduling leases, shared by start and runtime capabilities. */
+  gitOwner?(id: string): object;
+  dispose?(): void;
   /** Route deferred host effects to the active surface. */
   setWarningSink?(warn: (message: string) => void): void;
   /** Built-in Plugins in registry order, then the other Plugins `rowbly.config.json` names. A copy. */
@@ -84,6 +87,15 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
   let warningSink = (message: string) => {
     process.stderr.write(`${message}\n`);
   };
+  const gitOwners = new Map<string, object>();
+  const gitOwner = (id: string) => {
+    let owner = gitOwners.get(id);
+    if (!owner) {
+      owner = {};
+      gitOwners.set(id, owner);
+    }
+    return owner;
+  };
   const entries = (root ? await readEntries(root) : null) ?? {};
   const statuses: PluginStatus[] = [];
   const active: ActivePlugin[] = [];
@@ -112,13 +124,20 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
       const dataRoot = root;
       await definition.start?.({
         settings,
-        git: createPluginGit(dataRoot, definition.id, (message) => warningSink(message)),
+        git: createPluginGit(
+          dataRoot,
+          definition.id,
+          (message) => warningSink(message),
+          registry,
+          gitOwner(definition.id),
+        ),
         localData: async () => (await createRepositories(dataRoot).localState.get()).plugins?.[definition.id],
       });
       claim();
       status.loaded = true;
       active.push(plugin);
     } catch (err) {
+      disposeGitOwner(gitOwner(definition.id));
       status.reason = err instanceof Error ? err.message : String(err);
     }
   }
@@ -139,6 +158,10 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
 
   return {
     registry,
+    gitOwner,
+    dispose() {
+      for (const owner of gitOwners.values()) disposeGitOwner(owner);
+    },
     setWarningSink(warn) {
       warningSink = warn;
     },
@@ -149,6 +172,7 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
       const status = statuses.find((s) => s.id === id);
       const index = active.findIndex((p) => p.definition.id === id);
       if (!status?.loaded || index < 0) return;
+      disposeGitOwner(gitOwner(id));
       status.loaded = false;
       status.reason = reason;
       active.splice(index, 1);

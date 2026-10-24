@@ -84,8 +84,8 @@ Only affected record/file paths are selected, never `local.json`, `.lock` or `.t
 
 ## Recoverable Git publication
 
-The local publication engine implements ADR-0034 §4–5. Automatic synchronization scheduling and
-upstream push are still planned. All cooperating service calls acquire the common Git publication
+The local publication engine implements ADR-0034 §4–5. Synchronization prepares an isolated
+upstream merge and uses this engine before a normal push. All cooperating service calls acquire the common Git publication
 gate before their Data Root lock, and release both before reactions. Git location discovery and every
 Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
 
@@ -108,3 +108,18 @@ stop recovery instead of overwriting external work. Only a token-owned index res
 `test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills a real
 process after the ref effect but before its phase write. It checks complete local recovery, binary
 bytes/modes, unrelated staged blobs/working bytes and recovery through a second linked worktree.
+
+Synchronization captures all valid dirty Rowbly files even while Automatic Commits is Off. It uses an
+alternate index, `merge-tree --write-tree` and the real base/sides, then validates supported core and
+Plugin formats. Non-Rowbly conflicts, staged Rowbly ambiguity, unsupported topology, or overwriting
+unrelated dirty/staged/untracked paths stop preparation without live effects. Captured root drift
+retries preparation at most three times. Rejected/lost-response pushes retain the valid local result;
+a later attempt fetches the configured upstream again. Candidate indexes and fetch pins are cleaned
+on completion. Local Git children have 3.5 s limits, merge calculation 10 s, network commands 30 s,
+output 16 MiB and the overall run 120 s; Unix process groups are killed and awaited on timeout.
+
+Synchronization deadlines/results live separately under the worktree Git directory. The feature is
+Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
+Fixed-delay deadlines persist across restarts, including failures, with one overdue attempt and no
+catch-up burst. An admitted run may finish after Off. Private host leases cancel future timers on
+replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.

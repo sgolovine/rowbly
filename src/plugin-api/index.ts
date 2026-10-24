@@ -149,6 +149,7 @@ export function definePlugin<
   return definition;
 }
 
+export type { GitSyncOptions, GitSyncOptionsSource, GitSyncStatus } from '../services/plugins/gitSync';
 export type {
   IdentityRemap,
   MergeFile,
@@ -157,5 +158,6 @@ export type {
   PluginMergeSnapshot,
   PluginReconciler,
   PluginReconciliation,
+  RequiredStage,
   RequiredStory,
 } from '../services/plugins/reconciliation';

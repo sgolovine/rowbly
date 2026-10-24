@@ -1,6 +1,13 @@
 // The compiled examples of docs/plugins/api.md. `test/docs/tutorial.test.ts` checks that the
 // reference shows each region.
-import { DataIntegrityError, definePlugin, type PluginContext, z } from '../../../src/plugin-api';
+import {
+  DataIntegrityError,
+  definePlugin,
+  type PluginContext,
+  type RequiredStage,
+  type RequiredStory,
+  z,
+} from '../../../src/plugin-api';
 
 // #region safe-parse
 const Tally = z.object({ version: z.literal(1), count: z.number().int().min(0) });
@@ -70,7 +77,7 @@ export const mergeNotes = definePlugin({
       if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
       bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
     }
-    return { bags, files: {} };
+    return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
   },
 });
 // #endregion

@@ -1,6 +1,6 @@
 import { definePlugin, z } from '../../plugin-api';
 import { commands } from './commands';
-import { Preferences, resolveCommitOptions } from './model';
+import { Preferences, resolveCommitOptions, resolveSyncOptions } from './model';
 
 export const git = definePlugin({
   id: 'git',
@@ -12,9 +12,11 @@ export const git = definePlugin({
   async start({ git }) {
     await git.info();
     await git.resume(resolveCommitOptions);
+    await git.resumeSync(resolveSyncOptions);
   },
   async react({ changes, plugin }) {
     await plugin.git.changed(changes, resolveCommitOptions);
+    await plugin.git.resumeSync(resolveSyncOptions);
   },
   commands,
   tui: () => import('./tui').then((m) => m.tui),

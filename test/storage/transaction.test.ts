@@ -319,27 +319,39 @@ describe('Git local publication', () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
-    const t = await tempRoot(),
-      f = await syncFixture(t.dir, t.path);
-    await writeFile(
-      join(t.path, 'local.json'),
-      JSON.stringify({ version: 1, plugins: { git: { synchronization: { enabled: false, intervalSeconds: 300 } } } }),
-    );
-    const peer = join(t.dir, 'peer');
-    await f.git('worktree', 'add', '--detach', peer, f.plan.old);
-    const plan = join(t.dir, 'publication-plan.json');
-    await writeFile(plan, JSON.stringify(f.plan));
-    const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, 'ref-effect']);
-    expect(killed.signal, killed.stderr).toBe('SIGKILL');
-    expect(await f.git('rev-parse', 'HEAD')).toBe(f.plan.candidate);
-    expect(await readPublicationFile(f.repo, f.plan.edits[0]!.path)).toEqual(f.plan.edits[0]!.before);
-    // A different linked worktree shares the publication gate and recovers the recorded owner.
-    await coordinated({ path: join(peer, '.rowbly'), kind: 'local' }, 'peer read with sync Off', async () => undefined);
-    await coordinated(t.root, 'open with synchronization Off', async () => {
-      for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.after);
-    });
-    expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
-    expect(await f.git('remote')).toBe('');
-    expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+    for (const target of ['index-token-ready', 'index-reserved', 'ref-effect']) {
+      const t = await tempRoot(),
+        f = await syncFixture(t.dir, t.path);
+      await writeFile(
+        join(t.path, 'local.json'),
+        JSON.stringify({ version: 1, plugins: { git: { synchronization: { enabled: false, intervalSeconds: 300 } } } }),
+      );
+      const peer = join(t.dir, 'peer');
+      await f.git('worktree', 'add', '--detach', peer, f.plan.old);
+      const plan = join(t.dir, 'publication-plan.json');
+      await writeFile(plan, JSON.stringify(f.plan));
+      const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, target]);
+      expect(killed.signal, killed.stderr).toBe('SIGKILL');
+      expect(await f.git('rev-parse', 'HEAD')).toBe(target === 'ref-effect' ? f.plan.candidate : f.plan.old);
+      expect(await readPublicationFile(f.repo, f.plan.edits[0]!.path)).toEqual(f.plan.edits[0]!.before);
+      // A different linked worktree shares the publication gate and recovers the recorded owner.
+      await coordinated(
+        { path: join(peer, '.rowbly'), kind: 'local' },
+        'peer read with sync Off',
+        async () => undefined,
+      );
+      await coordinated(t.root, 'open with synchronization Off', async () => {
+        for (const edit of f.plan.edits)
+          expect(await readPublicationFile(f.repo, edit.path)).toEqual(
+            target === 'ref-effect' ? edit.after : edit.before,
+          );
+      });
+      expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
+      expect(await f.git('remote')).toBe('');
+      expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+      expect((await readdir(join(f.repo.gitDir, 'rowbly'))).filter((name) => name.startsWith('index-token-'))).toEqual(
+        [],
+      );
+    }
   });
 });

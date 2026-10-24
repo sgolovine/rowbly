@@ -1,8 +1,9 @@
-import type { PluginReconciler } from '../../plugin-api';
+import type { PluginReconciler, RequiredStage } from '../../plugin-api';
 import { TasksBag } from './model';
 
-export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
+export const reconcile: PluginReconciler = ({ base, left, right, helpers, remaps, stages }) => {
   const bags: Record<string, unknown> = {};
+  const requiredStages: RequiredStage[] = [];
   for (const scope of new Set([...Object.keys(base.bags), ...Object.keys(left.bags), ...Object.keys(right.bags)])) {
     const raw = [base.bags[scope], left.bags[scope], right.bags[scope]];
     const parsed = raw.map((value) => TasksBag.safeParse(value ?? { nextNumber: 1, tasks: [] }));
@@ -48,6 +49,19 @@ export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
       }
     }
     bags[scope] = { nextNumber: next, tasks };
+    const board = scope.split('/')[1];
+    if (board)
+      for (const [side, original] of [a.tasks, b.tasks].entries())
+        for (const task of original) {
+          const map = remaps[side];
+          if (!map || stages[board]?.includes(task.stage)) continue;
+          if (tasks.some((t) => (t as typeof task).stage === task.stage))
+            requiredStages.push({
+              source: map.source,
+              board: Object.entries(map.boards).find(([, value]) => value === board)?.[0] ?? board,
+              key: task.stage,
+            });
+        }
   }
-  return { bags, files: {} };
+  return { bags, files: {}, requiredStages };
 };

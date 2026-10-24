@@ -400,11 +400,16 @@ Only a supported format that understands a retained Story reference may addition
 supplied side snapshot. The host validates the source and key, applies the source-qualified identity
 map, and restores that exact complete Story subtree and required Board subtree with evidence.
 Restoration is monotone and idempotent over the finite supplied identities; reruns are bounded by
-that set. Invalid requests or nonconvergence fail before publication. This is the only core restoration
-request; it is no arbitrary core writer or generic dependency language. Never infer references by
+that set. Invalid requests or nonconvergence fail before publication. The analogous optional
+`requiredStages: [{ source, board, key }]` names an effective source Stage actually referenced by
+retained own data. The host validates the immutable source Board's effective definitions, maps its
+Board identity and restores into that merged Board's effective configuration level without flattening
+the Configuration Cascade or replacing unrelated definitions. Backlog and Done remain fixed. The
+monotone rerun bound includes the finite supplied Stories and effective Stage definitions. These are
+narrow restoration requests, with no arbitrary core writer or generic dependency language. Never infer references by
 matching strings in unknown data.
 
-The pure reconciliation layer is implemented; automatic synchronization execution is still planned.
+Synchronization uses this pure layer to validate its complete isolated candidate before local publication.
 
 ```ts
 export const mergeNotes = definePlugin({
@@ -419,7 +424,19 @@ export const mergeNotes = definePlugin({
       if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
       bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
     }
-    return { bags, files: {} };
+    return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
   },
 });
 ```
+
+### Synchronization capability
+
+`PluginGit.syncStatus(liveResolver)` reads current preferences and persisted run details.
+`resumeSync(liveResolver)` schedules persisted work only at start or in a live reaction.
+`requestSync(liveResolver)` requests/coalesces an immediate enabled run only from a command/screen
+boundary, waits outside Data Root coordination and returns its current result. Its live resolver
+returns independent `enabled` and `intervalSeconds`, with optional author name/email. Latest saved
+Off prevents admission; an admitted run may finish. The host supplies the registered format owners,
+recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
+Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
+and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.

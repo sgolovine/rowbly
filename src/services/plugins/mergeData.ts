@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { rankAfter } from '../../core';
 import { BoardConfigSchema, type CustomFieldDef, DEFAULT_STAGES, RowblyConfigSchema, StorySchema } from '../../schemas';
+import { isGitDataPath } from '../../storage/gitSyncFiles';
 import { fieldValueError, validateFieldValues } from '../_customFieldValues';
 import {
   canonicalValue,
@@ -13,6 +14,7 @@ import {
   type MergeHelpers,
   mergeDigest,
   type PluginMergeSnapshot,
+  type RequiredStage,
   type RequiredStory,
 } from './reconciliation';
 import type { AnyPluginDefinition } from './types';
@@ -34,7 +36,7 @@ const CORE = /^(rowbly.config.json|boards\/[^/]+\/board.config.json|boards\/[^/]
 
 /** Explicit owned paths: an arbitrary file under a Data Root is not automatically mergeable. */
 export function isRowblyPath(path: string): boolean {
-  return CORE.test(path) || path === '.gitignore' || PLUGIN.test(path);
+  return isGitDataPath(path);
 }
 function decode(file: MergeFile): string {
   const bytes = Buffer.from(file.data, 'base64');
@@ -89,10 +91,19 @@ export function mergeData(
   registry: readonly AnyPluginDefinition[],
 ): DataMergeResult {
   const restores = new Map<string, RequiredStory>();
+  const stages = new Map<string, RequiredStage>();
   const supplied = [left, right];
-  const maximum = supplied.reduce((n, source) => n + Object.keys(source.files).filter((p) => STORY.test(p)).length, 0);
+  const maximum = supplied.reduce(
+    (n, source) =>
+      n +
+      Object.keys(source.files).filter((p) => STORY.test(p)).length +
+      Object.keys(source.files)
+        .filter((p) => BOARD.test(p))
+        .reduce((n, p) => n + sourceStages(source.files, String(json(source.files[p])?.id)).length, 0),
+    0,
+  );
   for (let pass = 0; pass <= maximum; pass++) {
-    const result = mergeOnce(base, left, right, registry, [...restores.values()]);
+    const result = mergeOnce(base, left, right, registry, [...restores.values()], [...stages.values()]);
     let changed = false;
     for (const request of result.requests) {
       const source = supplied.find((s) => s.id === request.source);
@@ -102,6 +113,16 @@ export function mergeData(
       const key = canonicalValue(request);
       if (!restores.has(key)) {
         restores.set(key, request);
+        changed = true;
+      }
+    }
+    for (const request of result.stageRequests) {
+      const source = supplied.find((s) => s.id === request.source);
+      if (!source || !sourceStages(source.files, request.board).some((s) => s.key === request.key))
+        throw new Error('Plugin requiredStages must name an existing effective source Stage');
+      const key = canonicalValue(request);
+      if (!stages.has(key)) {
+        stages.set(key, request);
         changed = true;
       }
     }
@@ -115,7 +136,8 @@ function mergeOnce(
   b: MergeSource,
   registry: readonly AnyPluginDefinition[],
   restores: RequiredStory[],
-): DataMergeResult & { requests: RequiredStory[] } {
+  stages: RequiredStage[],
+): DataMergeResult & { requests: RequiredStory[]; stageRequests: RequiredStage[] } {
   // Source ordering is independent of ours/theirs. Equal IDs must actually be equal snapshots.
   const sources = [a, b].sort((x, y) => (canonicalValue([x.id, x.files]) < canonicalValue([y.id, y.files]) ? -1 : 1));
   const leftSource = sources[0]!,
@@ -131,7 +153,8 @@ function mergeOnce(
     boards: {},
     stories: {},
   })) as [IdentityRemap, IdentityRemap];
-  const requests: RequiredStory[] = [];
+  const requests: RequiredStory[] = [],
+    stageRequests: RequiredStage[] = [];
   for (const request of restores) {
     const source = [leftSource, rightSource].find((s) => s.id === request.source);
     if (!source) throw new Error('Unknown restoration source');
@@ -191,6 +214,33 @@ function mergeOnce(
       if (result !== undefined) files[path] = result as MergeFile;
     }
   }
+  for (const request of stages) {
+    if (['backlog', 'done'].includes(request.key)) continue;
+    const source = [leftSource, rightSource].find((s) => s.id === request.source);
+    const map = remaps.find((r) => r.source === request.source);
+    if (!source || !map) throw new Error('Unknown Stage restoration source');
+    const definition = sourceStages(source.files, request.board).find((s) => s.key === request.key);
+    if (!definition) throw new Error('Unknown source Stage');
+    const boardId = map.boards[request.board] ?? request.board;
+    const boardPath = `boards/${boardId}/board.config.json`,
+      board = json(files[boardPath]);
+    if (!board) throw new Error('Required Stage has no retained Board');
+    const root = json(files['rowbly.config.json'])!;
+    const target = board.stages === undefined ? root : board;
+    const effective = (target.stages ?? DEFAULT_STAGES) as { key: string; name: string }[];
+    if (!effective.some((s) => s.key === request.key)) {
+      target.stages = [...effective, definition];
+      files[target === root ? 'rowbly.config.json' : boardPath] = encode(target);
+      helpers.retain(
+        `${boardPath}/stages/${request.key}`,
+        'restored effective Stage referenced by supported retained data',
+        undefined,
+        definition,
+        request,
+        definition,
+      );
+    }
+  }
   for (const definition of registry) {
     if (!definition.reconcile) continue;
     const own = (snapshot: MergeFiles): PluginMergeSnapshot => ({
@@ -211,6 +261,14 @@ function mergeOnce(
       right: own(right),
       remaps: structuredClone(remaps),
       helpers,
+      stages: Object.fromEntries(
+        Object.keys(files)
+          .filter((p) => BOARD.test(p))
+          .map((p) => {
+            const board = String(json(files[p])?.id);
+            return [board, ['backlog', ...sourceStages(files, board).map((s) => s.key), 'done']];
+          }),
+      ),
       stories: Object.keys(files)
         .filter((p) => STORY.test(p))
         .map((p) => String(json(files[p])?.key)),
@@ -222,6 +280,16 @@ function mergeOnce(
       if (!request || typeof request.source !== 'string' || typeof request.key !== 'string')
         throw new Error('Invalid requiredStories request');
       requests.push(request);
+    }
+    for (const request of result.requiredStages ?? []) {
+      if (
+        !request ||
+        typeof request.source !== 'string' ||
+        typeof request.board !== 'string' ||
+        typeof request.key !== 'string'
+      )
+        throw new Error('Invalid requiredStages request');
+      stageRequests.push(request);
     }
     for (const [scope, bag] of Object.entries(result.bags)) {
       const path = scopeRecord(scope),
@@ -284,7 +352,7 @@ function mergeOnce(
     files[path] = encode(record);
     evidence.push(path);
   }
-  return { files, decisions, remaps, evidence, requests };
+  return { files, decisions, remaps, evidence, requests, stageRequests };
 }
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') {
@@ -719,4 +787,13 @@ function evidenceSource(source: MergeSource) {
   return evidence.length
     ? { id: source.id, files, evidence: evidence.sort((a, b) => (a.path < b.path ? -1 : 1)) }
     : source;
+}
+
+function sourceStages(files: MergeFiles, boardId: string): { key: string; name: string }[] {
+  const board = json(files[`boards/${boardId}/board.config.json`]);
+  if (!board) return [];
+  return (board.stages ?? json(files['rowbly.config.json'])?.stages ?? DEFAULT_STAGES) as {
+    key: string;
+    name: string;
+  }[];
 }

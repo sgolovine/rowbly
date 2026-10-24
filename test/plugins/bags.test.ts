@@ -137,6 +137,7 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     () => ({ bags: {}, files: { 'plugins/other/data.json': file({ corrupt: true }) } }),
     () => ({ bags: { 'boards/missing/stories/MIS-1': {} }, files: {} }),
     () => ({ bags: {}, files: {}, requiredStories: [{ source: 'left', key: 'WEB-999' }] }),
+    () => ({ bags: {}, files: {}, requiredStages: [{ source: 'left', board: 'web', key: 'missing' }] }),
     () => {
       throw new Error('format failed');
     },
