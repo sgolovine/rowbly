@@ -35,6 +35,13 @@ bounded by the host. Check raw recognized identities before projection or opaque
 future formats retain exact opaque preservation and evidence. No new stored identity or migration
 framework is introduced.
 
+Core records Custom Field aliases at the exact incompatible-type split, qualified by source and
+definition scope. Private replay projection carries those aliases through BASE, successive commits
+and pending values. Project definitions and effective Story values simultaneously, respecting root
+inheritance, Board overrides and Board identity changes. A new raw key at an earlier alias destination
+refuses before publication when correspondence is ambiguous. These private core maps do not expand
+the Plugin API or authorize interpreting Plugin identifiers.
+
 Replay alone may return `removedFiles`, at most 4096 unique normalized exact relative own paths
 present in a supplied own snapshot. The host rejects non-arrays, non-strings, unsafe paths, other
 scopes, duplicate entries and simultaneous add/remove of one path before changing the immutable

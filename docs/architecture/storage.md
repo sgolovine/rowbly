@@ -148,6 +148,9 @@ output 16 MiB and the overall run 120 s; Unix process groups are killed and awai
 The packaged private rebase strategy pins its standalone Git directory and working tree and disables
 global/system configuration and attributes for its tree installation. It never uses the live index
 or checkout. This preparation entry remains disconnected from synchronization pending replay validation.
+Private replay correspondence includes source-qualified Custom Field aliases from the original
+definition scope. Successive and pending values follow the same alias; root inheritance and Board
+overrides retain their scope. An ambiguous new key at a previous destination refuses preparation.
 The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
 bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 

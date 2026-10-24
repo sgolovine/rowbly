@@ -180,6 +180,70 @@ it('reconciles only supported owned formats while Off, preserves future bags and
   ).toThrow('Invalid replay file removals');
   expect(await readJsonFile(t, path)).toEqual(story);
 
+  const { emptyReplayProjection, transportReplayData, replayProjectionFor } = await import(
+    '../../src/services/plugins/replayData'
+  );
+  const boardPath = 'boards/web/board.config.json';
+  const numericPath = storyFile('WEB-2'),
+    textPath = storyFile('WEB-3');
+  const fieldBase = {
+    id: 'field-base',
+    files: {
+      'rowbly.config.json': file({ ...root, customFields: [] }),
+      [boardPath]: file({ ...board, customFields: [] }),
+      [path]: file({ ...story, customFields: {} }),
+    },
+  };
+  const fieldSource = (id: string, type: 'number' | 'text', key: string, rank: string, value: number | string) => ({
+    id,
+    files: {
+      ...fieldBase.files,
+      [boardPath]: file({ ...board, customFields: [{ key: 'x', name: 'X', type, required: false }] }),
+      [storyFile(key)]: file({ ...story, key, rank, customFields: { x: value } }),
+    },
+  });
+  const numeric = fieldSource('a-number', 'number', 'WEB-2', 'a1', 42);
+  let localField = fieldSource('b-text', 'text', 'WEB-3', 'a2', 'original');
+  let fieldProjection = transportReplayData(localField, emptyReplayProjection(), []).projection;
+  let fieldResult = mergeData(fieldBase, numeric, localField, [], {});
+  fieldProjection = replayProjectionFor(localField, fieldProjection, fieldResult);
+  expect(fieldProjection.fields).toEqual({ 'boards/web': { x: 'x-2' } });
+  for (const value of ['later', 'pending']) {
+    const next = fieldSource(`c-${value}`, 'text', 'WEB-3', 'a2', value);
+    const projected = transportReplayData(next, fieldProjection, []);
+    fieldResult = mergeData(
+      transportReplayData(localField, fieldProjection, []).source,
+      { id: 'a-current', files: fieldResult.files },
+      projected.source,
+      [],
+      {},
+    );
+    fieldProjection = replayProjectionFor(next, projected.projection, fieldResult);
+    localField = next;
+    expect(JSON.parse(Buffer.from(fieldResult.files[textPath]?.data ?? '', 'base64').toString()).customFields).toEqual({
+      'x-2': value,
+    });
+    expect(
+      JSON.parse(Buffer.from(fieldResult.files[numericPath]?.data ?? '', 'base64').toString()).customFields,
+    ).toEqual({ x: 42 });
+  }
+  expect(() =>
+    transportReplayData(
+      {
+        ...localField,
+        files: {
+          ...localField.files,
+          [boardPath]: file({
+            ...board,
+            customFields: ['x', 'x-2'].map((key) => ({ key, name: key, type: 'text', required: false })),
+          }),
+        },
+      },
+      fieldProjection,
+      [],
+    ),
+  ).toThrow('Ambiguous new Custom Field at a replay destination');
+
   const { tasks } = await import('../../src/plugins/tasks');
   const { comments } = await import('../../src/plugins/comments');
   const { epics } = await import('../../src/plugins/epics');
@@ -289,7 +353,6 @@ it('reconciles only supported owned formats while Off, preserves future bags and
     expect(replayed.identities?.filter((m) => m.source === 'c')).toHaveLength(2);
     expect(replayed.evidence).toHaveLength(1);
     if (!isTasks) {
-      const { transportReplayData, emptyReplayProjection } = await import('../../src/services/plugins/replayData');
       const original = source('identifiers', {
         comments: [
           { ...comment, id: '__proto__', body: 'first' },

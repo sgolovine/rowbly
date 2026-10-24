@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { BoardConfigSchema, StorySchema } from '../../schemas';
 import { type DataMergeResult, evidenceSource, type MergeSource, mergeData } from './mergeData';
 import {
@@ -12,10 +13,17 @@ import type { AnyPluginDefinition } from './types';
 export interface ReplayProjection {
   boards: Record<string, { id: string; keyPrefix: string }>;
   stories: Record<string, string>;
+  /** Raw definition scope and field key to its final core key. */
+  fields: Record<string, Record<string, string>>;
   owners: Record<string, PluginIdentityMap>;
 }
 export function emptyReplayProjection(): ReplayProjection {
-  return { boards: Object.create(null), stories: Object.create(null), owners: Object.create(null) };
+  return {
+    boards: Object.create(null),
+    stories: Object.create(null),
+    fields: Object.create(null),
+    owners: Object.create(null),
+  };
 }
 function own<T>(values: Readonly<Record<string, T>> | undefined, key: string): T | undefined {
   return values && Object.hasOwn(values, key) ? values[key] : undefined;
@@ -25,8 +33,11 @@ const STORY = /^boards\/([^/]+)\/stories\/([^/]+)\/story.json$/;
 function json(file: MergeFile): Record<string, unknown> {
   return JSON.parse(Buffer.from(file.data, 'base64').toString('utf8'));
 }
-function encode(value: unknown): MergeFile {
-  return { data: Buffer.from(`${JSON.stringify(value, null, 2)}\n`).toString('base64'), mode: '100644' };
+function encode(value: unknown, mode: MergeFile['mode']): MergeFile {
+  return { data: Buffer.from(`${JSON.stringify(value, null, 2)}\n`).toString('base64'), mode };
+}
+function projectedFile(value: unknown, original: MergeFile): MergeFile {
+  return isDeepStrictEqual(value, json(original)) ? original : encode(value, original.mode);
 }
 function allocatedSlug(id: string, used: Set<string>): string {
   for (let n = 2; n < 100_000; n++) {
@@ -120,6 +131,47 @@ export function projectReplayCore(
       const id = projection.boards[board]?.id ?? board;
       return story ? `boards/${id}/stories/${projection.stories[story] ?? story}` : `boards/${id}`;
     });
+  // Definition scopes are raw source scopes. Board overrides replace inherited root definitions.
+  const fieldKeys = (definitionScope: string, keys: readonly string[]): Record<string, string> => {
+    const before = own(prior.fields, definitionScope) ?? {};
+    const targets = new Set(Object.values(before));
+    const output: Record<string, string> = Object.create(null);
+    const occupied = new Set<string>();
+    for (const key of keys) {
+      if (!Object.hasOwn(before, key) && targets.has(key))
+        throw new Error('Ambiguous new Custom Field at a replay destination requires manual resolution');
+      const target = own(before, key) ?? key;
+      if (occupied.has(target)) throw new Error('Ambiguous Custom Field replay correspondence');
+      occupied.add(target);
+      output[key] = target;
+      if (target !== key) {
+        projection.fields[definitionScope] ??= Object.create(null);
+        const aliases = projection.fields[definitionScope];
+        if (!aliases) throw new Error('Missing core field replay scope');
+        aliases[key] = target;
+      }
+    }
+    return output;
+  };
+  const definitionMaps: Record<string, Record<string, string>> = Object.create(null);
+  for (const [path, raw] of Object.entries(original.files)) {
+    if (path !== 'rowbly.config.json' && !BOARD.test(path)) continue;
+    const value = json(raw);
+    if (!Array.isArray(value.customFields)) continue;
+    const definitionScope = path === 'rowbly.config.json' ? '' : path.slice(0, -18);
+    definitionMaps[definitionScope] = fieldKeys(
+      definitionScope,
+      value.customFields.map((definition) => String(definition.key)),
+    );
+  }
+  const projectFields = (value: Record<string, unknown>, definitionScope: string): void => {
+    if (!Array.isArray(value.customFields)) return;
+    const map = own(definitionMaps, definitionScope);
+    value.customFields = value.customFields.map((definition) => ({
+      ...definition,
+      key: own(map, String(definition.key)) ?? definition.key,
+    }));
+  };
   const files: MergeFiles = {};
   for (const [path, raw] of Object.entries(original.files)) {
     const target = scope(path);
@@ -127,18 +179,27 @@ export function projectReplayCore(
     if (BOARD.test(path)) {
       const value = json(raw),
         board = projection.boards[String(value.id)];
-      files[target] =
-        board && (value.id !== board.id || value.keyPrefix !== board.keyPrefix)
-          ? encode({ ...value, id: board.id, keyPrefix: board.keyPrefix })
-          : raw;
+      projectFields(value, path.slice(0, -18));
+      if (board) Object.assign(value, { id: board.id, keyPrefix: board.keyPrefix });
+      files[target] = projectedFile(value, raw);
     } else if (STORY.test(path)) {
       const value = json(raw),
         board = projection.boards[String(value.boardId)],
         key = projection.stories[String(value.key)];
-      files[target] =
-        board && key && (value.boardId !== board.id || value.key !== key)
-          ? encode({ ...value, key, boardId: board.id })
-          : raw;
+      const rawBoardScope = `boards/${String(value.boardId)}`;
+      const map = own(definitionMaps, rawBoardScope) ?? own(definitionMaps, '');
+      if (value.customFields && typeof value.customFields === 'object') {
+        const entries = Object.entries(value.customFields).map(([field, entry]) => [own(map, field) ?? field, entry]);
+        if (new Set(entries.map(([field]) => field)).size !== entries.length)
+          throw new Error('Ambiguous Custom Field value replay correspondence');
+        value.customFields = Object.fromEntries(entries);
+      }
+      if (board && key) Object.assign(value, { key, boardId: board.id });
+      files[target] = projectedFile(value, raw);
+    } else if (path === 'rowbly.config.json') {
+      const value = json(raw);
+      projectFields(value, '');
+      files[target] = projectedFile(value, raw);
     } else files[target] = raw;
   }
   const remap: IdentityRemap = {
@@ -208,6 +269,33 @@ export function replayProjectionFor(
   }
   for (const [from, target] of Object.entries(transported.stories))
     next.stories[from] = own(map.stories, target) ?? target;
+  const fieldChanges = (result.coreFields ?? []).filter((value) => value.source === original.id);
+  const rawFieldScope = (scope: string): string => {
+    if (!scope) return '';
+    const board = scope.slice('boards/'.length);
+    return `boards/${Object.entries(next.boards).find(([, target]) => target.id === board)?.[0] ?? board}`;
+  };
+  for (const scope of new Set([
+    ...Object.keys(transported.fields),
+    ...fieldChanges.map((value) => rawFieldScope(value.scope)),
+  ])) {
+    const before = own(transported.fields, scope) ?? {};
+    const board = scope.slice('boards/'.length);
+    const finalScope = scope ? `boards/${own(next.boards, board)?.id ?? board}` : '';
+    const changes = Object.fromEntries(
+      fieldChanges.filter((value) => value.scope === finalScope).map((value) => [value.from, value.to]),
+    );
+    const aliases: Record<string, string> = Object.create(null);
+    for (const from of new Set([
+      ...Object.keys(before),
+      ...Object.keys(changes).filter((key) => !Object.values(before).includes(key)),
+    ])) {
+      const priorKey = own(before, from) ?? from;
+      const to = own(changes, priorKey) ?? priorKey;
+      if (from !== to) aliases[from] = to;
+    }
+    if (Object.keys(aliases).length) next.fields[scope] = aliases;
+  }
   for (const owner of new Set([
     ...Object.keys(transported.owners),
     ...(result.identities ?? []).map((value) => value.owner),
@@ -291,7 +379,7 @@ export function retainReplayProvenance(
     output: evidenceSource({ id: 'prepared-replay-tree', files: result.files }),
   };
   const path = `plugins/git/merge-evidence/${mergeDigest(record)}.json`;
-  result.files[path] = encode(record);
+  result.files[path] = encode(record, '100644');
   result.evidence.push(path);
   return path;
 }

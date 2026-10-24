@@ -32,6 +32,8 @@ export interface DataMergeResult {
   decisions: MergeDecision[];
   evidence: string[];
   identities?: { owner: string; source: string; scope: string; from: string; to: string }[];
+  /** Private core correspondence; never supplied to Plugin callbacks. */
+  coreFields?: { source: string; scope: string; from: string; to: string }[];
 }
 export type ReplayOwnerMaps = Readonly<Record<string, Readonly<Record<string, PluginIdentityMap>>>>;
 const BOARD = /^boards\/([^/]+)\/board.config.json$/;
@@ -200,7 +202,7 @@ function mergeOnce(
   retainEditedParents(base, left, right, helpers);
   remapBoards(base, left, right, remaps, helpers);
   remapStories(base, left, right, remaps, helpers);
-  splitFieldTypes(base, left, right, helpers);
+  const coreFields = splitFieldTypes(base, left, right, helpers, rightSource.id);
   const files: MergeFiles = {};
   for (const path of [...new Set([...Object.keys(base), ...Object.keys(left), ...Object.keys(right)])].sort()) {
     if (!isRowblyPath(path)) throw new Error(`Unsupported Rowbly path: ${path}`);
@@ -442,7 +444,7 @@ function mergeOnce(
     files[path] = encode(record);
     evidence.push(path);
   }
-  return { files, decisions, remaps, evidence, identities, requests, stageRequests };
+  return { files, decisions, remaps, evidence, identities, coreFields, requests, stageRequests };
 }
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') {
@@ -699,7 +701,14 @@ function remapStories(
     }
   }
 }
-function splitFieldTypes(base: MergeFiles, left: MergeFiles, right: MergeFiles, helpers: MergeHelpers) {
+function splitFieldTypes(
+  base: MergeFiles,
+  left: MergeFiles,
+  right: MergeFiles,
+  helpers: MergeHelpers,
+  source: string,
+): NonNullable<DataMergeResult['coreFields']> {
+  const aliases: NonNullable<DataMergeResult['coreFields']> = [];
   for (const path of Object.keys(left).filter((p) => p === 'rowbly.config.json' || BOARD.test(p))) {
     const a = json(left[path]),
       b = json(right[path]);
@@ -720,6 +729,7 @@ function splitFieldTypes(base: MergeFiles, left: MergeFiles, right: MergeFiles, 
       );
       other.key = key;
       const scope = BOARD.exec(path)?.[1];
+      aliases.push({ source, scope: scope ? `boards/${scope}` : '', from: oldKey, to: key });
       for (const storyPath of Object.keys(right).filter(
         (p) => STORY.test(p) && (!scope || p.startsWith(`boards/${scope}/`)),
       )) {
@@ -738,6 +748,7 @@ function splitFieldTypes(base: MergeFiles, left: MergeFiles, right: MergeFiles, 
     }
     right[path] = encode(b);
   }
+  return aliases;
 }
 /** Restore only constraints needed by retained records, without destructive doctor fixes. */
 function repairConfiguration(files: MergeFiles, sources: MergeFiles[], helpers: MergeHelpers) {
