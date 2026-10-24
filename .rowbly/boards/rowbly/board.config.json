@@ -12,8 +12,12 @@
     {
       "key": "in-progress",
       "name": "In Progress"
+    },
+    {
+      "key": "ready-for-review",
+      "name": "Ready for Review"
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-22T22:58:41.404Z"
+  "updatedAt": "2026-10-24T18:06:40.237Z"
 }
