@@ -1,6 +1,6 @@
 # ADR-0021: Plugins own their data formats; compatibility is a policy, not an engine
 
-**Status:** Accepted. The policy is in effect; the engines and loaders it defers are not built.
+**Status:** Accepted. The policy is in effect; the engines and loaders it defers are not built. Amended narrowly by [ADR-0034](0034-git-synchronization-publishes-recoverably.md).
 
 Rowbly persists three kinds of Plugin Data with no stated rules for change: Epic files carry `version: 1`, while the Epics, Specs and Comments bags carry no version. The Plugin API has no version, and the application version and record `version` do not identify it. ADR-0020 §3 defines the bag kinds (absent, valid, invalid, unsupported) and reserves "unsupported" for bags that carry a version, but it left the policy for versions and migrations to this ADR. The policy text is in [compatibility.md](../../plugins/compatibility.md), and the trust model it relies on in [trust.md](../../plugins/trust.md).
 

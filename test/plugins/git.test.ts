@@ -113,7 +113,7 @@ async function savedPreferenceRace(boundary: 'react' | 'start' | 'worker') {
     }
     await held.promise;
     if (boundary !== 'worker') await configure(f.services.plugins.context('git'), off);
-    expect(await preferences(f.services.plugins.context('git'))).toEqual(off);
+    expect(await preferences(f.services.plugins.context('git'))).toMatchObject(off);
     if (boundary === 'worker') {
       // Off is saved, but its reaction has not updated pending.options yet.
       expect((await readGitPending(file))?.options.automaticCommits).toBe(true);

@@ -36,9 +36,7 @@ export const commands: PluginCommands = (group, cli) => {
         cli.run(cmd, async ({ plugin, print }) => {
           if (opts.automaticCommits !== undefined && !['on', 'off'].includes(opts.automaticCommits))
             throw new ValidationError('Automatic Commits must be on or off');
-          const old = await preferences(plugin);
           const value = await configure(plugin, {
-            ...old,
             ...(opts.automaticCommits !== undefined ? { automaticCommits: opts.automaticCommits === 'on' } : {}),
             ...(opts.frequency !== undefined ? { frequency: opts.frequency } : {}),
             ...(opts.interval !== undefined ? { intervalSeconds: Number(opts.interval) } : {}),

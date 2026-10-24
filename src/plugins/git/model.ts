@@ -8,6 +8,12 @@ import {
 
 export const Preferences = z.strictObject({
   automaticCommits: z.boolean().default(true),
+  synchronization: z
+    .strictObject({
+      enabled: z.boolean().default(false),
+      intervalSeconds: z.number().int().min(1).max(86400).default(300),
+    })
+    .default({ enabled: false, intervalSeconds: 300 }),
   frequency: z.enum(['change', 'interval']).default('change'),
   intervalSeconds: z.number().int().min(1).max(86400).default(300),
   authorName: z
@@ -19,25 +25,38 @@ export const Preferences = z.strictObject({
   authorEmail: z.string().trim().email().optional(),
 });
 
-export async function preferences(plugin: Pick<PluginReadContext, 'localData'>): Promise<GitCommitOptions> {
+export type GitPreferences = z.output<typeof Preferences>;
+
+export async function preferences(plugin: Pick<PluginReadContext, 'localData'>): Promise<GitPreferences> {
   return resolvePreferences(await plugin.localData());
 }
 
 /** Parses the current bag supplied by the host at scheduling and worker admission. */
-export function resolvePreferences(localData: unknown): GitCommitOptions {
+export function resolvePreferences(localData: unknown): GitPreferences {
   const result = Preferences.safeParse(localData ?? {});
   if (!result.success)
     throw new ValidationError('Git commit preferences are invalid', { details: { issues: result.error.issues } });
   return result.data;
 }
 
-export async function configure(plugin: PluginContext, input: unknown): Promise<GitCommitOptions> {
-  const result = Preferences.safeParse(input);
-  if (!result.success)
-    throw new ValidationError('Git commit preferences are invalid', { details: { issues: result.error.issues } });
-  const value = result.data;
-  return plugin.operation('configure', value, async (changes) => {
-    await changes.updateLocalState((local) => plugin.writeBag(local, value));
+export async function configure(plugin: PluginContext, input: unknown): Promise<GitPreferences> {
+  const patch = Preferences.partial().safeParse(input);
+  if (!patch.success)
+    throw new ValidationError('Git preferences are invalid', { details: { issues: patch.error.issues } });
+  return plugin.operation('configure', patch.data, async (changes) => {
+    let value!: GitPreferences;
+    await changes.updateLocalState((local) => {
+      // Read and merge inside the Operation, so independent settings cannot erase each other.
+      const old = resolvePreferences(local.plugins?.[plugin.id]);
+      value = Preferences.parse({ ...old, ...patch.data });
+      return plugin.writeBag(local, value);
+    });
     return value;
   });
+}
+
+/** Project legacy commit options independently of synchronization preferences. */
+export function resolveCommitOptions(localData: unknown): GitCommitOptions {
+  const { synchronization: _synchronization, ...options } = resolvePreferences(localData);
+  return options;
 }
