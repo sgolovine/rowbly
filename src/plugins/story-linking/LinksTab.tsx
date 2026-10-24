@@ -35,11 +35,11 @@ export function LinksTab({ story, active, plugin, ui }: PluginStoryTabProps) {
     keys
       ? [
           { key: 'tab/←/→', description: 'switch tab' },
-          { key: '↑/↓', description: 'select link' },
-          ...(highlighted?.available ? [{ key: 'enter', description: 'open Story' }] : []),
-          { key: '/', description: 'filter' },
           { key: 'n', description: 'new link' },
           ...(highlighted ? [{ key: 'd', description: 'remove link' }] : []),
+          ...(highlighted?.available ? [{ key: 'enter', description: 'open Story' }] : []),
+          { key: '↑/↓', description: 'select link' },
+          { key: '/', description: 'filter' },
         ]
       : [],
   );
