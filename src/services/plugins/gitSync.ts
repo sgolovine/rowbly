@@ -43,7 +43,7 @@ interface Resource {
   timer?: ReturnType<typeof setTimeout>;
 }
 const resources = new Map<string, Resource>();
-const jobs = new Map<string, Promise<void>>();
+const jobs = new Map<string, { root: string; done: Promise<void> }>();
 const disposed = new WeakSet<object>();
 export function disposeSyncOwner(owner: object): void {
   disposed.add(owner);
@@ -55,9 +55,9 @@ export function disposeSyncOwner(owner: object): void {
 }
 export async function drainSyncQueue(root?: DataRoot): Promise<void> {
   while (true) {
-    const waiting = [...jobs].filter(([file]) => !root || resources.get(file)?.root.path === root.path);
+    const waiting = [...jobs.values()].filter((job) => !root || job.root === root.path);
     if (!waiting.length) return;
-    await Promise.all(waiting.map(([, done]) => done));
+    await Promise.all(waiting.map((job) => job.done));
   }
 }
 function initial(intervalSeconds: number): GitSyncState {
@@ -95,7 +95,7 @@ function arm(file: string, resource: Resource, due: number) {
 }
 function enqueue(file: string, resource: Resource): Promise<void> {
   const prior = jobs.get(file);
-  if (prior) return prior;
+  if (prior) return prior.done;
   const startedAt = Date.now();
   let admittedId: string | undefined;
   const done = outsideCoordination(async () => {
@@ -248,9 +248,9 @@ function enqueue(file: string, resource: Resource): Promise<void> {
       if (!(live.owner && disposed.has(live.owner))) arm(file, live, Date.now() + 30_000);
     }
   });
-  jobs.set(file, done);
+  jobs.set(file, { root: resource.root.path, done });
   void done.finally(() => {
-    if (jobs.get(file) === done) jobs.delete(file);
+    if (jobs.get(file)?.done === done) jobs.delete(file);
   });
   return done;
 }

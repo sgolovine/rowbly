@@ -1130,8 +1130,17 @@ describe('isolated upstream synchronization', () => {
       await configure(plugin, { synchronization: { enabled: false } });
       const story = await f.services.stories.create('web', { name: 'Saved while admitted sync waits' });
       expect((await f.services.stories.get(story.key)).name).toBe('Saved while admitted sync waits');
+      f.host.dispose?.();
+      let drained = false;
+      const draining = drainGitQueue(f.t.root).then(() => {
+        drained = true;
+      });
+      expect((await plugin.git.syncStatus(resolveSyncOptions)).active?.phase).toBe('admitted');
+      expect(drained).toBe(false);
       release.resolve();
       expect((await first).last?.kind).toBe('synchronized');
+      await draining;
+      expect(drained).toBe(true);
       expect(spy).toHaveBeenCalledTimes(2);
       expect((await plugin.git.syncStatus(resolveSyncOptions)).enabled).toBe(false);
       if (typeof stale === 'function') stale();
