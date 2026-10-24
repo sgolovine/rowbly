@@ -1,4 +1,5 @@
 import { connect } from 'node:net';
+import { join } from 'node:path';
 import { gitText } from './gitProcess';
 
 /** Private strategy entry. Git owns replay commits; the parent supplies one validated tree. */
@@ -41,7 +42,10 @@ async function main(): Promise<void> {
     });
   });
   // This is an owned standalone context, never the user's index or working tree.
-  await gitText(process.cwd(), ['read-tree', '--reset', '-u', tree]);
+  const cwd = process.cwd();
+  await gitText(cwd, ['--git-dir', join(cwd, '.git'), '--work-tree', cwd, 'read-tree', '--reset', '-u', tree], {
+    privateContext: true,
+  });
 }
 
 void main().catch((err: unknown) => {

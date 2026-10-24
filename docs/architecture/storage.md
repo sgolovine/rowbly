@@ -145,6 +145,9 @@ retries preparation at most three times. Rejected/lost-response pushes retain th
 a later attempt fetches the configured upstream again. Candidate indexes and fetch pins are cleaned
 on completion. Local Git children have 3.5 s limits, merge calculation 10 s, network commands 30 s,
 output 16 MiB and the overall run 120 s; Unix process groups are killed and awaited on timeout.
+The packaged private rebase strategy pins its standalone Git directory and working tree and disables
+global/system configuration and attributes for its tree installation. It never uses the live index
+or checkout. This preparation entry remains disconnected from synchronization pending replay validation.
 The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
 bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 

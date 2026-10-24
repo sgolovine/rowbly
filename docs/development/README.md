@@ -19,7 +19,7 @@ pnpm dev stories list --board web
 | Command | What it does |
 | --- | --- |
 | `pnpm dev <args>` | Run the CLI from source with tsx |
-| `pnpm build` | Bundle `src/cli.ts` into `dist/cli.js` with tsup |
+| `pnpm build` | Bundle the CLI and fixed private Git rebase strategy into `dist/` with tsup |
 | `pnpm typecheck` | `tsc --noEmit` (strict); also compiles the tutorial fixtures in `test/docs/fixtures/` |
 | `pnpm lint` | Biome lint and format check (`docs/` is not linted) |
 | `pnpm format` | Format with Biome |

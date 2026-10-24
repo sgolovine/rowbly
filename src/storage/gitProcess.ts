@@ -14,6 +14,8 @@ export interface GitProcessOptions {
   index?: string;
   timeoutMs?: number;
   allowFailure?: boolean;
+  /** Host-owned standalone context only; never inherit global/system configuration or attributes. */
+  privateContext?: true;
 }
 /** Host-only argv execution: finite time/output, closed input, no interactive helpers or inherited Git overrides. */
 export function gitProcess(
@@ -36,6 +38,7 @@ export function gitProcess(
         'commit.gpgSign=false',
         '-c',
         'credential.interactive=false',
+        ...(options.privateContext ? ['-c', 'core.attributesFile=/dev/null', '-c', 'core.autocrlf=false'] : []),
         ...args,
       ],
       {
@@ -50,6 +53,14 @@ export function gitProcess(
           GCM_INTERACTIVE: 'Never',
           GIT_EDITOR: '/bin/false',
           GIT_SEQUENCE_EDITOR: '/bin/false',
+          ...(options.privateContext
+            ? {
+                GIT_CONFIG_NOSYSTEM: '1',
+                GIT_CONFIG_SYSTEM: '/dev/null',
+                GIT_CONFIG_GLOBAL: '/dev/null',
+                GIT_ATTR_NOSYSTEM: '1',
+              }
+            : {}),
           GIT_SSH_COMMAND: 'ssh -oBatchMode=yes -oStrictHostKeyChecking=yes -oControlMaster=no -oControlPersist=no',
           ...(options.index ? { GIT_INDEX_FILE: options.index } : {}),
         },
