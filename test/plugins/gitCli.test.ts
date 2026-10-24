@@ -33,6 +33,10 @@ describe('Git Plugin CLI workflow', () => {
     const configured = await cli(
       'git',
       'configure',
+      '--automatic-merge-resolution',
+      'off',
+      '--merge-interval',
+      '900',
       '--frequency',
       'interval',
       '--interval',
@@ -43,7 +47,11 @@ describe('Git Plugin CLI workflow', () => {
       'robot@example.com',
     );
     expect(configured.exitCode).toBe(0);
-    expect(JSON.parse(configured.stdout)).toMatchObject({ frequency: 'interval', intervalSeconds: 3600 });
+    expect(JSON.parse(configured.stdout)).toMatchObject({
+      frequency: 'interval',
+      intervalSeconds: 3600,
+      synchronization: { enabled: false, intervalSeconds: 900 },
+    });
     expect((await cli('git', 'configure', '--interval', '0')).exitCode).toBe(2);
     expect((await cli('git', 'configure', '--author-email', 'bad')).exitCode).toBe(2);
     const initial = git('rev-parse', 'HEAD');
@@ -52,7 +60,9 @@ describe('Git Plugin CLI workflow', () => {
     expect((await cli('git', 'configure', '--frequency', 'change')).exitCode).toBe(0);
     expect(git('log', '-1', '--format=%s|%an|%ae')).toBe('chore: update Rowbly data|Robot|robot@example.com');
     expect((await cli('git', 'configure', '--author-name', '', '--author-email', '')).exitCode).toBe(0);
-    expect(JSON.parse((await cli('git', 'show')).stdout).authorName).toBeUndefined();
+    const shown = JSON.parse((await cli('git', 'show')).stdout);
+    expect(shown.authorName).toBeUndefined();
+    expect(shown.synchronizationRun).toMatchObject({ enabled: false, intervalSeconds: 900 });
     expect(git('ls-files', '--', '.rowbly/local.json')).toBe('');
   });
 });
