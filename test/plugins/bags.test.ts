@@ -182,6 +182,37 @@ it('reconciles only supported owned formats while Off, preserves future bags and
 
   const { tasks } = await import('../../src/plugins/tasks');
   const { comments } = await import('../../src/plugins/comments');
+  const { epics } = await import('../../src/plugins/epics');
+  const epicPath = 'plugins/epics/same.json';
+  const currentEpic = {
+    version: 1,
+    id: 'same',
+    name: 'current',
+    description: '',
+    closed: false,
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+  const futureEpic = { version: 99, id: 'same', future: { exact: ['unchanged'] } };
+  const opaqueSide = { id: 'a-opaque', files: { ...base.files, [epicPath]: file(futureEpic) } };
+  const currentSide = { id: 'b-current', files: { ...base.files, [epicPath]: file(currentEpic) } };
+  expect(() =>
+    mergeData(base, opaqueSide, currentSide, [epics], {
+      'b-current': { epics: { '': { same: 'same-2' } } },
+    }),
+  ).toThrow('Opaque Epic at moved replay path');
+  expect(opaqueSide.files[epicPath]).toEqual(file(futureEpic));
+  const opaqueDestination = {
+    id: 'a-future-destination',
+    files: { ...base.files, 'plugins/epics/same-2.json': file({ ...futureEpic, id: 'same-2' }) },
+  };
+  expect(() =>
+    mergeData(base, opaqueDestination, currentSide, [epics], {
+      'b-current': { epics: { '': { same: 'same-2' } } },
+    }),
+  ).toThrow('Opaque Epic at moved replay path');
+  expect(opaqueDestination.files['plugins/epics/same-2.json']).toEqual(file({ ...futureEpic, id: 'same-2' }));
+
   const task = {
     number: 1,
     name: 'First duplicate Task',

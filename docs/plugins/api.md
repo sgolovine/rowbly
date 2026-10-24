@@ -440,6 +440,8 @@ paths absent from the final projected snapshot; never remove opaque, future or i
 a surviving old-path identity explicitly in `files`, without removing its path. The owner alone
 recognizes formats: Specs requires lossless UTF-8 before transporting Markdown and safely refuses an
 unrecognized binary Markdown source. Ordinary merge callers omit replay and retain omission behavior.
+Epics refuses a moved identity when any supplied snapshot has an opaque or future file at its source
+or destination path; an unrelated future file remains unchanged. Core does not inspect Epic formats.
 
 Only a supported format that understands a retained Story reference may additionally return
 `requiredStories: [{ source, key }]`. Each request must name an existing Story in an immutable

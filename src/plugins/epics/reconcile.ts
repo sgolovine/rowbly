@@ -159,5 +159,13 @@ export const reconcile: PluginReconciler = ({
         .filter((path) => !Object.hasOwn(files, path))
         .sort()
     : [];
+  if (replay) {
+    const affected = new Set(
+      identities.flatMap(({ from, to }) => [`plugins/epics/${from}.json`, `plugins/epics/${to}.json`]),
+    );
+    for (const path of affected)
+      if ([rawBase, rawLeft, rawRight].some((snapshot) => Object.hasOwn(snapshot.files, path) && !epic(snapshot, path)))
+        throw new Error(`Opaque Epic at moved replay path requires manual resolution: ${path}`);
+  }
   return { bags, files, identities, removedFiles };
 };
