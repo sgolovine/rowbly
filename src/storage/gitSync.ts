@@ -283,6 +283,12 @@ async function runSynchronization(
         { id: local, files: captured },
         { id: remote, files: await sourceFiles(repo, remoteTree, prefix) },
       );
+      if (
+        Object.keys(rootMerge.files).length > 4096 ||
+        Object.values(rootMerge.files).reduce((bytes, file) => bytes + Buffer.byteLength(file.data, 'base64'), 0) >
+          64 * 1024 * 1024
+      )
+        throw new Error('Reconciled candidate exceeds its bounded Data Root size');
       await validate(rootMerge.files);
       deadline();
       await phase('validating');

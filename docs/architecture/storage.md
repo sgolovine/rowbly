@@ -117,6 +117,8 @@ retries preparation at most three times. Rejected/lost-response pushes retain th
 a later attempt fetches the configured upstream again. Candidate indexes and fetch pins are cleaned
 on completion. Local Git children have 3.5 s limits, merge calculation 10 s, network commands 30 s,
 output 16 MiB and the overall run 120 s; Unix process groups are killed and awaited on timeout.
+The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
+bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 
 Synchronization deadlines/results live separately under the worktree Git directory. The feature is
 Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.

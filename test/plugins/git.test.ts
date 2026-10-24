@@ -759,14 +759,14 @@ describe('isolated upstream synchronization', () => {
     const { builtInPlugins } = await import('../../src/plugins');
     const { coordinated } = await import('../../src/services/coordination');
     const repo = await requireRepository(f.t.root);
-    const run = (phase: (name: string) => Promise<void> = async () => undefined) =>
+    const run = (phase: (name: string) => Promise<void> = async () => undefined, reconcile = mergeData) =>
       withGitWorker(repo, () =>
         synchronizeGit(
           repo,
           f.t.root,
           { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
           (read) => coordinated(f.t.root, 'sync test snapshot', read),
-          (base, left, right) => mergeData(base, left, right, builtInPlugins),
+          (base, left, right) => reconcile(base, left, right, builtInPlugins),
           phase,
           async (files) => {
             mergeData(
@@ -782,6 +782,26 @@ describe('isolated upstream synchronization', () => {
   }
   it('publishes an isolated valid merge with later writes while preserving unrelated content, and blocks non-Rowbly conflicts and dirty overlap without live effects', async () => {
     const f = await remoteFixture();
+    const oldHead = await f.command('rev-parse', 'HEAD');
+    const oldIndex = await readFile(f.repo.index);
+    await expect(
+      f.run(undefined, () => ({
+        files: Object.fromEntries(
+          Array.from({ length: 4097 }, (_, n) => [
+            `plugins/unknown/${n}.bin`,
+            { data: 'eA==', mode: '100644' as const },
+          ]),
+        ),
+        remaps: [
+          { source: 'left', boards: {}, stories: {} },
+          { source: 'right', boards: {}, stories: {} },
+        ],
+        evidence: [],
+        decisions: [],
+      })),
+    ).rejects.toThrow('bounded Data Root size');
+    expect(await f.command('rev-parse', 'HEAD')).toBe(oldHead);
+    expect(await readFile(f.repo.index)).toEqual(oldIndex);
     const abandoned = '0'.repeat(32);
     await mkdir(join(f.repo.gitDir, 'rowbly'), { recursive: true });
     await writeFile(join(f.repo.gitDir, 'rowbly', `candidate-${abandoned}`), 'abandoned private index');
