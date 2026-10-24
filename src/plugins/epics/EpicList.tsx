@@ -52,10 +52,11 @@ export function EpicList({ plugin, ui }: PluginScreenProps<Record<string, unknow
   const idle = !filtering && !confirming && !busy;
   const keys = active && idle;
   useKeyCapture(active && confirming !== null, { escape: true });
+  // Gated on `idle`, not `keys`: a context menu over the list leaves its hints, so the modal keeps its size.
   useKeyHints(
     confirming
       ? [{ key: 'y/n', description: 'confirm/cancel' }]
-      : keys
+      : idle
         ? [
             { key: 'n', description: 'new Epic' },
             { key: 'a', description: 'open/closed/all' },

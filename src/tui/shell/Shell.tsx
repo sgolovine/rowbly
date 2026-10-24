@@ -371,6 +371,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                                   .slice(routeDepth + 1)
                                   .some((next) => next.screen === 'story' || next.screen === 'settings'));
                             const focused = routeDepth === depth && overlay === null;
+                            // A context menu over the top modal keeps its hints, so the modal keeps its
+                            // width and the row the menu acts on stays where it was clicked.
+                            const hinted = routeDepth === depth && (overlay === null || overlay.kind === 'menu');
                             return (
                               <Box
                                 key={`${routeDepth}:${route.screen}`}
@@ -390,7 +393,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                                     size={screen ? 'screen' : 'panel'}
                                     focused={focused}
                                     onClose={focused ? back : undefined}
-                                    hints={modalHints(focused ? hints : [])}
+                                    hints={modalHints(hinted ? hints : [])}
                                   >
                                     <ScreenSlot
                                       route={route}
