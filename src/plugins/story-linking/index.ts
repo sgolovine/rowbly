@@ -40,4 +40,5 @@ export const storyLinking = definePlugin({
     ];
   },
   doctor: { check: ({ data, plugin }) => checkLinks(plugin, data.stories) },
+  tui: () => import('./tui').then((m) => m.tui),
 });
