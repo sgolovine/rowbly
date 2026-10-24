@@ -10,7 +10,7 @@ import {
   readGitPending,
   writeGitPending,
 } from '../../storage/git';
-import { requireRepository, withGitWorker } from '../../storage/gitRepository';
+import { canonicalGitRoot, requireRepository, withGitWorker } from '../../storage/gitRepository';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
 import { createGitSync, disposeSyncOwner, drainSyncQueue } from './gitSync';
@@ -35,8 +35,9 @@ const queues = new Map<string, { root: string; done: Promise<void> }>();
 /** Command mode waits for due work outside reaction deadlines; future interval timers stay unref'd. */
 export async function drainGitQueue(root?: DataRoot): Promise<void> {
   await drainSyncQueue(root);
+  const path = root ? (await canonicalGitRoot(root)).path : undefined;
   while (true) {
-    const running = [...queues.values()].filter((queue) => !root || queue.root === root.path);
+    const running = [...queues.values()].filter((queue) => !path || queue.root === path);
     if (!running.length) return;
     await Promise.all(running.map((queue) => queue.done));
   }
@@ -76,8 +77,14 @@ export function createPluginGit(
   owner?: object,
 ): PluginGit {
   let location: Promise<string> | undefined;
+  let queueRoot = root.path;
   let source: GitOptionsSource | undefined;
-  const filePath = () => (location ??= pendingPath(root, id));
+  const filePath = () =>
+    (location ??= (async () => {
+      const canonical = await canonicalGitRoot(root);
+      queueRoot = canonical.path;
+      return pendingPath(canonical, id);
+    })());
   const warning = (err: unknown) => warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`);
 
   // The resolver only interprets its own bag; the host owns the fresh read and its lock.
@@ -106,7 +113,7 @@ export function createPluginGit(
     const done = previous
       .then(() => outsideCoordination(async () => withGitWorker(await requireRepository(root), () => work(file))))
       .catch(warning);
-    queues.set(file, { root: root.path, done });
+    queues.set(file, { root: queueRoot, done });
     void done.then(() => {
       if (queues.get(file)?.done === done) queues.delete(file);
     });

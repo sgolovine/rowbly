@@ -150,6 +150,13 @@ bound as capture before publication; an oversized candidate leaves live data, re
 
 Synchronization deadlines/results live separately under the worktree Git directory. The feature is
 Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
+Private Git bindings resolve the Data Root with `realpath` before choosing repository-relative paths,
+state filenames, resources or jobs. A real root and its symlink aliases share one state, deadline and
+admitted run; root-specific drains use that identity even after the owning host is disposed. Linked
+worktrees keep distinct Git directories, indexes and state. Discovery and display retain their supplied
+Data Root paths. Existing canonical version-1 state remains authoritative. Older lexical-alias state
+files are preserved inactive, without scanning, migration or replay; if canonical state is absent,
+scheduling initializes it once from current local preferences.
 Deadlines also retain the exact branch/upstream identity. A stale timer after a branch or upstream
 change records a failed attempt without fetching; the next full interval uses the newly observed
 target. Explicit requests and new scheduling bind the current target, which is checked again before

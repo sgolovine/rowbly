@@ -5,7 +5,7 @@ import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories } from '../../storage';
 import { gitText } from '../../storage/gitProcess';
-import { requireRepository, rootGitKey, withGitWorker } from '../../storage/gitRepository';
+import { canonicalGitRoot, requireRepository, rootGitKey, withGitWorker } from '../../storage/gitRepository';
 import { configuredUpstream, GitSyncPushError, synchronizeGit } from '../../storage/gitSync';
 import {
   type GitSyncState,
@@ -54,8 +54,9 @@ export function disposeSyncOwner(owner: object): void {
     }
 }
 export async function drainSyncQueue(root?: DataRoot): Promise<void> {
+  const path = root ? (await canonicalGitRoot(root)).path : undefined;
   while (true) {
-    const waiting = [...jobs.values()].filter((job) => !root || job.root === root.path);
+    const waiting = [...jobs.values()].filter((job) => !path || job.root === path);
     if (!waiting.length) return;
     await Promise.all(waiting.map((job) => job.done));
   }
@@ -256,16 +257,29 @@ function enqueue(file: string, resource: Resource): Promise<void> {
 }
 
 export function createGitSync(
-  root: DataRoot,
+  suppliedRoot: DataRoot,
   id: string,
   registry: readonly AnyPluginDefinition[],
   warn: (message: string) => void,
   owner?: object,
 ) {
-  const location = async () =>
-    join((await requireRepository(root)).gitDir, 'rowbly', `sync-${id}-${rootGitKey(root)}.json`);
+  let binding: Promise<{ root: DataRoot; file: string }> | undefined;
+  const location = () => {
+    if (!binding) {
+      const found = (async () => {
+        const root = await canonicalGitRoot(suppliedRoot);
+        const file = join((await requireRepository(root)).gitDir, 'rowbly', `sync-${id}-${rootGitKey(root)}.json`);
+        return { root, file };
+      })();
+      binding = found;
+      void found.catch(() => {
+        if (binding === found) binding = undefined;
+      });
+    }
+    return binding;
+  };
   async function setup(source: GitSyncOptionsSource): Promise<{ file: string; resource: Resource } | null> {
-    const file = await location();
+    const { root, file } = await location();
     if (owner && disposed.has(owner)) return null;
     let resource = resources.get(file);
     if (!resource) resource = { root, id, registry, source, warn, owner };
@@ -278,8 +292,8 @@ export function createGitSync(
     return { file, resource };
   }
   async function status(source: GitSyncOptionsSource): Promise<GitSyncStatus> {
-    const file = await location(),
-      resource: Resource = resources.get(file) ?? { root, id, registry, source, warn, owner };
+    const { root, file } = await location();
+    const resource: Resource = resources.get(file) ?? { root, id, registry, source, warn, owner };
     const state = await coordinated(root, 'git.sync.read', async () => {
       const current = await preferences(resource),
         state = await readSyncState(file);
@@ -318,6 +332,7 @@ export function createGitSync(
       const found = await setup(source);
       if (!found) return;
       const { file, resource } = found;
+      const root = resource.root;
       const target = await configuredUpstream(await requireRepository(root)).catch(() => undefined);
       await coordinated(root, 'git.sync.schedule', async () => {
         if (owner && disposed.has(owner)) return;
@@ -349,6 +364,7 @@ export function createGitSync(
       const found = await setup(source);
       if (!found) throw new Error('This Git host has closed');
       const { file, resource } = found;
+      const root = resource.root;
       const target = await configuredUpstream(await requireRepository(root)).catch(() => undefined);
       const request = await coordinated(root, 'git.sync.request', async () => {
         if (owner && disposed.has(owner)) throw new Error('This Git host has closed');

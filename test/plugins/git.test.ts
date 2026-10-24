@@ -1,5 +1,5 @@
 import { execFile, fork } from 'node:child_process';
-import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -395,6 +395,8 @@ describe('Git automatic commits', () => {
     await savedPreferenceRace('worker');
     const f = await fixture();
     f.ctx.backgroundReactions = true;
+    const alias = { ...f.t.root, path: join(f.t.dir, 'root-alias') };
+    await symlink(f.t.path, alias.path, 'dir');
     const snapshotted = deferred();
     const release = deferred();
     const enqueued = deferred();
@@ -430,7 +432,15 @@ describe('Git automatic commits', () => {
         expect((await readGitPending(file))?.paths).toContain(`boards/web/stories/${later.key}`),
       );
       const paused = await readGitPending(file);
+      let aliasDrained = false;
+      const aliasDrain = drainGitQueue(alias).then(() => {
+        aliasDrained = true;
+      });
+      expect((await f.services.stories.get(story.key)).name).toBe('Latest snapshot');
+      expect(aliasDrained).toBe(false);
       release.resolve();
+      await aliasDrain;
+      expect(aliasDrained).toBe(true);
       await drainGitQueue(f.t.root);
       const path = `.rowbly/boards/web/stories/${story.key}/story.json`;
       expect(await f.command('show', `HEAD:${path}`)).toContain('First snapshot');
@@ -1078,6 +1088,15 @@ describe('isolated upstream synchronization', () => {
     const f = await remoteFixture(),
       plugin = f.services.plugins.context('git');
     const storage = await import('../../src/storage/gitSync');
+    const { createGitSync, disposeSyncOwner } = await import('../../src/services/plugins/gitSync');
+    const aliasA = { ...f.t.root, path: join(f.peer, '..', 'alias-a') },
+      aliasB = { ...f.t.root, path: join(f.peer, '..', 'alias-b') },
+      ownerA = {},
+      ownerB = {};
+    await symlink(f.t.path, aliasA.path, 'dir');
+    await symlink(f.t.path, aliasB.path, 'dir');
+    const a = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerA),
+      b = createGitSync(aliasB, 'git', [git, comments], f.ctx.warn, ownerB);
     const { drainGitQueue } = await import('../../src/services/plugins/git');
     const original = storage.synchronizeGit;
     const spy = vi.spyOn(storage, 'synchronizeGit');
@@ -1131,26 +1150,39 @@ describe('isolated upstream synchronization', () => {
       await configure(plugin, { synchronization: { intervalSeconds: 3600 } });
       const deadline = await plugin.git.syncStatus(resolveSyncOptions);
       expect(deadline.nextDue).toBe((deadline.anchor ?? 0) + 3_600_000);
+      await a.resumeSync(resolveSyncOptions);
+      await b.resumeSync(resolveSyncOptions);
+      expect(await a.syncStatus(resolveSyncOptions)).toEqual(deadline);
+      expect(await b.syncStatus(resolveSyncOptions)).toEqual(deadline);
+      expect(
+        (await readdir(join(f.repo.gitDir, 'rowbly'))).filter((name) => name.startsWith('sync-git-')),
+      ).toHaveLength(1);
       hold = true;
-      const first = plugin.git.requestSync(resolveSyncOptions);
+      const first = a.requestSync(resolveSyncOptions);
       await held.promise;
-      const coalesced = await plugin.git.requestSync(resolveSyncOptions);
+      const coalesced = await b.requestSync(resolveSyncOptions);
       expect(coalesced.active?.phase).toBe('admitted');
+      expect(await plugin.git.syncStatus(resolveSyncOptions)).toEqual(coalesced);
+      if (typeof stale === 'function') stale();
       f.ctx.backgroundReactions = true;
       await configure(plugin, { synchronization: { enabled: false } });
       const story = await f.services.stories.create('web', { name: 'Saved while admitted sync waits' });
       expect((await f.services.stories.get(story.key)).name).toBe('Saved while admitted sync waits');
       f.host.dispose?.();
-      let drained = false;
-      const draining = drainGitQueue(f.t.root).then(() => {
-        drained = true;
-      });
-      expect((await plugin.git.syncStatus(resolveSyncOptions)).active?.phase).toBe('admitted');
-      expect(drained).toBe(false);
+      disposeSyncOwner(ownerA);
+      disposeSyncOwner(ownerB);
+      const drained = [false, false, false];
+      const draining = [f.t.root, aliasA, aliasB].map((root, n) =>
+        drainGitQueue(root).then(() => {
+          drained[n] = true;
+        }),
+      );
+      expect((await plugin.git.syncStatus(resolveSyncOptions)).active?.id).toBe(coalesced.active?.id);
+      expect(drained).toEqual([false, false, false]);
       release.resolve();
       expect((await first).last?.kind).toBe('synchronized');
-      await draining;
-      expect(drained).toBe(true);
+      await Promise.all(draining);
+      expect(drained).toEqual([true, true, true]);
       expect(spy).toHaveBeenCalledTimes(2);
       expect((await plugin.git.syncStatus(resolveSyncOptions)).enabled).toBe(false);
       if (typeof stale === 'function') stale();
@@ -1164,6 +1196,8 @@ describe('isolated upstream synchronization', () => {
       release.resolve();
       await drainGitQueue(f.t.root);
       f.host.dispose?.();
+      disposeSyncOwner(ownerA);
+      disposeSyncOwner(ownerB);
       spy.mockRestore();
       timers.mockRestore();
     }
@@ -1184,6 +1218,10 @@ describe('isolated upstream synchronization', () => {
       const scheduled = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 3_500_000)?.[0];
       const repository = await import('../../src/storage/gitRepository');
       const { createGitSync, disposeSyncOwner } = await import('../../src/services/plugins/gitSync');
+      const aliasA = { ...f.t.root, path: join(f.peer, '..', 'reload-alias-a') },
+        aliasB = { ...f.t.root, path: join(f.peer, '..', 'reload-alias-b') };
+      await symlink(f.t.path, aliasA.path, 'dir');
+      await symlink(f.t.path, aliasB.path, 'dir');
       const ownerA = {},
         ownerB = {},
         locationEntered = deferred(),
@@ -1198,8 +1236,8 @@ describe('isolated upstream synchronization', () => {
         }
         return locate(root);
       });
-      const a = createGitSync(f.t.root, 'git', [git, comments], f.ctx.warn, ownerA);
-      const b = createGitSync(f.t.root, 'git', [git, comments], f.ctx.warn, ownerB);
+      const a = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerA);
+      const b = createGitSync(aliasB, 'git', [git, comments], f.ctx.warn, ownerB);
       const staleSetup = a.resumeSync(resolveSyncOptions);
       try {
         await locationEntered.promise;
@@ -1223,8 +1261,51 @@ describe('isolated upstream synchronization', () => {
       }
       const first = await readSyncState(stateFile);
       if (!first) throw new Error('Expected persisted synchronization deadline');
+      // Deliberately reproduce an old lexical filename; it is never an authoritative identity.
+      const { createHash } = await import('node:crypto');
+      const legacyFile = join(
+        f.repo.gitDir,
+        'rowbly',
+        `sync-git-${createHash('sha256').update(aliasA.path).digest('hex').slice(0, 20)}.json`,
+      );
+      await writeSyncState(legacyFile, {
+        ...first,
+        anchor: 0,
+        nextDue: 0,
+        requested: 'old-alias-request',
+        active: {
+          id: 'old-alias-active',
+          pid: process.pid,
+          host: 'unverified-old-host',
+          startedAt: 0,
+          phase: 'fetching',
+        },
+      });
+      const legacy = await readFile(legacyFile, 'utf8');
+      const ownerC = {},
+        c = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerC);
+      try {
+        await c.resumeSync(resolveSyncOptions);
+        expect(await readSyncState(stateFile)).toEqual(first);
+        expect(await c.syncStatus(resolveSyncOptions)).toEqual(await plugin.git.syncStatus(resolveSyncOptions));
+        await rm(stateFile);
+        const initializedAfter = Date.now();
+        await c.resumeSync(resolveSyncOptions);
+        const initialized = await readSyncState(stateFile);
+        expect(initialized?.anchor).toBeGreaterThanOrEqual(initializedAfter);
+        expect(initialized?.nextDue).toBe((initialized?.anchor ?? 0) + 3_600_000);
+        expect(initialized?.requested).toBeUndefined();
+        expect(initialized?.active).toBeUndefined();
+        await c.resumeSync(resolveSyncOptions);
+        expect(await readSyncState(stateFile)).toEqual(initialized);
+        expect(await readFile(legacyFile, 'utf8')).toBe(legacy);
+        expect(spy).not.toHaveBeenCalled();
+      } finally {
+        disposeSyncOwner(ownerC);
+      }
+      const canonical = await readSyncState(stateFile);
       hosts.push((await withPlugins(f.t, [git, comments])).host);
-      expect((await readSyncState(stateFile))?.nextDue).toBe(first.nextDue);
+      expect((await readSyncState(stateFile))?.nextDue).toBe(canonical?.nextDue);
       await configure(plugin, { synchronization: { enabled: false, intervalSeconds: 7200 } });
       const off = await readSyncState(stateFile);
       if (!off) throw new Error('Expected saved deadline');
