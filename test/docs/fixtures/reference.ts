@@ -56,3 +56,21 @@ export const tally = definePlugin({
 });
 
 export { readTally, saveSettings };
+
+// #region reconciliation
+export const mergeNotes = definePlugin({
+  id: 'merge-notes',
+  name: 'Merge Notes',
+  description: 'Notes with a supported reconciliation format',
+  reconcile({ base, left, right, helpers }) {
+    const bags: Record<string, unknown> = {};
+    const schema = z.strictObject({ version: z.literal(1), note: z.string() });
+    for (const scope of new Set([...Object.keys(left.bags), ...Object.keys(right.bags)])) {
+      const raw = [base.bags[scope], left.bags[scope], right.bags[scope]];
+      if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
+      bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
+    }
+    return { bags, files: {} };
+  },
+});
+// #endregion

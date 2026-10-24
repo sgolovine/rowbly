@@ -148,3 +148,14 @@ export function definePlugin<
 >(definition: PluginDefinition<S, In, FS>): PluginDefinition<S, In, FS> {
   return definition;
 }
+
+export type {
+  IdentityRemap,
+  MergeFile,
+  MergeFiles,
+  MergeHelpers,
+  PluginMergeSnapshot,
+  PluginReconciler,
+  PluginReconciliation,
+  RequiredStory,
+} from '../services/plugins/reconciliation';

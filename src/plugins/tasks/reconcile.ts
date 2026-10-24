@@ -1,0 +1,44 @@
+import type { PluginReconciler } from '../../plugin-api';
+import { TasksBag } from './model';
+
+export const reconcile: PluginReconciler = ({ base, left, right, helpers }) => {
+  const bags: Record<string, unknown> = {};
+  for (const scope of new Set([...Object.keys(base.bags), ...Object.keys(left.bags), ...Object.keys(right.bags)])) {
+    const raw = [base.bags[scope], left.bags[scope], right.bags[scope]];
+    const parsed = raw.map((value) => TasksBag.safeParse(value ?? { nextNumber: 1, tasks: [] }));
+    if (parsed.some((p, n) => !p.success || (raw[n] !== undefined && !helpers.same(p.data, raw[n])))) continue;
+    const [old, a, b] = parsed.map((p) => (p.success ? p.data : { nextNumber: 1, tasks: [] }));
+    if (!old || !a || !b) continue;
+    const tasks = [];
+    let next = Math.max(
+      old.nextNumber,
+      a.nextNumber,
+      b.nextNumber,
+      ...[...old.tasks, ...a.tasks, ...b.tasks].map((t) => t.number + 1),
+    );
+    for (const number of [...new Set([...old.tasks, ...a.tasks, ...b.tasks].map((t) => t.number))].sort(
+      (x, y) => x - y,
+    )) {
+      const before = old.tasks.find((t) => t.number === number),
+        l = a.tasks.find((t) => t.number === number),
+        r = b.tasks.find((t) => t.number === number);
+      if (!before && l && r && !helpers.same(l, r)) {
+        const second = { ...r, number: next++ };
+        tasks.push(l, second);
+        helpers.retain(
+          `${scope}/tasks/${number}`,
+          'distinct concurrent Tasks retained with separate numbers',
+          undefined,
+          l,
+          r,
+          [l, second],
+        );
+      } else {
+        const value = helpers.value(before, l, r, `${scope}/tasks/${number}`);
+        if (value !== undefined) tasks.push(value);
+      }
+    }
+    bags[scope] = { nextNumber: next, tasks };
+  }
+  return { bags, files: {} };
+};

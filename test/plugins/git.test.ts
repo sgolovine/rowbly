@@ -214,6 +214,12 @@ describe('Git automatic commits', () => {
   it('persists interval work, batches changes without postponing the deadline, resumes when due and skips empty commits', async () => {
     const f = await fixture();
     const plugin = f.services.plugins.context('git');
+    await configure(plugin, { synchronization: { intervalSeconds: 7200 } });
+    await configure(plugin, { synchronization: { enabled: true } });
+    expect((await preferences(plugin)).synchronization).toEqual({ enabled: true, intervalSeconds: 7200 });
+    await configure(plugin, { synchronization: { enabled: false } });
+    await configure(plugin, { synchronization: { intervalSeconds: 3600 } });
+    expect((await preferences(plugin)).synchronization).toEqual({ enabled: false, intervalSeconds: 3600 });
     await configure(plugin, { frequency: 'interval', intervalSeconds: 3600 });
     const initial = await f.command('rev-parse', 'HEAD');
     const story = await f.services.stories.create('web', { name: 'First' });
@@ -443,5 +449,219 @@ describe('Git automatic commits', () => {
       spy.mockRestore();
       writing.mockRestore();
     }
+  });
+});
+
+// Pure three-way imports exercise preservation boundaries, independently of Git's textual merge.
+describe('Git data reconciliation', () => {
+  it('combines independent fields and hunks, distinguishes missing/null, and retains byte-exact alternatives deterministically', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { createMergeHelpers } = await import('../../src/services/plugins/reconciliation');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const story = await f.services.stories.create('web', {
+      name: 'Base',
+      description: 'one\ntwo\nthree\nfour\nfive\n',
+    });
+    const core = `boards/web/stories/${story.key}/story.json`;
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const root = JSON.parse(await readFile(join(f.t.path, 'rowbly.config.json'), 'utf8'));
+    const board = JSON.parse(await readFile(join(f.t.path, 'boards/web/board.config.json'), 'utf8'));
+    const base = {
+      id: 'base',
+      files: { 'rowbly.config.json': file(root), 'boards/web/board.config.json': file(board), [core]: file(story) },
+    };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [core]: file({
+          ...story,
+          name: 'Left',
+          labels: ['left'],
+          description: 'ONE\nleft overlap\nthree\nfour\nfive\n',
+          plugins: { future: { x: null, shared: [1], private: 'left' } },
+        }),
+      },
+    };
+    const right = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [core]: file({
+          ...story,
+          priority: 'P1',
+          labels: ['right'],
+          description: 'one\nright overlap\nthree\nfour\nFIVE\n',
+          plugins: { future: { shared: [2], other: 'right' } },
+        }),
+      },
+    };
+    const result = mergeData(base, left, right, builtInPlugins);
+    const record = JSON.parse(Buffer.from(result.files[core]!.data, 'base64').toString());
+    expect(record).toMatchObject({
+      name: 'Left',
+      priority: 'P1',
+      labels: ['left', 'right'],
+      plugins: { future: { x: null, private: 'left', other: 'right' } },
+    });
+    expect(record.description).toContain('ONE\n');
+    expect(record.description).toContain('FIVE\n');
+    expect(record.description).not.toMatch(/<<<<<<<|>>>>>>>/);
+    expect(result.evidence).toHaveLength(1);
+    const evidence = JSON.parse(Buffer.from(result.files[result.evidence[0]!]!.data, 'base64').toString());
+    expect(evidence.sources.sides).toEqual([left, right]);
+    expect(evidence.decisions.some((d: { reason: string }) => d.reason === 'overlapping text hunks')).toBe(true);
+    expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
+    expect(mergeData(base, left, right, builtInPlugins)).toEqual(result);
+    const decisions: import('../../src/services/plugins/reconciliation').MergeDecision[] = [];
+    const h = createMergeHelpers(decisions);
+    expect(h.value({ v: 1 }, {}, { v: null }, 'opaque')).toEqual({ v: null });
+    expect(h.text('a\nb\nc\n', 'z\nleft\nc\n', 'a\nRIGHT\nc\n', 'text')).toBe('z\nRIGHT\nc\n');
+    expect(h.members(['old'], ['left'], ['old', 'right'])).toEqual(['left', 'right']);
+    expect(decisions[0]).toMatchObject({ base: { value: 1 }, alternatives: [{ missing: true }, { value: null }] });
+  });
+
+  it('splits equal-time identities with complete subtrees and source-qualified links, and restores a concurrently deleted linked target', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const target = await f.services.stories.create('web', { name: 'Target' });
+    const old = await f.services.stories.create('web', { name: 'Existing' });
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const text = (v: string) => ({ data: Buffer.from(v).toString('base64'), mode: '100644' as const });
+    const path = (key: string) => `boards/web/stories/${key}/story.json`;
+    const base: import('../../src/services/plugins/mergeData').MergeSource = {
+      id: 'base',
+      files: {
+        'rowbly.config.json': file(JSON.parse(await readFile(join(f.t.path, 'rowbly.config.json'), 'utf8'))),
+        'boards/web/board.config.json': file(
+          JSON.parse(await readFile(join(f.t.path, 'boards/web/board.config.json'), 'utf8')),
+        ),
+        [path(target.key)]: file(target),
+        [path(old.key)]: file(old),
+      },
+    };
+    const task = {
+      number: 1,
+      name: 'A',
+      description: '',
+      stage: 'backlog',
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+    };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [path(old.key)]: file({
+          ...old,
+          plugins: { tasks: { nextNumber: 2, tasks: [task] }, 'story-linking': { blocks: [target.key, 'WEB-3'] } },
+        }),
+        [path('WEB-3')]: file({ ...old, key: 'WEB-3', name: 'Left addition' }),
+        'boards/web/stories/WEB-3/plugins/specs/a.md': text('# Left\n'),
+        'boards/web/stories/WEB-3/plugins/unknown/raw.bin': {
+          data: Buffer.from([0, 255, 1]).toString('base64'),
+          mode: '100644' as const,
+        },
+      },
+    };
+    const right: typeof base = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [path(old.key)]: file({
+          ...old,
+          plugins: {
+            tasks: { nextNumber: 2, tasks: [{ ...task, name: 'B' }] },
+            'story-linking': { blocks: ['WEB-3'] },
+          },
+        }),
+        [path('WEB-3')]: file({ ...old, key: 'WEB-3', name: 'Right addition' }),
+        'boards/web/stories/WEB-3/plugins/specs/b.md': text('# Right\n'),
+      },
+    };
+    delete right.files[path(target.key)];
+    const result = mergeData(base, left, right, builtInPlugins);
+    const read = (key: string) => JSON.parse(Buffer.from(result.files[path(key)]!.data, 'base64').toString());
+    expect(read('WEB-3').name).toBe('Left addition');
+    expect(read('WEB-4').name).toBe('Right addition');
+    expect(result.files['boards/web/stories/WEB-3/plugins/specs/a.md']).toEqual(
+      left.files['boards/web/stories/WEB-3/plugins/specs/a.md'],
+    );
+    expect(result.files['boards/web/stories/WEB-4/plugins/specs/b.md']).toEqual(
+      right.files['boards/web/stories/WEB-3/plugins/specs/b.md'],
+    );
+    expect(read(old.key).plugins['story-linking'].blocks).toEqual(['WEB-1', 'WEB-3', 'WEB-4']);
+    expect(read(target.key)).toEqual(target);
+    expect(read(old.key).plugins.tasks).toMatchObject({
+      nextNumber: 3,
+      tasks: [
+        { number: 1, name: 'A' },
+        { number: 2, name: 'B' },
+      ],
+    });
+    expect(result.decisions.some((d) => d.reason.startsWith('restored source Story'))).toBe(true);
+    expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
+  });
+
+  it('repairs effective constraints while retaining definitions, required-field intent and incompatible types', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const story = await f.services.stories.create('web', { name: 'Retained' });
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const rootPath = 'rowbly.config.json',
+      boardPath = 'boards/web/board.config.json',
+      storyPath = `boards/web/stories/${story.key}/story.json`;
+    const root = JSON.parse(await readFile(join(f.t.path, rootPath), 'utf8'));
+    const board = JSON.parse(await readFile(join(f.t.path, boardPath), 'utf8'));
+    const base = { id: 'base', files: { [rootPath]: file(root), [boardPath]: file(board), [storyPath]: file(story) } };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [rootPath]: file({
+          ...root,
+          stages: [{ key: 'custom', name: 'Custom' }],
+          customFields: [{ key: 'kind', name: 'Kind', type: 'select', options: ['a'], required: false }],
+        }),
+        [storyPath]: file({ ...story, stage: 'custom', customFields: { kind: 'a' } }),
+      },
+    };
+    const right = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [rootPath]: file({
+          ...root,
+          stages: [],
+          customFields: [
+            { key: 'kind', name: 'Kind number', type: 'number', required: true },
+            { key: 'new', name: 'Required', type: 'text', required: true },
+          ],
+        }),
+        [storyPath]: file({ ...story, customFields: { kind: 10 } }),
+      },
+    };
+    const result = mergeData(base, left, right, []);
+    const read = (p: string) => JSON.parse(Buffer.from(result.files[p]!.data, 'base64').toString());
+    expect(read(storyPath).customFields).toEqual({ kind: 'a', 'kind-2': 10 });
+    const config = read(boardPath);
+    expect(config.customFields.find((f: { key: string }) => f.key === 'new').required).toBe(false);
+    expect(read(rootPath).customFields.map((f: { key: string }) => f.key)).toEqual(['kind', 'kind-2', 'new']);
+    expect(result.decisions.some((d) => d.reason === 'incompatible Custom Field types retained separately')).toBe(true);
+    expect(mergeData(base, right, left, [])).toEqual(result);
   });
 });

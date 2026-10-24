@@ -40,7 +40,21 @@ export function resolvePreferences(localData: unknown): GitPreferences {
 }
 
 export async function configure(plugin: PluginContext, input: unknown): Promise<GitPreferences> {
-  const patch = Preferences.partial().safeParse(input);
+  const patch = z
+    .strictObject({
+      automaticCommits: Preferences.shape.automaticCommits.removeDefault().optional(),
+      frequency: Preferences.shape.frequency.removeDefault().optional(),
+      intervalSeconds: Preferences.shape.intervalSeconds.removeDefault().optional(),
+      synchronization: z
+        .strictObject({
+          enabled: z.boolean().optional(),
+          intervalSeconds: z.number().int().min(1).max(86400).optional(),
+        })
+        .optional(),
+      authorName: Preferences.shape.authorName,
+      authorEmail: Preferences.shape.authorEmail,
+    })
+    .safeParse(input);
   if (!patch.success)
     throw new ValidationError('Git preferences are invalid', { details: { issues: patch.error.issues } });
   return plugin.operation('configure', patch.data, async (changes) => {
@@ -48,7 +62,11 @@ export async function configure(plugin: PluginContext, input: unknown): Promise<
     await changes.updateLocalState((local) => {
       // Read and merge inside the Operation, so independent settings cannot erase each other.
       const old = resolvePreferences(local.plugins?.[plugin.id]);
-      value = Preferences.parse({ ...old, ...patch.data });
+      value = Preferences.parse({
+        ...old,
+        ...patch.data,
+        synchronization: { ...old.synchronization, ...patch.data.synchronization },
+      });
       return plugin.writeBag(local, value);
     });
     return value;

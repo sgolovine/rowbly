@@ -10,6 +10,7 @@ import {
 } from '../../plugin-api';
 import { commands } from './commands';
 import { TasksBag } from './model';
+import { reconcile } from './reconcile';
 import { doneCount, stagesOf, storedTasks, updateTasks } from './tasks';
 
 /** Where `stages.remove` removes a Stage: the Data Root's list, or one Board's. */
@@ -49,6 +50,7 @@ function doctorStages(config: { stages?: StageConfig[] } | null, board: { stages
 }
 
 export const tasks = definePlugin({
+  reconcile,
   id: 'tasks',
   name: 'Tasks',
   description: 'Tasks inside Stories, each with its own Stage',

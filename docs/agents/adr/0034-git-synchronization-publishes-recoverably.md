@@ -42,6 +42,13 @@ run while the Plugin is Off; ordinary hooks, commands and start remain Off. Unsu
 unknown or future data stays opaque, with exact alternatives retained. This is no migration API or
 generic merge policy language. Core contains no Plugin-specific format rules.
 
+The sole core restoration request is optional `requiredStories: [{ source, key }]`, emitted only for
+a retained reference the owning supported format understands. It names an existing identity in an
+immutable supplied source, never an invented record. The host validates source/key, source-qualified
+remapping and output scope, and restores that complete Story and required Board subtree with evidence.
+Reruns are monotone/idempotent and bounded by the finite supplied identity set; nonconvergence or
+invalid output blocks publication. No reference is inferred by string matching.
+
 ### 4. Lock order
 
 Workers share a canonical common-Git-directory lock across Data Roots, processes and worktrees.

@@ -39,6 +39,7 @@ import type {
   StoryCreateInput,
   StoryPatch,
 } from '../types';
+import type { PluginReconciler } from './reconciliation';
 
 // ── Change Sets (ADR-0012) ──────────────────────────────────────────────────
 
@@ -930,6 +931,8 @@ export interface PluginDefinition<
   /** Refuse activation unless the Data Root is inside a Git repository. */
   requiresGit?: boolean;
   bags?: PluginBagSchemas;
+  /** Pure supported-format import, scoped to this Plugin, including while it is Off (ADR-0034 §3). */
+  reconcile?: PluginReconciler;
   /**
    * Runs each time the Plugin loads: every command-mode run, and in the TUI at start and again each
    * time a Plugin is turned on or off. There is no teardown, so it must be safe to run again.
