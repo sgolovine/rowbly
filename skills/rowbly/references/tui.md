@@ -6,8 +6,9 @@ screen, ask them to open it; do not start `rowbly` with no command in your own s
 
 `rowbly` with no command opens the TUI in a terminal (global flags such as `--data-root` still apply).
 With no Data Root, a first-run screen offers to create one. With a Board in context it opens that
-Board's Kanban board; otherwise the home menu. It reads the same files as command mode, so changes made
-with commands show when the user reloads (`r`) or returns to a screen.
+Board's Kanban board; otherwise the home menu. It reads the same files as command mode and watches the
+Data Root, so changes made with commands show on their own a moment later, without losing the user's
+place or what they typed in a form.
 
 ## Keys on every screen
 

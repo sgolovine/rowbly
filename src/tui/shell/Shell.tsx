@@ -19,6 +19,7 @@ import {
   ShellContext,
   SidebarFilterContext,
   useAsync,
+  useDataRootChanges,
   usePlugins,
   useScreenFocus,
   useScreenHints,
@@ -165,8 +166,13 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     setBoardsShown(!boardsShown);
   };
   const sidebarFocused = idle && pane !== 'main';
-  // `depth` reloads the list when a modal closes, e.g. after creating a Board.
-  const sidebar = useAsync(async () => (services ? services.boards.list() : null), [services, boardVersion, depth]);
+  // `depth` reloads the list when a modal closes, e.g. after creating a Board, and `changes` when
+  // the Data Root changes on disk.
+  const changes = useDataRootChanges();
+  const sidebar = useAsync(
+    async () => (services ? services.boards.list() : null),
+    [services, boardVersion, depth, changes],
+  );
   const boards = sidebar.data ?? [];
   // Read on every render: other screens (Context) switch the Board in `ctx.local` directly. Like
   // `resolveBoard`, without a context Board the only Board is the current one.

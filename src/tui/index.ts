@@ -116,6 +116,7 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
       mouse: stdin?.mouse,
       plugins,
       loadPlugins: options.loadPlugins,
+      watch: true,
     }),
     {
       stdin: (stdin ?? io.stdin) as NodeJS.ReadStream,

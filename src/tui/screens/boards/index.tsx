@@ -10,6 +10,7 @@ import {
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
@@ -51,6 +52,7 @@ function BoardsScreen() {
   const active = useIsActive();
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const list = useAsync(() => services.boards.list(), [services]);
+  useReloadOnReturn(list.reload);
   const boards = list.data ?? [];
   const listing = mode.kind === 'list';
   const [cursor] = useCursor(boards.length, active && listing);

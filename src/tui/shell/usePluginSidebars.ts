@@ -1,6 +1,14 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { invokePlugin, invokePluginSync, type PluginInput, type PluginSidebar } from '../../services';
-import { pluginUi, ServicesContext, type SidebarFilter, useAsync, usePlugins, useToast } from '../hooks';
+import {
+  pluginUi,
+  ServicesContext,
+  type SidebarFilter,
+  useAsync,
+  useDataRootChanges,
+  usePlugins,
+  useToast,
+} from '../hooks';
 import { useRouter } from '../router';
 import type { SidebarEntry } from './Sidebar';
 
@@ -35,11 +43,13 @@ export interface PluginSidebars {
 
 /**
  * The Plugin Sidebars: which one is on screen, its entries and what is picked in each. `depth`
- * reloads the entries when a modal closes, e.g. after creating one. A pick shows the board.
+ * reloads the entries when a modal closes, e.g. after creating one, as does a change to the Data Root
+ * on disk. A pick shows the board.
  */
 export function usePluginSidebars(depth: number): PluginSidebars {
   const { services } = useContext(ServicesContext);
   const { plugins } = usePlugins();
+  const changes = useDataRootChanges();
   const toast = useToast();
   const router = useRouter();
   const onPick = () => {
@@ -61,7 +71,7 @@ export function usePluginSidebars(depth: number): PluginSidebars {
       at.sidebar.items({ plugin: services.plugins.context(at.id) }),
     );
     return { id: at.id, items: loaded };
-  }, [withSidebar, openId, services, depth]);
+  }, [withSidebar, openId, services, depth, changes]);
   const loaded = items.data && items.data.id === openId ? items.data.items : [];
 
   // An entry that is gone, such as a deleted one, is no longer picked.
