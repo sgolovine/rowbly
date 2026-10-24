@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { DataRoot } from '../schemas';
 import type { GitCommitOptions } from './git';
 import { gitProcess, gitText, outsideGitDeadline, withGitDeadline } from './gitProcess';
-import { assertGitWorker, type GitRepository, rootPrefix } from './gitRepository';
+import { assertGitWorker, canonicalGitRoot, type GitRepository, rootPrefix } from './gitRepository';
 import { type GitDataFiles, isGitDataPath, readGitDataFiles } from './gitSyncFiles';
 import {
   type PublicationEdit,
@@ -166,7 +166,8 @@ async function cleanupPreparation(repo: GitRepository): Promise<void> {
 }
 
 /** Build/fetch/merge off to the side, publish locally only after complete validation, then normal push. */
-export function synchronizeGit(...args: Parameters<typeof runSynchronization>): Promise<SyncOutcome> {
+export async function synchronizeGit(...args: Parameters<typeof runSynchronization>): Promise<SyncOutcome> {
+  args[1] = await canonicalGitRoot(args[1]);
   return withGitDeadline(120_000, () => runSynchronization(...args));
 }
 async function runSynchronization(

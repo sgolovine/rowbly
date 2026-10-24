@@ -1,5 +1,5 @@
 // The recoverable commit engine (ADR-0019 §2; RES-01/ARCH-41 engine, RES-04 engine part).
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
@@ -421,6 +421,7 @@ describe('Git local publication', () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
+    const { requireRepository } = await import('../../src/storage/gitRepository');
     for (const target of [
       'index-token-ready',
       'index-reserved',
@@ -443,6 +444,13 @@ describe('Git local publication', () => {
       );
       const peer = join(t.dir, 'peer');
       await f.git('worktree', 'add', '--detach', peer, f.plan.old);
+      const alias = { path: join(t.dir, 'peer-root-alias'), kind: 'local' as const };
+      await symlink(join(peer, '.rowbly'), alias.path, 'dir');
+      const peerRepo = await requireRepository({ ...alias, path: join(peer, '.rowbly') });
+      expect(await requireRepository(alias)).toBe(peerRepo);
+      expect(peerRepo.common).toBe(f.repo.common);
+      expect(peerRepo.gitDir).not.toBe(f.repo.gitDir);
+      expect(peerRepo.index).not.toBe(f.repo.index);
       const plan = join(t.dir, 'publication-plan.json');
       await writeFile(plan, JSON.stringify(f.plan));
       const killed = await runScript(fixtureScript('killSyncAt.ts'), [t.path, plan, target]);
@@ -454,11 +462,7 @@ describe('Git local publication', () => {
         filesInstalled ? firstEdit.after : firstEdit.before,
       );
       // A different linked worktree shares the publication gate and recovers the recorded owner.
-      await coordinated(
-        { path: join(peer, '.rowbly'), kind: 'local' },
-        'peer read with sync Off',
-        async () => undefined,
-      );
+      await coordinated(alias, 'peer read with sync Off', async () => undefined);
       await coordinated(t.root, 'open with synchronization Off', async () => {
         for (const edit of f.plan.edits)
           expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);

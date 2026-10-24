@@ -1,5 +1,5 @@
 import { execFile, fork } from 'node:child_process';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -843,13 +843,17 @@ describe('isolated upstream synchronization', () => {
     const { builtInPlugins } = await import('../../src/plugins');
     const { coordinated } = await import('../../src/services/coordination');
     const repo = await requireRepository(f.t.root);
-    const run = (phase: (name: string) => Promise<void> = async () => undefined, reconcile = mergeData) =>
+    const run = (
+      phase: (name: string) => Promise<void> = async () => undefined,
+      reconcile = mergeData,
+      root = f.t.root,
+    ) =>
       withGitWorker(repo, () =>
         synchronizeGit(
           repo,
-          f.t.root,
+          root,
           { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
-          (read) => coordinated(f.t.root, 'sync test snapshot', read),
+          (read) => coordinated(root, 'sync test snapshot', read),
           (base, left, right) => reconcile(base, left, right, builtInPlugins),
           phase,
           async (files) => {
@@ -866,6 +870,8 @@ describe('isolated upstream synchronization', () => {
   }
   it('publishes an isolated valid merge with later writes while preserving unrelated content, and blocks non-Rowbly conflicts and dirty overlap without live effects', async () => {
     const f = await remoteFixture();
+    const alias = { ...f.t.root, path: join(f.peer, '..', 'external-root') };
+    await symlink(f.t.path, alias.path, 'dir');
     const oldHead = await f.command('rev-parse', 'HEAD');
     const oldIndex = await readFile(f.repo.index);
     await expect(
@@ -907,13 +913,17 @@ describe('isolated upstream synchronization', () => {
     const held = deferred(),
       release = deferred();
     let first = true;
-    const running = f.run(async (phase) => {
-      if (phase === 'validating' && first) {
-        first = false;
-        held.resolve();
-        await release.promise;
-      }
-    });
+    const running = f.run(
+      async (phase) => {
+        if (phase === 'validating' && first) {
+          first = false;
+          held.resolve();
+          await release.promise;
+        }
+      },
+      undefined,
+      alias,
+    );
     try {
       await held.promise;
       expect((await f.services.stories.get(story.key)).name).toBe('Dirty local capture');
