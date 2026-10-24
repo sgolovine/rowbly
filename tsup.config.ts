@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: { cli: 'src/cli.ts' },
+  entry: { cli: 'src/cli.ts', gitRebaseStrategy: 'src/storage/gitRebaseStrategy.ts' },
   format: ['esm'],
   platform: 'node',
   target: 'node22',
