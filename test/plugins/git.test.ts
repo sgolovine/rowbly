@@ -518,6 +518,17 @@ describe('Git data reconciliation', () => {
     expect(evidence.decisions.some((d: { reason: string }) => d.reason === 'overlapping text hunks')).toBe(true);
     expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
     expect(mergeData(base, left, right, builtInPlugins)).toEqual(result);
+    const nextBase = { id: 'published', files: result.files };
+    const nextLeft = { id: 'next-a', files: { ...result.files, [core]: file({ ...record, name: 'Second left' }) } };
+    const nextRight = { id: 'next-b', files: { ...result.files, [core]: file({ ...record, name: 'Second right' }) } };
+    const successive = mergeData(nextBase, nextLeft, nextRight, builtInPlugins);
+    expect(successive.files[result.evidence[0]!]).toEqual(result.files[result.evidence[0]!]);
+    const nextEvidence = JSON.parse(Buffer.from(successive.files[successive.evidence[0]!]!.data, 'base64').toString());
+    for (const source of [nextEvidence.sources.base, ...nextEvidence.sources.sides]) {
+      expect(Object.keys(source.files).some((p) => p.startsWith('plugins/git/merge-evidence/'))).toBe(false);
+      expect(source.evidence).toEqual([{ path: result.evidence[0], digest: expect.any(String) }]);
+    }
+    expect(mergeData(nextBase, nextRight, nextLeft, builtInPlugins)).toEqual(successive);
     const decisions: import('../../src/services/plugins/reconciliation').MergeDecision[] = [];
     const h = createMergeHelpers(decisions);
     expect(h.value({ v: 1 }, {}, { v: null }, 'opaque')).toEqual({ v: null });

@@ -185,6 +185,8 @@ function mergeOnce(
         if (!entries.includes(mandatory)) entries.push(mandatory);
       files[path] = helpers.file(`${entries.filter(Boolean).join('\n')}\n`);
     } else {
+      if (/^plugins\/git\/merge-evidence\//.test(path) && l && r && !isDeepStrictEqual(l, r))
+        throw new Error('Content-addressed merge evidence disagrees at the same path');
       const result = helpers.value(old, l, r, path);
       if (result !== undefined) files[path] = result as MergeFile;
     }
@@ -274,7 +276,7 @@ function mergeOnce(
   if (decisions.length || remaps.some((r) => Object.keys(r.boards).length || Object.keys(r.stories).length)) {
     const record = {
       version: 1,
-      sources: { base: baseSource, sides: [leftSource, rightSource] },
+      sources: { base: evidenceSource(baseSource), sides: [evidenceSource(leftSource), evidenceSource(rightSource)] },
       remaps,
       decisions: [...decisions].sort((a, b) => (canonicalValue(a) < canonicalValue(b) ? -1 : 1)),
     };
@@ -704,4 +706,17 @@ function retainEditedParents(base: MergeFiles, left: MergeFiles, right: MergeFil
       Object.assign(deleted, Object.fromEntries(Object.entries(base).filter(([p]) => p.startsWith(`${prefix}/`))));
     }
   }
+}
+
+/** Prior evidence stays additive; never recursively base64-embed its payload in the next record. */
+function evidenceSource(source: MergeSource) {
+  const files: MergeFiles = {},
+    evidence: { path: string; digest: string }[] = [];
+  for (const [path, file] of Object.entries(source.files)) {
+    if (path.startsWith('plugins/git/merge-evidence/')) evidence.push({ path, digest: mergeDigest(file) });
+    else files[path] = file;
+  }
+  return evidence.length
+    ? { id: source.id, files, evidence: evidence.sort((a, b) => (a.path < b.path ? -1 : 1)) }
+    : source;
 }
