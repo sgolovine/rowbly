@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Create right click concept",
   "description": "There are many places around the app where the user should be able to right click to open a context menu.\n\n- Implement base functionality to allow users to right click on elements with the mouse",
-  "stage": "in-progress",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aJ",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-22T23:01:27.312Z",
-  "updatedAt": "2026-10-22T23:01:41.500Z"
+  "updatedAt": "2026-10-24T16:24:38.084Z"
 }
