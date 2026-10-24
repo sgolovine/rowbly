@@ -12,6 +12,7 @@ import {
   useIsActive,
   useKeyCapture,
   useKeyHints,
+  useReloadOnReturn,
   useRowblyContext,
   useServices,
   useToast,
@@ -48,6 +49,7 @@ function StagesEditor({ scope }: { scope: ConfigScope }) {
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const target = targetFor(scope, level);
   const list = useAsync(async () => (ctx ? readLevel(ctx, target, 'stages') : null), [ctx, level, scope]);
+  useReloadOnReturn(list.reload);
   const stages = withFixedStages(list.data?.items ?? []);
   const listing = mode.kind === 'list';
   const [cursor, setCursor] = useCursor(stages.length, active && listing);

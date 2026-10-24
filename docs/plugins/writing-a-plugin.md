@@ -372,7 +372,7 @@ export function PointsScreen({ plugin, ui }: PluginScreenProps<PointsSettings>) 
 - `home` adds an entry to the home menu, and `settings` a section to the settings (`,`). Both name a screen of the Plugin, or the Plugin fails to load.
 - `ui.open(screen, params)` opens another of the Plugin's screens; `params.title` is its breadcrumb. `ui.openStory` and `ui.openBoard` open core screens; back returns here. `ui.toast` and `ui.error` show messages.
 - **Keys and focus.** `useIsActive()` is false while a dialog is open or another screen is on top. Give the same flag to `useInput`, `useKeyHints` and `useKeyCapture`. A Story tab gets an `active` prop as well: use `useIsActive() && active`.
-- **Loading.** `useAsync(fn, deps)` runs `fn` again when `deps` change, and shows a failure as a toast. `useReloadOnReturn(reload)` reloads when the screen is on top again, for example after a Story it opened is closed.
+- **Loading.** `useAsync(fn, deps)` runs `fn` again when `deps` change, and shows a failure as a toast. `useReloadOnReturn(reload)` reloads when the screen is on top again, for example after a Story it opened is closed, and when the Data Root changes on disk while it is on top.
 - A screen that throws while rendering shows a fallback naming the Plugin; the rest of the TUI keeps working. Errors in event handlers and detached promises are not caught by it: pass them to `ui.error`.
 
 ## 8. The operation lifecycle

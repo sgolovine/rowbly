@@ -64,6 +64,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | `version` | `1`; a file without it is read as version 1 |
 | `me` | optional, a handle: global Me, Me in every Data Root without a local Me |
 | `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
+| `openStoryAfterCreation` | optional, a boolean: whether the TUI opens a Story it has just created (the **Preferences** section of the settings); missing means off, and the TUI returns to the Board or list |
 
 Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.
 
