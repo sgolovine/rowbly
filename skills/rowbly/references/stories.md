@@ -14,15 +14,30 @@ rowbly assignees list --json --no-prompt            # valid handles, with the As
 rowbly whoami --json --no-prompt                    # {"me": "sam" | null, "source", "global", "local"}
 ```
 
-Pick Stages by **category**, not by name. Every Board starts with `backlog` (category `backlog`) and
-ends with `done` (category `done`). A Board's configured Stages might be `doing`, `review`, with no
-`todo` or `in-progress` key. The three Stages an agent uses:
+Read the Story's current Stage with `stories show`. `config show` returns the effective Stages in
+workflow order, each with its key, name and category. Every Board starts with `backlog` (category
+`backlog`) and ends with `done` (category `done`). All configured Stages have category `board`, so
+use their keys, names and order to understand preparation, development and review. Do not assume
+`todo` or `in-progress` exists.
 
 | When | Stage |
 | --- | --- |
 | A new Story | The `backlog` Stage, unless the user names another Stage |
-| Development starts | The in-progress Stage: the `board` Stage whose key or name says work is under way (`in-progress`, `doing`); if none does, the last `board` Stage |
-| The work is complete | The `done` Stage |
+| Work starts | The configured Stage for the assigned activity, such as refinement, development (`doing`, `in-progress`) or review |
+| Preparation or refinement finishes | The next Stage for prepared work, such as `ready` or `todo` |
+| Implementation finishes | The next review or approval Stage when the workflow requires it, such as `review` or `ready-for-review` |
+| The Story's workflow is complete, including required review or approval | The `done` Stage |
+
+For example, on `backlog → refining → ready → doing → review → done`, refinement hands off to `ready`
+and implementation hands off to `review`. On the default `backlog → todo → in-progress → done`,
+refinement hands off to `todo`; finished development can move to `done` when no review or approval
+remains. Use only destinations that exist on the Board. Choose the next Stage that represents the
+completed work and its handoff; do not blindly advance one Stage or skip required review. If the
+meaning of the Stages is unclear, ask for clarification before moving.
+
+Explicit user instructions about destinations or Board ownership take precedence. When a supervisor
+is the designated Board writer, report your completed work and intended next Stage to that supervisor;
+leave Story moves to them.
 
 ## 2. Find and read Stories
 
@@ -105,8 +120,10 @@ only if the user asks.
    `rowbly specs list --story <KEY> --json --no-prompt` and the Board Specs it links to; with the
    Comments Plugin on, `rowbly comments list <KEY> --json --no-prompt`. Read them all: this is the
    request.
-2. Start: before you change any code, `rowbly stories move <KEY> <in-progress Stage> --json --no-prompt`
-   (see the table in §1). Add
+2. Start: read the Board's Stages (§1), and move to the Stage for your assigned activity if needed:
+   `rowbly stories move <KEY> <activity-stage-key> --json --no-prompt`. This applies to preparation
+   and refinement too; before changing code, use the configured development Stage. If a supervisor
+   is the designated Board writer, report the intended move instead. Add
    `--add-assignee me` with `stories edit` only if the Assignees Plugin is on, Me is set, and the user
    wants it.
 3. To leave a progress note, blocker or decision, use `rowbly comments add <KEY> --body "…"`
@@ -114,9 +131,13 @@ only if the user asks.
    `rowbly plugins enable comments`, and tell the user, since that changes shared configuration.
 4. As each part is done: `rowbly tasks move <KEY>.<n> done --json --no-prompt`
    ([Tasks](plugin-tasks.md)).
-5. Finish: when the work is complete, `rowbly stories move <KEY> done --json --no-prompt`. Do this
-   yourself, as the last step, without waiting to be asked. Moving every Task to `done` does not move
-   the Story. Check: `stories show` reports the `done` Stage, and `tasks list` shows its Tasks done.
+5. Finish your assignment: choose the next appropriate Stage from the Board's workflow (§1), then
+   `rowbly stories move <KEY> <next-stage-key> --json --no-prompt` without waiting to be asked.
+   Preparation or refinement hands off to the configured ready Stage; implementation hands off to
+   review when required. Use `done` only when the entire Story workflow is complete. If a supervisor
+   is the designated Board writer, report the completed work and intended next Stage instead.
+   Moving every Task to `done` does not move the Story. Check the resulting Stage with `stories show`
+   and completed Tasks with `tasks list`.
 6. Mention the Story Key in branch names and commit messages (`WEB-42: add login form`). Commit the
    `.rowbly/` changes with the code, unless the Git Plugin commits them for you
    ([Git](plugin-git.md)).
@@ -133,8 +154,10 @@ how work is closed. If the highest-numbered Story is deleted, its key goes to th
   `--add-label` / `--add-assignee`.
 - **HIGH: hard-coding `in-progress` or `todo`.** Only `backlog` and `done` exist on every Board. Read the
   Board's Stages and choose the in-progress Stage as the table in §1 says.
-- **HIGH: leaving the Story where it was.** Move it to the in-progress Stage when development starts and
-  to `done` when the work is complete; the Board is how the user sees progress.
+- **HIGH: leaving the Story where it was or skipping its next workflow step.** Use the configured
+  activity Stage when work starts, then hand off to the appropriate next Stage when your assignment
+  finishes. Completing implementation does not complete required review. If a supervisor owns Board
+  updates, report the intended move to them.
 - **HIGH: Title Case or spaced Labels.** A Label must be lower-kebab-case, or the command exits 2.
 - **MEDIUM: guessing the next key** when creating several Stories. Read `key` from each `create`
   output. Two branches can both create `WEB-7`; `rowbly doctor --fix` fixes that after the merge
@@ -145,5 +168,6 @@ how work is closed. If the highest-numbered Story is deleted, its key goes to th
 ## Completion
 
 Each change returned the record you expected (exit 0), and `rowbly stories show <KEY> --json --no-prompt`
-confirms its final Stage and Plugin Data. If a command exits 6, follow
+confirms the intended handoff Stage and Plugin Data, or you reported the intended move to the
+designated Board writer. The Story is `done` only when its workflow is complete. If a command exits 6, follow
 [Check and repair a Data Root](doctor.md) before you try again.
