@@ -17,9 +17,15 @@ it('shows Git settings only when loaded and saves frequency, interval and author
   await focusListItem(app, 'Git');
   await waitForFrame(
     app,
-    (f) => f.includes('Git automatic commits') && f.includes('default@example.com') && f.includes('Frequency*'),
+    (f) => f.includes('Automatic Merge Conflict Resolution') && f.includes('Edit Automatic Commits'),
   );
   await app.press(KEYS.tab);
+  await waitForFrame(app, 'e edit Automatic Commits');
+  await app.press('e');
+  await waitForFrame(
+    app,
+    (f) => f.includes('Git automatic commits') && f.includes('default@example.com') && f.includes('Frequency*'),
+  );
   await app.press(KEYS.down);
   await focusFormField(app, 'Frequency');
   await app.press(KEYS.right);
