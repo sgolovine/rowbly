@@ -18,7 +18,7 @@ with commands show when the user reloads (`r`) or returns to a screen.
 | `/` | filter (on the board and the Stories list: the filter form) |
 | `esc` | back, or cancel the open form |
 | `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
-| `,` | settings: Boards, Stages, Fields, Me, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
+| `,` | settings: Boards, Stages, Fields, Me, Preferences, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
 | `ctrl+b` | hide or show the Board sidebar |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |
 | `{`/`}` | previous / next entry of the Plugin Sidebar |
@@ -27,6 +27,9 @@ with commands show when the user reloads (`r`) or returns to a screen.
 
 On every screen or tab that can create a record, `n` creates one. In a form, `enter`/`tab` move to the
 next field, `ctrl+enter` or `ctrl+s` saves, `ctrl+f` opens a description in the full-screen editor.
+After a new Story is saved, the TUI returns to the Board or list it was created from. To open each new
+Story instead, turn on **Open Story after creation** in the settings' **Preferences** section (off by
+default; kept in `~/.rowblyrc.json`).
 
 ## Keys per screen
 
