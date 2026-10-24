@@ -17,6 +17,7 @@ const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
   { text: /\buser\.(email|name)\b/g, why: 'the git config key' },
   { file: /^storage\/git\.ts$/, text: /^status$/, why: 'git status command argv, not a Rowbly term' },
+  { file: /^storage\/gitSync\.ts$/, text: /^--no-tags$/, why: 'Git fetch flag, not a Rowbly term' },
   { text: /\bLocal State\b/g, why: 'a CONTEXT.md term' },
   { text: /^\.\.?\/.*$/, why: 'a relative import path' },
 ];

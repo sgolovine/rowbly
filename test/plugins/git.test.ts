@@ -7,7 +7,7 @@ import { definePlugin, type GitOptionsSource } from '../../src/plugin-api';
 import { comments } from '../../src/plugins/comments';
 import { addComment } from '../../src/plugins/comments/comments';
 import { git } from '../../src/plugins/git';
-import { configure, preferences } from '../../src/plugins/git/model';
+import { configure, preferences, resolveSyncOptions } from '../../src/plugins/git/model';
 import { drainGitQueue } from '../../src/services/plugins/git';
 import * as gitStorage from '../../src/storage/git';
 import { pendingPath, readGitPending } from '../../src/storage/git';
@@ -836,6 +836,41 @@ describe('isolated upstream synchronization', () => {
     expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('local committed code\n');
     expect(await f.command('ls-files', '--unmerged')).toBe('');
     expect(await readFile(join(f.repo.gitDir, 'MERGE_HEAD'), 'utf8').catch(() => null)).toBeNull();
+    const overlap = await remoteFixture();
+    await writeFile(join(overlap.peer, 'overlap.txt'), 'base bytes');
+    await command(overlap.peer, 'add', 'overlap.txt');
+    await command(overlap.peer, 'commit', '-m', 'base overlap');
+    await command(overlap.peer, 'push');
+    await overlap.run();
+    await command(overlap.peer, 'pull', '--ff-only');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'staged alternative');
+    await overlap.command('add', 'overlap.txt');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'base bytes');
+    await writeFile(join(overlap.peer, 'overlap.txt'), 'incoming bytes');
+    await command(overlap.peer, 'commit', '-am', 'incoming overlap');
+    await command(overlap.peer, 'push');
+    const protectedIndex = await readFile(overlap.repo.index),
+      protectedHead = await overlap.command('rev-parse', 'HEAD');
+    await expect(overlap.run()).rejects.toThrow('unrelated staged content');
+    expect(await readFile(overlap.repo.index)).toEqual(protectedIndex);
+    expect(await overlap.command('rev-parse', 'HEAD')).toBe(protectedHead);
+    expect(await readFile(join(overlap.t.dir, 'overlap.txt'), 'utf8')).toBe('base bytes');
+    await overlap.command('restore', '--staged', '--', 'overlap.txt');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'dirty alternative');
+    await expect(overlap.run()).rejects.toThrow('unrelated local content');
+    expect(await readFile(join(overlap.t.dir, 'overlap.txt'), 'utf8')).toBe('dirty alternative');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'base bytes');
+    await writeFile(join(overlap.peer, 'incoming.txt'), 'new upstream file');
+    await command(overlap.peer, 'add', 'incoming.txt');
+    await command(overlap.peer, 'commit', '-m', 'incoming untracked overlap');
+    await command(overlap.peer, 'push');
+    await writeFile(join(overlap.t.dir, 'incoming.txt'), 'protected untracked bytes');
+    const untrackedIndex = await readFile(overlap.repo.index);
+    await expect(overlap.run()).rejects.toThrow('incoming.txt');
+    expect(await overlap.command('rev-parse', 'HEAD')).toBe(protectedHead);
+    expect(await readFile(overlap.repo.index)).toEqual(untrackedIndex);
+    expect(await readFile(join(overlap.t.dir, 'incoming.txt'), 'utf8')).toBe('protected untracked bytes');
+    overlap.host.dispose?.();
   });
 
   it('keeps a locally published merge after rejected or lost-response push, then fetches the advanced upstream and retries normally', async () => {
@@ -882,5 +917,178 @@ describe('isolated upstream synchronization', () => {
       'Accepted with lost response',
     );
     expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
+  });
+  it('runs a real interval without pending data, coalesces requests and lets one admitted run finish after saved Off while stale callbacks stay paused', async () => {
+    const f = await remoteFixture(),
+      plugin = f.services.plugins.context('git');
+    const storage = await import('../../src/storage/gitSync');
+    const { drainGitQueue } = await import('../../src/services/plugins/git');
+    const original = storage.synchronizeGit;
+    const spy = vi.spyOn(storage, 'synchronizeGit');
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const held = deferred(),
+      release = deferred();
+    let hold = false;
+    spy.mockImplementation(async (...args) => {
+      if (hold) {
+        held.resolve();
+        await release.promise;
+      }
+      return original(...args);
+    });
+    try {
+      const repository = await import('../../src/storage/gitRepository');
+      const worker = repository.withGitWorker;
+      let refuseAdmission = true;
+      const admission = vi.spyOn(repository, 'withGitWorker').mockImplementation(async (...args) => {
+        if (refuseAdmission) {
+          refuseAdmission = false;
+          throw new Error('controlled common worker lock timeout');
+        }
+        return worker(...args);
+      });
+      try {
+        await configure(plugin, { synchronization: { enabled: true, intervalSeconds: 1 } });
+        await vi.waitFor(
+          async () => {
+            const failed = await plugin.git.syncStatus(resolveSyncOptions);
+            expect(failed.last?.kind).toBe('failed');
+            expect(failed.last?.message).toContain('controlled common worker lock timeout');
+            expect(failed.nextDue).toBeGreaterThan(failed.last?.finishedAt ?? 0);
+          },
+          { timeout: 5000 },
+        );
+        await vi.waitFor(
+          async () => expect((await plugin.git.syncStatus(resolveSyncOptions)).last?.kind).toBe('synchronized'),
+          { timeout: 5000 },
+        );
+      } finally {
+        admission.mockRestore();
+      }
+      const stale = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 900 && ms <= 1000)?.[0];
+      expect(stale).toBeTypeOf('function');
+      await vi.waitFor(
+        async () => expect((await plugin.git.syncStatus(resolveSyncOptions)).last?.kind).toBe('synchronized'),
+        { timeout: 5000 },
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      await configure(plugin, { synchronization: { intervalSeconds: 3600 } });
+      const deadline = await plugin.git.syncStatus(resolveSyncOptions);
+      expect(deadline.nextDue).toBe((deadline.anchor ?? 0) + 3_600_000);
+      hold = true;
+      const first = plugin.git.requestSync(resolveSyncOptions);
+      await held.promise;
+      const coalesced = await plugin.git.requestSync(resolveSyncOptions);
+      expect(coalesced.active?.phase).toBe('admitted');
+      f.ctx.backgroundReactions = true;
+      await configure(plugin, { synchronization: { enabled: false } });
+      const story = await f.services.stories.create('web', { name: 'Saved while admitted sync waits' });
+      expect((await f.services.stories.get(story.key)).name).toBe('Saved while admitted sync waits');
+      release.resolve();
+      expect((await first).last?.kind).toBe('synchronized');
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect((await plugin.git.syncStatus(resolveSyncOptions)).enabled).toBe(false);
+      if (typeof stale === 'function') stale();
+      await drainGitQueue(f.t.root);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await command(f.peer, 'pull', '--ff-only');
+      expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+        'Saved while admitted sync waits',
+      );
+    } finally {
+      release.resolve();
+      await drainGitQueue(f.t.root);
+      f.host.dispose?.();
+      spy.mockRestore();
+      timers.mockRestore();
+    }
+  });
+
+  it('keeps persisted future deadlines on reload, resumes one overdue attempt, and admits no stale timer/start while saved Off', async () => {
+    const f = await remoteFixture(),
+      plugin = f.services.plugins.context('git');
+    const { rootGitKey } = await import('../../src/storage/gitRepository');
+    const { readSyncState, writeSyncState } = await import('../../src/storage/gitSyncState');
+    const storage = await import('../../src/storage/gitSync');
+    const spy = vi.spyOn(storage, 'synchronizeGit');
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const hosts = [f.host];
+    const stateFile = join(f.repo.gitDir, 'rowbly', `sync-git-${rootGitKey(f.t.root)}.json`);
+    try {
+      await configure(plugin, { synchronization: { enabled: true, intervalSeconds: 3600 } });
+      const scheduled = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 3_500_000)?.[0];
+      const repository = await import('../../src/storage/gitRepository');
+      const { createGitSync, disposeSyncOwner } = await import('../../src/services/plugins/gitSync');
+      const ownerA = {},
+        ownerB = {},
+        locationEntered = deferred(),
+        locationRelease = deferred();
+      const locate = repository.requireRepository;
+      let pausedLocation = true;
+      const locating = vi.spyOn(repository, 'requireRepository').mockImplementation(async (root) => {
+        if (pausedLocation) {
+          pausedLocation = false;
+          locationEntered.resolve();
+          await locationRelease.promise;
+        }
+        return locate(root);
+      });
+      const a = createGitSync(f.t.root, 'git', [git, comments], f.ctx.warn, ownerA);
+      const b = createGitSync(f.t.root, 'git', [git, comments], f.ctx.warn, ownerB);
+      const staleSetup = a.resumeSync(resolveSyncOptions);
+      try {
+        await locationEntered.promise;
+        disposeSyncOwner(ownerA);
+        await b.resumeSync(resolveSyncOptions);
+        const currentTimer = timers.mock.results.at(-1)?.value;
+        const clearing = vi.spyOn(globalThis, 'clearTimeout');
+        try {
+          locationRelease.resolve();
+          await staleSetup;
+          expect(clearing).not.toHaveBeenCalledWith(currentTimer);
+          expect((await b.syncStatus(resolveSyncOptions)).enabled).toBe(true);
+        } finally {
+          clearing.mockRestore();
+        }
+      } finally {
+        locationRelease.resolve();
+        await staleSetup;
+        locating.mockRestore();
+        disposeSyncOwner(ownerB);
+      }
+      const first = await readSyncState(stateFile);
+      if (!first) throw new Error('Expected persisted synchronization deadline');
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      expect((await readSyncState(stateFile))?.nextDue).toBe(first.nextDue);
+      await configure(plugin, { synchronization: { enabled: false, intervalSeconds: 7200 } });
+      const off = await readSyncState(stateFile);
+      if (!off) throw new Error('Expected saved deadline');
+      const anchor = Date.now() - 7_200_001;
+      await writeSyncState(stateFile, { ...off, anchor, nextDue: anchor + 7_200_000 });
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      if (typeof scheduled === 'function') scheduled();
+      await drainGitQueue(f.t.root);
+      expect(spy).not.toHaveBeenCalled();
+      // Reopening a persisted enabled bag is independent of a configure reaction.
+      const localFile = join(f.t.path, 'local.json'),
+        local = JSON.parse(await readFile(localFile, 'utf8'));
+      local.plugins.git.synchronization.enabled = true;
+      await writeFile(localFile, JSON.stringify(local));
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      await drainGitQueue(f.t.root);
+      expect(spy).toHaveBeenCalledTimes(1);
+      const completed = await readSyncState(stateFile);
+      expect(completed?.last?.kind).toBe('synchronized');
+      expect(completed?.nextDue).toBe((completed?.anchor ?? 0) + 7_200_000);
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      expect((await readSyncState(stateFile))?.nextDue).toBe(completed?.nextDue);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect((await preferences(plugin)).automaticCommits).toBe(false);
+    } finally {
+      for (const host of hosts) host.dispose?.();
+      await drainGitQueue(f.t.root);
+      spy.mockRestore();
+      timers.mockRestore();
+    }
   });
 });
