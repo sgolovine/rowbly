@@ -126,3 +126,5 @@ then retries from the latest interval; unavailable local recovery uses a 30 s wa
 saved preferences before admission. A disposed host cannot replace the current host's scheduling lease
 after an awaited setup. An admitted run may finish after Off. Private host leases cancel future timers on
 replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.
+Each new synchronization worker removes abandoned private candidate indexes and fetched pins under
+the common worker lock; prepared publication pins belong to journal recovery and are kept until it completes.

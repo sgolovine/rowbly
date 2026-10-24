@@ -148,6 +148,23 @@ async function mergeOptions(repo: GitRepository): Promise<string[]> {
   return args;
 }
 
+/** The common worker excludes live preparations; journal recovery owns its separate prepared pin. */
+async function cleanupPreparation(repo: GitRepository): Promise<void> {
+  const directory = join(repo.gitDir, 'rowbly');
+  await io.mkdir(directory);
+  for (const name of await io.readdir(directory)) {
+    if (!/^candidate-[a-f0-9]{32}(?:-install)?(?:\.lock)?$/.test(name)) continue;
+    const path = join(directory, name);
+    if (!(await io.lstat(path)).isFile()) throw new Error('Unsafe abandoned Git preparation');
+    await io.rm(path);
+  }
+  const pins = await gitText(repo.top, ['for-each-ref', '--format=%(refname)', 'refs/rowbly/fetched/']);
+  for (const pin of pins.split('\n').filter(Boolean)) {
+    if (!/^refs\/rowbly\/fetched\/[a-f0-9]{32}$/.test(pin)) throw new Error('Unrecognized Git preparation pin');
+    await gitText(repo.top, ['update-ref', '-d', pin]);
+  }
+}
+
 /** Build/fetch/merge off to the side, publish locally only after complete validation, then normal push. */
 export function synchronizeGit(...args: Parameters<typeof runSynchronization>): Promise<SyncOutcome> {
   return withGitDeadline(120_000, () => runSynchronization(...args));
@@ -172,6 +189,7 @@ async function runSynchronization(
     if (Date.now() - started > 120_000) throw new Error('Git synchronization exceeded its run deadline');
   };
   try {
+    await cleanupPreparation(repo);
     await busy(repo);
     const upstream = await configuredUpstream(repo);
     await phase('fetching');
