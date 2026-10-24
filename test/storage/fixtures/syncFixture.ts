@@ -46,24 +46,22 @@ export async function syncFixture(
   );
   const temporary = join(repo.gitDir, 'rowbly', 'test-index');
   await mkdir(join(repo.gitDir, 'rowbly'), { recursive: true });
-  await gitText(dir, ['read-tree', old], { index: temporary });
+  const entries: string[] = [];
   for (const edit of edits) {
     const data = edit.after;
     if (!data) throw new Error('Expected fixture payload');
     const oid = await gitText(dir, ['hash-object', '-w', '--stdin'], { input: Buffer.from(data.data, 'base64') });
-    await gitText(dir, ['update-index', '--add', '--cacheinfo', data.mode, oid, edit.path], { index: temporary });
+    entries.push(`${data.mode} ${oid}\t${edit.path}\0`);
   }
+  const input = entries.join('');
+  await gitText(dir, ['read-tree', old], { index: temporary });
+  await gitText(dir, ['update-index', '-z', '--index-info'], { index: temporary, input });
   const tree = await gitText(dir, ['write-tree'], { index: temporary });
   const candidate = await gitText(dir, ['commit-tree', tree, '-p', old, '-m', 'prepared local merge']);
   const stagedOid = await gitText(dir, ['rev-parse', ':staged.txt']);
   // Carry forward the live index, including the unrelated staged blob.
   await writeFile(temporary, Buffer.from(indexBefore ?? '', 'base64'));
-  for (const edit of edits) {
-    const data = edit.after;
-    if (!data) throw new Error('Expected fixture payload');
-    const oid = await gitText(dir, ['hash-object', '-w', '--stdin'], { input: Buffer.from(data.data, 'base64') });
-    await gitText(dir, ['update-index', '--add', '--cacheinfo', data.mode, oid, edit.path], { index: temporary });
-  }
+  await gitText(dir, ['update-index', '-z', '--index-info'], { index: temporary, input });
   const indexAfter = (await readFile(temporary)).toString('base64');
   const plan: PublicationPlan = {
     branch: 'refs/heads/main',
