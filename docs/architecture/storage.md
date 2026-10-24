@@ -103,11 +103,39 @@ before their phase write. It runs before the next cooperating read, through any 
 including while synchronization is Off. It performs no fetch or push. Pre-intent payloads are
 disposable; prepared payloads roll forward. A pre-application ref refusal discards only owned staging
 and reservation. Unexpected external index/path/ref changes after effects preserve the journal and
-stop recovery instead of overwriting external work. Only a token-owned index reservation is removed.
+stop recovery instead of overwriting external work.
 
-`test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills a real
-process after the ref effect but before its phase write. It checks complete local recovery, binary
-bytes/modes, unrelated staged blobs/working bytes and recovery through a second linked worktree.
+Publication checks each affected path's exact before/after bytes and executable mode again at
+installation. Under a Data Root lock, existing transaction replay checks immediately before every
+live write or delete. Non-Rowbly atomic writes check after temporary-file staging and immediately
+before the live rename; deletions check immediately before removal. Unexpected external bytes or
+topology stop publication and preserve the external data, journal and remaining payloads. External
+editors do not participate in these locks, so the final precondition check cannot make their later
+filesystem operations atomic with Rowbly's syscall.
+
+Index-lock ownership uses private hardlinks whose device/inode identity and expected bytes must
+match the live lock. The reservation token is retained, and the prepared index payload keeps a private
+inode reference across installation. A pending owned index lock is distinguishable from an already
+installed index. Equal bytes alone never authorize replacing or removing `index.lock`: a new foreign
+lock containing the prepared index bytes is preserved and blocks completion. Safe pre-effect
+ref-refusal releases its verified reservation before discarding other staged data.
+
+Prepared publication and recovery refusals report `DATA_INTEGRITY` (exit 6). Details identify the
+publication journal (`path`), affected repository-relative paths (`paths`), the owning worktree's index
+lock (`indexLock`) and the cause. Preserve the journal and affected files, resolve the reported external
+change or I/O failure, then retry recovery through `rowbly doctor`. Recovery performs no fetch or push.
+
+Plugin loading also enters publication-aware coordination before its first configuration or Local
+State read. It captures both from one recovered Data Root state and releases the gate and Data Root
+lock before registering commands, staging surfaces or calling `start`. A recovery failure propagates
+before any Plugin is staged or started.
+
+`test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills real
+processes before and after index reservation, durable intent, ref effects, file installation and index
+installation/phase recording. It verifies complete local recovery through a second linked worktree
+while synchronization is Off, binary bytes/executable modes, unrelated staged/dirty/untracked content,
+refusal of unexpected editor bytes and preservation of fresh identical-byte foreign index locks. The
+kept Plugin loading scenario verifies recovery before actual command registration and startup.
 
 Synchronization captures all valid dirty Rowbly files even while Automatic Commits is Off. It uses an
 alternate index, `merge-tree --write-tree` and the real base/sides, then validates supported core and

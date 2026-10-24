@@ -323,6 +323,14 @@ Each Plugin owns the shape of its bags and files. Built-in bags have no version 
 
 ## Load, reload and settings
 
+Before loading Plugins, the host finishes pending local publication recovery and snapshots root
+configuration and Local State together under publication-aware coordination. Command/surface staging
+and `start` run after the gate and Data Root lock are released. The `localData` function supplied to
+`start` returns a fresh copy of that Plugin's own bag from this startup snapshot; later saves are read
+by a subsequent load or the runtime's coordinated capabilities. A publication or transaction recovery
+failure stops loading before any Plugin is staged or started. An ordinary Local State snapshot read
+failure is raised when a Plugin calls `start.localData`, preserving per-Plugin load isolation.
+
 - Plugins load in registry order when Rowbly starts: each command-mode run, and the TUI at start, each time a Plugin is turned on or off in its **Plugins** section, and each time `rowbly.config.json` changes on disk. `start` runs on every load; there is no teardown, so `start` must be safe to run again.
 - `settings` parses the Data Root entry without `enabled`. Without a schema the settings are the raw entry (`Record<string, unknown>`). `z.object` drops unknown keys from the parsed value; `z.strictObject` fails the load on one. The stored entry is never rewritten.
 - `boardSettings(boardId)` is the Board's bag deep-merged over the Data Root entry (objects merge, lists replace), parsed again. An invalid Board bag is `VALIDATION` naming the Board.

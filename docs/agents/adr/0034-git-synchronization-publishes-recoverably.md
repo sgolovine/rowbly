@@ -1,6 +1,6 @@
 # ADR-0034: Git synchronization prepares isolated merges and publishes recoverably
 
-**Status:** Accepted (ROW-15; implementation in progress)
+**Status:** Accepted (ROW-15)
 
 ## Context
 
@@ -77,7 +77,10 @@ atomic carried-forward index replacement. The candidate need not descend from th
 After intent, local recovery finishes one complete valid result before any cooperating read/write,
 even when synchronization is Off. Recovery performs no network work and does not authorize a push.
 Recognize effects that landed before their phase write. Never overwrite unexpected external edits,
-remove another process's locks or force a ref. Preserve diagnostic evidence on unrecoverable I/O.
+remove another process's locks or force a ref. Index-lock ownership requires private inode identity
+and expected bytes, never byte equality alone. Installation rechecks paths at each live write/delete;
+Plugin startup snapshots pass through recovery before any callback. Preserve diagnostic evidence on
+unrecoverable I/O.
 External Git/editors remain outside cooperative locking.
 
 ### 6. Upstream and failure
