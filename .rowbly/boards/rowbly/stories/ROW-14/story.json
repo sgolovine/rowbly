@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-14",
+  "boardId": "rowbly",
+  "name": "Add Story Linking Plugin",
+  "description": "## Goal\nAdd a Plugin named \"Story Linking\" so users can express blocking relationships between Stories on the same Board and quickly navigate between them.\n\n## Acceptance criteria\n- When Story Linking is enabled, users can specify that a Story blocks another Story or is blocked by another Story.\n- Only Stories on the same Board can be linked; reject links to Stories on other Boards.\n- A Story can block multiple Stories and be blocked by multiple Stories, including having both kinds of links at once.\n- Each relationship is reflected on both affected Stories. If ROW-1 blocks ROW-2, ROW-1 shows \"Blocks ROW-2\" and ROW-2 shows \"Blocked by ROW-1\".\n- Show every linked Story with its Story Key and the correct relationship direction.\n- Clicking a linked Story opens that Story directly. Linked Stories are also accessible through keyboard navigation in the TUI.\n- Users can add and remove relationships from either affected Story; both Stories reflect the change without requiring a second edit.\n- Provide CLI support for managing and inspecting the relationships as well as TUI controls.\n- Follow the existing Plugin enable/disable behavior, preserving stored links while the Plugin is off.\n- Update the user guide, Plugin documentation and published Rowbly skill references for the new Plugin and its commands.\n\n## Verification\nWith the Plugin enabled, link three Stories on one Board so one Story has multiple outgoing links and another has multiple incoming links. Confirm both directions display correctly on every affected Story. Add and remove links from either side and verify the reciprocal display updates. Click each linked Story and verify it opens the correct Story; repeat using the keyboard. Attempt a cross-Board link and confirm it is rejected. Disable and re-enable the Plugin and confirm the links are preserved.",
+  "stage": "backlog",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-24T17:22:03.751Z",
+  "updatedAt": "2026-10-24T17:22:03.751Z"
+}
