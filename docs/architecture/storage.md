@@ -44,6 +44,10 @@ Each save is one transaction in `.rowbly/.txn/<id>/`:
 - A Story's key and Board never change through an ordinary update. Only doctor's renumbering changes a key.
 - Rowbly assumes a trusted filesystem. A symlinked Data Root is allowed. A symbolic link inside a `plugins/<id>/` folder is refused for every read, write, list and delete. These checks catch accidental links; they are not race-proof against someone swapping links.
 
+## Watching for changes
+
+The TUI watches its open Data Root (`watchDataRoot` in `src/storage/watch.ts`, a recursive `fs.watch`) and reloads what is on screen when a file under it is created, changed, deleted or renamed, by any process. It ignores the lock files at the top of the Data Root, the commit journal under `.txn/` and the temporary file of an atomic write: every service call takes the lock, reads included, so reporting it would make each reload report another change. The reload reads under the lock like any other call, so it sees a committed state, never a commit half applied. A burst of events, such as one command's several files, is reported once, 100 ms after the last. A watcher that fails warns once, starts again every 2 s, and reports a change when it does, since nothing watched in between. Switching to another Data Root or quitting closes it.
+
 ## Local State
 
 Context changes (`use`, `whoami --local`) start from the stored Local State, read under the lock. After a save, the saved Local State becomes the running context's before the reactions run; Me changes only when the stored local Me changed, and a cleared local Me falls back to global Me, reread just before the change ([ADR-0032](../agents/adr/0032-me-is-global-with-a-local-me-per-data-root.md)). `whoami` without `--local` changes the Home Config instead.
