@@ -1,0 +1,23 @@
+rowbly git show --json --no-prompt --data-root /tmp/row-13-revalidation/rowbly-demo/.rowbly
+{
+  "automaticCommits": false,
+  "frequency": "interval",
+  "intervalSeconds": 2,
+  "authorName": "Saved Author",
+  "authorEmail": "saved@example.com",
+  "defaults": {
+    "root": "/tmp/row-13-revalidation/rowbly-demo",
+    "authorName": "Default Author",
+    "authorEmail": "default@example.com"
+  }
+}
+
+rowbly plugins list --json --no-prompt (Git entry)
+{
+  "id": "git",
+  "name": "Git",
+  "description": "Automatically commit Rowbly changes to Git",
+  "enabled": true,
+  "loaded": true,
+  "known": true
+}

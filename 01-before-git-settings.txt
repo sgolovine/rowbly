@@ -1,0 +1,38 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  rowbly-demo  D  |                                                          me alex  Settings  ,  | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │ ● Backlog 2                 ● Todo 2                    ● In Progress 2             ● Done 2                      │
+│                    │ │ ━╭─Board › Settings───────────────────────────────────────────────────────────────────────────────────────── ✕ ╮  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │ ╭│  Global               │   Git                                                                               │  │
+│                    │ │ ││    Boards             │   Manage Git.                                                                       │  │
+│                    │ │ ││    Stages             │                                                                                     │  │
+│                    │ │ ││    Fields             │  Git automatic commits                                                              │  │
+│                    │ │ ╰│    Me                 │                                                                                     │  │
+│                    │ │ ╭│    Preferences        │  Git directory: /tmp/row-13-validation/baseline/rowbly-demo                         │  │
+│                    │ │ ││    Doctor             │  Commit message: chore: update Rowbly data                                          │  │
+│                    │ │ ││    Plugins            │                                                                                     │  │
+│                    │ │ ││                       │  Interval commits run while Rowbly is open; pending changes resume on the next      │  │
+│                    │ │ ╰│  Board: Rowbly Launch │  run.                                                                               │  │
+│                    │ │  │    Config             │                                                                                     │  │
+│                    │ │  │    Stages             │  Blank author fields use Git configuration: Default Author <default@example.com>    │  │
+│                    │ │  │    Fields             │                                                                                     │  │
+│                    │ │  │                       │  ←/→ change                                                                         │  │
+│                    │ │  │  Plugins: assignees   │                                                                                     │  │
+│                    │ │  │    Assignees          │  › Frequency*                     ‹ On an interval ›                                │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │  Plugins: git         │    Interval (seconds, 1–86400)*   3600                                              │  │
+│                    │ │  │  ▌ Git                │                                                                                     │  │
+│                    │ │  │                       │    Author name                    Saved Author                                      │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │                       │    Author email                   saved@example.com                                 │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  ctrl+s save  tab/enter next field  shift+tab previous field  tab sections  esc cancel                      │  │
+│                    │ │  ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  │
+│    + New Board     │ │                                                                                                                   │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                                                     ? help

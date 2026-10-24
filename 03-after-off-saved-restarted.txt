@@ -1,0 +1,38 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  rowbly-demo  D  |                                                          me alex  Settings  ,  | Stages / List  v  | + New Story  n   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─Boards─────────────╮ ╭─Board─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ ▌ Rowbly Launch 1  │ │ ● Backlog 4                 ● Todo 2                    ● In Progress 2             ● Done 2                      │
+│                    │ │ ━╭─Board › Settings───────────────────────────────────────────────────────────────────────────────────────── ✕ ╮  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │ ╭│  Global               │   Git                                                                               │  │
+│                    │ │ ││    Boards             │   Manage Git.                                                                       │  │
+│                    │ │ ││    Stages             │                                                                                     │  │
+│                    │ │ ││    Fields             │  Git directory: /tmp/row-13-revalidation/rowbly-demo                                │  │
+│                    │ │ ╰│    Me                 │  Commit message: chore: update Rowbly data                                          │  │
+│                    │ │ ╭│    Preferences        │                                                                                     │  │
+│                    │ │ ││    Doctor             │  Off keeps changes pending; On resumes them at the selected frequency.              │  │
+│                    │ │ ││    Plugins            │                                                                                     │  │
+│                    │ │ ││                       │  Interval commits run while Rowbly is open or on the next run when due.             │  │
+│                    │ │ ╰│  Board: Rowbly Launch │                                                                                     │  │
+│                    │ │ ╭│    Config             │  Blank author fields use Git configuration: Default Author <default@example.com>    │  │
+│                    │ │ ││    Stages             │                                                                                     │  │
+│                    │ │ ││    Fields             │  type to edit                                                                       │  │
+│                    │ │ ││                       │                                                                                     │  │
+│                    │ │ ╰│  Plugins: assignees   │    Automatic Commits*             ‹ Off ›                                           │  │
+│                    │ │ ╭│    Assignees          │                                                                                     │  │
+│                    │ │ ││                       │    Frequency*                     ‹ On an interval ›                                │  │
+│                    │ │ ││  Plugins: git         │                                                                                     │  │
+│                    │ │ ││  ▌ Git                │    Interval (seconds, 1–86400)*   2                                                 │  │
+│                    │ │ ╰│                       │                                                                                     │  │
+│                    │ │  │                       │    Author name                    Saved Author                                      │  │
+│                    │ │  │                       │                                                                                     │  │
+│                    │ │  │                       │  › Author email                   saved@example.com                                 │  │
+│                    │ │  │                       │  ↑↓ 3–22 of 23 · pgup/pgdn scroll                                                   │  │
+│                    │ │  │                                                                                                             │  │
+│                    │ │  │─────────────────────────────────────────────────────────────────────────────────────────────────────────────│  │
+│                    │ │  │  ctrl+s save  tab/enter next field  shift+tab previous field  tab sections  esc cancel                      │  │
+│                    │ │  ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯  │
+│    + New Board     │ │                                                                                                                   │
+╰────────────────────╯ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                                                                                                                     ? help
