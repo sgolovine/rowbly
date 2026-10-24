@@ -128,13 +128,37 @@ async function reserveIndex(repo: GitRepository, token: string, options: Publica
 function ownerPath(repo: GitRepository): string {
   return join(repo.common, 'rowbly', 'index-reservation.json');
 }
-async function lockBytes(repo: GitRepository): Promise<string | null> {
+function indexPayloadPath(repo: GitRepository, token: string): string {
+  return join(repo.gitDir, 'rowbly', `index-${token}`);
+}
+function indexInstallPath(repo: GitRepository, token: string): string {
+  return join(repo.gitDir, 'rowbly', `index-install-${token}`);
+}
+
+/** Private hardlinks retain ownership identity even after the live name has been renamed. */
+async function ownedFile(path: string, reference: string, bytes: string): Promise<boolean> {
   try {
-    return (await io.readBytes(`${repo.index}.lock`)).toString('base64');
+    const actual = await io.lstat(path);
+    const owner = await io.lstat(reference);
+    return (
+      actual.isFile() &&
+      owner.isFile() &&
+      actual.dev === owner.dev &&
+      actual.ino === owner.ino &&
+      (await io.readBytes(reference)).toString('base64') === bytes
+    );
   } catch (err) {
-    if (errorCode(err) === 'ENOENT') return null;
+    if (errorCode(err) === 'ENOENT') return false;
     throw err;
   }
+}
+async function indexLockState(journal: JournalData): Promise<'missing' | 'reservation' | 'payload'> {
+  const { repo, token, indexAfter } = journal;
+  const lock = `${repo.index}.lock`;
+  if (!(await entryExists(lock))) return 'missing';
+  if (await ownedFile(lock, tokenPath(repo, token), indexToken(token))) return 'reservation';
+  if (await ownedFile(lock, indexPayloadPath(repo, token), indexAfter)) return 'payload';
+  throw new Error(`Prepared index lock has an external holder: ${lock}`);
 }
 async function cleanupReservation(repo: GitRepository) {
   if (!(await entryExists(ownerPath(repo)))) return;
@@ -157,9 +181,10 @@ async function cleanupReservation(repo: GitRepository) {
     }
   }
   if (alive) throw new Error('Git index reservation is owned by a live process');
-  const bytes = await lockBytes(repo);
-  if (bytes === indexToken(owner.token)) await io.rm(`${repo.index}.lock`);
-  else if (bytes !== null) throw new Error('Git index lock changed outside Rowbly; preserving it');
+  if (await ownedFile(`${repo.index}.lock`, tokenPath(repo, owner.token), indexToken(owner.token)))
+    await io.rm(`${repo.index}.lock`);
+  else if (await entryExists(`${repo.index}.lock`))
+    throw new Error(`Git index lock changed outside Rowbly; preserving it: ${repo.index}.lock`);
   await io.rm(tokenPath(repo, owner.token));
   await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${owner.token}`]).catch(() => undefined);
   await io.rm(ownerPath(repo));
@@ -212,12 +237,31 @@ async function rootLocks<T>(roots: string[], fn: () => Promise<T>, recover = tru
     for (const lock of locks.reverse()) await lock.release();
   }
 }
+async function verifyFile(repo: GitRepository, edit: PublicationEdit, allowAfter: boolean) {
+  const actual = await readPublicationFile(repo, edit.path);
+  if (!isDeepStrictEqual(actual, edit.before) && !(allowAfter && isDeepStrictEqual(actual, edit.after)))
+    throw new Error(`Publication path changed outside captured snapshot: ${edit.path}`);
+}
 async function verifyFiles(journal: Pick<JournalData, 'repo' | 'edits'>, allowAfter: boolean) {
-  for (const edit of journal.edits) {
-    const actual = await readPublicationFile(journal.repo, edit.path);
-    if (!isDeepStrictEqual(actual, edit.before) && !(allowAfter && isDeepStrictEqual(actual, edit.after)))
-      throw new Error(`Publication path changed outside captured snapshot: ${edit.path}`);
-  }
+  for (const edit of journal.edits) await verifyFile(journal.repo, edit, allowAfter);
+}
+function recoveryFailure(repo: GitRepository, cause: unknown, journal?: JournalData): DataIntegrityError {
+  return new DataIntegrityError('Git local publication needs recovery before the next read or change', {
+    details: {
+      ...(cause instanceof DataIntegrityError ? cause.details : {}),
+      path: repo.journal,
+      paths: journal?.edits.map((edit) => edit.path) ?? [],
+      indexLock: `${repo.index}.lock`,
+      cause:
+        cause instanceof DataIntegrityError
+          ? (cause.details.cause ?? cause.message)
+          : cause instanceof Error
+            ? cause.message
+            : String(cause),
+    },
+    hint: 'preserve the journal and affected files; resolve the reported external change or I/O failure, then run `rowbly doctor`',
+    cause,
+  });
 }
 
 /** All payloads and owned index reservation precede durable intent; no Git runs under root locks. */
@@ -287,16 +331,13 @@ export async function publishPublication(
     }
   } catch (cause) {
     prepared ||= await entryExists(repo.journal);
-    if (prepared)
-      throw new DataIntegrityError('Git local publication is prepared; recovery must finish before the next read', {
-        details: { path: repo.journal },
-        cause,
-      });
+    if (prepared) throw recoveryFailure(repo, cause, journal);
     throw cause;
   } finally {
     if (!prepared) {
       for (const { tx } of transactions) await tx.discard();
-      if ((await lockBytes(repo)) === indexToken(token)) await io.rm(`${repo.index}.lock`);
+      if (await ownedFile(`${repo.index}.lock`, tokenPath(repo, token), indexToken(token)))
+        await io.rm(`${repo.index}.lock`);
       await io.rm(tokenPath(repo, token));
       await io.rm(ownerPath(repo));
       await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${token}`]).catch(() => undefined);
@@ -316,7 +357,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
       journal.phase === 'prepared' &&
       untouched.every(Boolean) &&
       (await readIndex(repo)) === journal.indexBefore &&
-      (await lockBytes(repo)) === indexToken(journal.token)
+      (await indexLockState(journal)) === 'reservation'
     ) {
       // CAS refused before any live effect: discard only our staged payload and reservation.
       for (const root of journal.roots) await io.rm(join(root.path, '.txn', root.transaction));
@@ -336,9 +377,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   if (index !== journal.indexBefore && index !== journal.indexAfter)
     throw new Error('Prepared index changed externally; preserving publication');
   await verifyFiles(journal, true);
-  const lock = await lockBytes(repo);
-  if (lock !== null && lock !== indexToken(journal.token) && lock !== journal.indexAfter)
-    throw new Error('Prepared index lock has an external holder');
+  await indexLockState(journal);
   if (current === journal.old) await gitText(repo.top, ['update-ref', journal.branch, journal.candidate, journal.old]);
   await options.checkpoint?.('ref-effect');
   journal.phase = 'ref';
@@ -352,6 +391,7 @@ async function applyPublication(journal: JournalData, options: PublicationOption
         // If the transaction already completed, all its paths already equal their after image.
         const prefix = relative(repo.top, root.path).split('\\').join('/');
         const edits = journal.edits.filter((e) => !prefix || e.path.startsWith(`${prefix}/`));
+        await verifyFiles({ repo, edits }, true);
         const done = await Promise.all(
           edits.map(async (e) => isDeepStrictEqual(await readPublicationFile(repo, e.path), e.after)),
         );
@@ -361,7 +401,17 @@ async function applyPublication(journal: JournalData, options: PublicationOption
             join(transactionDir, 'manifest.json'),
             JSON.stringify(root.manifest as TransactionManifest),
           );
-          await recoverTransactions(root.path, { onCheckpoint: (point) => options.checkpoint?.(`root:${point}`) });
+          await recoverTransactions(root.path, {
+            beforeStep: async (step) => {
+              if (step.kind !== 'write' && step.kind !== 'delete')
+                throw new Error('Unexpected publication transaction step');
+              const path = prefix ? `${prefix}/${step.path}` : step.path;
+              const edit = edits.find((edit) => edit.path === path);
+              if (!edit) throw new Error(`Unexpected publication transaction path: ${path}`);
+              await verifyFile(repo, edit, true);
+            },
+            onCheckpoint: (point) => options.checkpoint?.(`root:${point}`),
+          });
         }
       }
     },
@@ -376,13 +426,16 @@ async function applyPublication(journal: JournalData, options: PublicationOption
     if (!inRoot(edit.path)) {
       const path = repositoryPath(repo, edit.path);
       if (!isDeepStrictEqual(await readPublicationFile(repo, edit.path), edit.after)) {
-        if (!edit.after) await io.rm(path);
-        else {
+        if (!edit.after) {
+          await verifyFile(repo, edit, true);
+          await io.rm(path);
+        } else {
           await io.mkdir(dirname(path));
           await writeFileAtomic(
             path,
             Buffer.from(edit.after.data, 'base64'),
             edit.after.mode === '100755' ? 0o755 : 0o644,
+            () => verifyFile(repo, edit, true),
           );
         }
       }
@@ -391,19 +444,39 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   journal.phase = 'files';
   await writeJournal(journal);
   await options.checkpoint?.('files');
-  if ((await readIndex(repo)) !== journal.indexAfter) {
-    const bytes = await lockBytes(repo);
-    if (bytes === null) await reserveIndex(repo, journal.token);
-    const staged = join(repo.gitDir, 'rowbly', `index-${journal.token}`);
-    await writeFileAtomic(staged, Buffer.from(journal.indexAfter, 'base64'));
-    await io.rename(staged, `${repo.index}.lock`);
+  const beforeInstall = await readIndex(repo);
+  if (beforeInstall !== journal.indexBefore && beforeInstall !== journal.indexAfter)
+    throw new Error(`Prepared index changed externally: ${repo.index}`);
+  const lockState = await indexLockState(journal);
+  if (beforeInstall !== journal.indexAfter) {
+    if (lockState === 'missing') await reserveIndex(repo, journal.token);
+    const payload = indexPayloadPath(repo, journal.token);
+    if (!(await entryExists(payload))) await io.writeFile(payload, Buffer.from(journal.indexAfter, 'base64'));
+    if (!(await ownedFile(payload, payload, journal.indexAfter)))
+      throw new Error(`Prepared index payload changed: ${payload}`);
+    const install = indexInstallPath(repo, journal.token);
+    if (!(await entryExists(install))) await io.link(payload, install);
+    if (!(await ownedFile(install, payload, journal.indexAfter)))
+      throw new Error(`Prepared index install link changed: ${install}`);
+    await io.syncDir(dirname(payload));
+    // Replace only our reservation/payload; the private payload remains linked across installation.
+    if ((await indexLockState(journal)) === 'missing') throw new Error('Prepared index reservation disappeared');
+    await io.rename(install, `${repo.index}.lock`);
     await options.checkpoint?.('index-ready');
+    if (!(await ownedFile(`${repo.index}.lock`, payload, journal.indexAfter)))
+      throw new Error(`Prepared index lock changed externally: ${repo.index}.lock`);
+    const index = await readIndex(repo);
+    if (index !== journal.indexBefore && index !== journal.indexAfter)
+      throw new Error(`Prepared index changed externally: ${repo.index}`);
     await io.rename(`${repo.index}.lock`, repo.index);
     await io.syncDir(repo.gitDir);
   }
   await options.checkpoint?.('index-effect');
   journal.phase = 'index';
   await writeJournal(journal);
+  await indexLockState(journal);
+  if ((await readIndex(repo)) !== journal.indexAfter)
+    throw new Error(`Installed index changed externally: ${repo.index}`);
   await verifyFiles(journal, true);
   for (const edit of journal.edits)
     if (!isDeepStrictEqual(await readPublicationFile(repo, edit.path), edit.after))
@@ -411,9 +484,10 @@ async function applyPublication(journal: JournalData, options: PublicationOption
   journal.phase = 'complete';
   await writeJournal(journal);
   await options.checkpoint?.('complete');
-  const finalLock = await lockBytes(repo);
-  if (finalLock === indexToken(journal.token) || finalLock === journal.indexAfter) await io.rm(`${repo.index}.lock`);
+  if ((await indexLockState(journal)) !== 'missing') await io.rm(`${repo.index}.lock`);
   await io.rm(tokenPath(repo, journal.token));
+  await io.rm(indexInstallPath(repo, journal.token));
+  await io.rm(indexPayloadPath(repo, journal.token));
   await io.rm(ownerPath(repo));
   await gitText(repo.top, ['update-ref', '-d', `refs/rowbly/prepared/${journal.token}`]);
   await io.rm(repo.journal);
@@ -422,9 +496,14 @@ async function applyPublication(journal: JournalData, options: PublicationOption
 }
 export async function recoverPublication(hold: PublicationHold, options: PublicationOptions = {}): Promise<void> {
   assertHold(hold);
-  const journal = await readJournal(hold.repo);
-  if (journal) await applyPublication(journal, options);
-  else await cleanupReservation(hold.repo);
+  let journal: JournalData | null = null;
+  try {
+    journal = await readJournal(hold.repo);
+    if (journal) await applyPublication(journal, options);
+    else await cleanupReservation(hold.repo);
+  } catch (cause) {
+    throw recoveryFailure(journal?.repo ?? hold.repo, cause, journal ?? undefined);
+  }
 }
 
 function validateRoots(repo: GitRepository, roots: string[]) {
