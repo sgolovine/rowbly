@@ -3,6 +3,9 @@ import { type DOMElement, measureElement } from 'ink';
 import { createContext, type RefObject, useContext, useEffect, useRef } from 'react';
 import type { MouseEvent } from '../mouse';
 
+/** Lines one notch of the mouse wheel scrolls. */
+export const WHEEL_LINES = 3;
+
 /** What a box does when clicked, and what it accepts when something is dragged onto it. */
 export interface MouseHandlers {
   onClick?(): void;
