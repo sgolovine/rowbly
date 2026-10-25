@@ -729,10 +729,12 @@ export interface PluginActionOf<T extends ActionTarget, S = Record<string, unkno
   key: string;
   label: string;
   target: T;
+  /** Read-only status projection; cannot start Operations or admit Git effects (ADR-0035 §1). */
+  status?(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S> }): Promise<{ label?: string; busy?: boolean }>;
   run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
-/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
+/** A key with a header button wherever its target is in focus; data changes also need a command. */
 export type PluginAction<S = Record<string, unknown>> = {
   [T in ActionTarget]: PluginActionOf<T, S>;
 }[ActionTarget];

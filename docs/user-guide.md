@@ -479,6 +479,45 @@ Turning Automatic Commits Off keeps Git enabled and its settings accessible, but
 Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Automatic Commits do not push. Automatic Merge Conflict Resolution, described below, can commit and push independently. See [Git Plugin details](plugins/built-in.md#git).
 
 
+#### Manual Sync
+
+With Git enabled, the header's **Sync** Button and `S` synchronize the current branch with its
+configured upstream. This works with Automatic Commits and Automatic Merge Conflict Resolution
+**Off** and changes neither preference. The command equivalent is:
+
+```sh
+rowbly git sync --rebase
+rowbly git sync --rebase --json --no-prompt
+```
+
+Sync runs literal `git pull --rebase` in a private Git context, replaying unpublished Rowbly changes
+with the same reconciliation rules described below. It then stages pending Rowbly additions,
+modifications and deletions, commits only if needed, and normally pushes to the same upstream.
+Pending data is kept separately until after pull; unrelated staged, dirty and untracked content and
+private Local State remain intact. A no-change Sync still pulls and pushes without an empty commit.
+
+The Button shows waiting, pulling, rebasing, committing, validating or pushing progress and disables
+duplicate key/mouse requests. Compact headers retain active progress even when quiet Buttons hide.
+A manual request arriving during an admitted automatic merge waits for its own rebase and push;
+that merge cannot fulfill it. A success toast appears only after the manual push is acknowledged.
+Switching Data Roots or replacing the Git host suppresses obsolete toasts. Git Off stops unadmitted
+work; an admitted run may finish, retaining later saved edits as pending work.
+
+Missing upstream, detached HEAD, authentication/network errors, unsafe local overlap and unsupported
+replay correspondence report an actionable error. Normal unpublished two-parent Rowbly merges,
+including their committed resolution edits and descendants, are preserved. Ambiguous merge bases,
+octopus merges, non-Rowbly merge-only resolution edits or ambiguous identity/Custom Field continuation
+stop before publication. A rejected push retains the valid local result and evidence; fix the cause
+and explicitly Sync again. Interrupted local publication recovers without network even while Off;
+restart never replays a pending manual network request automatically.
+
+`git sync --rebase --json` returns `{ id, mode: "rebase", commit, upstream, evidence, repairs,
+pushed: true }` only for that request's acknowledged push. A safe refusal returns `CONFLICT` (exit 4)
+with the ordinary JSON error on stderr and empty stdout. Failed-push details retain the local commit
+and evidence. Unresolved local publication recovery returns `DATA_INTEGRITY` (exit 6). An unknown
+push response is never reported as success. Bare `git sync` and settings **Run now** keep their
+independent automatic merge behavior below.
+
 #### Automatic Merge Conflict Resolution
 
 The **Git** settings have a separate **Automatic Merge Conflict Resolution** section. It defaults to
@@ -546,7 +585,7 @@ and active work end. A local `commit` alone does not prove a push succeeded. Tim
 summaries are epoch milliseconds. See [Git Plugin details](plugins/built-in.md#git).
 
 
-For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+For bare `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
 JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.

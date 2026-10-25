@@ -103,7 +103,8 @@ Each Plugin callback runs in a **stage** (ADR-0020 §1):
 | `doctor-check` | — (`DoctorData`) | read only | no |
 | `doctor-fix` | writer (doctor's Change Set) | read only | no |
 | `command` | — | `PluginServices` | yes |
-| `screen` (screens, tabs, sections, Actions), `field` | — | `PluginServices` | yes |
+| `screen` (screens, tabs, sections, Action runs), `field` | — | `PluginServices` | yes |
+| `status` (Action status) | — | full context reads; Operations and Git admission rejected | no |
 | `filter`, `row`, `option-input` | — | `PluginServices`, reads only | no |
 
 - **Views are frozen copies.** Every record, change and list a hook reads is a detached, deeply frozen copy; assigning to it throws. An update callback (`updateStory(key, fn)`) gets a copy too: one that changes its copy and then throws changes nothing. `before` is always the stored record.
@@ -272,12 +273,26 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 - **Reloading.** `useAsync(fn, deps)` runs again when `deps` change, toasts a failure, and ignores a run that was superseded. Use `useReloadOnReturn(reload, active?)` to reload when the screen or tab is active again, and while it is active, each time the Data Root changes on disk (a command, another Rowbly or an editor); do not put `active` in `useAsync`'s deps. A screen that loads with `useAsync` alone does not follow changes on disk.
 - **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action only opens or shows something; a data change it offers must also be a command or an option.
 
+An optional `status({ focus, plugin })` returns a promise of `{ label?: string, busy?: boolean }`.
+It runs in the private read-only `status` stage, with the same typed focus and full context reads.
+Operations, Change Set writes, automatic scheduling, and manual/automatic Sync requests are rejected
+before effects. Git status can recover host-local metadata and read upstream configuration outside
+Data Root coordination; it cannot schedule work. Existing editable `field` callbacks keep their write
+boundary. Status polling retains loaded state during refresh, allows one read per Action at a time,
+and ignores obsolete host/root/focus results. Busy combines loaded status with a synchronous local
+pending guard, shared by keys, mouse, keycaps and actionable hints. A compact header retains active
+progress when quiet Buttons are hidden. Run results from obsolete hosts cannot show a later toast.
+
 ```ts
 actions: [
   {
     key: 'x',
     label: 'tally Story',
     target: 'story',
+    async status({ plugin }) {
+      await plugin.localData();
+      return { busy: false };
+    },
     // A `story` Action runs only where a Story is in focus.
     run: ({ focus, ui }) => ui.toast(`${focus.story.key} on Board ${focus.story.boardId}`),
   },

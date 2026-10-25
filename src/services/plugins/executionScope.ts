@@ -14,6 +14,7 @@ export type Stage =
   | 'command'
   | 'screen'
   | 'field'
+  | 'status'
   | 'filter'
   | 'row'
   | 'option-input';

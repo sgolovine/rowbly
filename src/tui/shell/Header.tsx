@@ -12,6 +12,7 @@ const ROOT_NAME_MAX = 24;
 export interface HeaderAction {
   key: string;
   label: string;
+  busy: boolean;
   run(): void;
 }
 
@@ -61,6 +62,11 @@ export function Header({
     newStory: onNewStory !== undefined,
     rootKey: buttonWidth('', 'D') - buttonWidth(''),
   });
+  const progress = actions
+    .filter((action) => action.busy)
+    .map((action) => action.label)
+    .join(' · ');
+  const detail = !showExtras && progress ? progress : labelText;
   return (
     <Panel height={3} paddingX={1} flexDirection="row" columnGap={2}>
       <Box flexShrink={0}>
@@ -74,9 +80,9 @@ export function Header({
         <Text color={theme.borderControl}>|</Text>
       </Box>
       <Box flexGrow={1} flexShrink={1} minWidth={8}>
-        {labelText && (
+        {detail && (
           <Text color={theme.inkMuted} wrap="truncate-end">
-            {labelText}
+            {detail}
           </Text>
         )}
       </Box>
@@ -112,9 +118,9 @@ export function Header({
             <Box key={action.key}>
               <Button
                 label={action.label}
-                keyName={showKeys ? action.key : undefined}
+                keyName={showKeys && !action.busy ? action.key : undefined}
                 onClick={action.run}
-                clickable={actionsClickable}
+                clickable={actionsClickable && !action.busy}
                 compact
               />
               <Text color={theme.borderControl}>|</Text>

@@ -3,8 +3,9 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadProgram } from '../../src/main';
 import type { AnyPluginDefinition } from '../../src/services';
-import { failureWarning, onOff } from '../../src/services';
+import { failureWarning, invokePlugin, onOff } from '../../src/services';
 import { coordinated } from '../../src/services/coordination';
+import { createGitSync } from '../../src/services/plugins/gitSync';
 import { withGitWorker } from '../../src/storage/gitRepository';
 import { publishPublication, withPublication } from '../../src/storage/gitSyncJournal';
 import { tempRoot } from '../helpers';
@@ -23,6 +24,15 @@ describe('loading Plugins (ADR-0010)', () => {
       ['boom', 'off'],
     ]);
     expect(host.failures()).toEqual([]);
+    const sync = createGitSync(t.root, 'git', [], () => undefined);
+    await invokePlugin({ plugin: 'notes', stage: 'status' }, async () => {
+      const options = () => ({ enabled: true, intervalSeconds: 300 });
+      await expect(sync.requestRebaseSync(options)).rejects.toThrow('live command or screen');
+      await expect(sync.requestSync(options)).rejects.toThrow('command or screen');
+      await expect(sync.resumeSync(options)).rejects.toThrow('live reaction');
+    });
+    // No repository exists: these reject before discovery, metadata, scheduling or network work.
+    await expect(stat(join(t.dir, '.git'))).rejects.toMatchObject({ code: 'ENOENT' });
 
     // The real program loader registers only the recovered configuration, before createContext.
     for (const enabled of [false, true]) {

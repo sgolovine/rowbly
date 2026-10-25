@@ -16,7 +16,11 @@ Git contributes the generic S/Sync Action whenever enabled, with `git sync --reb
 counterpart. Neither changes a preference. This amends ADR-0017: an Action may change data when the same
 change is available through a Plugin command. Existing bare `git sync` and automatic scheduling keep
 ADR-0034 merge behavior. Generic Action status and a synchronous pending guard share the same busy
-predicate for keyboard, mouse and hints. Progress remains visible at compact widths. Late results from
+predicate for keyboard, mouse and hints. Status uses a private read-only `status` invocation stage,
+excluded from Operation starts, Change Set writes and all Git scheduling/request admission. Full
+context reads remain available. Existing editable `field` callbacks retain their write boundary.
+Git status performs only host-local recovery and configuration reads, outside Data Root coordination
+for Git processes; polling never schedules work. Progress remains visible at compact widths. Late results from
 an obsolete Data Root or host cannot toast in a new session.
 
 ### 2. Isolated replay and ownership

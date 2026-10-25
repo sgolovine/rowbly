@@ -40,18 +40,29 @@ export function pluginRoute(id: string, screen: string, params: Record<string, u
 }
 
 /** What Plugin `id`'s screens and Actions use to open and show things. */
-export function pluginUi(id: string, router: Router, toasts: ToastStore): PluginUi {
+export function pluginUi(id: string, router: Router, toasts: ToastStore, current = () => true): PluginUi {
   return {
     open(screen, params) {
+      if (!current()) return;
       const route = pluginRoute(id, screen, params);
       router.push(route.screen, route.params);
     },
     // Core routes stay private: a Plugin names only the record, never the route (ARCH-07).
-    openStory: (key) => router.push('story', { key, title: key }),
-    openBoard: (boardId) => router.push('board-detail', { boardId, title: boardId }),
-    back: () => router.pop(),
-    toast: (message, kind = 'info') => toasts.push(kind, message),
-    error: (err) => toasts.error(err),
+    openStory: (key) => {
+      if (current()) router.push('story', { key, title: key });
+    },
+    openBoard: (boardId) => {
+      if (current()) router.push('board-detail', { boardId, title: boardId });
+    },
+    back: () => {
+      if (current()) router.pop();
+    },
+    toast: (message, kind = 'info') => {
+      if (current()) toasts.push(kind, message);
+    },
+    error: (err) => {
+      if (current()) toasts.error(err);
+    },
   };
 }
 

@@ -1,5 +1,6 @@
 import { definePlugin, z } from '../../plugin-api';
 import { commands } from './commands';
+import { syncAction } from './headerAction';
 import { Preferences, resolveCommitOptions, resolveSyncOptions } from './model';
 
 export const git = definePlugin({
@@ -19,5 +20,6 @@ export const git = definePlugin({
     await plugin.git.resumeSync(resolveSyncOptions);
   },
   commands,
+  actions: [syncAction],
   tui: () => import('./tui').then((m) => m.tui),
 });

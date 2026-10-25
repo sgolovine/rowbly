@@ -1,31 +1,41 @@
 import type { ActionFocus, PluginAction, PluginContext, PluginUi } from '../../services';
 
-/** What the shell passes to a bound Action. */
-export interface ActionRunArgs {
-  plugin: PluginContext;
-  ui: PluginUi;
+/** An Action bound to the exact focus required by its target. */
+export interface BoundAction {
+  run(args: { plugin: PluginContext; ui: PluginUi }): void | Promise<void>;
+  status?(plugin: PluginContext): Promise<{ label?: string; busy?: boolean }>;
 }
 
-/**
- * `action.run` bound to the focus its target needs, or `null` when that target is not in focus: a
- * Board for `board`, a Story for `story`; `none` always runs (DX-30).
- * The header button and the key both use this, so they show and run the same Actions.
- */
-export function bindAction(
-  action: PluginAction<unknown>,
-  focus: ActionFocus | null,
-): ((args: ActionRunArgs) => void | Promise<void>) | null {
+/** Keyboard, mouse and status use the same target-qualified focus (ADR-0017). */
+export function bindAction(action: PluginAction<unknown>, focus: ActionFocus | null): BoundAction | null {
   const current = focus ?? {};
   switch (action.target) {
     case 'board': {
       const { board } = current;
-      return board ? (args) => action.run({ ...args, focus: { ...current, board } }) : null;
+      if (!board) return null;
+      const focus = { ...current, board },
+        status = action.status;
+      return {
+        run: (args) => action.run({ ...args, focus }),
+        status: status && ((plugin) => status({ plugin, focus })),
+      };
     }
     case 'story': {
       const { story } = current;
-      return story ? (args) => action.run({ ...args, focus: { ...current, story } }) : null;
+      if (!story) return null;
+      const focus = { ...current, story },
+        status = action.status;
+      return {
+        run: (args) => action.run({ ...args, focus }),
+        status: status && ((plugin) => status({ plugin, focus })),
+      };
     }
-    case 'none':
-      return (args) => action.run({ ...args, focus: current });
+    case 'none': {
+      const status = action.status;
+      return {
+        run: (args) => action.run({ ...args, focus: current }),
+        status: status && ((plugin) => status({ plugin, focus: current })),
+      };
+    }
   }
 }

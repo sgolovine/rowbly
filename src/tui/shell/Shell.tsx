@@ -1,6 +1,6 @@
 import { Box, useApp, useInput, useStdout, useWindowSize } from 'ink';
 import { type ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { invokePlugin, knownDataRoots } from '../../services';
+import { knownDataRoots } from '../../services';
 import { ConfirmDialog, ContextMenu, Modal, Panel } from '../components';
 import {
   ActiveContext,
@@ -14,13 +14,11 @@ import {
   LayoutContext,
   type MainOverlay,
   MainOverlayContext,
-  pluginUi,
   ServicesContext,
   ShellContext,
   SidebarFilterContext,
   useAsync,
   useDataRootChanges,
-  usePlugins,
   useScreenFocus,
   useScreenHints,
   useScreenLabel,
@@ -29,17 +27,17 @@ import {
 import { globalAction, type KeyHint, moveDelta } from '../keymap';
 import { routeTitle, useRouter } from '../router';
 import type { ScreenRegistry } from '../screens';
-import { bindAction } from './actionFocus';
 import { boardKey } from './boardKey';
 import { DataRootSwitcher } from './DataRootSwitcher';
 import { dataRootName } from './dataRootName';
 import { Footer } from './Footer';
-import { Header, type HeaderAction } from './Header';
+import { Header } from './Header';
 import { HelpOverlay } from './HelpOverlay';
 import { FOOTER_HEIGHT, HEADER_HEIGHT, MAIN_MIN_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_WIDTH } from './layout';
 import { ScreenSlot } from './ScreenSlot';
 import { Sidebar } from './Sidebar';
 import { ToastArea } from './ToastArea';
+import { usePluginActions } from './usePluginActions';
 import { usePluginSidebars } from './usePluginSidebars';
 
 type Overlay =
@@ -95,33 +93,12 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const depth = router.stack.length - 1;
   const atRoot = depth === 0;
   const idle = atRoot && overlay === null;
-  const { plugins } = usePlugins();
   const focus = useScreenFocus(depth);
 
-  // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
-  const actions: HeaderAction[] = services
-    ? plugins.flatMap((plugin) =>
-        plugin.actions.flatMap((action) => {
-          const run = bindAction(action, focus);
-          if (!run) return [];
-          return [
-            {
-              key: action.key,
-              label: action.label,
-              run: () => {
-                const ui = pluginUi(plugin.id, router, toast);
-                // The adapter turns a synchronous throw and a rejection alike into one attributed
-                // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
-                invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
-                  run({ plugin: services.plugins.context(plugin.id), ui }),
-                ).catch((err: unknown) => toast.error(err));
-              },
-            },
-          ];
-        }),
-      )
-    : [];
-  const actionHints: KeyHint[] = actions.map((action) => ({ key: action.key, description: action.label }));
+  const actions = usePluginActions(focus);
+  const actionHints: KeyHint[] = actions
+    .filter((action) => !action.busy)
+    .map((action) => ({ key: action.key, description: action.label }));
 
   const selection = useMemo<BoardSelection>(
     () => ({

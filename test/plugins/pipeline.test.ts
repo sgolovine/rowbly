@@ -9,6 +9,7 @@ import { storyLinking } from '../../src/plugins/story-linking';
 import { addLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
 import { updateTask } from '../../src/plugins/tasks/tasks';
+import { invokePlugin } from '../../src/services';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import { makeStory } from '../helpers';
@@ -25,6 +26,23 @@ describe('transform (ADR-0012)', () => {
     order.length = 0;
     await services.stories.move('WEB-1', 'todo');
     expect(order).toEqual(['transform:1', 'guard', 'react:todo']);
+    const before = await services.boards.get('web');
+    await expect(
+      invokePlugin({ plugin: 'tracer', stage: 'status' }, () =>
+        services.plugins.context('tracer').operation('status-operation', {}, async () => undefined),
+      ),
+    ).rejects.toMatchObject({ code: 'INTERNAL', details: { stage: 'status', nested: 'tracer.status-operation' } });
+    await expect(
+      invokePlugin({ plugin: 'tracer', stage: 'status' }, () =>
+        services.boards.update('web', { name: 'Must not save' }),
+      ),
+    ).rejects.toMatchObject({ code: 'INTERNAL', details: { stage: 'status' } });
+    expect(await services.boards.get('web')).toEqual(before);
+    // Editable field forms retain their existing Operation boundary.
+    await invokePlugin({ plugin: 'tracer', stage: 'field' }, () =>
+      services.boards.update('web', { name: 'Field save' }),
+    );
+    expect((await services.boards.get('web')).name).toBe('Field save');
   });
 
   it('a thrown error fails the operation as INTERNAL, naming the Plugin; nothing is saved', async () => {

@@ -17,7 +17,18 @@ const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
   { text: /\buser\.(email|name)\b/g, why: 'the git config key' },
   { file: /^storage\/git\.ts$/, text: /^status$/, why: 'git status command argv, not a Rowbly term' },
-  { file: /^storage\/gitSync\.ts$/, text: /^--no-tags$/, why: 'Git fetch flag, not a Rowbly term' },
+  { file: /^storage\/git(?:Sync|RebaseSync)\.ts$/, text: /^--no-tags$/, why: 'Git fetch/pull flag, not a Rowbly term' },
+  {
+    file: /^storage\/gitRebase(?:Context|Sync)\.ts$/,
+    text: /^owner\.json$/,
+    why: 'private disposable Git context manifest filename',
+  },
+  { file: /^storage\/gitRebaseContext\.ts$/, text: /^info\/attributes$/, why: 'Git attributes filename' },
+  {
+    file: /^(services\/plugins\/executionScope|tui\/shell\/usePluginActions)\.ts$/,
+    text: /^status$/,
+    why: 'private read-only invocation stage identifier',
+  },
   { text: /\bLocal State\b/g, why: 'a CONTEXT.md term' },
   { text: /^\.\.?\/.*$/, why: 'a relative import path' },
 ];

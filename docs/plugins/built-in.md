@@ -277,6 +277,41 @@ Git failures warn after the Rowbly change has saved; the Operation still succeed
 Doctor repair passes are Operations too. To inspect a complete repair before the next Automatic Commit, disable Git before `doctor --fix` and re-enable it after doctor exits 0; keep other Plugins on for their checks.
 
 
+### Manual Sync
+
+When Git is enabled, its header **Sync** Button and `S` share `git sync --rebase`. Manual Sync ignores
+both automatic enablement preferences and changes neither. It uses the configured upstream and
+noninteractive Git authentication. A fixed private helper runs literal `git pull --rebase` before
+pending Rowbly additions, modifications and deletions are staged/committed. Replay carries recognized
+core and Plugin identities, Configuration Cascade definitions and effective Custom Field values
+through successive commits and pending bytes. Actual repairs retain exact raw/projected provenance
+and alternatives in Merge Evidence. Normal two-parent Rowbly merges retain resolution-only edits
+before descendants/pending changes. Ambiguous correspondence, octopus merges and non-Rowbly
+merge-only resolutions refuse safely. Unknown/future formats are never interpreted or removed.
+
+After complete validation, the existing journal publishes locally and pushes normally. A candidate
+may replace unpublished history without descending from the old local tip, but must descend from
+the exact fetched upstream. Unrelated index/working/untracked bytes and private exclusions remain
+intact, as do later pending revisions. Equal/up-to-date history without pending changes makes no new
+capture or audit-only commit; it still pulls and pushes.
+
+Progress uses the generic read-only Action status boundary (ADR-0035). The same busy predicate gates
+keyboard, mouse and hints, with compact progress retained. One manual id coalesces callers across
+processes and aliases. An automatic merge already admitted finishes first; only that manual id's
+acknowledged push resolves its waiters and produces its success toast. Obsolete root/host UI results
+are ignored. Git Off/host disposal cancels unadmitted intent; admitted jobs finish and drain. Restart
+recovers local publication without replaying manual network intent. Missing/interrupted receipts
+report unknown push results, never success.
+
+```sh
+rowbly git sync --rebase --json --no-prompt
+```
+
+The successful JSON result is `{ id, mode: "rebase", commit, upstream, evidence, repairs, pushed: true }`.
+Safe failures use `CONFLICT`/4 with empty stdout and the usual JSON error; failed pushes include the
+retained local commit/evidence in error details. Unresolved local journal recovery remains
+`DATA_INTEGRITY`/6. Bare `git sync` and settings **Run now** retain the automatic merge behavior below.
+
 ### Automatic Merge Conflict Resolution
 
 This separate section in **Git** settings is Off by default. `m` opens its enable/interval form;
@@ -347,7 +382,7 @@ can coexist with an older last result; only a completed `synchronized` result pr
 commit after a rejected push does not. See the [user guide](../user-guide.md#automatic-merge-conflict-resolution).
 
 
-For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+For bare `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
 JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.

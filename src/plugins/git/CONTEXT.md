@@ -20,3 +20,8 @@ An independently enabled, interval or on-demand synchronization of the current b
 
 **Merge Evidence**:
 Content-addressed files under `plugins/git/merge-evidence/` retaining the base, exact alternatives, provenance, remapping and repair decisions of synchronization.
+
+**Sync**:
+The explicit header Button/`S` and `git sync --rebase` action: pull with rebase before committing
+pending Rowbly data, then push normally. Available with Git On regardless of automatic preferences;
+success means that exact manual request's push completed.

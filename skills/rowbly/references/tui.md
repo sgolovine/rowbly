@@ -51,3 +51,8 @@ default; kept in `~/.rowblyrc.json`).
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
+
+With Git On, the header **Sync** Button and `S` run manual Sync, independently of both automatic
+preferences. Progress disables duplicate key/mouse input and remains visible at compact widths.
+Success appears only after that exact request's push. See [Git](plugin-git.md) for the command,
+refusals and recovery rules. Bare `git sync`/settings Run now retain automatic merge behavior.

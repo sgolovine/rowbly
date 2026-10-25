@@ -66,6 +66,40 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
 - A git failure (missing author, an index lock, a merge in progress) warns, keeps the Rowbly change
   saved, and leaves the work pending for a later run. Fix the cause, then run Rowbly again.
 
+## Manual Sync
+
+Use explicit manual Sync only when synchronization is requested. With Git On, `S`/the header **Sync**
+Button has the same behavior as:
+
+```sh
+rowbly git sync --rebase --json --no-prompt
+```
+
+- It works with both automatic preferences Off and changes neither. It runs literal `git pull
+  --rebase` in an owned private context BEFORE staging/committing pending Rowbly additions, edits and
+  deletions, then normally pushes to the configured upstream. No-change requests still pull/push
+  without creating an empty or audit-only commit. It preserves unrelated staging/dirty/untracked
+  bytes, Local State/locks/transactions and later pending revisions. Never use force-push, reset-hard,
+  whole-repository staging or a stash to bypass a refusal.
+- Replay uses the existing reconciliation rules, including recognized identity and Custom Field
+  continuation and committed resolution edits from normal two-parent Rowbly merges. Unknown/future
+  data stays opaque. Ambiguous merge bases, octopus merges, non-Rowbly merge-only resolution edits,
+  unprovable skipped correspondence and ambiguous new alias destinations refuse before publication.
+- Wait for this command's exact `{ id, mode: "rebase", commit, upstream, evidence, repairs,
+  pushed: true }` result. An automatic merge, old `last`, active phase or local commit alone cannot
+  prove manual success. Simultaneous callers join the same manual id, including across processes.
+  The header disables duplicate input and shows progress, including at compact widths; success
+  appears only after push. Late root/host results cannot toast in another session.
+- `CONFLICT`/4 failures have empty stdout and the usual JSON error on stderr. A rejected push retains
+  the valid local commit and evidence in error details. Resolve the cause, preserve that evidence,
+  then explicitly run manual Sync again. Unresolved publication recovery stays `DATA_INTEGRITY`/6.
+  Missing/interrupted receipts mean the push result is unknown. Restart performs only local recovery
+  for manual intent; it never retries its network request automatically. Git Off/host disposal stops
+  unadmitted work; admitted work can finish and later edits remain pending.
+- Bare `git sync` and settings **Run now** keep the automatic merge behavior below. Its On/Off does
+  not disable manual Sync. `git show` includes `manualAvailable`, optional pending `manual`, and
+  `mode`/`id` on active/last results, so a manual rebase is distinguishable from an automatic merge.
+
 ## 5. Automatic Merge Conflict Resolution
 
 ```sh
@@ -152,7 +186,7 @@ Git first (`rowbly plugins disable git`), remember that it was on, run the repai
   Commit. Start from a clean baseline.
 
 
-For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+For bare `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
 JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.

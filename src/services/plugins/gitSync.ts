@@ -606,7 +606,7 @@ export function createGitSync(
       }
       throw new ConflictError('Manual Sync is still pending or its push result is unknown', {
         details: { id: requestId },
-        hint: 'Inspect Git status before starting a new Sync.',
+        hint: 'Inspect Git synchronization details before starting a new Sync.',
       });
     },
   };

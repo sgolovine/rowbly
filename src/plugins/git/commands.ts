@@ -4,11 +4,20 @@ import { configure, preferences, resolveSyncOptions } from './model';
 export const commands: PluginCommands = (group, cli) => {
   group
     .command('sync')
-    .description('Synchronize with the configured upstream when enabled')
-    .action((_opts, cmd) =>
+    .description('Synchronize with the configured upstream')
+    .option(
+      '--rebase',
+      'pull with rebase, then commit pending Rowbly changes and push; independent of automatic preferences',
+    )
+    .action((opts: { rebase?: boolean }, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
+        if (opts.rebase) {
+          const result = await plugin.git.requestRebaseSync(resolveSyncOptions);
+          print(result, () => 'Synchronized with upstream');
+          return;
+        }
         const result = await plugin.git.requestSync(resolveSyncOptions);
-        if (!result.active && !result.requested && result.last?.kind === 'failed')
+        if (!result.active && !result.requested && !result.manual && result.last?.kind === 'failed')
           throw new ConflictError(result.last.message, {
             details: { synchronizationRun: result },
             hint: 'Resolve the reported cause, then retry `rowbly git sync`.',
@@ -16,7 +25,7 @@ export const commands: PluginCommands = (group, cli) => {
         print(result, (value) =>
           value.active
             ? `Synchronization ${value.active.phase}`
-            : value.requested
+            : value.requested || value.manual
               ? 'Synchronization pending'
               : value.last
                 ? `${value.last.kind}: ${value.last.message}`

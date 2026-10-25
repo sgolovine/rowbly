@@ -43,7 +43,7 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
   useEffect(() => {
     if (loaded.data) previous.current = loaded.data;
   }, [loaded.data]);
-  const busy = !!data?.sync.active || !!data?.sync.requested || requesting;
+  const busy = !!data?.sync.active || !!data?.sync.requested || !!data?.sync.manual || requesting;
   const canRun = active && data?.sync.enabled === true && !busy;
   const run = () => {
     if (!canRun) return;
@@ -53,7 +53,7 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
       .then((result) => {
         if (!mounted.current) return;
         if (result.active) ui.toast(`Synchronization running: ${result.active.phase}`);
-        else if (result.requested) ui.toast('Synchronization pending');
+        else if (result.requested || result.manual) ui.toast('Synchronization pending');
         else if (result.last?.kind === 'synchronized') ui.toast('Synchronized with upstream');
         else if (result.last) ui.error(new Error(result.last.message));
         else ui.toast('No synchronization admitted');
@@ -129,9 +129,19 @@ export function GitSettings({ plugin, ui }: PluginScreenProps) {
           { label: 'Upstream', value: sync.upstream ?? '—' },
           ...(sync.prerequisite ? [{ label: 'Prerequisite', value: sync.prerequisite }] : []),
           { label: 'Next run', value: sync.enabled ? date(sync.nextDue) : 'Paused' },
-          { label: 'Active run', value: sync.active?.phase ?? (requesting || sync.requested ? 'Pending' : '—') },
+          {
+            label: 'Active run',
+            value: sync.active
+              ? `${sync.active.mode}: ${sync.active.phase}`
+              : requesting || sync.requested || sync.manual
+                ? 'Pending'
+                : '—',
+          },
           { label: 'Last attempt', value: date(sync.active?.startedAt ?? sync.last?.startedAt) },
-          { label: 'Last result', value: sync.last ? `${sync.last.kind}: ${sync.last.message}` : '—' },
+          {
+            label: 'Last result',
+            value: sync.last ? `${sync.last.mode}: ${sync.last.kind}: ${sync.last.message}` : '—',
+          },
           { label: 'Finished', value: date(sync.last?.finishedAt) },
           { label: 'Local commit', value: sync.last?.commit?.slice(0, 12) ?? '—' },
           { label: 'Repairs', value: String(sync.last?.repairs ?? 0) },

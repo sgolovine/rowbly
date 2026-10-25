@@ -57,6 +57,10 @@ export const tally = definePlugin({
       key: 'x',
       label: 'tally Story',
       target: 'story',
+      async status({ plugin }) {
+        await plugin.localData();
+        return { busy: false };
+      },
       // A `story` Action runs only where a Story is in focus.
       run: ({ focus, ui }) => ui.toast(`${focus.story.key} on Board ${focus.story.boardId}`),
     },
