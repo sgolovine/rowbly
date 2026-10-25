@@ -1160,6 +1160,151 @@ describe('isolated upstream synchronization', () => {
     );
     expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
   });
+  it('rebases a rejected two-parent merge without losing its resolution, descendant owner edits or pending bytes', async () => {
+    const { tempRoot } = await import('../helpers');
+    const home = await tempRoot();
+    vi.stubEnv('HOME', home.dir);
+    try {
+      const f = await remoteFixture();
+      const { builtInPlugins } = await import('../../src/plugins');
+      const { mergeData } = await import('../../src/services/plugins/mergeData');
+      const { createReplayHistory } = await import('../../src/services/plugins/replayHistory');
+      const { synchronizeGitRebase } = await import('../../src/storage/gitRebaseSync');
+      const { withGitWorker } = await import('../../src/storage/gitRepository');
+      const { coordinated } = await import('../../src/services/coordination');
+      const story = await f.services.stories.create('web', { name: 'Base' });
+      const path = `.rowbly/boards/web/stories/${story.key}/story.json`;
+      const save = async (cwd: string, value: unknown) =>
+        writeFile(join(cwd, path), `${JSON.stringify(value, null, 2)}\n`);
+      const read = async (cwd: string) => JSON.parse(await readFile(join(cwd, path), 'utf8'));
+      await f.command('add', '.rowbly');
+      await f.command('commit', '-m', 'base Story');
+      await f.command('push');
+      await command(f.peer, 'pull', '--ff-only');
+      const base = await read(f.t.dir);
+      const task = (name: string) => ({
+        number: 1,
+        name,
+        description: '',
+        stage: 'backlog',
+        createdAt: story.createdAt,
+        updatedAt: story.updatedAt,
+      });
+      const comment = (body: string) => ({
+        id: 'same',
+        body,
+        author: null,
+        createdAt: story.createdAt,
+        updatedAt: story.updatedAt,
+      });
+      await save(f.t.dir, {
+        ...base,
+        plugins: { tasks: { nextNumber: 2, tasks: [task('local')] }, comments: { comments: [comment('local')] } },
+      });
+      const originalBytes = await readFile(join(f.t.dir, path));
+      await f.command('add', '.rowbly');
+      await f.command('commit', '-m', 'local identities');
+      const first = await f.command('rev-parse', 'HEAD');
+      await save(f.peer, {
+        ...base,
+        plugins: { tasks: { nextNumber: 2, tasks: [task('remote')] }, comments: { comments: [comment('remote')] } },
+      });
+      await command(f.peer, 'add', '.rowbly');
+      await command(f.peer, 'commit', '-m', 'remote identities');
+      await command(f.peer, 'push');
+      const hook = join(f.remote, 'hooks/pre-receive');
+      await writeFile(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+      try {
+        await expect(f.run()).rejects.toThrow('push');
+      } finally {
+        await rm(hook);
+      }
+      const parents = (await f.command('show', '-s', '--format=%P', 'HEAD')).split(' ');
+      expect(parents).toHaveLength(2);
+      expect(parents[0]).toBe(first);
+      const resolved = await read(f.t.dir);
+      resolved.description = 'resolution only\n';
+      await save(f.t.dir, resolved);
+      await f.command('add', '.rowbly');
+      const editedMerge = await f.command(
+        'commit-tree',
+        await f.command('write-tree'),
+        ...parents.flatMap((id) => ['-p', id]),
+        '-m',
+        'resolved merge',
+      );
+      await f.command('update-ref', 'refs/heads/main', editedMerge);
+      const later = await read(f.t.dir);
+      later.plugins.tasks.tasks.find((value: { name: string }) => value.name === 'local').name = 'later';
+      later.plugins.comments.comments.find((value: { body: string }) => value.body === 'local').body = 'later';
+      await save(f.t.dir, later);
+      await f.command('add', '.rowbly');
+      await f.command('commit', '-m', 'descendant edits');
+      const old = await f.command('rev-parse', 'HEAD');
+      const advanced = await read(f.peer);
+      advanced.name = 'New upstream';
+      await save(f.peer, advanced);
+      await command(f.peer, 'add', '.rowbly');
+      await command(f.peer, 'commit', '-m', 'advance upstream');
+      await command(f.peer, 'push');
+      const upstream = await command(f.peer, 'rev-parse', 'HEAD');
+      const pending = await read(f.t.dir);
+      pending.plugins.tasks.tasks.find((value: { name: string }) => value.name === 'later').name = 'pending';
+      pending.plugins.comments.comments.find((value: { body: string }) => value.body === 'later').body = 'pending';
+      await save(f.t.dir, pending);
+      const phases: string[] = [];
+      const run = () =>
+        withGitWorker(f.repo, () =>
+          synchronizeGitRebase(
+            f.repo,
+            f.t.root,
+            { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
+            (read) => coordinated(f.t.root, 'rebase regression capture', read),
+            (history) => createReplayHistory(history, builtInPlugins),
+            async (phase) => {
+              phases.push(phase);
+            },
+            async (files) => {
+              mergeData(
+                { id: 'validation', files },
+                { id: 'validation', files },
+                { id: 'validation', files },
+                builtInPlugins,
+              );
+            },
+          ),
+        );
+      const result = await run();
+      expect(result.pushed).toBe(true);
+      const final = await read(f.t.dir);
+      expect(final).toMatchObject({ name: 'New upstream', description: 'resolution only\n' });
+      expect(final.plugins.tasks.tasks.map((value: { name: string }) => value.name).sort()).toEqual([
+        'pending',
+        'remote',
+      ]);
+      expect(final.plugins.comments.comments.map((value: { body: string }) => value.body).sort()).toEqual([
+        'pending',
+        'remote',
+      ]);
+      expect(await command(f.remote, 'rev-parse', 'refs/heads/main')).toBe(result.commit);
+      expect(await f.command('merge-base', '--is-ancestor', upstream, result.commit)).toBe('');
+      await expect(f.command('merge-base', '--is-ancestor', old, result.commit)).rejects.toThrow();
+      const proofs = await Promise.all(
+        result.evidence.map(async (path) => JSON.parse(await readFile(join(f.t.path, path), 'utf8'))),
+      );
+      expect(proofs.some((proof) => proof.mergeOverlay?.committed.id === editedMerge)).toBe(true);
+      const replay = proofs.find((proof) => proof.kind === 'replay' && proof.original.commit.id === first);
+      expect(Buffer.from(replay.original.commit.files[path.slice(8)].data, 'base64')).toEqual(originalBytes);
+      expect(phases.indexOf('pulling')).toBeLessThan(phases.indexOf('preparing'));
+      const noop = await run();
+      expect(noop.commit).toBe(result.commit);
+      expect(noop.evidence).toEqual([]);
+      expect((await readdir(join(f.repo.gitDir, 'rowbly'))).some((name) => name.startsWith('rebase-'))).toBe(false);
+      expect((await preferences(f.services.plugins.context('git'))).automaticCommits).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it('runs a real interval without pending data, coalesces requests and lets one admitted run finish after saved Off while stale callbacks stay paused', async () => {
     const f = await remoteFixture(),
       plugin = f.services.plugins.context('git');

@@ -8,6 +8,8 @@ import { type LockHandle, withLock } from './lock';
 import { canonicalDataRoot } from './pathPolicy';
 
 export interface GitRepository {
+  /** Only the owned standalone rebase context sets this flag. */
+  isolated?: true;
   top: string;
   gitDir: string;
   common: string;

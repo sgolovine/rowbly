@@ -9,12 +9,17 @@ export interface GitReplayStep {
   current: string;
   commit: string;
 }
+export interface GitRebaseEnvironment {
+  ROWBLY_REBASE_SOCKET: string;
+  ROWBLY_REBASE_TOKEN: string;
+  PATH: string;
+}
 
 /** One bounded bridge for an owned standalone Git context; not a Plugin capability. */
 export async function openRebaseBridge(
   directory: string,
   prepare: (step: GitReplayStep) => Promise<string>,
-): Promise<{ environment: Record<string, string>; close(): Promise<void> }> {
+): Promise<{ environment: GitRebaseEnvironment; close(): Promise<void> }> {
   const token = randomBytes(16).toString('hex');
   const path = join(directory, 'replay.sock');
   const source = import.meta.url.endsWith('.ts');

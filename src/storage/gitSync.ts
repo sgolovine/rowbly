@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { DataRoot } from '../schemas';
 import type { GitCommitOptions } from './git';
 import { gitProcess, gitText, outsideGitDeadline, withGitDeadline } from './gitProcess';
+import { cleanupRebaseContexts } from './gitRebaseContext';
 import { assertGitWorker, canonicalGitRoot, type GitRepository, rootPrefix } from './gitRepository';
 import { type GitDataFiles, isGitDataPath, readGitDataFiles } from './gitSyncFiles';
 import {
@@ -64,7 +65,9 @@ export async function configuredUpstream(repo: GitRepository): Promise<GitUpstre
   return { branch, remote, mergeRef };
 }
 async function tree(repo: GitRepository, ref: string): Promise<Tree> {
-  const text = (await gitProcess(repo.top, ['ls-tree', '-r', '-z', ref])).stdout.toString('utf8');
+  const text = (
+    await gitProcess(repo.top, ['ls-tree', '-r', '-z', ref], { privateContext: repo.isolated })
+  ).stdout.toString('utf8');
   const out: Tree = {};
   for (const line of text.split('\0').filter(Boolean)) {
     const match = /^(\d+) (?:blob|commit) ([a-f0-9]+)\t(.+)$/.exec(line);
@@ -82,7 +85,7 @@ function inRepository(prefix: string, path: string): string {
 async function blob(repo: GitRepository, entry: TreeEntry): Promise<PublicationFile> {
   if (!['100644', '100755'].includes(entry.mode))
     throw new Error('Git synchronization refuses changed symbolic links or submodules');
-  const bytes = (await gitProcess(repo.top, ['cat-file', 'blob', entry.oid])).stdout;
+  const bytes = (await gitProcess(repo.top, ['cat-file', 'blob', entry.oid], { privateContext: repo.isolated })).stdout;
   return { data: bytes.toString('base64'), mode: entry.mode as PublicationFile['mode'] };
 }
 async function sourceFiles(repo: GitRepository, entries: Tree, prefix: string): Promise<GitDataFiles> {
@@ -104,11 +107,17 @@ async function sourceFiles(repo: GitRepository, entries: Tree, prefix: string): 
 }
 async function put(repo: GitRepository, index: string, path: string, file: PublicationFile | undefined) {
   if (!file) {
-    await gitText(repo.top, ['update-index', '--force-remove', '--', path], { index });
+    await gitText(repo.top, ['update-index', '--force-remove', '--', path], { index, privateContext: repo.isolated });
     return;
   }
-  const oid = await gitText(repo.top, ['hash-object', '-w', '--stdin'], { input: Buffer.from(file.data, 'base64') });
-  await gitText(repo.top, ['update-index', '--add', '--cacheinfo', file.mode, oid, path], { index });
+  const oid = await gitText(repo.top, ['hash-object', '-w', '--no-filters', '--stdin'], {
+    input: Buffer.from(file.data, 'base64'),
+    privateContext: repo.isolated,
+  });
+  await gitText(repo.top, ['update-index', '--add', '--cacheinfo', file.mode, oid, path], {
+    index,
+    privateContext: repo.isolated,
+  });
 }
 async function commit(
   repo: GitRepository,
@@ -117,15 +126,19 @@ async function commit(
   options: GitCommitOptions,
   message: string,
 ): Promise<string> {
-  return gitText(repo.top, [
-    ...(options.authorName ? ['-c', `user.name=${options.authorName}`] : []),
-    ...(options.authorEmail ? ['-c', `user.email=${options.authorEmail}`] : []),
-    'commit-tree',
-    treeOid,
-    ...parents.flatMap((p) => ['-p', p]),
-    '-m',
-    message,
-  ]);
+  return gitText(
+    repo.top,
+    [
+      ...(options.authorName ? ['-c', `user.name=${options.authorName}`] : []),
+      ...(options.authorEmail ? ['-c', `user.email=${options.authorEmail}`] : []),
+      'commit-tree',
+      treeOid,
+      ...parents.flatMap((p) => ['-p', p]),
+      '-m',
+      message,
+    ],
+    { privateContext: repo.isolated },
+  );
 }
 async function busy(repo: GitRepository) {
   for (const path of ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-apply', 'rebase-merge', 'sequencer'])
@@ -150,6 +163,7 @@ async function mergeOptions(repo: GitRepository): Promise<string[]> {
 
 /** The common worker excludes live preparations; journal recovery owns its separate prepared pin. */
 async function cleanupPreparation(repo: GitRepository): Promise<void> {
+  await cleanupRebaseContexts(repo);
   const directory = join(repo.gitDir, 'rowbly');
   await io.mkdir(directory);
   for (const name of await io.readdir(directory)) {

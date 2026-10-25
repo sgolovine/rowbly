@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawn } from 'node:child_process';
+import type { GitRebaseEnvironment } from './gitRebaseBridge';
 
 const deadlines = new AsyncLocalStorage<number>();
 export function withGitDeadline<T>(milliseconds: number, fn: () => Promise<T>): Promise<T> {
@@ -16,6 +17,7 @@ export interface GitProcessOptions {
   allowFailure?: boolean;
   /** Host-owned standalone context only; never inherit global/system configuration or attributes. */
   privateContext?: true;
+  rebase?: GitRebaseEnvironment;
 }
 /** Host-only argv execution: finite time/output, closed input, no interactive helpers or inherited Git overrides. */
 export function gitProcess(
@@ -24,6 +26,8 @@ export function gitProcess(
   options: GitProcessOptions = {},
 ): Promise<{ code: number; stdout: Buffer; stderr: string }> {
   const left = (deadlines.getStore() ?? Infinity) - Date.now();
+  if (options.rebase && !options.privateContext)
+    return Promise.reject(new Error('The fixed replay bridge requires an isolated Git context'));
   if (left <= 0) return Promise.reject(new Error('Git synchronization exceeded its run deadline'));
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   return new Promise((resolve, reject) => {
@@ -63,6 +67,13 @@ export function gitProcess(
             : {}),
           GIT_SSH_COMMAND: 'ssh -oBatchMode=yes -oStrictHostKeyChecking=yes -oControlMaster=no -oControlPersist=no',
           ...(options.index ? { GIT_INDEX_FILE: options.index } : {}),
+          ...(options.rebase
+            ? {
+                PATH: options.rebase.PATH,
+                ROWBLY_REBASE_SOCKET: options.rebase.ROWBLY_REBASE_SOCKET,
+                ROWBLY_REBASE_TOKEN: options.rebase.ROWBLY_REBASE_TOKEN,
+              }
+            : {}),
         },
       },
     );

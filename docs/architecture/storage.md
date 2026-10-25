@@ -147,13 +147,27 @@ on completion. Local Git children have 3.5 s limits, merge calculation 10 s, net
 output 16 MiB and the overall run 120 s; Unix process groups are killed and awaited on timeout.
 The packaged private rebase strategy pins its standalone Git directory and working tree and disables
 global/system configuration and attributes for its tree installation. It never uses the live index
-or checkout. This preparation entry remains disconnected from synchronization pending replay validation.
+or checkout. The host rebase driver uses this entry before installing its candidate.
 Launcher setup failures close and await the owned IPC server and remove its socket before returning.
 Private replay correspondence includes source-qualified Custom Field aliases from the original
 definition scope. Successive and pending values follow the same alias; root inheritance and Board
 overrides retain their scope. An ambiguous new key at a previous destination refuses preparation.
 New replay proof records use stable JSON key order, so equivalent correspondence maps cannot produce
 different bytes at the same content address. Original and ordinary merge evidence remains unchanged.
+
+Manual rebase preparation captures pending bytes separately, then runs literal `git pull --rebase`
+before staging or committing that capture. A standalone checkout owns its refs and index; only
+deliberately selected identity and credential/TLS/proxy settings cross into its isolated configuration.
+Each replay uses its original parent and source plus the actual rebased preimage. Account for skipped
+commits explicitly, and apply an omitted supported two-parent merge's Rowbly resolution effects at
+its frontier before descendants or final pending edits. Ambiguous bases, octopus histories,
+non-Rowbly merge resolutions and unprovable skipped correspondence refuse before live intent.
+At most 512 unpublished commits are inventoried; the existing process, run and root-size limits apply.
+Import candidate objects before the unchanged publication journal takes ownership. Only a changed
+final tree adds a pending-data commit; an unchanged Sync still pulls and pushes without an audit-only
+commit. Exact ref/index/capture and unrelated-content checks are shared with automatic merge.
+The common worker removes abandoned rebase directories only when their exact owned manifest agrees;
+normal completion awaits the bridge and removes its private checkout, capture and temporary pins.
 The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
 bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 
