@@ -2,7 +2,6 @@ import {
   definePlugin,
   isSlug,
   type PluginFinding,
-  type PluginInputOptions,
   type PluginOptionValues,
   parseRepeatable,
   UsageError,
@@ -15,8 +14,11 @@ import {
   listSpecSlugs,
   parseSpecsInput,
   SpecsBag,
+  SpecsCreateInput,
   SpecsInput,
   specFile,
+  specTitle,
+  titledText,
   withoutSpecs,
 } from './specs';
 
@@ -32,10 +34,6 @@ function slugs(value: PluginOptionValues[string]): string[] | undefined {
 }
 
 const specOption = { flags: '--spec <slug>', description: 'link to a Board Spec (repeatable)', repeatable: true };
-const setOptions: PluginInputOptions<SpecsInput> = {
-  options: [specOption],
-  input: ({ spec }) => (spec === undefined ? undefined : { specs: slugs(spec) }),
-};
 
 export const specs = definePlugin({
   reconcile,
@@ -44,12 +42,19 @@ export const specs = definePlugin({
   description: 'Spec documents for Stories and Boards',
   bags: { story: SpecsBag },
   // Checked before the operation runs: a malformed payload is VALIDATION and nothing is saved (DX-07).
-  inputs: { 'stories.create': SpecsInput, 'stories.update': SpecsInput },
+  inputs: { 'stories.create': SpecsCreateInput, 'stories.update': SpecsInput },
   commands,
   hooks: {
     'stories.create': {
       async transform({ changes, result, pluginInput, plugin }) {
         await applySpecs(changes, result.key, pluginInput, plugin);
+        for (const spec of pluginInput?.storySpecs ?? []) {
+          await changes.writeFile(
+            { story: result.key },
+            specFile(spec.slug),
+            titledText(spec.text, spec.title ?? (specTitle(spec.text) || spec.slug)),
+          );
+        }
       },
       async guard({ changes, pluginInput, plugin }) {
         if (pluginInput === undefined) return undefined;
@@ -95,7 +100,35 @@ export const specs = definePlugin({
     },
   },
   options: {
-    'stories create': setOptions,
+    'stories create': {
+      options: [
+        specOption,
+        {
+          flags: '--story-spec <slug=file>',
+          description: 'create a Story Spec from a file or - (repeatable)',
+          repeatable: true,
+        },
+      ],
+      async input(values, host) {
+        if (values.spec === undefined && values.storySpec === undefined) return undefined;
+        const files =
+          values.storySpec === undefined
+            ? []
+            : Array.isArray(values.storySpec)
+              ? values.storySpec
+              : [String(values.storySpec)];
+        const storySpecs = [];
+        for (const entry of files) {
+          const at = entry.indexOf('=');
+          if (at < 1 || !isSlug(entry.slice(0, at)) || !entry.slice(at + 1))
+            throw new UsageError('--story-spec needs <slug>=<file>');
+          const slug = entry.slice(0, at);
+          const text = (await host.readText({ file: entry.slice(at + 1) }, { name: 'story-spec' })) ?? '';
+          storySpecs.push({ slug, text, title: specTitle(text) || slug });
+        }
+        return { specs: slugs(values.spec), storySpecs };
+      },
+    },
     'stories edit': {
       options: [
         specOption,

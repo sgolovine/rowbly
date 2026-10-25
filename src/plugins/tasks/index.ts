@@ -6,12 +6,13 @@ import {
   type StageConfig,
   type Story,
   toTimestamp,
+  ValidationError,
   withFixedStages,
 } from '../../plugin-api';
 import { commands } from './commands';
-import { TasksBag } from './model';
+import { TasksBag, TasksCreateInput } from './model';
 import { reconcile } from './reconcile';
-import { doneCount, stagesOf, storedTasks, updateTasks } from './tasks';
+import { checkStage, doneCount, stagesOf, storedTasks, updateTasks } from './tasks';
 
 /** Where `stages.remove` removes a Stage: the Data Root's list, or one Board's. */
 type StageLevel = { level: 'global' } | { level: 'board'; boardId: string };
@@ -56,7 +57,44 @@ export const tasks = definePlugin({
   description: 'Tasks inside Stories, each with its own Stage',
   bags: { story: TasksBag },
   commands,
+  inputs: { 'stories.create': TasksCreateInput },
+  options: {
+    'stories create': {
+      options: [
+        { flags: '--task <name>', description: 'create a Task in the first Stage (repeatable)', repeatable: true },
+      ],
+      input: ({ task }) =>
+        task === undefined
+          ? undefined
+          : {
+              tasks: (Array.isArray(task) ? task : [String(task)]).map((name) => ({ name })),
+            },
+    },
+  },
   hooks: {
+    'stories.create': {
+      async transform({ changes, result, pluginInput, plugin }) {
+        if (!pluginInput) return;
+        const stages = await stagesOf(plugin, result);
+        const now = toTimestamp(plugin.now());
+        await updateTasks(plugin, changes, result.key, (bag) => {
+          const tasks = pluginInput.tasks.map((draft, index) => {
+            const stage = draft.stage ?? stages[0]?.key;
+            if (stage === undefined) throw new ValidationError('the Board has no Stages');
+            checkStage(stages, stage);
+            return {
+              ...draft,
+              stage,
+              description: draft.description ?? '',
+              number: bag.nextNumber + index,
+              createdAt: now,
+              updatedAt: now,
+            };
+          });
+          return { nextNumber: bag.nextNumber + tasks.length, tasks: [...bag.tasks, ...tasks] };
+        });
+      },
+    },
     'stages.remove': {
       // With `--move-to`, a Stage's Tasks move along with its Stories.
       async transform({ input, changes, plugin }) {

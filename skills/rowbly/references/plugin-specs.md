@@ -59,3 +59,5 @@ rowbly specs delete auth-flow --board web --yes --json --no-prompt   # unlinks i
 - **HIGH: `--spec` on `stories edit` to add one link.** It replaces all links. Use `--add-spec`.
 - **MEDIUM: a second Story Spec without a slug.** `specs create --story WEB-42` always means the Story
   Spec `spec`, so a second one exits 4 (already exists). Name it: `specs create design --story WEB-42`.
+
+Story creation accepts repeatable `stories create --story-spec <slug>=<file>` for several unique Story Spec slugs. `-` reads stdin, at most once including the Story description; title is the first `#` heading or slug. `--spec <slug>` still links existing Board Specs. New Story's Specs tab holds both Board Spec links and Story Spec drafts (`n` new Story Spec, default slug `spec`). Files save atomically with the Story.

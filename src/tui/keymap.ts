@@ -44,7 +44,8 @@ export const CORE_KEYS: readonly string[] = [
   // Screen actions: add, edit, delete, move Stage, top/bottom, filters (clear, all Boards), fix,
   // open (view Board, Stories, Stages, fields), reload. `a`, `e`, `f` and `s` are also `ctrl`
   // bindings of text inputs and forms.
-  ...'nedmTBcAfvosra',
+  // `g` is New Story's ctrl+g, switching focus between Plugin fields and drafts.
+  ...'nedmTBcAfvosrag',
 ];
 
 /**

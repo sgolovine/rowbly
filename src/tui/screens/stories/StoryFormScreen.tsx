@@ -9,7 +9,8 @@ import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
-import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { mergePluginInput, onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { StoryCreateForm } from './StoryCreateForm';
 import { boardIdFor, NONE } from './shared';
 import { priorityValue } from './storyFormValues';
 
@@ -42,7 +43,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
       throw onPluginFields(err, extra);
     });
 
-  const save = async (values: FormValues) => {
+  const save = async (values: FormValues, tabInput?: PluginInput) => {
     const fields = customFieldValues(choices.customFields, values);
     const common = {
       name: String(values.name),
@@ -50,7 +51,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
       priority: priorityValue(values.priority),
       labels: splitList(values.labels),
       dueDate: optional(values.dueDate),
-      ...pluginInputOptions(storyFormInput(plugins, extra, values, story)),
+      ...pluginInputOptions(mergePluginInput(storyFormInput(plugins, extra, values, story), tabInput)),
     };
     const stage = String(values.stage);
     if (!story) {
@@ -69,6 +70,17 @@ export function StoryFormScreen({ params }: ScreenProps) {
     toast.push('info', `Updated ${story.key}`);
     router.pop();
   };
+
+  if (!story)
+    return (
+      <StoryCreateForm
+        boardId={boardId}
+        fields={formFields(choices)}
+        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
+        extra={extra}
+        onSubmit={save}
+      />
+    );
 
   return (
     <Box flexDirection="column" gap={1}>

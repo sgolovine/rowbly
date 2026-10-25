@@ -123,7 +123,7 @@ function settingsAndResultsAreInferred() {
 }
 
 describe('Plugin API types', () => {
-  it('compiles the fixtures (checked by `pnpm typecheck`)', () => {
+  it('lists every core operation name once, with the compiled API fixtures', () => {
     const fixtures = [
       guardsCannotWrite,
       hookContextsHaveNoOperationOrEditor,
@@ -133,9 +133,6 @@ describe('Plugin API types', () => {
       settingsAndResultsAreInferred,
     ];
     expect(fixtures.every((f) => typeof f === 'function')).toBe(true);
-  });
-
-  it('lists every core operation name once', () => {
     const names: readonly CoreOperationName[] = CORE_OPERATION_NAMES;
     expect(new Set(names).size).toBe(names.length);
     expect(names).toContain('stories.create');

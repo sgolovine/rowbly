@@ -52,7 +52,7 @@ export function registerStories(program: Command): void {
     .option(...boardOption)
     .action(async (opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const filter = { ...listFilter(opts), ...pluginOptions(cmd) };
+        const filter = { ...listFilter(opts), ...(await pluginOptions(cmd)) };
         const boardId = opts.allBoards ? null : await services.context.resolveBoard(boardFlag(opts));
         const list = await services.stories.list(boardId, filter);
         if (globals.json) return printResult(list, { json: true, human: renderJsonOnly });
@@ -76,6 +76,7 @@ export function registerStories(program: Command): void {
     withContext(cmd, async ({ services, globals }) => {
       const boardId = await services.context.resolveBoard(boardFlag(opts));
       const name = await promptIfMissing(opts.name, globals, { flag: '--name', message: 'Story name' });
+      const pluginInputs = await pluginOptions(cmd);
       const description = await readDescription(opts);
       const story = await services.stories.create(boardId, {
         name,
@@ -85,7 +86,7 @@ export function registerStories(program: Command): void {
         labels: parseRepeatable(opts.label),
         dueDate: opts.due || undefined,
         customFields: parseFieldAssignments(opts.field),
-        ...pluginOptions(cmd),
+        ...pluginInputs,
       });
       printResult(story, { json: globals.json, human: renderStoryCreated });
     }),
@@ -121,7 +122,10 @@ export function registerStories(program: Command): void {
   ).action(async (key: string, opts: StoryOptions, cmd: Command) =>
     withContext(cmd, async ({ services, globals }) => {
       const current = opts.edit ? await services.stories.get(key) : undefined;
-      const patch = { ...editPatch(opts, await readDescription(opts, current?.description)), ...pluginOptions(cmd) };
+      const patch = {
+        ...editPatch(opts, await readDescription(opts, current?.description)),
+        ...(await pluginOptions(cmd)),
+      };
       if (Object.values(patch).every((value) => value === undefined)) {
         throw new UsageError('nothing to change', { hint: 'see `rowbly stories edit --help`' });
       }
@@ -136,7 +140,10 @@ export function registerStories(program: Command): void {
     .option('--top', 'place it at the top of the Stage')
     .action(async (key: string, stage: string, opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const story = await services.stories.move(key, stage, { top: opts.top ?? false, ...pluginOptions(cmd) });
+        const story = await services.stories.move(key, stage, {
+          top: opts.top ?? false,
+          ...(await pluginOptions(cmd)),
+        });
         printResult(story, { json: globals.json, human: renderStoryMoved });
       }),
     );
@@ -150,7 +157,7 @@ export function registerStories(program: Command): void {
     .option('--bottom', 'place it at the bottom of its Stage')
     .action(async (key: string, opts: StoryOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const story = await services.stories.rank(key, rankPosition(opts), pluginOptions(cmd));
+        const story = await services.stories.rank(key, rankPosition(opts), await pluginOptions(cmd));
         printResult(story, { json: globals.json, human: renderStoryRanked });
       }),
     );
@@ -162,7 +169,7 @@ export function registerStories(program: Command): void {
       withContext(cmd, async ({ services, globals }) => {
         const story = await services.stories.get(key);
         await confirmDestructive(`Delete ${story.key} "${story.name}"?`, globals);
-        await services.stories.remove(story.key, pluginOptions(cmd));
+        await services.stories.remove(story.key, await pluginOptions(cmd));
         printResult({ deleted: story.key }, { json: globals.json, human: renderStoryDeleted });
       }),
     );

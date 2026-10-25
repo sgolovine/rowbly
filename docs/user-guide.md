@@ -288,6 +288,8 @@ rowbly stories list [--stage <k>…] [--category backlog|board|done] [--open]
 rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
                       [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
                       [--field key=value …] [--board <id>]
+                      [--task <name>…] [--spec <slug>…] [--story-spec <slug>=<file>…]
+                      [--blocks <KEY>…] [--blocked-by <KEY>…]
 rowbly stories show <KEY>
 rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--priority <P> | --no-priority]
@@ -646,9 +648,13 @@ A click in the Board sidebar or a Plugin Sidebar focuses it, and its border ligh
 
 The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
 
-`n` on the board, in the list view or in the Stories list opens the new Story form. After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
+`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
 
-Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
+`tab` / `shift+tab` switch tabs. `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing remains one flat form.
+
+After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
+
+Story, New Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
 
 The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light theme, with dark as the fallback. Rowbly leaves the terminal background visible. Dates in the TUI use local time (for example, `20 Oct 2026, 23:03`); command JSON keeps ISO timestamps.
 
@@ -736,3 +742,15 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 How Rowbly is built is in [`docs/`](README.md): the [architecture](architecture/overview.md), the [plugin system](plugins/README.md), the [development guide](development/README.md) and the [decisions](agents/adr/README.md). Use the terms in [`CONTEXT.md`](agents/CONTEXT.md).
 
 The test projects, helpers and rules are in the [development guide](development/README.md#tests).
+
+With the corresponding Plugins enabled, `stories create` also accepts repeatable create options:
+
+| Option | Effect |
+| --- | --- |
+| `--task <name>` | Create name-only Tasks in flag order, numbered 1, 2, …, in the first effective Stage. Names are literal: commas and whitespace are preserved. |
+| `--spec <slug>` | Link an existing Board Spec (unchanged; repeatable, comma-separated). |
+| `--story-spec <slug>=<file>` | Create a Story Spec from a UTF-8 Markdown file; repeatable for several Specs with unique slugs. `-` reads stdin, at most once including `--description-file -`. Title is the first `#` heading or the slug. |
+| `--blocks <key>` | Link an existing same-Board Story that this new Story blocks. |
+| `--blocked-by <key>` | Link an existing same-Board Story that blocks this new Story. |
+
+All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.

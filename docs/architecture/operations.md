@@ -106,6 +106,11 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | --- | --- | --- |
 | Assignees | `stories.create`, `stories.update` | `{ assignees?, add?, remove? }`: handles or `me`; `assignees` replaces the list and cannot be combined with `add` or `remove` |
 | Epics | `stories.create`, `stories.update` | `{ epic: id \| null }` |
-| Specs | `stories.create`, `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset? }` |
+| Specs | `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset? }` |
+| Specs | `stories.create` | `{ specs?, addSpecs?, removeSpecs?, reset?, storySpecs?: [{ slug?, title?, text }] }`; Story Spec slugs default to `spec` and must be unique |
+| Tasks | `stories.create` | `{ tasks: [{ name, description?, stage? }] }`; Stage defaults to the first effective Stage, numbering follows draft order |
+| Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
 
 A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.
+
+`stories.create` collects these bags, Story Spec files and existing blockers’ bags in one Change Set and one journaled commit. Invalid input saves nothing. Story Spec titles use the supplied title, first `#` heading or slug.
