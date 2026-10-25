@@ -25,7 +25,7 @@ explains how it is built. Start at `docs/README.md`.
 | The agent skill for developing a Rowbly Story into a draft pull request (`rowbly-dev`) | `skills/rowbly-dev/SKILL.md` and its `references/`, published in the npm package; self-contained (see Agent skills below) |
 | The agent skill for interviewing a Story and saving its specification (`rowbly-grill`) | `skills/rowbly-grill/SKILL.md` and its `references/`, browser `scripts/` and `assets/`, published in the npm package |
 | The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev` and `.agents/skills/rowbly-grill` symlink to their published folders in `skills/` |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system, `rowbly-factory` to run remote workers over the Board's In Progress Stories and merge their pull requests) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev` and `.agents/skills/rowbly-grill` symlink to their published folders in `skills/` |
 
 ## Domain language and decisions
 
