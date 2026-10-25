@@ -1,6 +1,6 @@
 # ADR-0034: Git synchronization prepares isolated merges and publishes recoverably
 
-**Status:** Accepted (ROW-15)
+**Status:** Accepted (ROW-15); amended by [ADR-0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) for explicit manual commit-first rebase Sync.
 
 ## Context
 

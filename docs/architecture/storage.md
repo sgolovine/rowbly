@@ -85,7 +85,7 @@ Only affected record/file paths are selected, never `local.json`, `.lock` or `.t
 ## Recoverable Git publication
 
 The local publication engine implements ADR-0034 §4–5. Synchronization prepares an isolated
-upstream merge and uses this engine before a normal push. All cooperating service calls acquire the common Git publication
+upstream merge (scheduled/CLI) or replay (manual header Sync) and uses this engine before a normal push. Manual Sync also publishes its nonempty capture before fetching (ADR-0035). All cooperating service calls acquire the common Git publication
 gate before their Data Root lock, and release both before reactions. Git location discovery and every
 Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
 
@@ -175,3 +175,9 @@ after an awaited setup. An admitted run may finish after Off. Private host lease
 replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.
 Each new synchronization worker removes abandoned private candidate indexes and fetched pins under
 the common worker lock; prepared publication pins belong to journal recovery and are kept until it completes.
+
+Manual header Sync uses this same journal for both its pre-fetch capture and its final replay. Each
+linear commit is replayed with `merge-tree --merge-base=<original-parent>` and pure reconciliation,
+including clean JSON merges. Divergent local merge commits fail with `--rebase-merges` guidance.
+Capture drift retries preparation; the exact manual run's result is returned only after its push,
+even when it waited behind a scheduled merge. Both automatic preferences may be Off (ADR-0035).

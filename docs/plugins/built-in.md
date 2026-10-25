@@ -277,6 +277,22 @@ Git failures warn after the Rowbly change has saved; the Operation still succeed
 Doctor repair passes are Operations too. To inspect a complete repair before the next Automatic Commit, disable Git before `doctor --fix` and re-enable it after doctor exits 0; keep other Plugins on for their checks.
 
 
+### Manual header Sync
+
+With Git enabled, `S` / **Sync** calls the shared service in explicit rebase mode, independent of both
+automatic preferences. It publishes a nonempty pending Rowbly data/configuration capture before
+fetching, replays linear commits onto the configured upstream with ROW-15 reconciliation during each
+replay, validates and publishes recoverably, then pushes normally. No pending changes still fetches
+and pushes. It preserves unrelated staged/working/untracked content and original author/date/message.
+A divergent local merge commit stops with `git rebase --rebase-merges` guidance; no history is silently
+dropped. Staged Rowbly ambiguity and non-Rowbly conflicts require manual handling.
+
+The header shows `Sync…` and ignores duplicate input. A running scheduled merge finishes before a
+waiting manual rebase; completion is tied to that rebase's own run identity and push. Failures keep
+local work and show the cause/recovery guidance. The journal and common worker are shared with
+Automatic Commits and scheduled merges; there is no stash, separate landing marker or Git under a
+Data Root lock. Existing `rowbly git sync` and scheduling retain enabled merge behavior.
+
 ### Automatic Merge Conflict Resolution
 
 This separate section in **Git** settings is Off by default. `m` opens its enable/interval form;
