@@ -70,6 +70,11 @@ export async function pendingPath(root: DataRoot, plugin: string): Promise<strin
   return join(dir, 'rowbly', `${plugin}-${key}.json`);
 }
 
+/** Creates the folder of `file` in Git's directory, where the Git lock lives; a fresh clone has none yet. */
+export async function ensureGitQueueDir(file: string): Promise<void> {
+  await io.mkdir(dirname(file));
+}
+
 export async function readGitPending(path: string): Promise<GitPending | null> {
   const text = await readTextIfExists(path);
   if (text === null) return null;

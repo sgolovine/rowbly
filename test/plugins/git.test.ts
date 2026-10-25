@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -285,6 +285,10 @@ describe('Git automatic commits', () => {
       await f.command('diff', '--name-only'),
     ];
 
+    // A fresh clone has no Rowbly folder in Git's directory yet; Sync creates it for its lock.
+    await drainGitQueue(f.t.root);
+    const queue = join(f.t.dir, '.git', 'rowbly');
+    await rm(queue, { recursive: true, force: true });
     // A Rowbly change made by hand is pending; the upstream has an unrelated commit.
     await theirs('other.txt', () => 'other\n');
     await writeFile(join(f.t.dir, file), (await readFile(join(f.t.dir, file), 'utf8')).replace('Base', 'Pending'));
@@ -293,6 +297,7 @@ describe('Git automatic commits', () => {
     expect(await f.command('show', `HEAD:${file}`)).toContain('Pending');
     expect(await f.command('ls-files', '--', '.rowbly/local.json')).toBe('');
     expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
+    await access(queue);
 
     // The upstream and a local Automatic Commit change the same Story.
     await theirs(file, (text) => text.replace('Pending', 'Theirs'));

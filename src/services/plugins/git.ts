@@ -2,7 +2,14 @@ import { dirname } from 'node:path';
 import { ConflictError, PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories, withLock } from '../../storage';
-import { commitGitPaths, gitInfo, pendingPath, readGitPending, writeGitPending } from '../../storage/git';
+import {
+  commitGitPaths,
+  ensureGitQueueDir,
+  gitInfo,
+  pendingPath,
+  readGitPending,
+  writeGitPending,
+} from '../../storage/git';
 import { type GitSyncResult, syncGit } from '../../storage/gitSync';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
@@ -185,6 +192,7 @@ export function createPluginGit(
       if (syncs.has(key)) throw new ConflictError('Sync is already running', { hint: 'wait for it to finish' });
       syncs.add(key);
       try {
+        await ensureGitQueueDir(file);
         // Lock order: this guard, then the Git lock, then (briefly, for the snapshot) the Data Root lock.
         return await chain(file, 'git.sync', () =>
           syncGit(root, options, (read) => coordinated(root, `${id}.git.snapshot`, read)),
