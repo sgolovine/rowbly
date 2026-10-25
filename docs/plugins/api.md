@@ -24,6 +24,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 - [Load, reload and settings](#load-reload-and-settings)
 - [Tracing](#tracing)
 - [Testing](#testing)
+- [Clipboard images](#clipboard-images)
 - [Git capability](#git-capability)
 - [Supported-format reconciliation](#supported-format-reconciliation)
 
@@ -31,7 +32,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 
 | Module | Imported by | Holds |
 | --- | --- | --- |
-| `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `slugFromName`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
+| `src/plugin-api` | every file of a Plugin | `definePlugin`; `clipboard` and `ClipboardImageResult` ([Clipboard images](#clipboard-images)); `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `slugFromName`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
 | `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Button`, `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `MarkdownView`, `ConfirmDialog`, `Loading`, `StageBadge`, `Modal`, `SelectionRow`; the hooks `useAsync`, `useContextMenu`, `useFullScreenEditor`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; the type `ContextMenuItem`; `FORM_KEYS`, `moveDelta`, `markdownToPlain`; `theme`, `themes`, `stageColors`, `formatDate` |
 | `src/plugin-api/testing.ts` | tests only | `createPluginTestHost`, `validatePluginDefinition` ([Testing](#testing)) |
 
@@ -497,3 +498,33 @@ Off prevents admission; an admitted run may finish. The host supplies the regist
 recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
 Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
 and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.
+
+## Clipboard images
+
+Import `clipboard` from the Plugin API and call `await clipboard.readImage()` before starting the
+operation that saves the result. This helper needs no `PluginContext` and never acquires the Data
+Root lock or writes files. It returns `ClipboardImageResult`: either `{ bytes: Uint8Array,
+type: 'image/png' }`, or `{ reason: 'unsupported' | 'no-display' | 'no-image' | 'too-large' | 'timeout' }`.
+The caller decides how to present a failure or save an image.
+
+```ts
+/** Read before starting the operation that saves the image. */
+export async function readPastedImage(): Promise<ClipboardImageResult> {
+  const image = await clipboard.readImage();
+  if ('reason' in image) return image;
+  return { bytes: image.bytes, type: image.type };
+}
+```
+
+Reads have a single three-second deadline and accept at most 10 MiB of PNG bytes. Native loading and
+reading run lazily in a child process; a failed load is cached until Rowbly restarts. Native crashes,
+malformed output and unsupported environments return `unsupported`, connection/read errors return
+`no-display`, and a clipboard without an image returns `no-image`. Child stdout and stderr cannot
+reach the TUI. On Wayland, native load or connection failure tries `wl-paste` from `wl-clipboard`,
+requiring an exact `image/png` offered type. A missing helper returns `unsupported`. Timeout and size
+failures return their own reasons. The PNG signature is checked; image contents are not fully decoded.
+
+The installed package also includes `rowbly/dist/clipboard.js`, which exports `readClipboardImage`
+and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
+[ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
+child isolation and the bounds' limits. Paste keys and image storage are planned separately.
