@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T16:34:49.836Z",
+  "updatedAt": "2026-10-25T17:23:55.358Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,13 @@
           "body": "Plan accepted. Complexity 5: a dev worker for research and plan, a fresh dev worker for implementation, then a separate validator. Branch `claude/row-17-header-sync` from `origin/main`; PR against `main`. Scope cut by the user because ROW-13 and ROW-15 are only on `develop`: no ROW-15 conflict resolution, no Automatic Commits toggle, and no CLI command. Plan: the Git Plugin adds a header Sync Action on `S` with a busy state and a guard against running twice, sharing the Automatic Commits queue and worker lock. It commits pending Rowbly data from a snapshot (leaving out Local State, locks, `.txn` and tmp files), fetches, rebases in a temporary worktree (on conflict: abort, keep local work, show an error toast), lands the result with `git reset --keep`, then pushes without force. A success toast appears only after the push. No stash and no Git under the Data Root lock. New ADR-0035; docs and skill references updated.",
           "createdAt": "2026-10-25T16:34:49.835Z",
           "updatedAt": "2026-10-25T16:34:49.835Z"
+        },
+        {
+          "id": "6c5OPXiS",
+          "author": "sunny",
+          "body": "Draft PR #106 https://github.com/sgolovine/rowbly/pull/106 from `claude/row-17-header-sync`, head 0c70c9e. The Git Plugin adds a header Sync Action (`S`): commit pending Rowbly data, fetch, rebase in a temporary worktree, land keeping unrelated changes, push without force. The success toast appears only after the push, and errors show recovery hints. New ADR-0035. Validation: typecheck, lint, unit (67) and CLI (20) tests pass, plus manual two-clone TUI runs across success, no-change, conflict, missing upstream, network failure, rejected push, crash recovery and dirty-tree cases; screenshots are on the PR. Left for when `develop` reaches `main`: ROW-15 conflict resolution, handling Automatic Commits off, and moving onto `requestSync`.",
+          "createdAt": "2026-10-25T17:23:55.358Z",
+          "updatedAt": "2026-10-25T17:23:55.358Z"
         }
       ]
     }
