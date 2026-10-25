@@ -16,7 +16,13 @@ export { type FolderMove, listFilesUnder, moveFolders, preflightMoves, readTextI
 export * from './homeConfig';
 export { CONFLICT_MARKER_RE, readJson, serializeJson, writeJson } from './jsonStore';
 export * from './lock';
-export { canonicalDataRoot, listPluginFiles, readPluginFile, resolvePluginFile } from './pathPolicy';
+export {
+  canonicalDataRoot,
+  listPluginFiles,
+  readPluginBinaryFile,
+  readPluginFile,
+  resolvePluginFile,
+} from './pathPolicy';
 export { type DataRootPaths, paths } from './paths';
 export * from './repositories';
 export { listDataRootFiles, readDataRootFile, removeDataRootFile } from './scan';

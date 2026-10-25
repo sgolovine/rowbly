@@ -12,7 +12,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [0001](0001-json-files-not-sqlite.md) | JSON files in a folder tree are the only storage | Accepted; amended by 0015 |
+| [0001](0001-json-files-not-sqlite.md) | JSON files in a folder tree are the only storage | Accepted; amended by 0015 and 0036 |
 | [0002](0002-data-root-discovery.md) | The Data Root is discovered like `.git`, with a global fallback | Accepted; amended by 0033 |
 | [0003](0003-story-keys.md) | Stories are identified by sequential keys | Accepted |
 | [0004](0004-epic-link-on-story.md) | The Story holds the Epic link | Superseded by 0008 |
@@ -20,11 +20,12 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0006](0006-ink-owns-the-interactive-mode.md) | Ink owns the interactive mode; Clack only prompts in command mode | Accepted |
 | [0007](0007-no-workspaces.md) | The Data Root is the only container; there are no Workspaces | Accepted |
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
-| [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted |
+| [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted; amended by 0034 and 0036 |
 | [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
 | [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; amended by 0032, extended by 0033 |
 | [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
 | [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted |
+| [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
 
 ### Plugins
 

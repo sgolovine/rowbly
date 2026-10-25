@@ -9,6 +9,11 @@ const onCheckpoint = (point: TransactionCheckpoint) => {
 };
 if (mode === 'commit') {
   const plan = JSON.parse(await readFile(planPath, 'utf8'));
+  for (const change of plan.changes) {
+    if (change.kind === 'write' && typeof change.text !== 'string') {
+      change.text = await readFile(change.text.payload);
+    }
+  }
   await (await prepareTransaction(root, plan, { onCheckpoint })).commit();
 } else {
   await recoverTransactions(root, { onCheckpoint });

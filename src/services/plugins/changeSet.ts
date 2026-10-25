@@ -1,3 +1,5 @@
+import { isUtf8 } from 'node:buffer';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import type { ZodType } from 'zod';
 import { ConflictError, NotFoundError, PluginError, parseStoryKey, ValidationError } from '../../core';
@@ -19,6 +21,7 @@ import {
   type Repositories,
   resolvePluginFile,
   serializeJson,
+  readPluginBinaryFile as storedPluginBinaryFile,
   readPluginFile as storedPluginFile,
   listPluginFiles as storedPluginFiles,
   type TransactionChange,
@@ -70,6 +73,8 @@ interface FileEntry {
   readonly change: FileChange;
   readonly scope: ScopeRef;
   readonly name: string;
+  readonly before: Uint8Array | null;
+  after: string | Uint8Array | null;
 }
 
 /**
@@ -262,8 +267,12 @@ export class CoreChangeSet implements ChangeSet {
       check();
       return fn();
     };
+    const view = this.pluginView(id);
     return {
-      ...this.pluginView(id),
+      ...view,
+      get changes() {
+        return view.changes;
+      },
       putStory: (story) => write(async () => frozenCopy(await this.putStory(story, check))),
       updateStory: (key, update) => write(async () => frozenCopy(await this.updateStory(key, update, check))),
       deleteStory: (key) => write(() => this.deleteStory(key, check)),
@@ -280,21 +289,36 @@ export class CoreChangeSet implements ChangeSet {
         ),
       updateLocalState: (update) => write(async () => frozenCopy(await this.updateLocalState(update, check))),
       writeFile: (scope, name, text) => write(() => this.setFile(id, scope, name, text, check)),
+      writeBinaryFile: (scope, name, bytes) => {
+        const copy = new Uint8Array(bytes);
+        return write(() => this.setFile(id, scope, name, copy, check));
+      },
       deleteFile: (scope, name) => write(() => this.setFile(id, scope, name, null, check)),
     };
   }
 
   /** What a guard of Plugin `id` gets: the snapshot and its own pending files, no writers. */
   pluginView(id: string): PluginChangeSetView {
+    const view = this.view();
     return {
-      ...this.view(),
+      ...view,
+      get changes() {
+        return view.changes;
+      },
       readFile: async (scope, name) => {
         checkName(name);
         const ref = await this.resolveScope(scope);
         // A Story or Board this plan deletes has no files left.
         if (this.deletedRecord(ref)) return null;
         const pending = this.files.get(fileKey(id, ref, name));
-        return pending ? pending.change.after : this.storedFile(id, ref, name);
+        return pending ? asText(pending.after) : this.storedFile(id, ref, name);
+      },
+      readBinaryFile: async (scope, name) => {
+        checkName(name);
+        const ref = await this.resolveScope(scope);
+        if (this.deletedRecord(ref)) return null;
+        const pending = this.files.get(fileKey(id, ref, name));
+        return pending ? asBytes(pending.after) : this.storedBinaryFile(id, ref, name);
       },
     };
   }
@@ -453,7 +477,7 @@ export class CoreChangeSet implements ChangeSet {
     id: string,
     scope: FileScope,
     name: string,
-    text: string | null,
+    text: string | Uint8Array | null,
     check: () => void,
   ): Promise<void> {
     checkName(name);
@@ -465,22 +489,24 @@ export class CoreChangeSet implements ChangeSet {
       throw deletedScopeError(id, name, deleted);
     }
     const key = fileKey(id, ref, name);
-    const before = this.files.has(key) ? null : await this.storedFile(id, ref, name);
+    const before = this.files.has(key) ? null : await this.storedBinaryFile(id, ref, name);
     this.gate(check);
     const pending = this.files.get(key);
     if (pending) {
-      pending.change.after = text;
+      pending.after = text;
+      pending.change.before = fileValue(pending.before, text instanceof Uint8Array);
+      pending.change.after = fileValue(text, text instanceof Uint8Array);
       return;
     }
     const change: FileChange = {
       type: 'file',
       plugin: id,
       path: filePath(this.folderOf(ref), id, name),
-      before,
-      after: text,
+      before: fileValue(before, text instanceof Uint8Array),
+      after: fileValue(text, text instanceof Uint8Array),
     };
     this.add(change);
-    this.files.set(key, { change, scope: ref, name });
+    this.files.set(key, { change, scope: ref, name, before, after: text });
   }
 
   /**
@@ -529,6 +555,11 @@ export class CoreChangeSet implements ChangeSet {
   private async storedFile(id: string, ref: ScopeRef, name: string): Promise<string | null> {
     const folder = this.storedFolder(ref);
     return folder === null ? null : storedPluginFile(join(this.root.path, folder), id, name);
+  }
+
+  private async storedBinaryFile(id: string, ref: ScopeRef, name: string): Promise<Uint8Array | null> {
+    const folder = this.storedFolder(ref);
+    return folder === null ? null : storedPluginBinaryFile(join(this.root.path, folder), id, name);
   }
 
   /** Where the record of `ref` is stored now, relative to the Data Root; `null` when the plan creates it. */
@@ -643,7 +674,7 @@ export class CoreChangeSet implements ChangeSet {
       out.push(record(`${folder}/story.json`, StorySchema, after));
     }
 
-    for (const { change, scope, name } of this.files.values()) {
+    for (const { change, scope, name, after } of this.files.values()) {
       const deleted = this.deletedRecord(scope);
       if (deleted) {
         // A deletion is done by the cascade; a write would revive the deleted record.
@@ -658,9 +689,9 @@ export class CoreChangeSet implements ChangeSet {
       await resolvePluginFile(join(this.root.path, this.storedFolder(scope) ?? folder), change.plugin, name);
       const path = filePath(folder, change.plugin, name);
       out.push(
-        change.after === null
+        after === null
           ? { kind: 'delete', path, pruneTo: folder.replace(/\/$/, '') }
-          : { kind: 'write', path, text: change.after },
+          : { kind: 'write', path, text: after },
       );
     }
     return out;
@@ -802,6 +833,31 @@ export async function readPluginFile(
   name: string,
 ): Promise<string | null> {
   return storedPluginFile(await scopeFolder(root, repos, scope), id, checkName(name));
+}
+
+/** Stored bytes through the same scope resolution as text reads. */
+export async function readPluginBinaryFile(
+  root: DataRoot,
+  repos: Repositories,
+  id: string,
+  scope: FileScope,
+  name: string,
+): Promise<Uint8Array | null> {
+  return storedPluginBinaryFile(await scopeFolder(root, repos, scope), id, checkName(name));
+}
+
+function asText(value: string | Uint8Array | null): string | null {
+  return value instanceof Uint8Array ? Buffer.from(value).toString('utf8') : value;
+}
+
+function asBytes(value: string | Uint8Array | null): Uint8Array | null {
+  return value === null ? null : new Uint8Array(typeof value === 'string' ? Buffer.from(value) : value);
+}
+
+function fileValue(value: string | Uint8Array | null, binary: boolean): FileChange['before'] {
+  if (value === null || typeof value === 'string') return value;
+  if (!binary && isUtf8(value)) return Buffer.from(value).toString('utf8');
+  return { kind: 'binary', size: value.byteLength, sha256: createHash('sha256').update(value).digest('hex') };
 }
 
 function checkName(name: string): string {
