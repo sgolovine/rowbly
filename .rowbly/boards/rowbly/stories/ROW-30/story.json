@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.895Z",
-  "updatedAt": "2026-10-25T21:26:24.929Z",
+  "updatedAt": "2026-10-25T21:56:17.187Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -32,6 +32,13 @@
           "body": "Plan accepted: integrate updated ROW-29 and main, add transactional pending-image form handling, implement Attachments paste/tab/badges, update docs, then independently validate and capture screenshots. Branch codex/row-30-attachments-tui. Implementation waits for ROW-29's main merge.",
           "createdAt": "2026-10-25T21:26:24.928Z",
           "updatedAt": "2026-10-25T21:26:24.928Z"
+        },
+        {
+          "id": "RHmPZzRc",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/116 opened against main. Independent validation signed off: typecheck, lint, 76 unit tests, 20 CLI tests and build passed. Screenshots published and verified. Head 114c3f1; CI pending. Native desktop clipboard/opening remain unverified on headless rook; injected paste flows and native failure guidance verified.",
+          "createdAt": "2026-10-25T21:56:17.186Z",
+          "updatedAt": "2026-10-25T21:56:17.186Z"
         }
       ]
     }
