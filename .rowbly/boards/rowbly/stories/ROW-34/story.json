@@ -4,8 +4,8 @@
   "boardId": "rowbly",
   "name": "Fix storage fault-injection test leaking spies after a timeout",
   "description": "A storage fault-injection test on `main` can time out under load and then break the next test. Found by ROW-29's validation on rook, 2026-10-25.\n\n## What happens\n\n- The test (probably `test/storage/transaction.test.ts`, \"rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes\"; confirm it) takes about 8 s alone. With several suites running at once it passes the 20 s Vitest timeout.\n- After the timeout, the test body keeps running and installs file-system spies again (`vi.spyOn` on fs functions). `afterEach(vi.restoreAllMocks)` has already run, so the spies leak into the next test, whose Data Root lock acquisition then fails (\"recovery failure\").\n\n## Fix (AGENTS.md: a flaky test is a race in the test or the code)\n\n- Make the test stop and restore its spies on every path, including after a timeout. For example, check an abort signal between fault iterations, restore spies in `finally`, and make sure no work runs after the test ends.\n- Reproduce the cascade deterministically with a barrier (a held fault or fs call), not with load or sleeps. Keep the regression in `test/storage/`.\n- Do not raise timeouts, add retries or split the test to hide it. If the test is simply too slow, make it faster without losing coverage (for example fewer redundant fault points), and say so in the PR.\n\n## Done when\n\n- Under load (several suites at once), the test either passes or fails alone, without breaking the next test.\n- `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` pass. The suite stays under 100 tests.",
-  "stage": "in-pr",
-  "rank": "a4",
+  "stage": "done",
+  "rank": "ae",
   "priority": null,
   "labels": [
     "chore"
@@ -14,7 +14,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T21:06:58.964Z",
-  "updatedAt": "2026-10-25T21:29:59.290Z",
+  "updatedAt": "2026-10-25T21:30:25.735Z",
   "plugins": {
     "comments": {
       "comments": [
