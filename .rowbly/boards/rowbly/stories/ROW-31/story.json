@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:13.579Z",
-  "updatedAt": "2026-10-25T18:40:36.637Z",
+  "updatedAt": "2026-10-25T18:44:52.505Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -39,6 +39,13 @@
           "body": "Implementation pushed at 90ed800 on codex/row-31-clipboard-smoke. Added the three-OS packed-package smoke job, pixel comparison script, headless Wayland launcher and CI docs. Developer checks pass, including all four repository checks and local native/Wayland round trips. Independent validation is starting; hosted matrix checks and ROW-30 integration remain pending.",
           "createdAt": "2026-10-25T18:40:36.636Z",
           "updatedAt": "2026-10-25T18:40:36.636Z"
+        },
+        {
+          "id": "CpLreTH5",
+          "author": "sunny",
+          "body": "Local validation signed off at 5928c89244cf3622b69e7a6eda918343331995b6; all four required checks and packaged native/Wayland smoke checks pass. Screenshots published separately. Branch pushed; PR deferred until ROW-30 exists. Hosted three-OS validation remains pending. One existing Git recovery test timed out initially, then passed unchanged; evidence retained.",
+          "createdAt": "2026-10-25T18:44:52.505Z",
+          "updatedAt": "2026-10-25T18:44:52.505Z"
         }
       ]
     }
