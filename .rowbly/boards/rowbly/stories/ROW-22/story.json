@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-22",
+  "boardId": "rowbly",
+  "name": "Right click on epic should show context menu to edit/delete",
+  "description": "Right now if you right click on a board you get a context menu to edit/delete the board. We should have the same for epics.",
+  "stage": "in-progress",
+  "rank": "a2",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T16:54:23.896Z",
+  "updatedAt": "2026-10-25T16:55:28.629Z"
+}
