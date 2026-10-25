@@ -151,5 +151,5 @@ jobs:
         run: xvfb-run --auto-servernum node scripts/clipboard-smoke.mjs native
 
       - name: Headless Wayland fallback round trip
-        if: runner.os == 'Linux'
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: bash scripts/clipboard-wayland-smoke.sh
