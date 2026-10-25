@@ -1,4 +1,4 @@
-import { type PluginContext, type PluginTui, ValidationError } from '../../plugin-api';
+import { type PluginTui, ValidationError } from '../../plugin-api';
 import { AttachmentFormScreen } from './AttachmentFormScreen';
 import { AttachmentsTab } from './AttachmentsTab';
 import { addAttachment, clipboardName } from './attachments';
@@ -9,19 +9,13 @@ type PendingImage = { name: string; bytes: Uint8Array };
 function pendingImages(pending: unknown): PendingImage[] {
   return (pending ?? []) as PendingImage[];
 }
-function badge(story: Parameters<PluginContext['readBag']>[0], plugin: PluginContext): string | null {
-  const count = plugin.readBag(story, AttachmentsBag)?.attachments.length ?? 0;
-  return count ? `📎${count}` : null;
-}
-
 export const tui: PluginTui<unknown> = {
   screens: { form: AttachmentFormScreen },
   storyTabs: [{ label: 'Attachments', component: AttachmentsTab }],
   storyBadges: ({ story, plugin }) => {
-    const value = badge(story, plugin);
-    return value ? [value] : [];
+    const count = plugin.readBag(story, AttachmentsBag)?.attachments.length ?? 0;
+    return count ? [`📎${count}`] : [];
   },
-  cardBadge: ({ story, plugin }) => badge(story, plugin),
   storyForm: {
     async fields() {
       return [];
@@ -38,6 +32,7 @@ export const tui: PluginTui<unknown> = {
     },
   },
   storyPaste: {
+    clipboardFallback: 'use rowbly attachments add <KEY> <file>',
     async story({ story, image, plugin, ui }) {
       const added = await addAttachment(plugin, story.key, { name: clipboardName(plugin.now()), bytes: image.bytes });
       ui.toast(`Attached ${added.name} (${formatSize(added.size)})`);

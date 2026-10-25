@@ -832,6 +832,9 @@ export interface PluginPasteImage {
 
 /** One exclusive image-paste handler for open Stories and their new/edit forms. */
 export interface PluginStoryPaste<S = Record<string, unknown>> {
+  /** Plugin-owned CLI guidance appended when desktop clipboard access is unavailable. */
+  clipboardFallback?: string;
+
   /** Saves immediately through the Plugin's operations. */
   story(args: { story: Story; image: PluginPasteImage; plugin: PluginContext<S>; ui: PluginUi }): Promise<void>;
   /** Stages only in memory. The host retains the opaque value until save or cancellation. */

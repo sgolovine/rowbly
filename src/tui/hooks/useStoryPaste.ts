@@ -118,7 +118,12 @@ export function useStoryPaste({
         };
         const wayland =
           (image.reason === 'unsupported' || image.reason === 'no-display') && process.env.WAYLAND_DISPLAY;
-        toast.push('warning', messages[image.reason] + (wayland ? '; install wl-clipboard and try again' : ''));
+        const unavailable = image.reason === 'unsupported' || image.reason === 'no-display';
+        const fallback = unavailable && handler.clipboardFallback ? `; ${handler.clipboardFallback}` : '';
+        toast.push(
+          'warning',
+          messages[image.reason] + (wayland ? '; install wl-clipboard and try again' : '') + fallback,
+        );
         return;
       }
       toast.update(id, `Pasting image with Plugin "${claimant.id}"…`);

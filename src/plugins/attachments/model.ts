@@ -47,7 +47,8 @@ export const AttachmentsInput = z.object({
     )
     .min(1)
     .refine(
-      (images) => images.reduce((size, image) => size + image.png.length, 0) <= 4 * Math.ceil(MAX_ATTACHMENT_BYTES / 3),
+      (images) =>
+        images.reduce((size, image) => size + Buffer.byteLength(image.png, 'base64'), 0) <= MAX_ATTACHMENT_BYTES,
       'pending images exceed 10 MiB',
     ),
 });
