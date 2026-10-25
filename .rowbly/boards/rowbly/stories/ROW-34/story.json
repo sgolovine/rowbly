@@ -14,7 +14,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T21:06:58.964Z",
-  "updatedAt": "2026-10-25T21:19:32.934Z",
+  "updatedAt": "2026-10-25T21:23:17.332Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -38,6 +38,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/115 opened against main. Validation signed off at d28cf1e: typecheck, lint, 76 unit tests and 20 CLI tests passed; full suites used the shared lock. Barrier, mutation, load and forced-timeout checks confirm cancellation cleanup without cascading failures. All 130 fault cases retained; suite totals 96 tests. Screenshots published and verified HTTP 200. CI pending.",
           "createdAt": "2026-10-25T21:19:32.313Z",
           "updatedAt": "2026-10-25T21:19:32.313Z"
+        },
+        {
+          "id": "20HTIuKN",
+          "author": "sunny",
+          "body": "PR #115 failed CI because the fault sweep exceeded 20 s; the leak fix contained the failure to that test. Investigating runtime improvements while preserving fault coverage, with locked before/after measurements and green CI required before handoff.",
+          "createdAt": "2026-10-25T21:23:17.331Z",
+          "updatedAt": "2026-10-25T21:23:17.331Z"
         }
       ]
     }
