@@ -704,7 +704,8 @@ through the Plugin that takes pasted images, from any tab or field. The hint sho
 image` on macOS/Linux and `alt+v paste image` on Windows when that Plugin is active. Empty bracketed
 paste also reads an image; nonempty paste stays text. Image paste pauses under another task,
 another screen or the full-screen editor, and during saving. A spinner stays while the clipboard
-and Plugin are working; repeated gestures during that work are ignored.
+and Plugin are working; repeated gestures during that work are ignored. The paste hint stays hidden
+until that work finishes, including when you open another Story.
 An open Story saves through the Plugin immediately. New/edit forms keep images pending until the
 Story saves; validation/save failures keep them, and cancellation writes nothing. With no claimant,
 the gesture says `Turn on a Plugin that takes pasted images`. An empty clipboard says `No image on
