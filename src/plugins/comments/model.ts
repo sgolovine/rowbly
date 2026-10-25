@@ -9,8 +9,21 @@ const CommentSchema = z.object({
 });
 export type Comment = z.infer<typeof CommentSchema>;
 
-/** The bag on a Story: its Thread, in the order the Comments were added. */
-export const CommentsBag = z.object({ comments: z.array(CommentSchema) });
+/** Recognizes the current structure before reconciliation checks identity validity. */
+export const CommentsBagShape = z.object({ comments: z.array(CommentSchema) });
+/** The bag on a Story: its Thread, with unique ids in the order the Comments were added. */
+export const CommentsBag = CommentsBagShape.superRefine(({ comments }, ctx) => {
+  const seen = new Set<string>();
+  for (const [index, { id }] of comments.entries()) {
+    if (seen.has(id))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['comments', index, 'id'],
+        message: `duplicate Comment id ${JSON.stringify(id)}`,
+      });
+    seen.add(id);
+  }
+});
 
 /**
  * A new or edited Comment body: anything but whitespace only, kept exactly as given (W9). Stored

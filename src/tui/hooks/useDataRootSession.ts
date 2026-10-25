@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createServices, type RowblyContext, type Services } from '../../services';
 import { type PluginLoader, withPlugins } from '../loadPlugins';
 import type { Route } from '../router';
@@ -25,12 +25,25 @@ export function useDataRootSession(opts: {
   const { loadPlugins, toasts } = opts;
   const [current, setCurrent] = useState({ ctx: opts.ctx, services: opts.services, plugins: opts.plugins, key: 0 });
   const latest = useRef(0);
+  useEffect(
+    () => () => {
+      latest.current += 1;
+    },
+    [],
+  );
+  useEffect(() => {
+    const host = current.ctx?.plugins;
+    return () => host?.dispose?.();
+  }, [current.ctx?.plugins]);
   const activate = useCallback(
     async (next: RowblyContext) => {
       latest.current += 1;
       const run = latest.current;
       const loaded = await withPlugins(next, loadPlugins, toasts);
-      if (run !== latest.current) return false;
+      if (run !== latest.current) {
+        next.plugins?.dispose?.();
+        return false;
+      }
       setCurrent((was) => ({
         ctx: next,
         services: createServices(next),

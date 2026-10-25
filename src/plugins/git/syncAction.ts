@@ -1,5 +1,5 @@
 import type { PluginAction } from '../../plugin-api';
-import { preferences } from './model';
+import { resolveSyncOptions } from './model';
 
 /**
  * Sync, in the header wherever Rowbly runs (ADR-0035): commits pending Rowbly data, rebases onto the
@@ -10,11 +10,8 @@ export const syncAction: PluginAction = {
   label: 'Sync',
   target: 'none',
   async run({ plugin, ui }) {
-    const { authorName, authorEmail } = await preferences(plugin);
-    const result = await plugin.git.sync({ authorName, authorEmail });
-    const parts = [result.committed ? 'committed Rowbly changes' : 'no Rowbly changes to commit'];
-    if (result.pulled) parts.push(`pulled ${result.pulled} commit${result.pulled === 1 ? '' : 's'}`);
-    if (result.pushed) parts.push(`pushed ${result.pushed} commit${result.pushed === 1 ? '' : 's'}`);
-    ui.toast(`Synced with ${result.upstream} · ${parts.join(' · ')}`);
+    const result = await plugin.git.requestSync(resolveSyncOptions);
+    if (result.last?.kind !== 'synchronized') throw new Error(result.last?.message ?? 'Sync did not finish');
+    ui.toast(`Synced with ${result.last.upstream}`);
   },
 };

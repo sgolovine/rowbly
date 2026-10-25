@@ -11,6 +11,7 @@ import {
 } from '../../plugin-api';
 import { commands } from './commands';
 import { AssigneesBag, AssigneesFilter, AssigneesInput } from './model';
+import { reconcile } from './reconcile';
 import { parseRoster, ROSTER_FILE, ROSTER_PATH } from './roster';
 import { applyInput, resolveMe, setAssignees, storyAssignees } from './service';
 
@@ -31,6 +32,7 @@ function assigneesText(plugin: PluginReadContext, story: Bagged): string {
 }
 
 export const assignees = definePlugin({
+  reconcile,
   id: 'assignees',
   name: 'Assignees',
   description: 'A roster of Assignees for Stories',

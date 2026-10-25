@@ -1,21 +1,23 @@
 import { definePlugin, z } from '../../plugin-api';
 import { commands } from './commands';
-import { Preferences, preferences } from './model';
 import { syncAction } from './syncAction';
+import { Preferences, resolveCommitOptions, resolveSyncOptions } from './model';
 
 export const git = definePlugin({
   id: 'git',
   name: 'Git',
-  description: 'Automatically commit Rowbly changes to Git, and sync them with the upstream',
+  description: 'Automatically commit Rowbly changes to Git',
   settings: z.object({}),
   requiresGit: true,
   bags: { local: Preferences },
-  async start({ git, localData }) {
+  async start({ git }) {
     await git.info();
-    await git.resume(await preferences({ localData }));
+    await git.resume(resolveCommitOptions);
+    await git.resumeSync(resolveSyncOptions);
   },
   async react({ changes, plugin }) {
-    await plugin.git.changed(changes, await preferences(plugin));
+    await plugin.git.changed(changes, resolveCommitOptions);
+    await plugin.git.resumeSync(resolveSyncOptions);
   },
   commands,
   actions: [syncAction],

@@ -15,7 +15,6 @@ import type {
   StoryKey,
 } from '../../schemas';
 import type { GitCommitOptions } from '../../storage/git';
-import type { GitSyncResult } from '../../storage/gitSync';
 import type {
   BoardCreateInput,
   BoardPatch,
@@ -40,6 +39,8 @@ import type {
   StoryCreateInput,
   StoryPatch,
 } from '../types';
+import type { GitSyncOptionsSource, GitSyncStatus } from './gitSync';
+import type { PluginReconciler } from './reconciliation';
 
 // ── Change Sets (ADR-0012) ──────────────────────────────────────────────────
 
@@ -430,21 +431,20 @@ export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
 };
 
 export type { GitCommitOptions } from '../../storage/git';
-export type { GitSyncResult } from '../../storage/gitSync';
+
+/** A live resolver receives the owning Plugin's current Local State bag under the Data Root lock. */
+export type GitOptionsSource = GitCommitOptions | ((localData: unknown) => GitCommitOptions);
 
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {
+  syncStatus(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
+  resumeSync(options: GitSyncOptionsSource): Promise<void>;
+  requestSync(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
   /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
-  resume(options: GitCommitOptions): Promise<void>;
+  resume(options: GitOptionsSource): Promise<void>;
   /** Resolves after persisting the affected paths, before the queued commit finishes. */
-  changed(changes: ChangeSetView, options: GitCommitOptions): Promise<void>;
-  /**
-   * Sync (ADR-0035): commits pending Rowbly data, rebases onto the branch's upstream and pushes,
-   * never forced. Resolves after the push; rejects with the cause, and at once while a Sync runs.
-   * Allowed at start, in a live reaction and from a screen.
-   */
-  sync(options: Pick<GitCommitOptions, 'authorName' | 'authorEmail'>): Promise<GitSyncResult>;
+  changed(changes: ChangeSetView, options: GitOptionsSource): Promise<void>;
 }
 
 /** What a Plugin gets in every stage. */
@@ -731,11 +731,7 @@ export interface PluginActionOf<T extends ActionTarget, S = Record<string, unkno
   run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
-/**
- * A key, with a header button, wherever its target is in focus. It may only open or show something,
- * or change only Git state (ADR-0017, ADR-0035). While a `none` Action's `run` is pending, the header
- * shows it busy and ignores its key and click.
- */
+/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
 export type PluginAction<S = Record<string, unknown>> = {
   [T in ActionTarget]: PluginActionOf<T, S>;
 }[ActionTarget];
@@ -941,6 +937,8 @@ export interface PluginDefinition<
   /** Refuse activation unless the Data Root is inside a Git repository. */
   requiresGit?: boolean;
   bags?: PluginBagSchemas;
+  /** Pure supported-format import, scoped to this Plugin, including while it is Off (ADR-0034 §3). */
+  reconcile?: PluginReconciler;
   /**
    * Runs each time the Plugin loads: every command-mode run, and in the TUI at start and again each
    * time a Plugin is turned on or off. There is no teardown, so it must be safe to run again.

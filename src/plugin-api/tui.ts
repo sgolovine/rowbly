@@ -15,6 +15,7 @@ export type {
   SelectItem,
 } from '../tui/components';
 export {
+  Button,
   ConfirmDialog,
   DetailView,
   Form,

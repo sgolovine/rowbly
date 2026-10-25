@@ -59,3 +59,131 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     expect(await readJsonFile(t, 'local.json')).toEqual({ version: 1, board: 'web', me: 'alice', plugins: GHOST });
   });
 });
+
+it('reconciles only supported owned formats while Off, preserves future bags and refuses out-of-scope output before saving', async () => {
+  const { definePlugin, z } = await import('../../src/plugin-api');
+  const { mergeData } = await import('../../src/services/plugins/mergeData');
+  const t = await bagged();
+  const file = (v: unknown) => ({
+    data: Buffer.from(`${JSON.stringify(v)}\n`).toString('base64'),
+    mode: '100644' as const,
+  });
+  const root = await readJsonFile(t, 'rowbly.config.json'),
+    board = await readJsonFile(t, 'boards/web/board.config.json');
+  const story = (await import('../../src/schemas')).StorySchema.parse(await readJsonFile(t, storyFile('WEB-1')));
+  const path = storyFile('WEB-1');
+  const base = {
+    id: 'base',
+    files: { 'rowbly.config.json': file(root), 'boards/web/board.config.json': file(board), [path]: file(story) },
+  };
+  const left = {
+    id: 'left',
+    files: {
+      ...base.files,
+      [path]: file({
+        ...story,
+        plugins: {
+          ...story.plugins,
+          format: { version: 1, count: 1 },
+          future: { version: 100, list: ['left'], raw: null },
+        },
+      }),
+    },
+  };
+  const right = {
+    id: 'right',
+    files: {
+      ...base.files,
+      [path]: file({
+        ...story,
+        plugins: {
+          ...story.plugins,
+          format: { version: 1, count: 2 },
+          future: { version: 100, list: ['right'], bytes: 'unchanged' },
+        },
+      }),
+    },
+  };
+  let started = 0,
+    called = 0;
+  const format = definePlugin({
+    id: 'format',
+    name: 'Format',
+    description: '',
+    bags: { story: z.strictObject({ version: z.literal(1), count: z.number() }) },
+    start() {
+      started++;
+    },
+    reconcile({ left, right, helpers }) {
+      called++;
+      expect(Object.keys(left.bags)).toEqual(['boards/web/stories/WEB-1']);
+      expect(left.bags['boards/web/stories/WEB-1']).toEqual({ version: 1, count: 1 });
+      expect(() => {
+        left.bags.bad = 1;
+      }).toThrow();
+      expect(helpers.same(right.bags['boards/web/stories/WEB-1'], { version: 1, count: 2 })).toBe(true);
+      return { bags: { 'boards/web/stories/WEB-1': { version: 1, count: 3 } }, files: {} };
+    },
+  });
+  const result = mergeData(base, left, right, [format]);
+  const merged = JSON.parse(Buffer.from(result.files[path]?.data ?? '', 'base64').toString());
+  expect(merged.plugins.format).toEqual({ version: 1, count: 3 });
+  expect(merged.plugins.future).toMatchObject({ version: 100, raw: null, bytes: 'unchanged' });
+  expect(merged.plugins.ghost).toEqual(story.plugins?.ghost);
+  expect(started).toBe(0);
+  expect(called).toBe(1);
+  expect(result.evidence).toHaveLength(1);
+  for (const reconcile of [
+    () => ({ bags: {}, files: { 'plugins/other/data.json': file({ corrupt: true }) } }),
+    () => ({ bags: { 'boards/missing/stories/MIS-1': {} }, files: {} }),
+    () => ({ bags: {}, files: {}, requiredStories: [{ source: 'left', key: 'WEB-999' }] }),
+    () => ({ bags: {}, files: {}, requiredStages: [{ source: 'left', board: 'web', key: 'missing' }] }),
+    () => {
+      throw new Error('format failed');
+    },
+  ])
+    expect(() => mergeData(base, left, right, [{ ...format, reconcile }])).toThrow();
+  expect(await readJsonFile(t, path)).toEqual(story);
+
+  const { tasks } = await import('../../src/plugins/tasks');
+  const { comments } = await import('../../src/plugins/comments');
+  const task = {
+    number: 1,
+    name: 'First duplicate Task',
+    description: '',
+    stage: 'backlog',
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+  const comment = {
+    id: 'duplicate-id',
+    author: null,
+    body: 'First current-format Comment',
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+  for (const owner of [
+    { definition: tasks, bag: { nextNumber: 2, tasks: [task, { ...task, name: 'Second duplicate Task' }] } },
+    { definition: comments, bag: { comments: [comment, { ...comment, body: 'Second distinct Comment' }] } },
+  ]) {
+    const source = (id: string, bag: unknown) => ({
+      id,
+      files: { ...base.files, [path]: file({ ...story, plugins: { ...story.plugins, [owner.definition.id]: bag } }) },
+    });
+    // BASE and either side must reject known invalid identities, even beside an opaque future shape.
+    for (let position = 0; position < 3; position++) {
+      const inputs = ['base', 'left', 'right'].map((id, index) =>
+        source(id, index === position ? owner.bag : { ...owner.bag, version: 999 }),
+      );
+      const [old, a, b] = inputs;
+      if (!old || !a || !b) throw new Error('Expected three sources');
+      expect(() => mergeData(old, a, b, [owner.definition])).toThrow(/duplicate/i);
+    }
+    const future = source('future', { ...owner.bag, version: 999 });
+    const opaque = mergeData(future, future, future, [owner.definition]);
+    expect(
+      JSON.parse(Buffer.from(opaque.files[path]?.data ?? '', 'base64').toString()).plugins[owner.definition.id],
+    ).toEqual({ ...owner.bag, version: 999 });
+    expect(owner.definition.bags?.story?.safeParse(owner.bag).success).toBe(false);
+  }
+});

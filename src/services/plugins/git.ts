@@ -1,29 +1,43 @@
-import { dirname } from 'node:path';
-import { ConflictError, PluginError } from '../../core';
+import { isDeepStrictEqual } from 'node:util';
+import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
-import { createRepositories, withLock } from '../../storage';
+import { createRepositories } from '../../storage';
 import {
   commitGitPaths,
-  ensureGitQueueDir,
+  type GitPending,
   gitInfo,
   pendingPath,
   readGitPending,
   writeGitPending,
 } from '../../storage/git';
-import { type GitSyncResult, syncGit } from '../../storage/gitSync';
+import { canonicalGitRoot, requireRepository, withGitWorker } from '../../storage/gitRepository';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
-import type { ChangeSetView, GitCommitOptions, PluginGit } from './types';
+import { createGitSync, disposeSyncOwner, drainSyncQueue } from './gitSync';
+import type { AnyPluginDefinition, ChangeSetView, GitCommitOptions, GitOptionsSource, PluginGit } from './types';
+
+const timerOwners = new Map<string, object>();
+const disposedOwners = new WeakSet<object>();
+export function disposeGitOwner(owner: object): void {
+  disposedOwners.add(owner);
+  disposeSyncOwner(owner);
+  for (const [file, holder] of timerOwners)
+    if (holder === owner) {
+      clearTimeout(timers.get(file));
+      timers.delete(file);
+      timerOwners.delete(file);
+    }
+}
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const queues = new Map<string, { root: string; done: Promise<void> }>();
-/** The running Sync per Git directory's Rowbly folder: a second Sync is refused, not queued. */
-const syncs = new Set<string>();
 
 /** Command mode waits for due work outside reaction deadlines; future interval timers stay unref'd. */
 export async function drainGitQueue(root?: DataRoot): Promise<void> {
+  await drainSyncQueue(root);
+  const path = root ? (await canonicalGitRoot(root)).path : undefined;
   while (true) {
-    const running = [...queues.values()].filter((queue) => !root || queue.root === root.path);
+    const running = [...queues.values()].filter((queue) => !path || queue.root === path);
     if (!running.length) return;
     await Promise.all(running.map((queue) => queue.done));
   }
@@ -59,32 +73,50 @@ export function createPluginGit(
   root: DataRoot,
   id: string,
   warn: (message: string) => void = (message) => process.stderr.write(`${message}\n`),
+  registry: readonly AnyPluginDefinition[] = [],
+  owner?: object,
 ): PluginGit {
   let location: Promise<string> | undefined;
-  const filePath = () => (location ??= pendingPath(root, id));
+  let queueRoot = root.path;
+  let source: GitOptionsSource | undefined;
+  const filePath = () =>
+    (location ??= (async () => {
+      const canonical = await canonicalGitRoot(root);
+      queueRoot = canonical.path;
+      return pendingPath(canonical, id);
+    })());
   const warning = (err: unknown) => warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`);
 
-  /** Runs `job` after the queued Git work for `file`, under the cross-process Git lock. */
-  function chain<T>(file: string, operation: string, job: () => Promise<T>): Promise<T> {
-    const previous = queues.get(file)?.done ?? Promise.resolve();
-    const result = previous.then(() =>
-      outsideCoordination(() =>
-        withLock(dirname(file), { operation: `${id}.${operation}`, subject: 'The Git queue' }, job),
-      ),
-    );
-    const done = result.then(
-      () => undefined,
-      () => undefined,
-    );
-    queues.set(file, { root: root.path, done });
-    void done.then(() => {
-      if (queues.get(file)?.done === done) queues.delete(file);
-    });
-    return result;
+  // The resolver only interprets its own bag; the host owns the fresh read and its lock.
+  async function options(fallback?: GitCommitOptions): Promise<GitCommitOptions | undefined> {
+    return typeof source === 'function'
+      ? source((await createRepositories(root).localState.get()).plugins?.[id])
+      : fallback;
+  }
+
+  function updated(pending: GitPending, options: GitCommitOptions): GitPending {
+    return {
+      ...pending,
+      due: pending.due + (options.intervalSeconds - pending.options.intervalSeconds) * 1000,
+      options,
+      revision: (pending.revision ?? 0) + 1,
+    };
+  }
+
+  function cancelTimer(file: string) {
+    clearTimeout(timers.get(file));
+    timers.delete(file);
   }
 
   function enqueue(file: string) {
-    chain(file, 'git', () => work(file)).catch(warning);
+    const previous = queues.get(file)?.done ?? Promise.resolve();
+    const done = previous
+      .then(() => outsideCoordination(async () => withGitWorker(await requireRepository(root), () => work(file))))
+      .catch(warning);
+    queues.set(file, { root: queueRoot, done });
+    void done.then(() => {
+      if (queues.get(file)?.done === done) queues.delete(file);
+    });
   }
 
   function arm(file: string, due: number) {
@@ -109,14 +141,25 @@ export function createPluginGit(
   async function commitPending(file: string): Promise<boolean> {
     const pending = await coordinated(root, `${id}.git.pending`, async () => {
       const config = await createRepositories(root).rootConfig.get();
-      if (config.plugins?.[id]?.enabled !== true) return null;
-      return readGitPending(file);
+      if (config.plugins?.[id]?.enabled !== true || (owner && disposedOwners.has(owner))) return null;
+      let pending = await readGitPending(file);
+      if (!pending) return null;
+      const current = await options(pending.options);
+      if (current && !isDeepStrictEqual(current, pending.options)) {
+        pending = updated(pending, current);
+        await writeGitPending(file, pending);
+      }
+      if (pending.options.automaticCommits === false) {
+        cancelTimer(file);
+        return null;
+      }
+      if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
+        arm(file, pending.due);
+        return null;
+      }
+      return pending;
     });
     if (!pending) return false;
-    if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
-      arm(file, pending.due);
-      return false;
-    }
     await commitGitPaths(root, pending.paths, pending.options, (read) => coordinated(root, `${id}.git.snapshot`, read));
     return coordinated(root, `${id}.git.acknowledge`, async () => {
       const latest = await readGitPending(file);
@@ -129,35 +172,36 @@ export function createPluginGit(
     });
   }
 
-  async function schedule(given?: GitCommitOptions, paths: string[] = []) {
+  async function schedule(given: GitOptionsSource, paths: string[] = []) {
+    if (owner && disposedOwners.has(owner)) return;
     const file = await filePath();
-    let due: number | undefined;
+    if (owner && disposedOwners.has(owner)) return;
+    if (owner) timerOwners.set(file, owner);
     await coordinated(root, `${id}.git`, async () => {
-      clearTimeout(timers.get(file));
-      timers.delete(file);
+      if (owner && disposedOwners.has(owner)) return;
+      cancelTimer(file);
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return;
+      source = given;
       let pending = await readGitPending(file);
-      const options = given ?? pending?.options;
-      if (!options) return;
+      const current = await options(typeof given === 'function' ? undefined : given);
+      if (!current) return;
       if (paths.length) {
         pending = {
           paths: [...new Set([...(pending?.paths ?? []), ...paths])],
-          due: pending?.due ?? Date.now() + options.intervalSeconds * 1000,
-          options: pending?.options ?? options,
+          due: pending?.due ?? Date.now() + current.intervalSeconds * 1000,
+          options: pending?.options ?? current,
           revision: pending?.revision,
         };
       }
       if (!pending) return;
-      pending.due += (options.intervalSeconds - pending.options.intervalSeconds) * 1000;
-      pending.options = options;
-      pending.revision = (pending.revision ?? 0) + 1;
+      pending = updated(pending, current);
       await writeGitPending(file, pending);
-      due = options.frequency === 'change' ? 0 : pending.due;
+      if (current.automaticCommits === false) return;
+      const due = current.frequency === 'change' ? 0 : pending.due;
+      if (due > Date.now()) arm(file, due);
+      else enqueue(file);
     });
-    if (due === undefined) return;
-    if (due > Date.now()) arm(file, due);
-    else enqueue(file);
   }
   function assertEffect() {
     const scope = currentScope();
@@ -165,14 +209,8 @@ export function createPluginGit(
       throw new PluginError('Git effects are available only at Plugin start or in a live reaction');
     }
   }
-  /** Sync also runs from a screen, such as a TUI Action (ADR-0035). */
-  function assertSync() {
-    const scope = currentScope();
-    if (scope && ((scope.stage !== 'reaction' && scope.stage !== 'screen') || scope.ended)) {
-      throw new PluginError('Git Sync is available only at Plugin start, in a live reaction or from a screen');
-    }
-  }
   return {
+    ...createGitSync(root, id, registry, warn, owner),
     info: () => gitInfo(root),
     async resume(options) {
       assertEffect();
@@ -185,23 +223,6 @@ export function createPluginGit(
     changed: (changes, options) => {
       assertEffect();
       return schedule(options, changedPaths(changes));
-    },
-    async sync(options): Promise<GitSyncResult> {
-      assertSync();
-      const file = await filePath();
-      const key = dirname(file);
-      // No await between the check and the add, so two calls cannot both pass.
-      if (syncs.has(key)) throw new ConflictError('Sync is already running', { hint: 'wait for it to finish' });
-      syncs.add(key);
-      try {
-        await ensureGitQueueDir(file);
-        // Lock order: this guard, then the Git lock, then (briefly, for the snapshot) the Data Root lock.
-        return await chain(file, 'git.sync', () =>
-          syncGit(root, options, (read) => coordinated(root, `${id}.git.snapshot`, read)),
-        );
-      } finally {
-        syncs.delete(key);
-      }
     },
   };
 }

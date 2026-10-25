@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Add a Sync button to the header through the Git Plugin",
   "description": "## Goal\nWhen the Git Plugin is enabled, add a \"Sync\" button to the TUI header so users can synchronize Rowbly changes with the current branch’s configured upstream.\n\n## Dependencies\nBlocked by ROW-13 (Allow disabling Automatic Commits while the Git Plugin is enabled) and ROW-15 (Add Automatic Merge Conflict Resolution to the Git Plugin). Both Stories must be done before starting this Story.\n\n## Acceptance criteria\n- The Git Plugin contributes a \"Sync\" button to the header when enabled.\n- Pressing Sync runs the following sequence: pull the current branch with `git pull --rebase`; stage pending Rowbly Story and configuration changes, including additions and deletions; create a commit when there are changes to commit; and push the current branch to its configured upstream.\n- Include pending Rowbly changes when Automatic Commits are disabled. Handle a dirty working tree safely so the pull/rebase can run before the final staging and commit without losing local changes.\n- Reuse the conflict-resolution behavior delivered by ROW-15 for Rowbly data and configuration during the rebase. Keep the explicit `git pull --rebase` behavior for this action.\n- Coordinate with Automatic Commits, scheduled synchronization and other Rowbly writes. Show progress and prevent duplicate Sync runs while one is active.\n- Preserve unrelated working-tree and staged changes; keep Local State, locks and transaction files out of the commit. Do not force-push.\n- Show a success toast only after the push succeeds. If pulling, rebasing, staging, committing or pushing fails, show an error toast with an actionable cause and preserve local work for recovery.\n- If no Rowbly changes need a commit, skip creating an empty commit and still complete the pull/push synchronization.\n- Update the user guide, Git Plugin documentation and published Rowbly skill Git reference for the header action and its interaction with Automatic Commits and automatic synchronization.\n\n## Verification\nUse two clones of a temporary remote to verify pulling upstream changes with rebase, committing pending Rowbly Story/configuration changes and pushing successfully. Check success/error toasts, Automatic Commits on and off, no-change runs, overlapping synchronization, Rowbly conflicts, and safe handling of unrelated changes, missing upstream and network/authentication or push failures. Follow the repository test policy for any required data-loss or race regression coverage.",
-  "stage": "in-progress",
+  "stage": "in-pr",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T16:34:49.836Z",
+  "updatedAt": "2026-10-25T17:26:51.700Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,34 @@
           "body": "Plan accepted. Complexity 5: a dev worker for research and plan, a fresh dev worker for implementation, then a separate validator. Branch `claude/row-17-header-sync` from `origin/main`; PR against `main`. Scope cut by the user because ROW-13 and ROW-15 are only on `develop`: no ROW-15 conflict resolution, no Automatic Commits toggle, and no CLI command. Plan: the Git Plugin adds a header Sync Action on `S` with a busy state and a guard against running twice, sharing the Automatic Commits queue and worker lock. It commits pending Rowbly data from a snapshot (leaving out Local State, locks, `.txn` and tmp files), fetches, rebases in a temporary worktree (on conflict: abort, keep local work, show an error toast), lands the result with `git reset --keep`, then pushes without force. A success toast appears only after the push. No stash and no Git under the Data Root lock. New ADR-0035; docs and skill references updated.",
           "createdAt": "2026-10-25T16:34:49.835Z",
           "updatedAt": "2026-10-25T16:34:49.835Z"
+        },
+        {
+          "id": "6c5OPXiS",
+          "author": "sunny",
+          "body": "Draft PR #106 https://github.com/sgolovine/rowbly/pull/106 from `claude/row-17-header-sync`, head 0c70c9e. The Git Plugin adds a header Sync Action (`S`): commit pending Rowbly data, fetch, rebase in a temporary worktree, land keeping unrelated changes, push without force. The success toast appears only after the push, and errors show recovery hints. New ADR-0035. Validation: typecheck, lint, unit (67) and CLI (20) tests pass, plus manual two-clone TUI runs across success, no-change, conflict, missing upstream, network failure, rejected push, crash recovery and dirty-tree cases; screenshots are on the PR. Left for when `develop` reaches `main`: ROW-15 conflict resolution, handling Automatic Commits off, and moving onto `requestSync`.",
+          "createdAt": "2026-10-25T17:23:55.358Z",
+          "updatedAt": "2026-10-25T17:23:55.358Z"
+        },
+        {
+          "id": "45eh6pcE",
+          "author": "sunny",
+          "body": "On hold by the user's decision: #106 (the reduced Sync on main) will not merge yet. After #105 (develop → main) merges, ROW-17 will be rebuilt on main using develop's sync service and ROW-15's conflict resolution, including the criteria that were dropped.",
+          "createdAt": "2026-10-25T17:24:35.497Z",
+          "updatedAt": "2026-10-25T17:24:35.497Z"
+        },
+        {
+          "id": "kSjzTgNT",
+          "author": "sunny",
+          "body": "#105 (develop → main) merged. Rebuilding ROW-17 on main's sync service on the same branch and PR #106, with the full acceptance criteria restored (ROW-15 conflict resolution, pending changes with Automatic Commits off). Worker: GPT 6.1 sol, medium, on rook.",
+          "createdAt": "2026-10-25T17:26:37.735Z",
+          "updatedAt": "2026-10-25T17:26:37.735Z"
+        },
+        {
+          "id": "DWwKN9DS",
+          "author": "sunny",
+          "body": "Rebuilding PR #106 on main’s Git sync service, restoring Automatic Commits-off support and automatic conflict resolution while adopting rebase integration.",
+          "createdAt": "2026-10-25T17:26:51.699Z",
+          "updatedAt": "2026-10-25T17:26:51.699Z"
         }
       ]
     }
