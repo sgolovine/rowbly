@@ -89,10 +89,11 @@ describe('rowbly skill: references/setup.md', () => {
 });
 
 describe('rowbly skill: references/stories.md', () => {
-  it('picks up and finishes a Story by Stage Category, with Tasks', async () => {
+  it('hands off a Story through configured ready and review Stages before completion, with Tasks', async () => {
     const { json } = await project();
-    await json('stages', 'add', 'doing', '--name', 'Doing', '--after', 'backlog', '--board', 'web', '--level', 'board');
+    await json('stages', 'add', 'doing', '--name', 'Doing', '--after', 'todo', '--board', 'web', '--level', 'board');
     await json('stages', 'remove', 'in-progress', '--board', 'web');
+    await json('stages', 'add', 'review', '--name', 'Review', '--after', 'doing', '--board', 'web', '--level', 'board');
 
     const created = await json(
       'stories',
@@ -114,10 +115,19 @@ describe('rowbly skill: references/stories.md', () => {
 
     const { stages } = await json('config', 'show', '--board', 'web');
     const first = (category: string) => stages.find((s: { category: string }) => s.category === category).key;
-    expect(first('board')).toBe('doing');
+    expect(stages.map((s: { key: string }) => s.key)).toEqual(['backlog', 'todo', 'doing', 'review', 'done']);
+    // Refinement hands off to the ready Stage; development starts in Doing.
     await json('stories', 'move', created.key, first('board'));
+    expect((await json('stories', 'show', created.key)).stage).toBe('todo');
+    await json('stories', 'move', created.key, 'doing');
     await json('tasks', 'move', task.id, first('done'));
     expect((await json('stories', 'show', created.key)).stage).toBe('doing');
+    // Completing implementation and its Tasks still leaves the Story open for review.
+    await json('stories', 'move', created.key, 'review');
+    expect((await json('stories', 'list', '--board', 'web', '--open')).map((s: { stage: string }) => s.stage)).toEqual([
+      'review',
+    ]);
+    // Only after review is complete does the Story leave the open workflow.
     await json('stories', 'move', created.key, first('done'));
 
     const finished = await json('stories', 'show', created.key);

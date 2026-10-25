@@ -144,19 +144,22 @@ say that you did; ask first for Assignees and Git. See [Plugins](references/plug
 
 ## 7. Keep the Story's Stage current
 
-When you work on a Story, its Stage shows the user where the work is. Move it yourself, without being
-asked:
+When you work on a Story, its Stage shows the user where the work is. Read the Story and its Board's
+ordered Stages with `stories show` and `config show --board <id>` before choosing a destination.
+Use the configured keys, names and Stage order to match the work you were assigned
+([Stories](references/stories.md) §1).
 
 - **Create** a Story in the `backlog` Stage (the default; leave out `--stage`) unless the user names
   another Stage.
-- **Start development**: before you change any code, move the Story to the in-progress Stage
-  (`in-progress` on most Boards; see [Stories](references/stories.md) §1 for a Board without one).
-- **Complete the work**: move the Story to `done` as your last step.
+- **Start work**: use the Stage for the activity, whether preparation, refinement, development or
+  review. Before changing code, move to the Board's development Stage if the Story is not there.
+- **Finish your assignment**: move the Story to the next appropriate Stage without waiting to be
+  asked. Refinement may hand off to a ready Stage; implementation may hand off to review. Move to
+  `done` only when the Story's workflow is complete, including any required review or approval.
 
-```sh
-rowbly stories move WEB-42 in-progress --json --no-prompt
-rowbly stories move WEB-42 done --json --no-prompt
-```
+Follow explicit user instructions about destinations and who updates the Board. If a supervisor is
+the designated Board writer, report the completed work and intended next Stage to that supervisor
+instead of moving the Story yourself. Otherwise make the move and verify it with `stories show`.
 
 ## Use Rowbly's words
 
@@ -197,5 +200,6 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 ## Completion
 
 Each call you made exited 0, or you handled its exit code as described in the table above. A Story you
-worked on is in the Stage that matches its work (§7). Report any
+worked on is in the Stage that matches its next workflow step (§7), or you reported the intended move
+to the designated Board writer. Report any
 change you could not make, with its `error.code` and message, and any Plugin you turned on.
