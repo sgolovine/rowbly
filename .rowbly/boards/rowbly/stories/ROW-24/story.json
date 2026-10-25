@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-24",
+  "boardId": "rowbly",
+  "name": "Test",
+  "description": "",
+  "stage": "todo",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T17:16:48.922Z",
+  "updatedAt": "2026-10-25T17:16:48.922Z"
+}
