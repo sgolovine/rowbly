@@ -87,6 +87,22 @@ export function canonicalValue(value: unknown): string {
 export function mergeDigest(value: unknown): string {
   return createHash('sha256').update(canonicalValue(value)).digest('hex');
 }
+/** A replay proof has one byte representation regardless of map construction order. */
+export function replayEvidenceFile(value: unknown): MergeFile {
+  const text = JSON.stringify(
+    value,
+    (_key, entry) =>
+      isObject(entry)
+        ? Object.fromEntries(
+            Object.keys(entry)
+              .sort()
+              .map((key) => [key, entry[key]]),
+          )
+        : entry,
+    2,
+  );
+  return { data: Buffer.from(`${text}\n`).toString('base64'), mode: '100644' };
+}
 export function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

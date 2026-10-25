@@ -17,6 +17,7 @@ import {
   type PluginMergeSnapshot,
   type RequiredStage,
   type RequiredStory,
+  replayEvidenceFile,
 } from './reconciliation';
 import type { AnyPluginDefinition } from './types';
 
@@ -441,7 +442,7 @@ function mergeOnce(
       decisions: [...decisions].sort((a, b) => (canonicalValue(a) < canonicalValue(b) ? -1 : 1)),
     };
     const path = `plugins/git/merge-evidence/${mergeDigest(record)}.json`;
-    files[path] = encode(record);
+    files[path] = replay ? replayEvidenceFile(record) : encode(record);
     evidence.push(path);
   }
   return { files, decisions, remaps, evidence, identities, coreFields, requests, stageRequests };

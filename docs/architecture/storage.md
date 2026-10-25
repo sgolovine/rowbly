@@ -152,6 +152,8 @@ Launcher setup failures close and await the owned IPC server and remove its sock
 Private replay correspondence includes source-qualified Custom Field aliases from the original
 definition scope. Successive and pending values follow the same alias; root inheritance and Board
 overrides retain their scope. An ambiguous new key at a previous destination refuses preparation.
+New replay proof records use stable JSON key order, so equivalent correspondence maps cannot produce
+different bytes at the same content address. Original and ordinary merge evidence remains unchanged.
 The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
 bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
 

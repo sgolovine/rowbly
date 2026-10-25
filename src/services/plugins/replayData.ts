@@ -7,6 +7,7 @@ import {
   type MergeFiles,
   mergeDigest,
   type PluginIdentityMap,
+  replayEvidenceFile,
 } from './reconciliation';
 import type { AnyPluginDefinition } from './types';
 
@@ -231,6 +232,11 @@ export function transportReplayData(
   const owners: Record<string, PluginIdentityMap> = {};
   for (const [owner, scopes] of Object.entries(prior.owners))
     owners[owner] = Object.fromEntries(Object.entries(scopes).map(([scope, map]) => [core.scope(scope), map]));
+  if (
+    isDeepStrictEqual(core.source.files, original.files) &&
+    !Object.values(owners).some((scopes) => Object.values(scopes).some((map) => Object.keys(map).length))
+  )
+    return { source: core.source, projection: core.projection, evidence: [], core: core.source };
   const result = mergeData(core.source, core.source, core.source, registry, { [original.id]: owners });
   for (const identity of result.identities ?? []) {
     const rawScope =
@@ -379,7 +385,7 @@ export function retainReplayProvenance(
     output: evidenceSource({ id: 'prepared-replay-tree', files: result.files }),
   };
   const path = `plugins/git/merge-evidence/${mergeDigest(record)}.json`;
-  result.files[path] = encode(record, '100644');
+  result.files[path] = replayEvidenceFile(record);
   result.evidence.push(path);
   return path;
 }

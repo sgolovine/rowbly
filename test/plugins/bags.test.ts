@@ -369,6 +369,11 @@ it('reconciles only supported owned formats while Off, preserves future bags and
         { ...comment, id: 'constructor', body: 'first' },
       ]);
       expect(Object.hasOwn(transported.projection.owners.comments?.[scope] ?? {}, '__proto__')).toBe(true);
+      const reversed = JSON.parse(JSON.stringify(projection));
+      reversed.owners.comments[scope] = Object.fromEntries(Object.entries(reversed.owners.comments[scope]).reverse());
+      const same = transportReplayData(original, reversed, [comments]);
+      expect(same.evidence).toEqual(transported.evidence);
+      for (const path of transported.evidence) expect(same.source.files[path]).toEqual(transported.source.files[path]);
     }
   }
 });
