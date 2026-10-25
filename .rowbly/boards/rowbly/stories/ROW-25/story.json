@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:09.530Z",
-  "updatedAt": "2026-10-25T17:40:39.964Z",
+  "updatedAt": "2026-10-25T17:43:02.875Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,6 +20,17 @@
     "story-linking": {
       "blocks": [
         "ROW-28"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "gVBd7BFk",
+          "author": "sunny",
+          "body": "The user decided (2026-10-25) not to wait for this check: ROW-28 goes ahead with the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste where terminals send one). The user will run the terminal check later and post the findings table here. It needs real macOS, Windows and Linux terminals, which the rook workers don't have.",
+          "createdAt": "2026-10-25T17:43:02.874Z",
+          "updatedAt": "2026-10-25T17:43:02.874Z"
+        }
       ]
     }
   }
