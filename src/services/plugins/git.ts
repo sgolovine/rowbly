@@ -1,14 +1,17 @@
 import { dirname } from 'node:path';
-import { PluginError } from '../../core';
+import { ConflictError, PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories, withLock } from '../../storage';
 import { commitGitPaths, gitInfo, pendingPath, readGitPending, writeGitPending } from '../../storage/git';
+import { type GitSyncResult, syncGit } from '../../storage/gitSync';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
 import type { ChangeSetView, GitCommitOptions, PluginGit } from './types';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const queues = new Map<string, { root: string; done: Promise<void> }>();
+/** The running Sync per Git directory's Rowbly folder: a second Sync is refused, not queued. */
+const syncs = new Set<string>();
 
 /** Command mode waits for due work outside reaction deadlines; future interval timers stay unref'd. */
 export async function drainGitQueue(root?: DataRoot): Promise<void> {
@@ -54,15 +57,25 @@ export function createPluginGit(
   const filePath = () => (location ??= pendingPath(root, id));
   const warning = (err: unknown) => warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`);
 
-  function enqueue(file: string) {
+  /** Runs `job` after the queued Git work for `file`, under the cross-process Git lock. */
+  function chain<T>(file: string, operation: string, job: () => Promise<T>): Promise<T> {
     const previous = queues.get(file)?.done ?? Promise.resolve();
-    const done = previous
-      .then(() => outsideCoordination(() => withLock(dirname(file), { operation: `${id}.git` }, () => work(file))))
-      .catch(warning);
+    const result = previous.then(() =>
+      outsideCoordination(() => withLock(dirname(file), { operation: `${id}.${operation}` }, job)),
+    );
+    const done = result.then(
+      () => undefined,
+      () => undefined,
+    );
     queues.set(file, { root: root.path, done });
     void done.then(() => {
       if (queues.get(file)?.done === done) queues.delete(file);
     });
+    return result;
+  }
+
+  function enqueue(file: string) {
+    chain(file, 'git', () => work(file)).catch(warning);
   }
 
   function arm(file: string, due: number) {
@@ -143,6 +156,13 @@ export function createPluginGit(
       throw new PluginError('Git effects are available only at Plugin start or in a live reaction');
     }
   }
+  /** Sync also runs from a screen, such as a TUI Action (ADR-0035). */
+  function assertSync() {
+    const scope = currentScope();
+    if (scope && ((scope.stage !== 'reaction' && scope.stage !== 'screen') || scope.ended)) {
+      throw new PluginError('Git Sync is available only at Plugin start, in a live reaction or from a screen');
+    }
+  }
   return {
     info: () => gitInfo(root),
     async resume(options) {
@@ -156,6 +176,22 @@ export function createPluginGit(
     changed: (changes, options) => {
       assertEffect();
       return schedule(options, changedPaths(changes));
+    },
+    async sync(options): Promise<GitSyncResult> {
+      assertSync();
+      const file = await filePath();
+      const key = dirname(file);
+      // No await between the check and the add, so two calls cannot both pass.
+      if (syncs.has(key)) throw new ConflictError('Sync is already running', { hint: 'wait for it to finish' });
+      syncs.add(key);
+      try {
+        // Lock order: this guard, then the Git lock, then (briefly, for the snapshot) the Data Root lock.
+        return await chain(file, 'git.sync', () =>
+          syncGit(root, options, (read) => coordinated(root, `${id}.git.snapshot`, read)),
+        );
+      } finally {
+        syncs.delete(key);
+      }
     },
   };
 }

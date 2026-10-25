@@ -70,6 +70,7 @@ export type {
   FileChange,
   FileScope,
   GitCommitOptions,
+  GitSyncResult,
   GuardEvent,
   GuardResult,
   LocalStateChange,

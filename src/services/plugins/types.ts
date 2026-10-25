@@ -15,6 +15,7 @@ import type {
   StoryKey,
 } from '../../schemas';
 import type { GitCommitOptions } from '../../storage/git';
+import type { GitSyncResult } from '../../storage/gitSync';
 import type {
   BoardCreateInput,
   BoardPatch,
@@ -429,6 +430,7 @@ export type PluginServices = Omit<Services, 'plugins' | 'setup' | 'doctor'> & {
 };
 
 export type { GitCommitOptions } from '../../storage/git';
+export type { GitSyncResult } from '../../storage/gitSync';
 
 /** Host-owned Git automation, resolved from the Data Root, with bounded argv execution. */
 export interface PluginGit {
@@ -437,6 +439,12 @@ export interface PluginGit {
   resume(options: GitCommitOptions): Promise<void>;
   /** Resolves after persisting the affected paths, before the queued commit finishes. */
   changed(changes: ChangeSetView, options: GitCommitOptions): Promise<void>;
+  /**
+   * Sync (ADR-0035): commits pending Rowbly data, rebases onto the branch's upstream and pushes,
+   * never forced. Resolves after the push; rejects with the cause, and at once while a Sync runs.
+   * Allowed at start, in a live reaction and from a screen.
+   */
+  sync(options: Pick<GitCommitOptions, 'authorName' | 'authorEmail'>): Promise<GitSyncResult>;
 }
 
 /** What a Plugin gets in every stage. */

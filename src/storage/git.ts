@@ -12,12 +12,16 @@ import { writeTextFile } from './system';
 const execute = promisify(execFile);
 
 /** No shell, bounded output/time, and no inherited Git directory/index/author overrides. */
-async function runGit(cwd: string, args: readonly string[]): Promise<string> {
+export async function runGit(
+  cwd: string,
+  args: readonly string[],
+  options: { timeout?: number; env?: Record<string, string> } = {},
+): Promise<string> {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   const { stdout } = await execute('git', [...args], {
     cwd,
-    env: { ...env, GIT_TERMINAL_PROMPT: '0', ROWBLY_GIT_AUTOCOMMIT: '1' },
-    timeout: 3500,
+    env: { ...env, GIT_TERMINAL_PROMPT: '0', ROWBLY_GIT_AUTOCOMMIT: '1', ...options.env },
+    timeout: options.timeout ?? 3500,
     maxBuffer: 1024 * 1024,
   });
   return stdout;
