@@ -5,14 +5,14 @@
   "name": "Add the Attachments Built-in Plugin: storage, CLI and doctor",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. It needs binary Plugin files and the clipboard reader from the Stories that block it.\n\n## Goal\n\nA new **Attachments** Built-in Plugin that stores image files on Stories, with CLI commands and doctor checks. The TUI and pasting are a separate Story.\n\n## Data\n\n- Files: `boards/<b>/stories/<KEY>/plugins/attachments/<id>.png`, saved as binary Plugin files.\n- A bag on the Story lists them, in order: `{ id, name, type, size, createdAt, createdBy }`. `createdBy` is Me, or `null`.\n- Default names for pasted images: `image-YYYYMMDD-HHMM.png`. A file added from a path keeps its base name.\n- The operation `attachments.add` writes the file and the bag entry together; `attachments.remove` deletes both.\n\n## CLI\n\nEvery data change must be a command as well as a key; this also covers SSH.\n\n- `rowbly attachment add <KEY> <file>` and `rowbly attachment add <KEY> --from-clipboard` (uses the clipboard reader).\n- `rowbly attachment list <KEY> [--json]`\n- `rowbly attachment remove <KEY> <id>`: destructive, so it needs `--yes` when it can't prompt.\n- `rowbly attachment open <KEY> <id>`: opens the file with `open`, `start` or `xdg-open`. Plugins have no filesystem or process capability, so add a small Plugin API helper.\n\nCheck the noun with the glossary: `attachment` or `attachments`, matching how other Plugins name their commands (e.g. `comments`).\n\n## Doctor\n\n- Report a file with no bag entry, and a bag entry with no file.\n- `--fix` repairs what is safe.\n- A Story renumbered by doctor already takes its Plugin files with it; check that it does for these files.\n\n## Built-in Plugin checklist (`docs/plugins/writing-a-plugin.md` §12)\n\n- `src/plugins/attachments/` with `index.ts` and `definePlugin`; an entry in `builtInPlugins`; the TUI part loaded lazily.\n- `src/plugins/attachments/CONTEXT.md` defining **Attachment**, with an `_Avoid_` line (e.g. upload, file blob). Link it from `docs/agents/CONTEXT-MAP.md`.\n- Its section in `docs/plugins/built-in.md`.\n- Its operations in `docs/architecture/operations.md`. `test/plugins/operationInventory.test.ts` parses those tables, so keep their headings and row format.\n- `docs/user-guide.md`: the commands and doctor findings.\n- `skills/rowbly/references/plugin-attachments.md` and a row in `skills/rowbly/SKILL.md`. Update `skills/rowbly-reference.md`, then copy it to `.agents/skills/rowbly-dev/references/rowbly-reference.md`.\n- Imports only from `../../plugin-api` and `../../plugin-api/tui`.\n\n## Tests\n\nNone by default (AGENTS.md). Check it by running `pnpm dev attachment …` against a scratch Data Root, and say how in the pull request.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
   "stage": "in-pr",
-  "rank": "a1",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T21:12:31.189Z",
+  "updatedAt": "2026-10-25T21:29:56.673Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -86,6 +86,13 @@
           "body": "Draft PR #114 opened on ROW-28 with verified screenshots. All four checks passed at f2f4f31; functional validation signed off. Current main’s ROW-24 merge conflicts require supervisor review. Board unchanged on rook.",
           "createdAt": "2026-10-25T21:12:30.586Z",
           "updatedAt": "2026-10-25T21:12:30.586Z"
+        },
+        {
+          "id": "W4TH3GBR",
+          "author": "sunny",
+          "body": "Main integrated at 2cec02f; ROW-29-only diff and all local checks pass. CI Unit failed on the existing transaction.test.ts:236 timeout; Verify and CLI passed. Awaiting the separately owned storage-test fix before final CI completion.",
+          "createdAt": "2026-10-25T21:29:56.050Z",
+          "updatedAt": "2026-10-25T21:29:56.050Z"
         }
       ]
     }
