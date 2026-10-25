@@ -79,6 +79,8 @@ into your skill's `references/` folder and tell the agent to read it whenever th
 Rowbly. One page covers the flags every call needs, exit codes and the JSON error shape, the words
 Rowbly uses, how to find the Board and its Stages, every command with its options, each Built-in Plugin
 and a shell pattern for acting on a set of Stories. It is in the npm package too, beside `skills/rowbly`.
+`rowbly skills create <name> --harness claude` starts such a skill with the page already in place; see
+[Skills](docs/user-guide.md#skills) in the user guide.
 
 ## Quick start
 

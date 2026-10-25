@@ -144,6 +144,25 @@ rowbly fields remove estimate --board web
   `MISSING_REQUIRED_FIELD` for them.
 - Stories take values as `--field key=value` ([Stories](stories.md)).
 
+## 5. Start a skill that uses Rowbly
+
+When the user wants a new agent skill that works with Rowbly, create it from the folder the skill is
+for (usually the repository root):
+
+```sh
+rowbly skills create release-notes --harness claude --description "Write release notes from done Stories"
+rowbly skills list                       # [{name, description, harnesses, path}]
+```
+
+- `create` writes `<folder>/<name>/SKILL.md`, which opens with a paragraph that points at
+  `references/rowbly-reference.md`, and that reference page. Then write the skill's steps in `SKILL.md`.
+- `--harness` picks the folder: `generic` (the default) and `codex` `.agents/skills`, `claude`
+  `.claude/skills`, `gemini` `.gemini/skills`, `pi` `.pi/skills`, `cursor` `.cursor/skills`. Ask which
+  agent the user runs when they do not say.
+- The name is lowercase letters, digits and single hyphens (exit 2 otherwise). A skill folder that
+  already exists exits 4 and is not changed; pick another name rather than deleting it.
+- `list` shows the skills below the current folder that hold the reference.
+
 ## Common mistakes
 
 - **HIGH: editing at the wrong level.** Adding a Stage without `--board`/`--level` while a Board is in

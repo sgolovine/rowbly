@@ -4,6 +4,7 @@ import { registerDoctor } from './doctor';
 import { registerFields } from './fields';
 import { registerPlugins } from './plugins';
 import { registerSetup } from './setup';
+import { registerSkills } from './skills';
 import { registerStages } from './stages';
 import { registerStories } from './stories';
 
@@ -16,4 +17,5 @@ export function registerCommands(program: Command): void {
   registerStories(program);
   registerDoctor(program);
   registerPlugins(program);
+  registerSkills(program);
 }
