@@ -12,12 +12,5 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:26:41.440Z",
-  "updatedAt": "2026-10-25T17:26:56.418Z",
-  "plugins": {
-    "story-linking": {
-      "blocks": [
-        "ROW-24"
-      ]
-    }
-  }
+  "updatedAt": "2026-10-25T17:27:11.127Z"
 }
