@@ -71,6 +71,15 @@ cp -r "$(npm root -g)"/rowbly/skills/rowbly ~/.claude/skills/
 For another agent, copy the same folder wherever it loads skills from. Copy it again after you
 upgrade Rowbly, so it matches the CLI.
 
+### Rowbly in your own skills
+
+To write a skill that uses Rowbly ("work on every Story in progress", "create a Story for each
+finding") without explaining Rowbly in it, copy [`skills/rowbly-reference.md`](skills/rowbly-reference.md)
+into your skill's `references/` folder and tell the agent to read it whenever the skill mentions
+Rowbly. One page covers the flags every call needs, exit codes and the JSON error shape, the words
+Rowbly uses, how to find the Board and its Stages, every command with its options, each Built-in Plugin
+and a shell pattern for acting on a set of Stories. It is in the npm package too, beside `skills/rowbly`.
+
 ## Quick start
 
 In the repository you want to track:

@@ -22,6 +22,7 @@ explains how it is built. Start at `docs/README.md`.
 | Commands, flags, keys, doctor findings, exit codes (user facing) | `docs/user-guide.md` |
 | What Rowbly is, install and a first Board (the landing page) | `README.md` |
 | The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
+| The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
 | Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published |
 
 ## Domain language and decisions
@@ -69,6 +70,12 @@ by copying the folder into an agent's skills folder (`README.md`, Install). Keep
 - `references/` has one page per area (setup, Stories, Plugins, doctor, Data Root layout, TUI) and one
   `plugin-<id>.md` per Built-in Plugin. A new Built-in Plugin, or a change to a command, flag, exit code
   or doctor finding, updates the matching page in the same change.
+
+`skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
+an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to
+nothing. It repeats the essentials of `skills/rowbly` in less space, so a change that updates a
+`skills/rowbly` page updates this page too when it touches a command, flag, JSON shape, exit code or
+Plugin that the page shows. Keep it concise: commands with their options, not procedures.
 
 ## Screenshots
 
