@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T16:51:46.423Z",
-  "updatedAt": "2026-10-25T16:51:51.430Z"
+  "updatedAt": "2026-10-25T16:57:17.206Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "ZqFLsNHm",
+          "author": "sunny",
+          "body": "Complexity 2 (supervisor only). Branch claude/row-21-rowbly-dev-official. Plan: move .agents/skills/rowbly-dev to skills/rowbly-dev (keep a tracked .agents symlink for repo use), add it to package.json files so `rowbly skills install` lists it, update AGENTS.md, README, user guide and setup reference.",
+          "createdAt": "2026-10-25T16:57:17.205Z",
+          "updatedAt": "2026-10-25T16:57:17.205Z"
+        }
+      ]
+    }
+  }
 }
