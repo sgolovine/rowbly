@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T21:05:14.546Z",
+  "updatedAt": "2026-10-25T21:12:30.587Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -79,6 +79,13 @@
           "body": "Clean, pushed head 6513e3e is signed off: typecheck, lint, 80 unit tests and 20 CLI tests passed. Both screenshots uploaded and HTTP 200 verified. Awaiting ROW-28 main sync to remove inherited ROW-29/ROW-31 Board files before PR creation.",
           "createdAt": "2026-10-25T21:05:14.545Z",
           "updatedAt": "2026-10-25T21:05:14.545Z"
+        },
+        {
+          "id": "jvkq801H",
+          "author": "sunny",
+          "body": "Draft PR #114 opened on ROW-28 with verified screenshots. All four checks passed at f2f4f31; functional validation signed off. Current main’s ROW-24 merge conflicts require supervisor review. Board unchanged on rook.",
+          "createdAt": "2026-10-25T21:12:30.586Z",
+          "updatedAt": "2026-10-25T21:12:30.586Z"
         }
       ]
     }
