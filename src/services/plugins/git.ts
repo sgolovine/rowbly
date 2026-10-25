@@ -1,8 +1,7 @@
-import { dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
-import { createRepositories, withLock } from '../../storage';
+import { createRepositories } from '../../storage';
 import {
   commitGitPaths,
   type GitPending,
@@ -11,17 +10,34 @@ import {
   readGitPending,
   writeGitPending,
 } from '../../storage/git';
+import { canonicalGitRoot, requireRepository, withGitWorker } from '../../storage/gitRepository';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
-import type { ChangeSetView, GitCommitOptions, GitOptionsSource, PluginGit } from './types';
+import { createGitSync, disposeSyncOwner, drainSyncQueue } from './gitSync';
+import type { AnyPluginDefinition, ChangeSetView, GitCommitOptions, GitOptionsSource, PluginGit } from './types';
+
+const timerOwners = new Map<string, object>();
+const disposedOwners = new WeakSet<object>();
+export function disposeGitOwner(owner: object): void {
+  disposedOwners.add(owner);
+  disposeSyncOwner(owner);
+  for (const [file, holder] of timerOwners)
+    if (holder === owner) {
+      clearTimeout(timers.get(file));
+      timers.delete(file);
+      timerOwners.delete(file);
+    }
+}
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const queues = new Map<string, { root: string; done: Promise<void> }>();
 
 /** Command mode waits for due work outside reaction deadlines; future interval timers stay unref'd. */
 export async function drainGitQueue(root?: DataRoot): Promise<void> {
+  await drainSyncQueue(root);
+  const path = root ? (await canonicalGitRoot(root)).path : undefined;
   while (true) {
-    const running = [...queues.values()].filter((queue) => !root || queue.root === root.path);
+    const running = [...queues.values()].filter((queue) => !path || queue.root === path);
     if (!running.length) return;
     await Promise.all(running.map((queue) => queue.done));
   }
@@ -57,10 +73,18 @@ export function createPluginGit(
   root: DataRoot,
   id: string,
   warn: (message: string) => void = (message) => process.stderr.write(`${message}\n`),
+  registry: readonly AnyPluginDefinition[] = [],
+  owner?: object,
 ): PluginGit {
   let location: Promise<string> | undefined;
+  let queueRoot = root.path;
   let source: GitOptionsSource | undefined;
-  const filePath = () => (location ??= pendingPath(root, id));
+  const filePath = () =>
+    (location ??= (async () => {
+      const canonical = await canonicalGitRoot(root);
+      queueRoot = canonical.path;
+      return pendingPath(canonical, id);
+    })());
   const warning = (err: unknown) => warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`);
 
   // The resolver only interprets its own bag; the host owns the fresh read and its lock.
@@ -87,9 +111,9 @@ export function createPluginGit(
   function enqueue(file: string) {
     const previous = queues.get(file)?.done ?? Promise.resolve();
     const done = previous
-      .then(() => outsideCoordination(() => withLock(dirname(file), { operation: `${id}.git` }, () => work(file))))
+      .then(() => outsideCoordination(async () => withGitWorker(await requireRepository(root), () => work(file))))
       .catch(warning);
-    queues.set(file, { root: root.path, done });
+    queues.set(file, { root: queueRoot, done });
     void done.then(() => {
       if (queues.get(file)?.done === done) queues.delete(file);
     });
@@ -117,7 +141,7 @@ export function createPluginGit(
   async function commitPending(file: string): Promise<boolean> {
     const pending = await coordinated(root, `${id}.git.pending`, async () => {
       const config = await createRepositories(root).rootConfig.get();
-      if (config.plugins?.[id]?.enabled !== true) return null;
+      if (config.plugins?.[id]?.enabled !== true || (owner && disposedOwners.has(owner))) return null;
       let pending = await readGitPending(file);
       if (!pending) return null;
       const current = await options(pending.options);
@@ -149,8 +173,12 @@ export function createPluginGit(
   }
 
   async function schedule(given: GitOptionsSource, paths: string[] = []) {
+    if (owner && disposedOwners.has(owner)) return;
     const file = await filePath();
+    if (owner && disposedOwners.has(owner)) return;
+    if (owner) timerOwners.set(file, owner);
     await coordinated(root, `${id}.git`, async () => {
+      if (owner && disposedOwners.has(owner)) return;
       cancelTimer(file);
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return;
@@ -182,6 +210,7 @@ export function createPluginGit(
     }
   }
   return {
+    ...createGitSync(root, id, registry, warn, owner),
     info: () => gitInfo(root),
     async resume(options) {
       assertEffect();

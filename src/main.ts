@@ -187,6 +187,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
   // Why the Data Root could not be opened, other than finding none: a Plugin command or option is
   // unknown then because no Plugin loaded, so that is the error to report (ADR-0033 §1).
   let preload: unknown;
+  let runningHost: PluginHost | undefined;
   try {
     // The same resolution as the command's own context, so the Plugins loaded are the ones of the
     // Data Root it opens. A failure loads none here; the command reports it when it needs the root.
@@ -200,6 +201,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
       return null;
     });
     const { program, host } = await loadProgram(root, registry);
+    runningHost = host;
     printWarnings(host.failures().map(failureWarning), { json });
     await program.parseAsync(argv, { from: 'user' });
     // A command may set its own exit code without throwing (e.g. `doctor` with errors).
@@ -208,6 +210,7 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
     return handleError(preload !== undefined && unknownName(err) ? preload : err, json, registry);
   } finally {
     await drainGitQueue();
+    runningHost?.dispose?.();
     setTraceSink(undefined);
   }
 }

@@ -2,8 +2,10 @@ import { type Bagged, definePlugin, type PluginReadContext } from '../../plugin-
 import { commands } from './commands';
 import { storedComments } from './comments';
 import { CommentsBag } from './model';
+import { reconcile } from './reconcile';
 
 export const comments = definePlugin({
+  reconcile,
   id: 'comments',
   name: 'Comments',
   description: 'Comments on Stories',

@@ -1,6 +1,6 @@
 # Git
 
-Git reacts to saved Operations and commits their Rowbly-managed files. Its personal preferences live in Local State.
+Git reacts to saved Operations and commits their Rowbly-managed files. Automatic Merge Conflict Resolution independently fetches, reconciles and pushes to the configured upstream. Its personal preferences live in Local State.
 
 **Automatic Commit**:
 A Git commit with the message `chore: update Rowbly data`, made after a saved Operation or when its interval is due.
@@ -13,3 +13,10 @@ _Avoid_: cadence
 **Commit Author**:
 The Git name and email used for an Automatic Commit; unset values come from Git configuration.
 _Avoid_: committer identity
+
+
+**Automatic Merge Conflict Resolution**:
+An independently enabled, interval or on-demand synchronization of the current branch with its configured upstream, retaining conflicting Rowbly alternatives as committed evidence before pushing a valid result.
+
+**Merge Evidence**:
+Content-addressed files under `plugins/git/merge-evidence/` retaining the base, exact alternatives, provenance, remapping and repair decisions of synchronization.

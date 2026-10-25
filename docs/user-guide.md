@@ -454,7 +454,7 @@ rowbly plugins disable <id>    # keeps its settings and data
 <!-- END plugins -->
 
 <!-- BEGIN tui -->
-### Automatic Git commits
+### Git automation
 
 Enable the **Git** Plugin with `rowbly plugins enable git` while the Data Root is inside a Git repository. Otherwise activation reports an error. Git creates `chore: update Rowbly data` commits for saved Rowbly changes, including other Plugins' writes and deletions. Establish a clean Data Root baseline first: edits made by hand to the same affected paths are included. Other files and unrelated staged changes stay untouched; staged changes on an affected path cause a warning instead of a commit. Local State, locks and transaction files are excluded.
 
@@ -474,9 +474,83 @@ Saved changes enter a Git queue. The TUI stays usable while commits run; rapid e
 
 Interval mode batches changes from the first pending write without postponing the deadline. It commits only when files changed. Timers run while Rowbly is open; CLI commands exit without waiting for a future deadline. Pending paths persist in Git's directory and resume on the next Rowbly run. No daemon runs after exit.
 
-Turning Automatic Commits Off keeps Git enabled and its settings accessible, but prevents commits after changes, at interval deadlines and on restart. Saved changes continue to join the pending paths. Frequency, interval and author preferences are preserved; editing them does not turn Automatic Commits back On. Turning On resumes pending work at the selected frequency: change commits immediately, while interval keeps the deadline relative to the first pending change and commits immediately if already due. An already running commit may finish, and later edits remain pending. Disabling the Git Plugin also pauses waiting work until re-enabled.
+Turning Automatic Commits Off keeps Git enabled and its settings accessible, but prevents Automatic Commits after changes, at interval deadlines and on restart. Saved changes continue to join the pending paths. Frequency, interval and author preferences are preserved; editing them does not turn Automatic Commits back On. Turning On resumes pending work at the selected frequency: change commits immediately, while interval keeps the deadline relative to the first pending change and commits immediately if already due. An already running commit may finish, and later edits remain pending. Disabling the Git Plugin also pauses waiting work until re-enabled.
 
-Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](plugins/built-in.md#git).
+Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Automatic Commits do not push. Automatic Merge Conflict Resolution, described below, can commit and push independently. See [Git Plugin details](plugins/built-in.md#git).
+
+
+#### Automatic Merge Conflict Resolution
+
+The **Git** settings have a separate **Automatic Merge Conflict Resolution** section. It defaults to
+**Off**, with a 300-second interval (1–86400 seconds). Enable it only when you want Rowbly to fetch,
+merge and push the current branch to its configured upstream without prompts or an editor. Configure
+that upstream and Git authentication beforehand. Automatic Commits and this feature keep independent
+On/Off choices and intervals; changing one preserves the other. Synchronization captures pending
+Rowbly changes even when Automatic Commits are Off.
+
+```sh
+rowbly git configure --automatic-merge-resolution on --merge-interval 600
+rowbly git sync                    # on-demand attempt; requires the preference On
+rowbly git show                    # preferences, upstream, active run and last result
+rowbly git configure --automatic-merge-resolution off
+```
+
+In settings, `e` opens Automatic Commits preferences and `m` opens merge preferences; `ctrl+s` saves
+each form. **Run now** is a clickable control with the equivalent `r` key. Both are unavailable while
+Off, pending or running. The overview shows the branch, upstream or missing prerequisite, next run,
+active phase, last attempt and finish time, result, local commit, repair count and retained evidence
+paths. Scroll the settings body for long messages and paths.
+
+Intervals run while Rowbly is open, including outside settings. The next deadline is measured from
+the last attempt's completion; changing the interval recalculates it from that saved time (or the
+initial scheduling time before the first run). Deadlines and results persist in Git's directory per
+Data Root and worktree. Reopening resumes one overdue attempt, then waits a full interval. There is
+no daemon while Rowbly is closed. CLI commands wait for admitted/due work before exiting, without
+waiting for a future deadline. Turning Off prevents future admission and disables Run now; a run
+already admitted may finish, including its push. Disabling Git, switching Data Roots or closing the
+TUI stops future scheduling for that host.
+
+Each attempt fetches the configured upstream, prepares a merge separately, reconciles Rowbly data
+and configuration, validates the result, commits when needed and normally pushes it. It does not
+rebase, create branches or force-push. Independent JSON fields and non-overlapping Markdown hunks
+combine. Conflicting values or overlapping hunks use stable content/source ordering, with the exact
+base and both alternatives retained as committed evidence under `plugins/git/merge-evidence/` inside
+the Data Root. Edit wins over delete, including edited descendants. Distinct concurrent additions
+retain both records and their scoped files with source-qualified key remapping; exact identical
+additions coalesce. Configuration Cascade levels stay separate. Referenced definitions can be
+restored, incompatible field types split and constraints relaxed to retain valid data; original
+values and repair decisions remain in the evidence. Supported Plugin formats reconcile their own
+references and files, including while the Plugin is Off. Unknown, invalid or unsupported data is
+kept opaque; an unsafe result stops the attempt rather than discarding it.
+
+Repeated Task numbers or Comment ids within a recognized current-format Story bag stop synchronization
+before local publication or push (`CONFLICT`, exit 4), even in BASE, while the owner is Off, or beside
+a future shape on another side. Input files, live branch, index and remote remain unchanged. With
+the owner on, doctor reports `PLUGIN_DATA_INVALID` (warning) and offers no fix; owner reads and
+changes that require the bag fail with `DATA_INTEGRITY` (exit 6). Preserve both records while resolving
+their identity by hand. Valid additions from different sources still retain both records with evidence.
+
+Runs coordinate with other Rowbly processes, writes and Automatic Commits. Unrelated staged, dirty
+and untracked content is preserved. A conflict outside Rowbly data, unsafe overlap with local edits,
+staged Rowbly ambiguity, missing upstream, detached branch or authentication/network failure stops
+safely and reports the cause. Fix the cause; the next enabled interval or Run now retries. A rejected
+push leaves the valid local merge available and reports **failed**, rather than synchronized; the
+next attempt fetches and merges again before retrying a normal push. Interrupted local publication
+recovers before Rowbly reads or writes, even while Off; that recovery does not newly push.
+
+`git show --json` includes preferences plus `synchronizationRun`; `git sync --json` returns that run
+summary directly. `enabled` and `intervalSeconds` describe the current preference, `requested` means
+pending, and `active` contains the running phase. A previous `last` result can coexist with a new
+active run. Check `last.kind` (`synchronized`, `failed` or `interrupted`) and its message after pending
+and active work end. A local `commit` alone does not prove a push succeeded. Times in these JSON
+summaries are epoch milliseconds. See [Git Plugin details](plugins/built-in.md#git).
+
+
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
+retained local commit and evidence paths. It prints no success result on stdout. An active or pending
+run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
+`git show` remains an inspection command and can successfully display a previous failed result.
 
 
 ## Interactive mode (TUI)

@@ -1,6 +1,6 @@
 # ADR-0011: Plugin Data is a bag per Plugin, and core keeps it unchanged
 
-**Status:** Accepted. Built. Since [ADR-0022](0022-tasks-are-a-built-in-plugin.md), Tasks are Plugin Data of the Tasks Plugin and carry no bags of their own.
+**Status:** Accepted. Built. Since [ADR-0022](0022-tasks-are-a-built-in-plugin.md), Tasks are Plugin Data of the Tasks Plugin and carry no bags of their own. Amended narrowly by [ADR-0034](0034-git-synchronization-publishes-recoverably.md).
 
 A Plugin stores its values on Rowbly's records in a bag under its own id, for example `"plugins": { "epics": { "epic": "auth" } }` on a Story. The Data Root (in `rowbly.config.json`), Boards, Stories, Tasks and Assignees can each carry bags. Local State can carry them too, for per-developer values that are never committed. Each Plugin validates its own bag with its own schema. Core does not read the bags, but it keeps every bag unchanged when it writes a record. This includes the bags of Plugins that are off, and of Plugins that this Rowbly version does not know. `--json` output prints records as they are stored, with every bag.
 

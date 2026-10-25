@@ -2,8 +2,10 @@ import { definePlugin } from '../../plugin-api';
 import { commands } from './commands';
 import { checkLinks, readLinks, unlinkDeleted } from './links';
 import { LinksBag } from './model';
+import { reconcile } from './reconcile';
 
 export const storyLinking = definePlugin({
+  reconcile,
   id: 'story-linking',
   name: 'Story Linking',
   description: 'Blocking relationships between Stories on the same Board',

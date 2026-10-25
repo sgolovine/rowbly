@@ -1,5 +1,5 @@
-import { execFile } from 'node:child_process';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { execFile, fork } from 'node:child_process';
+import { mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -7,7 +7,7 @@ import { definePlugin, type GitOptionsSource } from '../../src/plugin-api';
 import { comments } from '../../src/plugins/comments';
 import { addComment } from '../../src/plugins/comments/comments';
 import { git } from '../../src/plugins/git';
-import { configure, preferences } from '../../src/plugins/git/model';
+import { configure, preferences, resolveSyncOptions } from '../../src/plugins/git/model';
 import { drainGitQueue } from '../../src/services/plugins/git';
 import * as gitStorage from '../../src/storage/git';
 import { pendingPath, readGitPending } from '../../src/storage/git';
@@ -113,7 +113,7 @@ async function savedPreferenceRace(boundary: 'react' | 'start' | 'worker') {
     }
     await held.promise;
     if (boundary !== 'worker') await configure(f.services.plugins.context('git'), off);
-    expect(await preferences(f.services.plugins.context('git'))).toEqual(off);
+    expect(await preferences(f.services.plugins.context('git'))).toMatchObject(off);
     if (boundary === 'worker') {
       // Off is saved, but its reaction has not updated pending.options yet.
       expect((await readGitPending(file))?.options.automaticCommits).toBe(true);
@@ -214,6 +214,12 @@ describe('Git automatic commits', () => {
   it('persists interval work, batches changes without postponing the deadline, resumes when due and skips empty commits', async () => {
     const f = await fixture();
     const plugin = f.services.plugins.context('git');
+    await configure(plugin, { synchronization: { intervalSeconds: 7200 } });
+    await configure(plugin, { synchronization: { enabled: true } });
+    expect((await preferences(plugin)).synchronization).toEqual({ enabled: true, intervalSeconds: 7200 });
+    await configure(plugin, { synchronization: { enabled: false } });
+    await configure(plugin, { synchronization: { intervalSeconds: 3600 } });
+    expect((await preferences(plugin)).synchronization).toEqual({ enabled: false, intervalSeconds: 3600 });
     await configure(plugin, { frequency: 'interval', intervalSeconds: 3600 });
     const initial = await f.command('rev-parse', 'HEAD');
     const story = await f.services.stories.create('web', { name: 'First' });
@@ -389,6 +395,8 @@ describe('Git automatic commits', () => {
     await savedPreferenceRace('worker');
     const f = await fixture();
     f.ctx.backgroundReactions = true;
+    const alias = { ...f.t.root, path: join(f.t.dir, 'root-alias') };
+    await symlink(f.t.path, alias.path, 'dir');
     const snapshotted = deferred();
     const release = deferred();
     const enqueued = deferred();
@@ -424,7 +432,15 @@ describe('Git automatic commits', () => {
         expect((await readGitPending(file))?.paths).toContain(`boards/web/stories/${later.key}`),
       );
       const paused = await readGitPending(file);
+      let aliasDrained = false;
+      const aliasDrain = drainGitQueue(alias).then(() => {
+        aliasDrained = true;
+      });
+      expect((await f.services.stories.get(story.key)).name).toBe('Latest snapshot');
+      expect(aliasDrained).toBe(false);
       release.resolve();
+      await aliasDrain;
+      expect(aliasDrained).toBe(true);
       await drainGitQueue(f.t.root);
       const path = `.rowbly/boards/web/stories/${story.key}/story.json`;
       expect(await f.command('show', `HEAD:${path}`)).toContain('First snapshot');
@@ -442,6 +458,972 @@ describe('Git automatic commits', () => {
       await drainGitQueue(f.t.root);
       spy.mockRestore();
       writing.mockRestore();
+    }
+  });
+});
+
+// Pure three-way imports exercise preservation boundaries, independently of Git's textual merge.
+describe('Git data reconciliation', () => {
+  it('combines independent fields and hunks, distinguishes missing/null, and retains byte-exact alternatives deterministically', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { createMergeHelpers } = await import('../../src/services/plugins/reconciliation');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const story = await f.services.stories.create('web', {
+      name: 'Base',
+      description: 'one\ntwo\nthree\nfour\nfive\n',
+    });
+    const core = `boards/web/stories/${story.key}/story.json`;
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const root = JSON.parse(await readFile(join(f.t.path, 'rowbly.config.json'), 'utf8'));
+    const board = JSON.parse(await readFile(join(f.t.path, 'boards/web/board.config.json'), 'utf8'));
+    const base = {
+      id: 'base',
+      files: { 'rowbly.config.json': file(root), 'boards/web/board.config.json': file(board), [core]: file(story) },
+    };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [core]: file({
+          ...story,
+          name: 'Left',
+          labels: ['left'],
+          description: 'ONE\nleft overlap\nthree\nfour\nfive\n',
+          plugins: { future: { x: null, shared: [1], private: 'left' } },
+        }),
+      },
+    };
+    const right = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [core]: file({
+          ...story,
+          priority: 'P1',
+          labels: ['right'],
+          description: 'one\nright overlap\nthree\nfour\nFIVE\n',
+          plugins: { future: { shared: [2], other: 'right' } },
+        }),
+      },
+    };
+    const result = mergeData(base, left, right, builtInPlugins);
+    const record = JSON.parse(Buffer.from(result.files[core]?.data ?? '', 'base64').toString());
+    expect(record).toMatchObject({
+      name: 'Left',
+      priority: 'P1',
+      labels: ['left', 'right'],
+      plugins: { future: { x: null, private: 'left', other: 'right' } },
+    });
+    expect(record.description).toContain('ONE\n');
+    expect(record.description).toContain('FIVE\n');
+    expect(record.description).not.toMatch(/<<<<<<<|>>>>>>>/);
+    expect(result.evidence).toHaveLength(1);
+    const evidencePath = result.evidence[0];
+    if (!evidencePath) throw new Error('Expected merge evidence');
+    const evidence = JSON.parse(Buffer.from(result.files[evidencePath]?.data ?? '', 'base64').toString());
+    expect(evidence.sources.sides).toEqual([left, right]);
+    expect(evidence.decisions.some((d: { reason: string }) => d.reason === 'overlapping text hunks')).toBe(true);
+    expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
+    expect(mergeData(base, left, right, builtInPlugins)).toEqual(result);
+    const nextBase = { id: 'published', files: result.files };
+    const nextLeft = { id: 'next-a', files: { ...result.files, [core]: file({ ...record, name: 'Second left' }) } };
+    const nextRight = { id: 'next-b', files: { ...result.files, [core]: file({ ...record, name: 'Second right' }) } };
+    const successive = mergeData(nextBase, nextLeft, nextRight, builtInPlugins);
+    expect(successive.files[evidencePath]).toEqual(result.files[evidencePath]);
+    const nextPath = successive.evidence[0];
+    if (!nextPath) throw new Error('Expected successive merge evidence');
+    const nextEvidence = JSON.parse(Buffer.from(successive.files[nextPath]?.data ?? '', 'base64').toString());
+    for (const source of [nextEvidence.sources.base, ...nextEvidence.sources.sides]) {
+      expect(Object.keys(source.files).some((p) => p.startsWith('plugins/git/merge-evidence/'))).toBe(false);
+      expect(source.evidence).toEqual([{ path: result.evidence[0], digest: expect.any(String) }]);
+    }
+    expect(mergeData(nextBase, nextRight, nextLeft, builtInPlugins)).toEqual(successive);
+    const decisions: import('../../src/services/plugins/reconciliation').MergeDecision[] = [];
+    const h = createMergeHelpers(decisions);
+    expect(h.value({ v: 1 }, {}, { v: null }, 'opaque')).toEqual({ v: null });
+    expect(h.text('a\nb\nc\n', 'z\nleft\nc\n', 'a\nRIGHT\nc\n', 'text')).toBe('z\nRIGHT\nc\n');
+    const opaque = h.value(
+      { labels: ['a'], body: 'one\ntwo\n' },
+      { labels: [], body: 'ONE\ntwo\n' },
+      { labels: ['a', 'b'], body: 'one\nTWO\n' },
+      'story.json/plugins/future',
+    ) as { labels: string[]; body: string };
+    expect([[], ['a', 'b']]).toContainEqual(opaque.labels);
+    expect(['ONE\ntwo\n', 'one\nTWO\n']).toContain(opaque.body);
+    expect(decisions.filter((d) => d.path.startsWith('story.json/plugins/future'))).toHaveLength(2);
+    expect(h.members(['old'], ['left'], ['old', 'right'])).toEqual(['left', 'right']);
+    expect(decisions[0]).toMatchObject({ base: { value: 1 }, alternatives: [{ missing: true }, { value: null }] });
+  });
+
+  it('splits equal-time identities with complete subtrees and source-qualified links, and restores a concurrently deleted linked target', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const target = await f.services.stories.create('web', { name: 'Target' });
+    const old = await f.services.stories.create('web', { name: 'Existing' });
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const text = (v: string) => ({ data: Buffer.from(v).toString('base64'), mode: '100644' as const });
+    const path = (key: string) => `boards/web/stories/${key}/story.json`;
+    const base: import('../../src/services/plugins/mergeData').MergeSource = {
+      id: 'base',
+      files: {
+        'rowbly.config.json': file(JSON.parse(await readFile(join(f.t.path, 'rowbly.config.json'), 'utf8'))),
+        'boards/web/board.config.json': file(
+          JSON.parse(await readFile(join(f.t.path, 'boards/web/board.config.json'), 'utf8')),
+        ),
+        [path(target.key)]: file(target),
+        [path(old.key)]: file(old),
+      },
+    };
+    const task = {
+      number: 1,
+      name: 'A',
+      description: '',
+      stage: 'backlog',
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+    };
+    const comment = {
+      id: 'same-id',
+      author: null,
+      body: 'Left Comment',
+      createdAt: old.createdAt,
+      updatedAt: old.updatedAt,
+    };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [path(old.key)]: file({
+          ...old,
+          plugins: {
+            tasks: { nextNumber: 2, tasks: [task] },
+            comments: { comments: [comment] },
+            'story-linking': { blocks: [target.key, 'WEB-3'] },
+          },
+        }),
+        [path('WEB-3')]: file({ ...old, key: 'WEB-3', name: 'Left addition' }),
+        'boards/web/stories/WEB-3/plugins/specs/a.md': text('# Left\n'),
+        'boards/web/stories/WEB-3/plugins/unknown/raw.bin': {
+          data: Buffer.from([0, 255, 1]).toString('base64'),
+          mode: '100644' as const,
+        },
+      },
+    };
+    const right: typeof base = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [path(old.key)]: file({
+          ...old,
+          plugins: {
+            tasks: { nextNumber: 2, tasks: [{ ...task, name: 'B' }] },
+            comments: { comments: [{ ...comment, body: 'Right Comment' }] },
+            'story-linking': { blocks: ['WEB-3'] },
+          },
+        }),
+        [path('WEB-3')]: file({ ...old, key: 'WEB-3', name: 'Right addition' }),
+        'boards/web/stories/WEB-3/plugins/specs/b.md': text('# Right\n'),
+      },
+    };
+    delete right.files[path(target.key)];
+    const result = mergeData(base, left, right, builtInPlugins);
+    const read = (key: string) => JSON.parse(Buffer.from(result.files[path(key)]?.data ?? '', 'base64').toString());
+    expect(read('WEB-3').name).toBe('Left addition');
+    expect(read('WEB-4').name).toBe('Right addition');
+    expect(result.files['boards/web/stories/WEB-3/plugins/specs/a.md']).toEqual(
+      left.files['boards/web/stories/WEB-3/plugins/specs/a.md'],
+    );
+    expect(result.files['boards/web/stories/WEB-4/plugins/specs/b.md']).toEqual(
+      right.files['boards/web/stories/WEB-3/plugins/specs/b.md'],
+    );
+    expect(read(old.key).plugins['story-linking'].blocks).toEqual(['WEB-1', 'WEB-3', 'WEB-4']);
+    expect(read(target.key)).toEqual(target);
+    expect(read(old.key).plugins.tasks).toMatchObject({
+      nextNumber: 3,
+      tasks: [
+        { number: 1, name: 'A' },
+        { number: 2, name: 'B' },
+      ],
+    });
+    expect(result.decisions.some((d) => d.reason.startsWith('restored source Story'))).toBe(true);
+    expect(read(old.key).plugins.comments.comments).toEqual([
+      comment,
+      { ...comment, id: 'same-id-2', body: 'Right Comment' },
+    ]);
+    expect(result.decisions).toContainEqual(
+      expect.objectContaining({
+        reason: 'distinct concurrent Comments retained with separate identities',
+        alternatives: [{ value: comment }, { value: { ...comment, body: 'Right Comment' } }],
+      }),
+    );
+    expect(result.evidence).toHaveLength(1);
+    expect(mergeData(base, right, left, builtInPlugins)).toEqual(result);
+
+    const boardPath = 'boards/web/board.config.json';
+    const originalBoard = JSON.parse(Buffer.from(base.files[boardPath]?.data ?? '', 'base64').toString());
+    const opaquePath = 'boards/web/plugins/future/opaque.bin';
+    const retainedStoryFile = `boards/web/stories/${target.key}/plugins/future/retained.bin`;
+    const boardBase = {
+      ...base,
+      files: { ...base.files, [opaquePath]: text('original bytes'), [retainedStoryFile]: text('unchanged descendant') },
+    };
+    const recreatedBoard = {
+      id: 'a',
+      files: {
+        ...boardBase.files,
+        [boardPath]: file({ ...originalBoard, name: 'Recreated Board', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [path(target.key)]: file({
+          ...target,
+          createdAt: '2030-01-01T00:00:00.000Z',
+          plugins: { 'story-linking': { blocks: [old.key] }, future: { key: target.key } },
+        }),
+        [path(old.key)]: file({ ...old, name: 'Recreated Story', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [opaquePath]: { data: Buffer.from([0, 255, 65]).toString('base64'), mode: '100644' as const },
+      },
+    };
+    const editedBoard = {
+      id: 'b',
+      files: {
+        ...boardBase.files,
+        [boardPath]: file({ ...originalBoard, name: 'Edited original Board' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+        [opaquePath]: { data: Buffer.from([0, 255, 66]).toString('base64'), mode: '100644' as const },
+      },
+    };
+    const boards = mergeData(boardBase, recreatedBoard, editedBoard, builtInPlugins);
+    const remap = boards.remaps.find((map) => map.source === recreatedBoard.id);
+    const newBoard = remap?.boards.web,
+      newTarget = remap?.stories[target.key],
+      newOld = remap?.stories[old.key];
+    if (!newBoard || !newTarget || !newOld) throw new Error('Expected recreated Board subtree remapping');
+    const readBoardMerge = (path: string) =>
+      JSON.parse(Buffer.from(boards.files[path]?.data ?? '', 'base64').toString());
+    expect(Object.keys(boards.files).filter((p) => p.endsWith('/board.config.json'))).toHaveLength(2);
+    expect(readBoardMerge(boardPath).name).toBe('Edited original Board');
+    expect(boards.files[path(target.key)]).toBeDefined();
+    expect(readBoardMerge(path(target.key))).toEqual(target);
+    expect(readBoardMerge(`boards/${newBoard}/board.config.json`).name).toBe('Recreated Board');
+    expect(boards.files[opaquePath]).toEqual(editedBoard.files[opaquePath]);
+    expect(boards.files[retainedStoryFile]).toEqual(editedBoard.files[retainedStoryFile]);
+    expect(boards.files[`boards/${newBoard}/plugins/future/opaque.bin`]).toEqual(recreatedBoard.files[opaquePath]);
+    expect(readBoardMerge(path(old.key)).plugins['story-linking'].blocks).toEqual([target.key]);
+    const newStory = readBoardMerge(`boards/${newBoard}/stories/${newTarget}/story.json`);
+    expect(newStory.boardId).toBe(newBoard);
+    expect(newStory.plugins['story-linking'].blocks).toEqual([newOld]);
+    expect(newStory.plugins.future.key).toBe(target.key);
+    expect(mergeData(boardBase, editedBoard, recreatedBoard, builtInPlugins)).toEqual(boards);
+
+    // Story recreation uses the same complete-subtree rule: unchanged descendants belong to
+    // the retained old identity, even though the other source replaced that identity.
+    const recreatedStory = {
+      id: 'a',
+      files: {
+        ...boardBase.files,
+        [path(target.key)]: file({ ...target, name: 'Recreated Story', createdAt: '2030-01-01T00:00:00.000Z' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+        [retainedStoryFile]: text('recreated descendant'),
+      },
+    };
+    const editedStory = {
+      id: 'b',
+      files: {
+        ...boardBase.files,
+        [path(target.key)]: file({ ...target, name: 'Edited original Story' }),
+        [path(old.key)]: file({ ...old, plugins: { 'story-linking': { blocks: [target.key] } } }),
+      },
+    };
+    const storyMerge = mergeData(boardBase, recreatedStory, editedStory, builtInPlugins);
+    const replacement = storyMerge.remaps.find((map) => map.source === 'a')?.stories[target.key];
+    if (!replacement) throw new Error('Expected recreated Story remapping');
+    expect(storyMerge.files[retainedStoryFile]).toEqual(editedStory.files[retainedStoryFile]);
+    expect(storyMerge.files[`boards/web/stories/${replacement}/plugins/future/retained.bin`]).toEqual(
+      recreatedStory.files[retainedStoryFile],
+    );
+    const retainedLinks = JSON.parse(Buffer.from(storyMerge.files[path(old.key)]?.data ?? '', 'base64').toString());
+    expect(retainedLinks.plugins['story-linking'].blocks).toEqual([target.key, replacement]);
+    expect(mergeData(boardBase, editedStory, recreatedStory, builtInPlugins)).toEqual(storyMerge);
+  });
+
+  it('repairs effective constraints while retaining definitions, required-field intent and incompatible types', async () => {
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const f = await fixture();
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const story = await f.services.stories.create('web', { name: 'Retained' });
+    const file = (v: unknown) => ({
+      data: Buffer.from(`${JSON.stringify(v, null, 2)}\n`).toString('base64'),
+      mode: '100644' as const,
+    });
+    const rootPath = 'rowbly.config.json',
+      boardPath = 'boards/web/board.config.json',
+      storyPath = `boards/web/stories/${story.key}/story.json`;
+    const root = JSON.parse(await readFile(join(f.t.path, rootPath), 'utf8'));
+    const board = JSON.parse(await readFile(join(f.t.path, boardPath), 'utf8'));
+    const base = { id: 'base', files: { [rootPath]: file(root), [boardPath]: file(board), [storyPath]: file(story) } };
+    const left = {
+      id: 'a',
+      files: {
+        ...base.files,
+        [rootPath]: file({
+          ...root,
+          stages: [{ key: 'custom', name: 'Custom' }],
+          customFields: [{ key: 'kind', name: 'Kind', type: 'select', options: ['a'], required: false }],
+        }),
+        [storyPath]: file({ ...story, stage: 'custom', customFields: { kind: 'a' } }),
+      },
+    };
+    const right = {
+      id: 'b',
+      files: {
+        ...base.files,
+        [rootPath]: file({
+          ...root,
+          stages: [],
+          customFields: [
+            { key: 'kind', name: 'Kind number', type: 'number', required: true },
+            { key: 'new', name: 'Required', type: 'text', required: true },
+          ],
+        }),
+        [storyPath]: file({ ...story, customFields: { kind: 10 } }),
+      },
+    };
+    const result = mergeData(base, left, right, []);
+    const read = (p: string) => JSON.parse(Buffer.from(result.files[p]?.data ?? '', 'base64').toString());
+    expect(read(storyPath).customFields).toEqual({ kind: 'a', 'kind-2': 10 });
+    const config = read(boardPath);
+    expect(config.customFields.find((f: { key: string }) => f.key === 'new').required).toBe(false);
+    expect(read(rootPath).customFields.map((f: { key: string }) => f.key)).toEqual(['kind', 'kind-2', 'new']);
+    expect(result.decisions.some((d) => d.reason === 'incompatible Custom Field types retained separately')).toBe(true);
+    expect(mergeData(base, right, left, [])).toEqual(result);
+    const { builtInPlugins } = await import('../../src/plugins');
+    for (const boardOverride of [false, true]) {
+      const retainedStage = { key: 'task-only', name: 'Task only' };
+      const rootConfig = {
+        ...root,
+        stages: boardOverride ? [{ key: 'global-only', name: 'Global only' }] : [retainedStage],
+      };
+      const boardConfig = { ...board, ...(boardOverride ? { stages: [retainedStage] } : {}) };
+      const source = {
+        id: 'stage-base',
+        files: { [rootPath]: file(rootConfig), [boardPath]: file(boardConfig), [storyPath]: file(story) },
+      };
+      const task = {
+        number: 1,
+        name: 'Retained concurrent Task',
+        description: '',
+        stage: 'task-only',
+        createdAt: story.createdAt,
+        updatedAt: story.updatedAt,
+      };
+      const a = {
+        id: 'stage-a',
+        files: {
+          ...source.files,
+          [storyPath]: file({ ...story, plugins: { tasks: { nextNumber: 2, tasks: [task] } } }),
+        },
+      };
+      const b = {
+        id: 'stage-b',
+        files: {
+          ...source.files,
+          [boardOverride ? boardPath : rootPath]: file({ ...(boardOverride ? boardConfig : rootConfig), stages: [] }),
+        },
+      };
+      const merged = mergeData(source, a, b, builtInPlugins);
+      const configPath = boardOverride ? boardPath : rootPath;
+      expect(JSON.parse(Buffer.from(merged.files[configPath]?.data ?? '', 'base64').toString()).stages).toContainEqual(
+        retainedStage,
+      );
+      if (boardOverride)
+        expect(JSON.parse(Buffer.from(merged.files[rootPath]?.data ?? '', 'base64').toString())).toEqual(rootConfig);
+      else
+        expect(
+          JSON.parse(Buffer.from(merged.files[boardPath]?.data ?? '', 'base64').toString()).stages,
+        ).toBeUndefined();
+      expect(merged.decisions.some((d) => d.reason.startsWith('restored effective Stage'))).toBe(true);
+      expect(mergeData(source, b, a, builtInPlugins)).toEqual(merged);
+    }
+  });
+});
+
+// Real Git remotes are disposable and never point to the development origin.
+describe('isolated upstream synchronization', () => {
+  async function remoteFixture() {
+    const f = await fixture();
+    const { tempRoot } = await import('../helpers');
+    const holder = await tempRoot();
+    const remote = join(holder.dir, 'remote.git'),
+      peer = join(holder.dir, 'peer');
+    await command(holder.dir, 'init', '--bare', '--initial-branch=main', remote);
+    await f.command('remote', 'add', 'origin', remote);
+    await f.command('push', '-u', 'origin', 'main');
+    await command(holder.dir, 'clone', remote, peer);
+    await command(peer, 'config', 'user.name', 'Peer');
+    await command(peer, 'config', 'user.email', 'peer@example.com');
+    await configure(f.services.plugins.context('git'), { automaticCommits: false });
+    const { requireRepository, withGitWorker } = await import('../../src/storage/gitRepository');
+    const { synchronizeGit } = await import('../../src/storage/gitSync');
+    const { mergeData } = await import('../../src/services/plugins/mergeData');
+    const { builtInPlugins } = await import('../../src/plugins');
+    const { coordinated } = await import('../../src/services/coordination');
+    const repo = await requireRepository(f.t.root);
+    const run = (
+      phase: (name: string) => Promise<void> = async () => undefined,
+      reconcile = mergeData,
+      root = f.t.root,
+    ) =>
+      withGitWorker(repo, () =>
+        synchronizeGit(
+          repo,
+          root,
+          { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
+          (read) => coordinated(root, 'sync test snapshot', read),
+          (base, left, right) => reconcile(base, left, right, builtInPlugins),
+          phase,
+          async (files) => {
+            mergeData(
+              { id: 'validation', files },
+              { id: 'validation', files },
+              { id: 'validation', files },
+              builtInPlugins,
+            );
+          },
+        ),
+      );
+    return { ...f, remote, peer, repo, run };
+  }
+  it('publishes an isolated valid merge with later writes while preserving unrelated content, and blocks non-Rowbly conflicts and dirty overlap without live effects', async () => {
+    const f = await remoteFixture();
+    const alias = { ...f.t.root, path: join(f.peer, '..', 'external-root') };
+    await symlink(f.t.path, alias.path, 'dir');
+    const oldHead = await f.command('rev-parse', 'HEAD');
+    const oldIndex = await readFile(f.repo.index);
+    await expect(
+      f.run(undefined, () => ({
+        files: Object.fromEntries(
+          Array.from({ length: 4097 }, (_, n) => [
+            `plugins/unknown/${n}.bin`,
+            { data: 'eA==', mode: '100644' as const },
+          ]),
+        ),
+        remaps: [
+          { source: 'left', boards: {}, stories: {} },
+          { source: 'right', boards: {}, stories: {} },
+        ],
+        evidence: [],
+        decisions: [],
+      })),
+    ).rejects.toThrow('bounded Data Root size');
+    expect(await f.command('rev-parse', 'HEAD')).toBe(oldHead);
+    expect(await readFile(f.repo.index)).toEqual(oldIndex);
+    const abandoned = '0'.repeat(32);
+    await mkdir(join(f.repo.gitDir, 'rowbly'), { recursive: true });
+    await writeFile(join(f.repo.gitDir, 'rowbly', `candidate-${abandoned}`), 'abandoned private index');
+    await f.command('update-ref', `refs/rowbly/fetched/${abandoned}`, 'HEAD');
+    await writeFile(join(f.t.dir, 'staged.txt'), 'staged blob');
+    await f.command('add', 'staged.txt');
+    await writeFile(join(f.t.dir, 'staged.txt'), 'unstaged over staged');
+    await writeFile(join(f.t.dir, 'untracked.txt'), 'untracked');
+    const stage = await f.command('rev-parse', ':staged.txt');
+    const story = await f.services.stories.create('web', { name: 'Dirty local capture', description: 'Local' });
+    const boardFile = join(f.peer, '.rowbly/boards/web/board.config.json');
+    const board = JSON.parse(await readFile(boardFile, 'utf8'));
+    board.description = 'Peer Board';
+    await writeFile(boardFile, JSON.stringify(board));
+    await writeFile(join(f.peer, 'code.txt'), 'peer clean code\n');
+    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', 'code.txt');
+    await command(f.peer, 'commit', '-m', 'peer data and code');
+    await command(f.peer, 'push');
+    const storyPath = join(f.t.path, 'boards/web/stories', story.key, 'story.json');
+    const validStoryBytes = await readFile(storyPath);
+    const task = {
+      number: 1,
+      name: 'First duplicate Task',
+      description: '',
+      stage: 'backlog',
+      createdAt: story.createdAt,
+      updatedAt: story.updatedAt,
+    };
+    const comment = {
+      id: 'duplicate-id',
+      author: null,
+      body: 'First current-format Comment',
+      createdAt: story.createdAt,
+      updatedAt: story.updatedAt,
+    };
+    const rootBytes = async () =>
+      Object.fromEntries(
+        await Promise.all(
+          (await readdir(f.t.path, { recursive: true, withFileTypes: true }))
+            .filter((entry) => entry.isFile())
+            .map(async (entry) => [
+              join(entry.parentPath, entry.name),
+              await readFile(join(entry.parentPath, entry.name)),
+            ]),
+        ),
+      );
+    // Supported same-source duplicates must stop before publication, including while Tasks is Off.
+    for (const plugins of [
+      { tasks: { nextNumber: 2, tasks: [task, { ...task, name: 'Second duplicate Task distinct bytes' }] } },
+      { comments: { comments: [comment, { ...comment, body: 'Second distinct current-format Comment' }] } },
+    ]) {
+      await writeFile(storyPath, `${JSON.stringify({ ...story, plugins }, null, 2)}\n`);
+      const bytes = await rootBytes(),
+        index = await readFile(f.repo.index),
+        head = await f.command('rev-parse', 'HEAD');
+      const branches = await f.command('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads/');
+      const upstream = await command(f.remote, 'rev-parse', 'refs/heads/main');
+      await expect(f.run()).rejects.toThrow(/Cannot reconcile (Tasks|Comments).*duplicate/);
+      expect(await rootBytes()).toEqual(bytes);
+      expect(await readFile(f.repo.index)).toEqual(index);
+      expect(await f.command('rev-parse', 'HEAD')).toBe(head);
+      expect(await f.command('for-each-ref', '--format=%(refname) %(objectname)', 'refs/heads/')).toBe(branches);
+      expect(await command(f.remote, 'rev-parse', 'refs/heads/main')).toBe(upstream);
+      expect(await f.command('rev-parse', ':staged.txt')).toBe(stage);
+      expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
+      expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
+      expect(await readFile(join(f.repo.gitDir, 'rowbly/publication.json')).catch(() => null)).toBeNull();
+      expect(await readFile(join(f.repo.gitDir, 'MERGE_HEAD')).catch(() => null)).toBeNull();
+      expect(await f.command('ls-files', '--unmerged')).toBe('');
+    }
+    await writeFile(storyPath, validStoryBytes);
+    const held = deferred(),
+      release = deferred();
+    let first = true;
+    const running = f.run(
+      async (phase) => {
+        if (phase === 'validating' && first) {
+          first = false;
+          held.resolve();
+          await release.promise;
+        }
+      },
+      undefined,
+      alias,
+    );
+    try {
+      await held.promise;
+      expect((await f.services.stories.get(story.key)).name).toBe('Dirty local capture');
+      const writer = fork(
+        new URL('../storage/fixtures/syncConcurrentWriter.ts', import.meta.url),
+        [f.t.path, story.key],
+        {
+          execArgv: ['--import', 'tsx'],
+          stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+        },
+      );
+      let writerErrors = '';
+      writer.stderr?.on('data', (bytes) => {
+        writerErrors += bytes.toString();
+      });
+      const written = new Promise<void>((resolve, reject) => {
+        writer.once('message', () => resolve());
+        writer.once('error', reject);
+        writer.once('exit', (code) => {
+          if (code !== 0) reject(new Error(writerErrors));
+        });
+      });
+      const exited = new Promise<number | null>((resolve) => writer.once('exit', resolve));
+      try {
+        await written;
+        expect((await f.services.stories.get(story.key)).name).toBe('Later accepted edit');
+        release.resolve();
+        expect(await exited, writerErrors).toBe(0);
+      } finally {
+        release.resolve();
+        if (writer.exitCode === null) writer.kill('SIGKILL');
+        await exited;
+      }
+      const result = await running;
+      expect(await readGitPending(await pendingPath(f.t.root, 'git'))).toBeNull();
+      expect(result.pushed).toBe(true);
+      expect(await readdir(join(f.repo.gitDir, 'rowbly'))).not.toContain(`candidate-${abandoned}`);
+      expect(await f.command('for-each-ref', '--format=%(refname)', 'refs/rowbly/fetched/')).toBe('');
+      expect((await f.services.stories.get(story.key)).name).toBe('Later accepted edit');
+      expect(await f.command('rev-parse', ':staged.txt')).toBe(stage);
+      expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
+      expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
+      expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('peer clean code\n');
+      expect(await f.command('ls-tree', '-r', '--name-only', 'HEAD')).not.toContain('staged.txt');
+      await command(f.peer, 'pull', '--ff-only');
+      expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+        'Later accepted edit',
+      );
+      expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
+    } finally {
+      release.resolve();
+      await running.catch(() => undefined);
+    }
+    // Divergent code changes stop only the isolated merge, preserving live ref, index and bytes.
+    await writeFile(join(f.t.dir, 'code.txt'), 'local committed code\n');
+    await f.command('add', 'code.txt');
+    await f.command('commit', '--only', '-m', 'local code', '--', 'code.txt');
+    await writeFile(join(f.peer, 'code.txt'), 'remote conflicting code\n');
+    await command(f.peer, 'commit', '-am', 'peer conflict');
+    await command(f.peer, 'push');
+    const before = await f.command('rev-parse', 'HEAD'),
+      index = await readFile(f.repo.index);
+    await expect(f.run()).rejects.toThrow('Non-Rowbly conflicts');
+    expect(await f.command('rev-parse', 'HEAD')).toBe(before);
+    expect(await readFile(f.repo.index)).toEqual(index);
+    expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('local committed code\n');
+    expect(await f.command('ls-files', '--unmerged')).toBe('');
+    expect(await readFile(join(f.repo.gitDir, 'MERGE_HEAD'), 'utf8').catch(() => null)).toBeNull();
+    const overlap = await remoteFixture();
+    await writeFile(join(overlap.peer, 'overlap.txt'), 'base bytes');
+    await command(overlap.peer, 'add', 'overlap.txt');
+    await command(overlap.peer, 'commit', '-m', 'base overlap');
+    await command(overlap.peer, 'push');
+    await overlap.run();
+    await command(overlap.peer, 'pull', '--ff-only');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'staged alternative');
+    await overlap.command('add', 'overlap.txt');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'base bytes');
+    await writeFile(join(overlap.peer, 'overlap.txt'), 'incoming bytes');
+    await command(overlap.peer, 'commit', '-am', 'incoming overlap');
+    await command(overlap.peer, 'push');
+    const protectedIndex = await readFile(overlap.repo.index),
+      protectedHead = await overlap.command('rev-parse', 'HEAD');
+    await expect(overlap.run()).rejects.toThrow('unrelated staged content');
+    expect(await readFile(overlap.repo.index)).toEqual(protectedIndex);
+    expect(await overlap.command('rev-parse', 'HEAD')).toBe(protectedHead);
+    expect(await readFile(join(overlap.t.dir, 'overlap.txt'), 'utf8')).toBe('base bytes');
+    await overlap.command('restore', '--staged', '--', 'overlap.txt');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'dirty alternative');
+    await expect(overlap.run()).rejects.toThrow('unrelated local content');
+    expect(await readFile(join(overlap.t.dir, 'overlap.txt'), 'utf8')).toBe('dirty alternative');
+    await writeFile(join(overlap.t.dir, 'overlap.txt'), 'base bytes');
+    await writeFile(join(overlap.peer, 'incoming.txt'), 'new upstream file');
+    await command(overlap.peer, 'add', 'incoming.txt');
+    await command(overlap.peer, 'commit', '-m', 'incoming untracked overlap');
+    await command(overlap.peer, 'push');
+    await writeFile(join(overlap.t.dir, 'incoming.txt'), 'protected untracked bytes');
+    const untrackedIndex = await readFile(overlap.repo.index);
+    await expect(overlap.run()).rejects.toThrow('incoming.txt');
+    expect(await overlap.command('rev-parse', 'HEAD')).toBe(protectedHead);
+    expect(await readFile(overlap.repo.index)).toEqual(untrackedIndex);
+    expect(await readFile(join(overlap.t.dir, 'incoming.txt'), 'utf8')).toBe('protected untracked bytes');
+    overlap.host.dispose?.();
+  });
+
+  it('keeps a locally published merge after rejected or lost-response push, then fetches the advanced upstream and retries normally', async () => {
+    const f = await remoteFixture();
+    const hook = join(f.remote, 'hooks/pre-receive');
+    await writeFile(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const story = await f.services.stories.create('web', { name: 'Saved despite rejection' });
+    await expect(f.run()).rejects.toThrow('push');
+    const local = await f.command('rev-parse', 'HEAD');
+    expect(await f.command('show', `HEAD:.rowbly/boards/web/stories/${story.key}/story.json`)).toContain(
+      'Saved despite rejection',
+    );
+    const { rm } = await import('node:fs/promises');
+    await rm(hook);
+    await writeFile(join(f.peer, 'peer.txt'), 'advance after rejection');
+    await command(f.peer, 'add', 'peer.txt');
+    await command(f.peer, 'commit', '-m', 'advance');
+    await command(f.peer, 'push');
+    const result = await f.run();
+    expect(result.pushed).toBe(true);
+    expect(await f.command('merge-base', '--is-ancestor', local, 'HEAD')).toBe('');
+    // Simulate response loss after server accepted, through the actual host Git execution seam.
+    const process = await import('../../src/storage/gitProcess');
+    const original = process.gitText;
+    let lost = false;
+    const spy = vi.spyOn(process, 'gitText').mockImplementation(async (cwd, args, options) => {
+      const value = await original(cwd, args, options);
+      if (args[0] === 'push' && !lost) {
+        lost = true;
+        throw new Error('push response lost after acceptance');
+      }
+      return value;
+    });
+    try {
+      await f.services.stories.update(story.key, { name: 'Accepted with lost response' });
+      await expect(f.run()).rejects.toThrow('response lost');
+    } finally {
+      spy.mockRestore();
+    }
+    const accepted = await f.command('rev-parse', 'HEAD');
+    expect((await f.run()).commit).toBe(accepted);
+    await command(f.peer, 'pull', '--ff-only');
+    expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+      'Accepted with lost response',
+    );
+    expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
+  });
+  it('runs a real interval without pending data, coalesces requests and lets one admitted run finish after saved Off while stale callbacks stay paused', async () => {
+    const f = await remoteFixture(),
+      plugin = f.services.plugins.context('git');
+    const storage = await import('../../src/storage/gitSync');
+    const { createGitSync, disposeSyncOwner } = await import('../../src/services/plugins/gitSync');
+    const aliasA = { ...f.t.root, path: join(f.peer, '..', 'alias-a') },
+      aliasB = { ...f.t.root, path: join(f.peer, '..', 'alias-b') },
+      ownerA = {},
+      ownerB = {};
+    await symlink(f.t.path, aliasA.path, 'dir');
+    await symlink(f.t.path, aliasB.path, 'dir');
+    const a = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerA),
+      b = createGitSync(aliasB, 'git', [git, comments], f.ctx.warn, ownerB);
+    const { drainGitQueue } = await import('../../src/services/plugins/git');
+    const original = storage.synchronizeGit;
+    const spy = vi.spyOn(storage, 'synchronizeGit');
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const held = deferred(),
+      release = deferred();
+    let hold = false;
+    spy.mockImplementation(async (...args) => {
+      if (hold) {
+        held.resolve();
+        await release.promise;
+      }
+      return original(...args);
+    });
+    try {
+      const repository = await import('../../src/storage/gitRepository');
+      const worker = repository.withGitWorker;
+      let refuseAdmission = true;
+      const admission = vi.spyOn(repository, 'withGitWorker').mockImplementation(async (...args) => {
+        if (refuseAdmission) {
+          refuseAdmission = false;
+          throw new Error('controlled common worker lock timeout');
+        }
+        return worker(...args);
+      });
+      try {
+        await configure(plugin, { synchronization: { enabled: true, intervalSeconds: 1 } });
+        await vi.waitFor(
+          async () => {
+            const failed = await plugin.git.syncStatus(resolveSyncOptions);
+            expect(failed.last?.kind).toBe('failed');
+            expect(failed.last?.message).toContain('controlled common worker lock timeout');
+            expect(failed.nextDue).toBeGreaterThan(failed.last?.finishedAt ?? 0);
+          },
+          { timeout: 5000 },
+        );
+        await vi.waitFor(
+          async () => expect((await plugin.git.syncStatus(resolveSyncOptions)).last?.kind).toBe('synchronized'),
+          { timeout: 5000 },
+        );
+      } finally {
+        admission.mockRestore();
+      }
+      const stale = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 900 && ms <= 1000)?.[0];
+      expect(stale).toBeTypeOf('function');
+      await vi.waitFor(
+        async () => expect((await plugin.git.syncStatus(resolveSyncOptions)).last?.kind).toBe('synchronized'),
+        { timeout: 5000 },
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      await configure(plugin, { synchronization: { intervalSeconds: 3600 } });
+      const deadline = await plugin.git.syncStatus(resolveSyncOptions);
+      expect(deadline.nextDue).toBe((deadline.anchor ?? 0) + 3_600_000);
+      await a.resumeSync(resolveSyncOptions);
+      await b.resumeSync(resolveSyncOptions);
+      expect(await a.syncStatus(resolveSyncOptions)).toEqual(deadline);
+      expect(await b.syncStatus(resolveSyncOptions)).toEqual(deadline);
+      expect(
+        (await readdir(join(f.repo.gitDir, 'rowbly'))).filter((name) => name.startsWith('sync-git-')),
+      ).toHaveLength(1);
+      hold = true;
+      const first = a.requestSync(resolveSyncOptions);
+      await held.promise;
+      const coalesced = await b.requestSync(resolveSyncOptions);
+      expect(coalesced.active?.phase).toBe('admitted');
+      expect(await plugin.git.syncStatus(resolveSyncOptions)).toEqual(coalesced);
+      if (typeof stale === 'function') stale();
+      f.ctx.backgroundReactions = true;
+      await configure(plugin, { synchronization: { enabled: false } });
+      const story = await f.services.stories.create('web', { name: 'Saved while admitted sync waits' });
+      expect((await f.services.stories.get(story.key)).name).toBe('Saved while admitted sync waits');
+      f.host.dispose?.();
+      disposeSyncOwner(ownerA);
+      disposeSyncOwner(ownerB);
+      const drained = [false, false, false];
+      const draining = [f.t.root, aliasA, aliasB].map((root, n) =>
+        drainGitQueue(root).then(() => {
+          drained[n] = true;
+        }),
+      );
+      expect((await plugin.git.syncStatus(resolveSyncOptions)).active?.id).toBe(coalesced.active?.id);
+      expect(drained).toEqual([false, false, false]);
+      release.resolve();
+      expect((await first).last?.kind).toBe('synchronized');
+      await Promise.all(draining);
+      expect(drained).toEqual([true, true, true]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect((await plugin.git.syncStatus(resolveSyncOptions)).enabled).toBe(false);
+      if (typeof stale === 'function') stale();
+      await drainGitQueue(f.t.root);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await command(f.peer, 'pull', '--ff-only');
+      expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
+        'Saved while admitted sync waits',
+      );
+    } finally {
+      release.resolve();
+      await drainGitQueue(f.t.root);
+      f.host.dispose?.();
+      disposeSyncOwner(ownerA);
+      disposeSyncOwner(ownerB);
+      spy.mockRestore();
+      timers.mockRestore();
+    }
+  });
+
+  it('keeps persisted future deadlines on reload, resumes one overdue attempt, and admits no stale timer/start while saved Off', async () => {
+    const f = await remoteFixture(),
+      plugin = f.services.plugins.context('git');
+    const { rootGitKey } = await import('../../src/storage/gitRepository');
+    const { readSyncState, writeSyncState } = await import('../../src/storage/gitSyncState');
+    const storage = await import('../../src/storage/gitSync');
+    const spy = vi.spyOn(storage, 'synchronizeGit');
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    const hosts = [f.host];
+    const stateFile = join(f.repo.gitDir, 'rowbly', `sync-git-${rootGitKey(f.t.root)}.json`);
+    try {
+      await configure(plugin, { synchronization: { enabled: true, intervalSeconds: 3600 } });
+      const scheduled = timers.mock.calls.find(([, ms]) => typeof ms === 'number' && ms > 3_500_000)?.[0];
+      const repository = await import('../../src/storage/gitRepository');
+      const { createGitSync, disposeSyncOwner } = await import('../../src/services/plugins/gitSync');
+      const aliasA = { ...f.t.root, path: join(f.peer, '..', 'reload-alias-a') },
+        aliasB = { ...f.t.root, path: join(f.peer, '..', 'reload-alias-b') };
+      await symlink(f.t.path, aliasA.path, 'dir');
+      await symlink(f.t.path, aliasB.path, 'dir');
+      const ownerA = {},
+        ownerB = {},
+        locationEntered = deferred(),
+        locationRelease = deferred();
+      const locate = repository.requireRepository;
+      let pausedLocation = true;
+      const locating = vi.spyOn(repository, 'requireRepository').mockImplementation(async (root) => {
+        if (pausedLocation) {
+          pausedLocation = false;
+          locationEntered.resolve();
+          await locationRelease.promise;
+        }
+        return locate(root);
+      });
+      const a = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerA);
+      const b = createGitSync(aliasB, 'git', [git, comments], f.ctx.warn, ownerB);
+      const staleSetup = a.resumeSync(resolveSyncOptions);
+      try {
+        await locationEntered.promise;
+        disposeSyncOwner(ownerA);
+        await b.resumeSync(resolveSyncOptions);
+        const currentTimer = timers.mock.results.at(-1)?.value;
+        const clearing = vi.spyOn(globalThis, 'clearTimeout');
+        try {
+          locationRelease.resolve();
+          await staleSetup;
+          expect(clearing).not.toHaveBeenCalledWith(currentTimer);
+          expect((await b.syncStatus(resolveSyncOptions)).enabled).toBe(true);
+        } finally {
+          clearing.mockRestore();
+        }
+      } finally {
+        locationRelease.resolve();
+        await staleSetup;
+        locating.mockRestore();
+        disposeSyncOwner(ownerB);
+      }
+      const first = await readSyncState(stateFile);
+      if (!first) throw new Error('Expected persisted synchronization deadline');
+      // Deliberately reproduce an old lexical filename; it is never an authoritative identity.
+      const { createHash } = await import('node:crypto');
+      const legacyFile = join(
+        f.repo.gitDir,
+        'rowbly',
+        `sync-git-${createHash('sha256').update(aliasA.path).digest('hex').slice(0, 20)}.json`,
+      );
+      await writeSyncState(legacyFile, {
+        ...first,
+        anchor: 0,
+        nextDue: 0,
+        requested: 'old-alias-request',
+        active: {
+          id: 'old-alias-active',
+          pid: process.pid,
+          host: 'unverified-old-host',
+          startedAt: 0,
+          phase: 'fetching',
+        },
+      });
+      const legacy = await readFile(legacyFile, 'utf8');
+      const ownerC = {},
+        c = createGitSync(aliasA, 'git', [git, comments], f.ctx.warn, ownerC);
+      try {
+        await c.resumeSync(resolveSyncOptions);
+        expect(await readSyncState(stateFile)).toEqual(first);
+        expect(await c.syncStatus(resolveSyncOptions)).toEqual(await plugin.git.syncStatus(resolveSyncOptions));
+        await rm(stateFile);
+        const initializedAfter = Date.now();
+        await c.resumeSync(resolveSyncOptions);
+        const initialized = await readSyncState(stateFile);
+        expect(initialized?.anchor).toBeGreaterThanOrEqual(initializedAfter);
+        expect(initialized?.nextDue).toBe((initialized?.anchor ?? 0) + 3_600_000);
+        expect(initialized?.requested).toBeUndefined();
+        expect(initialized?.active).toBeUndefined();
+        await c.resumeSync(resolveSyncOptions);
+        expect(await readSyncState(stateFile)).toEqual(initialized);
+        expect(await readFile(legacyFile, 'utf8')).toBe(legacy);
+        expect(spy).not.toHaveBeenCalled();
+      } finally {
+        disposeSyncOwner(ownerC);
+      }
+      const canonical = await readSyncState(stateFile);
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      expect((await readSyncState(stateFile))?.nextDue).toBe(canonical?.nextDue);
+      await configure(plugin, { synchronization: { enabled: false, intervalSeconds: 7200 } });
+      const off = await readSyncState(stateFile);
+      if (!off) throw new Error('Expected saved deadline');
+      const anchor = Date.now() - 7_200_001;
+      await writeSyncState(stateFile, { ...off, anchor, nextDue: anchor + 7_200_000 });
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      if (typeof scheduled === 'function') scheduled();
+      await drainGitQueue(f.t.root);
+      expect(spy).not.toHaveBeenCalled();
+      // Reopening a persisted enabled bag is independent of a configure reaction.
+      const localFile = join(f.t.path, 'local.json'),
+        local = JSON.parse(await readFile(localFile, 'utf8'));
+      local.plugins.git.synchronization.enabled = true;
+      await writeFile(localFile, JSON.stringify(local));
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      await drainGitQueue(f.t.root);
+      expect(spy).toHaveBeenCalledTimes(1);
+      const completed = await readSyncState(stateFile);
+      expect(completed?.last?.kind).toBe('synchronized');
+      expect(completed?.nextDue).toBe((completed?.anchor ?? 0) + 7_200_000);
+      hosts.push((await withPlugins(f.t, [git, comments])).host);
+      expect((await readSyncState(stateFile))?.nextDue).toBe(completed?.nextDue);
+      expect(spy).toHaveBeenCalledTimes(1);
+      const callback = timers.mock.calls.findLast(([, ms]) => typeof ms === 'number' && ms > 7_000_000)?.[0];
+      expect(callback).toBeTypeOf('function');
+      await f.command('checkout', '-b', 'another');
+      await f.command('branch', '--set-upstream-to=origin/main');
+      if (typeof callback === 'function') callback();
+      await drainGitQueue(f.t.root);
+      const changedBranch = await readSyncState(stateFile);
+      expect(changedBranch?.last?.kind).toBe('failed');
+      expect(changedBranch?.last?.message).toContain('changed since scheduling');
+      expect(changedBranch?.target?.branch).toBe('refs/heads/another');
+      expect(changedBranch?.nextDue).toBeGreaterThan(Date.now());
+      expect(spy).toHaveBeenCalledTimes(1);
+      await f.command('checkout', 'main');
+      expect((await preferences(plugin)).automaticCommits).toBe(false);
+    } finally {
+      for (const host of hosts) host.dispose?.();
+      await drainGitQueue(f.t.root);
+      spy.mockRestore();
+      timers.mockRestore();
     }
   });
 });

@@ -24,13 +24,15 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 - [Load, reload and settings](#load-reload-and-settings)
 - [Tracing](#tracing)
 - [Testing](#testing)
+- [Git capability](#git-capability)
+- [Supported-format reconciliation](#supported-format-reconciliation)
 
 ## Modules and exports
 
 | Module | Imported by | Holds |
 | --- | --- | --- |
 | `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `slugFromName`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
-| `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `MarkdownView`, `ConfirmDialog`, `Loading`, `StageBadge`, `Modal`, `SelectionRow`; the hooks `useAsync`, `useContextMenu`, `useFullScreenEditor`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; the type `ContextMenuItem`; `FORM_KEYS`, `moveDelta`, `markdownToPlain`; `theme`, `themes`, `stageColors`, `formatDate` |
+| `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Button`, `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `MarkdownView`, `ConfirmDialog`, `Loading`, `StageBadge`, `Modal`, `SelectionRow`; the hooks `useAsync`, `useContextMenu`, `useFullScreenEditor`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; the type `ContextMenuItem`; `FORM_KEYS`, `moveDelta`, `markdownToPlain`; `theme`, `themes`, `stageColors`, `formatDate` |
 | `src/plugin-api/testing.ts` | tests only | `createPluginTestHost`, `validatePluginDefinition` ([Testing](#testing)) |
 
 The types a Plugin meets at run time, by where it meets them:
@@ -43,6 +45,8 @@ The types a Plugin meets at run time, by where it meets them:
 | Options | `PluginOption`, `PluginInputOptions`, `PluginFilterOptions`, `PluginOptionValues`, `PluginOptionCommand` |
 | TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
 | Doctor | `DoctorData`, `PluginFinding` |
+| Git | `PluginGit`, `GitCommitOptions`, `GitOptionsSource`, `GitSyncOptions`, `GitSyncOptionsSource`, `GitSyncStatus` |
+| Reconciliation | `PluginReconciler`, `PluginReconciliation`, `PluginMergeSnapshot`, `MergeFile`, `MergeFiles`, `MergeHelpers`, `IdentityRemap`, `RequiredStory`, `RequiredStage` |
 
 Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring (a Plugin gets `PluginServices` or `PluginReadServices`), `PluginError` (the framework's own attribution error), and the TUI's `useToast` (use `ui.toast` and `ui.error`).
 
@@ -55,6 +59,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `id` | A slug: the Plugin's command (`rowbly <id>`), bag key and folder name. |
 | `settings` | A Zod schema of its entry in `rowbly.config.json` (without `enabled`). See [settings](#load-reload-and-settings). |
 | `bags` | Schemas of its bags on Stories and Local State, checked by doctor. |
+| `reconcile` | Optional pure supported-format reconciliation during Git import, including while Off; see below. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
 | `start({ settings, git, localData })` | Runs each time the Plugin loads. Throwing fails the load. |
 | `requiresGit` | When true, enabling the Plugin requires a Git repository containing the Data Root. |
@@ -318,6 +323,14 @@ Each Plugin owns the shape of its bags and files. Built-in bags have no version 
 
 ## Load, reload and settings
 
+Before loading Plugins, the host finishes pending local publication recovery and snapshots root
+configuration and Local State together under publication-aware coordination. Command/surface staging
+and `start` run after the gate and Data Root lock are released. The `localData` function supplied to
+`start` returns a fresh copy of that Plugin's own bag from this startup snapshot; later saves are read
+by a subsequent load or the runtime's coordinated capabilities. A publication or transaction recovery
+failure stops loading before any Plugin is staged or started. An ordinary Local State snapshot read
+failure is raised when a Plugin calls `start.localData`, preserving per-Plugin load isolation.
+
 - Plugins load in registry order when Rowbly starts: each command-mode run, and the TUI at start, each time a Plugin is turned on or off in its **Plugins** section, and each time `rowbly.config.json` changes on disk. `start` runs on every load; there is no teardown, so `start` must be safe to run again.
 - `settings` parses the Data Root entry without `enabled`. Without a schema the settings are the raw entry (`Record<string, unknown>`). `z.object` drops unknown keys from the parsed value; `z.strictObject` fails the load on one. The stored entry is never rewritten.
 - `boardSettings(boardId)` is the Board's bag deep-merged over the Data Root entry (objects merge, lists replace), parsed again. An invalid Board bag is `VALIDATION` naming the Board.
@@ -375,3 +388,73 @@ With `automaticCommits: false`, both methods retain pending work and `changed` s
 Local State-only changes add no paths. Queue updates and file snapshots serialize with Data Root writes, and workers check that the owning Plugin is still enabled before admitting each job. With a live resolver, they also refresh pending options, adjust the deadline once for any interval change and increment the revision under that lock before deciding whether to pause. Thus a saved Off preference takes effect even before its reaction publishes a queue update; delayed startup and reactions cannot overwrite it with earlier preferences. Timer decisions use the same coordinated options. Admission under this lock marks a job as running. A commit already running may finish; revision acknowledgement retains later edits. Git processes run under a separate queue lock outside the Data Root lock. These effect methods are intended for `start` and reactions; commands and screens change personal preferences through an Operation. There is no arbitrary Git command or filesystem capability.
 
 Git executes argument arrays without a shell, with a 3.5 s limit per process and 1 MiB output bound. Automatic commits select affected paths, preserve unrelated staging, refuse already-staged affected paths, suppress hooks and signing, and exclude Local State and internal files. Pending paths/deadlines live under Git's own directory. Command-mode Operations and the CLI await due queue work outside reaction deadlines; the TUI does not. Timers do not keep command mode alive; a later load resumes due work. There is no cancellation or flush of future interval work on exit. See [Git](built-in.md#git) for the user contract and ADR-0030 for queue ownership.
+
+## Supported-format reconciliation
+
+ADR-0034 §3 permits one optional synchronous `reconcile` callback during an isolated Git import.
+It receives frozen BASE/left/right snapshots of only its own raw bags and scoped files, core
+source-qualified Board/Story remaps, retained Story Keys, effective Stage Keys by Board and
+deterministic merge/evidence helpers.
+Files hold exact base64 bytes and Git modes; `helpers.read` requires lossless UTF-8 and
+`helpers.file` encodes supported text. Missing bags are `undefined`, distinct from JSON null.
+`helpers.value` recursively combines structurally safe object edits and retains ambiguous leaves; it
+does not infer text or set semantics from field names. Only an owning supported format selects
+`text` for its text fields and `members` for its sets. `same` compares raw values and `retain` records
+explicit alternatives and repairs.
+No Plugin context, services, filesystem or Git capability is passed. Normal activation and hooks stay
+Off. Unsupported, invalid or future formats must return no override and remain opaque; never parse
+through a schema that drops unknown keys and then save its stripped output.
+
+The result has `bags` keyed by existing core scope paths (empty for the Data Root,
+`boards/<id>`, `boards/<id>/stories/<key>`) and `files` keyed by owned paths relative to the Data Root.
+Omitted entries keep the host's opaque reconciliation. An explicit undefined bag removes that bag.
+Output cannot write another Plugin, invent a scope, escape a scoped folder or change core fields.
+A thrown error or invalid output stops preparation before live publication.
+
+Only a supported format that understands a retained Story reference may additionally return
+`requiredStories: [{ source, key }]`. Each request must name an existing Story in an immutable
+supplied side snapshot. The host validates the source and key, applies the source-qualified identity
+map, and restores that exact complete Story subtree and required Board subtree with evidence.
+Restoration is monotone and idempotent over the finite supplied identities; reruns are bounded by
+that set. Invalid requests or nonconvergence fail before publication. The analogous optional
+`requiredStages: [{ source, board, key }]` names an effective source Stage actually referenced by
+retained own data. The host validates the immutable source Board's effective definitions, maps its
+Board identity and restores into that merged Board's effective configuration level without flattening
+the Configuration Cascade or replacing unrelated definitions. Backlog and Done remain fixed. The
+monotone rerun bound includes the finite supplied Stories and effective Stage definitions. These are
+narrow restoration requests, with no arbitrary core writer or generic dependency language. Never infer references by
+matching strings in unknown data.
+
+Synchronization uses this pure layer to validate its complete isolated candidate before local publication.
+
+```ts
+export const mergeNotes = definePlugin({
+  id: 'merge-notes',
+  name: 'Merge Notes',
+  description: 'Notes with a supported reconciliation format',
+  reconcile({ base, left, right, helpers }) {
+    const bags: Record<string, unknown> = {};
+    const schema = z.strictObject({ version: z.literal(1), note: z.string() });
+    for (const scope of new Set([...Object.keys(left.bags), ...Object.keys(right.bags)])) {
+      const raw = [base.bags[scope], left.bags[scope], right.bags[scope]];
+      if (raw.some((value) => value !== undefined && !schema.safeParse(value).success)) continue;
+      bags[scope] = helpers.value(raw[0], raw[1], raw[2], `${scope}/merge-notes`);
+    }
+    return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
+  },
+});
+```
+
+### Synchronization capability
+
+`PluginGit.syncStatus(liveResolver)` reads current preferences and persisted run details, including
+the optional scheduled `target` (`branch`, `remote`, `mergeRef`). A stale timer cannot synchronize a
+changed branch/upstream in that attempt.
+`resumeSync(liveResolver)` schedules persisted work only at start or in a live reaction.
+`requestSync(liveResolver)` requests/coalesces an immediate enabled run only from a command/screen
+boundary, waits outside Data Root coordination and returns its current result. Its live resolver
+returns independent `enabled` and `intervalSeconds`, with optional author name/email. Latest saved
+Off prevents admission; an admitted run may finish. The host supplies the registered format owners,
+recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
+Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
+and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.

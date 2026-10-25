@@ -76,8 +76,102 @@ A stale `.lock` is not a finding: the next acquisition breaks it.
 
 ## Git Automatic Commits
 
-The optional Git capability persists pending paths/deadlines under Git's own directory. Queue updates and a copy of selected saved files take brief Data Root locks with recovery. All Git subprocesses run outside that lock, using the immutable copy as their working tree. A separate lock in the worktree's Git `rowbly/` directory serializes workers, including workers for different Data Roots sharing an index. Each enqueue increments a pending revision; a successful commit acknowledges only its revision, so later edits to the same paths remain pending. Legacy pending files without a revision resume normally. A Git failure leaves the Rowbly save intact and retains pending work.
+The optional Git capability persists pending paths/deadlines under Git's own directory. Queue updates and a copy of selected saved files take brief Data Root locks with recovery. All Git subprocesses run outside that lock, using the immutable copy as their working tree. A separate lock in the canonical common Git directory's `rowbly/worker/` folder serializes workers across Data Roots, processes and linked worktrees. Each enqueue increments a pending revision; a successful commit acknowledges only its revision, so later edits to the same paths remain pending. Legacy pending files without a revision resume normally. A Git failure leaves the Rowbly save intact and retains pending work.
 
 The optional `automaticCommits` option defaults to `true` when absent in legacy pending files. When false, queue updates still retain and add paths, but cancel timers and start no work. Plain-option capability callers keep using persisted pending options. Built-in Git supplies a live resolver: scheduling and worker admission read its current Local State bag under the Data Root lock and resolve preferences there. When worker admission finds changed preferences before their reaction runs, it persists the new options, adjusts the deadline for the interval difference and increments the revision together before deciding whether to pause. Delayed startup, reactions and stale timer callbacks therefore cannot bypass a saved Off preference. Scheduling and timer decisions take the Data Root lock together with pending updates. Turning Automatic Commits back on preserves the first-write deadline (adjusted by interval edits); an overdue interval runs immediately. A job admitted under the Data Root lock is running and may finish; acknowledgement cannot discard later paused revisions.
 
 Only affected record/file paths are selected, never `local.json`, `.lock` or `.txn/`. The TUI returns after enqueueing, and command mode drains due work outside reaction deadlines. External Git and editors do not participate in either Rowbly lock; Git's own index lock still protects its index. See [Git](../plugins/built-in.md#git) and [ADR-0030](../agents/adr/0030-git-work-runs-outside-the-data-root-lock.md).
+
+## Recoverable Git publication
+
+The local publication engine implements ADR-0034 §4–5. Synchronization prepares an isolated
+upstream merge and uses this engine before a normal push. All cooperating service calls acquire the common Git publication
+gate before their Data Root lock, and release both before reactions. Git location discovery and every
+Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
+
+A detached candidate supplies an expected branch ref/OID, before/after index bytes and exact changed
+working-file bytes/modes. Publication rechecks the index and each changed path, stages existing
+Data Root transactions (including binary Plugin files and executable modes), reserves the real
+`index.lock` exclusively with a random ownership token, pins the candidate, then atomically persists
+`rowbly/publication.json` under the common Git directory. This durable intent precedes local effects.
+Unrelated staged entries are carried forward in the prepared index; no live whole-tree index is read
+from the candidate. No network operation belongs inside this gate.
+
+Recovery uses expected-ref compare-and-swap, the Data Root transaction journals, idempotent clean
+working-file installation and atomic index replacement. It recognizes ref/index effects that landed
+before their phase write. It runs before the next cooperating read, through any linked worktree,
+including while synchronization is Off. It performs no fetch or push. Pre-intent payloads are
+disposable; prepared payloads roll forward. A pre-application ref refusal discards only owned staging
+and reservation. Unexpected external index/path/ref changes after effects preserve the journal and
+stop recovery instead of overwriting external work.
+
+Publication checks each affected path's exact before/after bytes and executable mode again at
+installation. Under a Data Root lock, existing transaction replay checks immediately before every
+live write or delete. Non-Rowbly atomic writes check after temporary-file staging and immediately
+before the live rename; deletions check immediately before removal. Unexpected external bytes or
+topology stop publication and preserve the external data, journal and remaining payloads. External
+editors do not participate in these locks, so the final precondition check cannot make their later
+filesystem operations atomic with Rowbly's syscall.
+
+Index-lock ownership uses private hardlinks whose device/inode identity and expected bytes must
+match the live lock. The reservation token is retained, and the prepared index payload keeps a private
+inode reference across installation. A pending owned index lock is distinguishable from an already
+installed index. Equal bytes alone never authorize replacing or removing `index.lock`: a new foreign
+lock containing the prepared index bytes is preserved and blocks completion. Safe pre-effect
+ref-refusal releases its verified reservation before discarding other staged data.
+
+Prepared publication and recovery refusals report `DATA_INTEGRITY` (exit 6). Details identify the
+publication journal (`path`), affected repository-relative paths (`paths`), the owning worktree's index
+lock (`indexLock`) and the cause. Preserve the journal and affected files, resolve the reported external
+change or I/O failure, then retry recovery through `rowbly doctor`. Recovery performs no fetch or push.
+
+Plugin loading also enters publication-aware coordination before its first configuration or Local
+State read. It captures both from one recovered Data Root state and releases the gate and Data Root
+lock before registering commands, staging surfaces or calling `start`. A recovery failure propagates
+before any Plugin is staged or started.
+
+`test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills real
+processes before and after index reservation, durable intent, ref effects, file installation and index
+installation/phase recording. It verifies complete local recovery through a second linked worktree
+while synchronization is Off, binary bytes/executable modes, unrelated staged/dirty/untracked content,
+refusal of unexpected editor bytes and preservation of fresh identical-byte foreign index locks. The
+kept Plugin loading scenario verifies recovery before actual command registration and startup.
+
+Synchronization captures all valid dirty Rowbly files even while Automatic Commits is Off. It uses an
+alternate index, `merge-tree --write-tree` and the real base/sides, then validates supported core and
+Plugin formats. Non-Rowbly conflicts, staged Rowbly ambiguity, unsupported topology, or overwriting
+unrelated dirty/staged/untracked paths stop preparation without live effects. Captured root drift
+retries preparation at most three times. Rejected/lost-response pushes retain the valid local result;
+a later attempt fetches the configured upstream again. Candidate indexes and fetch pins are cleaned
+on completion. Local Git children have 3.5 s limits, merge calculation 10 s, network commands 30 s,
+output 16 MiB and the overall run 120 s; Unix process groups are killed and awaited on timeout.
+The reconciled candidate, including retained evidence, must fit the same 4096-file/64 MiB Data Root
+bound as capture before publication; an oversized candidate leaves live data, ref and index intact.
+
+Tasks and Comments recognize their exact current bag structure before checking unique identities in
+BASE and each source. Repeated Task numbers or Comment ids in a recognized source stop preparation
+before durable publication intent or push, including while the owner is Off and when another source
+is opaque. The live input bytes, branch, index and remote remain unchanged. Unknown fields and future
+or unrecognized shapes retain opaque preservation; no identity repair or migration is inferred.
+
+Synchronization deadlines/results live separately under the worktree Git directory. The feature is
+Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
+Private Git bindings resolve the Data Root with `realpath` before choosing repository-relative paths,
+state filenames, resources or jobs. A real root and its symlink aliases share one state, deadline and
+admitted run; root-specific drains use that identity even after the owning host is disposed. Linked
+worktrees keep distinct Git directories, indexes and state. Discovery and display retain their supplied
+Data Root paths. Existing canonical version-1 state remains authoritative. Older lexical-alias state
+files are preserved inactive, without scanning, migration or replay; if canonical state is absent,
+scheduling initializes it once from current local preferences.
+Deadlines also retain the exact branch/upstream identity. A stale timer after a branch or upstream
+change records a failed attempt without fetching; the next full interval uses the newly observed
+target. Explicit requests and new scheduling bind the current target, which is checked again before
+fetch and publication.
+Fixed-delay deadlines persist across restarts, including failures, with one overdue attempt and no
+catch-up burst. A failure before admission records a failed attempt when recovery and locking permit,
+then retries from the latest interval; unavailable local recovery uses a 30 s wake-up that rechecks
+saved preferences before admission. A disposed host cannot replace the current host's scheduling lease
+after an awaited setup. An admitted run may finish after Off. Private host leases cancel future timers on
+replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.
+Each new synchronization worker removes abandoned private candidate indexes and fetched pins under
+the common worker lock; prepared publication pins belong to journal recovery and are kept until it completes.
