@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Paste images onto Stories in the TUI with an Attachments tab",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. It needs the `storyPaste` hook and the Attachments Plugin from the Stories that block it.\n\n## Goal\n\nThe full user flow in the TUI: copy a screenshot, open a Story or the new-Story form, press the paste key, and the image is attached.\n\n## Work\n\n- **Claim `storyPaste`** in the Attachments Plugin:\n  - `story`: run `attachments.add` at once. Toast `Attached image-YYYYMMDD-HHMM.png (412 KB)`, and reload the Attachments tab.\n  - `form`: keep the image in memory, not on disk. Show an `Attachments` row on the Story form, e.g. `2 images (612 KB)`, through `PluginStoryForm`. The images are written in the same operation that creates or edits the Story, so cancelling the form saves nothing. `esc` on a form with pending images asks to discard them (`useDirty`).\n- **Attachments tab** on the Story screen:\n  - a list with name, size and date;\n  - `n` adds a file from a path (the \"n creates\" rule);\n  - `o` opens the selected file;\n  - `d` removes it after a `ConfirmDialog`.\n\n  It reloads on return (`useReloadOnReturn`) following the rules in AGENTS.md: show `<Loading />` only when there is no data yet, and don't gate `useInput` on `loading`.\n- **Badge** on Story cards and list rows, e.g. `📎 2`, from the bag (`storyBadges`/`cardBadge`, no file reads).\n- Follow `.agents/skills/rowbly-tui-design/SKILL.md`; one component per file.\n\n## Docs\n\n- `docs/user-guide.md`:\n  - the paste keys on each platform;\n  - the screenshot shortcuts that copy to the clipboard: macOS Cmd+Ctrl+Shift+4 (Cmd+Shift+4 saves a file instead), Windows Win+Shift+S, Linux depends on the desktop;\n  - `wl-clipboard` for sway and Hyprland users;\n  - troubleshooting: SSH, headless, unsupported platforms, and the `rowbly attachment add` fallback.\n- The Attachments sections in `docs/plugins/built-in.md` and `skills/rowbly/references/tui.md`.\n\n## Verify\n\nRun it with `pnpm dev` on this machine:\n- paste on an open Story;\n- paste on the new-Story form, then cancel and then save;\n- remove an attachment.\n\nTake screenshots with agentic-tui following `.agents/skills/rowbly-screenshots/SKILL.md`, and don't commit them. No new tests by default.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "todo",
-  "rank": "a6",
+  "stage": "in-progress",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.895Z",
-  "updatedAt": "2026-10-25T17:38:12.895Z",
+  "updatedAt": "2026-10-25T17:40:43.220Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
