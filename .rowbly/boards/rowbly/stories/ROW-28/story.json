@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:11.570Z",
-  "updatedAt": "2026-10-25T18:18:26.882Z",
+  "updatedAt": "2026-10-25T18:21:43.413Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -37,6 +37,13 @@
           "body": "Research complete; branch codex/row-28-story-paste created from origin/main. Plan covers exclusive storyPaste activation, shared paste dispatch, pending form state integrated with ROW-24, documentation, and independent validation/screenshots. Awaiting decisions on occupied ADR-0036 numbering and Plugin-supplied command guidance. Baseline typecheck, lint, test:unit (80), and test:cli (20) pass.",
           "createdAt": "2026-10-25T18:18:26.881Z",
           "updatedAt": "2026-10-25T18:18:26.881Z"
+        },
+        {
+          "id": "jUBWlXPW",
+          "author": "sunny",
+          "body": "Plan accepted, complexity 5/10, branch codex/row-28-story-paste. Implement exclusive storyPaste activation, shared paste dispatch, pending form state compatible with ROW-24, and docs/ADR-0038. Core owns generic clipboard errors; claiming Plugins supply command-specific guidance. Independent validation and screenshots follow.",
+          "createdAt": "2026-10-25T18:21:43.412Z",
+          "updatedAt": "2026-10-25T18:21:43.412Z"
         }
       ]
     }
