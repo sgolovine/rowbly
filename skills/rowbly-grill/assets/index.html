@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grill</title>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --panel: #ffffff;
+    --text: #1b1b1f;
+    --muted: #6b6b76;
+    --line: #e3e3e0;
+    --accent: #4f46e5;
+    --accent-soft: #eef0ff;
+    --accent-line: #c7c9fb;
+    --good: #15803d;
+    --good-soft: #e9f7ee;
+    --warn: #b45309;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+    --radius: 12px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111114;
+      --panel: #1a1a1f;
+      --text: #ececf1;
+      --muted: #9a9aa6;
+      --line: #2c2c34;
+      --accent: #8b8cff;
+      --accent-soft: #23234a;
+      --accent-line: #3d3d80;
+      --good: #4ade80;
+      --good-soft: #13291c;
+      --warn: #fbbf24;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; }
+  code { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: .05em .35em; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+  pre code { border: 0; padding: 0; background: none; }
+
+  header {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 24px;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  header .brand { font-weight: 650; letter-spacing: -.01em; }
+  header .ws { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 550;
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+    white-space: nowrap;
+  }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .pill.turn { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .pill.wait .dot { animation: pulse 1.4s ease-in-out infinite; }
+  .pill.done { color: var(--good); background: var(--good-soft); border-color: transparent; }
+  .pill.off { color: var(--warn); }
+  @keyframes pulse { 0%,100% { opacity: .25 } 50% { opacity: 1 } }
+
+  main { max-width: 780px; margin: 0 auto; padding: 28px 24px 140px; }
+  h1 { font-size: 22px; letter-spacing: -.015em; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .context { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 18px; margin-bottom: 18px; }
+
+  .q {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+    transition: border-color .15s ease, box-shadow .15s ease;
+    scroll-margin: 90px;
+  }
+  .q.active { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .q-head { display: flex; gap: 10px; align-items: baseline; }
+  .q-num { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 1px 7px; flex: none; }
+  .q-title { font-size: 16.5px; font-weight: 620; letter-spacing: -.01em; margin: 0; flex: 1; }
+  .q-state { font-size: 12px; color: var(--good); font-weight: 600; opacity: 0; transition: opacity .15s; }
+  .q.answered .q-state { opacity: 1; }
+  .q-body { color: var(--text); margin-top: 6px; }
+  .q-body p { margin: .5em 0; }
+  .q-body ul, .q-body ol { margin: .5em 0; padding-left: 1.3em; }
+  .rec { margin: 10px 0 2px; font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--accent-line); padding: 2px 0 2px 10px; }
+  .rec b { color: var(--accent); font-weight: 600; }
+
+  .opts { display: grid; gap: 8px; margin-top: 12px; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    font: inherit; color: inherit; cursor: pointer;
+    background: var(--panel); border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 12px;
+    transition: border-color .12s ease, background-color .12s ease, transform .08s ease;
+  }
+  .opt:hover { border-color: var(--accent-line); }
+  .opt:active { transform: scale(.995); }
+  .opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .key {
+    flex: none; width: 24px; height: 24px; display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; border-radius: 6px;
+    border: 1px solid var(--line); color: var(--muted); background: var(--bg);
+  }
+  .multi .key { border-radius: 6px; }
+  .opt[aria-checked="true"] .key { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .opt-text { flex: 1; min-width: 0; }
+  .opt-label { font-weight: 560; }
+  .opt-desc { color: var(--muted); font-size: 13.5px; margin-top: 1px; }
+  .chip { flex: none; font-size: 11px; font-weight: 650; letter-spacing: .02em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 999px; padding: 1px 8px; margin-top: 2px; }
+
+  textarea, input[type=text] {
+    width: 100%; font: inherit; color: inherit; background: var(--bg);
+    border: 1.5px solid var(--line); border-radius: 10px; padding: 9px 12px; resize: vertical;
+  }
+  textarea:focus, input[type=text]:focus { outline: none; border-color: var(--accent); background: var(--panel); }
+  .other-input { margin-top: 8px; }
+  .q-tools { display: flex; gap: 14px; margin-top: 10px; }
+  .link { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; }
+  .link:hover { color: var(--accent); }
+  .note { margin-top: 8px; }
+
+  .general { margin-top: 22px; }
+  .general label { display: block; font-weight: 600; margin-bottom: 6px; }
+
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+    background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+  }
+  .bar-inner { max-width: 780px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; gap: 12px; }
+  .progress { flex: 1; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; }
+  .track { flex: 0 1 160px; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .25s ease; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+    border-radius: 10px; padding: 9px 16px; border: 1.5px solid var(--line);
+    background: var(--panel); color: var(--text);
+    transition: transform .08s ease, background-color .12s ease, opacity .12s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: default; transform: none; }
+  .progress span { white-space: nowrap; }
+  .hint { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  @media (max-width: 860px) { #kbd-hint { display: none; } }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); }
+
+  .empty { text-align: center; padding: 70px 20px 40px; color: var(--muted); }
+  .empty h2 { color: var(--text); font-size: 18px; margin: 14px 0 4px; }
+  .spinner { width: 28px; height: 28px; margin: 0 auto; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin .9s linear infinite; }
+  .check { width: 40px; height: 40px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; background: var(--good-soft); color: var(--good); font-size: 22px; font-weight: 700; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @media (prefers-reduced-motion: reduce) { .spinner, .pill.wait .dot { animation: none; } }
+  .summary { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 18px; margin-top: 20px; color: var(--text); }
+
+  .history { margin-top: 40px; }
+  .history h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; }
+  summary { cursor: pointer; padding: 10px 14px; font-weight: 560; display: flex; gap: 10px; align-items: center; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary .meta { margin-left: auto; color: var(--muted); font-size: 12.5px; font-weight: 400; }
+  .h-list { padding: 0 14px 12px 36px; margin: 0; list-style: none; }
+  .h-list li { padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .h-list .a { color: var(--muted); }
+  .h-list .a strong { color: var(--text); font-weight: 560; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 84px; transform: translate(-50%, 8px); opacity: 0;
+    background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 550;
+    transition: opacity .18s ease, transform .18s ease; pointer-events: none; z-index: 10;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .banner { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🔥 Grill</span>
+  <span class="ws" id="ws"></span>
+  <span class="pill wait" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></span>
+</header>
+<main id="main"></main>
+<div class="bar" id="bar" hidden>
+  <div class="bar-inner">
+    <div class="progress"><div class="track"><div class="fill" id="fill"></div></div><span id="count"></span></div>
+    <span class="hint" id="kbd-hint"><kbd>1</kbd>–<kbd>9</kbd> pick · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> submit</span>
+    <button class="btn" id="accept">Use recommended</button>
+    <button class="btn primary" id="submit">Submit</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const token = new URLSearchParams(location.search).get("t");
+const $ = (id) => document.getElementById(id);
+const main = $("main");
+
+let state = null;
+let renderedRoundId = null;
+let renderedKey = "";
+let draft = null;
+let activeIdx = 0;
+let connected = false;
+let submitting = false;
+
+// ---------- data ----------
+
+function currentRound() {
+  if (!state || state.ended) return null;
+  const last = state.rounds[state.rounds.length - 1];
+  return last && !last.answers && !last.cancelled ? last : null;
+}
+
+function draftKey(id) { return `grill:${state?.startedAt}:${id}`; }
+
+function loadDraft(round) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(draftKey(round.id)));
+    if (saved) return saved;
+  } catch {}
+  const questions = {};
+  for (const q of round.questions) questions[q.id] = { selected: [], otherOn: false, other: "", note: "", noteOn: false };
+  return { questions, comment: "" };
+}
+
+function saveDraft() {
+  const round = currentRound();
+  if (round) localStorage.setItem(draftKey(round.id), JSON.stringify(draft));
+}
+
+function isAnswered(q) {
+  const a = draft.questions[q.id];
+  if (!q.options.length) return a.other.trim() !== "";
+  return a.selected.length > 0 || (a.otherOn && a.other.trim() !== "");
+}
+
+// ---------- markdown-lite ----------
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+function inline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+}
+function md(src) {
+  if (!src) return "";
+  const out = [];
+  const blocks = String(src).replace(/\r/g, "").split(/```/);
+  blocks.forEach((chunk, i) => {
+    if (i % 2) { out.push(`<pre><code>${esc(chunk.replace(/^\w*\n/, ""))}</code></pre>`); return; }
+    for (const para of chunk.split(/\n\s*\n/)) {
+      const lines = para.split("\n").filter((l) => l.trim());
+      if (!lines.length) continue;
+      if (lines.every((l) => /^\s*[-*]\s+/.test(l))) out.push(`<ul>${lines.map((l) => `<li>${inline(l.replace(/^\s*[-*]\s+/, ""))}</li>`).join("")}</ul>`);
+      else if (lines.every((l) => /^\s*\d+[.)]\s+/.test(l))) out.push(`<ol>${lines.map((l) => `<li>${inline(l.replace(/^\s*\d+[.)]\s+/, ""))}</li>`).join("")}</ol>`);
+      else out.push(`<p>${lines.map(inline).join("<br>")}</p>`);
+    }
+  });
+  return out.join("");
+}
+
+// ---------- rendering ----------
+
+function render() {
+  $("ws").textContent = state ? `${state.title} — ${state.workspace}` : "";
+  renderStatus();
+  const round = currentRound();
+  const key = JSON.stringify([round?.id ?? null, state?.ended?.at ?? null, state?.rounds.length ?? 0, connected]);
+  if (key === renderedKey) return;
+  renderedKey = key;
+
+  if (round && round.id === renderedRoundId) { renderHistoryOnly(); return; }
+  renderedRoundId = round?.id ?? null;
+  main.innerHTML = "";
+  if (!connected && state) main.insertAdjacentHTML("beforeend", `<div class="banner">Lost connection to the grill server. It reconnects automatically if it comes back.</div>`);
+
+  if (round) renderRound(round);
+  else if (state?.ended) renderEnded();
+  else renderWaiting();
+  main.insertAdjacentHTML("beforeend", `<div id="history"></div>`);
+  renderHistoryOnly();
+  $("bar").hidden = !round;
+}
+
+function renderStatus() {
+  const el = $("status");
+  const round = currentRound();
+  let cls = "wait", text = "Waiting for questions…";
+  if (!connected) { cls = "off"; text = "Disconnected"; }
+  else if (state?.ended) { cls = "done"; text = "Session complete"; }
+  else if (round) { cls = "turn"; text = "Your turn"; }
+  else if (state?.rounds.length) text = "Agent is thinking…";
+  el.className = `pill ${cls}`;
+  $("status-text").textContent = text;
+  document.title = round ? `● Your turn — Grill` : `Grill — ${state?.title ?? ""}`;
+}
+
+function renderWaiting() {
+  const answered = state?.rounds.some((r) => r.answers);
+  main.insertAdjacentHTML("beforeend", `
+    <div class="empty">
+      <div class="spinner"></div>
+      <h2>${answered ? "Answers sent" : "Ready when the agent is"}</h2>
+      <div>${answered ? "The agent is working through your answers. The next round will appear here." : "Questions will appear here as soon as the agent asks them."}</div>
+    </div>`);
+}
+
+function renderEnded() {
+  main.insertAdjacentHTML("beforeend", `
+    <div class="empty">
+      <div class="check">✓</div>
+      <h2>Grilling complete</h2>
+      <div>${state.rounds.filter((r) => r.answers).length} rounds answered. You can close this tab.</div>
+      ${state.ended.summary ? `<div class="summary">${md(state.ended.summary)}</div>` : ""}
+    </div>`);
+}
+
+function renderRound(round) {
+  draft = loadDraft(round);
+  activeIdx = Math.max(0, round.questions.findIndex((q) => !isAnswered(q)));
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <h1>${esc(round.title || `Round ${round.id}`)}</h1>
+    <p class="sub">${round.questions.length} question${round.questions.length === 1 ? "" : "s"} · click an option, or write your own.</p>
+    ${round.context ? `<div class="context">${md(round.context)}</div>` : ""}`;
+  round.questions.forEach((q, i) => wrap.appendChild(renderQuestion(round, q, i)));
+  wrap.insertAdjacentHTML("beforeend", `
+    <div class="general">
+      <label for="comment">Anything else for the agent? <span class="hint">(optional)</span></label>
+      <textarea id="comment" rows="2" placeholder="Context, pushback, or a new concern…"></textarea>
+    </div>`);
+  main.appendChild(wrap);
+  const comment = $("comment");
+  comment.value = draft.comment;
+  comment.addEventListener("input", () => { draft.comment = comment.value; saveDraft(); });
+  updateProgress(round);
+  setActive(activeIdx, false);
+  if (document.hidden) document.title = `● Your turn — Grill`;
+}
+
+function renderQuestion(round, q, i) {
+  const a = draft.questions[q.id];
+  const recs = [q.recommended].flat().filter(Boolean);
+  const el = document.createElement("section");
+  el.className = `q${q.multiple ? " multi" : ""}`;
+  el.dataset.idx = i;
+  const recLine = q.recommendation || recs.length
+    ? `<div class="rec">➡️ <b>Recommended${recs.length ? `: ${recs.map(esc).join(", ")}` : ""}</b>${q.recommendation ? ` — ${inline(q.recommendation)}` : ""}</div>`
+    : "";
+  el.innerHTML = `
+    <div class="q-head">
+      <span class="q-num">${esc(q.id)}</span>
+      <h2 class="q-title">${inline(q.title)}</h2>
+      <span class="q-state">✓ Answered</span>
+    </div>
+    ${q.body ? `<div class="q-body">${md(q.body)}</div>` : ""}
+    ${recLine}
+    <div class="opts" role="${q.multiple ? "group" : "radiogroup"}"></div>
+    <div class="q-tools"></div>`;
+  const opts = el.querySelector(".opts");
+  const tools = el.querySelector(".q-tools");
+
+  const sync = () => {
+    opts.querySelectorAll(".opt[data-id]").forEach((b) => b.setAttribute("aria-checked", String(a.selected.includes(b.dataset.id))));
+    const ob = opts.querySelector(".opt.other");
+    if (ob) ob.setAttribute("aria-checked", String(a.otherOn));
+    if (otherInput) otherInput.hidden = q.options.length > 0 && !a.otherOn;
+    el.classList.toggle("answered", isAnswered(q));
+    saveDraft();
+    updateProgress(round);
+  };
+
+  const choose = (id) => {
+    if (q.multiple) a.selected = a.selected.includes(id) ? a.selected.filter((x) => x !== id) : [...a.selected, id];
+    else { a.selected = a.selected[0] === id ? [] : [id]; a.otherOn = false; }
+    sync();
+    if (!q.multiple && a.selected.length) advance(i);
+  };
+
+  q.options.forEach((o, j) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "opt";
+    b.dataset.id = o.id;
+    b.setAttribute("role", q.multiple ? "checkbox" : "radio");
+    b.innerHTML = `
+      <span class="key">${j < 9 ? j + 1 : esc(o.id)}</span>
+      <span class="opt-text"><div class="opt-label">${inline(o.label)}</div>${o.description ? `<div class="opt-desc">${inline(o.description)}</div>` : ""}</span>
+      ${recs.includes(o.id) ? `<span class="chip">Recommended</span>` : ""}`;
+    b.addEventListener("click", () => { setActive(i, false); choose(o.id); });
+    opts.appendChild(b);
+  });
+
+  let otherInput = null;
+  if (q.options.length && q.allowOther !== false) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "opt other";
+    b.setAttribute("role", q.multiple ? "checkbox" : "radio");
+    b.innerHTML = `<span class="key">✎</span><span class="opt-text"><div class="opt-label">Something else</div><div class="opt-desc">Write your own answer</div></span>`;
+    b.addEventListener("click", () => {
+      setActive(i, false);
+      a.otherOn = !a.otherOn;
+      if (a.otherOn && !q.multiple) a.selected = [];
+      sync();
+      if (a.otherOn) otherInput.focus();
+    });
+    opts.appendChild(b);
+  }
+  if (!q.options.length || q.allowOther !== false) {
+    otherInput = document.createElement("textarea");
+    otherInput.rows = q.options.length ? 2 : 3;
+    otherInput.className = "other-input";
+    otherInput.placeholder = q.options.length ? "Your answer…" : "Type your answer…";
+    otherInput.value = a.other;
+    otherInput.addEventListener("focus", () => setActive(i, false));
+    otherInput.addEventListener("input", () => { a.other = otherInput.value; sync(); });
+    opts.after(otherInput);
+  }
+
+  if (!q.options.length && q.recommendation) {
+    const use = document.createElement("button");
+    use.className = "link";
+    use.textContent = "Use recommendation";
+    use.addEventListener("click", () => { a.other = q.recommendation; otherInput.value = a.other; sync(); });
+    tools.appendChild(use);
+  }
+  const noteBtn = document.createElement("button");
+  noteBtn.className = "link";
+  noteBtn.textContent = "Add a note";
+  const note = document.createElement("textarea");
+  note.className = "note";
+  note.rows = 2;
+  note.placeholder = "Extra context for this answer…";
+  note.value = a.note;
+  note.hidden = !a.noteOn && !a.note;
+  note.addEventListener("input", () => { a.note = note.value; saveDraft(); });
+  note.addEventListener("focus", () => setActive(i, false));
+  noteBtn.addEventListener("click", () => { a.noteOn = note.hidden; note.hidden = !note.hidden; if (!note.hidden) note.focus(); saveDraft(); });
+  tools.appendChild(noteBtn);
+  tools.after(note);
+
+  el.addEventListener("pointerdown", () => setActive(i, false));
+  el._sync = sync;
+  queueMicrotask(sync);
+  return el;
+}
+
+function setActive(i, scroll) {
+  const qs = main.querySelectorAll(".q");
+  if (!qs.length) return;
+  activeIdx = Math.max(0, Math.min(i, qs.length - 1));
+  qs.forEach((q, k) => q.classList.toggle("active", k === activeIdx));
+  if (scroll) qs[activeIdx].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+}
+
+function advance(i) {
+  const round = currentRound();
+  const next = round.questions.findIndex((q, k) => k > i && !isAnswered(q));
+  if (next !== -1) setTimeout(() => setActive(next, true), 120);
+}
+
+function updateProgress(round) {
+  const done = round.questions.filter(isAnswered).length;
+  const total = round.questions.length;
+  $("fill").style.width = `${(done / total) * 100}%`;
+  $("count").textContent = `${done} of ${total} answered`;
+  const skipped = total - done;
+  $("submit").textContent = skipped ? `Submit (${skipped} skipped)` : "Submit";
+  $("accept").hidden = !round.questions.some((q) => !isAnswered(q) && (q.recommended || (!q.options.length && q.recommendation)));
+}
+
+function renderHistoryOnly() {
+  const host = $("history");
+  if (!host || !state) return;
+  const past = state.rounds.filter((r) => r.answers).slice().reverse();
+  if (!past.length) { host.innerHTML = ""; return; }
+  host.innerHTML = `<div class="history"><h3>Previous rounds</h3>${past.map((r) => `
+    <details>
+      <summary>${esc(r.title || `Round ${r.id}`)}<span class="meta">${r.questions.length} question${r.questions.length === 1 ? "" : "s"}</span></summary>
+      <ul class="h-list">${r.questions.map((q) => `<li><div>${inline(q.title)}</div><div class="a">${answerText(q, r.answers.questions?.[q.id])}</div></li>`).join("")}</ul>
+    </details>`).join("")}</div>`;
+}
+
+function answerText(q, a) {
+  if (!a) return "<em>skipped</em>";
+  const parts = (a.selected || []).map((id) => `<strong>${inline(q.options.find((o) => o.id === id)?.label ?? id)}</strong>`);
+  if (a.other) parts.push(`<strong>${esc(a.other)}</strong>`);
+  let s = parts.length ? parts.join(", ") : "<em>skipped</em>";
+  if (a.note) s += ` — ${esc(a.note)}`;
+  return s;
+}
+
+// ---------- actions ----------
+
+$("accept").addEventListener("click", () => {
+  const round = currentRound();
+  if (!round) return;
+  round.questions.forEach((q, i) => {
+    if (isAnswered(q)) return;
+    const a = draft.questions[q.id];
+    const recs = [q.recommended].flat().filter(Boolean);
+    if (q.options.length && recs.length) { a.selected = recs; a.otherOn = false; }
+    else if (!q.options.length && q.recommendation) a.other = q.recommendation;
+    const el = main.querySelector(`.q[data-idx="${i}"]`);
+    const ta = el.querySelector(".other-input");
+    if (ta && !q.options.length) ta.value = a.other;
+    el._sync();
+  });
+  toast("Filled in the recommended answers");
+});
+
+$("submit").addEventListener("click", submit);
+
+async function submit() {
+  const round = currentRound();
+  if (!round || submitting) return;
+  const questions = {};
+  for (const q of round.questions) {
+    const a = draft.questions[q.id];
+    questions[q.id] = {
+      selected: a.selected,
+      other: (!q.options.length || a.otherOn) ? a.other.trim() : "",
+      note: a.note.trim(),
+    };
+  }
+  submitting = true;
+  $("submit").disabled = true;
+  try {
+    const res = await fetch(`/api/rounds/${round.id}/answers?t=${token}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ questions, comment: draft.comment.trim() }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+    localStorage.removeItem(draftKey(round.id));
+    toast("Answers sent to the agent");
+    window.scrollTo({ top: 0 });
+  } catch (err) {
+    toast(`Could not send: ${err.message}`);
+  } finally {
+    submitting = false;
+    $("submit").disabled = false;
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  const round = currentRound();
+  if (!round) return;
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); submit(); return; }
+  if (e.target.closest("textarea, input")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const q = round.questions[activeIdx];
+  if (/^[1-9]$/.test(e.key) && q?.options[Number(e.key) - 1]) {
+    e.preventDefault();
+    main.querySelector(`.q[data-idx="${activeIdx}"] .opt[data-id="${CSS.escape(q.options[Number(e.key) - 1].id)}"]`).click();
+  } else if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); setActive(activeIdx + 1, true); }
+  else if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); setActive(activeIdx - 1, true); }
+});
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+// ---------- live connection ----------
+
+function connect() {
+  const es = new EventSource(`/api/events?t=${token}`);
+  es.onmessage = (e) => { connected = true; state = JSON.parse(e.data); render(); };
+  es.onerror = () => { connected = false; render(); };
+}
+if (!token) main.innerHTML = `<div class="banner">Missing session token. Open the URL printed by <code>grill-ui.mjs</code>.</div>`;
+else connect();
+</script>
+</body>
+</html>
