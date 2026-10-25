@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Write binary Plugin files through the commit journal",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first.\n\n## Goal\n\nLet a Plugin save **binary** files (PNG images) through the same Data Root lock, commit journal and recovery that text files use today. The Attachments Plugin needs this.\n\n## Today\n\n- `src/storage/io.ts` `writeFile` writes `utf8` text only.\n- `src/storage/transaction.ts` journal writes are `{ kind: 'write'; path; text }`; staged steps are `{ kind: 'write'; path; staged; existed }`.\n- `FileChange` (`src/services/plugins/types.ts`) has `before` and `after` as `string | null`, and `changes.readFile` returns the pending text.\n\n## Work\n\n- Add a byte variant to journal writes (e.g. `{ kind: 'write'; path; bytes: Uint8Array }`), staged and recovered exactly like text.\n- Add binary reads and writes to the Plugin file API, e.g. `changes.writeBinaryFile(scope, name, bytes)` / `changes.readBinaryFile` and `plugin.files.readBinary`. Text files keep their current API unchanged.\n- Choose how a binary `FileChange` appears in a `ChangeSetView`: the bytes, or a size and hash that keep diffs and logs small.\n- Binary files are never parsed as JSON and never pass through `serializeJson`.\n- Doctor and the Git Plugin must accept binary Plugin files: no `DATA_INTEGRITY` finding, and they are included in automatic commits.\n- Write **ADR-0035** (binary Plugin files) in `docs/agents/adr/`, with a row in its index.\n\n## Tests (required by AGENTS.md: storage row)\n\nIn `test/storage/`, extend the existing failure-path tests: a fault or crash at each step of a binary write ends in the complete old or the complete new file, byte for byte.\n\n## Docs\n\n- `docs/architecture/storage.md`.\n- `docs/plugins/api.md`, with a compiled fixture `// #region` in `test/docs/fixtures/` for any new code example.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.201Z",
-  "updatedAt": "2026-10-25T18:04:43.734Z",
+  "updatedAt": "2026-10-25T18:04:44.367Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
