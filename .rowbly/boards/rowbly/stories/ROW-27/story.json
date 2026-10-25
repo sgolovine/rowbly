@@ -12,14 +12,15 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:38:32.624Z",
+  "updatedAt": "2026-10-25T17:38:33.312Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
     },
     "story-linking": {
       "blocks": [
-        "ROW-28"
+        "ROW-28",
+        "ROW-29"
       ]
     }
   }
