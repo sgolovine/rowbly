@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Move `rowbly-dev` to be an official skill",
   "description": "- The skill \"rowbly-dev\" is currently a skill within `.agents/skills` and is not available for users to install. Move this skill to the consumer `skills` folder so that users can install it. Make sure `rowbly skills install` list the skill as available.",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T16:51:46.423Z",
-  "updatedAt": "2026-10-25T16:51:46.423Z"
+  "updatedAt": "2026-10-25T16:51:51.430Z"
 }
