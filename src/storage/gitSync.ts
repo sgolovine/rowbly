@@ -4,7 +4,7 @@
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { ConflictError, ValidationError } from '../core';
+import { ConflictError, isRowblyError, ValidationError } from '../core';
 import type { DataRoot } from '../schemas';
 import { readTextIfExists } from './files';
 import { commitGitPaths, gitInfo, isCommittedPath, pendingPath, runGit } from './git';
@@ -66,11 +66,33 @@ async function pendingRowblyPaths(top: string, prefix: string): Promise<string[]
   return [...new Set(paths)];
 }
 
+/** The step Sync is in, so an unexpected failure says where it stopped and what to do next. */
+interface SyncStep {
+  step: string;
+  hint: string;
+}
+
 export async function syncGit(
   root: DataRoot,
   author: { authorName?: string; authorEmail?: string },
   snapshot: <T>(read: () => Promise<T>) => Promise<T>,
 ): Promise<GitSyncResult> {
+  const at: SyncStep = { step: 'checking the repository', hint: 'run Sync again; nothing was committed or pushed' };
+  try {
+    return await sync(root, author, snapshot, at);
+  } catch (err) {
+    if (isRowblyError(err)) throw err;
+    throw new ConflictError(`Sync stopped while ${at.step}: ${gitReason(err)}`, { hint: at.hint, cause: err });
+  }
+}
+
+async function sync(
+  root: DataRoot,
+  author: { authorName?: string; authorEmail?: string },
+  snapshot: <T>(read: () => Promise<T>) => Promise<T>,
+  at: SyncStep,
+): Promise<GitSyncResult> {
+  const step = (name: string, hint: string) => Object.assign(at, { step: name, hint });
   const info = await gitInfo(root);
   const top = info.root;
   const git = (args: string[], timeout?: number) => runGit(top, args, { timeout });
@@ -117,9 +139,17 @@ export async function syncGit(
       hint: 'set `git config user.name` and `user.email`, or the author in the Git settings',
     });
 
+  step(
+    'finishing an interrupted Sync',
+    'check what is staged with `git diff --cached`, then run Sync again; nothing was pushed',
+  );
   await finishLanding(root, branch, git);
 
   // 1. Commit pending Rowbly data; with nothing pending, no commit is made.
+  step(
+    'committing Rowbly changes',
+    'commit or unstage your staged changes to those files, then run Sync again; nothing was pushed',
+  );
   const data = await io.realpath(root.path);
   const prefix = relative(top, data).split('\\').join('/');
   const before = await value(['rev-parse', '--verify', '--quiet', 'HEAD']);
@@ -150,6 +180,7 @@ export async function syncGit(
   // 3. Rebase onto the upstream without touching the live tree, then land the result.
   let tip = head;
   if (pulled > 0) {
+    step(`rebasing onto ${upstream}`, 'run Sync again; nothing was pushed and the branch is unchanged');
     tip = (await git(['merge-base', '--is-ancestor', head, theirs]).then(
       () => true,
       () => false,
@@ -160,6 +191,10 @@ export async function syncGit(
     // refuses to overwrite local changes (`reset --keep` would unstage them), then the branch moves
     // only if it is still where Sync started (compare and swap). The marker lets the next Sync finish
     // a landing that a crash cut between the two, so HEAD never stays behind a tree that is ahead.
+    step(
+      'updating the branch',
+      'check what is staged with `git diff --cached`, then run Sync again; nothing was pushed',
+    );
     const marker = await landingMarker(root);
     await writeTextFile(marker, JSON.stringify({ branch, old: head, new: tip }));
     try {
@@ -181,13 +216,14 @@ export async function syncGit(
       throw new ConflictError('The branch changed during Sync', {
         hint: restored
           ? 'run Sync again; nothing was pushed'
-          : `check \`git status\`: files from ${upstream} may be staged; nothing was pushed`,
+          : `files from ${upstream} may be staged (see \`git diff --cached\`); nothing was pushed`,
       });
     }
     await io.rm(marker);
   }
 
   // 4. Push, never forced. A rejection keeps every local commit.
+  step(`pushing to ${remote}`, 'run Sync again; your local commits are kept');
   const pushed = Number(await value(['rev-list', '--count', `${theirs}..${tip}`]));
   if (pushed > 0) {
     try {
@@ -196,10 +232,21 @@ export async function syncGit(
         LONG,
       );
     } catch (err) {
-      const reason = gitReason(err);
-      if (/\((fetch first|non-fast-forward)\)/.test(String((err as { stderr?: string }).stderr)))
+      const stderr = String((err as { stderr?: string }).stderr ?? '');
+      if (/\((fetch first|non-fast-forward)\)/.test(stderr))
         throw new ConflictError(`The upstream ${upstream} moved during Sync`, {
           hint: 'run Sync again; your local commits are kept',
+        });
+      // What the remote said, such as a hook's message, names the cause.
+      const said = stderr
+        .split('\n')
+        .filter((line) => line.startsWith('remote:'))
+        .map((line) => line.slice('remote:'.length).trim())
+        .filter(Boolean);
+      const reason = `${gitReason(err)}${said.length ? ` (remote: ${said.join(' ')})` : ''}`;
+      if (stderr.includes('[remote rejected]'))
+        throw new ConflictError(`${remote} refused the push: ${reason}`, {
+          hint: "do what the remote's message asks, then run Sync again; your local commits are kept",
         });
       throw new ValidationError(`Sync could not push to ${remote}: ${reason}`, {
         hint: 'check the network and your Git credentials, then run Sync again; your local commits are kept',
@@ -278,10 +325,10 @@ async function rebaseAside(
       await inTree(['rebase', '--abort']).catch(() => undefined);
       if (!files.length)
         throw new ConflictError(`Sync could not rebase onto ${upstream}: ${gitReason(err)}`, {
-          hint: 'nothing was pushed; resolve with `git pull --rebase` and run Sync again',
+          hint: 'nothing was pushed; commit or stash your other changes, run `git pull --rebase` (or `git pull --rebase --autostash`), resolve, then run Sync again',
         });
       throw new ConflictError(`Sync stopped: your commits conflict with ${upstream} in ${files.join(', ')}`, {
-        hint: 'nothing was pushed; resolve with `git pull --rebase` and run Sync again',
+        hint: 'nothing was pushed; commit or stash your other changes, run `git pull --rebase` (or `git pull --rebase --autostash`), resolve, then run Sync again',
       });
     }
     return (await inTree(['rev-parse', 'HEAD'])).trim();

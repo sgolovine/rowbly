@@ -86,10 +86,13 @@ Every failure shows an error toast and keeps local commits:
 | needs a Git author name and email | `git config user.name` / `user.email`, or `rowbly git configure --author-name … --author-email …` |
 | already have staged changes | commit or unstage the staged Rowbly file |
 | could not fetch / could not push | the toast quotes git; fix the network or credentials |
-| your commits conflict with origin/main in <files> | nothing was pushed and the branch is unchanged; `git pull --rebase`, resolve, then Sync again |
+| origin refused the push: … (remote: …) | a server hook or rule refused it; do what the remote's message asks |
+| your commits conflict with origin/main in <files> | nothing was pushed and the branch is unchanged; commit or stash other changes, `git pull --rebase` (or `--autostash`), resolve, then Sync again |
 | could not update your working tree | commit or stash the user's change to the named file |
 | branch changed / upstream moved during Sync | Sync again |
 | Sync is already running | wait for it |
+| Sync stopped while <step>: <reason> | follow the hint; Git's message is quoted |
+| The Git queue is busy | Sync or an Automatic Commit holds the Git lock; try again when it ends |
 
 ## Common mistakes
 

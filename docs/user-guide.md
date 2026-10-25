@@ -453,9 +453,11 @@ While Sync runs, the header shows `Sync…` and `S` does nothing; Automatic Comm
 | No Git author name or email | Set `git config user.name` and `user.email`, or the author in the Git settings |
 | A Rowbly file you changed is already staged | Commit or unstage it |
 | Fetch or push failed (network, credentials) | The toast shows Git's message; fix it and press `S` again |
-| Your commits conflict with the upstream | Nothing was pushed and your branch is unchanged; run `git pull --rebase`, resolve the conflict, and press `S` again |
+| The remote refused the push (for example a server hook) | The toast shows the remote's message; do what it asks and press `S` again |
+| Your commits conflict with the upstream | Nothing was pushed and your branch is unchanged; commit or stash your other changes, run `git pull --rebase` (or `git pull --rebase --autostash`), resolve the conflict, and press `S` again |
 | A file you changed locally would be overwritten | Commit or stash your change to that file |
 | The branch or the upstream changed during Sync | Press `S` again |
+| Sync stopped while <step>: <reason> | Follow the hint under it, then press `S` again |
 
 Sync runs Git without hooks or commit signing, like Automatic Commits. There is no `rowbly` command for Sync; use `git pull --rebase` and `git push` in command mode.
 

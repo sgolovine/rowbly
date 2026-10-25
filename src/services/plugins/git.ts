@@ -68,7 +68,9 @@ export function createPluginGit(
   function chain<T>(file: string, operation: string, job: () => Promise<T>): Promise<T> {
     const previous = queues.get(file)?.done ?? Promise.resolve();
     const result = previous.then(() =>
-      outsideCoordination(() => withLock(dirname(file), { operation: `${id}.${operation}` }, job)),
+      outsideCoordination(() =>
+        withLock(dirname(file), { operation: `${id}.${operation}`, subject: 'The Git queue' }, job),
+      ),
     );
     const done = result.then(
       () => undefined,
