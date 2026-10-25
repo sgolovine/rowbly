@@ -5,12 +5,12 @@
   "name": "Instruct agents to move stories",
   "description": "Update the rowbly skill to instruct agents to move stories as they work on them. If an agent is working on a story, after completion it should move that story to the next column. Agent should look at the layout of the board and decide where to move the story. The sample applies if an agent is preparing a story, move it to the correct column when finished refining",
   "stage": "todo",
-  "rank": "a2",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:35:40.032Z",
-  "updatedAt": "2026-10-24T17:50:44.191Z"
+  "updatedAt": "2026-10-25T15:05:36.724Z"
 }
