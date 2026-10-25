@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:45:29.830Z",
-  "updatedAt": "2026-10-25T17:51:26.842Z",
+  "updatedAt": "2026-10-25T17:51:27.488Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -29,6 +29,13 @@
           "body": "Plan accepted. Complexity 1/10; branch codex/row-33-fix-linting, based on origin/main. Add a shared Biome exclusion for .rowbly/, preserve its files, run all four required checks, and attach lint-output screenshot evidence.",
           "createdAt": "2026-10-25T17:51:26.841Z",
           "updatedAt": "2026-10-25T17:51:26.841Z"
+        },
+        {
+          "id": "t3cHqQxq",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/107 excludes .rowbly/ from Biome linting and formatting. All four required checks passed; validation signed off at a90dfb1. Screenshot evidence attached and verified HTTP 200. No Board files edited.",
+          "createdAt": "2026-10-25T17:51:27.488Z",
+          "updatedAt": "2026-10-25T17:51:27.488Z"
         }
       ]
     }
