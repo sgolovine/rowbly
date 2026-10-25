@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { constants } from 'node:fs';
 import { type FileHandle, open } from 'node:fs/promises';
 import { basename } from 'node:path';
 import { NotFoundError, UsageError, ValidationError } from '../core';
@@ -9,7 +10,7 @@ export async function readBinaryInput(path: string, maxBytes: number): Promise<{
     throw new ValidationError('binary input limit must be between 1 byte and 10 MiB');
   let file: FileHandle;
   try {
-    file = await open(path, 'r');
+    file = await open(path, constants.O_RDONLY | constants.O_NONBLOCK);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new NotFoundError(`file not found: ${path}`);
     throw error;

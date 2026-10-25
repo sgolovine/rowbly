@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships seven Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships eight Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -10,6 +10,7 @@ Rowbly ships seven Built-in Plugins. Each is off until a Data Root turns it on w
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
 | [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
 | [Story Linking](#story-linking) | Blocking relationships between Stories on the same Board | [`story-linking/CONTEXT.md`](../../src/plugins/story-linking/CONTEXT.md) | [Plugin Data, ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md) |
+| [Attachments](#attachments) | PNG images on Stories | [`attachments/CONTEXT.md`](../../src/plugins/attachments/CONTEXT.md) | Binary journal: [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md) |
 | [Git](#git) | Automatic Commits and upstream synchronization | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
@@ -186,6 +187,36 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
 **TUI:** a **Comments** tab on the Story screen (`n` new Comment, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
+
+## Attachments
+
+An Attachment is a PNG image on a Story. Enable with `rowbly plugins enable attachments`.
+There are no settings. Commands use the plural Plugin id: `rowbly attachments`.
+
+- `add <KEY> <file>` reads an explicitly chosen regular file, retaining its basename as the name.
+  `add <KEY> --from-clipboard` reads a clipboard PNG and names it `image-YYYYMMDD-HHMM.png` in UTC.
+  Give exactly one source; both require a PNG signature and at most 10 MiB. Clipboard failures report
+  their reason (`unsupported`, `no-display`, `no-image`, `too-large` or `timeout`) and save nothing.
+- `list <KEY> [--json]` returns entries in insertion order. Each entry is
+  `{ id, name, type, size, createdAt, createdBy }`; `type` is `image/png`, `size` is bytes,
+  `createdAt` is a timestamp and `createdBy` is Me or `null`. `add` returns the added entry.
+- `remove <KEY> <id>` confirms first (`--yes` when prompting is unavailable), removes the entry and
+  PNG together, and returns `{ removed }`. `open <KEY> <id>` uses the platform's associated application
+  (`open`, Windows `start`, or `xdg-open`); with `--json` it returns `{ opened }`.
+
+The Story bag is `plugins.attachments: { attachments: [...] }`. Ids are unique and path-safe;
+bytes live at `boards/<board>/stories/<KEY>/plugins/attachments/<id>.png`. Names are display basenames,
+not storage paths. `attachments.add` and `attachments.remove` save the bag and PNG in one journaled
+Change Set. Unrelated Plugin Data is kept. An invalid bag exits 6 on reads or changes and is never
+replaced with an empty bag. Disabling keeps entries and files; renumbering a Story moves its PNGs.
+
+Doctor reports `ATTACHMENTS_MISSING_FILE` (warning) for entries without a PNG; `--fix` removes only
+those entries from valid bags. `ATTACHMENTS_ORPHAN_FILE` (warning) reports files without entries and
+preserves their bytes, including with `--fix`, for recovery. Invalid bags receive the core
+`PLUGIN_DATA_INVALID` warning and no automatic repair.
+
+**TUI:** an Attachments Story tab and paste handling are planned; this Plugin currently provides
+storage, commands and doctor checks. The reusable add/remove/open functions serve the future tab.
 
 ## Story Linking
 
