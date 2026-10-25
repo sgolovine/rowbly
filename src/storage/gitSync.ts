@@ -316,82 +316,22 @@ async function runSynchronization(
           options,
           'chore: synchronize Rowbly data',
         );
-      const finalEntries = await tree(repo, candidate),
-        edits: PublicationEdit[] = [];
-      await writeFileAtomic(installIndex, Buffer.from(indexBefore, 'base64'));
-      for (const path of new Set([...Object.keys(oldTree), ...Object.keys(finalEntries)])) {
-        const beforeEntry = oldTree[path],
-          afterEntry = finalEntries[path];
-        const rel = inside(prefix, path),
-          owned = rel !== null && isGitDataPath(rel);
-        if (!owned && isDeepStrictEqual(beforeEntry, afterEntry)) continue;
-        const before = owned ? (captured[rel] ?? null) : beforeEntry ? await blob(repo, beforeEntry) : null;
-        const after = afterEntry ? await blob(repo, afterEntry) : null;
-        // Every unrelated changed path must still match clean HEAD bytes before local intent.
-        if (!owned && !isDeepStrictEqual(await readPublicationFile(repo, path), before))
-          throw new Error(`Upstream would overwrite unrelated local content: ${path}`);
-        const stagedEntry = (
-          await gitProcess(repo.top, ['ls-files', '--stage', '-z', '--', `:(literal)${path}`])
-        ).stdout.toString('utf8');
-        if (
-          !owned &&
-          (beforeEntry ? !stagedEntry.startsWith(`${beforeEntry.mode} ${beforeEntry.oid} 0\t`) : stagedEntry !== '')
-        )
-          throw new Error(`Upstream would overwrite unrelated staged content: ${path}`);
-        if (!isDeepStrictEqual(before, after)) edits.push({ path, before, after });
-        await put(repo, installIndex, path, after ?? undefined);
-      }
-      if (!isDeepStrictEqual(await configuredUpstream(repo), upstream))
-        throw new Error('Git upstream changed while preparing synchronization');
-      const plan: PublicationPlan = {
-        branch: upstream.branch,
-        old,
-        candidate,
-        indexBefore,
-        indexAfter: (await io.readBytes(installIndex)).toString('base64'),
-        edits,
-        roots: [root.path],
-        captures: [{ root: root.path, files: captured }],
-      };
-      await phase('publishing');
       try {
-        await withPublication(repo, (hold) => publishPublication(hold, plan));
+        return await publishSyncCandidate(repo, root, installIndex, capture, validate, phase, deadline, {
+          old,
+          oldTree,
+          candidate,
+          indexBefore,
+          captured,
+          upstream,
+          remote,
+          evidence: rootMerge.evidence,
+          repairs: rootMerge.decisions.length,
+        });
       } catch (err) {
         if (err instanceof Error && err.message === 'Rowbly capture changed; prepare again' && attempt < 2) continue;
         throw err;
       }
-      // Revalidate installed files, without changing or acknowledging later dirty revisions.
-      await validate(await capture(() => readGitDataFiles(root)));
-      deadline();
-      await phase('pushing');
-      if (
-        (await gitProcess(repo.top, ['merge-base', '--is-ancestor', remote, candidate], { allowFailure: true }))
-          .code !== 0
-      )
-        throw new Error('Prepared commit does not descend from the fetched upstream');
-      const localResult = {
-        commit: candidate,
-        upstream: `${upstream.remote}/${upstream.mergeRef}`,
-        evidence: rootMerge.evidence,
-        repairs: rootMerge.decisions.length,
-        pushed: false,
-      };
-      try {
-        await gitText(
-          repo.top,
-          ['push', '--porcelain', '--no-verify', '--', upstream.remote, `${candidate}:${upstream.mergeRef}`],
-          { timeoutMs: 30_000 },
-        );
-      } catch (err) {
-        throw new GitSyncPushError(err instanceof Error ? err.message : String(err), localResult);
-      }
-      return {
-        commit: candidate,
-        upstream: `${upstream.remote}/${upstream.mergeRef}`,
-        evidence: rootMerge.evidence,
-        repairs: rootMerge.decisions.length,
-        pushed: true,
-      };
     }
     throw new Error('Rowbly changes stayed busy; synchronization will retry on its next interval');
   } finally {
@@ -400,3 +340,101 @@ async function runSynchronization(
     await outsideGitDeadline(() => gitText(repo.top, ['update-ref', '-d', fetched])).catch(() => undefined);
   }
 }
+
+/** Shared immutable-candidate installation and normal push; the publication journal is unchanged. */
+export async function publishSyncCandidate(
+  repo: GitRepository,
+  root: DataRoot,
+  installIndex: string,
+  capture: <T>(read: () => Promise<T>) => Promise<T>,
+  validate: (files: GitDataFiles) => Promise<void>,
+  phase: (name: string) => Promise<void>,
+  deadline: () => void,
+  prepared: {
+    old: string;
+    oldTree: Tree;
+    candidate: string;
+    indexBefore: string;
+    captured: GitDataFiles;
+    upstream: GitUpstream;
+    remote: string;
+    evidence: string[];
+    repairs: number;
+  },
+): Promise<SyncOutcome> {
+  const { old, oldTree, candidate, indexBefore, captured, upstream, remote } = prepared;
+  const prefix = rootPrefix(repo, root);
+  const finalEntries = await tree(repo, candidate),
+    edits: PublicationEdit[] = [];
+  await writeFileAtomic(installIndex, Buffer.from(indexBefore, 'base64'));
+  for (const path of new Set([...Object.keys(oldTree), ...Object.keys(finalEntries)])) {
+    const beforeEntry = oldTree[path],
+      afterEntry = finalEntries[path];
+    const rel = inside(prefix, path),
+      owned = rel !== null && isGitDataPath(rel);
+    if (!owned && isDeepStrictEqual(beforeEntry, afterEntry)) continue;
+    const before = owned ? (captured[rel] ?? null) : beforeEntry ? await blob(repo, beforeEntry) : null;
+    const after = afterEntry ? await blob(repo, afterEntry) : null;
+    // Every unrelated changed path must still match clean HEAD bytes before local intent.
+    if (!owned && !isDeepStrictEqual(await readPublicationFile(repo, path), before))
+      throw new Error(`Upstream would overwrite unrelated local content: ${path}`);
+    const stagedEntry = (
+      await gitProcess(repo.top, ['ls-files', '--stage', '-z', '--', `:(literal)${path}`])
+    ).stdout.toString('utf8');
+    if (
+      !owned &&
+      (beforeEntry ? !stagedEntry.startsWith(`${beforeEntry.mode} ${beforeEntry.oid} 0\t`) : stagedEntry !== '')
+    )
+      throw new Error(`Upstream would overwrite unrelated staged content: ${path}`);
+    if (!isDeepStrictEqual(before, after)) edits.push({ path, before, after });
+    await put(repo, installIndex, path, after ?? undefined);
+  }
+  if (!isDeepStrictEqual(await configuredUpstream(repo), upstream))
+    throw new Error('Git upstream changed while preparing synchronization');
+  if (
+    (await gitProcess(repo.top, ['merge-base', '--is-ancestor', remote, candidate], { allowFailure: true })).code !== 0
+  )
+    throw new Error('Prepared commit does not descend from the fetched upstream');
+  const plan: PublicationPlan = {
+    branch: upstream.branch,
+    old,
+    candidate,
+    indexBefore,
+    indexAfter: (await io.readBytes(installIndex)).toString('base64'),
+    edits,
+    roots: [root.path],
+    captures: [{ root: root.path, files: captured }],
+  };
+  await phase('publishing');
+  await withPublication(repo, (hold) => publishPublication(hold, plan));
+  // Revalidate installed files, without changing or acknowledging later dirty revisions.
+  await validate(await capture(() => readGitDataFiles(root)));
+  deadline();
+  await phase('pushing');
+  const localResult = {
+    commit: candidate,
+    upstream: `${upstream.remote}/${upstream.mergeRef}`,
+    evidence: prepared.evidence,
+    repairs: prepared.repairs,
+    pushed: false,
+  };
+  try {
+    await gitText(
+      repo.top,
+      ['push', '--porcelain', '--no-verify', '--', upstream.remote, `${candidate}:${upstream.mergeRef}`],
+      { timeoutMs: 30_000 },
+    );
+  } catch (err) {
+    throw new GitSyncPushError(err instanceof Error ? err.message : String(err), localResult);
+  }
+  return {
+    commit: candidate,
+    upstream: `${upstream.remote}/${upstream.mergeRef}`,
+    evidence: prepared.evidence,
+    repairs: prepared.repairs,
+    pushed: true,
+  };
+}
+
+// Host-only shared preparation primitives, not Plugin capabilities.
+export { blob, busy, commit, inRepository, inside, put, sourceFiles, tree };
