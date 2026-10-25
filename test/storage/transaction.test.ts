@@ -6,8 +6,17 @@ import { prepareTransaction, recoverTransactions, type TransactionPlan } from '.
 import { FIXED_NOW, fixedClock, tempRoot } from '../helpers';
 import { fixtureScript, injectFaults, runScript, snapshotTree } from './engineHelpers';
 
-afterEach(() => {
-  vi.restoreAllMocks();
+let publicationRun: Promise<void> | undefined;
+
+afterEach(async () => {
+  // A timeout aborts the context but does not await the test body. Drain it before
+  // restoring mocks or removing temp roots, so it cannot spy on the next test.
+  try {
+    await publicationRun?.catch(() => undefined);
+  } finally {
+    publicationRun = undefined;
+    vi.restoreAllMocks();
+  }
 });
 
 const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
@@ -233,7 +242,7 @@ describe('a killed process', () => {
 });
 
 describe('Git local publication', () => {
-  it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', async () => {
+  async function publicationFaults(signal: AbortSignal): Promise<void> {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { requireRepository, withGitWorker } = await import('../../src/storage/gitRepository');
     const { gitText } = await import('../../src/storage/gitProcess');
@@ -263,6 +272,7 @@ describe('Git local publication', () => {
         }
       }
       const run = async (failAt?: number, crash = false): Promise<string[]> => {
+        signal.throwIfAborted();
         const t = await tempRoot();
         try {
           await Promise.all(directories.map((path) => mkdir(join(t.dir, path), { recursive: true })));
@@ -283,6 +293,7 @@ describe('Git local publication', () => {
             intended = false;
           await withGitWorker(f.repo, () =>
             withPublication(f.repo, async (hold) => {
+              signal.throwIfAborted();
               const faults = injectFaults();
               if (failAt !== undefined) {
                 if (crash) faults.crashAt(failAt);
@@ -355,6 +366,7 @@ describe('Git local publication', () => {
     }
     // External editors and Git do not take Rowbly's locks. Refuse at the actual effect boundary.
     for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging', 'foreign-lock']) {
+      signal.throwIfAborted();
       const t = await tempRoot(),
         f = await syncFixture(t.dir, t.path);
       const path =
@@ -375,6 +387,7 @@ describe('Git local publication', () => {
       };
       await withGitWorker(f.repo, () =>
         withPublication(f.repo, async (hold) => {
+          signal.throwIfAborted();
           const originalWrite = io.writeFile;
           const spy = vi.spyOn(io, 'writeFile').mockImplementation(async (file, ...args) => {
             await originalWrite(file, ...args);
@@ -438,6 +451,7 @@ describe('Git local publication', () => {
       });
       await t.cleanup();
     }
+    signal.throwIfAborted();
     const t = await tempRoot(),
       f = await syncFixture(t.dir, t.path);
     await withGitWorker(f.repo, () =>
@@ -457,6 +471,7 @@ describe('Git local publication', () => {
           'external ref advance',
         );
         const { io } = await import('../../src/storage/io');
+        signal.throwIfAborted();
         const remove = io.rm;
         let foreignLock = false;
         const cleanup = vi.spyOn(io, 'rm').mockImplementation(async (path) => {
@@ -485,6 +500,13 @@ describe('Git local publication', () => {
         for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.before);
       }),
     );
+  }
+
+  it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', ({
+    signal,
+  }) => {
+    publicationRun = publicationFaults(signal);
+    return publicationRun;
   });
 
   it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
