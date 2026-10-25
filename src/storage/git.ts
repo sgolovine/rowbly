@@ -13,16 +13,12 @@ import { isWatchedPath } from './watch';
 const execute = promisify(execFile);
 
 /** No shell, bounded output/time, and no inherited Git directory/index/author overrides. */
-export async function runGit(
-  cwd: string,
-  args: readonly string[],
-  options: { timeout?: number; env?: Record<string, string> } = {},
-): Promise<string> {
+async function runGit(cwd: string, args: readonly string[]): Promise<string> {
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   const { stdout } = await execute('git', [...args], {
     cwd,
-    env: { ...env, GIT_TERMINAL_PROMPT: '0', ROWBLY_GIT_AUTOCOMMIT: '1', ...options.env },
-    timeout: options.timeout ?? 3500,
+    env: { ...env, GIT_TERMINAL_PROMPT: '0', ROWBLY_GIT_AUTOCOMMIT: '1' },
+    timeout: 3500,
     maxBuffer: 1024 * 1024,
   });
   return stdout;
@@ -54,7 +50,7 @@ export async function gitInfo(root: DataRoot) {
  * (`.txn/`) and atomic-write temporary files (`.<name>.<8 hex>.tmp`). Other dot files, such as the
  * Data Root's `.gitignore`, are committed.
  */
-export function isCommittedPath(inside: string): boolean {
+function isCommittedPath(inside: string): boolean {
   return inside !== 'local.json' && isWatchedPath(inside);
 }
 
@@ -81,11 +77,6 @@ export async function pendingPath(root: DataRoot, plugin: string): Promise<strin
   const dir = (await runGit(path, ['rev-parse', '--absolute-git-dir'])).trim();
   const key = createHash('sha256').update(path).digest('hex').slice(0, 20);
   return join(dir, 'rowbly', `${plugin}-${key}.json`);
-}
-
-/** Creates the folder of `file` in Git's directory, where the Git lock lives; a fresh clone has none yet. */
-export async function ensureGitQueueDir(file: string): Promise<void> {
-  await io.mkdir(dirname(file));
 }
 
 export async function readGitPending(path: string): Promise<GitPending | null> {
