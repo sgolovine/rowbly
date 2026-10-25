@@ -27,6 +27,32 @@ export const SpecsInput = z.object({
   reset: z.literal(true).optional(),
 });
 export type SpecsInput = z.infer<typeof SpecsInput>;
+export const SpecsCreateInput = SpecsInput.extend({
+  storySpecs: z
+    .array(
+      z.object({
+        slug: SlugSchema.default('spec'),
+        title: z
+          .string()
+          .min(1)
+          .regex(/^[^\r\n]+$/)
+          .optional(),
+        text: z.string(),
+      }),
+    )
+    .optional(),
+}).superRefine(({ storySpecs }, ctx) => {
+  const seen = new Set<string>();
+  for (const [i, spec] of (storySpecs ?? []).entries()) {
+    if (seen.has(spec.slug))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['storySpecs', i, 'slug'],
+        message: `duplicate Story Spec slug "${spec.slug}"`,
+      });
+    seen.add(spec.slug);
+  }
+});
 
 /** A Story Spec (`story` and `slug`) or a Board Spec (`slug` alone) on `board`. */
 export type SpecTarget =

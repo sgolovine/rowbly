@@ -54,6 +54,8 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 
 ## Tasks
 
+At Story creation, repeatable `stories create --task <name>` creates Tasks in flag order in the first effective Stage. Names are literal. New Story has a Tasks create tab with Name, Description and Stage drafts (`n` new Task). The `plugins.tasks` create input is `{ tasks: [{ name, description?, stage? }] }`; numbering starts at 1. It runs inside `stories.create`, with no separate Task operations.
+
 A Task is a smaller unit of work inside exactly one Story, with its own name, description and Stage. It has no Assignees, Priority or Rank of its own: it belongs to the Story's Assignees. Its Task Id is its Story's Story Key, a dot and a number that is never reused in that Story (`WEB-42.3`).
 
 **Data**
@@ -122,6 +124,8 @@ rowbly stories edit … [--epic <id> | --no-epic]
 - `EPICS_CONFLICT_MARKERS`, `EPICS_INVALID_JSON`, `EPICS_UNSUPPORTED_VERSION`, `EPICS_SCHEMA_INVALID`, `EPICS_ID_MISMATCH`, `EPICS_UNREADABLE` (errors): an Epic file that cannot be used. Never fixed automatically.
 
 ## Specs
+
+New Story's Specs create tab holds linked Board Specs and multiple Story Spec drafts (`n` new Story Spec), each with slug (default `spec`), title and Markdown. `stories create --story-spec <slug>=<file>` is repeatable, reads `-` as stdin at most once across all text inputs, and derives title from the first `#` heading or slug. Slugs must be unique. `--spec <slug>` still links an existing Board Spec. The create-only `storySpecs: [{ slug?, title?, text }]` input writes the files on the newly created Story in the same Change Set as all other create data. Editing keeps its flat Specs multiselect.
 
 A Spec is a Markdown document that describes work to be done; it has no approval or Stage of its own. A **Board Spec** belongs to a Board and a **Story Spec** to one Story; each is named by a slug, unique on its Board or Story. The first `# ` heading of a Spec is its title.
 
@@ -219,6 +223,8 @@ preserves their bytes, including with `--fix`, for recovery. Invalid bags receiv
 storage, commands and doctor checks. The reusable add/remove/open functions serve the future tab.
 
 ## Story Linking
+
+New Story's Links create tab collects Blocks and Blocked by drafts (`n` new link). Repeatable `stories create --blocks <KEY>` and `--blocked-by <KEY>` add the same relationships at creation. All targets must exist on the same Board, otherwise creation fails with `VALIDATION` and saves nothing. The create input is `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; incoming relationships update the existing blocker's bag in the same Change Set and journaled commit.
 
 Story Linking records that a Story **blocks** another Story on the same Board. The other Story shows
 **Blocked by** with the blocker's Story Key. Both directions can have any number of links, including

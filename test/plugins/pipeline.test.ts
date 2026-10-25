@@ -7,6 +7,7 @@ import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
+import { specs } from '../../src/plugins/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
 import { addLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
@@ -19,6 +20,65 @@ import { echo, faulty, notes, order, tracer } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
 
 describe('transform (ADR-0012)', () => {
+  it('creates Plugin bags, Story Spec files and incoming links atomically; rejected input saves nothing', async () => {
+    const t = await pluginRoot({ tasks: true, specs: true, 'story-linking': true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-10', plugins: { ghost: { kept: true } } });
+    const { services } = await withPlugins(t, [tasks, specs, storyLinking]);
+    const input = {
+      name: 'Atomic Story',
+      plugins: {
+        tasks: { tasks: [{ name: 'First' }, { name: 'Second', stage: 'todo' }] },
+        specs: {
+          storySpecs: [
+            { slug: 'design', text: '# Design' },
+            { slug: 'checks', text: 'Checks' },
+          ],
+        },
+        'story-linking': { blockedBy: ['WEB-10'] },
+      },
+    };
+    const created = await services.stories.create('web', input);
+    const specPath = (key: string, slug: string) => join(t.path, `boards/web/stories/${key}/plugins/specs/${slug}.md`);
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Design');
+    expect(await readFile(specPath(created.key, 'checks'), 'utf8')).toBe('# checks\n\nChecks');
+    expect(created.plugins?.tasks).toMatchObject({
+      nextNumber: 3,
+      tasks: [
+        { number: 1, stage: 'backlog' },
+        { number: 2, stage: 'todo' },
+      ],
+    });
+    expect((await services.stories.get('WEB-10')).plugins).toEqual({
+      ghost: { kept: true },
+      'story-linking': { blocks: [created.key] },
+    });
+    const before = await services.stories.list('web', {});
+    const boardBefore = await services.boards.get('web');
+    // A later transform fails after Tasks and Spec files were staged.
+    await expect(
+      services.stories.create('web', {
+        ...input,
+        plugins: { ...input.plugins, 'story-linking': { blockedBy: ['WEB-999'] } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await services.boards.get('web')).toEqual(boardBefore);
+    await expect(
+      services.stories.create('web', {
+        ...input,
+        plugins: {
+          specs: {
+            storySpecs: [
+              { slug: 'same', text: 'A' },
+              { slug: 'same', text: 'B' },
+            ],
+          },
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+  });
+
   it('runs before guards, which run before the save, which runs before reactions', async () => {
     const t = await pluginRoot({ tracer: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });

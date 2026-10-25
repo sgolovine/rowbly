@@ -9,6 +9,7 @@ interface PluginBoundaryProps {
   /** Rendering again starts over only when one of these changes, e.g. the Plugin was loaded again. */
   resetKeys: readonly unknown[];
   children: ReactNode;
+  onFailure?(): void;
 }
 
 interface PluginBoundaryState {
@@ -39,6 +40,10 @@ export class PluginBoundary extends Component<PluginBoundaryProps, PluginBoundar
       props.resetKeys.length !== state.resetKeys.length ||
       props.resetKeys.some((key, i) => !Object.is(key, state.resetKeys[i]));
     return changed ? { failure: undefined, resetKeys: props.resetKeys } : null;
+  }
+
+  override componentDidCatch() {
+    this.props.onFailure?.();
   }
 
   override render() {

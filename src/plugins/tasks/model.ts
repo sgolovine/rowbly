@@ -33,6 +33,16 @@ export interface Task extends StoredTask {
   id: string;
 }
 
+export const TasksCreateInput = z.object({
+  tasks: z.array(
+    z.object({
+      name: z.string().min(1).max(200),
+      description: z.string().optional(),
+      stage: SlugSchema.optional(),
+    }),
+  ),
+});
+
 /** The input of `tasks.create`. */
 export interface TaskCreateInput {
   name: string;
