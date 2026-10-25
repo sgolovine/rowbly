@@ -1,5 +1,6 @@
 import type { PluginTui } from '../../plugin-api';
 import { SpecFormScreen } from './SpecFormScreen';
+import { SpecsCreateTab, type StorySpecDraft } from './SpecsCreateTab';
 import { SpecsScreen } from './SpecsScreen';
 import { SpecsSection } from './SpecsSection';
 import { SpecTab } from './SpecTab';
@@ -8,6 +9,15 @@ import { linkedSpecs, listSpecSlugs, SpecsBag } from './specs';
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { list: SpecsScreen, form: SpecFormScreen },
   home: [{ label: 'Specs', screen: 'list' }],
+  storyCreateTabs: [
+    {
+      label: 'Specs',
+      component: SpecsCreateTab,
+      input: (draft) => ({
+        storySpecs: (draft as StorySpecDraft[]).map((s) => ({ ...s, title: s.title || undefined })),
+      }),
+    },
+  ],
   storyTabs: [{ label: 'Specs', component: SpecTab }],
   boardSections: [SpecsSection],
   storyForm: {

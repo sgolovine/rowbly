@@ -10,7 +10,8 @@ import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
-import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { mergePluginInput, onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { StoryCreateForm } from './StoryCreateForm';
 import { boardIdFor, NONE } from './shared';
 import { priorityValue } from './storyFormValues';
 
@@ -52,7 +53,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
       throw onPluginFields(err, extra);
     });
 
-  const save = async (values: FormValues) => {
+  const save = async (values: FormValues, tabInput?: PluginInput) => {
     if (submitting.current || paste.busy) return;
     submitting.current = true;
     setSaving(true);
@@ -64,7 +65,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         priority: priorityValue(values.priority),
         labels: splitList(values.labels),
         dueDate: optional(values.dueDate),
-        ...pluginInputOptions(paste.input(storyFormInput(plugins, extra, values, story))),
+        ...pluginInputOptions(paste.input(mergePluginInput(storyFormInput(plugins, extra, values, story), tabInput))),
       };
       const stage = String(values.stage);
       if (!story) {
@@ -89,6 +90,19 @@ export function StoryFormScreen({ params }: ScreenProps) {
       setSaving(false);
     }
   };
+
+  if (!story)
+    return (
+      <StoryCreateForm
+        boardId={boardId}
+        fields={formFields(choices)}
+        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
+        extra={extra}
+        onSubmit={save}
+        isActive={!paste.busy && !saving}
+        extraHints={paste.hints}
+      />
+    );
 
   return (
     <Box flexDirection="column" gap={1}>

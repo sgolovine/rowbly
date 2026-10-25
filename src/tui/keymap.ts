@@ -45,7 +45,8 @@ export const CORE_KEYS: readonly string[] = [
   // open (view Board, Stories, Stages, fields), reload. `a`, `e`, `f` and `s` are also `ctrl`
   // bindings of text inputs and forms.
   // `v` also reserves ctrl+v / alt+v Story image paste.
-  ...'nedmTBcAfvosra',
+  // `g` is New Story's ctrl+g, switching focus between Plugin fields and drafts.
+  ...'nedmTBcAfvosrag',
 ];
 
 /**

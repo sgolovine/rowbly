@@ -305,3 +305,10 @@ done
 - Parsing table output: it changes with terminal width and colour. Parse `--json` only.
 - Leaving a Story where it was after working on it: move it to in progress when work starts and to
   `done` when it is complete.
+
+Create with enabled Plugins (all in one operation, invalid input saves nothing):
+`stories create … [--task <name>…] [--spec <slug>…] [--story-spec <slug>=<file>…]
+[--blocks <KEY>…] [--blocked-by <KEY>…]`.
+Tasks: literal names, flag order, first effective Stage. Story Specs: unique slugs, first `#` heading or
+slug as title; file `-` uses stdin at most once including description. Links: existing same-Board Stories.
+New Story tabs: Details, Tasks, Specs, Links when enabled; ctrl+s saves all, esc confirms changed drafts.

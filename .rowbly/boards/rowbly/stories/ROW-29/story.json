@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T18:44:49.532Z",
+  "updatedAt": "2026-10-25T21:05:14.546Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -65,6 +65,20 @@
           "body": "Implementation pushed at 003b479. Prior Attachment checks and screenshots remain valid. Final validation was not run because other suites were active. Awaiting an exclusive sequential check window and ROW-28 main sync before draft PR creation.",
           "createdAt": "2026-10-25T18:44:49.531Z",
           "updatedAt": "2026-10-25T18:44:49.531Z"
+        },
+        {
+          "id": "7lFOSZyU",
+          "author": "sunny",
+          "body": "Functional validation signed off at 6513e3e; all four mandatory checks passed under the shared suite lock. Screenshot evidence is ready. ROW-28 needs main c8aef73 incorporated so inherited ROW-29/ROW-31 Board records disappear from the PR diff.",
+          "createdAt": "2026-10-25T21:05:13.913Z",
+          "updatedAt": "2026-10-25T21:05:13.913Z"
+        },
+        {
+          "id": "qE9JCTeN",
+          "author": "sunny",
+          "body": "Clean, pushed head 6513e3e is signed off: typecheck, lint, 80 unit tests and 20 CLI tests passed. Both screenshots uploaded and HTTP 200 verified. Awaiting ROW-28 main sync to remove inherited ROW-29/ROW-31 Board files before PR creation.",
+          "createdAt": "2026-10-25T21:05:14.545Z",
+          "updatedAt": "2026-10-25T21:05:14.545Z"
         }
       ]
     }
