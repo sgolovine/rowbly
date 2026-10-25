@@ -1183,7 +1183,8 @@ describe('isolated upstream synchronization', () => {
         return result;
       });
       const { builtInPlugins } = await import('../../src/plugins');
-      const { mergeData } = await import('../../src/services/plugins/mergeData');
+      const { mergeData, evidenceSource } = await import('../../src/services/plugins/mergeData');
+      const { mergeDigest, replayEvidenceFile } = await import('../../src/services/plugins/reconciliation');
       const { createReplayHistory } = await import('../../src/services/plugins/replayHistory');
       const { synchronizeGitRebase } = await import('../../src/storage/gitRebaseSync');
       const { withGitWorker } = await import('../../src/storage/gitRepository');
@@ -1269,6 +1270,7 @@ describe('isolated upstream synchronization', () => {
       pending.plugins.comments.comments.find((value: { body: string }) => value.body === 'later').body = 'pending';
       await save(f.t.dir, pending);
       const phases: string[] = [];
+      let finalMergeChecked = false;
       const run = () =>
         withGitWorker(f.repo, () =>
           synchronizeGitRebase(
@@ -1276,7 +1278,85 @@ describe('isolated upstream synchronization', () => {
             f.t.root,
             { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
             (read) => coordinated(f.t.root, 'rebase regression capture', read),
-            (history) => createReplayHistory(history, builtInPlugins),
+            (history) => {
+              const replay = createReplayHistory(history, builtInPlugins);
+              let finalMerge: ReturnType<typeof createReplayHistory> | undefined;
+              const preceding: Parameters<typeof replay.replay>[] = [];
+              const originals = new Map<string, ReturnType<typeof history.read>>();
+              const check = async (result: Awaited<ReturnType<typeof replay.finish>>) => {
+                const proofs = [];
+                for (const path of result.evidence) {
+                  const file = result.files[path];
+                  if (!file) throw new Error(`Missing replay evidence: ${path}`);
+                  const proof = JSON.parse(Buffer.from(file.data, 'base64').toString());
+                  expect(path).toBe(`plugins/git/merge-evidence/${mergeDigest(proof)}.json`);
+                  if (proof.kind !== 'replay') continue;
+                  expect(file).toEqual(replayEvidenceFile(proof));
+                  for (const source of [...Object.values(proof.original), proof.mergeOverlay?.committed]) {
+                    if (!source || !/^[a-f0-9]{40,64}$/.test(source.id)) continue;
+                    if (!originals.has(source.id)) originals.set(source.id, history.read(source.id));
+                    const raw = await originals.get(source.id);
+                    if (!raw) throw new Error('Missing original replay source');
+                    // Includes the complete eligible path set, exact raw bytes/modes and prior evidence digests.
+                    expect(source).toEqual(evidenceSource(raw));
+                  }
+                  for (const source of [
+                    ...Object.values(proof.original),
+                    ...Object.values(proof.projected),
+                    proof.mergeOverlay?.baseline,
+                    proof.mergeOverlay?.committed,
+                    proof.output,
+                  ])
+                    for (const reference of source?.evidence ?? [])
+                      expect(mergeDigest(result.files[reference.path])).toBe(reference.digest);
+                  proofs.push(proof);
+                }
+                return proofs;
+              };
+              return {
+                async replay(step, current) {
+                  finalMerge ??= createReplayHistory(
+                    { ...history, old: await history.read(editedMerge) },
+                    builtInPlugins,
+                  );
+                  if (step.base === editedMerge) {
+                    // The same captured graph, ending at its merge with descendant edits treated as pending.
+                    const pendingId = 'pending:final-merge-regression';
+                    const result = await finalMerge.finish(current, {
+                      id: pendingId,
+                      files: (await history.read(old)).files,
+                    });
+                    const proof = (await check(result)).find(
+                      (proof) => proof.kind === 'replay' && proof.original.commit.id === pendingId,
+                    );
+                    expect(proof.original.current).toEqual(evidenceSource(current));
+                    expect(proof.projected.current.files).not.toEqual(proof.original.current.files);
+                    const rawMerge = await history.read(editedMerge);
+                    const withoutPending = createReplayHistory({ ...history, old: rawMerge }, builtInPlugins);
+                    for (const args of preceding) await withoutPending.replay(...args);
+                    const clean = await withoutPending.finish(current, rawMerge);
+                    await check(clean);
+                    const cleanStory = clean.files[path.slice(8)];
+                    if (!cleanStory) throw new Error('Missing retained merge Story');
+                    expect(JSON.parse(Buffer.from(cleanStory.data, 'base64').toString()).description).toBe(
+                      'resolution only\n',
+                    );
+                    finalMergeChecked = true;
+                  } else {
+                    preceding.push([step, current]);
+                    await finalMerge.replay(step, current);
+                  }
+                  const result = await replay.replay(step, current);
+                  await check(result);
+                  return result;
+                },
+                async finish(current, pending) {
+                  const result = await replay.finish(current, pending);
+                  await check(result);
+                  return result;
+                },
+              };
+            },
             async (phase) => {
               phases.push(phase);
               if (phase === 'pulling') {
@@ -1300,6 +1380,7 @@ describe('isolated upstream synchronization', () => {
         );
       const result = await run();
       expect(result.pushed).toBe(true);
+      expect(finalMergeChecked).toBe(true);
       const final = await read(f.t.dir);
       expect(final).toMatchObject({ name: 'New upstream', description: 'resolution only\n' });
       expect(final.plugins.tasks.tasks.map((value: { name: string }) => value.name).sort()).toEqual([

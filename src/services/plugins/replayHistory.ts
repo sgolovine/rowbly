@@ -57,7 +57,7 @@ export function createReplayHistory(
     const inherited = (await history.contains(id, history.upstream.id)) ? maps.get(history.upstream.id) : undefined;
     maps.set(id, transport(raw, inherited).projection);
   }
-  async function ensure(id: string, current: MergeSource): Promise<MergeSource> {
+  async function ensure(id: string, current: MergeSource, originalCurrent = current): Promise<MergeSource> {
     if (maps.has(id)) return current;
     if (await history.contains(id, current.id)) {
       await remember(id);
@@ -65,7 +65,7 @@ export function createReplayHistory(
     }
     const node = nodes.get(id);
     if (!node?.parents.length) throw new Error('Unprovable skipped replay correspondence requires manual resolution');
-    for (const parent of node.parents) current = await ensure(parent, current);
+    for (const parent of node.parents) current = await ensure(parent, current, originalCurrent);
     const committed = await history.read(id);
     if (node.parents.length === 1) {
       const parent = node.parents[0];
@@ -97,10 +97,10 @@ export function createReplayHistory(
     await advance(current, result);
     const final = replayProjectionFor(committed, projectedMerge.projection, result);
     maps.set(id, final);
-    retain(result, baselineSource, committed, current, projectedBase.source, projectedMerge.source);
+    retain(result, baselineSource, committed, originalCurrent, current, projectedBase.source, projectedMerge.source);
     const path = retainReplayProvenance(
       result,
-      { base: baselineSource, current, commit: committed },
+      { base: baselineSource, current: originalCurrent, commit: committed },
       { base: projectedBase.source, current, commit: projectedMerge.source },
       final,
       { parents: node.parents, baseline: baselineSource, committed },
@@ -140,11 +140,11 @@ export function createReplayHistory(
       const base = transport(history.old, projection),
         next = transport(pending, projection);
       const result = combine(base.source, current, next.source);
-      retain(result, history.old, current, pending, base.source, next.source);
+      retain(result, history.old, originalCurrent, current, pending, base.source, next.source);
       evidence.add(
         retainReplayProvenance(
           result,
-          { base: history.old, current, commit: pending },
+          { base: history.old, current: originalCurrent, commit: pending },
           { base: base.source, current, commit: next.source },
           replayProjectionFor(pending, next.projection, result),
         ),
