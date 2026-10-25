@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:29:04.286Z",
-  "updatedAt": "2026-10-25T18:08:06.843Z",
+  "updatedAt": "2026-10-25T18:21:36.528Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -29,6 +29,13 @@
           "body": "Development pushed at b86f9a1 on codex/row-24-story-create. Atomic create inputs, CLI flags, tabbed drafts, docs and compiled API example implemented. Typecheck, lint, 80 unit tests and 20 CLI tests passed. Independent validation and screenshots are next; no PR opened yet.",
           "createdAt": "2026-10-25T18:08:06.842Z",
           "updatedAt": "2026-10-25T18:08:06.842Z"
+        },
+        {
+          "id": "BpkIjhCr",
+          "author": "sunny",
+          "body": "Independent validation passed typecheck, lint, 81 unit tests and 20 CLI tests, plus atomic CLI/TUI checks. Signoff withheld: latest main needs an API-doc merge resolution, the suite exceeds 100 tests, and duplicate-Spec errors need visible placement. Fresh correction and revalidation assigned. Screenshots preserved outside checkouts.",
+          "createdAt": "2026-10-25T18:21:36.527Z",
+          "updatedAt": "2026-10-25T18:21:36.527Z"
         }
       ]
     }
