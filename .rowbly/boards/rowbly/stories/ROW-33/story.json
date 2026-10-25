@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Chore: Fix linting",
   "description": "Linting currently runs over stories within `.rowbly` and causes failures. Fix this by ignoring the `.rowbly` folder for any linting/formatting.",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "a9",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:45:29.830Z",
-  "updatedAt": "2026-10-25T17:45:29.830Z"
+  "updatedAt": "2026-10-25T17:45:36.378Z"
 }
