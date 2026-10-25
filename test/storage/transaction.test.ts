@@ -3,12 +3,12 @@ import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
-import { FIXED_NOW, fixedClock, tempRoot } from '../helpers';
-import { fixtureScript, injectFaults, runScript, snapshotTree } from './engineHelpers';
+import { deferred, FIXED_NOW, fixedClock, tempRoot } from '../helpers';
+import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree } from './engineHelpers';
 
 let publicationRun: Promise<void> | undefined;
 
-afterEach(async () => {
+async function finishPublicationRun(): Promise<void> {
   // A timeout aborts the context but does not await the test body. Drain it before
   // restoring mocks or removing temp roots, so it cannot spy on the next test.
   try {
@@ -17,7 +17,9 @@ afterEach(async () => {
     publicationRun = undefined;
     vi.restoreAllMocks();
   }
-});
+}
+
+afterEach(finishPublicationRun);
 
 const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
 const NEXT_PNG = new Uint8Array([...PNG, 1, 254]);
@@ -507,6 +509,62 @@ describe('Git local publication', () => {
   }) => {
     publicationRun = publicationFaults(signal);
     return publicationRun;
+  });
+
+  it('drains a cancelled fault sweep before restoring spies and opening the next Data Root', async ({ signal }) => {
+    const { io } = await import('../../src/storage/io');
+    const { coordinated } = await import('../../src/services/coordination');
+    const controller = new AbortController();
+    const entered = deferred();
+    const release = deferred();
+    const originals = MUTATING.map((name) => io[name]);
+    const readBytes = io.readBytes;
+    let held = false;
+    vi.spyOn(io, 'readBytes').mockImplementation(async (path) => {
+      // Hold real publication I/O only after the sweep has installed its mutating spies.
+      if (!held && vi.isMockFunction(io.rename)) {
+        held = true;
+        entered.resolve();
+        await release.promise;
+      }
+      return readBytes(path);
+    });
+    const stop = () => {
+      controller.abort(new Error('simulated test timeout'));
+      release.resolve();
+    };
+    signal.addEventListener('abort', stop, { once: true });
+    publicationRun = publicationFaults(controller.signal);
+    const outcome = publicationRun.catch((error: unknown) => error);
+    try {
+      await Promise.race([
+        entered.promise,
+        outcome.then(() => {
+          throw new Error('Fault sweep ended before the held I/O');
+        }),
+      ]);
+      controller.abort(new Error('simulated test timeout'));
+      let finished = false;
+      const finishing = finishPublicationRun().then(() => {
+        finished = true;
+      });
+      // Teardown must keep the current spies until the held operation has drained.
+      expect(vi.isMockFunction(io.rename)).toBe(true);
+      expect(finished).toBe(false);
+      release.resolve();
+      await finishing;
+      expect(await outcome).toBe(controller.signal.reason);
+      expect(MUTATING.map((name) => io[name])).toEqual(originals);
+      expect(vi.isMockFunction(io.readBytes)).toBe(false);
+      const next = await tempRoot();
+      await coordinated(next.root, 'read after cancelled fault sweep', async () => {
+        expect(await readFile(join(next.path, 'rowbly.config.json'), 'utf8')).toContain('"version": 1');
+      });
+    } finally {
+      stop();
+      await finishPublicationRun();
+      signal.removeEventListener('abort', stop);
+    }
   });
 
   it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
