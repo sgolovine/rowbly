@@ -71,7 +71,7 @@ export interface LoadPluginsOptions {
    * Prepares the part of a Plugin that the surface in use needs (its CLI commands and options, or
    * its TUI part) while it loads, without publishing it. Throwing makes the Plugin fail to load.
    */
-  stage?(plugin: ActivePlugin): void | Promise<void>;
+  stage?(plugin: ActivePlugin, active: readonly ActivePlugin[]): void | Promise<void>;
 }
 
 /**
@@ -133,7 +133,7 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
       const settings = parseSettings(definition, raw);
       const claim = claimNames(definition, claims);
       const plugin: ActivePlugin = { definition, settings, entry: raw };
-      await stage?.(plugin);
+      await stage?.(plugin, active);
       if (!root) continue;
       const dataRoot = root;
       await definition.start?.({

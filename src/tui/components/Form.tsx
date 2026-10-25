@@ -41,6 +41,8 @@ export interface FormProps {
   isActive?: boolean;
   /** What the `ctrl+s` hint says the form does: `save` (the default), or e.g. `apply` for a filter. */
   submitLabel?: string;
+  /** Screen-specific keys shown after save, before navigation hints. */
+  extraHints?: readonly KeyHint[];
   /** Controlled values for forms whose drafts outlive the mounted editor. */
   values?: FormValues;
   onChange?(values: FormValues): void;
@@ -50,6 +52,8 @@ export interface FormProps {
 }
 
 type Raw = string | boolean | string[] | null;
+
+const NO_EXTRA_HINTS: readonly KeyHint[] = [];
 
 /** Kinds edited in a `TextInput`, where letters are text rather than keys. */
 const TYPED_KINDS: readonly FieldKind[] = ['text', 'number', 'date'];
@@ -158,6 +162,7 @@ export function Form({
   onSubmit,
   isActive = true,
   submitLabel = 'save',
+  extraHints,
   values: controlled,
   onChange,
   submitRequest = 0,
@@ -165,6 +170,7 @@ export function Form({
 }: FormProps) {
   const active = useIsActive() && isActive;
   const navigation = useContext(FormNavigationContext);
+  const hints = extraHints ?? navigation?.extraHints ?? NO_EXTRA_HINTS;
   const formId = useId();
   const toast = useToast();
   const layout = useLayout();
@@ -201,7 +207,10 @@ export function Form({
           : formKeys(submitLabel),
     [navigation, submitLabel],
   );
-  useFormKeys(active, keys);
+  useFormKeys(
+    active,
+    useMemo(() => [...keys.slice(0, 1), ...hints, ...keys.slice(1)], [keys, hints]),
+  );
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
 
