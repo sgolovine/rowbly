@@ -461,7 +461,16 @@ rowbly plugins disable <id>    # keeps its settings and data
 
 `rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
 folders that ship in the npm package's `skills/` folder: today `rowbly`, which teaches an agent to run
-Rowbly, and `rowbly-dev`, which takes a Story from its Key to a draft pull request. A new skill holds
+Rowbly; `rowbly-dev`, which takes a Story from its Key to a draft pull request; and `rowbly-grill`,
+which interviews a person about a Story and saves its specification and qualifying ADRs as Story
+Specs. Invoke `$rowbly-grill WEB-42`, `/rowbly-grill WEB-42`, or name the skill with a Key
+(case-insensitive); a bare number uses the current Board. Without a Key it asks, never chooses.
+Specs must be enabled and loaded and the Story must have a description before the interview starts.
+The browser form has a numbered chat fallback. The skill leaves the description and Stage unchanged
+and grants no implementation permission. Install with
+`rowbly skills install rowbly-grill --harness codex` (or `--harness claude`).
+
+A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
 `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.
 Every `skills` command works in the current folder and needs no Data Root.
@@ -588,6 +597,38 @@ retained local commit and evidence paths. It prints no success result on stdout.
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
 `git show` remains an inspection command and can successfully display a previous failed result.
 
+### Sync with Git
+
+When the Git Plugin is on, the TUI header shows **Sync** (key `S`). It works with
+Automatic Commits and Automatic Merge Conflict Resolution either On or Off:
+
+1. Commit pending Rowbly Story, Plugin and configuration additions, edits and deletions before any
+   network work. Skip the commit when nothing changed; still fetch and push. Local State, locks,
+   transactions, atomic-write temporary files and unrelated files remain excluded.
+2. Fetch the current branch's configured upstream.
+3. Replay local commits onto that upstream in isolation, reconciling Rowbly data/configuration with
+   the same rules and committed conflict evidence as automatic synchronization above. Validate and
+   publish the result recoverably. Unrelated staged, working and untracked changes stay intact.
+4. Push normally to that same upstream. Never force-push.
+
+While running, the header shows `Sync…` and ignores repeated `S` or clicks. Automatic Commits and
+synchronization share one Git worker. A scheduled merge finishes before a waiting manual rebase;
+the toast says `Synced with <upstream>` only after that manual run's push succeeds. Inspect progress
+and the last result with `rowbly git show`.
+
+Failures show the cause and keep local work, including a capture committed before a failed fetch.
+Fix missing upstream with `git push -u origin <branch>` or `git branch --set-upstream-to=origin/<branch>`.
+Configure Git author and noninteractive authentication first. Finish any existing merge/rebase before
+Sync; commit or unstage already-staged Rowbly files. Resolve non-Rowbly conflicts and dirty files that
+upstream would overwrite with Git before retrying. Divergent local merge commits require explicit
+`git rebase --rebase-merges` outside Rowbly before retrying; Sync never silently flattens them. Network,
+authentication and push rejection errors retain the local result so you can fix the cause and retry.
+
+Sync suppresses hooks and signing, never stashes, and never runs Git under the Data Root lock.
+The existing `rowbly git sync` command and scheduled synchronization retain their **merge** behavior
+and require Automatic Merge Conflict Resolution On. The header provides manual **rebase** Sync;
+no new command or strategy setting is added.
+
 
 ## Interactive mode (TUI)
 
@@ -624,6 +665,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
+| `S` | with the Git Plugin on: Sync with the branch's upstream (or click **Sync** in the header; see [Sync with Git](#sync-with-git)) |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -658,7 +700,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
 <!-- END tui -->
 
 ## Exit codes

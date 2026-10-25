@@ -82,13 +82,20 @@ export interface StoryChange {
   beforeFolder?: string;
 }
 
-/** A Plugin file, as text. `path` is relative to the Data Root, e.g. `plugins/epics/auth.json`. */
+/** A compact description of bytes; the payload is private to the Change Set (ADR-0036 §2). */
+export interface BinaryFileSummary {
+  kind: 'binary';
+  size: number;
+  sha256: string;
+}
+
+/** A Plugin file. `path` is relative to the Data Root, e.g. `plugins/epics/auth.json`. */
 export interface FileChange {
   type: 'file';
   plugin: string;
   path: string;
-  before: string | null;
-  after: string | null;
+  before: string | BinaryFileSummary | null;
+  after: string | BinaryFileSummary | null;
 }
 
 /**
@@ -153,6 +160,8 @@ export type FileScope = 'dataRoot' | { board: Slug } | { story: StoryKey };
 export interface PluginChangeSetView extends ChangeSetView {
   /** The text of one of the Plugin's files: its pending version, else the stored one; `null` when none. */
   readFile(scope: FileScope, name: string): Promise<string | null>;
+  /** Detached bytes of the pending file, else the stored one; `null` when absent. */
+  readBinaryFile(scope: FileScope, name: string): Promise<Uint8Array | null>;
 }
 
 /**
@@ -188,6 +197,8 @@ export interface PluginChangeSet extends PluginChangeSetView {
   updateRootConfig(update: (config: RowblyConfig) => RowblyConfig): Promise<DeepReadonly<RowblyConfig>>;
   updateLocalState(update: (state: LocalState) => LocalState): Promise<DeepReadonly<LocalState>>;
   writeFile(scope: FileScope, name: string, text: string): Promise<void>;
+  /** Copies the bytes immediately, before awaiting scope or disk reads. */
+  writeBinaryFile(scope: FileScope, name: string, bytes: Uint8Array): Promise<void>;
   deleteFile(scope: FileScope, name: string): Promise<void>;
 }
 
@@ -403,6 +414,8 @@ export type BagInspection<T> =
 export interface PluginFiles {
   /** The file's text, or `null` when it does not exist. */
   read(scope: FileScope, name: string): Promise<string | null>;
+  /** Detached stored bytes, or `null` when absent. */
+  readBinary(scope: FileScope, name: string): Promise<Uint8Array | null>;
   /** File names in the folder, recursively, as `/`-separated paths, sorted. */
   list(scope: FileScope): Promise<string[]>;
 }
@@ -439,7 +452,8 @@ export type GitOptionsSource = GitCommitOptions | ((localData: unknown) => GitCo
 export interface PluginGit {
   syncStatus(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
   resumeSync(options: GitSyncOptionsSource): Promise<void>;
-  requestSync(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
+  /** Explicit rebase ignores automatic preferences and resolves only for its own pushed run (ADR-0035). */
+  requestSync(options: GitSyncOptionsSource, mode?: 'merge' | 'rebase'): Promise<GitSyncStatus>;
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
   /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
   resume(options: GitOptionsSource): Promise<void>;
@@ -731,7 +745,7 @@ export interface PluginActionOf<T extends ActionTarget, S = Record<string, unkno
   run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
-/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
+/** A header Action opens/shows UI or requests host-owned Git synchronization (ADR-0017, ADR-0035). */
 export type PluginAction<S = Record<string, unknown>> = {
   [T in ActionTarget]: PluginActionOf<T, S>;
 }[ActionTarget];

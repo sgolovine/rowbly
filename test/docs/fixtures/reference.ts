@@ -1,6 +1,8 @@
 // The compiled examples of docs/plugins/api.md. `test/docs/tutorial.test.ts` checks that the
 // reference shows each region.
 import {
+  type ClipboardImageResult,
+  clipboard,
   DataIntegrityError,
   definePlugin,
   type PluginContext,
@@ -80,4 +82,28 @@ export const mergeNotes = definePlugin({
     return { bags, files: {}, requiredStories: [] as RequiredStory[], requiredStages: [] as RequiredStage[] };
   },
 });
+// #endregion
+
+// #region binary-files
+/** Saves PNG bytes and the Story's bag together in one recoverable operation. */
+export async function saveImage(plugin: PluginContext, key: string, png: Uint8Array): Promise<void> {
+  await plugin.operation('save-image', { key }, async (changes) => {
+    const scope = { story: key };
+    await changes.writeBinaryFile(scope, 'image.png', png);
+    await changes.updateStory(key, (story) => plugin.writeBag(story, { image: 'image.png' }));
+    const pending = await changes.readBinaryFile(scope, 'image.png');
+    if (pending === null) throw new Error('Missing pending image');
+  });
+  const stored = await plugin.files.readBinary({ story: key }, 'image.png');
+  if (stored === null) throw new Error('Missing saved image');
+}
+// #endregion
+
+// #region clipboard
+/** Read before starting the operation that saves the image. */
+export async function readPastedImage(): Promise<ClipboardImageResult> {
+  const image = await clipboard.readImage();
+  if ('reason' in image) return image;
+  return { bytes: image.bytes, type: image.type };
+}
 // #endregion

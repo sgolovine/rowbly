@@ -182,6 +182,17 @@ describe('Git automatic commits', () => {
     expect(await f.command('show', '--format=', '--name-only', 'HEAD')).toBe(
       `.rowbly/boards/web/stories/${story.key}/story.json`,
     );
+    const plugin = f.services.plugins.context('comments');
+    const scope = { story: story.key };
+    const binaryPath = `.rowbly/boards/web/stories/${story.key}/plugins/comments/image.png`;
+    const binary = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
+    await plugin.operation('image', {}, (changes) => changes.writeBinaryFile(scope, 'image.png', binary));
+    const committed = await exec('git', ['show', `HEAD:${binaryPath}`], { cwd: f.t.dir, encoding: 'buffer' });
+    expect(committed.stdout).toEqual(Buffer.from(binary));
+    await plugin.operation('image', {}, (changes) =>
+      changes.writeBinaryFile(scope, 'image.png', new Uint8Array([...binary, 254])),
+    );
+    expect(await plugin.files.readBinary(scope, 'image.png')).toEqual(new Uint8Array([...binary, 254]));
     await f.services.stories.update(story.key, { name: 'Changed' });
     await f.services.stories.remove(story.key);
     expect(await f.command('show', '--format=', '--name-status', 'HEAD')).toContain('D\t.rowbly/boards/web/stories/');
@@ -939,8 +950,12 @@ describe('isolated upstream synchronization', () => {
     const board = JSON.parse(await readFile(boardFile, 'utf8'));
     board.description = 'Peer Board';
     await writeFile(boardFile, JSON.stringify(board));
+    const png = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
+    const pngPath = '.rowbly/boards/web/plugins/unknown/image.png';
+    await mkdir(join(f.peer, pngPath, '..'), { recursive: true });
+    await writeFile(join(f.peer, pngPath), png);
     await writeFile(join(f.peer, 'code.txt'), 'peer clean code\n');
-    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', 'code.txt');
+    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', pngPath, 'code.txt');
     await command(f.peer, 'commit', '-m', 'peer data and code');
     await command(f.peer, 'push');
     const storyPath = join(f.t.path, 'boards/web/stories', story.key, 'story.json');
@@ -1053,6 +1068,7 @@ describe('isolated upstream synchronization', () => {
       expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
       expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
       expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('peer clean code\n');
+      expect(await readFile(join(f.t.dir, pngPath))).toEqual(Buffer.from(png));
       expect(await f.command('ls-tree', '-r', '--name-only', 'HEAD')).not.toContain('staged.txt');
       await command(f.peer, 'pull', '--ff-only');
       expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(
@@ -1159,6 +1175,151 @@ describe('isolated upstream synchronization', () => {
       'Accepted with lost response',
     );
     expect((await f.services.doctor.check()).findings.filter((finding) => finding.severity === 'error')).toEqual([]);
+  });
+  it('rebases manual captures with retained conflicts and concurrent writes, preserves the index and waits for its own push after scheduled work', async () => {
+    const f = await remoteFixture();
+    const plugin = f.services.plugins.context('git');
+    const storage = await import('../../src/storage/gitSync');
+    const process = await import('../../src/storage/gitProcess');
+    const originalGit = process.gitText;
+    const originalSync = storage.synchronizeGit;
+    const story = await f.services.stories.create('web', { name: 'Base' });
+    await mkdir(join(f.t.path, 'plugins/unknown'), { recursive: true });
+    await writeFile(join(f.t.path, 'plugins/unknown/.blob.12345678.tmp'), 'atomic temporary bytes');
+    await plugin.git.requestSync(resolveSyncOptions, 'rebase');
+    expect(await f.command('ls-files', '--', '.rowbly/plugins/unknown/.blob.12345678.tmp')).toBe('');
+    await command(f.peer, 'pull', '--ff-only');
+    const storyPath = `.rowbly/boards/web/stories/${story.key}/story.json`;
+    const peerStory = JSON.parse(await readFile(join(f.peer, storyPath), 'utf8'));
+    peerStory.name = 'Peer alternative';
+    await writeFile(join(f.peer, storyPath), `${JSON.stringify(peerStory, null, 2)}\n`);
+    await writeFile(join(f.peer, 'upstream.txt'), 'new upstream content');
+    await command(f.peer, 'add', '.');
+    await command(f.peer, 'commit', '-m', 'peer changes');
+    await command(f.peer, 'push');
+    const upstream = await command(f.peer, 'rev-parse', 'HEAD');
+    await f.services.stories.update(story.key, { name: 'Local alternative' });
+    await writeFile(join(f.t.dir, 'staged.txt'), 'staged content');
+    await f.command('add', 'staged.txt');
+    await writeFile(join(f.t.dir, 'staged.txt'), 'unstaged over staged');
+    await writeFile(join(f.t.dir, 'untracked.txt'), 'keep untracked');
+    const staged = await f.command('rev-parse', ':staged.txt');
+    let capturedBeforeFetch = false;
+    const held = deferred(),
+      release = deferred();
+    let firstPublication = true;
+    const spy = vi.spyOn(process, 'gitText').mockImplementation(async (cwd, args, opts) => {
+      if (args[0] === 'fetch') {
+        expect(await f.command('show', `HEAD:${storyPath}`)).toContain('Local alternative');
+        capturedBeforeFetch = true;
+      }
+      return originalGit(cwd, args, opts);
+    });
+    const syncSpy = vi.spyOn(storage, 'synchronizeGit').mockImplementation((...args) => {
+      const phase = args[5];
+      args[5] = async (name) => {
+        await phase(name);
+        if (name === 'rebasing' && firstPublication) {
+          firstPublication = false;
+          held.resolve();
+          await release.promise;
+        }
+      };
+      return originalSync(...args);
+    });
+    try {
+      f.ctx.backgroundReactions = true;
+      const pending = plugin.git.requestSync(resolveSyncOptions, 'rebase');
+      await held.promise;
+      await f.services.stories.update(story.key, { description: 'Later accepted revision' });
+      release.resolve();
+      const result = await pending;
+      expect(capturedBeforeFetch).toBe(true);
+      expect(result.last?.kind).toBe('synchronized');
+      expect(result.last?.repairs).toBeGreaterThan(0);
+      expect(result.last?.evidence.length).toBeGreaterThan(0);
+      expect(await f.command('merge-base', '--is-ancestor', upstream, 'HEAD')).toBe('');
+      expect(await f.command('rev-list', '--merges', `${upstream}..HEAD`)).toBe('');
+      expect((await f.services.stories.get(story.key)).description).toBe('Later accepted revision');
+      expect(await f.command('rev-parse', ':staged.txt')).toBe(staged);
+      expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
+      expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('keep untracked');
+    } finally {
+      release.resolve();
+      await drainGitQueue(f.t.root);
+      spy.mockRestore();
+      syncSpy.mockRestore();
+    }
+    // Fetch failure must leave the pre-network capture installed, including config and deletion.
+    const removed = await f.services.stories.create('web', { name: 'Remove before fetch' });
+    await plugin.git.requestSync(resolveSyncOptions, 'rebase');
+    await f.services.stories.remove(removed.key);
+    await f.services.boards.update('web', { name: 'Configuration captured first' });
+    await f.command('remote', 'set-url', 'origin', join(f.remote, 'missing'));
+    await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('fetch');
+    expect(await f.command('show', 'HEAD:.rowbly/boards/web/board.config.json')).toContain(
+      'Configuration captured first',
+    );
+    expect(await f.command('ls-tree', 'HEAD', `.rowbly/boards/web/stories/${removed.key}/story.json`)).toBe('');
+    expect(await f.command('rev-parse', ':staged.txt')).toBe(staged);
+    await f.command('remote', 'set-url', 'origin', f.remote);
+    const hook = join(f.remote, 'hooks/pre-receive');
+    await writeFile(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const retained = await f.command('rev-parse', 'HEAD');
+    try {
+      await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('push failed');
+      expect(await f.command('rev-parse', 'HEAD')).toBe(retained);
+    } finally {
+      await rm(hook);
+    }
+    await f.command('branch', '--unset-upstream');
+    await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('upstream');
+    await f.command('branch', '--set-upstream-to=origin/main');
+    const unchanged = await f.command('rev-parse', 'HEAD');
+    expect((await plugin.git.requestSync(resolveSyncOptions, 'rebase')).last?.commit).toBe(unchanged);
+    await configure(plugin, { automaticCommits: true });
+    await f.services.stories.update(story.key, { description: 'Automatic Commits on' });
+    await drainGitQueue(f.t.root);
+    expect((await plugin.git.requestSync(resolveSyncOptions, 'rebase')).last?.kind).toBe('synchronized');
+    await configure(plugin, { automaticCommits: false, synchronization: { enabled: true, intervalSeconds: 3600 } });
+    const scheduledHeld = deferred(),
+      scheduledRelease = deferred(),
+      manualHeld = deferred(),
+      manualRelease = deferred();
+    const modes: string[] = [];
+    const overlapSpy = vi.spyOn(storage, 'synchronizeGit').mockImplementation(async (...args) => {
+      modes.push(args[8] ?? 'merge');
+      if (args[8] === 'rebase') {
+        manualHeld.resolve();
+        await manualRelease.promise;
+      } else {
+        scheduledHeld.resolve();
+        await scheduledRelease.promise;
+      }
+      return originalSync(...args);
+    });
+    let manualFinished = false;
+    try {
+      const scheduled = plugin.git.requestSync(resolveSyncOptions);
+      await scheduledHeld.promise;
+      const manual = plugin.git.requestSync(resolveSyncOptions, 'rebase').then((result) => {
+        manualFinished = true;
+        return result;
+      });
+      scheduledRelease.resolve();
+      await scheduled;
+      await manualHeld.promise;
+      expect(manualFinished).toBe(false);
+      manualRelease.resolve();
+      expect((await manual).last?.kind).toBe('synchronized');
+      expect(modes).toEqual(['merge', 'rebase']);
+    } finally {
+      scheduledRelease.resolve();
+      manualRelease.resolve();
+      await drainGitQueue(f.t.root);
+      overlapSpy.mockRestore();
+      f.host.dispose?.();
+    }
   });
   it('runs a real interval without pending data, coalesces requests and lets one admitted run finish after saved Off while stale callbacks stay paused', async () => {
     const f = await remoteFixture(),

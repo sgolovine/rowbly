@@ -24,6 +24,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 - [Load, reload and settings](#load-reload-and-settings)
 - [Tracing](#tracing)
 - [Testing](#testing)
+- [Clipboard images](#clipboard-images)
 - [Git capability](#git-capability)
 - [Supported-format reconciliation](#supported-format-reconciliation)
 
@@ -31,7 +32,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 
 | Module | Imported by | Holds |
 | --- | --- | --- |
-| `src/plugin-api` | every file of a Plugin | `definePlugin`; `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `slugFromName`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
+| `src/plugin-api` | every file of a Plugin | `definePlugin`; `clipboard` and `ClipboardImageResult` ([Clipboard images](#clipboard-images)); `z` (Zod); the errors `UsageError`, `ValidationError`, `NotFoundError`, `ConflictError`, `DataIntegrityError`, `RowblyError`; helpers `isSlug`, `slugFromName`, `parseStoryKey`, `parseRepeatable`, `toTimestamp`; `colors`, `colorByCategory` and `renderTable`; the schemas `SlugSchema`, `StoryKeySchema`, `TimestampSchema`; `withFixedStages`, which puts Backlog and Done around a configured `stages` list; `CORE_OPERATION_NAMES`; the record types (`Story`, `BoardConfig`, `RowblyConfig`, `LocalState`, …); every Plugin type, and the type-only `Command` (Commander) |
 | `src/plugin-api/tui` | a Plugin's TUI part only | Ink's `Box`, `Text`, `useInput` and `Key`; React's `useState`, `useEffect`, `useMemo`, `useCallback`, `useRef` and `ReactNode`; the components `Button`, `Form`, `SelectList`, `DetailView`, `Tabs`, `TextInput`, `TextArea`, `MarkdownView`, `ConfirmDialog`, `Loading`, `StageBadge`, `Modal`, `SelectionRow`; the hooks `useAsync`, `useContextMenu`, `useFullScreenEditor`, `useIsActive`, `useKeyHints`, `useKeyCapture`, `useReloadOnReturn`, `useDirty`, `useLayout`; the type `ContextMenuItem`; `FORM_KEYS`, `moveDelta`, `markdownToPlain`; `theme`, `themes`, `stageColors`, `formatDate` |
 | `src/plugin-api/testing.ts` | tests only | `createPluginTestHost`, `validatePluginDefinition` ([Testing](#testing)) |
 
@@ -97,7 +98,7 @@ Each Plugin callback runs in a **stage** (ADR-0020 §1):
 | `body` (an operation's body) | writer | read only | no |
 | `replacement` | writer, plus `core()` once | read only | no |
 | `transform` | writer, for as long as the transform runs | read only | no |
-| `guard` | read-only view, plus pending `readFile` | read only | no |
+| `guard` | read-only view, plus pending `readFile` / `readBinaryFile` | read only | no |
 | `commit` | — (Rowbly saves; holds the lock) | — | — |
 | `reaction` | read-only view of the saved Change Set | read only, `warn` | no |
 | `doctor-check` | — (`DoctorData`) | read only | no |
@@ -129,10 +130,11 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 | Read | Sees |
 | --- | --- |
 | `plugin.services.*` (lists and gets) | stored records |
-| `plugin.files.read` / `files.list` | stored files |
+| `plugin.files.read` / `files.readBinary` / `files.list` | stored files |
 | `changes.changes`, `changes.story(key)`, `changes.board(id)` | the Change Set as it is when called, including this stage's own writes |
 | `changes.updateStory(key, fn)` | the latest version: the Change Set's, else the stored one |
 | `changes.readFile(scope, name)` | the pending text: the Change Set's, else the stored file; `null` for none |
+| `changes.readBinaryFile(scope, name)` | detached `Uint8Array` of the pending file, else the stored file; `null` for none |
 | `doctor.check`'s `data` | the records doctor read, and `local` (Local State); only Stories stored at their own key's folder |
 
 A hook that must see what earlier hooks of the same operation did reads through `changes`. File scopes in a Change Set:
@@ -141,6 +143,44 @@ A hook that must see what earlier hooks of the same operation did reads through 
 - Writing a file of a Story or Board that the same operation deletes fails with `CONFLICT`. Reading it gives `null`, and deleting it does nothing: the whole folder goes.
 - `updateStory` cannot change `key` or `boardId` (`VALIDATION`). Putting again a Story or Board that the operation deleted fails with `CONFLICT`.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused for reading, writing, listing and deleting.
+
+### Binary Plugin files
+
+`changes.writeBinaryFile(scope, name, bytes: Uint8Array)` creates or replaces a file in the same
+Change Set as records and text files. It copies the input before any asynchronous work, so callers
+may reuse their buffer immediately. `changes.readBinaryFile` reads pending bytes; `plugin.files.readBinary`
+reads only stored bytes under the Data Root lock. Both return detached arrays, or `null` for absence.
+They use the same names, scopes, symbolic link checks and stage lifetime rules as the text API.
+`changes.deleteFile` deletes either kind of file, without decoding invalid UTF-8. Await every write.
+
+`writeFile`, `readFile` and `plugin.files.read` keep their UTF-8 text behavior; an explicit text read
+of binary content decodes it as UTF-8. Binary writes and reads do not parse or serialize JSON.
+`FileChange` keeps `type: 'file'`, `plugin` and `path`. Text writes retain string `before`/`after` values.
+A binary write describes each present version as `{ kind: 'binary', size, sha256 }`, with size in
+bytes and a lowercase hexadecimal SHA-256; absent/deleted versions are `null`. Deletion or replacement
+through the text API describes stored valid UTF-8 as text and other bytes as a binary summary. This
+is a view convention, not a persisted file type: a deleted file containing valid UTF-8 is shown as
+text even if it was originally written through the binary API. Narrow each value with `typeof` or
+`kind` before using it. Snapshots contain no buffers and stay deeply frozen; payload bytes are private.
+
+```ts
+/** Saves PNG bytes and the Story's bag together in one recoverable operation. */
+export async function saveImage(plugin: PluginContext, key: string, png: Uint8Array): Promise<void> {
+  await plugin.operation('save-image', { key }, async (changes) => {
+    const scope = { story: key };
+    await changes.writeBinaryFile(scope, 'image.png', png);
+    await changes.updateStory(key, (story) => plugin.writeBag(story, { image: 'image.png' }));
+    const pending = await changes.readBinaryFile(scope, 'image.png');
+    if (pending === null) throw new Error('Missing pending image');
+  });
+  const stored = await plugin.files.readBinary({ story: key }, 'image.png');
+  if (stored === null) throw new Error('Missing saved image');
+}
+```
+
+The journal stages and recovers exact bytes. Doctor accepts scoped Plugin files without treating them
+as core JSON, and Git Automatic Commits and synchronization include them as ordinary raw files.
+See [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md).
 
 ## Errors
 
@@ -270,7 +310,7 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 - **List filters.** `SelectList` reports its filter mode through `onFilteringChange(filtering)`. Pass a stable state setter and disable the screen's shortcuts and hints while filtering, while keeping the list active so it can accept text and finish filtering. The callback reports false when filtering ends or the list unmounts.
 - **Context menus.** `SelectList`'s `onContextMenu(item, x, y)` runs on a right click on an item, after highlighting it. Open a menu there with `useContextMenu().open(x, y, items)`: each `ContextMenuItem` has a `label`, an `onSelect()`, the `key` that does the same on the screen and `disabled` for one that does not apply. Offer only what the screen's keys do. The menu runs an item after the renders that opening it caused, so check in `onSelect` that the item is still the one the menu was opened for.
 - **Reloading.** `useAsync(fn, deps)` runs again when `deps` change, toasts a failure, and ignores a run that was superseded. Use `useReloadOnReturn(reload, active?)` to reload when the screen or tab is active again, and while it is active, each time the Data Root changes on disk (a command, another Rowbly or an editor); do not put `active` in `useAsync`'s deps. A screen that loads with `useAsync` alone does not follow changes on disk.
-- **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action only opens or shows something; a data change it offers must also be a command or an option.
+- **Actions** are TUI-only keys with a header button: `{ key, label, target, run({ focus, plugin, ui }) }`. An Action shows and runs only where its target is in focus, and `focus` is typed by the target: `board` has the Board, `story` the Story; `none` runs everywhere with whatever is in focus. The key is one character that no core screen (`CORE_KEYS` in [`src/tui/keymap.ts`](../../src/tui/keymap.ts)) and no earlier Plugin uses. An Action opens or shows something; a data change it offers must also be a command or an option. ADR-0035 permits host-owned Git synchronization without a new matching command, including its validated data import. A pending `none` Action shows busy and ignores duplicate keys/clicks.
 
 ```ts
 actions: [
@@ -456,5 +496,44 @@ boundary, waits outside Data Root coordination and returns its current result. I
 returns independent `enabled` and `intervalSeconds`, with optional author name/email. Latest saved
 Off prevents admission; an admitted run may finish. The host supplies the registered format owners,
 recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
+`requestSync(liveResolver, 'rebase')` explicitly requests manual commit-first rebase synchronization,
+independent of both automatic preferences, while the Git Plugin is enabled. It joins an existing
+manual rebase, or queues a distinct rebase after a running scheduled merge. It returns that exact
+run's `last` result (including optional `id`), after its push, and throws an actionable error on failure.
+It never accepts a stale `last` success. Progress phases include committing, fetching, rebasing,
+publishing and pushing. Both publications use the shared recoverable journal. Replay reconciles
+supported data during every commit, preserves author/date/message, and refuses divergent local
+merge commits with explicit `--rebase-merges` guidance. No Git runs under a Data Root lock.
+
 Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
 and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.
+
+## Clipboard images
+
+Import `clipboard` from the Plugin API and call `await clipboard.readImage()` before starting the
+operation that saves the result. This helper needs no `PluginContext` and never acquires the Data
+Root lock or writes files. It returns `ClipboardImageResult`: either `{ bytes: Uint8Array,
+type: 'image/png' }`, or `{ reason: 'unsupported' | 'no-display' | 'no-image' | 'too-large' | 'timeout' }`.
+The caller decides how to present a failure or save an image.
+
+```ts
+/** Read before starting the operation that saves the image. */
+export async function readPastedImage(): Promise<ClipboardImageResult> {
+  const image = await clipboard.readImage();
+  if ('reason' in image) return image;
+  return { bytes: image.bytes, type: image.type };
+}
+```
+
+Reads have a single three-second deadline and accept at most 10 MiB of PNG bytes. Native loading and
+reading run lazily in a child process; a failed load is cached until Rowbly restarts. Native crashes,
+malformed output and unsupported environments return `unsupported`, connection/read errors return
+`no-display`, and a clipboard without an image returns `no-image`. Child stdout and stderr cannot
+reach the TUI. On Wayland, native load or connection failure tries `wl-paste` from `wl-clipboard`,
+requiring an exact `image/png` offered type. A missing helper returns `unsupported`. Timeout and size
+failures return their own reasons. The PNG signature is checked; image contents are not fully decoded.
+
+The installed package also includes `rowbly/dist/clipboard.js`, which exports `readClipboardImage`
+and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
+[ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
+child isolation and the bounds' limits. Paste keys and image storage are planned separately.

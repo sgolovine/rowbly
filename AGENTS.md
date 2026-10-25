@@ -23,8 +23,9 @@ explains how it is built. Start at `docs/README.md`.
 | What Rowbly is, install and a first Board (the landing page) | `README.md` |
 | The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
 | The agent skill for developing a Rowbly Story into a draft pull request (`rowbly-dev`) | `skills/rowbly-dev/SKILL.md` and its `references/`, published in the npm package; self-contained (see Agent skills below) |
+| The agent skill for interviewing a Story and saving its specification (`rowbly-grill`) | `skills/rowbly-grill/SKILL.md` and its `references/`, browser `scripts/` and `assets/`, published in the npm package |
 | The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system, `rowbly-factory` to run remote workers over the Board's In Progress Stories and merge their pull requests) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev` is a symlink to `skills/rowbly-dev`, so agents here use the published skill |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system, `rowbly-factory` to run remote workers over the Board's In Progress Stories and merge their pull requests) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev` and `.agents/skills/rowbly-grill` symlink to their published folders in `skills/` |
 
 ## Domain language and decisions
 
@@ -34,10 +35,12 @@ explains how it is built. Start at `docs/README.md`.
 - Do not reverse an accepted ADR without the user. To change a decision, add a new ADR that supersedes or
   amends it and update the old one's **Status** line. Source comments cite ADRs by number and section
   (`ADR-0019 §2`); never renumber an ADR or its sections.
-- **ADRs live only in `docs/agents/adr/`.** Any skill or workflow that records an ADR (for example
-  `grill-with-docs`) must save it there, never in `docs/adr/`, the repository root or a skill's own
-  folder. Name it `NNNN-<kebab-case-title>.md` with the next free number, follow the format in
+- **Repository ADRs live only in `docs/agents/adr/`.** Any workflow that records a repository ADR
+  must save it there, never in `docs/adr/`, the repository root or a skill's own folder. Name it
+  `NNNN-<kebab-case-title>.md` with the next free number, follow the format in
   `docs/agents/adr/README.md`, and add a row to that index in the same change.
+  `rowbly-grill` records interview decisions as Story Specs (`adr-NNNN-kebab-title`) through the
+  CLI instead; these belong to the Story, not the repository ADR index.
 - Older source comments cite IDs such as `RES-02`, `CQ-155` or `WP09`. They refer to a review that has been
   removed from `docs/` (it is in git history). Do not add new ones; cite an ADR or a docs page instead.
 
@@ -82,12 +85,18 @@ each one self-contained:
 `skills/rowbly-dev/` takes a Story from its Key to a draft pull request, in any repository tracked with
 Rowbly and in this one. Steps that only apply here (`pnpm dev`, the `rowbly-screenshots` skill) say so.
 
+`skills/rowbly-grill/` interviews a person about a Story and incrementally saves its main Spec,
+resolved glossary and qualifying ADRs as Story Specs. It keeps the Story description and Stage
+unchanged and does not authorize implementation. Its browser UI has a numbered chat fallback.
+
 `skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
 an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to
 nothing. It repeats the essentials of `skills/rowbly` in less space, so a change that updates a
 `skills/rowbly` page updates this page too when it touches a command, flag, JSON shape, exit code or
 Plugin that the page shows. Keep it concise: commands with their options, not procedures.
-`skills/rowbly-dev/references/rowbly-reference.md` is a copy of this page; copy it again when the page changes.
+`skills/rowbly-dev/references/rowbly-reference.md` and
+`skills/rowbly-grill/references/rowbly-reference.md` are byte-identical copies of this page; refresh
+all copies whenever it changes (the `.agents/skills/` symlinks use these same files).
 
 ## Screenshots
 

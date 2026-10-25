@@ -179,6 +179,7 @@ async function runSynchronization(
   phase: (name: string) => Promise<void>,
   validate: (files: GitDataFiles) => Promise<void>,
   expectedTarget?: GitUpstream,
+  mode: 'merge' | 'rebase' = 'merge',
 ): Promise<SyncOutcome> {
   assertGitWorker(repo);
   const started = Date.now(),
@@ -190,12 +191,119 @@ async function runSynchronization(
   const deadline = () => {
     if (Date.now() - started > 120_000) throw new Error('Git synchronization exceeded its run deadline');
   };
+  async function publish(
+    old: string,
+    candidate: string,
+    captured: GitDataFiles,
+    indexBefore: string,
+    upstream: GitUpstream,
+  ) {
+    const oldTree = await tree(repo, old);
+    const finalEntries = await tree(repo, candidate),
+      edits: PublicationEdit[] = [];
+    await writeFileAtomic(installIndex, Buffer.from(indexBefore, 'base64'));
+    for (const path of new Set([...Object.keys(oldTree), ...Object.keys(finalEntries)])) {
+      const beforeEntry = oldTree[path],
+        afterEntry = finalEntries[path];
+      const rel = inside(prefix, path),
+        owned = rel !== null && isGitDataPath(rel);
+      if (!owned && isDeepStrictEqual(beforeEntry, afterEntry)) continue;
+      const before = owned ? (captured[rel] ?? null) : beforeEntry ? await blob(repo, beforeEntry) : null;
+      const after = afterEntry ? await blob(repo, afterEntry) : null;
+      // Every unrelated changed path must still match clean HEAD bytes before local intent.
+      if (!owned && !isDeepStrictEqual(await readPublicationFile(repo, path), before))
+        throw new Error(`Upstream would overwrite unrelated local content: ${path}`);
+      const stagedEntry = (
+        await gitProcess(repo.top, ['ls-files', '--stage', '-z', '--', `:(literal)${path}`])
+      ).stdout.toString('utf8');
+      if (
+        !owned &&
+        (beforeEntry ? !stagedEntry.startsWith(`${beforeEntry.mode} ${beforeEntry.oid} 0\t`) : stagedEntry !== '')
+      )
+        throw new Error(`Upstream would overwrite unrelated staged content: ${path}`);
+      if (!isDeepStrictEqual(before, after)) edits.push({ path, before, after });
+      await put(repo, installIndex, path, after ?? undefined);
+    }
+    if (!isDeepStrictEqual(await configuredUpstream(repo), upstream))
+      throw new Error('Git upstream changed while preparing synchronization');
+    const plan: PublicationPlan = {
+      branch: upstream.branch,
+      old,
+      candidate,
+      indexBefore,
+      indexAfter: (await io.readBytes(installIndex)).toString('base64'),
+      edits,
+      roots: [root.path],
+      captures: [{ root: root.path, files: captured }],
+    };
+    await phase('publishing');
+    await withPublication(repo, (hold) => publishPublication(hold, plan));
+  }
+  async function snapshot() {
+    const old = await gitText(repo.top, ['rev-parse', 'HEAD']);
+    const oldTree = await tree(repo, old);
+    const eligible = new Set(
+      (await gitProcess(repo.top, ['ls-files', '--cached', '--others', '--exclude-standard', '-z'])).stdout
+        .toString('utf8')
+        .split('\0'),
+    );
+    const staged = (await gitProcess(repo.top, ['diff', '--cached', '--name-only', '-z'])).stdout
+      .toString('utf8')
+      .split('\0');
+    if (
+      staged.some((p) => {
+        const rel = inside(prefix, p);
+        return rel !== null && isGitDataPath(rel);
+      })
+    )
+      throw new Error('Git synchronization refuses already-staged Rowbly changes');
+    const indexBefore = await readIndex(repo);
+    if (indexBefore === null) throw new Error('Git synchronization requires an existing index');
+    const captured = await capture(() => readGitDataFiles(root));
+    for (const path of Object.keys(captured))
+      if (!eligible.has(inRepository(prefix, path)))
+        throw new Error(`Ignored Rowbly data needs explicit handling before synchronization: ${path}`);
+    const original = await sourceFiles(repo, oldTree, prefix);
+    await io.rm(index);
+    await gitText(repo.top, ['read-tree', old], { index });
+    for (const path of new Set([...Object.keys(original), ...Object.keys(captured)]))
+      if (!isDeepStrictEqual(original[path], captured[path]))
+        await put(repo, index, inRepository(prefix, path), captured[path]);
+    const captureTree = await gitText(repo.top, ['write-tree'], { index });
+    const oldTreeOid = await gitText(repo.top, ['rev-parse', `${old}^{tree}`]);
+    const local =
+      captureTree === oldTreeOid
+        ? old
+        : await commit(repo, captureTree, [old], options, 'chore: capture Rowbly changes for synchronization');
+    return { old, oldTree, indexBefore, captured, captureTree, local };
+  }
   try {
     await cleanupPreparation(repo);
     await busy(repo);
     const upstream = await configuredUpstream(repo);
     if (expectedTarget && !isDeepStrictEqual(upstream, expectedTarget))
       throw new Error('Git branch or upstream changed after synchronization admission');
+    if (mode === 'rebase') {
+      // Durable, nonempty local capture precedes any network access, even with automation Off.
+      for (let attempt = 0; ; attempt++) {
+        await phase('committing');
+        const snapshotResult = await snapshot();
+        await validate(snapshotResult.captured);
+        try {
+          await publish(
+            snapshotResult.old,
+            snapshotResult.local,
+            snapshotResult.captured,
+            snapshotResult.indexBefore,
+            upstream,
+          );
+          break;
+        } catch (err) {
+          if (err instanceof Error && err.message === 'Rowbly capture changed; prepare again' && attempt < 2) continue;
+          throw err;
+        }
+      }
+    }
     await phase('fetching');
     await gitText(
       repo.top,
@@ -216,146 +324,85 @@ async function runSynchronization(
       deadline();
       await busy(repo);
       await phase('preparing');
-      const old = await gitText(repo.top, ['rev-parse', 'HEAD']);
-      const oldTree = await tree(repo, old),
-        remoteTree = await tree(repo, remote);
-      const eligible = new Set(
-        (await gitProcess(repo.top, ['ls-files', '--cached', '--others', '--exclude-standard', '-z'])).stdout
-          .toString('utf8')
-          .split('\0'),
-      );
-      const staged = (await gitProcess(repo.top, ['diff', '--cached', '--name-only', '-z'])).stdout
-        .toString('utf8')
-        .split('\0');
-      if (
-        staged.some((p) => {
-          const rel = inside(prefix, p);
-          return rel !== null && isGitDataPath(rel);
-        })
-      )
-        throw new Error('Git synchronization refuses already-staged Rowbly changes');
-      const indexBefore = await readIndex(repo);
-      if (indexBefore === null) throw new Error('Git synchronization requires an existing index');
-      const captured = await capture(() => readGitDataFiles(root));
-      for (const path of Object.keys(captured))
-        if (!eligible.has(inRepository(prefix, path)))
-          throw new Error(`Ignored Rowbly data needs explicit handling before synchronization: ${path}`);
-      const original = await sourceFiles(repo, oldTree, prefix);
-      await io.rm(index);
-      await gitText(repo.top, ['read-tree', old], { index });
-      for (const path of new Set([...Object.keys(original), ...Object.keys(captured)]))
-        if (!isDeepStrictEqual(original[path], captured[path]))
-          await put(repo, index, inRepository(prefix, path), captured[path]);
-      const captureTree = await gitText(repo.top, ['write-tree'], { index });
-      const oldTreeOid = await gitText(repo.top, ['rev-parse', `${old}^{tree}`]);
-      const local =
-        captureTree === oldTreeOid
-          ? old
-          : await commit(repo, captureTree, [old], options, 'chore: capture Rowbly changes for synchronization');
-      const base = await gitText(repo.top, ['merge-base', local, remote]);
-      const merged = await gitProcess(
-        repo.top,
-        [...driverOptions, 'merge-tree', '--write-tree', '--name-only', '-z', '--messages', local, remote],
-        { allowFailure: true, timeoutMs: 10_000 },
-      );
-      if (![0, 1].includes(merged.code))
-        throw new Error('Git synchronization requires modern merge-tree --write-tree plumbing');
-      const parts = merged.stdout.toString('utf8').split('\0'),
-        mergedTree = parts.shift();
-      if (!mergedTree || !/^[a-f0-9]{40,64}$/.test(mergedTree))
-        throw new Error('Git isolated merge did not produce a tree');
-      const conflicts: string[] = [];
-      for (const path of parts) {
-        if (!path) break;
-        conflicts.push(path);
-      }
-      if (
-        conflicts.some((path) => {
-          const rel = inside(prefix, path);
-          return rel === null || !isGitDataPath(rel);
-        })
-      )
-        throw new Error(`Non-Rowbly conflicts require manual resolution: ${conflicts.join(', ')}`);
-      // Structural conflict messages also fail closed, even if a path happens to be recognized.
-      if (parts.some((text) => /CONFLICT \((?:file\/directory|directory|rename|submodule|distinct)/i.test(text)))
-        throw new Error('Unsupported Git merge topology conflict');
-      const rootMerge = reconcile(
-        { id: base, files: await sourceFiles(repo, await tree(repo, base), prefix) },
-        { id: local, files: captured },
-        { id: remote, files: await sourceFiles(repo, remoteTree, prefix) },
-      );
-      if (
-        Object.keys(rootMerge.files).length > 4096 ||
-        Object.values(rootMerge.files).reduce((bytes, file) => bytes + Buffer.byteLength(file.data, 'base64'), 0) >
-          64 * 1024 * 1024
-      )
-        throw new Error('Reconciled candidate exceeds its bounded Data Root size');
-      await validate(rootMerge.files);
-      deadline();
-      await phase('validating');
-      await io.rm(index);
-      await gitText(repo.top, ['read-tree', mergedTree], { index });
-      const mergedEntries = await tree(repo, mergedTree);
-      const existingRoot = await sourceFiles(repo, mergedEntries, prefix);
-      for (const path of new Set([...Object.keys(existingRoot), ...Object.keys(rootMerge.files)]))
-        await put(repo, index, inRepository(prefix, path), rootMerge.files[path]);
-      const finalTree = await gitText(repo.top, ['write-tree'], { index });
-      const remoteTreeOid = await gitText(repo.top, ['rev-parse', `${remote}^{tree}`]);
+      const { old, indexBefore, captured, captureTree, local } = await snapshot();
+      const remoteTree = await tree(repo, remote);
       let candidate: string;
-      const localAncestor =
-        (await gitProcess(repo.top, ['merge-base', '--is-ancestor', local, remote], { allowFailure: true })).code === 0;
-      const remoteAncestor =
-        (await gitProcess(repo.top, ['merge-base', '--is-ancestor', remote, local], { allowFailure: true })).code === 0;
-      if (localAncestor && finalTree === remoteTreeOid) candidate = remote;
-      else if (remoteAncestor && finalTree === captureTree) candidate = local;
-      else
-        candidate = await commit(
-          repo,
-          finalTree,
-          [...new Set([local, remote])],
-          options,
-          'chore: synchronize Rowbly data',
+      let rootMerge: GitReconciled;
+      if (mode === 'rebase') {
+        await phase('rebasing');
+        const replay = await rebaseCandidate(repo, local, remote, prefix, index, options, reconcile, validate, phase);
+        candidate = replay.commit;
+        rootMerge = replay.rootMerge;
+      } else {
+        const base = await gitText(repo.top, ['merge-base', local, remote]);
+        const merged = await gitProcess(
+          repo.top,
+          [...driverOptions, 'merge-tree', '--write-tree', '--name-only', '-z', '--messages', local, remote],
+          { allowFailure: true, timeoutMs: 10_000 },
         );
-      const finalEntries = await tree(repo, candidate),
-        edits: PublicationEdit[] = [];
-      await writeFileAtomic(installIndex, Buffer.from(indexBefore, 'base64'));
-      for (const path of new Set([...Object.keys(oldTree), ...Object.keys(finalEntries)])) {
-        const beforeEntry = oldTree[path],
-          afterEntry = finalEntries[path];
-        const rel = inside(prefix, path),
-          owned = rel !== null && isGitDataPath(rel);
-        if (!owned && isDeepStrictEqual(beforeEntry, afterEntry)) continue;
-        const before = owned ? (captured[rel] ?? null) : beforeEntry ? await blob(repo, beforeEntry) : null;
-        const after = afterEntry ? await blob(repo, afterEntry) : null;
-        // Every unrelated changed path must still match clean HEAD bytes before local intent.
-        if (!owned && !isDeepStrictEqual(await readPublicationFile(repo, path), before))
-          throw new Error(`Upstream would overwrite unrelated local content: ${path}`);
-        const stagedEntry = (
-          await gitProcess(repo.top, ['ls-files', '--stage', '-z', '--', `:(literal)${path}`])
-        ).stdout.toString('utf8');
+        if (![0, 1].includes(merged.code))
+          throw new Error('Git synchronization requires modern merge-tree --write-tree plumbing');
+        const parts = merged.stdout.toString('utf8').split('\0'),
+          mergedTree = parts.shift();
+        if (!mergedTree || !/^[a-f0-9]{40,64}$/.test(mergedTree))
+          throw new Error('Git isolated merge did not produce a tree');
+        const conflicts: string[] = [];
+        for (const path of parts) {
+          if (!path) break;
+          conflicts.push(path);
+        }
         if (
-          !owned &&
-          (beforeEntry ? !stagedEntry.startsWith(`${beforeEntry.mode} ${beforeEntry.oid} 0\t`) : stagedEntry !== '')
+          conflicts.some((path) => {
+            const rel = inside(prefix, path);
+            return rel === null || !isGitDataPath(rel);
+          })
         )
-          throw new Error(`Upstream would overwrite unrelated staged content: ${path}`);
-        if (!isDeepStrictEqual(before, after)) edits.push({ path, before, after });
-        await put(repo, installIndex, path, after ?? undefined);
+          throw new Error(`Non-Rowbly conflicts require manual resolution: ${conflicts.join(', ')}`);
+        // Structural conflict messages also fail closed, even if a path happens to be recognized.
+        if (parts.some((text) => /CONFLICT \((?:file\/directory|directory|rename|submodule|distinct)/i.test(text)))
+          throw new Error('Unsupported Git merge topology conflict');
+        rootMerge = reconcile(
+          { id: base, files: await sourceFiles(repo, await tree(repo, base), prefix) },
+          { id: local, files: captured },
+          { id: remote, files: await sourceFiles(repo, remoteTree, prefix) },
+        );
+        if (
+          Object.keys(rootMerge.files).length > 4096 ||
+          Object.values(rootMerge.files).reduce((bytes, file) => bytes + Buffer.byteLength(file.data, 'base64'), 0) >
+            64 * 1024 * 1024
+        )
+          throw new Error('Reconciled candidate exceeds its bounded Data Root size');
+        await validate(rootMerge.files);
+        deadline();
+        await phase('validating');
+        await io.rm(index);
+        await gitText(repo.top, ['read-tree', mergedTree], { index });
+        const mergedEntries = await tree(repo, mergedTree);
+        const existingRoot = await sourceFiles(repo, mergedEntries, prefix);
+        for (const path of new Set([...Object.keys(existingRoot), ...Object.keys(rootMerge.files)]))
+          await put(repo, index, inRepository(prefix, path), rootMerge.files[path]);
+        const finalTree = await gitText(repo.top, ['write-tree'], { index });
+        const remoteTreeOid = await gitText(repo.top, ['rev-parse', `${remote}^{tree}`]);
+        const localAncestor =
+          (await gitProcess(repo.top, ['merge-base', '--is-ancestor', local, remote], { allowFailure: true })).code ===
+          0;
+        const remoteAncestor =
+          (await gitProcess(repo.top, ['merge-base', '--is-ancestor', remote, local], { allowFailure: true })).code ===
+          0;
+        if (localAncestor && finalTree === remoteTreeOid) candidate = remote;
+        else if (remoteAncestor && finalTree === captureTree) candidate = local;
+        else
+          candidate = await commit(
+            repo,
+            finalTree,
+            [...new Set([local, remote])],
+            options,
+            'chore: synchronize Rowbly data',
+          );
       }
-      if (!isDeepStrictEqual(await configuredUpstream(repo), upstream))
-        throw new Error('Git upstream changed while preparing synchronization');
-      const plan: PublicationPlan = {
-        branch: upstream.branch,
-        old,
-        candidate,
-        indexBefore,
-        indexAfter: (await io.readBytes(installIndex)).toString('base64'),
-        edits,
-        roots: [root.path],
-        captures: [{ root: root.path, files: captured }],
-      };
-      await phase('publishing');
+      await validate(await sourceFiles(repo, await tree(repo, candidate), prefix));
       try {
-        await withPublication(repo, (hold) => publishPublication(hold, plan));
+        await publish(old, candidate, captured, indexBefore, upstream);
       } catch (err) {
         if (err instanceof Error && err.message === 'Rowbly capture changed; prepare again' && attempt < 2) continue;
         throw err;
@@ -399,4 +446,110 @@ async function runSynchronization(
     await io.rm(installIndex);
     await outsideGitDeadline(() => gitText(repo.top, ['update-ref', '-d', fetched])).catch(() => undefined);
   }
+}
+
+/** Replay linear commits off the live checkout; reconcile every replay, including clean JSON merges. */
+async function rebaseCandidate(
+  repo: GitRepository,
+  local: string,
+  remote: string,
+  prefix: string,
+  index: string,
+  options: GitCommitOptions,
+  reconcile: (base: GitDataSource, left: GitDataSource, right: GitDataSource) => GitReconciled,
+  validate: (files: GitDataFiles) => Promise<void>,
+  phase: (name: string) => Promise<void>,
+): Promise<{ commit: string; rootMerge: GitReconciled }> {
+  const rootMerge: GitReconciled = { files: {}, evidence: [], decisions: [] };
+  if ((await gitProcess(repo.top, ['merge-base', '--is-ancestor', remote, local], { allowFailure: true })).code === 0)
+    return { commit: local, rootMerge };
+  await gitText(repo.top, ['merge-base', local, remote]); // Fail closed for unrelated histories.
+  const lines = (await gitText(repo.top, ['rev-list', '--reverse', '--topo-order', '--parents', `${remote}..${local}`]))
+    .split('\n')
+    .filter(Boolean);
+  // Ordinary rebase drops merge topology. Require explicit manual Git handling instead.
+  if (lines.some((line) => line.split(' ').length !== 2))
+    throw new Error(
+      'Sync cannot replay local merge commits safely. Preserve local work and rebase with git rebase --rebase-merges, then run Sync again.',
+    );
+  if (lines.length > 512)
+    throw new Error('Sync replay exceeds 512 local commits; rebase with Git, then run Sync again.');
+  let tip = remote;
+  const driverOptions = await mergeOptions(repo);
+  for (const [n, line] of lines.entries()) {
+    const [original, parent] = line.split(' ');
+    if (!original || !parent) throw new Error('Unsupported rebase commit');
+    await phase(`rebasing ${n + 1}/${lines.length}`);
+    const merged = await gitProcess(
+      repo.top,
+      [
+        ...driverOptions,
+        'merge-tree',
+        '--write-tree',
+        '--name-only',
+        '-z',
+        '--messages',
+        `--merge-base=${parent}`,
+        tip,
+        original,
+      ],
+      { allowFailure: true, timeoutMs: 10_000 },
+    );
+    if (![0, 1].includes(merged.code)) throw new Error('Git replay requires merge-tree with --merge-base support');
+    const parts = merged.stdout.toString('utf8').split('\0');
+    const mergedTree = parts.shift();
+    if (!mergedTree || !/^[a-f0-9]{40,64}$/.test(mergedTree)) throw new Error('Git replay did not produce a tree');
+    const conflicts: string[] = [];
+    for (const path of parts) {
+      if (!path) break;
+      conflicts.push(path);
+    }
+    if (
+      conflicts.some((path) => {
+        const rel = inside(prefix, path);
+        return rel === null || !isGitDataPath(rel);
+      })
+    )
+      throw new Error(`Non-Rowbly conflicts require manual rebase resolution: ${conflicts.join(', ')}`);
+    if (parts.some((text) => /CONFLICT \((?:file\/directory|directory|rename|submodule|distinct)/i.test(text)))
+      throw new Error('Unsupported Git replay topology conflict');
+    const resolved = reconcile(
+      { id: parent, files: await sourceFiles(repo, await tree(repo, parent), prefix) },
+      { id: tip, files: await sourceFiles(repo, await tree(repo, tip), prefix) },
+      { id: original, files: await sourceFiles(repo, await tree(repo, original), prefix) },
+    );
+    if (
+      Object.keys(resolved.files).length > 4096 ||
+      Object.values(resolved.files).reduce((bytes, file) => bytes + Buffer.byteLength(file.data, 'base64'), 0) >
+        64 * 1024 * 1024
+    )
+      throw new Error('Reconciled candidate exceeds its bounded Data Root size');
+    await validate(resolved.files);
+    await io.rm(index);
+    await gitText(repo.top, ['read-tree', mergedTree], { index });
+    const existing = await sourceFiles(repo, await tree(repo, mergedTree), prefix);
+    for (const path of new Set([...Object.keys(existing), ...Object.keys(resolved.files)]))
+      await put(repo, index, inRepository(prefix, path), resolved.files[path]);
+    const finalTree = await gitText(repo.top, ['write-tree'], { index });
+    // Preserve original author identity, date and message; keep empty original commits as evidence.
+    const raw = (await gitProcess(repo.top, ['cat-file', 'commit', original])).stdout.toString('utf8');
+    const author = /^author (.+) <([^<>]*)> (\d+ [+-]\d{4})$/m.exec(raw);
+    if (!author?.[1] || !author[2] || !author[3]) throw new Error('Unsupported commit author identity');
+    tip = await gitText(
+      repo.top,
+      [
+        ...(options.authorName ? ['-c', `user.name=${options.authorName}`] : []),
+        ...(options.authorEmail ? ['-c', `user.email=${options.authorEmail}`] : []),
+        'commit-tree',
+        finalTree,
+        '-p',
+        tip,
+      ],
+      { input: raw.slice(raw.indexOf('\n\n') + 2), author: { name: author[1], email: author[2], date: author[3] } },
+    );
+    rootMerge.files = resolved.files;
+    rootMerge.evidence.push(...resolved.evidence);
+    rootMerge.decisions = [...rootMerge.decisions, ...resolved.decisions];
+  }
+  return { commit: tip, rootMerge };
 }

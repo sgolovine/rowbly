@@ -5,7 +5,7 @@ description: "Use whenever an agent works with Rowbly, the file-backed Kanban
   (--json, --no-prompt, --yes, exit codes, JSON errors), setting up a Data Root,
   Boards, Me, Stages and Custom Fields, tracking Stories (keys like WEB-42),
   turning Plugins on and using them (Assignees, Tasks, Epics, Specs, Comments,
-  automatic Git commits), and checking or repairing a Data Root with rowbly
+  automatic Git commits and synchronization), and checking or repairing a Data Root with rowbly
   doctor after a git merge or an exit 6. Not for writing a new Plugin."
 ---
 

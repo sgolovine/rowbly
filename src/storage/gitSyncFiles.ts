@@ -2,13 +2,16 @@ import { join } from 'node:path';
 import type { DataRoot } from '../schemas';
 import type { PublicationFile } from './gitSyncJournal';
 import { io } from './io';
+import { isWatchedPath } from './watch';
 
 export type GitDataFiles = Record<string, PublicationFile>;
 export function isGitDataPath(path: string): boolean {
   return (
-    /^(rowbly.config.json|\.gitignore|boards\/[^/]+\/board.config.json|boards\/[^/]+\/stories\/[^/]+\/story.json)$/.test(
+    isWatchedPath(path) &&
+    (/^(rowbly.config.json|\.gitignore|boards\/[^/]+\/board.config.json|boards\/[^/]+\/stories\/[^/]+\/story.json)$/.test(
       path,
-    ) || /^(?:boards\/[^/]+\/(?:stories\/[^/]+\/)?)?plugins\/[^/]+\/.+/.test(path)
+    ) ||
+      /^(?:boards\/[^/]+\/(?:stories\/[^/]+\/)?)?plugins\/[^/]+\/.+/.test(path))
   );
 }
 /** A complete bounded immutable root capture. No Git child, ignore decision or schema round-trip. */

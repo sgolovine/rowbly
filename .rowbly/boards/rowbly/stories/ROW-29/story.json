@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T17:40:47.205Z",
+  "updatedAt": "2026-10-25T18:37:12.340Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,6 +20,45 @@
     "story-linking": {
       "blocks": [
         "ROW-30"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "XzldtkbM",
+          "author": "sunny",
+          "body": "Started ROW-29 on rook. Inspecting the Plugin API, binary file support, and adjacent stack branches before planning.",
+          "createdAt": "2026-10-25T18:18:28.957Z",
+          "updatedAt": "2026-10-25T18:18:28.957Z"
+        },
+        {
+          "id": "57FjP8HE",
+          "author": "sunny",
+          "body": "Accepted complexity-6 plan on codex/row-29-attachments: implement the Attachments bag and atomic operations, CLI and narrow host helpers, conservative doctor checks, docs, and required existing-test extensions. Baseline checks all pass. ROW-28 has not pushed yet; its branch will be merged when available.",
+          "createdAt": "2026-10-25T18:18:29.566Z",
+          "updatedAt": "2026-10-25T18:18:29.566Z"
+        },
+        {
+          "id": "PENax0OW",
+          "author": "sunny",
+          "body": "Implementation pushed at 6dd7533, including atomic PNG operations, attachments CLI, conservative doctor repairs, API helpers, and docs. Development checks passed: typecheck, lint, 80 unit tests, 20 CLI tests, and scratch-root acceptance checks. Independent validation and screenshots are next.",
+          "createdAt": "2026-10-25T18:29:48.743Z",
+          "updatedAt": "2026-10-25T18:29:48.743Z"
+        },
+        {
+          "id": "l1QnymgG",
+          "author": "sunny",
+          "body": "Independent validation passed at d9cf709: typecheck, lint, 80 unit tests, 20 CLI tests, and scratch acceptance scenarios; screenshots captured. Fixing the newly required rowbly-grill reference copy. ROW-28 must merge current main before ROW-29 PR sign-off to remove inherited ROW-32 and Board changes from the stacked diff.",
+          "createdAt": "2026-10-25T18:33:47.906Z",
+          "updatedAt": "2026-10-25T18:33:47.906Z"
+        },
+        {
+          "id": "XyT2zjZX",
+          "author": "sunny",
+          "body": "Revalidation at 030afaf passed typecheck, lint, CLI tests, build, and Attachment scenarios, but unit tests had a storage timeout followed by a recovery failure. Investigating before rerunning. Main advanced during validation; ROW-28 needs another main sync for a clean stacked diff.",
+          "createdAt": "2026-10-25T18:37:12.339Z",
+          "updatedAt": "2026-10-25T18:37:12.339Z"
+        }
       ]
     }
   }

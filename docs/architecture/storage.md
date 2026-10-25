@@ -28,7 +28,7 @@ The guarantee covers the Rowbly process dying (a crash, `kill -9`, Ctrl-C). It d
 Each save is one transaction in `.rowbly/.txn/<id>/`:
 
 1. **Validate** the whole final plan: record schemas, parents, the stored sources of updates, moves and deletions, free destinations, unique keys, path containment, one filesystem, the symlink policy, and that no Plugin changed an `enabled` value. A failure throws before anything is written.
-2. **Stage** each new file in `staged/`, fsynced.
+2. **Stage** each new file in `staged/`, fsynced. Text is encoded as UTF-8; binary Plugin payloads are written as exact bytes.
 3. **Prepare**: write `manifest.json` with `phase: "prepared"`. This is the commit point.
 4. **Apply**: move renumbered Story folders out, delete, move them in, then write each staged file over its destination.
 5. **Complete**: mark the manifest `complete` and remove the transaction folder.
@@ -43,6 +43,19 @@ Each save is one transaction in `.rowbly/.txn/<id>/`:
 - Writing a file in a Board or Story that the same operation deletes fails with `CONFLICT`; reading it gives nothing.
 - A Story's key and Board never change through an ordinary update. Only doctor's renumbering changes a key.
 - Rowbly assumes a trusted filesystem. A symlinked Data Root is allowed. A symbolic link inside a `plugins/<id>/` folder is refused for every read, write, list and delete. These checks catch accidental links; they are not race-proof against someone swapping links.
+
+## Binary Plugin files
+
+Binary Plugin writes share the Data Root lock, scope resolution, final validation and version 1
+commit journal with text files ([ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md)).
+The manifest holds paths and steps, never file contents. Payloads stay raw in `staged/`; applying or
+repeating recovery installs those exact bytes. Story moves and cascading deletions preserve or remove
+the whole folder, including binary files. No binary JSON encoding or new storage version is needed.
+
+Change Set payloads are private copied arrays. Hooks see compact size/SHA-256 summaries for binary
+writes; text changes still show strings. Binary reads return detached bytes. Doctor classifies scoped
+Plugin files before core JSON validation, so PNG bytes are not a `DATA_INTEGRITY` finding. Git Automatic
+Commits copy raw file bytes, and synchronization captures and publishes raw bytes through this journal.
 
 ## Watching for changes
 
@@ -85,7 +98,7 @@ Only affected record/file paths are selected, never `local.json`, `.lock` or `.t
 ## Recoverable Git publication
 
 The local publication engine implements ADR-0034 §4–5. Synchronization prepares an isolated
-upstream merge and uses this engine before a normal push. All cooperating service calls acquire the common Git publication
+upstream merge (scheduled/CLI) or replay (manual header Sync) and uses this engine before a normal push. Manual Sync also publishes its nonempty capture before fetching (ADR-0035). All cooperating service calls acquire the common Git publication
 gate before their Data Root lock, and release both before reactions. Git location discovery and every
 Git child run outside Data Root locks. A worker takes the common worker lock before the gate.
 
@@ -175,3 +188,9 @@ after an awaited setup. An admitted run may finish after Off. Private host lease
 replacement, failure, root switch and shutdown. Metadata changes never queue Rowbly commits.
 Each new synchronization worker removes abandoned private candidate indexes and fetched pins under
 the common worker lock; prepared publication pins belong to journal recovery and are kept until it completes.
+
+Manual header Sync uses this same journal for both its pre-fetch capture and its final replay. Each
+linear commit is replayed with `merge-tree --merge-base=<original-parent>` and pure reconciliation,
+including clean JSON merges. Divergent local merge commits fail with `--rebase-merges` guidance.
+Capture drift retries preparation; the exact manual run's result is returned only after its push,
+even when it waited behind a scheduled merge. Both automatic preferences may be Off (ADR-0035).

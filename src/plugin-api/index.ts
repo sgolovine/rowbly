@@ -58,6 +58,7 @@ export type {
   AnyPluginDefinition,
   Bagged,
   BagInspection,
+  BinaryFileSummary,
   BoardChange,
   Change,
   ChangeSet,
@@ -149,6 +150,7 @@ export function definePlugin<
   return definition;
 }
 
+export { type ClipboardImageResult, clipboard } from '../services/clipboard';
 export type { GitSyncOptions, GitSyncOptionsSource, GitSyncStatus } from '../services/plugins/gitSync';
 export type {
   IdentityRemap,

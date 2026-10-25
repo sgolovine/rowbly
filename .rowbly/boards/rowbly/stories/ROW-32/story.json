@@ -4,13 +4,33 @@
   "boardId": "rowbly",
   "name": "Add the rowbly-grill skill",
   "description": "Add `rowbly-grill`, an official skill that grills a person about one Story and writes the result into that Story: Story Specs for the design, and ADRs for decisions that are hard to reverse.\n\nBase it on `grill-with-docs-ui` (https://github.com/sgolovine/agent-skills/tree/main/skills/grill-with-docs-ui). Keep its interview method (the design tree, rounds over the frontier, a recommended answer for every question, sub-agents look up facts and the person makes the decisions). Keep its browser Grill UI (`scripts/grill-ui.mjs`, `assets/index.html`), with the fallback to numbered questions in chat. Change where it writes: not `CONTEXT.md` or `docs/adr/`, but the Story.\n\n## Invocation\n\n- The person runs `$rowbly-grill STORY-12` (Codex), `/rowbly-grill STORY-12` (Claude Code) or names the skill with a Key. A bare number (`12`) resolves to a Key on the current Board, the same way `rowbly-dev` does.\n- No Key: ask for one. Do not pick a Story.\n\n## Refusals (before the first question)\n\nThe skill stops with a short message and asks no questions when:\n\n1. **The Specs Plugin is off.** Check `rowbly plugins list --json --no-prompt` for `specs` with `enabled` and `loaded` true. Plugins are turned on per Data Root, not per Board (ADR-0010), so the check is for the Data Root that holds the Story. The message names the command that turns it on (`rowbly plugins enable specs`); the skill does not run it.\n2. **The Story does not exist** (exit 3, `NOT_FOUND`).\n3. **The Story is empty.** Its description is missing or only whitespace. The message tells the person to add a description first (`rowbly stories edit KEY --edit`). An existing Story Spec does not make an empty Story non-empty: the description is the request.\n\n## Reading the Story\n\nBefore round 1, read the Story as `rowbly-dev` does: `stories show`, `specs list --story`, `comments list`, `tasks list` (when Tasks is on), the Epic and linked Board Specs (when present). Existing Story Specs and ADRs are inputs: the grill continues from them and does not ask again what they already settle.\n\n## What it writes\n\nAll writes use `rowbly` commands (`--json --no-prompt`), never the files in `.rowbly/` directly.\n\n- **The Story Spec `spec`**: the design the grill settles: goal, scope and non-goals, behavior, edge cases, open questions, and a short glossary of terms the grill resolved (this replaces the base skill's `CONTEXT.md`). Create it with `rowbly specs create --story KEY --file -`, or update it with `specs edit spec --story KEY --file -` when it exists. Write it as the frontier settles, not only at the end, so a stopped session keeps what it settled.\n- **More Story Specs** when the design has parts that read better apart (for example `api`, `migration`). The skill offers the split; the person decides.\n- **ADRs as Story Specs** with slug `adr-NNNN-<kebab-title>` (numbered per Story, from `0001`) and title `ADR NNNN: <title>`. Use the base skill's `adr-format.md` for when to offer an ADR and its format, and keep its rule that all three conditions hold (hard to reverse, surprising without context, a real trade-off). Store them only with the Story: never in `docs/adr/`, `docs/agents/adr/` or the repository root.\n- The Story description does not change. A Comment at the end may summarize the session (Specs written, ADRs added, open questions) when Comments is on.\n- The skill does not change the Stage, start work, create branches or edit code. The result is not permission to implement it; `rowbly-dev` does that.\n\n## Rowbly integration\n\n- The skill folder is `skills/rowbly-grill/` and holds `SKILL.md`, `references/` (the base skill's `grilling.md`, `adr-format.md` and `ui-protocol.md`, changed to the Story targets above, plus a copy of `skills/rowbly-reference.md` as `references/rowbly-reference.md`), `scripts/`, `assets/` and `agents/openai.yaml`.\n- `SKILL.md` tells the agent to read `references/rowbly-reference.md` before running any `rowbly` command, like `rowbly-dev`.\n- Self-contained (AGENTS.md, Agent skills): frontmatter has only `name` and `description`; the description names no other skill or file; no links outside the folder.\n- Keep the base skill's MIT license (`LICENSE.md`, Copyright Matt Pocock) in the folder.\n- Add `skills/rowbly-grill` to `package.json` `files`, so `rowbly skills list` shows it and `rowbly skills install rowbly-grill --harness <h>` installs it. Check both against the packed tarball (`pnpm pack`), not only the source tree.\n- If `skills/rowbly-reference.md` lacks a command the skill needs (for example `plugins list` and its JSON fields), add it there and copy the page again to `skills/rowbly-dev/references/` and `skills/rowbly-grill/references/`.\n- Add `.agents/skills/rowbly-grill` as a symlink to `skills/rowbly-grill`, as for `rowbly-dev`.\n\n## Docs\n\n- `AGENTS.md`: a row in the documentation map, and a paragraph under Agent skills (and the note that `skills/rowbly-grill/references/rowbly-reference.md` is a copy to refresh).\n- `README.md` Install and `docs/user-guide.md` (skills section): list `rowbly-grill` with the official skills.\n\n## Done when\n\n- `rowbly skills install rowbly-grill --harness claude` and `--harness codex` copy the full folder from the packed package, and `rowbly skills list` lists it as official.\n- In a test Data Root: with Specs off, the skill refuses and names `rowbly plugins enable specs`. With an empty description, it refuses. With a real Story, a short session writes the Story Spec `spec` and at least one `adr-0001-…` Story Spec, both shown by `rowbly specs list --story KEY`.\n- No files outside the Story change during a session (no `CONTEXT.md`, no `docs/adr/`).\n- Tests: none by default (ADR-0027). Add one task check in `test/skills/agentWorkflows.test.ts` only for a failure the skill rates HIGH or CRITICAL (for example grilling with Specs off, or writing ADRs to `docs/adr/`).\n- `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` pass.",
-  "stage": "in-progress",
-  "rank": "a7",
+  "stage": "done",
+  "rank": "ab",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:41:19.763Z",
-  "updatedAt": "2026-10-25T17:42:25.428Z"
+  "updatedAt": "2026-10-25T18:29:09.698Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "huH8QYl3",
+          "author": "sunny",
+          "body": "Complexity 4/10. Plan accepted for codex/row-32-rowbly-grill: adapt the upstream interview and UI to Story Specs and Story-scoped ADRs, integrate packaging/docs, verify disposable sessions and packed installs, then run independent validation and capture evidence.",
+          "createdAt": "2026-10-25T18:01:23.904Z",
+          "updatedAt": "2026-10-25T18:01:23.904Z"
+        },
+        {
+          "id": "nzY3JEog",
+          "author": "sunny",
+          "body": "Draft PR #111 opened: https://github.com/sgolovine/rowbly/pull/111. Validation signed off at cb4cfc5; all four checks, packed installs and synthetic interview passed. Five screenshots published. Browser testing limitation documented.",
+          "createdAt": "2026-10-25T18:28:32.824Z",
+          "updatedAt": "2026-10-25T18:28:32.824Z"
+        }
+      ]
+    }
+  }
 }
