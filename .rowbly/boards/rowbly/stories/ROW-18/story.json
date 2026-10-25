@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-18",
+  "boardId": "rowbly",
+  "name": "Add `rowbly skills create`",
+  "description": "If I am working on my project where I have rowbly. I expect to be able to run the following commands:\n\n- `rowbly skills create`: Boilerplates a new skill for the user\n- `rowbly skills list`: List all skills created with `create`\n- `rowbly skills`: Help page, lists above commands\n\n\n### Create Flags\n\n- `--harness`: Allows the options: `codex`, `claude`, `gemini`, `pi`, `cursor` and `generic`. Defaults to `generic`. This determines the placement of the skill, whether in a `.codex/skills` or `.claude/skills`, etc. Generic puts it in `.agents/skills`.\n\n\nFor harness support and placement, I have another project that can act as a great reference point: https://github.com/sgolovine/distributor. This is all about placing skills in their correct locations.\n\n### Skill Boilerplate\n\nThe skill boilerplate should include the rowbly reference (skills/rowbly-reference.md) in a reference sub-folder and short paragraph at the top (no more than 160 characters) that tells the agent about rowbly and gives it a link to the reference file.",
+  "stage": "todo",
+  "rank": "a2",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T15:14:29.347Z",
+  "updatedAt": "2026-10-25T15:16:42.960Z"
+}
