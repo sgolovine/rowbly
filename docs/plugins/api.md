@@ -609,7 +609,7 @@ The installed package also includes `rowbly/dist/clipboard.js`, which exports `r
 and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
 [ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
 child isolation and the bounds' limits. Story paste keys are described below; an image-storage
-consumer is planned separately.
+consumer is provided by the Built-in Attachments Plugin.
 
 
 ## Story image paste
@@ -619,6 +619,8 @@ and its new/edit form. All three callbacks are required. The first successfully 
 owns the contribution; a second claimant fails as a whole. A claimant whose startup fails owns
 nothing, so a later Plugin can load. This applies to staged TUI loading and reloads as well.
 
+- Optional `clipboardFallback: string` supplies Plugin-owned CLI guidance appended to unsupported/no-display
+  clipboard toasts; for example `use rowbly attachments add <KEY> <file>`.
 - `story({ story, image, plugin, ui }): Promise<void>` saves immediately through the Plugin's
   operations. Core reloads the Story when it finishes. It runs in the `screen` stage.
 - `form({ boardId, story, image, pending, setPending, plugin, ui }): void` stages only in memory.
@@ -632,18 +634,34 @@ nothing, so a later Plugin can load. This applies to staged TUI loading and relo
 
 `image` is `PluginPasteImage`: `{ bytes: Uint8Array, type: 'image/png' }`. Core reads once per
 accepted gesture using `clipboard.readImage()`. Keep the bytes in pending input and consume them
-in your create/update transform so all files and the Story save in one Change Set. Pending data remains associated with its originating Plugin ID and
+in memory, then encode them as strings (for example base64) in `input`: operation inputs are deeply frozen. Decode them in your create/update transform so all files and the Story save in one Change Set. Pending data remains associated with its originating Plugin ID and
 lives above the form's fields and tabs, marks the form dirty, survives validation/save failures,
 and clears after success. Cancellation writes nothing. Object input merges over the same Plugin's
 field and create-tab input (pending keys win); another value replaces it. Core merges field and
 create-tab input first, then converts and applies pending paste input once per submission. Declare matching operation input schemas
 and transforms in the Plugin definition; the example below shows only its TUI contribution.
 
+`PluginStoryForm.pendingSummary?({ pending, story })` may return `{ label, value }` strings for a
+read-only row below Details fields (or the edit form). It runs in the `field` stage after a paste,
+only for defined pending data. It must use memory only. The row clears on successful save.
+
 ```ts
 import type { PluginPasteImage, PluginTui } from '../../plugin-api';
 
 export const imageTui: PluginTui = {
+  storyForm: {
+    async fields() {
+      return [];
+    },
+    input() {
+      return undefined;
+    },
+    pendingSummary({ pending }) {
+      return { label: 'Images', value: `${(pending as PluginPasteImage[]).length} pending` };
+    },
+  },
   storyPaste: {
+    clipboardFallback: 'use the Plugin command to add an image file',
     async story({ story, image, plugin, ui }) {
       await plugin.operation('paste', { key: story.key }, (changes) =>
         changes.writeBinaryFile({ story: story.key }, 'clipboard.png', image.bytes),
@@ -657,7 +675,7 @@ export const imageTui: PluginTui = {
     },
     input({ pending }) {
       // The Plugin's stories.create/update transform consumes these bytes in the same Change Set.
-      return { images: pending };
+      return { images: (pending as PluginPasteImage[]).map((image) => Buffer.from(image.bytes).toString('base64')) };
     },
   },
 };

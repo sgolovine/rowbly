@@ -114,6 +114,7 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | --- | --- | --- |
 | Assignees | `stories.create`, `stories.update` | `{ assignees?, add?, remove? }`: handles or `me`; `assignees` replaces the list and cannot be combined with `add` or `remove` |
 | Epics | `stories.create`, `stories.update` | `{ epic: id \| null }` |
+| Attachments | `stories.create`, `stories.update` | `{ images: [{ name, png }] }`: PNGs encoded as base64, at most 10 MiB total; appends metadata and files in the Story Change Set |
 | Specs | `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset? }` |
 | Specs | `stories.create` | `{ specs?, addSpecs?, removeSpecs?, reset?, storySpecs?: [{ slug?, title?, text }] }`; Story Spec slugs default to `spec` and must be unique |
 | Tasks | `stories.create` | `{ tasks: [{ name, description?, stage? }] }`; Stage defaults to the first effective Stage, numbering follows draft order |

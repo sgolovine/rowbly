@@ -31,3 +31,25 @@ export const AttachmentsBag = z
       seen.add(id);
     }
   });
+
+/** Strings survive the operation input's deep freeze; decoding is deferred until the transform. */
+export const AttachmentsInput = z.object({
+  images: z
+    .array(
+      z.object({
+        name: AttachmentSchema.shape.name,
+        png: z
+          .string()
+          .min(12)
+          .max(4 * Math.ceil(MAX_ATTACHMENT_BYTES / 3))
+          // A repeated quartet group can overflow the regex stack on supported large images.
+          .refine((png) => png.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(png), 'Invalid base64'),
+      }),
+    )
+    .min(1)
+    .refine(
+      (images) =>
+        images.reduce((size, image) => size + Buffer.byteLength(image.png, 'base64'), 0) <= MAX_ATTACHMENT_BYTES,
+      'pending images exceed 10 MiB',
+    ),
+});

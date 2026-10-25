@@ -30,3 +30,9 @@ Doctor reports `ATTACHMENTS_MISSING_FILE` for dangling entries; `--fix` removes 
 valid bags. `ATTACHMENTS_ORPHAN_FILE` preserves unreferenced bytes for recovery, including with
 `--fix`. Invalid bags receive `PLUGIN_DATA_INVALID` and no repair. Owner reads and changes exit 6;
 never overwrite unreadable data with an empty bag. Preserve the bytes and report the problem.
+
+In the TUI, paste with Ctrl+V, Alt+V, Ctrl+Alt+V or empty bracketed paste on any Story tab or
+new/edit form. Open Stories save immediately. Forms hold images in memory until save (10 MiB total),
+show an Attachments summary on Details/in the edit form, preserve failed saves, and confirm discard.
+The Attachments tab lists name, size and date: n new Attachment from PNG path, o open, d remove
+with confirmation. Story/card badges use the stored count. SSH/headless fallback: rowbly attachments add <KEY> <file>.

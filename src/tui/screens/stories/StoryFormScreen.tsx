@@ -101,6 +101,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
         onSubmit={save}
         isActive={!paste.busy && !saving}
         extraHints={paste.hints}
+        pendingSummary={paste.summary}
       />
     );
 
@@ -114,6 +115,11 @@ export function StoryFormScreen({ params }: ScreenProps) {
         isActive={!paste.busy && !saving}
         extraHints={paste.hints}
       />
+      {paste.summary && (
+        <Text>
+          {paste.summary.label}: {paste.summary.value}
+        </Text>
+      )}
       <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
       {choices.labels.length > 0 && <Text color={theme.inkFaint}>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>

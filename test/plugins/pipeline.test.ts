@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
 import { definePlugin, type PluginChangeSet, readBinaryInput } from '../../src/plugin-api';
 import { attachments } from '../../src/plugins/attachments';
-import { addAttachment, removeAttachment } from '../../src/plugins/attachments/attachments';
+import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
 import { specs } from '../../src/plugins/specs';
@@ -115,6 +115,12 @@ describe('guard', () => {
       hooks: {
         'stories.remove': { guard: () => (refuse ? { reject: 'hold deletion' } : undefined) },
         'doctor.fix': { guard: () => (refuse ? { reject: 'hold repair' } : undefined) },
+        'stories.create': {
+          guard: ({ input }) => (refuse && input.plugins?.attachments ? { reject: 'hold image create' } : undefined),
+        },
+        'stories.update': {
+          guard: ({ input }) => (refuse && input.plugins?.attachments ? { reject: 'hold image update' } : undefined),
+        },
         'attachments.add': { guard: () => (refuse ? { reject: 'hold add' } : undefined) },
         'attachments.remove': { guard: () => (refuse ? { reject: 'hold remove' } : undefined) },
       },
@@ -153,6 +159,16 @@ describe('guard', () => {
       code: 'CONFLICT',
     });
     expect(await attachment.files.list({ story: 'WEB-1' })).toEqual(['recover.png']);
+    const images = { images: [{ name: 'pending.png', png: Buffer.from(png).toString('base64') }] };
+    await expect(
+      services.stories.create('web', { name: 'Pending', plugins: { attachments: images } }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    await expect(
+      services.stories.update('WEB-1', { name: 'Unsaved', plugins: { attachments: images } }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await attachment.files.list({ story: 'WEB-1' })).toEqual(['recover.png']);
+
     await expect(services.stories.remove('WEB-2')).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(await services.stories.list('web', {})).toEqual(before);
     await expect(services.doctor.fix()).rejects.toMatchObject({ code: 'CONFLICT' });
@@ -173,6 +189,25 @@ describe('guard', () => {
     refuse = false;
     await removeAttachment(attachment, 'WEB-1', image.id);
     expect(await attachment.files.readBinary({ story: 'WEB-1' }, `${image.id}.png`)).toBeNull();
+    const created = await services.stories.create('web', { name: 'With image', plugins: { attachments: images } });
+    const first = (await listAttachments(attachment, created.key))[0];
+    expect(first).toMatchObject({ name: 'pending.png', size: png.length });
+    expect(await attachment.files.readBinary({ story: created.key }, `${first?.id}.png`)).toEqual(png);
+    await services.stories.update(created.key, { name: 'With two images', plugins: { attachments: images } });
+    expect(await listAttachments(attachment, created.key)).toHaveLength(2);
+    const saved = await services.stories.get(created.key);
+    await expect(
+      services.stories.update(created.key, {
+        name: 'Invalid image',
+        plugins: {
+          attachments: {
+            images: [images.images[0], { name: 'bad.png', png: Buffer.alloc(9).toString('base64') }],
+          },
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.get(created.key)).toEqual(saved);
+    expect(await attachment.files.list({ story: created.key })).toHaveLength(2);
     await services.stories.remove('WEB-2');
     expect((await services.stories.get('WEB-1')).plugins).toEqual(other);
     await expect(services.stories.get('WEB-2')).rejects.toMatchObject({ code: 'NOT_FOUND' });

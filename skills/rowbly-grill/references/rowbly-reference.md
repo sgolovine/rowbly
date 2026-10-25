@@ -10,6 +10,7 @@ your skill's `references/` folder and point at it from your `SKILL.md`, for exam
 Rowbly is a Kanban tracker that stores its data as JSON and Markdown files in a `.rowbly/` folder (the
 **Data Root**), usually committed with the code. `rowbly <noun> <verb> …` runs one command and exits.
 Bare `rowbly` opens a full-screen TUI for people; **agents never run it**.
+TUI Attachments tab: n new PNG by file path, o open, d remove (confirmation); Story/card count badge.
 TUI Story/new/edit image paste: `ctrl+v`, `alt+v`, `ctrl+alt+v` or empty bracketed paste; requires a Plugin claimant. Forms stage until save; cancellation writes nothing. Nonempty paste stays text.
 
 ## 1. Rules for every call
@@ -207,7 +208,8 @@ rowbly attachments open WEB-42 <id> --json --no-prompt
 input uses `image-YYYYMMDD-HHMM.png` (UTC). Bytes live in the Story's `plugins/attachments/<id>.png`;
 entries in `plugins.attachments.attachments`. Add/remove saves both together. Invalid bags exit 6.
 Doctor `ATTACHMENTS_MISSING_FILE` removes dangling entries with `--fix`; `ATTACHMENTS_ORPHAN_FILE`
-keeps recoverable bytes. `PLUGIN_DATA_INVALID` has no automatic repair. The TUI tab is planned.
+keeps recoverable bytes. `PLUGIN_DATA_INVALID` has no automatic repair. The TUI Attachments tab lists
+images and supports adding, opening and removing them.
 
 **Comments** (`comments`): notes on a Story, oldest first; the author is Me.
 
