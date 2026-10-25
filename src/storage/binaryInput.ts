@@ -40,7 +40,12 @@ export async function openAssociatedFile(path: string): Promise<void> {
     execFile(
       command,
       args,
-      { timeout: 10_000, maxBuffer: 64 * 1024, env: { ...process.env, ROWBLY_OPEN_FILE: path } },
+      {
+        timeout: 10_000,
+        maxBuffer: 64 * 1024,
+        windowsVerbatimArguments: process.platform === 'win32',
+        env: { ...process.env, ROWBLY_OPEN_FILE: path },
+      },
       (error) => {
         if (error) reject(new UsageError(`could not open file with ${command}`, { cause: error }));
         else resolve();
