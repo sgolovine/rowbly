@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:11.570Z",
-  "updatedAt": "2026-10-25T17:40:41.471Z",
+  "updatedAt": "2026-10-25T17:43:03.620Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,6 +20,17 @@
     "story-linking": {
       "blocks": [
         "ROW-30"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "Z5DT1tVw",
+          "author": "sunny",
+          "body": "Not waiting for ROW-25 (user decision, 2026-10-25): use the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste). ROW-25's findings may adjust the keys later. Still blocked by ROW-27 (clipboard reader).",
+          "createdAt": "2026-10-25T17:43:03.619Z",
+          "updatedAt": "2026-10-25T17:43:03.619Z"
+        }
       ]
     }
   }
