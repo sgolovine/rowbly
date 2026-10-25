@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T18:18:28.958Z",
+  "updatedAt": "2026-10-25T18:18:29.566Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -30,6 +30,13 @@
           "body": "Started ROW-29 on rook. Inspecting the Plugin API, binary file support, and adjacent stack branches before planning.",
           "createdAt": "2026-10-25T18:18:28.957Z",
           "updatedAt": "2026-10-25T18:18:28.957Z"
+        },
+        {
+          "id": "57FjP8HE",
+          "author": "sunny",
+          "body": "Accepted complexity-6 plan on codex/row-29-attachments: implement the Attachments bag and atomic operations, CLI and narrow host helpers, conservative doctor checks, docs, and required existing-test extensions. Baseline checks all pass. ROW-28 has not pushed yet; its branch will be merged when available.",
+          "createdAt": "2026-10-25T18:18:29.566Z",
+          "updatedAt": "2026-10-25T18:18:29.566Z"
         }
       ]
     }
