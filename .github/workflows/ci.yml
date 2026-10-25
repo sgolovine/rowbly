@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -97,3 +98,58 @@ jobs:
       # The `cli` project builds the CLIs from source in its global setup.
       - name: CLI tests
         run: pnpm test:cli
+
+  clipboard-smoke:
+    name: Clipboard smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 12.11.2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and install actual npm tarball
+        run: |
+          pnpm build
+          npm pack --pack-destination "$RUNNER_TEMP"
+          npm install --global "$RUNNER_TEMP"/rowbly-*.tgz
+          node scripts/clipboard-smoke.mjs load
+
+      - name: Install Linux clipboard servers and tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb xauth sway wl-clipboard
+
+      - name: Native clipboard round trip
+        if: runner.os != 'Linux'
+        run: node scripts/clipboard-smoke.mjs native
+
+      - name: X11 native clipboard round trip
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum node scripts/clipboard-smoke.mjs native
+
+      - name: Headless Wayland fallback round trip
+        if: runner.os == 'Linux'
+        run: bash scripts/clipboard-wayland-smoke.sh
