@@ -98,5 +98,35 @@ binary; its build script stays off, since the binaries it ships load without it.
 
 | Workflow | When | What |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | Pull requests and pushes to `main` | Three parallel jobs, each installing with the frozen lockfile: **Verify** (typecheck, lint, build, verify the packed package), **Unit tests** (`pnpm test:unit`) and **CLI tests** (`pnpm test:cli`) |
+| `.github/workflows/ci.yml` | Pull requests, pushes to `main` and manual dispatch | Frozen-lockfile jobs: **Verify** (typecheck, lint, build, verify the packed package), **Unit tests** (`pnpm test:unit`), **CLI tests** (`pnpm test:cli`) and **Clipboard smoke** (macOS, Windows and Ubuntu) |
 | `.github/workflows/release.yml` | Run by hand with a version bump | Create a GitHub release from `main`, then publish to npm |
+
+### Clipboard smoke
+
+The clipboard matrix builds Rowbly, runs `npm pack`, and globally installs that tarball with npm.
+`scripts/clipboard-smoke.mjs` resolves the installed `dist/clipboard.js` and its native dependency
+from `npm root -g`, logging their paths and versions. Every OS must load the installed reader and
+native binding, write a small opaque multicolor PNG with `setImageBinary`, and read it through
+`readClipboardImage()`. It compares decoded dimensions and RGBA pixels, because clipboard servers
+can reencode PNG bytes. The PNG codec is a development dependency; the smoke runs outside Vitest.
+
+Ubuntu runs the native check under Xvfb, then `scripts/clipboard-wayland-smoke.sh` starts a bounded
+headless Sway session with no `DISPLAY`. A foreground `wl-copy` owns the real selection; a forwarding
+wrapper records the installed reader's real `wl-paste --list-types` and `wl-paste --type image/png`
+calls, proving the fallback ran. Sway provides data-control support without a focused helper window.
+Writers and the compositor are stopped on completion or failure, and compositor logs are printed.
+All load failures, unavailable clipboard results, timeouts and pixel mismatches fail the job; none
+are silently skipped. Hosted runner clipboard access failures therefore retain their attempted
+round-trip diagnostics alongside the preceding required install/load check.
+
+To reproduce after a build and global tarball install, run:
+
+```sh
+node scripts/clipboard-smoke.mjs load
+node scripts/clipboard-smoke.mjs native  # macOS or Windows
+xvfb-run --auto-servernum node scripts/clipboard-smoke.mjs native  # Linux X11
+bash scripts/clipboard-wayland-smoke.sh  # Linux; requires sway and wl-clipboard
+```
+
+The manual trigger becomes available once the workflow is on the default branch. A pushed feature
+branch alone does not run this matrix; its pull request does.
