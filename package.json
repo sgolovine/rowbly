@@ -10,6 +10,7 @@
   "files": [
     "dist",
     "skills/rowbly",
+    "skills/rowbly-dev",
     "skills/rowbly-reference.md"
   ],
   "engines": {
