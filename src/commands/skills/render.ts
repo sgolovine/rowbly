@@ -1,7 +1,7 @@
 import { colors, renderTable } from '../../output';
 import type { SkillEntry } from '../../services';
 
-const DESCRIPTION_WIDTH = 60;
+const DESCRIPTION_WIDTH = 48;
 
 function shorten(text: string): string {
   return text.length > DESCRIPTION_WIDTH ? `${text.slice(0, DESCRIPTION_WIDTH - 1)}…` : text;
