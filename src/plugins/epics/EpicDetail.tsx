@@ -23,7 +23,7 @@ export function EpicDetail({ params, plugin, ui }: PluginScreenProps<Record<stri
   const data = useAsync(() => showEpic(plugin, id), [plugin, id]);
   // Back from the Epic form or a Story shows what changed there.
   useReloadOnReturn(data.reload);
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(params.confirmDelete === true);
   const [busy, setBusy] = useState(false);
   useKeyCapture(active && confirming, { escape: true });
   useKeyHints(

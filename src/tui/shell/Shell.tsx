@@ -149,7 +149,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     : 'Rowbly';
   const openDataRoots = () => setOverlay({ kind: 'dataRoots' });
 
-  const pluginSidebars = usePluginSidebars(depth);
+  const pluginSidebars = usePluginSidebars(depth, contextMenu);
   // Dragged with the mouse; like the view, the widths last until Rowbly quits.
   const [boardsWidth, setBoardsWidth] = useState(SIDEBAR_WIDTH);
   const [pluginWidth, setPluginWidth] = useState(SIDEBAR_WIDTH);
@@ -247,6 +247,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     else if (sidebarFocused && pane === 'boards' && input === 'e' && focusedBoard) editBoard(focusedBoard.id);
     else if (sidebarFocused && pane === 'boards' && input === 'd' && focusedBoard) deleteBoard(focusedBoard.id);
     else if (sidebarFocused && pane === 'plugin' && input === 'n') pluginCreate?.onClick();
+    else if (sidebarFocused && pane === 'plugin' && (input === 'e' || input === 'd')) pluginSidebars.shown?.run(input);
     else if (atRoot && input === '\\') pluginSidebars.cycle();
     else if (atRoot && input === '{') pluginSidebars.step(-1);
     else if (atRoot && input === '}') pluginSidebars.step(1);
@@ -259,6 +260,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
 
   const screenHints = useScreenHints(depth);
   const hints = [
+    ...(sidebarFocused && pane === 'plugin' ? (pluginSidebars.shown?.hints ?? []) : []),
     ...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label, focusedBoard !== undefined) : screenHints),
     ...actionHints,
   ];
@@ -332,6 +334,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                       clickable={idle}
                       onFocus={() => setPane('plugin')}
                       onSelect={pluginSidebars.pick}
+                      onContextMenu={pluginSidebars.shown.menu}
                       button={pluginSidebars.shown.button}
                     />
                   )}
