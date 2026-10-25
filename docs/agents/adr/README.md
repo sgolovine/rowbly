@@ -25,7 +25,6 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; amended by 0032, extended by 0033 |
 | [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
 | [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted |
-
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
 
 ### Plugins
@@ -37,7 +36,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0011](0011-plugin-data-is-a-bag-per-plugin.md) | Plugin Data is a bag per Plugin, and core keeps it unchanged | Accepted; amended by 0022 |
 | [0012](0012-plugins-intercept-service-operations.md) | Plugins intercept Service Layer operations through Change Sets | Accepted; amended by 0019 and 0020 |
 | [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted; amended by 0022 |
-| [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 |
+| [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 and 0035 |
 | [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022 |
 | [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
 | [0028](0028-plugin-badges-can-load-from-files.md) | Plugin badges can load what they show from the Plugin's files | Accepted |
@@ -56,6 +55,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0025](0025-a-story-has-many-story-specs.md) | A Story has any number of Story Specs, each named by a slug | Accepted |
 | [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted; amended by 0030 |
 | [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
+| [0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) | Manual Sync rebases in isolation and never force-pushes | Accepted |
 
 ### Development
 
@@ -63,6 +63,5 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | --- | --- | --- |
 | [0027](0027-tests-guard-only-what-review-cannot-check.md) | Tests guard only what review cannot check | Accepted |
 
-| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted |
-
+| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted; amended by 0035 |
 | [0037](0037-clipboard-reads-use-an-isolated-native-child.md) | Clipboard images are read by an isolated optional native child | Accepted |

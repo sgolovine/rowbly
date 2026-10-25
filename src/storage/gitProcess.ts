@@ -11,6 +11,7 @@ export function outsideGitDeadline<T>(fn: () => Promise<T>): Promise<T> {
 
 export interface GitProcessOptions {
   input?: string | Uint8Array;
+  author?: { name: string; email: string; date: string };
   index?: string;
   timeoutMs?: number;
   allowFailure?: boolean;
@@ -51,6 +52,13 @@ export function gitProcess(
           GIT_EDITOR: '/bin/false',
           GIT_SEQUENCE_EDITOR: '/bin/false',
           GIT_SSH_COMMAND: 'ssh -oBatchMode=yes -oStrictHostKeyChecking=yes -oControlMaster=no -oControlPersist=no',
+          ...(options.author
+            ? {
+                GIT_AUTHOR_NAME: options.author.name,
+                GIT_AUTHOR_EMAIL: options.author.email,
+                GIT_AUTHOR_DATE: options.author.date,
+              }
+            : {}),
           ...(options.index ? { GIT_INDEX_FILE: options.index } : {}),
         },
       },

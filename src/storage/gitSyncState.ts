@@ -4,6 +4,7 @@ import { readTextIfExists } from './files';
 import { writeTextFile } from './system';
 
 const Last = z.object({
+  id: z.string().optional(),
   kind: z.enum(['synchronized', 'failed', 'interrupted']),
   message: z.string(),
   startedAt: z.number(),

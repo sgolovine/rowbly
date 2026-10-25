@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.201Z",
-  "updatedAt": "2026-10-25T17:47:49.330Z",
+  "updatedAt": "2026-10-25T17:54:36.908Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -30,6 +30,13 @@
           "body": "Complexity 5/10. Branch codex/row-26-binary-plugin-files starts at e084d06. Plan accepted: expose binary Plugin reads/writes over the existing byte-capable journal, preserve text APIs, add exact-byte recovery coverage, verify doctor/Git integration, and document the API in ADR-0036 if still available.",
           "createdAt": "2026-10-25T17:47:49.329Z",
           "updatedAt": "2026-10-25T17:47:49.329Z"
+        },
+        {
+          "id": "kdM8ALPn",
+          "author": "sunny",
+          "body": "Implementation pushed at e096aa6 in three focused commits plus main merges. Binary APIs, compact binary summaries, exact-byte recovery/Git coverage and ADR-0036 are complete. Development checks pass except five Board formatting errors reported as covered by PR107. Starting independent validation and required screenshot capture.",
+          "createdAt": "2026-10-25T17:54:36.907Z",
+          "updatedAt": "2026-10-25T17:54:36.907Z"
         }
       ]
     }
