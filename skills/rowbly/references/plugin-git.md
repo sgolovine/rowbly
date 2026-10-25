@@ -36,8 +36,9 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
 ## 3. What it commits
 
 - Each Automatic Commit has the message `chore: update Rowbly data`. It includes the paths that saved
-  Rowbly changes affected, deletions and other Plugins' writes included. Local State, locks and
-  `.txn/` are excluded; git ignores still apply.
+  Rowbly changes affected, deletions and other Plugins' writes included. Local State, locks,
+  `.txn/` and atomic-write temporary files are excluded; the Data Root's `.gitignore` is included; git
+  ignores still apply.
 - Other paths and unrelated staged files stay untouched. An affected path that already has staged
   changes is refused with a warning instead of committed.
 - Hooks and commit signing are turned off for Automatic Commits. They never push, create branches or
@@ -69,7 +70,7 @@ tell the user to press `S`, or do the same with git yourself (`git pull --rebase
 only when they ask you to push.
 
 Sync, in order: commits pending Rowbly changes under the Data Root (changed, added and deleted files;
-never `local.json`, `.lock`, `.lock.break`, `.txn/` or `.*.tmp`), only when there are some; fetches;
+never `local.json`, `.lock`, `.lock.break`, `.txn/` or `.<name>.<8 hex>.tmp`; `.gitignore` is included), only when there are some; fetches;
 rebases onto the branch's upstream in a temporary worktree, then moves the branch like `git checkout`,
 keeping the user's other staged and unstaged changes; pushes to the upstream, never forced. The header
 shows `Sync…` while it runs and `S` does nothing until it ends. The success toast

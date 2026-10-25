@@ -7,7 +7,7 @@ import { dirname, join, relative } from 'node:path';
 import { ConflictError, ValidationError } from '../core';
 import type { DataRoot } from '../schemas';
 import { readTextIfExists } from './files';
-import { commitGitPaths, gitInfo, pendingPath, runGit } from './git';
+import { commitGitPaths, gitInfo, isCommittedPath, pendingPath, runGit } from './git';
 import { io } from './io';
 import { writeTextFile } from './system';
 
@@ -36,7 +36,7 @@ function gitReason(err: unknown): string {
   return lines.find((line) => /^(fatal|error):|^!/.test(line)) ?? lines[0] ?? failure.message ?? String(err);
 }
 
-/** Changed, added and deleted files under the Data Root, as Data Root paths, without Local State or Rowbly's own dot files. */
+/** Changed, added and deleted files under the Data Root, as Data Root paths, that Git automation commits (`isCommittedPath`). */
 async function pendingRowblyPaths(top: string, prefix: string): Promise<string[]> {
   const out = await runGit(top, [
     'status',
@@ -60,8 +60,7 @@ async function pendingRowblyPaths(top: string, prefix: string): Promise<string[]
     }
     for (const name of names) {
       const inside = prefix ? name.slice(prefix.length + 1) : name;
-      if (!inside || inside === 'local.json' || inside.split('/').some((part) => part.startsWith('.'))) continue;
-      paths.push(inside);
+      if (inside && isCommittedPath(inside)) paths.push(inside);
     }
   }
   return [...new Set(paths)];

@@ -438,7 +438,7 @@ Git failures warn without undoing a saved Rowbly change; pending work is retried
 
 When the Git Plugin is on, the TUI header shows **Sync** (key `S`). Sync sends your Rowbly changes to the current branch's upstream and brings in your team's, like `git pull --rebase` followed by `git push`:
 
-1. It commits pending Rowbly changes to Stories and configuration, including new and deleted files, as one `chore: update Rowbly data` commit. With nothing pending it makes no commit. Local State (`local.json`), lock and transaction files, and files outside the Data Root are never committed.
+1. It commits pending Rowbly changes to Stories and configuration, including new and deleted files, as one `chore: update Rowbly data` commit. With nothing pending it makes no commit. Local State (`local.json`), lock, transaction and temporary files, and files outside the Data Root are never committed; the Data Root's `.gitignore` is.
 2. It fetches the upstream's remote.
 3. When the upstream has new commits, it rebases your commits onto them in a temporary Git worktree, then moves your branch to the result the way `git checkout` would. Your other staged and unstaged changes stay as they were.
 4. It pushes to the upstream. It never force-pushes.

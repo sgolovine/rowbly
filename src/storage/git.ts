@@ -8,6 +8,7 @@ import type { DataRoot } from '../schemas';
 import { readTextIfExists } from './files';
 import { errorCode, io } from './io';
 import { writeTextFile } from './system';
+import { isWatchedPath } from './watch';
 
 const execute = promisify(execFile);
 
@@ -45,6 +46,16 @@ export async function gitInfo(root: DataRoot) {
     }
   };
   return { root: top, authorName: await config('user.name'), authorEmail: await config('user.email') };
+}
+
+/**
+ * Whether `inside`, a Data Root path with `/`, is Rowbly data that Git automation commits: anything
+ * but Local State (`local.json`), the Data Root lock (`.lock`, `.lock.break`), the commit journal
+ * (`.txn/`) and atomic-write temporary files (`.<name>.<8 hex>.tmp`). Other dot files, such as the
+ * Data Root's `.gitignore`, are committed.
+ */
+export function isCommittedPath(inside: string): boolean {
+  return inside !== 'local.json' && isWatchedPath(inside);
 }
 
 /** Personal Git commit preferences; omitted author fields use Git configuration. */
@@ -120,12 +131,7 @@ export async function commitGitPaths(
   const data = await io.realpath(root.path);
   const prefix = relative(info.root, data).split('\\').join('/');
   const safe = paths.map((path) => {
-    if (
-      isAbsolute(path) ||
-      path.split('/').includes('..') ||
-      path.split('/').some((p) => p.startsWith('.')) ||
-      path === 'local.json'
-    )
+    if (isAbsolute(path) || path.split('/').includes('..') || !isCommittedPath(path))
       throw new Error(`Unsafe Git automation path: ${path}`);
     const full = resolve(data, path);
     if (relative(data, full).startsWith('..')) throw new Error('Git automation path escapes the Data Root');
@@ -147,7 +153,7 @@ export async function commitGitPaths(
   if (!tracked.length) return;
   const files = [...new Set(tracked)].filter((path) => {
     const inside = prefix ? path.slice(prefix.length + 1) : path;
-    return inside !== 'local.json' && !inside.split('/').some((part) => part.startsWith('.'));
+    return isCommittedPath(inside);
   });
   if (!files.length) return;
   const selected = files.map((path) => `:(literal)${path}`);
