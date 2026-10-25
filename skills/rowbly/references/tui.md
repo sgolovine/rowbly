@@ -64,7 +64,8 @@ On an open Story or its new/edit form, `ctrl+v`, `alt+v`, `ctrl+alt+v` or empty 
 an image for the single active Plugin that takes pasted images, across tabs and fields. The hint is
 `ctrl+v paste image` on macOS/Linux, `alt+v paste image` on Windows, and absent without that Plugin.
 Nonempty paste stays text. Other screens, tasks, the full-screen editor and saving disable image
-paste. A spinner spans reading/handling; repeated gestures while busy are ignored. An open Story
+paste. A spinner spans reading/handling; repeated gestures while busy are ignored, and the paste hint
+stays hidden even after opening another Story until that work finishes. An open Story
 saves immediately through its Plugin; a form keeps images pending through failures until save,
 and cancellation writes nothing. No claimant: `Turn on a Plugin that takes pasted images`.
 No image: `No image on the clipboard`. Size and timeout have separate messages; unavailable access

@@ -1,5 +1,5 @@
 import { useInput, usePaste } from 'ink';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { Story } from '../../schemas';
 import { invokePlugin, invokePluginSync, type PluginInput } from '../../services';
 import { clipboard } from '../../services/clipboard';
@@ -11,7 +11,23 @@ import { type ToastStore, useToast } from './toasts';
 import { useServices } from './useServices';
 
 // A read remains in flight even if its screen closes and another Story opens.
-const reading = new WeakSet<ToastStore>();
+const sessions = new WeakMap<ToastStore, ReturnType<typeof createPasteSession>>();
+
+function createPasteSession() {
+  let busy = false;
+  const listeners = new Set<() => void>();
+  return {
+    isBusy: () => busy,
+    setBusy(value: boolean) {
+      busy = value;
+      for (const listener of listeners) listener();
+    },
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
 
 /** Image gestures belong to the whole Story, independently of its selected tab or field. */
 export function useStoryPaste({
@@ -35,7 +51,15 @@ export function useStoryPaste({
   const active = useIsActive();
   const covered = useCovered();
   const allowed = active && !covered && enabled && !!boardId;
-  const [busy, setBusy] = useState(false);
+  const pasteSession = useMemo(() => {
+    let session = sessions.get(toast);
+    if (!session) {
+      session = createPasteSession();
+      sessions.set(toast, session);
+    }
+    return session;
+  }, [toast]);
+  const busy = useSyncExternalStore(pasteSession.subscribe, pasteSession.isBusy);
   const pending = useRef<unknown>(undefined);
   const pendingOwner = useRef<string | undefined>(undefined);
   const [dirty, setDirty] = useState(false);
@@ -64,7 +88,7 @@ export function useStoryPaste({
   );
 
   const paste = async () => {
-    if (!allowed || reading.has(toast)) return;
+    if (!allowed || pasteSession.isBusy()) return;
     if (!claimant?.tui.storyPaste) {
       toast.push('info', 'Turn on a Plugin that takes pasted images');
       return;
@@ -77,8 +101,7 @@ export function useStoryPaste({
       latest.current.router.current === route &&
       latest.current.claimant === claimant &&
       latest.current.services === services;
-    reading.add(toast);
-    setBusy(true);
+    pasteSession.setBusy(true);
     const id = toast.pending('Reading clipboard image…');
     progress.current = id;
     try {
@@ -130,8 +153,7 @@ export function useStoryPaste({
     } finally {
       toast.dismiss(id);
       if (progress.current === id) progress.current = undefined;
-      reading.delete(toast);
-      setBusy(false);
+      pasteSession.setBusy(false);
     }
   };
   useInput(
