@@ -72,6 +72,7 @@ Use these in commands, commit messages and replies.
 | Assignee | A person in the roster (Assignees Plugin) | owner |
 | Epic | A group of Stories from any Boards (Epics Plugin) | — |
 | Spec | A Markdown document of a Story or a Board (Specs Plugin) | — |
+| Attachment | A PNG image on a Story (Attachments Plugin) | upload, file blob |
 | Comment | A note on a Story (Comments Plugin) | — |
 
 ## 4. Where a command looks
@@ -147,7 +148,7 @@ rowbly stories delete WEB-42 --yes --json --no-prompt           # only when the 
 A Story's JSON: `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`"P1"` or
 `null`), `labels`, `dueDate`, `customFields`, `createdBy`, `createdAt`, `updatedAt`, and `plugins`
 with one entry per Plugin that has data (`plugins.tasks.tasks`, `plugins.assignees.assignees`,
-`plugins.epics.epic`, `plugins.specs.specs`, `plugins.comments.comments`).
+`plugins.epics.epic`, `plugins.specs.specs`, `plugins.comments.comments`, `plugins.attachments.attachments`).
 
 Rules: Priority is `P0`–`P4`; a Label is lower-kebab-case (`auth`, never `Auth`); `--due` is
 `YYYY-MM-DD`; required Custom Fields need a `--field`; a Story never moves to another Board. Story Keys
@@ -169,7 +170,7 @@ are defaults; where `ROWBLY.md` (§4) says otherwise, follow it:
 
 ## 8. Plugins
 
-Six Built-in Plugins ship with Rowbly. Each is **off** until the Data Root turns it on, for everyone
+Eight Built-in Plugins ship with Rowbly. Each is **off** until the Data Root turns it on, for everyone
 who shares the Data Root. While off, its command is unknown (exit 2, hint `Plugin "tasks" is off`) and
 its options on core commands are unknown options.
 
@@ -191,6 +192,22 @@ rowbly tasks edit WEB-42.1 --name "Build the sign-in form" --json --no-prompt
 rowbly tasks move WEB-42.1 done --json --no-prompt
 rowbly tasks delete WEB-42.1 --yes --json --no-prompt
 ```
+
+**Attachments** (`attachments`): ordered PNG images on a Story, maximum 10 MiB.
+
+```sh
+rowbly attachments add WEB-42 <file> --json --no-prompt           # or --from-clipboard, never both
+rowbly attachments list WEB-42 --json --no-prompt                # [{id,name,type,size,createdAt,createdBy}]
+rowbly attachments remove WEB-42 <id> --yes --json --no-prompt    # only when removal is requested
+rowbly attachments open WEB-42 <id> --json --no-prompt
+```
+
+`add` returns one entry; `remove` returns `{removed}`; `open` returns `{opened}`. `type` is
+`image/png`, `size` is bytes, `createdBy` is Me or null. File input keeps its basename; clipboard
+input uses `image-YYYYMMDD-HHMM.png` (UTC). Bytes live in the Story's `plugins/attachments/<id>.png`;
+entries in `plugins.attachments.attachments`. Add/remove saves both together. Invalid bags exit 6.
+Doctor `ATTACHMENTS_MISSING_FILE` removes dangling entries with `--fix`; `ATTACHMENTS_ORPHAN_FILE`
+keeps recoverable bytes. `PLUGIN_DATA_INVALID` has no automatic repair. The TUI tab is planned.
 
 **Comments** (`comments`): notes on a Story, oldest first; the author is Me.
 
