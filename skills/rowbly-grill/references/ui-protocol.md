@@ -45,7 +45,8 @@ check as the browser. Never answer the form on the person's behalf.
       "title": "Which modules ship first?",
       "multiple": true,
       "options": ["Auth", "Billing", "Search"],
-      "recommended": ["A", "C"]
+      "recommended": ["A", "C"],
+      "recommendation": "Validate authentication and discovery before adding billing."
     },
     { "title": "What do we call a paying customer?", "recommendation": "Account" }
   ]

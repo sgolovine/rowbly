@@ -36,10 +36,11 @@ explains how it is built. Start at `docs/README.md`.
   amends it and update the old one's **Status** line. Source comments cite ADRs by number and section
   (`ADR-0019 §2`); never renumber an ADR or its sections.
 - **Repository ADRs live only in `docs/agents/adr/`.** Any workflow that records a repository ADR
-  must save it there, never in `docs/adr/`, the repository root or a skill's own folder.
-  `rowbly-grill` records interview decisions as Story Specs (`adr-NNNN-kebab-title`) through the
-  CLI instead; these belong to the Story, not the repository ADR index. Name it `NNNN-<kebab-case-title>.md` with the next free number, follow the format in
+  must save it there, never in `docs/adr/`, the repository root or a skill's own folder. Name it
+  `NNNN-<kebab-case-title>.md` with the next free number, follow the format in
   `docs/agents/adr/README.md`, and add a row to that index in the same change.
+  `rowbly-grill` records interview decisions as Story Specs (`adr-NNNN-kebab-title`) through the
+  CLI instead; these belong to the Story, not the repository ADR index.
 - Older source comments cite IDs such as `RES-02`, `CQ-155` or `WP09`. They refer to a review that has been
   removed from `docs/` (it is in git history). Do not add new ones; cite an ADR or a docs page instead.
 
