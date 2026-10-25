@@ -67,11 +67,19 @@ export { readOpenStoryAfterCreation, setOpenStoryAfterCreation } from './prefere
 export {
   type CreateSkillInput,
   createSkill,
+  HARNESS_FOLDERS,
   HARNESSES,
   type Harness,
+  type InstalledSkill,
+  type InstallSkillInput,
+  installSkill,
   invalidSkillName,
+  listAllSkills,
   listSkills,
+  type OfficialSkill,
+  officialSkills,
   type SkillEntry,
+  type SkillList,
 } from './skills';
 export type * from './types';
 
