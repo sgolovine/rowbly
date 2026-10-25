@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:13.579Z",
-  "updatedAt": "2026-10-25T18:30:25.059Z",
+  "updatedAt": "2026-10-25T18:33:54.590Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -25,6 +25,13 @@
           "body": "Starting the CI clipboard smoke job from main; the draft PR will wait for ROW-30’s stack branch.",
           "createdAt": "2026-10-25T18:30:25.058Z",
           "updatedAt": "2026-10-25T18:30:25.058Z"
+        },
+        {
+          "id": "XXrRGJpZ",
+          "author": "sunny",
+          "body": "Complexity 4/10. Plan accepted for codex/row-31-clipboard-smoke: add packed-package clipboard smoke coverage on macOS, Windows and Ubuntu, verify the real Wayland fallback, and document CI. Baseline typecheck, lint, 80 unit tests and 20 CLI tests pass. Hosted matrix results will be required once the stack permits a PR.",
+          "createdAt": "2026-10-25T18:33:54.590Z",
+          "updatedAt": "2026-10-25T18:33:54.590Z"
         }
       ]
     }
