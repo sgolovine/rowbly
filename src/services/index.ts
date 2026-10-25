@@ -64,6 +64,15 @@ export {
 export type * from './plugins/types';
 export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';
 export { readOpenStoryAfterCreation, setOpenStoryAfterCreation } from './preferences';
+export {
+  type CreateSkillInput,
+  createSkill,
+  HARNESSES,
+  type Harness,
+  invalidSkillName,
+  listSkills,
+  type SkillEntry,
+} from './skills';
 export type * from './types';
 
 /**
