@@ -6,7 +6,7 @@ import { clipboard } from '../../services/clipboard';
 import { useCovered } from '../components';
 import { useRouter } from '../router';
 import { pluginUi, usePlugins } from './plugins';
-import { useDirty, useIsActive, useKeyHints } from './shell';
+import { useDirty, useIsActive } from './shell';
 import { type ToastStore, useToast } from './toasts';
 import { useServices } from './useServices';
 
@@ -54,14 +54,14 @@ export function useStoryPaste({
     };
   }, [allowed, route, claimant, services, storyKey, toast]);
   useDirty(form && dirty);
+  const accepting = allowed && !busy;
   const hints = useMemo(
     () =>
-      allowed && !busy && claimant
+      accepting && claimant
         ? [{ key: process.platform === 'win32' ? 'alt+v' : 'ctrl+v', description: 'paste image' }]
         : [],
-    [allowed, busy, claimant],
+    [accepting, claimant],
   );
-  useKeyHints(hints);
 
   const paste = async () => {
     if (!allowed || reading.has(toast)) return;
@@ -138,13 +138,13 @@ export function useStoryPaste({
     (input, key) => {
       if (input === 'v' && (key.ctrl || key.meta)) void paste();
     },
-    { isActive: allowed && !busy },
+    { isActive: accepting },
   );
   usePaste(
     (text) => {
       if (text === '') void paste();
     },
-    { isActive: allowed && !busy },
+    { isActive: accepting },
   );
 
   return {

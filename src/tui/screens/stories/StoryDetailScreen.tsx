@@ -64,7 +64,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   }, [services, ctx, key, plugins]);
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story });
-  useStoryPaste({
+  const paste = useStoryPaste({
     boardId: data.data?.story.boardId,
     story: data.data?.story,
     enabled: mode === 'view',
@@ -86,10 +86,11 @@ export function StoryDetailScreen({ params }: ScreenProps) {
         ? [
             { key: 'tab/←/→', description: 'switch tab' },
             { key: 'e', description: 'edit' },
+            ...paste.hints,
             { key: 'm', description: 'move Stage' },
             { key: 'd', description: 'delete' },
           ]
-        : [{ key: 'tab/←/→', description: 'switch tab' }],
+        : [{ key: 'tab/←/→', description: 'switch tab' }, ...paste.hints],
   );
 
   useInput(
