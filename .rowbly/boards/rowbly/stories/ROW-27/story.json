@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:40:46.189Z",
+  "updatedAt": "2026-10-25T17:48:44.980Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -22,6 +22,17 @@
         "ROW-28",
         "ROW-29",
         "ROW-31"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "wmZs9d6t",
+          "author": "sunny",
+          "body": "Baseline and plan prepared in codex/row-27-clipboard-reader. Awaiting ADR-number and native-isolation decisions before implementation. Typecheck, unit tests (78), and CLI tests (20) pass; baseline lint reports five existing .rowbly formatting errors, left untouched. ROW-26 parent branch not yet pushed.",
+          "createdAt": "2026-10-25T17:48:44.979Z",
+          "updatedAt": "2026-10-25T17:48:44.979Z"
+        }
       ]
     }
   }
