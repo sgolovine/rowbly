@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rowbly Dev"
+  short_description: "Develop a Rowbly Story through to a validated draft PR"
+  default_prompt: "Use $rowbly-dev to read this Rowbly Story, keep its Stage and Comments current, rightsize the work, supervise fresh workers through research, planning, development in an isolated worktree, and validation, publish coherent checkpoints, and open a draft PR after supervisor sign-off."

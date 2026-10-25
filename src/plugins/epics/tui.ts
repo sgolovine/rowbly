@@ -36,6 +36,10 @@ export const tui: PluginTui<Record<string, unknown>> = {
       return (await listEpics(plugin, 'open')).map((epic) => ({ value: epic.id, label: epic.name }));
     },
     filter: (id) => id,
+    menu: (id) => [
+      { label: 'Edit', key: 'e', screen: 'form', params: { id, title: `Edit ${id}` } },
+      { label: 'Delete', key: 'd', screen: 'detail', params: { id, title: `Delete ${id}`, confirmDelete: true } },
+    ],
     create: { label: '+ New Epic', screen: 'form', params: { title: 'New Epic' } },
   },
   storyForm: {

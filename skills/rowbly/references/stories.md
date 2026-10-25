@@ -4,7 +4,9 @@ Every command below takes `--json --no-prompt`, and a delete also needs `--yes`.
 
 ## 1. Learn the Board before you change it
 
-Stage keys and Custom Fields differ per Board. Read them once:
+Stage keys and Custom Fields differ per Board, and so do the rituals of the people who use it. Read the
+Data Root's `ROWBLY.md` if it has one ([Data Root layout](data-root.md#rowblymd-how-this-data-root-is-used)):
+where it differs from this page, follow it. Then read the Board's configuration once:
 
 ```sh
 rowbly boards list --json --no-prompt               # Board ids and key prefixes
@@ -119,7 +121,8 @@ only if the user asks.
    `rowbly tasks list <KEY> --json --no-prompt`; with the Specs Plugin on,
    `rowbly specs list --story <KEY> --json --no-prompt` and the Board Specs it links to; with the
    Comments Plugin on, `rowbly comments list <KEY> --json --no-prompt`. Read them all: this is the
-   request.
+   request. Each step below is a default: where `ROWBLY.md` names another Stage, a required Comment
+   or someone else who moves the Story, do that instead (§1).
 2. Start: read the Board's Stages (§1), and move to the Stage for your assigned activity if needed:
    `rowbly stories move <KEY> <activity-stage-key> --json --no-prompt`. This applies to preparation
    and refinement too; before changing code, use the configured development Stage. If a supervisor

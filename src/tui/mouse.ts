@@ -3,16 +3,16 @@
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 
-/** Turns on pointer reporting in SGR encoding for clicks, drag/drop and control hover. */
+/** Turns on pointer reporting in SGR encoding for clicks, drag/drop, control hover and the wheel. */
 export const MOUSE_ON = '\u001B[?1000h\u001B[?1003h\u001B[?1006h';
 export const MOUSE_OFF = '\u001B[?1006l\u001B[?1003l\u001B[?1000l';
 
 /**
- * A press or release of the left button, a pointer move, or a press of the right button (`menu`, which
- * asks for a context menu), at a 0-based cell.
+ * A press or release of the left button, a pointer move, a press of the right button (`menu`, which
+ * asks for a context menu), or a notch of the wheel (`wheelUp`, `wheelDown`), at a 0-based cell.
  */
 export interface MouseEvent {
-  kind: 'press' | 'release' | 'move' | 'menu';
+  kind: 'press' | 'release' | 'move' | 'menu' | 'wheelUp' | 'wheelDown';
   x: number;
   y: number;
 }
@@ -23,9 +23,9 @@ const SGR = /\u001B\[<(\d+);(\d+);(\d+)([Mm])/g;
 const PARTIAL = /\u001B\[<[\d;]*$/;
 
 /**
- * Takes the SGR mouse reports out of `input`. The left button's presses and releases, pointer moves
- * and right-button presses are reported; the right button's release, the wheel and other buttons are
- * dropped. `rest` is the remaining text, `pending` an unfinished report to prepend to
+ * Takes the SGR mouse reports out of `input`. The left button's presses and releases, pointer moves,
+ * right-button presses and wheel notches are reported; the right button's release and other buttons
+ * are dropped. `rest` is the remaining text, `pending` an unfinished report to prepend to
  * the next chunk.
  */
 export function extractMouse(input: string): { events: MouseEvent[]; rest: string; pending: string } {
@@ -37,6 +37,10 @@ export function extractMouse(input: string): { events: MouseEvent[]; rest: strin
       events.push({ kind: final === 'M' ? 'press' : 'release', x: Number(x) - 1, y: Number(y) - 1 });
     } else if ((Number(button) & 0b1100_0011) === 2 && final === 'M') {
       events.push({ kind: 'menu', x: Number(x) - 1, y: Number(y) - 1 });
+    } else if ((Number(button) & 0b1100_0010) === 64 && final === 'M') {
+      // Wheel buttons 4 and 5 report as 64 and 65.
+      const kind = (Number(button) & 1) === 0 ? 'wheelUp' : 'wheelDown';
+      events.push({ kind, x: Number(x) - 1, y: Number(y) - 1 });
     }
     return '';
   });

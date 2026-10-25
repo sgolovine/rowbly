@@ -24,7 +24,9 @@ export async function pathExists(path: string): Promise<boolean> {
     await stat(path);
     return true;
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    const code = (err as NodeJS.ErrnoException).code;
+    // ENOTDIR: a part of `path` is a file, as in `<file>/SKILL.md`.
+    if (code === 'ENOENT' || code === 'ENOTDIR') return false;
     throw err;
   }
 }

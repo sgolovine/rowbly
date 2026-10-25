@@ -2,15 +2,28 @@
   "version": 1,
   "key": "ROW-16",
   "boardId": "rowbly",
-  "name": "Instruct agents to move stories",
-  "description": "Update the rowbly skill to instruct agents to move stories as they work on them. If an agent is working on a story, after completion it should move that story to the next column. Agent should look at the layout of the board and decide where to move the story. The sample applies if an agent is preparing a story, move it to the correct column when finished refining",
-  "stage": "ready-for-review",
-  "rank": "a0",
+  "name": "Create ROWBLY.md concept for agents using Rowbly",
+  "description": "- Every rowbly board is setup a little differently\n- Teams and individuals often times have their own rituals around using a kanban board.\n- These rituals aren't really written down anywhere and seldom inforced in the application.\n\n- Because of the above, we want to encode those rituals into a ROWBLY.md file.\n- This file will live in the data root's `.rowbly/` folder.\n- Update rowbly reference to have the agent look for this and use it within the reference\n- Update official skill references so official skills know how to use/respect/read this file and update when necissary.",
+  "stage": "done",
+  "rank": "aQ",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:35:40.032Z",
-  "updatedAt": "2026-10-24T18:15:01.312Z"
+  "updatedAt": "2026-10-25T16:50:58.002Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "5NaOd7bM",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/98 (branch claude/row-16-rowbly-md, head 715c5bd). Adds .rowbly/ROWBLY.md, an optional file for a Data Root's rituals: doctor accepts it; glossary, data model and user guide describe it; skills/rowbly, rowbly-reference.md (and its rowbly-dev copy) and rowbly-dev tell agents to read it before changing data, follow it over their defaults (after the user's request and Rowbly's rules), report stale parts and update it only with the user's agreement. Validation: typecheck, lint, test:unit (66), test:cli (20) all pass; manual doctor check on the demo Data Root (UNKNOWN_FILE on main, no problems on the branch). Screenshots are in a PR comment. Overlaps: ROW-17 edits the same pages; ROW-18 copies the reference.",
+          "createdAt": "2026-10-25T16:22:55.942Z",
+          "updatedAt": "2026-10-25T16:22:55.942Z"
+        }
+      ]
+    }
+  }
 }

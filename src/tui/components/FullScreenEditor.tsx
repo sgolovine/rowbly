@@ -39,7 +39,7 @@ type SaveState = { kind: 'idle' | 'saving' | 'saved' } | { kind: 'failed'; messa
 /**
  * A text in a modal as large as the area it covers, in two modes: `view` renders the markdown and
  * scrolls, and `edit` shows the raw text. `tab` or a click on a mode switches mode (`e` also edits); `esc`, `ctrl+f` and
- * the `✕` in its border close it. Every edit goes to `onChange`; with `onSave`, `ctrl+s` saves and
+ * the `✕` in its border close it. Every edit goes to `onChange`; `ctrl+s` closes a field editor. With `onSave`, it saves and
  * closing with unsaved changes asks before discarding them.
  */
 export function FullScreenEditor({
@@ -88,7 +88,10 @@ export function FullScreenEditor({
       if (key.escape || (key.ctrl && input === 'f')) close();
       else if (key.tab) setMode((m) => (m === 'view' ? 'edit' : 'view'));
       else if (mode === 'view' && input === 'e' && !key.ctrl && !key.meta) setMode('edit');
-      else if (onSave && key.ctrl && input === 's') void store();
+      else if (key.ctrl && input === 's') {
+        if (onSave) void store();
+        else close();
+      }
     },
     { isActive: keys },
   );
@@ -96,7 +99,7 @@ export function FullScreenEditor({
   const hints: KeyHint[] = [
     mode === 'view' ? { key: 'tab/e', description: 'edit' } : { key: 'tab', description: 'view' },
     ...(mode === 'view' ? [{ key: '↑/↓', description: 'scroll' }] : []),
-    ...(onSave ? [{ key: 'ctrl+s', description: 'save' }] : []),
+    { key: 'ctrl+s', description: onSave ? 'save' : 'close' },
     { key: 'esc', description: 'close' },
   ];
   return (

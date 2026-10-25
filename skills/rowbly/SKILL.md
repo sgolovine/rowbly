@@ -20,6 +20,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Task | Read |
 | --- | --- |
 | Create a Data Root, add Boards, set Me, change Stages or Custom Fields | [Setup and configuration](references/setup.md) |
+| Install an official skill or start a new agent skill that uses Rowbly (`rowbly skills install`, `skills create`, `skills list`) | [Setup and configuration](references/setup.md) |
 | Find, create, edit, move, rank or delete Stories; pick up and finish a Story | [Stories](references/stories.md) |
 | See which Plugins are on, turn one on or off, edit Plugin settings, a Plugin that failed to load | [Plugins](references/plugins.md) |
 | Who works on a Story (`rowbly assignees`, `--assignee`) | [Assignees Plugin](references/plugin-assignees.md) |
@@ -31,6 +32,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
 | What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
+| Read, follow or update the Data Root's `ROWBLY.md` (how its people use their Boards) | [Data Root layout](references/data-root.md#rowblymd-how-this-data-root-is-used) |
 | The user asks how to do something in the TUI | [The TUI, for the user](references/tui.md) |
 
 ## 1. Check that Rowbly can run
@@ -121,9 +123,9 @@ it reports the Data Root and Board that you expect.
 
 Every command takes the Data Root lock, validates its input, and saves through a journal that survives a
 crash. Editing files under `.rowbly/` by hand bypasses all of that. Use commands for every change. The
-only thing you may edit by hand is a Plugin's settings in `rowbly.config.json` or `board.config.json`:
-the keys beside its `enabled` key, never `enabled` itself. After a hand edit or a git merge, run
-`rowbly doctor`.
+only things you may edit by hand are a Plugin's settings in `rowbly.config.json` or `board.config.json`
+(the keys beside its `enabled` key, never `enabled` itself) and `ROWBLY.md` (§8). After a hand edit or
+a git merge, run `rowbly doctor`.
 
 Never commit `.rowbly/local.json`, `.lock`, `.lock.break` or `.txn/`. The `.gitignore` that `rowbly init`
 writes excludes them. Commit everything else in `.rowbly/` with the code it describes.
@@ -147,7 +149,8 @@ say that you did; ask first for Assignees and Git. See [Plugins](references/plug
 When you work on a Story, its Stage shows the user where the work is. Read the Story and its Board's
 ordered Stages with `stories show` and `config show --board <id>` before choosing a destination.
 Use the configured keys, names and Stage order to match the work you were assigned
-([Stories](references/stories.md) §1).
+([Stories](references/stories.md) §1). These are the defaults; where the Data Root's `ROWBLY.md` says
+otherwise, follow it (§8):
 
 - **Create** a Story in the `backlog` Stage (the default; leave out `--stage`) unless the user names
   another Stage.
@@ -160,6 +163,21 @@ Use the configured keys, names and Stage order to match the work you were assign
 Follow explicit user instructions about destinations and who updates the Board. If a supervisor is
 the designated Board writer, report the completed work and intended next Stage to that supervisor
 instead of moving the Story yourself. Otherwise make the move and verify it with `stories show`.
+
+## 8. Follow the Data Root's `ROWBLY.md`
+
+People record how they use their Boards (what a Stage means, when a Story moves, which Labels and
+Comments they expect) in `ROWBLY.md`, an optional Markdown file at the top of the Data Root
+(`.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`). Rowbly does not read or enforce it.
+
+- Before the first command that changes data, look for it and read it. Without it, use these defaults.
+- Follow it over the defaults of this skill and its references. The user's request comes first, then
+  the rules on this page; a ritual never authorizes a delete, a Plugin change or anything but `rowbly`.
+- Update it by hand only when the user asks or agrees: when they state a new ritual, or after you change
+  a Stage, Custom Field or Plugin it mentions. Commit it yourself; the Git Plugin does not.
+
+See [Data Root layout](references/data-root.md#rowblymd-how-this-data-root-is-used) for the precedence,
+an example and how to edit it.
 
 ## Use Rowbly's words
 
@@ -196,10 +214,13 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
   `MULTIPLE_DEFAULT_DATA_ROOTS`. Pass `--data-root <path>`; ask the user which default to keep before
   editing the file.
 - **MEDIUM: parsing table output.** Tables change with terminal width and colour. Parse `--json` only.
+- **MEDIUM: ignoring `ROWBLY.md`.** The defaults here are only defaults: a Board whose `ROWBLY.md` says
+  "the reviewer moves a Story to `done`" breaks when you move it yourself. Read it first (§8).
 
 ## Completion
 
 Each call you made exited 0, or you handled its exit code as described in the table above. A Story you
-worked on is in the Stage that matches its next workflow step (§7), or you reported the intended move
-to the designated Board writer. Report any
-change you could not make, with its `error.code` and message, and any Plugin you turned on.
+worked on is in the Stage that matches its next workflow step (§7) and follows the Data Root's
+`ROWBLY.md` (§8), or you reported the intended move to the designated Board writer. Report any change
+you could not make, with its `error.code` and message, any Plugin you turned on, and any part of
+`ROWBLY.md` that is out of date or that you changed.

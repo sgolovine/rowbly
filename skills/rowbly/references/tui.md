@@ -28,6 +28,8 @@ place or what they typed in a form.
 
 On every screen or tab that can create a record, `n` creates one. In a form, `enter`/`tab` move to the
 next field, `ctrl+enter` or `ctrl+s` saves, `ctrl+f` opens a description in the full-screen editor.
+In that field editor, `ctrl+s`, `esc` or `ctrl+f` returns to the form with the text kept; it does not
+submit the form. Press `ctrl+s` again in the form to save.
 After a new Story is saved, the TUI returns to the Board or list it was created from. To open each new
 Story instead, turn on **Open Story after creation** in the settings' **Preferences** section (off by
 default; kept in `~/.rowblyrc.json`).
@@ -51,3 +53,5 @@ default; kept in `~/.rowblyrc.json`).
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
+
+Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.

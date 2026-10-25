@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "key": "ROW-20",
+  "boardId": "rowbly",
+  "name": "Add `rowbly skills install`",
+  "description": "Users that use rowbly have two options for skills:\n\n- Import pre-built skills\n- Create their own skills\n\n\nI want a command that allows users to import pre-built skills for rowbly into their project. For this I want to introduce one command and update an existing:\n\n- `rowbly skills install`: Installs a new skill, can either be run with <path_to_skill> OR when run by itself it will show a menu of skills available for install. Clack prompts should be used for menu\n- `rowbly skills list`: Update this command to list out two sections: official skills and custom skills\n\n\n",
+  "stage": "done",
+  "rank": "aT",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T15:26:27.648Z",
+  "updatedAt": "2026-10-25T16:50:59.698Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "uowBLSfj",
+          "author": "sunny",
+          "body": "Complexity 3 (one development agent, no separate research or validation agent). Branch claude/row-20-skills-install, built on ROW-18's skills command group. Plan: add `rowbly skills install [path]` (with no path, a Clack menu of the official skills shipped in the package; copies into the --harness skills folder), split `rowbly skills list` into Official and Custom sections (text and --json), and update the user guide and skill references. No new tests, per AGENTS.md. Validation is the four repository checks, a manual run and agentic-tui screenshots.",
+          "createdAt": "2026-10-25T16:22:57.961Z",
+          "updatedAt": "2026-10-25T16:22:57.961Z"
+        },
+        {
+          "id": "mSMERakl",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/100 (depends on ROW-18's PR #99; land after it). Adds `rowbly skills install [path|official-name] [--harness]` with a Clack menu of official skills when run with no path, and splits `rowbly skills list` into Official skills and Custom skills (JSON {official, custom}). Validation: typecheck, lint, test:unit (66) and test:cli (20) pass; manual runs of the built CLI cover menu, name and path installs and every exit code; agentic-tui screenshots are on the PR. The Board has no review Stage, so the Story stays in In Progress.",
+          "createdAt": "2026-10-25T16:22:58.526Z",
+          "updatedAt": "2026-10-25T16:22:58.526Z"
+        }
+      ]
+    }
+  }
+}

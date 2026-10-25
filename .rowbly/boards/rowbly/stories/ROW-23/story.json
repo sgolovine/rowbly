@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "key": "ROW-23",
+  "boardId": "rowbly",
+  "name": "TextArea: Make \"ctrl+s\" escape fullscreen",
+  "description": "Right now when in full-screen on a textarea, I can only exit by pressing \"esc\". Make it so I can also exit by pressing \"ctrl+s\" since more users are familiar with that action to save their current work and \"esc\" feels jarring after you have entered a bunch of text",
+  "stage": "done",
+  "rank": "aV",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T16:55:25.261Z",
+  "updatedAt": "2026-10-25T17:05:31.903Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "zDHZHrDR",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-23-textarea-ctrl-s from origin/main at 0abb49c. Plan: make ctrl+s close expanded TextArea fields while retaining text, preserve document save behavior, update hints and docs, capture before/after PTY evidence, and run all four required checks. Companion branches inspected; shared guide changes will be reconciled before the PR.",
+          "createdAt": "2026-10-25T17:02:51.925Z",
+          "updatedAt": "2026-10-25T17:02:51.925Z"
+        },
+        {
+          "id": "cKvlKgmQ",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/103 opened at a49e739. Validation signed off: typecheck, lint, 66 unit tests, 20 CLI tests and build passed; manual checks confirmed retained text without Form submission and preserved document saving. Screenshot capture complete; upload blocked by browser AppArmor and no-screenshot-commit instructions. Files on rook: /tmp/row-23-evidence/{01-before,02-after,03-returned-form}.png. Supervisor upload handoff is linked in the PR.",
+          "createdAt": "2026-10-25T17:04:38.480Z",
+          "updatedAt": "2026-10-25T17:04:38.480Z"
+        }
+      ]
+    }
+  }
+}

@@ -870,6 +870,8 @@ export interface PluginSidebar<S = Record<string, unknown>> {
   filter(value: string): unknown;
   /** The button at the bottom, such as `+ New Epic`: opens one of the Plugin's screens. */
   create?: PluginLink;
+  /** Screen links offered when an entry is right clicked; the all entry has no menu. */
+  menu?(value: string): (PluginLink & { key: 'e' | 'd' })[];
 }
 
 /** A Plugin's TUI part, loaded only when the TUI starts. */

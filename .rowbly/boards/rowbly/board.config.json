@@ -14,10 +14,10 @@
       "name": "In Progress"
     },
     {
-      "key": "ready-for-review",
-      "name": "Ready for Review"
+      "key": "in-pr",
+      "name": "In PR"
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-24T18:06:40.237Z"
+  "updatedAt": "2026-10-25T16:53:38.207Z"
 }

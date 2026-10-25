@@ -20,6 +20,7 @@ export { canonicalDataRoot, listPluginFiles, readPluginFile, resolvePluginFile }
 export { type DataRootPaths, paths } from './paths';
 export * from './repositories';
 export { listDataRootFiles, readDataRootFile, removeDataRootFile } from './scan';
+export { copyFolder, createFolder, isFolder, listFoldersWith, packagePath, readPackageFile } from './skills';
 export { editTextInEditor, pathExists, readTextFile, writeFileAtomic, writeTextFile } from './system';
 export * from './transaction';
 export { isWatchedPath, type WatchDataRootOptions, watchDataRoot } from './watch';

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "key": "ROW-22",
+  "boardId": "rowbly",
+  "name": "Right click on epic should show context menu to edit/delete",
+  "description": "Right now if you right click on a board you get a context menu to edit/delete the board. We should have the same for epics.",
+  "stage": "done",
+  "rank": "aW",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T16:54:23.896Z",
+  "updatedAt": "2026-10-25T17:08:19.154Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "7c5k2uTO",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-22-epic-context-menu, based on origin/main a27bcde. The Epics screen already has a context menu; the missing menu is in the Epics sidebar. Plan: add optional Plugin Sidebar edit/delete links using the existing Epic form and delete confirmation, update docs, capture before/after evidence, and run typecheck, lint, unit and CLI checks.",
+          "createdAt": "2026-10-25T17:00:07.323Z",
+          "updatedAt": "2026-10-25T17:00:07.323Z"
+        },
+        {
+          "id": "Afxtg8r2",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/104 adds Epic sidebar Edit/Delete menus and matching keys. Typecheck, lint, 66 unit tests, 20 CLI tests and build passed; manual TUI checks passed. Four screenshots uploaded and verified. Validation signed off at 40ad56a. Manual checks canceled edits/deletion; no Board data changed.",
+          "createdAt": "2026-10-25T17:07:47.377Z",
+          "updatedAt": "2026-10-25T17:07:47.377Z"
+        }
+      ]
+    }
+  }
+}
