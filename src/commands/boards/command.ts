@@ -36,7 +36,7 @@ export function registerBoards(program: Command): void {
           name,
           keyPrefix,
           description: opts.description,
-          ...pluginOptions(cmd),
+          ...(await pluginOptions(cmd)),
         });
         printResult(board, {
           json: globals.json,
@@ -64,7 +64,7 @@ export function registerBoards(program: Command): void {
     .option('--description <text>', 'new description')
     .action(async (id: string, opts: BoardOptions, cmd: Command) =>
       withContext(cmd, async ({ services, globals }) => {
-        const operationOptions = pluginOptions(cmd);
+        const operationOptions = await pluginOptions(cmd);
         if (opts.name === undefined && opts.description === undefined && !operationOptions.plugins) {
           throw new UsageError('nothing to change', { hint: 'pass --name and/or --description' });
         }
@@ -88,7 +88,7 @@ export function registerBoards(program: Command): void {
           opts.force ? `Delete Board ${boardId} and all of its Stories?` : `Delete Board ${boardId}?`,
           globals,
         );
-        await services.boards.remove(boardId, { force: opts.force ?? false, ...pluginOptions(cmd) });
+        await services.boards.remove(boardId, { force: opts.force ?? false, ...(await pluginOptions(cmd)) });
         printResult({ deleted: boardId }, { json: globals.json, human: renderBoardDeleted });
       }),
     );

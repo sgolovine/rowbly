@@ -217,7 +217,7 @@ A Plugin's input of a core operation is `plugins.<id>` in the operation's input.
 - **Convention:** `undefined` changes nothing, `null` clears, a value sets.
 - `storyFilterSchema` parses the Story filter (`StoryFilter.plugins.<id>`) once per list, from the CLI, the TUI or a service caller alike. Without one the value reaches `filterStories` unchecked.
 
-**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `boards create|edit|delete`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
+**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `boards create|edit|delete`). `stories list` entries use `filter(values)`; every other entry uses `input(values, host)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
 
 `values` holds the raw values by Commander attribute name (`--add-spec` → `addSpec`, `--no-epic` → `epic`). Only options that were given have a value:
 
@@ -458,3 +458,7 @@ Off prevents admission; an admitted run may finish. The host supplies the regist
 recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
 Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
 and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.
+
+CLI option `input(values, host)` may return a Promise. The host awaits it with Plugin error attribution before starting the operation. `host.readText({ text?, file?, edit? }, { name, initial? })` reads long text, including `file: '-'` for stdin. Stdin may be consumed once across Plugin option conversion and the Story description. Filter conversion remains synchronous.
+
+A transform can write Plugin files on a Story created by the current operation immediately: `changes.writeFile({ story: result.key }, name, text)` resolves the pending Story. These files, new bags and updates to existing Stories all join the same Change Set and journaled commit; no follow-up operation is needed.

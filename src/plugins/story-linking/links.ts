@@ -161,3 +161,27 @@ export function checkLinks(plugin: PluginReadContext, stories: readonly Story[])
     ];
   });
 }
+
+/** Adds both directions to this operation, including the bags of existing blockers. */
+export async function applyCreateLinks(
+  changes: PluginChangeSet,
+  story: Pick<Story, 'key' | 'boardId'>,
+  input: { readonly blocks?: readonly string[]; readonly blockedBy?: readonly string[] } | undefined,
+  plugin: PluginHookContext,
+): Promise<void> {
+  if (!input) return;
+  const candidates = new Map((await plugin.services.stories.list(story.boardId, {})).map((s) => [s.key, s]));
+  for (const key of [...(input.blocks ?? []), ...(input.blockedBy ?? [])]) {
+    if (!candidates.has(key)) throw new ValidationError(`linked Story "${key}" must exist on Board "${story.boardId}"`);
+  }
+  if (input.blocks?.length)
+    await changes.updateStory(story.key, (current) =>
+      plugin.writeBag(current, { blocks: [...new Set([...requireBlocks(plugin, current), ...(input.blocks ?? [])])] }),
+    );
+  for (const key of new Set(input.blockedBy ?? [])) {
+    await changes.updateStory(key, (current) => ({
+      ...plugin.writeBag(current, { blocks: [...new Set([...requireBlocks(plugin, current), story.key])] }),
+      updatedAt: toTimestamp(plugin.now()),
+    }));
+  }
+}

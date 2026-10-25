@@ -614,6 +614,11 @@ export interface PluginOption {
 export type PluginOptionValues = Readonly<Record<string, string | readonly string[] | boolean | undefined>>;
 
 /** A Plugin's options on a core command that runs an operation. */
+/** Host text access for option conversion; awaited and attributed before the operation starts. */
+export interface PluginOptionHost {
+  readText: PluginCommandEnv<unknown>['readText'];
+}
+
 export interface PluginInputOptions<I = unknown> {
   options: PluginOption[];
   /**
@@ -621,7 +626,7 @@ export interface PluginInputOptions<I = unknown> {
    * `undefined` for none. The input is parsed by `inputs[<operation>]` when the Plugin declares it.
    * By convention `undefined` changes nothing, an explicit `null` clears, and a value sets.
    */
-  input(values: PluginOptionValues): I | undefined;
+  input(values: PluginOptionValues, host: PluginOptionHost): I | undefined | Promise<I | undefined>;
 }
 
 /** A Plugin's options on `stories list`: criteria, not operation input (DX-12). */

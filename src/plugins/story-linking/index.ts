@@ -1,7 +1,7 @@
-import { definePlugin } from '../../plugin-api';
+import { definePlugin, parseStoryKey, ValidationError } from '../../plugin-api';
 import { commands } from './commands';
-import { checkLinks, readLinks, unlinkDeleted } from './links';
-import { LinksBag } from './model';
+import { applyCreateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
+import { LinksBag, LinksCreateInput } from './model';
 import { reconcile } from './reconcile';
 
 export const storyLinking = definePlugin({
@@ -11,7 +11,33 @@ export const storyLinking = definePlugin({
   description: 'Blocking relationships between Stories on the same Board',
   bags: { story: LinksBag },
   commands,
+  inputs: { 'stories.create': LinksCreateInput },
+  options: {
+    'stories create': {
+      options: [
+        { flags: '--blocks <key>', description: 'Story this Story blocks (repeatable)', repeatable: true },
+        { flags: '--blocked-by <key>', description: 'Story blocking this Story (repeatable)', repeatable: true },
+      ],
+      input({ blocks, blockedBy }) {
+        if (blocks === undefined && blockedBy === undefined) return undefined;
+        const keys = (value: typeof blocks) =>
+          value === undefined
+            ? undefined
+            : (Array.isArray(value) ? value : [String(value)]).map((key) => {
+                try {
+                  return parseStoryKey(key).key;
+                } catch {
+                  throw new ValidationError(`invalid Story Key "${key}"`);
+                }
+              });
+        return { blocks: keys(blocks), blockedBy: keys(blockedBy) };
+      },
+    },
+  },
   hooks: {
+    'stories.create': {
+      transform: ({ changes, result, pluginInput, plugin }) => applyCreateLinks(changes, result, pluginInput, plugin),
+    },
     'stories.remove': {
       transform: ({ changes, plugin }) => unlinkDeleted(changes, plugin),
     },

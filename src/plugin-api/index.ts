@@ -106,6 +106,7 @@ export type {
   PluginOperationOptions,
   PluginOption,
   PluginOptionCommand,
+  PluginOptionHost,
   PluginOptionOperations,
   PluginOptionValues,
   PluginPayload,
