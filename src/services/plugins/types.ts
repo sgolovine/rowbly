@@ -452,7 +452,8 @@ export type GitOptionsSource = GitCommitOptions | ((localData: unknown) => GitCo
 export interface PluginGit {
   syncStatus(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
   resumeSync(options: GitSyncOptionsSource): Promise<void>;
-  requestSync(options: GitSyncOptionsSource): Promise<GitSyncStatus>;
+  /** Explicit rebase ignores automatic preferences and resolves only for its own pushed run (ADR-0035). */
+  requestSync(options: GitSyncOptionsSource, mode?: 'merge' | 'rebase'): Promise<GitSyncStatus>;
   info(): Promise<{ root: string; authorName: string; authorEmail: string }>;
   /** Resolves after scheduling persisted work; Git runs outside the reaction deadline. */
   resume(options: GitOptionsSource): Promise<void>;
@@ -744,7 +745,7 @@ export interface PluginActionOf<T extends ActionTarget, S = Record<string, unkno
   run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
-/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
+/** A header Action opens/shows UI or requests host-owned Git synchronization (ADR-0017, ADR-0035). */
 export type PluginAction<S = Record<string, unknown>> = {
   [T in ActionTarget]: PluginActionOf<T, S>;
 }[ActionTarget];

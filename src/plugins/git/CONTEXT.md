@@ -20,3 +20,8 @@ An independently enabled, interval or on-demand synchronization of the current b
 
 **Merge Evidence**:
 Content-addressed files under `plugins/git/merge-evidence/` retaining the base, exact alternatives, provenance, remapping and repair decisions of synchronization.
+
+**Sync**: the Git Plugin's header Action (`S`). Commits pending Rowbly data/configuration before
+fetching, reconciles while rebasing onto the configured upstream, publishes recoverably and pushes.
+Independent of both automatic preferences; no empty capture or force-push. Scheduled and CLI sync
+retain merge semantics. Success belongs to the manual run that actually pushed (ADR-0035).

@@ -12,9 +12,19 @@ export interface ButtonProps {
   /** Sized to its label, for tight spots like the header; otherwise as wide as its parent. */
   compact?: boolean;
   primary?: boolean;
+  /** Its work is running: the label is muted, and the caller ignores the click and key. */
+  busy?: boolean;
 }
 
-export function Button({ label, keyName, onClick, clickable, compact = false, primary = false }: ButtonProps) {
+export function Button({
+  label,
+  keyName,
+  onClick,
+  clickable,
+  compact = false,
+  primary = false,
+  busy = false,
+}: ButtonProps) {
   const ref = useRef<DOMElement>(null);
   const [hovered, setHovered] = useState(false);
   useMouse(ref, { onClick, onEnter: () => setHovered(true), onLeave: () => setHovered(false) }, clickable);
@@ -28,7 +38,7 @@ export function Button({ label, keyName, onClick, clickable, compact = false, pr
       gap={1}
       paddingX={1}
     >
-      <Text bold={primary} color={primary ? theme.accent : theme.ink}>
+      <Text bold={primary} color={busy ? theme.inkMuted : primary ? theme.accent : theme.ink}>
         {label}
       </Text>
       {keyName && (

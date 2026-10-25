@@ -12,6 +12,8 @@ const ROOT_NAME_MAX = 24;
 export interface HeaderAction {
   key: string;
   label: string;
+  /** Set while the Action runs: its label ends in `…`, and its key and click do nothing. */
+  busy?: boolean;
   run(): void;
 }
 
@@ -114,8 +116,9 @@ export function Header({
                 label={action.label}
                 keyName={showKeys ? action.key : undefined}
                 onClick={action.run}
-                clickable={actionsClickable}
+                clickable={actionsClickable && !action.busy}
                 compact
+                busy={action.busy}
               />
               <Text color={theme.borderControl}>|</Text>
             </Box>
