@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:48:44.980Z",
+  "updatedAt": "2026-10-25T17:50:48.215Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -32,6 +32,13 @@
           "body": "Baseline and plan prepared in codex/row-27-clipboard-reader. Awaiting ADR-number and native-isolation decisions before implementation. Typecheck, unit tests (78), and CLI tests (20) pass; baseline lint reports five existing .rowbly formatting errors, left untouched. ROW-26 parent branch not yet pushed.",
           "createdAt": "2026-10-25T17:48:44.979Z",
           "updatedAt": "2026-10-25T17:48:44.979Z"
+        },
+        {
+          "id": "0zP0CiVP",
+          "author": "sunny",
+          "body": "User decision (2026-10-25): run the native clipboard calls in a short-lived subprocess with a hard ~3 s kill, instead of an in-process Promise.race, because hasImage() is synchronous and can hang on X11. ADR number: ROW-26 takes 0036 and ROW-27 0037 if it needs one.",
+          "createdAt": "2026-10-25T17:50:48.214Z",
+          "updatedAt": "2026-10-25T17:50:48.214Z"
         }
       ]
     }
