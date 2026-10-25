@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Move `rowbly-dev` to be an official skill",
   "description": "- The skill \"rowbly-dev\" is currently a skill within `.agents/skills` and is not available for users to install. Move this skill to the consumer `skills` folder so that users can install it. Make sure `rowbly skills install` list the skill as available.",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "aU",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T16:51:46.423Z",
-  "updatedAt": "2026-10-25T16:57:17.206Z",
+  "updatedAt": "2026-10-25T17:00:37.698Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,13 @@
           "body": "Complexity 2 (supervisor only). Branch claude/row-21-rowbly-dev-official. Plan: move .agents/skills/rowbly-dev to skills/rowbly-dev (keep a tracked .agents symlink for repo use), add it to package.json files so `rowbly skills install` lists it, update AGENTS.md, README, user guide and setup reference.",
           "createdAt": "2026-10-25T16:57:17.205Z",
           "updatedAt": "2026-10-25T16:57:17.205Z"
+        },
+        {
+          "id": "30Sq5nvo",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/102 (branch claude/row-21-rowbly-dev-official, head 497202f). rowbly-dev moved to skills/rowbly-dev and added to the npm package; `rowbly skills list` and `rowbly skills install rowbly-dev` offer it. A tracked symlink .agents/skills/rowbly-dev keeps it working in this repo. Validation: typecheck pass, lint pass, test:unit 66 passed, test:cli 20 passed, npm pack includes skills/rowbly-dev, manual CLI before/after confirmed; screenshots in the PR. Overlap: ROW-17 edits the reference copy at the old path; check the copy after both merge.",
+          "createdAt": "2026-10-25T16:59:40.266Z",
+          "updatedAt": "2026-10-25T16:59:40.266Z"
         }
       ]
     }
