@@ -2,8 +2,8 @@
   "version": 1,
   "key": "ROW-16",
   "boardId": "rowbly",
-  "name": "Instruct agents to move stories",
-  "description": "",
+  "name": "Create ROWBLY.md concept for agents using Rowbly",
+  "description": "- Every rowbly board is setup a little differently\n- Teams and individuals often times have their own rituals around using a kanban board.\n- These rituals aren't really written down anywhere and seldom inforced in the application.\n\n- Because of the above, we want to encode those rituals into ",
   "stage": "in-progress",
   "rank": "a1",
   "priority": null,
@@ -12,5 +12,5 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:35:40.032Z",
-  "updatedAt": "2026-10-25T15:19:22.438Z"
+  "updatedAt": "2026-10-25T15:25:10.904Z"
 }
