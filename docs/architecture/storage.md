@@ -149,7 +149,18 @@ output 16 MiB and the overall run 120 s; Unix process groups are killed and awai
 The packaged private rebase strategy pins its standalone Git directory and working tree and disables
 global/system configuration and attributes for its tree installation. It never uses the live index
 or checkout. The host rebase driver uses this entry before installing its candidate.
-Launcher setup failures close and await the owned IPC server and remove its socket before returning.
+Replay IPC uses an exclusive 0700 temporary directory, independent of repository and Git directory
+length. The complete bind path fits 100 UTF-8 bytes; an overlong system temporary directory uses
+`/tmp` instead. A private bind alias is detached before exposing the direct 0600 socket. Cleanup
+detaches that alias before closing the server, then unlinks only the recorded owned direct socket
+and removes its empty directory. Node's implicit close-time unlink therefore cannot remove a
+replacement at the direct endpoint. Launcher setup failures follow the same awaited cleanup.
+Observed ownership changes or persistent cleanup I/O errors refuse unsafe deletion and report the
+failure; retained listeners are unreferenced for liveness, which does not prevent Node's implicit
+unlink during graceful exit. The private-directory boundary excludes hostile same-UID/elevated
+replacement and check/syscall races, including recreation of the detached bind alias. Such failures
+or SIGKILL can leave one private directory/socket per interrupted bridge; no global sweeper removes
+these paths. Ordinary errors, timeouts and drained shutdown remove owned endpoints and await children.
 Private replay correspondence includes source-qualified Custom Field aliases from the original
 definition scope. Successive and pending values follow the same alias; root inheritance and Board
 overrides retain their scope. An ambiguous new key at a previous destination refuses preparation.
