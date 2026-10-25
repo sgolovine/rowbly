@@ -23,7 +23,7 @@ explains how it is built. Start at `docs/README.md`.
 | What Rowbly is, install and a first Board (the landing page) | `README.md` |
 | The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
 | The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system, `rowbly-dev` to take a Story from its Key to a draft pull request) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published |
 
 ## Domain language and decisions
 
@@ -76,6 +76,7 @@ an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmat
 nothing. It repeats the essentials of `skills/rowbly` in less space, so a change that updates a
 `skills/rowbly` page updates this page too when it touches a command, flag, JSON shape, exit code or
 Plugin that the page shows. Keep it concise: commands with their options, not procedures.
+`.agents/skills/rowbly-dev/references/rowbly-reference.md` is a copy of this page; copy it again when the page changes.
 
 ## Screenshots
 
