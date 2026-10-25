@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:11.570Z",
-  "updatedAt": "2026-10-25T17:43:03.620Z",
+  "updatedAt": "2026-10-25T18:18:26.882Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -30,6 +30,13 @@
           "body": "Not waiting for ROW-25 (user decision, 2026-10-25): use the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste). ROW-25's findings may adjust the keys later. Still blocked by ROW-27 (clipboard reader).",
           "createdAt": "2026-10-25T17:43:03.619Z",
           "updatedAt": "2026-10-25T17:43:03.619Z"
+        },
+        {
+          "id": "KvQNtxXV",
+          "author": "sunny",
+          "body": "Research complete; branch codex/row-28-story-paste created from origin/main. Plan covers exclusive storyPaste activation, shared paste dispatch, pending form state integrated with ROW-24, documentation, and independent validation/screenshots. Awaiting decisions on occupied ADR-0036 numbering and Plugin-supplied command guidance. Baseline typecheck, lint, test:unit (80), and test:cli (20) pass.",
+          "createdAt": "2026-10-25T18:18:26.881Z",
+          "updatedAt": "2026-10-25T18:18:26.881Z"
         }
       ]
     }
