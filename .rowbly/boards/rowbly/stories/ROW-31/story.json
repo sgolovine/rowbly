@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add a cross-platform clipboard smoke job to CI",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. It needs the clipboard reader from the Story that blocks it.\n\n## Goal\n\nCatch a broken native clipboard binary on any OS before release. CI runs only on `ubuntu-latest` today, so a broken macOS or Windows build would go unnoticed.\n\n## Work\n\n- Add a job to `.github/workflows/ci.yml` on `macos-latest`, `windows-latest` and `ubuntu-latest`:\n  1. `pnpm build && npm pack`, then install the tarball globally (`npm i -g ./rowbly-*.tgz`). This proves the optional platform binary installs and loads from the published package shape.\n  2. Run a script, e.g. `scripts/clipboard-smoke.mjs`. It puts a small PNG on the clipboard with the module's `setImageBinary`, reads it back through Rowbly's `readClipboardImage()`, and compares the pixels: the module re-encodes, so the bytes can differ.\n  3. On Ubuntu, run it under `xvfb-run`.\n- **Wayland fallback step** on Ubuntu: hide the native module, or run with no X11 display. Start a headless compositor (e.g. `weston --backend=headless`), put an image on the clipboard with `wl-copy`, and check that `readClipboardImage()` returns it through `wl-paste`.\n- Keep it out of the Vitest projects: it's a script, not a test (AGENTS.md: keep the suite small).\n- If a runner can't reach a clipboard (e.g. Windows service sessions), record what was tried in the pull request, and keep the install-and-load check on that OS.\n\n## Docs\n\n`docs/development/README.md`: the CI section.\n\n## Done when\n\nThe new job passes on all three OSes. `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "in-progress",
-  "rank": "a4",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:13.579Z",
-  "updatedAt": "2026-10-25T22:03:07.831Z",
+  "updatedAt": "2026-10-25T22:03:08.453Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
