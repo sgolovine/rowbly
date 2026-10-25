@@ -12,8 +12,12 @@
     {
       "key": "in-progress",
       "name": "In Progress"
+    },
+    {
+      "key": "in-pr",
+      "name": "In PR"
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-22T22:58:41.404Z"
+  "updatedAt": "2026-10-25T16:24:36.008Z"
 }
