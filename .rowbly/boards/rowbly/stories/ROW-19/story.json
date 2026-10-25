@@ -4,13 +4,33 @@
   "boardId": "rowbly",
   "name": "Scroll description with scroll-wheel",
   "description": "The story description currently can only be scrolled with page up + page down buttons. Make it so I can also scroll it with my mouse scroll wheel just like a regular UI application.",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "in-pr",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:17:59.534Z",
-  "updatedAt": "2026-10-25T16:33:29.572Z"
+  "updatedAt": "2026-10-25T16:40:47.826Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "09E6B8MS",
+          "author": "sunny",
+          "body": "Complexity 2 (small, well-bounded TUI input change; done in one thread with no subagents). Branch claude/row-19-scroll-wheel. Plan: have the mouse parser report wheel notches, add an onWheel handler to the mouse registry, make ScrollBody (Story body) and MarkdownView scroll 3 lines per notch while they are active and overflowing, and mention the wheel in docs/user-guide.md.",
+          "createdAt": "2026-10-25T16:40:46.708Z",
+          "updatedAt": "2026-10-25T16:40:46.708Z"
+        },
+        {
+          "id": "uYZq96qj",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/101 (branch claude/row-19-scroll-wheel, head 7989220). The mouse wheel now scrolls the Story body, Settings sections, dialog bodies and the full-screen editor's View mode, 3 lines per notch. Validation: typecheck pass, lint pass, test:unit 66/66, test:cli 20/20; checked by hand with agentic-tui (main: no movement; branch: 3 notches down → 10–23 of 50, 1 up → 7–20 of 50). Before/after screenshots are in a PR comment.",
+          "createdAt": "2026-10-25T16:40:47.272Z",
+          "updatedAt": "2026-10-25T16:40:47.272Z"
+        }
+      ]
+    }
+  }
 }
