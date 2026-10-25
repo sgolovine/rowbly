@@ -14,7 +14,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T21:06:58.964Z",
-  "updatedAt": "2026-10-25T21:08:59.988Z",
+  "updatedAt": "2026-10-25T21:12:40.055Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -24,6 +24,13 @@
           "body": "Started ROW-34 on rook. Investigating the fault-injection timeout and spy leak; Board changes remain owned by the thinkpad supervisor.",
           "createdAt": "2026-10-25T21:08:59.987Z",
           "updatedAt": "2026-10-25T21:08:59.987Z"
+        },
+        {
+          "id": "QtYh9enQ",
+          "author": "sunny",
+          "body": "Complexity 2/10; no subagents. Plan accepted for codex/row-34-fault-spy-cleanup: add cancellation-aware fault-sweep teardown, preserve all 130 fault cases and the 20 s timeout, add a held-I/O regression, then run locked validation and open a draft PR against main.",
+          "createdAt": "2026-10-25T21:12:40.054Z",
+          "updatedAt": "2026-10-25T21:12:40.054Z"
         }
       ]
     }
