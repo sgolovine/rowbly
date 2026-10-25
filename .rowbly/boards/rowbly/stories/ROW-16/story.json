@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:35:40.032Z",
-  "updatedAt": "2026-10-25T15:32:37.913Z"
+  "updatedAt": "2026-10-25T16:22:55.943Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "5NaOd7bM",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/98 (branch claude/row-16-rowbly-md, head 715c5bd). Adds .rowbly/ROWBLY.md, an optional file for a Data Root's rituals: doctor accepts it; glossary, data model and user guide describe it; skills/rowbly, rowbly-reference.md (and its rowbly-dev copy) and rowbly-dev tell agents to read it before changing data, follow it over their defaults (after the user's request and Rowbly's rules), report stale parts and update it only with the user's agreement. Validation: typecheck, lint, test:unit (66), test:cli (20) all pass; manual doctor check on the demo Data Root (UNKNOWN_FILE on main, no problems on the branch). Screenshots are in a PR comment. Overlaps: ROW-17 edits the same pages; ROW-18 copies the reference.",
+          "createdAt": "2026-10-25T16:22:55.942Z",
+          "updatedAt": "2026-10-25T16:22:55.942Z"
+        }
+      ]
+    }
+  }
 }
