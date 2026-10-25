@@ -595,7 +595,7 @@ Automatic Commits and Automatic Merge Conflict Resolution either On or Off:
 
 1. Commit pending Rowbly Story, Plugin and configuration additions, edits and deletions before any
    network work. Skip the commit when nothing changed; still fetch and push. Local State, locks,
-   transactions and unrelated files remain excluded.
+   transactions, atomic-write temporary files and unrelated files remain excluded.
 2. Fetch the current branch's configured upstream.
 3. Replay local commits onto that upstream in isolation, reconciling Rowbly data/configuration with
    the same rules and committed conflict evidence as automatic synchronization above. Validate and

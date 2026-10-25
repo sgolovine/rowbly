@@ -18,7 +18,7 @@ merge is already running.
 Git worker. Before fetching, it captures valid pending Rowbly data/configuration additions, edits
 and deletions through an alternate index and publishes a nonempty capture commit using ADR-0034's
 recoverable publication engine. No empty capture commit is created. Fetch/push still run with no
-pending changes. Local State, locks and transactions remain excluded. Already-staged Rowbly changes
+pending changes. Local State, locks, transactions and atomic-write temporary files remain excluded. Already-staged Rowbly changes
 remain an explicit ambiguity error; unrelated staged entries and working/untracked files survive.
 
 Fetch the configured upstream into a private pinned ref. Replay linear local commits in order onto
@@ -50,8 +50,7 @@ leaves local commits available for retry and never causes force-push or rollback
 A manual rebase is independent of both automatic preferences, but requires the Git Plugin enabled.
 A scheduled merge already running completes first; the manual request then admits a distinct rebase.
 Overlapping manual requests join the same rebase. The shared worker serializes Automatic Commits,
-scheduled synchronization and manual Sync across processes/worktrees. Admission checks the current
-branch/upstream. An admitted run may finish after preferences change; host disposal stops future work.
+scheduled synchronization and manual Sync across processes/worktrees. Admission checks the branch/upstream captured when the manual request was made; changing either while queued fails safely. An admitted run may finish after preferences change; host disposal stops future work.
 
 Manual completion returns the exact joined run's identity/result and throws on failure. It never
 reports success from stale persisted `last` data or from another mode's completion.

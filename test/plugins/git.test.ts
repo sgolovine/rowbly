@@ -1168,7 +1168,10 @@ describe('isolated upstream synchronization', () => {
     const originalGit = process.gitText;
     const originalSync = storage.synchronizeGit;
     const story = await f.services.stories.create('web', { name: 'Base' });
+    await mkdir(join(f.t.path, 'plugins/unknown'), { recursive: true });
+    await writeFile(join(f.t.path, 'plugins/unknown/.blob.12345678.tmp'), 'atomic temporary bytes');
     await plugin.git.requestSync(resolveSyncOptions, 'rebase');
+    expect(await f.command('ls-files', '--', '.rowbly/plugins/unknown/.blob.12345678.tmp')).toBe('');
     await command(f.peer, 'pull', '--ff-only');
     const storyPath = `.rowbly/boards/web/stories/${story.key}/story.json`;
     const peerStory = JSON.parse(await readFile(join(f.peer, storyPath), 'utf8'));
@@ -1231,6 +1234,31 @@ describe('isolated upstream synchronization', () => {
       spy.mockRestore();
       syncSpy.mockRestore();
     }
+    // Fetch failure must leave the pre-network capture installed, including config and deletion.
+    const removed = await f.services.stories.create('web', { name: 'Remove before fetch' });
+    await plugin.git.requestSync(resolveSyncOptions, 'rebase');
+    await f.services.stories.remove(removed.key);
+    await f.services.boards.update('web', { name: 'Configuration captured first' });
+    await f.command('remote', 'set-url', 'origin', join(f.remote, 'missing'));
+    await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('fetch');
+    expect(await f.command('show', 'HEAD:.rowbly/boards/web/board.config.json')).toContain(
+      'Configuration captured first',
+    );
+    expect(await f.command('ls-tree', 'HEAD', `.rowbly/boards/web/stories/${removed.key}/story.json`)).toBe('');
+    expect(await f.command('rev-parse', ':staged.txt')).toBe(staged);
+    await f.command('remote', 'set-url', 'origin', f.remote);
+    const hook = join(f.remote, 'hooks/pre-receive');
+    await writeFile(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+    const retained = await f.command('rev-parse', 'HEAD');
+    try {
+      await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('push failed');
+      expect(await f.command('rev-parse', 'HEAD')).toBe(retained);
+    } finally {
+      await rm(hook);
+    }
+    await f.command('branch', '--unset-upstream');
+    await expect(plugin.git.requestSync(resolveSyncOptions, 'rebase')).rejects.toThrow('upstream');
+    await f.command('branch', '--set-upstream-to=origin/main');
     const unchanged = await f.command('rev-parse', 'HEAD');
     expect((await plugin.git.requestSync(resolveSyncOptions, 'rebase')).last?.commit).toBe(unchanged);
     await configure(plugin, { automaticCommits: true });

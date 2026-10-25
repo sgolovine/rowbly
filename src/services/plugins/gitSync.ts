@@ -6,7 +6,7 @@ import type { DataRoot } from '../../schemas';
 import { createRepositories } from '../../storage';
 import { gitText } from '../../storage/gitProcess';
 import { canonicalGitRoot, requireRepository, rootGitKey, withGitWorker } from '../../storage/gitRepository';
-import { configuredUpstream, GitSyncPushError, synchronizeGit } from '../../storage/gitSync';
+import { configuredUpstream, GitSyncPushError, type GitUpstream, synchronizeGit } from '../../storage/gitSync';
 import {
   type GitSyncState,
   localHost,
@@ -45,6 +45,7 @@ interface Resource {
 const resources = new Map<string, Resource>();
 interface ManualRequest {
   id: string;
+  target: GitUpstream;
   result?: GitSyncState['last'];
 }
 const jobs = new Map<string, { root: string; done: Promise<void>; manual?: ManualRequest }>();
@@ -104,7 +105,7 @@ function enqueue(file: string, resource: Resource, manual?: ManualRequest): Prom
     if (!manual) return prior.done;
     // A scheduled merge cannot satisfy a manual rebase. Join a rebase, or wait then admit one.
     return prior.done.then(async () => {
-      if (prior.manual) manual.result = prior.manual.result;
+      if (prior.manual && isDeepStrictEqual(prior.manual.target, manual.target)) manual.result = prior.manual.result;
       else await enqueue(file, resource, manual);
     });
   }
@@ -114,6 +115,10 @@ function enqueue(file: string, resource: Resource, manual?: ManualRequest): Prom
     const repo = await requireRepository(resource.root);
     await withGitWorker(repo, async () => {
       const target = await configuredUpstream(repo);
+      if (manual && !isDeepStrictEqual(manual.target, target))
+        throw new Error(
+          'Git branch or upstream changed while manual Sync waited; run Sync again on the intended branch',
+        );
       const admitted = await coordinated(resource.root, 'git.sync.admit', async () => {
         const current = await preferences(resource);
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
@@ -397,7 +402,13 @@ export function createGitSync(
       const { file, resource } = found;
       const root = resource.root;
       if (mode === 'rebase') {
-        const manual: ManualRequest = { id: randomBytes(8).toString('hex') };
+        const target = await configuredUpstream(await requireRepository(root)).catch((cause: unknown) => {
+          throw new ConflictError(errorText(cause), {
+            hint: 'Check out the intended branch and configure its Git upstream, then run Sync again.',
+            cause,
+          });
+        });
+        const manual: ManualRequest = { id: randomBytes(8).toString('hex'), target };
         await enqueue(file, resource, manual);
         // Use this exact run's completion, never a possibly newer persisted last result.
         const result = manual.result;
