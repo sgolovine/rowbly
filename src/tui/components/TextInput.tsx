@@ -1,4 +1,4 @@
-import { Text, useInput } from 'ink';
+import { Text, useInput, usePaste } from 'ink';
 import { useRef } from 'react';
 import { useKeyCapture } from '../hooks';
 import { theme } from '../theme';
@@ -23,6 +23,15 @@ export function TextInput({ value, onChange, focus = true, width, placeholder }:
   const [{ cursor }, apply, latest] = useEditState(value, onChange);
   useKeyCapture(focus);
   const offset = useRef(0);
+
+  usePaste(
+    (text) => {
+      if (!text) return;
+      const next = editKey(latest.current, text, {} as import('ink').Key, false);
+      if (next) apply(next);
+    },
+    { isActive: focus },
+  );
 
   useInput(
     (input, key) => {
