@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:17:59.534Z",
-  "updatedAt": "2026-10-25T16:33:29.572Z"
+  "updatedAt": "2026-10-25T16:40:46.709Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "09E6B8MS",
+          "author": "sunny",
+          "body": "Complexity 2 (small, well-bounded TUI input change; done in one thread with no subagents). Branch claude/row-19-scroll-wheel. Plan: have the mouse parser report wheel notches, add an onWheel handler to the mouse registry, make ScrollBody (Story body) and MarkdownView scroll 3 lines per notch while they are active and overflowing, and mention the wheel in docs/user-guide.md.",
+          "createdAt": "2026-10-25T16:40:46.708Z",
+          "updatedAt": "2026-10-25T16:40:46.708Z"
+        }
+      ]
+    }
+  }
 }
