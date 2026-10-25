@@ -45,6 +45,8 @@ export async function gitInfo(root: DataRoot) {
 
 /** Personal Git commit preferences; omitted author fields use Git configuration. */
 export interface GitCommitOptions {
+  /** Omitted by older callers and pending files: Automatic Commits stay on. */
+  automaticCommits?: boolean;
   frequency: 'change' | 'interval';
   intervalSeconds: number;
   authorName?: string;
@@ -83,6 +85,7 @@ export async function readGitPending(path: string): Promise<GitPending | null> {
     !('options' in value) ||
     !value.options ||
     typeof value.options !== 'object' ||
+    ('automaticCommits' in value.options && typeof value.options.automaticCommits !== 'boolean') ||
     !('frequency' in value.options) ||
     !['change', 'interval'].includes(String(value.options.frequency)) ||
     !('intervalSeconds' in value.options) ||

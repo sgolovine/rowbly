@@ -1,11 +1,19 @@
 import { dirname } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories, withLock } from '../../storage';
-import { commitGitPaths, gitInfo, pendingPath, readGitPending, writeGitPending } from '../../storage/git';
+import {
+  commitGitPaths,
+  type GitPending,
+  gitInfo,
+  pendingPath,
+  readGitPending,
+  writeGitPending,
+} from '../../storage/git';
 import { coordinated, outsideCoordination } from '../coordination';
 import { currentScope } from './executionScope';
-import type { ChangeSetView, GitCommitOptions, PluginGit } from './types';
+import type { ChangeSetView, GitCommitOptions, GitOptionsSource, PluginGit } from './types';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const queues = new Map<string, { root: string; done: Promise<void> }>();
@@ -51,8 +59,30 @@ export function createPluginGit(
   warn: (message: string) => void = (message) => process.stderr.write(`${message}\n`),
 ): PluginGit {
   let location: Promise<string> | undefined;
+  let source: GitOptionsSource | undefined;
   const filePath = () => (location ??= pendingPath(root, id));
   const warning = (err: unknown) => warn(`Git automation: ${err instanceof Error ? err.message : String(err)}`);
+
+  // The resolver only interprets its own bag; the host owns the fresh read and its lock.
+  async function options(fallback?: GitCommitOptions): Promise<GitCommitOptions | undefined> {
+    return typeof source === 'function'
+      ? source((await createRepositories(root).localState.get()).plugins?.[id])
+      : fallback;
+  }
+
+  function updated(pending: GitPending, options: GitCommitOptions): GitPending {
+    return {
+      ...pending,
+      due: pending.due + (options.intervalSeconds - pending.options.intervalSeconds) * 1000,
+      options,
+      revision: (pending.revision ?? 0) + 1,
+    };
+  }
+
+  function cancelTimer(file: string) {
+    clearTimeout(timers.get(file));
+    timers.delete(file);
+  }
 
   function enqueue(file: string) {
     const previous = queues.get(file)?.done ?? Promise.resolve();
@@ -88,13 +118,24 @@ export function createPluginGit(
     const pending = await coordinated(root, `${id}.git.pending`, async () => {
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return null;
-      return readGitPending(file);
+      let pending = await readGitPending(file);
+      if (!pending) return null;
+      const current = await options(pending.options);
+      if (current && !isDeepStrictEqual(current, pending.options)) {
+        pending = updated(pending, current);
+        await writeGitPending(file, pending);
+      }
+      if (pending.options.automaticCommits === false) {
+        cancelTimer(file);
+        return null;
+      }
+      if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
+        arm(file, pending.due);
+        return null;
+      }
+      return pending;
     });
     if (!pending) return false;
-    if (pending.options.frequency === 'interval' && pending.due > Date.now()) {
-      arm(file, pending.due);
-      return false;
-    }
     await commitGitPaths(root, pending.paths, pending.options, (read) => coordinated(root, `${id}.git.snapshot`, read));
     return coordinated(root, `${id}.git.acknowledge`, async () => {
       const latest = await readGitPending(file);
@@ -107,35 +148,32 @@ export function createPluginGit(
     });
   }
 
-  async function schedule(given?: GitCommitOptions, paths: string[] = []) {
+  async function schedule(given: GitOptionsSource, paths: string[] = []) {
     const file = await filePath();
-    let due: number | undefined;
     await coordinated(root, `${id}.git`, async () => {
-      clearTimeout(timers.get(file));
-      timers.delete(file);
+      cancelTimer(file);
       const config = await createRepositories(root).rootConfig.get();
       if (config.plugins?.[id]?.enabled !== true) return;
+      source = given;
       let pending = await readGitPending(file);
-      const options = given ?? pending?.options;
-      if (!options) return;
+      const current = await options(typeof given === 'function' ? undefined : given);
+      if (!current) return;
       if (paths.length) {
         pending = {
           paths: [...new Set([...(pending?.paths ?? []), ...paths])],
-          due: pending?.due ?? Date.now() + options.intervalSeconds * 1000,
-          options: pending?.options ?? options,
+          due: pending?.due ?? Date.now() + current.intervalSeconds * 1000,
+          options: pending?.options ?? current,
           revision: pending?.revision,
         };
       }
       if (!pending) return;
-      pending.due += (options.intervalSeconds - pending.options.intervalSeconds) * 1000;
-      pending.options = options;
-      pending.revision = (pending.revision ?? 0) + 1;
+      pending = updated(pending, current);
       await writeGitPending(file, pending);
-      due = options.frequency === 'change' ? 0 : pending.due;
+      if (current.automaticCommits === false) return;
+      const due = current.frequency === 'change' ? 0 : pending.due;
+      if (due > Date.now()) arm(file, due);
+      else enqueue(file);
     });
-    if (due === undefined) return;
-    if (due > Date.now()) arm(file, due);
-    else enqueue(file);
   }
   function assertEffect() {
     const scope = currentScope();

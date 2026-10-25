@@ -20,8 +20,10 @@ it('shows Git settings only when loaded and saves frequency, interval and author
     (f) => f.includes('Git automatic commits') && f.includes('default@example.com') && f.includes('Frequency*'),
   );
   await app.press(KEYS.tab);
+  await app.press(KEYS.down);
   await focusFormField(app, 'Frequency');
   await app.press(KEYS.right);
+  await app.press(KEYS.down);
   await focusFormField(app, 'Interval (seconds, 1–86400)');
   await app.press(
     KEYS.home,
@@ -40,6 +42,7 @@ it('shows Git settings only when loaded and saves frequency, interval and author
   await waitForFrame(app, 'Updated Git commit preferences');
   const local = JSON.parse(await readFile(join(t.path, 'local.json'), 'utf8'));
   expect(local.plugins.git).toEqual({
+    automaticCommits: true,
     frequency: 'interval',
     intervalSeconds: 600,
     authorName: 'Robot',
