@@ -1,10 +1,11 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { invokePlugin, invokePluginSync, type PluginInput, type PluginSidebar } from '../../services';
 import {
   pluginUi,
   ServicesContext,
   type SidebarFilter,
   useAsync,
+  useContextMenu,
   useDataRootChanges,
   usePlugins,
   useToast,
@@ -30,6 +31,9 @@ export interface PluginSidebars {
     title: string;
     entries: SidebarEntry[];
     current: number;
+    hints: { key: string; description: string }[];
+    run(key: string): void;
+    menu?(id: string, x: number, y: number): void;
     button?: { label: string; onClick(): void };
   } | null;
   /** Shows the next Plugin's sidebar, or none after the last (`\`). */
@@ -51,6 +55,7 @@ export function usePluginSidebars(depth: number): PluginSidebars {
   const { plugins } = usePlugins();
   const changes = useDataRootChanges();
   const toast = useToast();
+  const contextMenu = useContextMenu();
   const router = useRouter();
   const onPick = () => {
     if (router.stack[0]?.screen !== 'board') router.reset('board');
@@ -68,7 +73,10 @@ export function usePluginSidebars(depth: number): PluginSidebars {
     const at = withSidebar.find((p) => p.id === openId);
     if (!at || !services) return null;
     const loaded = await invokePlugin({ plugin: at.id, stage: 'field' }, () =>
-      at.sidebar.items({ plugin: services.plugins.context(at.id) }),
+      (async () => {
+        const entries = await at.sidebar.items({ plugin: services.plugins.context(at.id) });
+        return entries.map((item) => ({ ...item, links: at.sidebar.menu?.(item.value) ?? [] }));
+      })(),
     );
     return { id: at.id, items: loaded };
   }, [withSidebar, openId, services, depth, changes]);
@@ -116,6 +124,32 @@ export function usePluginSidebars(depth: number): PluginSidebars {
     return { plugins: input, summary };
   }, [withSidebar, picks]);
 
+  const latest = useRef({ openId, loaded });
+  latest.current = { openId, loaded };
+  const menu = (value: string, x: number, y: number) => {
+    if (!current?.sidebar.menu || !loaded.some((item) => item.value === value)) return;
+    const { id } = current;
+    try {
+      const links = loaded.find((item) => item.value === value)?.links ?? [];
+      if (links.length === 0) return;
+      contextMenu.open(
+        x,
+        y,
+        links.map((link) => ({
+          label: link.label,
+          key: link.key,
+          onSelect: () => {
+            if (latest.current.openId === id && latest.current.loaded.some((item) => item.value === value)) {
+              pluginUi(id, router, toast).open(link.screen, link.params);
+            }
+          },
+        })),
+      );
+    } catch (err) {
+      toast.error(err);
+    }
+  };
+  const selectedLinks = loaded.find((item) => item.value === picked?.value)?.links ?? [];
   const create = current?.sidebar.create;
   return {
     buttons: withSidebar.map(({ id, sidebar }) => ({
@@ -128,6 +162,12 @@ export function usePluginSidebars(depth: number): PluginSidebars {
           title: current.sidebar.title,
           entries,
           current: at,
+          hints: selectedLinks.map((link) => ({ key: link.key, description: link.label.toLowerCase() })),
+          run: (key) => {
+            const link = selectedLinks.find((link) => link.key === key);
+            if (link) pluginUi(current.id, router, toast).open(link.screen, link.params);
+          },
+          menu: current.sidebar.menu ? menu : undefined,
           button: create && {
             label: create.label,
             onClick: () => pluginUi(current.id, router, toast).open(create.screen, create.params),
