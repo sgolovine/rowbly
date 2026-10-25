@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!!.rowbly", "!docs", "!pnpm-lock.yaml"]
+    "includes": [
+      "**",
+      "!!.rowbly",
+      "!docs",
+      "!pnpm-lock.yaml",
+      "!skills/rowbly-grill/scripts/grill-ui.mjs",
+      "!skills/rowbly-grill/assets/index.html"
+    ]
   },
   "formatter": {
     "enabled": true,
