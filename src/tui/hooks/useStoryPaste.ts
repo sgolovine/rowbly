@@ -37,6 +37,7 @@ export function useStoryPaste({
   const allowed = active && !covered && enabled && !!boardId;
   const [busy, setBusy] = useState(false);
   const pending = useRef<unknown>(undefined);
+  const pendingOwner = useRef<string | undefined>(undefined);
   const [dirty, setDirty] = useState(false);
   const generation = useRef(0);
   const progress = useRef<number | undefined>(undefined);
@@ -100,13 +101,14 @@ export function useStoryPaste({
       const plugin = services.plugins.context(claimant.id);
       const ui = pluginUi(claimant.id, router, toast);
       if (form) {
-        let next = pending.current;
+        const previous = pendingOwner.current === claimant.id ? pending.current : undefined;
+        let next = previous;
         invokePluginSync({ plugin: claimant.id, stage: 'field' }, () =>
           handler.form({
             boardId: boardId as string,
             story: story ?? null,
             image,
-            pending: pending.current,
+            pending: previous,
             setPending: (value) => {
               next = value;
             },
@@ -116,6 +118,7 @@ export function useStoryPaste({
         );
         if (current()) {
           pending.current = next;
+          pendingOwner.current = claimant.id;
           setDirty(next !== undefined);
         }
       } else if (story) {
@@ -149,10 +152,12 @@ export function useStoryPaste({
     hints,
     saved() {
       pending.current = undefined;
+      pendingOwner.current = undefined;
       setDirty(false);
     },
     input(base?: PluginInput): PluginInput | undefined {
-      if (pending.current === undefined || !claimant?.tui.storyPaste) return base;
+      if (pending.current === undefined || !claimant?.tui.storyPaste || pendingOwner.current !== claimant.id)
+        return base;
       const value = invokePluginSync(
         { plugin: claimant.id, stage: 'field', operation: story ? 'stories.update' : 'stories.create' },
         () => claimant.tui.storyPaste?.input({ pending: pending.current, story: story ?? null }),
