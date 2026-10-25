@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Read clipboard images with @mariozechner/clipboard and a wl-paste fallback",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first.\n\n## Goal\n\nAdd one core function that reads an image from the system clipboard on macOS, Windows and Linux, and never crashes Rowbly when it can't.\n\n## Work\n\n- Add `@mariozechner/clipboard` to `dependencies`, pinned to exactly `0.3.9`.\n  - Check that `dist/cli.js` does not inline it: tsup leaves dependencies out of the bundle, and the `.node` binary must load at runtime.\n  - It has no install script, so `pnpm-workspace.yaml` `allowBuilds` should need no change. Confirm this.\n- Add `src/storage/clipboard.ts` with `readClipboardImage()`. It returns either `{ bytes: Uint8Array; type: 'image/png' }` or `{ reason: 'unsupported' | 'no-display' | 'no-image' | 'too-large' | 'timeout' }`.\n  1. Load the module with `await import()` inside `try`, and cache a failed load.\n  2. Call `hasImage()`, then `getImageBase64()` and decode it with `Buffer.from(…, 'base64')`. The output has no padding, which `Buffer` accepts. Don't use the `number[]` from `getImageBinary()` for large images.\n  3. Give up after about 3 s (`Promise.race`), since an X11 clipboard owner can hang.\n  4. Refuse images over a size cap (10 MB to start).\n- **Wayland fallback** (decided: option D). When the module can't load or connect and `WAYLAND_DISPLAY` is set:\n  - run `wl-paste --list-types` and continue only if it lists `image/png`;\n  - then read the image with `wl-paste --type image/png`;\n  - run it with `execFile` (no shell), using the same timeout and a byte limit, in the style of `src/storage/git.ts`.\n\n  If `wl-paste` isn't installed, return `unsupported`.\n- Nothing in this path may write to stdout or stderr: the TUI would be garbled.\n- Expose the reader to Plugins through `src/plugin-api` (Plugins can't import `src/storage`), e.g. a `clipboard.readImage()` capability. Document it in `docs/plugins/api.md`, with a fixture region.\n- Write **ADR-0034** (an optional native clipboard module with a `wl-paste` fallback) in `docs/agents/adr/`, with a row in its index. It should cover the exact version pin, reviewing each release's diff before upgrading, and the single-maintainer supply-chain risk.\n\n## Verify (no new tests by default; see AGENTS.md)\n\nCheck by hand on this machine (GNOME Wayland):\n- `wl-copy --type image/png < some.png`, then call the reader: you get PNG bytes.\n- With the native module hidden: the `wl-paste` fallback returns the same bytes.\n- With no image on the clipboard: `no-image`.\n\nSay how you checked in the pull request. The CI smoke job across OSes is a separate Story.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aa",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T18:11:29.591Z",
+  "updatedAt": "2026-10-25T18:11:56.637Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
