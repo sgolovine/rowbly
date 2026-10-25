@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T17:42:44.895Z",
+  "updatedAt": "2026-10-25T17:44:28.086Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -64,6 +64,13 @@
           "body": "Research accepted. Plan: rebuild header Sync on main’s coordinated sync service with commit-first rebase and ROW-15 reconciliation; retain existing CLI/scheduled merge behavior, update ADR-0035 and docs, then independently validate recovery, races, and TUI feedback.",
           "createdAt": "2026-10-25T17:30:12.474Z",
           "updatedAt": "2026-10-25T17:30:12.474Z"
+        },
+        {
+          "id": "NOYba5qJ",
+          "author": "sunny",
+          "body": "Rebuild pushed at a75f90a. Typecheck passed; unit 79/79 and CLI 20/20 passed. Full lint is blocked by inherited formatting in ROW-25 through ROW-29 Board JSON; task-scoped lint passes. Independent validation and screenshot evidence are next.",
+          "createdAt": "2026-10-25T17:44:28.086Z",
+          "updatedAt": "2026-10-25T17:44:28.086Z"
         }
       ]
     }
