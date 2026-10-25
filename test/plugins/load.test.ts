@@ -1,15 +1,18 @@
 import { readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadProgram } from '../../src/main';
+import { loadProgram, reservedNames } from '../../src/main';
 import type { AnyPluginDefinition } from '../../src/services';
-import { failureWarning, onOff } from '../../src/services';
+import { failureWarning, loadPlugins, onOff } from '../../src/services';
 import { coordinated } from '../../src/services/coordination';
 import { withGitWorker } from '../../src/storage/gitRepository';
 import { publishPublication, withPublication } from '../../src/storage/gitSyncJournal';
+import { createToastStore } from '../../src/tui/hooks';
+import { loadTuiPlugins, withPlugins as withTuiPlugins } from '../../src/tui/loadPlugins';
 import { tempRoot } from '../helpers';
 import { syncFixture } from '../storage/fixtures/syncFixture';
 import { boom, notes, stamp, strict } from './fixtures';
+import { paste } from './fixtures/paste';
 import { pluginRoot, withPlugins } from './helpers';
 
 describe('loading Plugins (ADR-0010)', () => {
@@ -158,6 +161,46 @@ describe('loading Plugins (ADR-0010)', () => {
       'Plugin "boom" failed to load (boom at start); Rowbly runs without it and keeps its data. ' +
         'Turn it off with `rowbly plugins disable boom`',
     );
+    const images = await pluginRoot({ paste: true, second: true, stamp: true });
+    const second = { ...paste, id: 'second', name: 'Second' };
+    for (const staged of [false, true]) {
+      const setup = await withPlugins(images, [paste, second, stamp]);
+      const loaded = staged
+        ? await withTuiPlugins(
+            setup.ctx,
+            (root, stage) => loadPlugins({ root, stage, registry: [paste, second, stamp], reserved: reservedNames() }),
+            createToastStore(),
+          )
+        : await loadTuiPlugins(setup.host);
+      expect(loaded.map((p) => p.id)).toEqual(['paste', 'stamp']);
+      expect(setup.ctx.plugins?.failures()).toEqual([
+        expect.objectContaining({ id: 'second', reason: 'storyPaste is already claimed by Plugin "paste"' }),
+      ]);
+    }
+    const setup = await withPlugins(images, []);
+    const loaded = await withTuiPlugins(
+      setup.ctx,
+      (root, stage) =>
+        loadPlugins({
+          root,
+          stage,
+          reserved: reservedNames(),
+          registry: [
+            {
+              ...paste,
+              start() {
+                throw new Error('failed startup');
+              },
+            },
+            second,
+            stamp,
+          ],
+        }),
+      createToastStore(),
+    );
+    expect(loaded.map((p) => p.id)).toEqual(['second', 'stamp']);
+    expect(setup.ctx.plugins?.failures()).toEqual([expect.objectContaining({ id: 'paste', reason: 'failed startup' })]);
+
     const noRoot = await loadProgram(null, [notes, boom]);
     expect(noRoot.host.active()).toEqual([]);
     const malformed = await tempRoot();

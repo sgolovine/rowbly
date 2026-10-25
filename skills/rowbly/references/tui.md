@@ -57,4 +57,17 @@ default; kept in `~/.rowblyrc.json`).
 
 Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.
 
+
+## Clipboard images on Stories
+
+On an open Story or its new/edit form, `ctrl+v`, `alt+v`, `ctrl+alt+v` or empty bracketed paste reads
+an image for the single active Plugin that takes pasted images, across tabs and fields. The hint is
+`ctrl+v paste image` on macOS/Linux, `alt+v paste image` on Windows, and absent without that Plugin.
+Nonempty paste stays text. Other screens, tasks, the full-screen editor and saving disable image
+paste. A spinner spans reading/handling; repeated gestures while busy are ignored, and the paste hint
+stays hidden even after opening another Story until that work finishes. An open Story
+saves immediately through its Plugin; a form keeps images pending through failures until save,
+and cancellation writes nothing. No claimant: `Turn on a Plugin that takes pasted images`.
+No image: `No image on the clipboard`. Size and timeout have separate messages; unavailable access
+gets environment guidance, including `wl-clipboard` on Wayland. The API alone supplies no image consumer.
 New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab switches tabs; arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.

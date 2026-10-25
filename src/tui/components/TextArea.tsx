@@ -1,4 +1,4 @@
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, usePaste } from 'ink';
 import { useRef } from 'react';
 import { useKeyCapture } from '../hooks';
 import { theme } from '../theme';
@@ -57,6 +57,15 @@ export function TextArea({
   report.current = onChange;
   const expand = () =>
     editor.open({ title, initial: latest.current.value, mode: 'edit', onChange: (next) => report.current(next) });
+
+  usePaste(
+    (text) => {
+      if (!text) return;
+      const next = editKey(latest.current, text, {} as import('ink').Key, true);
+      if (next) apply(next);
+    },
+    { isActive: editing },
+  );
 
   useInput(
     (input, key) => {

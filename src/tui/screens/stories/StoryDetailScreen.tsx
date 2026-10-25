@@ -28,6 +28,7 @@ import {
   useReloadOnReturn,
   useRowblyContext,
   useServices,
+  useStoryPaste,
   useToast,
 } from '../../hooks';
 import { useRouter } from '../../router';
@@ -63,6 +64,12 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   }, [services, ctx, key, plugins]);
   useReloadOnReturn(data.reload);
   useActionFocus({ story: data.data?.story });
+  const paste = useStoryPaste({
+    boardId: data.data?.story.boardId,
+    story: data.data?.story,
+    enabled: mode === 'view',
+    onSaved: data.reload,
+  });
   const viewing = mode === 'view';
   // A tab's ID is its Plugin and its place in that Plugin's list, never its label (ARCH-40).
   const pluginTabs = plugins.flatMap((p) =>
@@ -79,10 +86,11 @@ export function StoryDetailScreen({ params }: ScreenProps) {
         ? [
             { key: 'tab/←/→', description: 'switch tab' },
             { key: 'e', description: 'edit' },
+            ...paste.hints,
             { key: 'm', description: 'move Stage' },
             { key: 'd', description: 'delete' },
           ]
-        : [{ key: 'tab/←/→', description: 'switch tab' }],
+        : [{ key: 'tab/←/→', description: 'switch tab' }, ...paste.hints],
   );
 
   useInput(

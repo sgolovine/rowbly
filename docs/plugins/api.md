@@ -583,4 +583,70 @@ failures return their own reasons. The PNG signature is checked; image contents 
 The installed package also includes `rowbly/dist/clipboard.js`, which exports `readClipboardImage`
 and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
 [ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
-child isolation and the bounds' limits. Paste keys and image storage are planned separately.
+child isolation and the bounds' limits. Story paste keys are described below; an image-storage
+consumer is planned separately.
+
+
+## Story image paste
+
+`PluginTui.storyPaste` (type `PluginStoryPaste<S>`) exclusively handles images on an open Story
+and its new/edit form. All three callbacks are required. The first successfully activated claimant
+owns the contribution; a second claimant fails as a whole. A claimant whose startup fails owns
+nothing, so a later Plugin can load. This applies to staged TUI loading and reloads as well.
+
+- `story({ story, image, plugin, ui }): Promise<void>` saves immediately through the Plugin's
+  operations. Core reloads the Story when it finishes. It runs in the `screen` stage.
+- `form({ boardId, story, image, pending, setPending, plugin, ui }): void` stages only in memory.
+  `story` is `null` for creation. `pending` starts as `undefined`; call `setPending(value)` to replace
+  the opaque value, or `setPending(undefined)` to clear it. Core applies the replacement only when
+  the callback returns successfully. Do not save files or start operations here.
+- `input({ pending, story }): unknown` converts pending data into this Plugin's `stories.create`
+  or `stories.update` input. It is called only for defined pending data, after core field validation.
+  Return `undefined` for no contribution. Both form callbacks run through the Plugin error adapter
+  in the `field` stage; conversion errors name the operation too.
+
+`image` is `PluginPasteImage`: `{ bytes: Uint8Array, type: 'image/png' }`. Core reads once per
+accepted gesture using `clipboard.readImage()`. Keep the bytes in pending input and consume them
+in your create/update transform so all files and the Story save in one Change Set. Pending data remains associated with its originating Plugin ID and
+lives above the form's fields and tabs, marks the form dirty, survives validation/save failures,
+and clears after success. Cancellation writes nothing. Object input merges over the same Plugin's
+field and create-tab input (pending keys win); another value replaces it. Core merges field and
+create-tab input first, then converts and applies pending paste input once per submission. Declare matching operation input schemas
+and transforms in the Plugin definition; the example below shows only its TUI contribution.
+
+```ts
+import type { PluginPasteImage, PluginTui } from '../../plugin-api';
+
+export const imageTui: PluginTui = {
+  storyPaste: {
+    async story({ story, image, plugin, ui }) {
+      await plugin.operation('paste', { key: story.key }, (changes) =>
+        changes.writeBinaryFile({ story: story.key }, 'clipboard.png', image.bytes),
+      );
+      ui.toast('Saved clipboard image');
+    },
+    form({ image, pending, setPending, ui }) {
+      const images = (pending ?? []) as PluginPasteImage[];
+      setPending([...images, image]);
+      ui.toast('Image ready for Story save');
+    },
+    input({ pending }) {
+      // The Plugin's stories.create/update transform consumes these bytes in the same Change Set.
+      return { images: pending };
+    },
+  },
+};
+```
+
+Core accepts Ctrl+V, Alt+V, Ctrl+Alt+V and empty bracketed paste on every Story tab and form field.
+Nonempty bracketed paste remains text. Other screens, nested tasks, full-screen text editors and
+saving forms disable image paste. Core prevents overlapping reads and discards a read result when
+its original screen, services or claimant no longer owns it. An already dispatched Plugin callback
+must manage any asynchronous work it starts; closing a screen cannot undo its operations.
+
+A persistent spinner toast spans reading and handling. The active claimant gets a platform-appropriate
+paste hint. Without one, the gesture says `Turn on a Plugin that takes pasted images`. Clipboard
+failures are core messages: no image, size limit, timeout, or unavailable environment, with
+`wl-clipboard` guidance on Wayland. The claimant supplies its own success messages and any guidance
+for using its commands; core never names those commands. See
+[ADR-0038](../agents/adr/0038-story-image-paste-is-an-exclusive-plugin-contribution.md).

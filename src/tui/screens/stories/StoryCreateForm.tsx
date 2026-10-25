@@ -15,6 +15,7 @@ import {
   useCovered,
 } from '../../components';
 import { useDirty, useIsActive, useKeyHints, useLayout, usePlugins } from '../../hooks';
+import type { KeyHint } from '../../keymap';
 import { theme } from '../../theme';
 import { PluginFailures } from './PluginFailures';
 import { mergePluginInput, onPluginFields, type PluginFieldSet } from './pluginFields';
@@ -26,7 +27,11 @@ export function StoryCreateForm({
   initialValues,
   extra,
   onSubmit,
+  isActive: enabled = true,
+  extraHints,
 }: {
+  isActive?: boolean;
+  extraHints: readonly KeyHint[];
   boardId: string;
   fields: FormField[];
   initialValues: FormValues;
@@ -37,7 +42,7 @@ export function StoryCreateForm({
   const layout = useLayout();
   const isActive = useIsActive();
   const covered = useCovered();
-  const active = isActive && !covered;
+  const active = isActive && !covered && enabled;
   const [tab, setTab] = useState(0);
   const [values, setValues] = useState(initialValues);
   const [drafts, setDrafts] = useState<Record<string, unknown>>({});
@@ -51,6 +56,7 @@ export function StoryCreateForm({
   const { height: headerHeight } = useBoxMetrics(header);
   const navigation = useMemo(
     () => ({
+      extraHints,
       register(id: string, on: boolean) {
         if (on) editing.current.add(id);
         else editing.current.delete(id);
@@ -59,7 +65,7 @@ export function StoryCreateForm({
         };
       },
     }),
-    [],
+    [extraHints],
   );
   const tabs = plugins.flatMap((p) =>
     (p.tui.storyCreateTabs ?? []).map((contribution, i) => ({
@@ -83,11 +89,12 @@ export function StoryCreateForm({
   useKeyHints([
     { key: 'tab/←/→', description: 'switch tab' },
     { key: 'ctrl+s', description: 'save Story' },
+    ...extraHints,
   ]);
   const switchTab = (delta: number) => setTab((at) => (at + delta + tabs.length + 1) % (tabs.length + 1));
   useInput(
     (input, key) => {
-      if (busy) return;
+      if (busy || !active) return;
       if ((key.ctrl && input === 's') || (key.ctrl && key.return)) setRequest((n) => n + 1);
       else if (key.ctrl && input === 'g') setDraftFocus((value) => !value);
       else if (key.tab) switchTab(key.shift ? -1 : 1);
@@ -97,7 +104,7 @@ export function StoryCreateForm({
   );
 
   const save = async (details: FormValues) => {
-    if (busy) return;
+    if (busy || !active) return;
     setBusy(true);
     setErrors({});
     try {

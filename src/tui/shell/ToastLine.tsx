@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import { useEffect } from 'react';
+import { Spinner } from '../components';
 import { type Toast, useToast } from '../hooks';
 import { theme } from '../theme';
 
@@ -9,6 +10,7 @@ const TOAST_MS = { info: 4000, warning: 6000, error: 8000 } as const;
 export function ToastLine({ toast }: { toast: Toast }) {
   const store = useToast();
   useEffect(() => {
+    if (toast.pending) return;
     const timer = setTimeout(() => store.dismiss(toast.id), TOAST_MS[toast.kind]);
     return () => clearTimeout(timer);
   }, [store, toast]);
@@ -19,7 +21,10 @@ export function ToastLine({ toast }: { toast: Toast }) {
     <Box flexDirection="column" marginTop={1}>
       <Text backgroundColor={theme.overlayRaised}>{blank}</Text>
       <Text backgroundColor={theme.overlayRaised}>
-        <Text color={TOAST_COLORS[toast.kind]}>{`  ${glyph} `}</Text>
+        <Text color={TOAST_COLORS[toast.kind]}>
+          {'  '}
+          {toast.pending ? <Spinner /> : glyph}{' '}
+        </Text>
         <Text color={theme.ink}>{`${toast.message}  `}</Text>
       </Text>
       <Text backgroundColor={theme.overlayRaised}>{blank}</Text>

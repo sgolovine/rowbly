@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.895Z",
-  "updatedAt": "2026-10-25T17:40:43.220Z",
+  "updatedAt": "2026-10-25T21:19:44.318Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "tA6M83LO",
+          "author": "sunny",
+          "body": "Research complete. Waiting for codex/row-29-attachments to incorporate ROW-28 commit 91a238a, including ROW-24's tabbed Story form. Merging current main produced conflicts and was aborted cleanly. ROW-30 worktree is ready at /home/sgolovine/Projects/rowbly-worktrees/row-30-attachments-tui on codex/row-30-attachments-tui. No implementation edits or Board writes.",
+          "createdAt": "2026-10-25T21:19:44.317Z",
+          "updatedAt": "2026-10-25T21:19:44.317Z"
+        }
+      ]
     }
   }
 }
