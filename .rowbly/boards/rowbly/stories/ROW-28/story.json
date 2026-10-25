@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add the storyPaste hook for pasting images on Story screens",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. It needs the clipboard reader and the paste-key findings from the Stories that block it.\n\n## Goal\n\nThe core TUI accepts a paste key anywhere on an open Story or the Story form, reads the clipboard, and hands the image to the one Plugin that claims it. This is what makes \"press Ctrl+V with a Story open\" work, whichever tab or field has focus.\n\n## Work\n\n- Add a Plugin API contribution in the TUI part (the exact shape is up to you), e.g.:\n\n```ts\nstoryPaste: {\n  // An open Story: save now.\n  story({ story, image, plugin, ui }): Promise<void>;\n  // The new-Story or edit form: hold the image until the Story is saved.\n  form({ image, pending, plugin, ui }): void;\n}\n```\n\n- **Where:** `StoryDetailScreen` and `StoryFormScreen` (new and edit). It works whichever tab or form field has focus, but not while a modal or screen from elsewhere is on top. Ctrl+V never pastes text in a terminal, so it doesn't clash with typing.\n- **Keys:** the set the paste-key check recommends. Default: Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste (Ink 8 `usePaste`) where terminals send one.\n- **Key hint** for the platform: `ctrl+v paste image` on macOS and Linux, `alt+v paste image` on Windows. Follow `.agents/skills/rowbly-tui-design/SKILL.md`. Show the hint only when a Plugin claims `storyPaste`, and gate the hint and the input on the same condition.\n- **Claims:** core calls `readClipboardImage()` once per key press, shows a spinner toast while it reads, then calls the claiming Plugin. Only one Plugin may claim `storyPaste`: a second claim fails that Plugin's load, like other name clashes (ADR-0020).\n- **Failure toasts:**\n  - no Plugin claims it: `Turn on a Plugin that takes pasted images`\n  - `no-image`: `No image on the clipboard`\n  - `unsupported` or `no-display`: `Pasting images is not supported here; use rowbly attachment add <KEY> <file>` (on Wayland, mention `wl-clipboard`)\n  - `too-large` and `timeout`: their own messages\n\n  Core text must not use Plugin terms (AGENTS.md); `test/e2e/language.test.ts` checks this.\n- Add the keys to `src/tui/keymap.ts` (`CORE_KEYS`) so no Plugin can claim them.\n- Write **ADR-0036** (the Story paste hook) in `docs/agents/adr/`, with a row in its index.\n\n## Tests\n\nPlugin pipeline and loading rules are a required-test row in AGENTS.md: add one fixture-Plugin test in `test/plugins/` that a second `storyPaste` claim fails that Plugin's load. No tests for the keys, hints or toasts themselves.\n\n## Docs\n\n- `docs/plugins/api.md`, with a fixture region in `test/docs/fixtures/`.\n- `docs/user-guide.md`: the keys.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "in-pr",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "ad",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:11.570Z",
-  "updatedAt": "2026-10-25T21:22:55.131Z",
+  "updatedAt": "2026-10-25T21:23:03.678Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
