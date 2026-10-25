@@ -461,7 +461,16 @@ rowbly plugins disable <id>    # keeps its settings and data
 
 `rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
 folders that ship in the npm package's `skills/` folder: today `rowbly`, which teaches an agent to run
-Rowbly, and `rowbly-dev`, which takes a Story from its Key to a draft pull request. A new skill holds
+Rowbly; `rowbly-dev`, which takes a Story from its Key to a draft pull request; and `rowbly-grill`,
+which interviews a person about a Story and saves its specification and qualifying ADRs as Story
+Specs. Invoke `$rowbly-grill WEB-42`, `/rowbly-grill WEB-42`, or name the skill with a Key
+(case-insensitive); a bare number uses the current Board. Without a Key it asks, never chooses.
+Specs must be enabled and loaded and the Story must have a description before the interview starts.
+The browser form has a numbered chat fallback. The skill leaves the description and Stage unchanged
+and grants no implementation permission. Install with
+`rowbly skills install rowbly-grill --harness codex` (or `--harness claude`).
+
+A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
 `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.
 Every `skills` command works in the current folder and needs no Data Root.
