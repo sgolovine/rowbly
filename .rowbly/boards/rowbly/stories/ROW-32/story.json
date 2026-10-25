@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:41:19.763Z",
-  "updatedAt": "2026-10-25T18:01:23.905Z",
+  "updatedAt": "2026-10-25T18:28:32.824Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,13 @@
           "body": "Complexity 4/10. Plan accepted for codex/row-32-rowbly-grill: adapt the upstream interview and UI to Story Specs and Story-scoped ADRs, integrate packaging/docs, verify disposable sessions and packed installs, then run independent validation and capture evidence.",
           "createdAt": "2026-10-25T18:01:23.904Z",
           "updatedAt": "2026-10-25T18:01:23.904Z"
+        },
+        {
+          "id": "nzY3JEog",
+          "author": "sunny",
+          "body": "Draft PR #111 opened: https://github.com/sgolovine/rowbly/pull/111. Validation signed off at cb4cfc5; all four checks, packed installs and synthetic interview passed. Five screenshots published. Browser testing limitation documented.",
+          "createdAt": "2026-10-25T18:28:32.824Z",
+          "updatedAt": "2026-10-25T18:28:32.824Z"
         }
       ]
     }
