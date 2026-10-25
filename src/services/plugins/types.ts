@@ -814,6 +814,30 @@ export interface PluginStoryForm<S = Record<string, unknown>> {
   }): unknown;
 }
 
+/** The PNG accepted by the clipboard reader. */
+export interface PluginPasteImage {
+  bytes: Uint8Array;
+  type: 'image/png';
+}
+
+/** One exclusive image-paste handler for open Stories and their new/edit forms. */
+export interface PluginStoryPaste<S = Record<string, unknown>> {
+  /** Saves immediately through the Plugin's operations. */
+  story(args: { story: Story; image: PluginPasteImage; plugin: PluginContext<S>; ui: PluginUi }): Promise<void>;
+  /** Stages only in memory. The host retains the opaque value until save or cancellation. */
+  form(args: {
+    boardId: Slug;
+    story: Story | null;
+    image: PluginPasteImage;
+    pending: unknown;
+    setPending(value: unknown): void;
+    plugin: PluginContext<S>;
+    ui: PluginUi;
+  }): void;
+  /** Converts pending data into this Plugin's create/update input; undefined contributes nothing. */
+  input(args: { pending: unknown; story: Story | null }): unknown;
+}
+
 export interface PluginStoryFilter<S = Record<string, unknown>> {
   fields(args: { boardId: Slug; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**
@@ -895,6 +919,7 @@ export interface PluginTui<S = Record<string, unknown>> {
   home?: PluginLink[];
   settings?: PluginLink[];
   storyForm?: PluginStoryForm<S>;
+  storyPaste?: PluginStoryPaste<S>;
   storyFilter?: PluginStoryFilter<S>;
   sidebar?: PluginSidebar<S>;
   /**
