@@ -55,3 +55,5 @@ default; kept in `~/.rowblyrc.json`).
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
 
 Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.
+
+New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab switches tabs; arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.

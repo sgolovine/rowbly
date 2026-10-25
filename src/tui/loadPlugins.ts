@@ -71,10 +71,15 @@ function tuiProblem(tui: PluginTui<unknown>): string | undefined {
   const labelled = [
     { kind: 'settings sections', labels: (tui.settings ?? []).map((link) => link.label) },
     { kind: 'Story tabs', labels: (tui.storyTabs ?? []).map((tab) => tab.label) },
+    { kind: 'Story create tabs', labels: (tui.storyCreateTabs ?? []).map((tab) => tab.label) },
   ];
   for (const { kind, labels } of labelled) {
     const twice = labels.find((label, i) => labels.indexOf(label) !== i);
     if (twice !== undefined) return `it has two ${kind} labelled "${twice}"`;
+  }
+  for (const tab of tui.storyCreateTabs ?? []) {
+    if (!tab.label || typeof tab.input !== 'function' || !tab.component)
+      return 'a Story create tab needs label, component and input';
   }
   return undefined;
 }

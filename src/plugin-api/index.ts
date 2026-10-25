@@ -118,6 +118,8 @@ export type {
   PluginSidebar,
   PluginSidebarItem,
   PluginStatus,
+  PluginStoryCreateTab,
+  PluginStoryCreateTabProps,
   PluginStoryFilter,
   PluginStoryForm,
   PluginStoryTabProps,

@@ -174,3 +174,20 @@ Each change returned the record you expected (exit 0), and `rowbly stories show 
 confirms the intended handoff Stage and Plugin Data, or you reported the intended move to the
 designated Board writer. The Story is `done` only when its workflow is complete. If a command exits 6, follow
 [Check and repair a Data Root](doctor.md) before you try again.
+
+## Create with Plugin data in one operation
+
+With Tasks, Specs and Story Linking enabled:
+
+```sh
+rowbly stories create --board web --name "Login" --task "Build form" --task "Review" \
+  --story-spec design=./design.md --story-spec checks=./checks.md \
+  --spec auth-flow --blocks WEB-2 --blocked-by WEB-1 --json --no-prompt
+```
+
+`--task <name>` repeats in flag order, preserves literal names and uses the first effective Stage.
+`--story-spec <slug>=<file>` repeats for unique slugs; `-` reads stdin at most once including the
+Story description. Title is the first `#` heading or slug. `--spec` still links an existing Board Spec.
+`--blocks <KEY>` and `--blocked-by <KEY>` repeat and require existing same-Board Stories. Invalid input
+exits 2 (`VALIDATION`) and saves nothing: the Story, Task bags, Spec files and existing blockers' bags
+are all one `stories.create` operation. Do not create them through follow-up operations.

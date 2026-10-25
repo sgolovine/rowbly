@@ -372,7 +372,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                         >
                           {router.stack.slice(1).map((route, i) => {
                             const routeDepth = i + 1;
-                            const screen = route.screen === 'story' || route.screen === 'settings';
+                            const screen =
+                              route.screen === 'story' ||
+                              route.screen === 'settings' ||
+                              (route.screen === 'story-form' && !route.params.key);
                             const visible =
                               routeDepth === depth ||
                               (screen &&

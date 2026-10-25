@@ -879,6 +879,26 @@ export interface PluginSidebar<S = Record<string, unknown>> {
   menu?(value: string): (PluginLink & { key: 'e' | 'd' })[];
 }
 
+/** An unsaved create-tab draft. The host retains it across tabs and submits one stories.create.
+ * Components only change drafts: they must never save records or call operations.
+ * Throw a failed asynchronous load during render so PluginSlot excludes this tab's input.
+ */
+export interface PluginStoryCreateTabProps<S = Record<string, unknown>> {
+  draft: unknown;
+  onChange(draft: unknown): void;
+  boardId: Slug;
+  active: boolean;
+  plugin: PluginContext<S>;
+  ui: PluginUi;
+}
+
+export interface PluginStoryCreateTab<S = Record<string, unknown>> {
+  label: string;
+  component: ComponentType<PluginStoryCreateTabProps<S>>;
+  /** Pure conversion to plugins.<id>; undefined adds nothing. Called only for changed drafts. */
+  input(draft: unknown): unknown | undefined;
+}
+
 /** A Plugin's TUI part, loaded only when the TUI starts. */
 export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
@@ -886,6 +906,7 @@ export interface PluginTui<S = Record<string, unknown>> {
   home?: PluginLink[];
   settings?: PluginLink[];
   storyForm?: PluginStoryForm<S>;
+  storyCreateTabs?: PluginStoryCreateTab<S>[];
   storyFilter?: PluginStoryFilter<S>;
   sidebar?: PluginSidebar<S>;
   /**

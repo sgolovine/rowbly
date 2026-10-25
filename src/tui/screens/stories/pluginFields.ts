@@ -264,3 +264,18 @@ function gatherPluginInput(
   }
   return Object.keys(input).length > 0 ? input : undefined;
 }
+
+/** A Plugin can contribute both relocated fields and create drafts to its single input. */
+export function mergePluginInput(
+  fields: PluginInput | undefined,
+  tabs: PluginInput | undefined,
+): PluginInput | undefined {
+  if (!tabs) return fields;
+  const result = { ...fields };
+  for (const [id, value] of Object.entries(tabs)) {
+    const before = result[id];
+    result[id] =
+      before && typeof before === 'object' && value && typeof value === 'object' ? { ...before, ...value } : value;
+  }
+  return result;
+}
