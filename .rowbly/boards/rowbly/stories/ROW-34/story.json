@@ -14,7 +14,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T21:06:58.964Z",
-  "updatedAt": "2026-10-25T21:12:40.055Z",
+  "updatedAt": "2026-10-25T21:19:32.314Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -31,6 +31,13 @@
           "body": "Complexity 2/10; no subagents. Plan accepted for codex/row-34-fault-spy-cleanup: add cancellation-aware fault-sweep teardown, preserve all 130 fault cases and the 20 s timeout, add a held-I/O regression, then run locked validation and open a draft PR against main.",
           "createdAt": "2026-10-25T21:12:40.054Z",
           "updatedAt": "2026-10-25T21:12:40.054Z"
+        },
+        {
+          "id": "1KGxbEb1",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/115 opened against main. Validation signed off at d28cf1e: typecheck, lint, 76 unit tests and 20 CLI tests passed; full suites used the shared lock. Barrier, mutation, load and forced-timeout checks confirm cancellation cleanup without cascading failures. All 130 fault cases retained; suite totals 96 tests. Screenshots published and verified HTTP 200. CI pending.",
+          "createdAt": "2026-10-25T21:19:32.313Z",
+          "updatedAt": "2026-10-25T21:19:32.313Z"
         }
       ]
     }
