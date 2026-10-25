@@ -699,6 +699,20 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 
 In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; the focused field scrolls into view, and after the last field `enter` saves. Saving is shown in the modal's key strip, with no separate Save button. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `ctrl+s`, `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote in the form. Closing the editor does not submit the form; press `ctrl+s` again in the form to save it. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
+On an open Story or its new/edit form, `ctrl+v`, `alt+v` or `ctrl+alt+v` pastes a clipboard image
+through the Plugin that takes pasted images, from any tab or field. The hint shows `ctrl+v paste
+image` on macOS/Linux and `alt+v paste image` on Windows when that Plugin is active. Empty bracketed
+paste also reads an image; nonempty paste stays text. Image paste pauses under another task,
+another screen or the full-screen editor, and during saving. A spinner stays while the clipboard
+and Plugin are working; repeated gestures during that work are ignored.
+An open Story saves through the Plugin immediately. New/edit forms keep images pending until the
+Story saves; validation/save failures keep them, and cancellation writes nothing. With no claimant,
+the gesture says `Turn on a Plugin that takes pasted images`. An empty clipboard says `No image on
+the clipboard`; oversized images and timeouts have their own messages. Unavailable clipboard access
+shows environment guidance; on Wayland, install `wl-clipboard` when prompted. Rowbly ships the
+contribution API; an image-consuming Plugin must supply its behavior.
+
+
 The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`), `page up`/`page down` and the mouse wheel scroll it. **Edit** shows the raw text in a multi-line text box. `tab`, or a click on **View** or **Edit**, switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
 ### Keys per screen
