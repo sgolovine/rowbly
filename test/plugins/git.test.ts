@@ -292,10 +292,11 @@ describe('Git automatic commits', () => {
     // A Rowbly change made by hand is pending; the upstream has an unrelated commit.
     await theirs('other.txt', () => 'other\n');
     await writeFile(join(f.t.dir, file), (await readFile(join(f.t.dir, file), 'utf8')).replace('Base', 'Pending'));
+    await writeFile(join(f.t.dir, '.rowbly', '.DS_Store'), 'editor');
     await expect(sync()).resolves.toEqual({ committed: true, pulled: 1, pushed: 1, upstream: 'origin/main' });
     expect(await remoteHead()).toBe(await f.command('rev-parse', 'HEAD'));
     expect(await f.command('show', `HEAD:${file}`)).toContain('Pending');
-    expect(await f.command('ls-files', '--', '.rowbly/local.json')).toBe('');
+    expect(await f.command('ls-files', '--', '.rowbly/local.json', '.rowbly/.DS_Store')).toBe('');
     expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
     await access(queue);
 

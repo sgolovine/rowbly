@@ -58,6 +58,17 @@ export function isCommittedPath(inside: string): boolean {
   return inside !== 'local.json' && isWatchedPath(inside);
 }
 
+/**
+ * Whether Sync's scan of `git status` commits `inside`: a committed path (`isCommittedPath`) with no
+ * dot-named segment, so editor and system files (`.DS_Store`, `.story.json.swp`) are never pushed.
+ * The Data Root's own `.gitignore` is the one dot file it commits. A Plugin's dot-named file is still
+ * committed by the Automatic Commit of the Operation that writes it.
+ */
+export function isSyncedPath(inside: string): boolean {
+  if (inside === '.gitignore') return true;
+  return isCommittedPath(inside) && !inside.split('/').some((part) => part.startsWith('.'));
+}
+
 /** Personal Git commit preferences; omitted author fields use Git configuration. */
 export interface GitCommitOptions {
   frequency: 'change' | 'interval';

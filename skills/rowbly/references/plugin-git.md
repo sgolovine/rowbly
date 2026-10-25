@@ -70,7 +70,7 @@ tell the user to press `S`, or do the same with git yourself (`git pull --rebase
 only when they ask you to push.
 
 Sync, in order: commits pending Rowbly changes under the Data Root (changed, added and deleted files;
-never `local.json`, `.lock`, `.lock.break`, `.txn/` or `.<name>.<8 hex>.tmp`; `.gitignore` is included), only when there are some; fetches;
+never `local.json`, `.lock`, `.lock.break`, `.txn/`, `.<name>.<8 hex>.tmp` or any other dot-named file or folder such as `.DS_Store` or `.story.json.swp`; the Data Root's `.gitignore` is included), only when there are some; fetches;
 rebases onto the branch's upstream in a temporary worktree, then moves the branch like `git checkout`,
 keeping the user's other staged and unstaged changes; pushes to the upstream, never forced. The header
 shows `Sync…` while it runs and `S` does nothing until it ends. The success toast
