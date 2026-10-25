@@ -58,6 +58,7 @@ export type {
   AnyPluginDefinition,
   Bagged,
   BagInspection,
+  BinaryFileSummary,
   BoardChange,
   Change,
   ChangeSet,
