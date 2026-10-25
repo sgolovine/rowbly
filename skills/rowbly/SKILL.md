@@ -20,7 +20,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Task | Read |
 | --- | --- |
 | Create a Data Root, add Boards, set Me, change Stages or Custom Fields | [Setup and configuration](references/setup.md) |
-| Start a new agent skill that uses Rowbly (`rowbly skills create`, `skills list`) | [Setup and configuration](references/setup.md) |
+| Install an official skill or start a new agent skill that uses Rowbly (`rowbly skills install`, `skills create`, `skills list`) | [Setup and configuration](references/setup.md) |
 | Find, create, edit, move, rank or delete Stories; pick up and finish a Story | [Stories](references/stories.md) |
 | See which Plugins are on, turn one on or off, edit Plugin settings, a Plugin that failed to load | [Plugins](references/plugins.md) |
 | Who works on a Story (`rowbly assignees`, `--assignee`) | [Assignees Plugin](references/plugin-assignees.md) |

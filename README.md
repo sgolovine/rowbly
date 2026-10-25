@@ -69,7 +69,8 @@ cp -r "$(npm root -g)"/rowbly/skills/rowbly ~/.claude/skills/
 ```
 
 For another agent, copy the same folder wherever it loads skills from. Copy it again after you
-upgrade Rowbly, so it matches the CLI.
+upgrade Rowbly, so it matches the CLI. Or let Rowbly copy it into the project:
+`rowbly skills install rowbly --harness claude` (run `rowbly skills install` alone for a menu).
 
 ### Rowbly in your own skills
 

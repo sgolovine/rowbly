@@ -144,15 +144,22 @@ rowbly fields remove estimate --board web
   `MISSING_REQUIRED_FIELD` for them.
 - Stories take values as `--field key=value` ([Stories](stories.md)).
 
-## 5. Start a skill that uses Rowbly
+## 5. Install or start a skill that uses Rowbly
 
-When the user wants a new agent skill that works with Rowbly, create it from the folder the skill is
-for (usually the repository root):
+Run these from the folder the skill is for (usually the repository root). To install an official
+skill (one shipped with Rowbly, such as `rowbly`) or copy an existing skill folder, use `install`; for
+a new agent skill that works with Rowbly, use `create`:
 
 ```sh
+rowbly skills install rowbly --harness claude --json --no-prompt   # {name, description, harnesses, path, official}
+rowbly skills install ../shared/release-notes --harness claude     # any folder that holds SKILL.md
 rowbly skills create release-notes --harness claude --description "Write release notes from done Stories"
-rowbly skills list                       # [{name, description, harnesses, path}]
+rowbly skills list --json --no-prompt    # {official: [{name, description, installed: [{harnesses, path}]}], custom: [...]}
 ```
+
+- `install` copies the whole folder to `<folder>/<name>`, named by its `SKILL.md` frontmatter `name`.
+  Pass a path or an official skill name: without one it opens a menu, so with `--no-prompt` it exits 2.
+  A path without `SKILL.md` exits 2; an unknown name exits 3.
 
 - `create` writes `<folder>/<name>/SKILL.md`, which opens with a paragraph that points at
   `references/rowbly-reference.md`, and that reference page. Then write the skill's steps in `SKILL.md`.
@@ -161,7 +168,8 @@ rowbly skills list                       # [{name, description, harnesses, path}
   agent the user runs when they do not say.
 - The name is lowercase letters, digits and single hyphens (exit 2 otherwise). A skill folder that
   already exists exits 4 and is not changed; pick another name rather than deleting it.
-- `list` shows the skills below the current folder that hold the reference.
+- `list` shows the official skills with where each is installed, and the custom skills: the other
+  skills below the current folder that hold the reference.
 
 ## Common mistakes
 
