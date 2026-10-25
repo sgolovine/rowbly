@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:14:29.347Z",
-  "updatedAt": "2026-10-25T15:29:23.814Z"
+  "updatedAt": "2026-10-25T16:22:53.877Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "jaq6doJ9",
+          "author": "sunny",
+          "body": "Draft PR open: https://github.com/sgolovine/rowbly/pull/99 (branch claude/row-18-skills-create, head bbf237e). Adds `rowbly skills` (help), `skills create [name] --harness generic|claude|codex|gemini|pi|cursor --description` and `skills list` (table or --json). The reference is read from the packaged skills/rowbly-reference.md when the command runs. Validation: typecheck pass, lint pass, test:unit 66/66, test:cli 20/20; checked by hand for all harnesses, error exits 2 and 4, and from dist and npm pack. Screenshots on the PR. Open choices: codex goes to .agents/skills (per distributor); `list` shows any skill that holds the Rowbly reference. Land before ROW-20; merges cleanly with ROW-16's claude/row-16-rowbly-md branch.",
+          "createdAt": "2026-10-25T16:22:53.876Z",
+          "updatedAt": "2026-10-25T16:22:53.876Z"
+        }
+      ]
+    }
+  }
 }
