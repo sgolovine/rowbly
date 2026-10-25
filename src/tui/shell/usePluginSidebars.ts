@@ -1,11 +1,11 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { invokePlugin, invokePluginSync, type PluginInput, type PluginSidebar } from '../../services';
 import {
+  type ContextMenuControl,
   pluginUi,
   ServicesContext,
   type SidebarFilter,
   useAsync,
-  useContextMenu,
   useDataRootChanges,
   usePlugins,
   useToast,
@@ -50,12 +50,11 @@ export interface PluginSidebars {
  * reloads the entries when a modal closes, e.g. after creating one, as does a change to the Data Root
  * on disk. A pick shows the board.
  */
-export function usePluginSidebars(depth: number): PluginSidebars {
+export function usePluginSidebars(depth: number, contextMenu: ContextMenuControl): PluginSidebars {
   const { services } = useContext(ServicesContext);
   const { plugins } = usePlugins();
   const changes = useDataRootChanges();
   const toast = useToast();
-  const contextMenu = useContextMenu();
   const router = useRouter();
   const onPick = () => {
     if (router.stack[0]?.screen !== 'board') router.reset('board');

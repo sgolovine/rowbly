@@ -149,7 +149,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     : 'Rowbly';
   const openDataRoots = () => setOverlay({ kind: 'dataRoots' });
 
-  const pluginSidebars = usePluginSidebars(depth);
+  const pluginSidebars = usePluginSidebars(depth, contextMenu);
   // Dragged with the mouse; like the view, the widths last until Rowbly quits.
   const [boardsWidth, setBoardsWidth] = useState(SIDEBAR_WIDTH);
   const [pluginWidth, setPluginWidth] = useState(SIDEBAR_WIDTH);
