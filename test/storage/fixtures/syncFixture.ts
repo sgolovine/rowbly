@@ -15,7 +15,7 @@ export async function syncFixture(
   path: string,
   configAfter = '{"version":1,"plugins":{"future":{"enabled":false,"retained":true}}}\n',
 ) {
-  await gitText(dir, ['init', '-b', 'main']);
+  await gitText(dir, ['init', '--template=', '-b', 'main']);
   await gitText(dir, ['config', 'user.name', 'Journal test']);
   await gitText(dir, ['config', 'user.email', 'journal@example.com']);
   await writeFile(join(path, '.gitignore'), 'local.json\n.lock\n.lock.break\n.txn/\n');

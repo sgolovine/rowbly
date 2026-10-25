@@ -224,7 +224,7 @@ describe('Git local publication', () => {
       '../../src/storage/gitSyncJournal'
     );
     const { coordinated } = await import('../../src/services/coordination');
-    const { cp, lstat, rm } = await import('node:fs/promises');
+    const { lstat, rm } = await import('node:fs/promises');
     const seed = await tempRoot();
     try {
       const template = await syncFixture(seed.dir, seed.path);
@@ -232,11 +232,24 @@ describe('Git local publication', () => {
       expect(await readdir(join(template.repo.gitDir, 'rowbly'))).toEqual(['test-index']);
       expect((await readdir(seed.path)).sort()).toEqual(['.gitignore', 'rowbly.config.json']);
       const seedIndex = await lstat(template.repo.index);
+      // Read the pristine repository once. Rewalking and copying it for all 130 faults
+      // spends the CI budget on fixture setup; fresh writes still give each run its own inodes.
+      const directories: string[] = [];
+      const files: { path: string; bytes: Buffer; mode: number }[] = [];
+      for (const entry of await readdir(seed.dir, { recursive: true, withFileTypes: true })) {
+        const path = join(entry.parentPath, entry.name);
+        const relative = path.slice(seed.dir.length + 1);
+        if (entry.isDirectory()) directories.push(relative);
+        else {
+          expect(entry.isFile()).toBe(true);
+          files.push({ path: relative, bytes: await readFile(path), mode: (await lstat(path)).mode & 0o777 });
+        }
+      }
       const run = async (failAt?: number, crash = false): Promise<string[]> => {
         const t = await tempRoot();
         try {
-          // mode 0 requests ordinary copies, with no hardlinks or copy-on-write clone flags.
-          await cp(seed.dir, t.dir, { recursive: true, mode: 0 });
+          await Promise.all(directories.map((path) => mkdir(join(t.dir, path), { recursive: true })));
+          await Promise.all(files.map(({ path, bytes, mode }) => writeFile(join(t.dir, path), bytes, { mode })));
           const repo = await requireRepository(t.root);
           const copiedIndex = await lstat(repo.index);
           expect({ dev: copiedIndex.dev, ino: copiedIndex.ino }).not.toEqual({
@@ -289,10 +302,12 @@ describe('Git local publication', () => {
               expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
                 intended ? f.plan.indexAfter : f.plan.indexBefore,
               );
-              expect(await f.git('rev-parse', 'HEAD')).toBe(intended ? f.plan.candidate : f.plan.old);
+              expect((await f.git('rev-parse', 'HEAD', ':staged.txt')).split('\n')).toEqual([
+                intended ? f.plan.candidate : f.plan.old,
+                f.stagedOid,
+              ]);
               for (const edit of f.plan.edits)
                 expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
-              expect(await f.git('rev-parse', ':staged.txt')).toBe(f.stagedOid);
               expect(await readFile(join(t.dir, 'staged.txt'), 'utf8')).toBe('unstaged bytes over staged blob\n');
               expect(await readFile(join(t.dir, 'untracked.txt'), 'utf8')).toBe('untracked bytes\n');
               await recoverPublication(hold);
