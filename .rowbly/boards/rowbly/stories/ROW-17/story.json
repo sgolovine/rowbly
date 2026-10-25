@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T17:26:37.736Z",
+  "updatedAt": "2026-10-25T17:26:51.700Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -43,6 +43,13 @@
           "body": "#105 (develop → main) merged. Rebuilding ROW-17 on main's sync service on the same branch and PR #106, with the full acceptance criteria restored (ROW-15 conflict resolution, pending changes with Automatic Commits off). Worker: GPT 6.1 sol, medium, on rook.",
           "createdAt": "2026-10-25T17:26:37.735Z",
           "updatedAt": "2026-10-25T17:26:37.735Z"
+        },
+        {
+          "id": "DWwKN9DS",
+          "author": "sunny",
+          "body": "Rebuilding PR #106 on main’s Git sync service, restoring Automatic Commits-off support and automatic conflict resolution while adopting rebase integration.",
+          "createdAt": "2026-10-25T17:26:51.699Z",
+          "updatedAt": "2026-10-25T17:26:51.699Z"
         }
       ]
     }
