@@ -15,7 +15,7 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 Built:
 
 - The Plugin API, the registry and loading; the operation pipeline (guard, transform, replace, react) with the Data Root lock and commit journal; Plugin Data and Plugin files; the `plugins` commands and the TUI **Plugins** settings section; every slot listed under [Surfaces](#surfaces).
-- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs), [Comments](built-in.md#comments), [Story Linking](built-in.md#story-linking) and [Git](built-in.md#git).
+- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs), [Comments](built-in.md#comments), [Attachments](built-in.md#attachments), [Story Linking](built-in.md#story-linking) and [Git](built-in.md#git).
 
 Planned, not built:
 
@@ -136,9 +136,11 @@ Option flags are long and lower-kebab-case; `--x` and `--no-x` may pair. Plugin 
 
 Every data change a Plugin offers works in both the CLI and the TUI.
 
-Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, `stories show` rows, Board detail sections, Story badges on the board, and Actions. `stories list` columns and other closed lists open when a Plugin first needs them.
+Slots Plugins can add to: commands, options on core commands, screens, home menu entries, settings sections, Story form fields, Story filters (the Stories list and the board), Story detail tabs and rows, Story image paste, `stories show` rows, Board detail sections, Story badges on the board, and Actions. `stories list` columns and other closed lists open when a Plugin first needs them.
 
 **Actions** ([ADR-0017](../agents/adr/0017-actions-are-tui-only.md)) are TUI only. An Action names a target (a Board, a Story, or nothing) and shows wherever that target is in focus: in the footer, the help and as a header button. A data change an Action offers must also be a Plugin command or a Plugin option on a core command.
+
+**Story image paste** is one exclusive `storyPaste` contribution across open Stories and new/edit forms. The host reads the image once; the Plugin saves immediately for an open Story or stages pending form input until Story save. See the [API contract](api.md#story-image-paste).
 
 **Containment in the TUI.** A Plugin screen, tab or section that throws while rendering shows a fallback naming the Plugin; the rest of the TUI keeps working, and the Plugin is tried again when the Plugins load again. A Plugin whose form or filter fields fail contributes nothing to that form or filter, and the screen says so.
 

@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Story create updates",
   "description": "- Create view should move to a tabbed layout just like when viewing the story\n- Show tabs based on enabled plugins and allow setting options just like when viewing the story\n- Example: if story linking is enabled, allow adding story links just like when viewing the story\n- Example 2: Allow creating multiple specs at create time\n- Also allow doing this via the CLI for agents.\n",
-  "stage": "in-progress",
-  "rank": "a8",
+  "stage": "done",
+  "rank": "ac",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:29:04.286Z",
-  "updatedAt": "2026-10-25T18:33:41.238Z",
+  "updatedAt": "2026-10-25T21:05:55.422Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -43,6 +43,27 @@
           "body": "Corrections pushed at 1b967ba: latest-main integration preserves both create and Clipboard APIs, Plugin errors stay visible above drafts, and redundant test coverage was consolidated to restore the 100-test limit. Typecheck, lint, 80 unit tests and 20 CLI tests passed. Fresh independent validation and screenshots are next.",
           "createdAt": "2026-10-25T18:33:41.237Z",
           "updatedAt": "2026-10-25T18:33:41.237Z"
+        },
+        {
+          "id": "uXHRseMF",
+          "author": "sunny",
+          "body": "Fresh validation at b1aafa7 passed typecheck, lint, 80 unit tests, 20 CLI tests and CLI/TUI acceptance flows. Screenshots captured and inspected. Signoff awaits synchronization of the newly merged rowbly-grill reference copy with the canonical Rowbly reference.",
+          "createdAt": "2026-10-25T18:43:59.625Z",
+          "updatedAt": "2026-10-25T18:43:59.625Z"
+        },
+        {
+          "id": "AkRGH32J",
+          "author": "sunny",
+          "body": "Supervisor validation signoff at 02c02396. Typecheck, lint, locked 80-unit and 20-CLI suites passed; all reference copies match and 13 screenshot pairs are verified. Fresh finalizer assigned to push validated merges, open the draft PR and publish screenshot assets. Ctrl+Enter verified by source review due terminal-tool limitation.",
+          "createdAt": "2026-10-25T21:05:10.657Z",
+          "updatedAt": "2026-10-25T21:05:10.657Z"
+        },
+        {
+          "id": "mCR8r6o1",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/112 opened at signed-off 02c02396. All four required checks passed, 100 tests total. Screenshots published and verified. Branch pushed and worktree clean; real Board untouched. Ctrl+Enter tool limitation documented.",
+          "createdAt": "2026-10-25T21:05:11.266Z",
+          "updatedAt": "2026-10-25T21:05:11.266Z"
         }
       ]
     }

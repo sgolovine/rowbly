@@ -10,6 +10,8 @@ import {
 } from '../../core';
 import { formatIssues, type LocalState, type Story } from '../../schemas';
 import type { Repositories } from '../../storage';
+import { pathExists } from '../../storage';
+import { openAssociatedFile } from '../../storage/binaryInput';
 import { coordinated, outsideCoordination } from '../coordination';
 import { effectiveMe } from '../identity';
 import type { PluginInput, RowblyContext, Services } from '../types';
@@ -19,6 +21,7 @@ import {
   frozenCopy,
   isRootConfigCopy,
   listPluginFiles,
+  pluginFilePath,
   readPluginBinaryFile,
   readPluginFile,
 } from './changeSet';
@@ -36,6 +39,7 @@ import {
   type CoreOperationName,
   type CoreOperations,
   type DeepReadonly,
+  type FileScope,
   type GuardResult,
   type LocalStateChange,
   type OperationHooks,
@@ -598,6 +602,15 @@ function pluginContext(
       return projected;
     },
     operation,
+    async openFile(scope: FileScope, name: string) {
+      assertMayStart(`${id}.openFile`);
+      const path = await coordinated(ctx.root, `${id}.openFile`, async () => {
+        const path = await pluginFilePath(ctx.root, repos, id, scope, name);
+        if (!(await pathExists(path))) throw new NotFoundError(`Plugin file not found: ${name}`);
+        return path;
+      });
+      await openAssociatedFile(path);
+    },
     warn: (message: string) => ctx.warn(message),
   });
 }

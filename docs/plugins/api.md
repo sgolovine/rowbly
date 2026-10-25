@@ -182,6 +182,31 @@ The journal stages and recovers exact bytes. Doctor accepts scoped Plugin files 
 as core JSON, and Git Automatic Commits and synchronization include them as ordinary raw files.
 See [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md).
 
+### External binary input and associated applications
+
+`readBinaryInput(path, maxBytes)` returns `{ name, bytes }`: the basename and detached bytes of an
+explicitly chosen regular file. It reads at most `maxBytes + 1` bytes and rejects oversized input;
+the limit must be between 1 byte and 10 MiB. A missing path raises `NOT_FOUND`. Source paths may be
+symbolic links, since the caller explicitly chooses them. Read before starting an operation; the
+helper never writes or takes the Data Root lock. Validate the media format before saving it.
+
+`plugin.openFile(scope, name)` is available on command/screen contexts only. It checks the normal
+Plugin scope, name and symbolic link rules and file existence under the Data Root lock, then invokes
+the associated application outside the lock. It uses `open` on macOS, `xdg-open` on Linux and the
+Windows `start` via a fixed `cmd.exe` command, with the path supplied through an environment variable.
+macOS and Linux use argument arrays without a shell. Failure raises
+`USAGE`. It cannot run inside an operation or hook, and gives no arbitrary process execution.
+The filesystem remains trusted, with the same check-then-use limits as other Plugin file access.
+
+```ts
+/** Read external bytes before saving; opening is limited to the caller's own Plugin files. */
+export async function importImage(plugin: PluginContext, key: string, path: string): Promise<void> {
+  const input = await readBinaryInput(path, 10 * 1024 * 1024);
+  await saveImage(plugin, key, input.bytes);
+  await plugin.openFile({ story: key }, 'image.png');
+}
+```
+
 ## Errors
 
 What a Plugin callback throws becomes (ADR-0020 §5):
@@ -257,7 +282,7 @@ A Plugin's input of a core operation is `plugins.<id>` in the operation's input.
 - **Convention:** `undefined` changes nothing, `null` clears, a value sets.
 - `storyFilterSchema` parses the Story filter (`StoryFilter.plugins.<id>`) once per list, from the CLI, the TUI or a service caller alike. Without one the value reaches `filterStories` unchecked.
 
-**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `boards create|edit|delete`). `stories list` entries use `filter(values)`; every other entry uses `input(values)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
+**Options on core commands.** The commands that take Plugin options are `PluginOptionCommand` (`stories list|create|edit|move|rank|delete`, `boards create|edit|delete`). `stories list` entries use `filter(values)`; every other entry uses `input(values, host)` for the command's operation. Stages, Custom Fields, context and doctor are hookable but take no Plugin options.
 
 `values` holds the raw values by Commander attribute name (`--add-spec` → `addSpec`, `--no-epic` → `epic`). Only options that were given have a value:
 
@@ -299,7 +324,7 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 
 Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains both palettes and `stageColors` maps Stage Categories. `formatDate(isoTimestamp)` formats a timestamp in the terminal's local time. Never use named colours, literal hex values or `dimColor` in a Plugin component. `SelectionRow` takes `selected`, `active`, optional `onClick` and children; it supplies the shared selection bar, fill and focus-following scroll.
 
-`Modal` is a content-sized generic task frame (normally 48–72 columns), with `title` as its breadcrumb, `hints` as key hints and `onClose` for the close control. Use it for a local picker or confirmation; a screen opened with `ui.open` already has this frame. A `Modal` rendered inside a Story tab or a screen opened with `ui.open` is drawn as a layer over that frame's body, not where it is rendered, so a scrolling tab never clips it; it keeps the active state and the Plugin's error boundary of the place that rendered it. The hint strip drops later hints when it is too narrow but keeps a last `esc` hint, so put the confirming key first and `esc back` last. Only core opens Story and Settings screen modals: Plugins use generic task modals and do not request `size: 'screen'`. The top layer alone takes input and shows its hints; the underlying Story or Settings takes no keys, shows no hints and remains mounted and returns with its state intact. A `select` or `multiselect` field's `optionLabels` maps a choice to what it shows, such as a Stage's name for its key. A text field's `fillFrom: { field, format }` fills it with `format(text)` of another field when focus leaves that field, such as a slug from a name with `slugFromName`; it fills the field only while it is empty or still holds the text it filled, so a value the person typed is kept. Put the source field first. A `Form` shows its keys (`FORM_KEYS`: `ctrl+s save` first) itself, in the strip of the Modal around it or with the screen's hints, and there `esc` reads `cancel`, as it does around a `ConfirmDialog`; `submitLabel` names what `ctrl+s` does when it does not save (`apply` for a filter); saving uses `ctrl+s` without an in-form Save button. Bounded bodies scroll with Page Up/Down; focused Form fields and selected rows scroll into view.
+`Modal` is a content-sized generic task frame (normally 48–72 columns), with `title` as its breadcrumb, `hints` as key hints and `onClose` for the close control. Use it for a local picker or confirmation; a screen opened with `ui.open` already has this frame. A `Modal` rendered inside a Story tab or a screen opened with `ui.open` is drawn as a layer over that frame's body, not where it is rendered, so a scrolling tab never clips it; it keeps the active state and the Plugin's error boundary of the place that rendered it. The hint strip drops later hints when it is too narrow but keeps a last `esc` hint, so put the confirming key first and `esc back` last. Only core opens Story, New Story and Settings screen modals: Plugins use generic task modals and do not request `size: 'screen'`. The top layer alone takes input and shows its hints; the underlying Story or Settings takes no keys, shows no hints and remains mounted and returns with its state intact. A `select` or `multiselect` field's `optionLabels` maps a choice to what it shows, such as a Stage's name for its key. A text field's `fillFrom: { field, format }` fills it with `format(text)` of another field when focus leaves that field, such as a slug from a name with `slugFromName`; it fills the field only while it is empty or still holds the text it filled, so a value the person typed is kept. Put the source field first. A `Form` shows its keys (`FORM_KEYS`: `ctrl+s save` first) itself, in the strip of the Modal around it or with the screen's hints, and there `esc` reads `cancel`, as it does around a `ConfirmDialog`; `submitLabel` names what `ctrl+s` does when it does not save (`apply` for a filter); saving uses `ctrl+s` without an in-form Save button. Bounded bodies scroll with Page Up/Down; focused Form fields and selected rows scroll into view.
 
 - **Screens** get `{ params, plugin, ui }`. `ui.open(screen, params)` opens one of the Plugin's screens on top. `params.title` is the breadcrumb (without one, the screen name with a capital letter); `plugin` and `screen` are reserved route params that Rowbly sets and the screen never gets. Params are not checked: validate them, for example with a schema, and show an error instead of using a bad value.
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
@@ -508,6 +533,53 @@ merge commits with explicit `--rebase-merges` guidance. No Git runs under a Data
 Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
 and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.
 
+CLI option `input(values, host)` may return a Promise. The host awaits it with Plugin error attribution before starting the operation. `host.readText({ text?, file?, edit? }, { name, initial? })` reads long text, including `file: '-'` for stdin. Stdin may be consumed once across Plugin option conversion and the Story description. Filter conversion remains synchronous.
+
+A transform can write Plugin files on a Story created by the current operation immediately: `changes.writeFile({ story: result.key }, name, text)` resolves the pending Story. These files, new bags and updates to existing Stories all join the same Change Set and journaled commit; no follow-up operation is needed.
+
+## Story create tabs
+
+`tui.storyCreateTabs` contributes `{ label, component, input(draft) }` entries separately from saved `storyTabs`. New Story shows Details, then enabled Plugins' create tabs in registry order. Details holds core fields, Custom Fields and `storyForm` fields of Plugins without create tabs. A Plugin with a create tab has its `storyForm` fields moved into that tab; `ctrl+g` switches focus between those fields and the draft component. Edit stays flat.
+
+`PluginStoryCreateTabProps` supplies `draft`, `onChange`, `boardId`, `active`, `plugin` and `ui`. Drafts start as `undefined`; the host owns them and keeps them mounted across tab switches. Components change drafts through `onChange`, respect `active`, and never save or run operations. They may read choices through `plugin.services`. Throw an asynchronous load error during render to show the failure in `PluginSlot`; a failed tab contributes no input, including relocated fields, and the Story can still save.
+
+The host calls synchronous, attributed `input(draft)` only for changed drafts. It returns `plugins.<id>` input, or `undefined` to contribute nothing. If both `storyForm` and create tabs return objects, their keys are combined, with tab keys taking precedence. A Plugin with several create tabs should return disjoint object keys. Untouched fields and tabs add no input. `stories.create` parses the complete Plugin input and runs its transforms and guards before one commit; components must not follow creation with separate operations.
+
+Tab switches tabs everywhere. Field editors retain their left/right arrows; left/right switch tabs from draft lists or after the last field. Up/down and Enter move through fields. The host owns `ctrl+s`/`ctrl+enter` for all tabs, including while a draft editor is open. Enter after the final Details field saves; Enter in a draft editor keeps that draft locally. A Plugin input error selects its tab and keeps every draft. Esc uses the host's discard confirmation for changed fields or drafts.
+
+```tsx
+import { type PluginStoryCreateTabProps, type PluginTui, z } from '../../plugin-api';
+import { Form } from '../../plugin-api/tui';
+
+const Draft = z.object({ note: z.string() });
+
+function CreateNotes({ draft, onChange, active }: PluginStoryCreateTabProps) {
+  const value = Draft.parse(draft ?? { note: '' });
+  return (
+    <Form
+      fields={[{ name: 'note', label: 'Note', kind: 'multiline' }]}
+      values={value}
+      onChange={onChange}
+      isActive={active}
+      onSubmit={() => {}}
+    />
+  );
+}
+
+export const createNotesTui: PluginTui = {
+  storyCreateTabs: [
+    {
+      label: 'Notes',
+      component: CreateNotes,
+      input(draft) {
+        const { note } = Draft.parse(draft);
+        return note ? { note } : undefined;
+      },
+    },
+  ],
+};
+```
+
 ## Clipboard images
 
 Import `clipboard` from the Plugin API and call `await clipboard.readImage()` before starting the
@@ -536,4 +608,88 @@ failures return their own reasons. The PNG signature is checked; image contents 
 The installed package also includes `rowbly/dist/clipboard.js`, which exports `readClipboardImage`
 and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
 [ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
-child isolation and the bounds' limits. Paste keys and image storage are planned separately.
+child isolation and the bounds' limits. Story paste keys are described below; an image-storage
+consumer is provided by the Built-in Attachments Plugin.
+
+
+## Story image paste
+
+`PluginTui.storyPaste` (type `PluginStoryPaste<S>`) exclusively handles images on an open Story
+and its new/edit form. All three callbacks are required. The first successfully activated claimant
+owns the contribution; a second claimant fails as a whole. A claimant whose startup fails owns
+nothing, so a later Plugin can load. This applies to staged TUI loading and reloads as well.
+
+- Optional `clipboardFallback: string` supplies Plugin-owned CLI guidance appended to unsupported/no-display
+  clipboard toasts; for example `use rowbly attachments add <KEY> <file>`.
+- `story({ story, image, plugin, ui }): Promise<void>` saves immediately through the Plugin's
+  operations. Core reloads the Story when it finishes. It runs in the `screen` stage.
+- `form({ boardId, story, image, pending, setPending, plugin, ui }): void` stages only in memory.
+  `story` is `null` for creation. `pending` starts as `undefined`; call `setPending(value)` to replace
+  the opaque value, or `setPending(undefined)` to clear it. Core applies the replacement only when
+  the callback returns successfully. Do not save files or start operations here.
+- `input({ pending, story }): unknown` converts pending data into this Plugin's `stories.create`
+  or `stories.update` input. It is called only for defined pending data, after core field validation.
+  Return `undefined` for no contribution. Both form callbacks run through the Plugin error adapter
+  in the `field` stage; conversion errors name the operation too.
+
+`image` is `PluginPasteImage`: `{ bytes: Uint8Array, type: 'image/png' }`. Core reads once per
+accepted gesture using `clipboard.readImage()`. Keep the bytes in pending input and consume them
+in memory, then encode them as strings (for example base64) in `input`: operation inputs are deeply frozen. Decode them in your create/update transform so all files and the Story save in one Change Set. Pending data remains associated with its originating Plugin ID and
+lives above the form's fields and tabs, marks the form dirty, survives validation/save failures,
+and clears after success. Cancellation writes nothing. Object input merges over the same Plugin's
+field and create-tab input (pending keys win); another value replaces it. Core merges field and
+create-tab input first, then converts and applies pending paste input once per submission. Declare matching operation input schemas
+and transforms in the Plugin definition; the example below shows only its TUI contribution.
+
+`PluginStoryForm.pendingSummary?({ pending, story })` may return `{ label, value }` strings for a
+read-only row below Details fields (or the edit form). It runs in the `field` stage after a paste,
+only for defined pending data. It must use memory only. The row clears on successful save.
+
+```ts
+import type { PluginPasteImage, PluginTui } from '../../plugin-api';
+
+export const imageTui: PluginTui = {
+  storyForm: {
+    async fields() {
+      return [];
+    },
+    input() {
+      return undefined;
+    },
+    pendingSummary({ pending }) {
+      return { label: 'Images', value: `${(pending as PluginPasteImage[]).length} pending` };
+    },
+  },
+  storyPaste: {
+    clipboardFallback: 'use the Plugin command to add an image file',
+    async story({ story, image, plugin, ui }) {
+      await plugin.operation('paste', { key: story.key }, (changes) =>
+        changes.writeBinaryFile({ story: story.key }, 'clipboard.png', image.bytes),
+      );
+      ui.toast('Saved clipboard image');
+    },
+    form({ image, pending, setPending, ui }) {
+      const images = (pending ?? []) as PluginPasteImage[];
+      setPending([...images, image]);
+      ui.toast('Image ready for Story save');
+    },
+    input({ pending }) {
+      // The Plugin's stories.create/update transform consumes these bytes in the same Change Set.
+      return { images: (pending as PluginPasteImage[]).map((image) => Buffer.from(image.bytes).toString('base64')) };
+    },
+  },
+};
+```
+
+Core accepts Ctrl+V, Alt+V, Ctrl+Alt+V and empty bracketed paste on every Story tab and form field.
+Nonempty bracketed paste remains text. Other screens, nested tasks, full-screen text editors and
+saving forms disable image paste. Core prevents overlapping reads and discards a read result when
+its original screen, services or claimant no longer owns it. An already dispatched Plugin callback
+must manage any asynchronous work it starts; closing a screen cannot undo its operations.
+
+A persistent spinner toast spans reading and handling. The active claimant gets a platform-appropriate
+paste hint. Without one, the gesture says `Turn on a Plugin that takes pasted images`. Clipboard
+failures are core messages: no image, size limit, timeout, or unavailable environment, with
+`wl-clipboard` guidance on Wayland. The claimant supplies its own success messages and any guidance
+for using its commands; core never names those commands. See
+[ADR-0038](../agents/adr/0038-story-image-paste-is-an-exclusive-plugin-contribution.md).

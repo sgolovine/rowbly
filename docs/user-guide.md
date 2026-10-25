@@ -288,6 +288,8 @@ rowbly stories list [--stage <k>…] [--category backlog|board|done] [--open]
 rowbly stories create --name <n> [--description <text>|--description-file <path|->|--edit] [--stage <k>]
                       [--priority <P>] [--label <l>…] [--due <YYYY-MM-DD>]
                       [--field key=value …] [--board <id>]
+                      [--task <name>…] [--spec <slug>…] [--story-spec <slug>=<file>…]
+                      [--blocks <KEY>…] [--blocked-by <KEY>…]
 rowbly stories show <KEY>
 rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--priority <P> | --no-priority]
@@ -393,6 +395,32 @@ rowbly story-linking remove WEB-2 --blocked-by WEB-1 --yes
   the old key cannot identify which Story was intended. See [Story Linking details](plugins/built-in.md#story-linking).
 <!-- END story-linking -->
 
+<!-- BEGIN attachments -->
+### Attachments
+
+Enable the Built-in Plugin with `rowbly plugins enable attachments`.
+
+```text
+rowbly attachments add <KEY> <file>
+rowbly attachments add <KEY> --from-clipboard
+rowbly attachments list <KEY> [--json]
+rowbly attachments remove <KEY> <id>     # confirms; pass --yes when not interactive
+rowbly attachments open <KEY> <id>
+```
+
+- Attachments are PNG images, at most 10 MiB, on Stories. Give exactly one source when adding.
+  A file keeps its basename; a clipboard image is named `image-YYYYMMDD-HHMM.png` (UTC).
+  Clipboard failure reports a reason and saves nothing.
+- `list --json` returns an ordered array of `{ id, name, type, size, createdAt, createdBy }`;
+  `type` is `image/png`, `size` is bytes, and `createdBy` is Me or `null`. `add --json` returns one
+  entry, `remove --json` returns `{ removed }`, and `open --json` returns `{ opened }`.
+- `open` uses `open` on macOS, `start` on Windows or `xdg-open` on Linux; it requires an available
+  associated application. The PNG and Story bag save or delete together. Disabling keeps both.
+- An invalid bag exits 6 and doctor reports `PLUGIN_DATA_INVALID`; repair by hand without dropping
+  entries or files. A Story tab and paste handling are planned.
+
+<!-- END attachments -->
+
 <!-- BEGIN doctor -->
 ### Doctor
 
@@ -422,6 +450,8 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `PLUGIN_DATA_INVALID` | warning | Plugin Data of a Plugin that is on that does not match its schema | — |
 | `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or that this version does not have, reported once per Plugin | — |
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
+| `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
+| `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |
@@ -646,9 +676,13 @@ A click in the Board sidebar or a Plugin Sidebar focuses it, and its border ligh
 
 The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
 
-`n` on the board, in the list view or in the Stories list opens the new Story form. After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
+`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
 
-Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
+`tab` / `shift+tab` switch tabs. `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing remains one flat form.
+
+After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
+
+Story, New Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
 
 The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light theme, with dark as the fallback. Rowbly leaves the terminal background visible. Dates in the TUI use local time (for example, `20 Oct 2026, 23:03`); command JSON keeps ISO timestamps.
 
@@ -670,6 +704,33 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `q` | quit (from the first screen) |
 
 In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; the focused field scrolls into view, and after the last field `enter` saves. Saving is shown in the modal's key strip, with no separate Save button. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `ctrl+s`, `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote in the form. Closing the editor does not submit the form; press `ctrl+s` again in the form to save it. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
+
+On an open Story or its new/edit form, `ctrl+v`, `alt+v` or `ctrl+alt+v` pastes a clipboard image
+through the Plugin that takes pasted images, from any tab or field. The hint shows `ctrl+v paste
+image` on macOS/Linux and `alt+v paste image` on Windows when that Plugin is active. Empty bracketed
+paste also reads an image; nonempty paste stays text. Image paste pauses under another task,
+another screen or the full-screen editor, and during saving. A spinner stays while the clipboard
+and Plugin are working; repeated gestures during that work are ignored. The paste hint stays hidden
+until that work finishes, including when you open another Story.
+An open Story saves through the Plugin immediately. New/edit forms keep images pending until the
+Story saves; validation/save failures keep them, and cancellation writes nothing. With no claimant,
+the gesture says `Turn on a Plugin that takes pasted images`. An empty clipboard says `No image on
+the clipboard`; oversized images and timeouts have their own messages. Unavailable clipboard access
+shows environment guidance; on Wayland, install `wl-clipboard` when prompted. Enable the Attachments Plugin to use this flow: `rowbly plugins enable attachments`.
+An open Story shows `Attached image-YYYYMMDD-HHMM.png (412 KB)` after saving. Its Attachments tab
+lists name, size and date; `n` adds a PNG by file path, `o` opens it, and `d` removes it after
+confirmation. A `📎2` badge shows the number on Stories and cards. New Story's Details tab and the
+edit form show pending images as `Attachments: 2 images (612 KB)`. Pending images stay in memory,
+with a 10 MiB total limit; Escape asks before discarding them.
+
+To copy a screenshot to the clipboard, use **Cmd+Ctrl+Shift+4** on macOS (**Cmd+Shift+4** saves a file),
+**Win+Shift+S** on Windows, or your Linux desktop's screenshot-to-clipboard shortcut. The paste
+keys above work when the terminal forwards them; on Windows prefer Alt+V if Ctrl+V is handled by
+the terminal. Sway/Hyprland and other Wayland desktops may need the `wl-clipboard` package (`wl-paste`).
+SSH, headless sessions and unsupported clipboard environments may have no access to the desktop
+clipboard. Save or transfer a PNG file and run `rowbly attachments add <KEY> <file>` instead,
+or use `n` on the Attachments tab to enter that file path.
+
 
 The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`), `page up`/`page down` and the mouse wheel scroll it. **Edit** shows the raw text in a multi-line text box. `tab`, or a click on **View** or **Edit**, switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
@@ -736,3 +797,15 @@ Plugins that are on can add home menu entries, screens, fields to the Story form
 How Rowbly is built is in [`docs/`](README.md): the [architecture](architecture/overview.md), the [plugin system](plugins/README.md), the [development guide](development/README.md) and the [decisions](agents/adr/README.md). Use the terms in [`CONTEXT.md`](agents/CONTEXT.md).
 
 The test projects, helpers and rules are in the [development guide](development/README.md#tests).
+
+With the corresponding Plugins enabled, `stories create` also accepts repeatable create options:
+
+| Option | Effect |
+| --- | --- |
+| `--task <name>` | Create name-only Tasks in flag order, numbered 1, 2, …, in the first effective Stage. Names are literal: commas and whitespace are preserved. |
+| `--spec <slug>` | Link an existing Board Spec (unchanged; repeatable, comma-separated). |
+| `--story-spec <slug>=<file>` | Create a Story Spec from a UTF-8 Markdown file; repeatable for several Specs with unique slugs. `-` reads stdin, at most once including `--description-file -`. Title is the first `#` heading or the slug. |
+| `--blocks <key>` | Link an existing same-Board Story that this new Story blocks. |
+| `--blocked-by <key>` | Link an existing same-Board Story that blocks this new Story. |
+
+All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.

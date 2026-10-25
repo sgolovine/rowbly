@@ -1,11 +1,12 @@
 import { Box, type Key, Text, useInput } from 'ink';
-import { useContext, useEffect, useId, useMemo, useState } from 'react';
+import { useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ValidationError } from '../../core';
 import type { PluginFieldKind, PluginFormValue } from '../../services';
 import { ScreenDepthContext, ShellContext, useDirty, useIsActive, useLayout, useToast } from '../hooks';
 import { FORM_KEYS, formKeys, type KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { FieldRow } from './FieldRow';
+import { FormNavigationContext } from './formNavigation';
 import { FormKeysContext } from './modalLayer';
 
 /** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
@@ -40,9 +41,19 @@ export interface FormProps {
   isActive?: boolean;
   /** What the `ctrl+s` hint says the form does: `save` (the default), or e.g. `apply` for a filter. */
   submitLabel?: string;
+  /** Screen-specific keys shown after save, before navigation hints. */
+  extraHints?: readonly KeyHint[];
+  /** Controlled values for forms whose drafts outlive the mounted editor. */
+  values?: FormValues;
+  onChange?(values: FormValues): void;
+  /** Increment to validate and submit this form from another create tab. */
+  submitRequest?: number;
+  onInvalid?(): void;
 }
 
 type Raw = string | boolean | string[] | null;
+
+const NO_EXTRA_HINTS: readonly KeyHint[] = [];
 
 /** Kinds edited in a `TextInput`, where letters are text rather than keys. */
 const TYPED_KINDS: readonly FieldKind[] = ['text', 'number', 'date'];
@@ -145,12 +156,33 @@ function useFormKeys(active: boolean, keys: readonly KeyHint[]): void {
  * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
  * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` after the last field submits.
  */
-export function Form({ fields, initialValues = {}, onSubmit, isActive = true, submitLabel = 'save' }: FormProps) {
+export function Form({
+  fields,
+  initialValues = {},
+  onSubmit,
+  isActive = true,
+  submitLabel = 'save',
+  extraHints,
+  values: controlled,
+  onChange,
+  submitRequest = 0,
+  onInvalid,
+}: FormProps) {
   const active = useIsActive() && isActive;
+  const navigation = useContext(FormNavigationContext);
+  const hints = extraHints ?? navigation?.extraHints ?? NO_EXTRA_HINTS;
+  const formId = useId();
   const toast = useToast();
   const layout = useLayout();
   const [initial] = useState(() => Object.fromEntries(fields.map((f) => [f.name, toRaw(f, initialValues[f.name])])));
-  const [values, setValues] = useState<Record<string, Raw>>(initial);
+  const [localValues, setLocalValues] = useState<Record<string, Raw>>(initial);
+  const values = controlled
+    ? Object.fromEntries(fields.map((f) => [f.name, toRaw(f, controlled[f.name])]))
+    : localValues;
+  const setValues = (update: (prev: Record<string, Raw>) => Record<string, Raw>) => {
+    if (controlled) onChange?.({ ...controlled, ...update(values) });
+    else setLocalValues(update);
+  };
   const [focus, setFocus] = useState(0);
   const [optionCursor, setOptionCursor] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -161,8 +193,24 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
-  const keys = useMemo(() => (submitLabel === 'save' ? FORM_KEYS : formKeys(submitLabel)), [submitLabel]);
-  useFormKeys(active, keys);
+  useEffect(() => navigation?.register(formId, active && field !== undefined), [navigation, formId, active, field]);
+  const keys = useMemo(
+    () =>
+      navigation
+        ? [
+            { key: 'ctrl+s', description: 'save Story' },
+            { key: 'tab', description: 'switch tab' },
+            { key: '↑/↓/enter', description: 'field' },
+          ]
+        : submitLabel === 'save'
+          ? FORM_KEYS
+          : formKeys(submitLabel),
+    [navigation, submitLabel],
+  );
+  useFormKeys(
+    active,
+    useMemo(() => [...keys.slice(0, 1), ...hints, ...keys.slice(1)], [keys, hints]),
+  );
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
 
@@ -201,7 +249,10 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
     }
     setErrors(found);
     setFormErrors([]);
-    if (Object.keys(found).length > 0) return;
+    if (Object.keys(found).length > 0) {
+      onInvalid?.();
+      return;
+    }
     setBusy(true);
     try {
       await onSubmit(parsed);
@@ -216,6 +267,13 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
     }
   };
 
+  // External save requests validate Details even while another tab is visible.
+  const submitCurrent = useRef(submit);
+  submitCurrent.current = submit;
+  useEffect(() => {
+    if (submitRequest > 0) void submitCurrent.current();
+  }, [submitRequest]);
+
   const moveFocus = (delta: number) => {
     fill(field?.name);
     setFocus((f) => Math.max(0, Math.min(fields.length, f + delta)));
@@ -226,10 +284,11 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
     (input, key) => {
       if (busy) return;
       if (isSubmitKey(input, key)) {
-        void submit();
+        if (!navigation) void submit();
         return;
       }
       if (key.tab) {
+        if (navigation) return;
         moveFocus(key.shift ? -1 : 1);
         return;
       }

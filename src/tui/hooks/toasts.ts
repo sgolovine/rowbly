@@ -7,11 +7,14 @@ export interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
+  pending?: boolean;
 }
 
 /** Holds the toasts on screen. Lives outside React so `ctx.warn` can feed it. */
 export interface ToastStore {
   push(kind: ToastKind, message: string): void;
+  pending(message: string): number;
+  update(id: number, message: string): void;
   /** Shows any error as an error toast, with its hint when it is a `RowblyError`. */
   error(err: unknown): void;
   dismiss(id: number): void;
@@ -27,12 +30,23 @@ export function createToastStore(): ToastStore {
   let nextId = 1;
   const listeners = new Set<() => void>();
   const set = (next: readonly Toast[]) => {
-    toasts = next;
+    const pendingCount = next.filter((toast) => toast.pending).length;
+    const capacity = Math.max(0, MAX_TOASTS - pendingCount);
+    const regular = new Set(capacity ? next.filter((toast) => !toast.pending).slice(-capacity) : []);
+    toasts = next.filter((toast) => toast.pending || regular.has(toast));
     for (const listener of listeners) listener();
   };
   const store: ToastStore = {
     push(kind, message) {
-      set([...toasts, { id: nextId++, kind, message }].slice(-MAX_TOASTS));
+      set([...toasts, { id: nextId++, kind, message }]);
+    },
+    pending(message) {
+      const id = nextId++;
+      set([...toasts, { id, kind: 'info', message, pending: true }]);
+      return id;
+    },
+    update(id, message) {
+      set(toasts.map((toast) => (toast.id === id ? { ...toast, message } : toast)));
     },
     error(err) {
       if (err instanceof RowblyError) {

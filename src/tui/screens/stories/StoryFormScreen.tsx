@@ -1,15 +1,17 @@
 import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
+import { useRef, useState } from 'react';
 import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
 import { type CustomFieldValuesInput, type PluginInput, readOpenStoryAfterCreation } from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
 import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
-import { useAsync, usePlugins, useRowblyContext, useServices, useToast } from '../../hooks';
+import { useAsync, usePlugins, useRowblyContext, useServices, useStoryPaste, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
 import { PluginFailures } from './PluginFailures';
-import { onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { mergePluginInput, onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
+import { StoryCreateForm } from './StoryCreateForm';
 import { boardIdFor, NONE } from './shared';
 import { priorityValue } from './storyFormValues';
 
@@ -32,6 +34,15 @@ export function StoryFormScreen({ params }: ScreenProps) {
     return { story, boardId, choices: await storyChoices(ctx, boardId), extra };
   }, [services, ctx, key, params.boardId, plugins]);
 
+  const [saving, setSaving] = useState(false);
+  const submitting = useRef(false);
+  const paste = useStoryPaste({
+    boardId: data.data?.boardId,
+    story: data.data?.story,
+    form: true,
+    enabled: !saving,
+  });
+
   if (!data.data)
     return data.loading ? <Loading label="Loading…" /> : <Text color={theme.danger}>Cannot open the form.</Text>;
   const { story, boardId, choices, extra } = data.data;
@@ -42,33 +53,57 @@ export function StoryFormScreen({ params }: ScreenProps) {
       throw onPluginFields(err, extra);
     });
 
-  const save = async (values: FormValues) => {
-    const fields = customFieldValues(choices.customFields, values);
-    const common = {
-      name: String(values.name),
-      description: String(values.description ?? ''),
-      priority: priorityValue(values.priority),
-      labels: splitList(values.labels),
-      dueDate: optional(values.dueDate),
-      ...pluginInputOptions(storyFormInput(plugins, extra, values, story)),
-    };
-    const stage = String(values.stage);
-    if (!story) {
-      const created = await services.stories.create(boardId, { ...common, stage, customFields: fields });
-      toast.push('info', `Created ${created.key}`);
-      // Back to the Board or list, which reloads on return, unless the user opens new Stories.
-      // The Story is saved, so an unreadable Home Config counts as off rather than an error.
-      const open = await readOpenStoryAfterCreation(ctx?.home ?? homedir()).catch(() => false);
-      if (open) router.replace('story', { key: created.key, title: created.key });
-      else router.pop();
-      return;
+  const save = async (values: FormValues, tabInput?: PluginInput) => {
+    if (submitting.current || paste.busy) return;
+    submitting.current = true;
+    setSaving(true);
+    try {
+      const fields = customFieldValues(choices.customFields, values);
+      const common = {
+        name: String(values.name),
+        description: String(values.description ?? ''),
+        priority: priorityValue(values.priority),
+        labels: splitList(values.labels),
+        dueDate: optional(values.dueDate),
+        ...pluginInputOptions(paste.input(mergePluginInput(storyFormInput(plugins, extra, values, story), tabInput))),
+      };
+      const stage = String(values.stage);
+      if (!story) {
+        const created = await services.stories.create(boardId, { ...common, stage, customFields: fields });
+        paste.saved();
+        toast.push('info', `Created ${created.key}`);
+        // Back to the Board or list, which reloads on return, unless the user opens new Stories.
+        // The Story is saved, so an unreadable Home Config counts as off rather than an error.
+        const open = await readOpenStoryAfterCreation(ctx?.home ?? homedir()).catch(() => false);
+        if (open) router.replace('story', { key: created.key, title: created.key });
+        else router.pop();
+        return;
+      }
+      const unsetFields = Object.keys(story.customFields).filter((k) => fields[k] === undefined);
+      // One operation, so a rejected Stage change saves none of the edit (ARCH-43).
+      await services.stories.update(story.key, { ...common, stage, customFields: fields, unsetFields });
+      paste.saved();
+      toast.push('info', `Updated ${story.key}`);
+      router.pop();
+    } finally {
+      submitting.current = false;
+      setSaving(false);
     }
-    const unsetFields = Object.keys(story.customFields).filter((k) => fields[k] === undefined);
-    // One operation, so a rejected Stage change saves none of the edit (ARCH-43).
-    await services.stories.update(story.key, { ...common, stage, customFields: fields, unsetFields });
-    toast.push('info', `Updated ${story.key}`);
-    router.pop();
   };
+
+  if (!story)
+    return (
+      <StoryCreateForm
+        boardId={boardId}
+        fields={formFields(choices)}
+        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
+        extra={extra}
+        onSubmit={save}
+        isActive={!paste.busy && !saving}
+        extraHints={paste.hints}
+        pendingSummary={paste.summary}
+      />
+    );
 
   return (
     <Box flexDirection="column" gap={1}>
@@ -77,7 +112,14 @@ export function StoryFormScreen({ params }: ScreenProps) {
         fields={[...formFields(choices), ...extra.fields]}
         initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
         onSubmit={submit}
+        isActive={!paste.busy && !saving}
+        extraHints={paste.hints}
       />
+      {paste.summary && (
+        <Text>
+          {paste.summary.label}: {paste.summary.value}
+        </Text>
+      )}
       <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
       {choices.labels.length > 0 && <Text color={theme.inkFaint}>Labels in use: {choices.labels.join(', ')}</Text>}
     </Box>

@@ -883,3 +883,14 @@ async function orNull<T>(promise: Promise<T>): Promise<T | null> {
     throw err;
   }
 }
+
+/** Resolves only this Plugin's file, enforcing the normal name and symbolic link policy. */
+export async function pluginFilePath(
+  root: DataRoot,
+  repos: Repositories,
+  id: string,
+  scope: FileScope,
+  name: string,
+): Promise<string> {
+  return resolvePluginFile(await scopeFolder(root, repos, scope), id, checkName(name));
+}

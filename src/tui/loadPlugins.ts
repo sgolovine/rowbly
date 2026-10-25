@@ -14,7 +14,7 @@ import type { ToastStore, TuiPlugin } from './hooks';
  */
 export type PluginLoader = (
   root: DataRoot | null,
-  stage?: (plugin: ActivePlugin) => Promise<void>,
+  stage?: (plugin: ActivePlugin, active: readonly ActivePlugin[]) => Promise<void>,
 ) => Promise<PluginHost>;
 
 /**
@@ -31,6 +31,8 @@ export async function loadTuiPlugins(
   for (const { definition } of host.active()) {
     try {
       const tui = staged.get(definition.id) ?? (await importTui(definition));
+      const claimant = loaded.find((p) => p.tui.storyPaste);
+      if (tui.storyPaste && claimant) throw new Error(`storyPaste is already claimed by Plugin "${claimant.id}"`);
       loaded.push({ id: definition.id, tui, actions: definition.actions ?? [] });
     } catch (err) {
       host.markFailed(definition.id, err instanceof Error ? err.message : String(err));
@@ -57,6 +59,12 @@ async function importTui(definition: ActivePlugin['definition']): Promise<Plugin
  * kind with the same label. Field names are checked when the fields load.
  */
 function tuiProblem(tui: PluginTui<unknown>): string | undefined {
+  if (
+    tui.storyPaste &&
+    ['story', 'form', 'input'].some((key) => typeof tui.storyPaste?.[key as keyof typeof tui.storyPaste] !== 'function')
+  ) {
+    return 'storyPaste must declare story, form and input callbacks';
+  }
   const screens = tui.screens ?? {};
   const links = [
     ...(tui.home ?? []).map((link) => ({ kind: 'Home entry', ...link })),
@@ -71,10 +79,15 @@ function tuiProblem(tui: PluginTui<unknown>): string | undefined {
   const labelled = [
     { kind: 'settings sections', labels: (tui.settings ?? []).map((link) => link.label) },
     { kind: 'Story tabs', labels: (tui.storyTabs ?? []).map((tab) => tab.label) },
+    { kind: 'Story create tabs', labels: (tui.storyCreateTabs ?? []).map((tab) => tab.label) },
   ];
   for (const { kind, labels } of labelled) {
     const twice = labels.find((label, i) => labels.indexOf(label) !== i);
     if (twice !== undefined) return `it has two ${kind} labelled "${twice}"`;
+  }
+  for (const tab of tui.storyCreateTabs ?? []) {
+    if (!tab.label || typeof tab.input !== 'function' || !tab.component)
+      return 'a Story create tab needs label, component and input';
   }
   return undefined;
 }
@@ -119,8 +132,14 @@ export async function withPlugins(
 ): Promise<TuiPlugin[]> {
   const staged = new Map<string, PluginTui<unknown>>();
   if (load) {
-    ctx.plugins = await load(ctx.root, async ({ definition }) => {
-      staged.set(definition.id, await importTui(definition));
+    ctx.plugins = await load(ctx.root, async ({ definition }, active) => {
+      const tui = await importTui(definition);
+      // Only successfully started Plugins own a claim (ADR-0020 §8).
+      const claimant = active.find((p) => staged.get(p.definition.id)?.storyPaste);
+      if (tui.storyPaste && claimant) {
+        throw new Error(`storyPaste is already claimed by Plugin "${claimant.definition.id}"`);
+      }
+      staged.set(definition.id, tui);
     });
   }
   ctx.backgroundReactions = true;

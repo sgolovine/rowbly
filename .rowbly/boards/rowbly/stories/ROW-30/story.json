@@ -4,18 +4,43 @@
   "boardId": "rowbly",
   "name": "Paste images onto Stories in the TUI with an Attachments tab",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. It needs the `storyPaste` hook and the Attachments Plugin from the Stories that block it.\n\n## Goal\n\nThe full user flow in the TUI: copy a screenshot, open a Story or the new-Story form, press the paste key, and the image is attached.\n\n## Work\n\n- **Claim `storyPaste`** in the Attachments Plugin:\n  - `story`: run `attachments.add` at once. Toast `Attached image-YYYYMMDD-HHMM.png (412 KB)`, and reload the Attachments tab.\n  - `form`: keep the image in memory, not on disk. Show an `Attachments` row on the Story form, e.g. `2 images (612 KB)`, through `PluginStoryForm`. The images are written in the same operation that creates or edits the Story, so cancelling the form saves nothing. `esc` on a form with pending images asks to discard them (`useDirty`).\n- **Attachments tab** on the Story screen:\n  - a list with name, size and date;\n  - `n` adds a file from a path (the \"n creates\" rule);\n  - `o` opens the selected file;\n  - `d` removes it after a `ConfirmDialog`.\n\n  It reloads on return (`useReloadOnReturn`) following the rules in AGENTS.md: show `<Loading />` only when there is no data yet, and don't gate `useInput` on `loading`.\n- **Badge** on Story cards and list rows, e.g. `📎 2`, from the bag (`storyBadges`/`cardBadge`, no file reads).\n- Follow `.agents/skills/rowbly-tui-design/SKILL.md`; one component per file.\n\n## Docs\n\n- `docs/user-guide.md`:\n  - the paste keys on each platform;\n  - the screenshot shortcuts that copy to the clipboard: macOS Cmd+Ctrl+Shift+4 (Cmd+Shift+4 saves a file instead), Windows Win+Shift+S, Linux depends on the desktop;\n  - `wl-clipboard` for sway and Hyprland users;\n  - troubleshooting: SSH, headless, unsupported platforms, and the `rowbly attachment add` fallback.\n- The Attachments sections in `docs/plugins/built-in.md` and `skills/rowbly/references/tui.md`.\n\n## Verify\n\nRun it with `pnpm dev` on this machine:\n- paste on an open Story;\n- paste on the new-Story form, then cancel and then save;\n- remove an attachment.\n\nTake screenshots with agentic-tui following `.agents/skills/rowbly-screenshots/SKILL.md`, and don't commit them. No new tests by default.\n\n## Done when\n\n`pnpm typecheck`, `pnpm lint`, `pnpm test:unit` and `pnpm test:cli` all pass.",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "ag",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.895Z",
-  "updatedAt": "2026-10-25T17:40:43.220Z",
+  "updatedAt": "2026-10-25T21:56:49.992Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "tA6M83LO",
+          "author": "sunny",
+          "body": "Research complete. Waiting for codex/row-29-attachments to incorporate ROW-28 commit 91a238a, including ROW-24's tabbed Story form. Merging current main produced conflicts and was aborted cleanly. ROW-30 worktree is ready at /home/sgolovine/Projects/rowbly-worktrees/row-30-attachments-tui on codex/row-30-attachments-tui. No implementation edits or Board writes.",
+          "createdAt": "2026-10-25T21:19:44.317Z",
+          "updatedAt": "2026-10-25T21:19:44.317Z"
+        },
+        {
+          "id": "9wrPBleH",
+          "author": "sunny",
+          "body": "Plan accepted: integrate updated ROW-29 and main, add transactional pending-image form handling, implement Attachments paste/tab/badges, update docs, then independently validate and capture screenshots. Branch codex/row-30-attachments-tui. Implementation waits for ROW-29's main merge.",
+          "createdAt": "2026-10-25T21:26:24.928Z",
+          "updatedAt": "2026-10-25T21:26:24.928Z"
+        },
+        {
+          "id": "RHmPZzRc",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/116 opened against main. Independent validation signed off: typecheck, lint, 76 unit tests, 20 CLI tests and build passed. Screenshots published and verified. Head 114c3f1; CI pending. Native desktop clipboard/opening remain unverified on headless rook; injected paste flows and native failure guidance verified.",
+          "createdAt": "2026-10-25T21:56:17.186Z",
+          "updatedAt": "2026-10-25T21:56:17.186Z"
+        }
+      ]
     }
   }
 }

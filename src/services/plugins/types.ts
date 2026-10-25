@@ -525,6 +525,8 @@ export interface PluginOperationOptions<R> {
 /** The context of commands, screens, fields, filters, rows, option input and Actions. */
 export interface PluginContext<S = unknown> extends PluginReadContext<S> {
   services: PluginServices;
+  /** Opens an existing file in this Plugin's scope with the platform's associated application. */
+  openFile(scope: FileScope, name: string): Promise<void>;
   /**
    * Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. It
    * returns `options.result` when given, else what `body` returned; reactions get the same value.
@@ -628,6 +630,11 @@ export interface PluginOption {
 export type PluginOptionValues = Readonly<Record<string, string | readonly string[] | boolean | undefined>>;
 
 /** A Plugin's options on a core command that runs an operation. */
+/** Host text access for option conversion; awaited and attributed before the operation starts. */
+export interface PluginOptionHost {
+  readText: PluginCommandEnv<unknown>['readText'];
+}
+
 export interface PluginInputOptions<I = unknown> {
   options: PluginOption[];
   /**
@@ -635,7 +642,7 @@ export interface PluginInputOptions<I = unknown> {
    * `undefined` for none. The input is parsed by `inputs[<operation>]` when the Plugin declares it.
    * By convention `undefined` changes nothing, an explicit `null` clears, and a value sets.
    */
-  input(values: PluginOptionValues): I | undefined;
+  input(values: PluginOptionValues, host: PluginOptionHost): I | undefined | Promise<I | undefined>;
 }
 
 /** A Plugin's options on `stories list`: criteria, not operation input (DX-12). */
@@ -798,6 +805,9 @@ export interface PluginFormField {
  * | any | `fields` threw | never called | bag kept as stored |
  */
 export interface PluginStoryForm<S = Record<string, unknown>> {
+  /** Optional read-only row beneath the fields for pending paste data; no file reads. */
+  pendingSummary?(args: { pending: unknown; story: Story | null }): { label: string; value: string };
+
   /** The Plugin's fields for a new Story (`story: null`) or an existing one, read when the form opens and when the Plugins load again. */
   fields(args: { boardId: Slug; story: Story | null; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**
@@ -812,6 +822,33 @@ export interface PluginStoryForm<S = Record<string, unknown>> {
     changedFields: readonly string[];
     story: Story | null;
   }): unknown;
+}
+
+/** The PNG accepted by the clipboard reader. */
+export interface PluginPasteImage {
+  bytes: Uint8Array;
+  type: 'image/png';
+}
+
+/** One exclusive image-paste handler for open Stories and their new/edit forms. */
+export interface PluginStoryPaste<S = Record<string, unknown>> {
+  /** Plugin-owned CLI guidance appended when desktop clipboard access is unavailable. */
+  clipboardFallback?: string;
+
+  /** Saves immediately through the Plugin's operations. */
+  story(args: { story: Story; image: PluginPasteImage; plugin: PluginContext<S>; ui: PluginUi }): Promise<void>;
+  /** Stages only in memory. The host retains the opaque value until save or cancellation. */
+  form(args: {
+    boardId: Slug;
+    story: Story | null;
+    image: PluginPasteImage;
+    pending: unknown;
+    setPending(value: unknown): void;
+    plugin: PluginContext<S>;
+    ui: PluginUi;
+  }): void;
+  /** Converts pending data into this Plugin's create/update input; undefined contributes nothing. */
+  input(args: { pending: unknown; story: Story | null }): unknown;
 }
 
 export interface PluginStoryFilter<S = Record<string, unknown>> {
@@ -888,6 +925,26 @@ export interface PluginSidebar<S = Record<string, unknown>> {
   menu?(value: string): (PluginLink & { key: 'e' | 'd' })[];
 }
 
+/** An unsaved create-tab draft. The host retains it across tabs and submits one stories.create.
+ * Components only change drafts: they must never save records or call operations.
+ * Throw a failed asynchronous load during render so PluginSlot excludes this tab's input.
+ */
+export interface PluginStoryCreateTabProps<S = Record<string, unknown>> {
+  draft: unknown;
+  onChange(draft: unknown): void;
+  boardId: Slug;
+  active: boolean;
+  plugin: PluginContext<S>;
+  ui: PluginUi;
+}
+
+export interface PluginStoryCreateTab<S = Record<string, unknown>> {
+  label: string;
+  component: ComponentType<PluginStoryCreateTabProps<S>>;
+  /** Pure conversion to plugins.<id>; undefined adds nothing. Called only for changed drafts. */
+  input(draft: unknown): unknown | undefined;
+}
+
 /** A Plugin's TUI part, loaded only when the TUI starts. */
 export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
@@ -895,6 +952,8 @@ export interface PluginTui<S = Record<string, unknown>> {
   home?: PluginLink[];
   settings?: PluginLink[];
   storyForm?: PluginStoryForm<S>;
+  storyPaste?: PluginStoryPaste<S>;
+  storyCreateTabs?: PluginStoryCreateTab<S>[];
   storyFilter?: PluginStoryFilter<S>;
   sidebar?: PluginSidebar<S>;
   /**

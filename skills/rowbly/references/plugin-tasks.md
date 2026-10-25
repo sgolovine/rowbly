@@ -51,3 +51,5 @@ When doctor renumbers a Story after a merge, its Task Ids follow the new key.
   the bag unchanged; preserve both records while resolving the duplicate identity by hand.
 - A change to the Tasks of a Story whose stored Tasks are invalid exits 6 and saves nothing;
   `tasks list` exits 6 for it. Repair the file by hand, using `rowbly doctor` to find it.
+
+Story creation also accepts repeatable `stories create --task <name>`: names are literal, numbering follows flag order from 1, and Stage is the first effective Stage. In New Story, the Tasks tab collects Name, Description and Stage drafts with `n`. All drafts save with the Story in one operation; invalid Plugin input saves nothing.

@@ -50,7 +50,7 @@ export function doneCount(tasks: readonly Pick<Task, 'stage'>[], stages: readonl
 /** The effective Stages of `story`'s Board. */
 export async function stagesOf(
   plugin: { services: Pick<PluginReadServices, 'config'> },
-  story: Story,
+  story: Pick<Story, 'boardId'>,
 ): Promise<Stage[]> {
   return (await plugin.services.config.effective(story.boardId)).stages;
 }

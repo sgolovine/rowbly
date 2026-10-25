@@ -11,3 +11,4 @@ export * from './useDataRootSession';
 export * from './useEscape';
 export * from './useReloadOnReturn';
 export * from './useServices';
+export * from './useStoryPaste';

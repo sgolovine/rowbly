@@ -2,6 +2,7 @@
 // (src/cli.ts) reads it; core never imports a Plugin.
 import type { AnyPluginDefinition } from '../plugin-api';
 import { assignees } from './assignees';
+import { attachments } from './attachments';
 import { comments } from './comments';
 import { epics } from './epics';
 import { git } from './git';
@@ -15,6 +16,7 @@ export const builtInPlugins: readonly AnyPluginDefinition[] = [
   epics,
   specs,
   comments,
+  attachments,
   storyLinking,
   git,
 ];

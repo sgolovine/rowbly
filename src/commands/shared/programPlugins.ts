@@ -1,12 +1,12 @@
 import type { Command } from 'commander';
-import type { PluginHost, PluginOptionValues } from '../../services';
+import type { PluginHost, PluginOptionHost, PluginOptionValues } from '../../services';
 
 export interface AttachedPluginOptions {
   id: string;
   /** The Commander attribute names of its options, e.g. `epic`. */
   attributes: string[];
   /** Its `input` (operation input) or, on `stories list`, its `filter` (criteria). */
-  convert(values: PluginOptionValues): unknown;
+  convert(values: PluginOptionValues, host: PluginOptionHost): unknown;
 }
 
 export interface ProgramPlugins {

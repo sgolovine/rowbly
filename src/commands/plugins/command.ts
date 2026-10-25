@@ -143,7 +143,7 @@ function converterOf(path: string, spec: PluginCommandOptions): AttachedPluginOp
   const wanted = path === 'stories list' ? 'filter' : 'input';
   const convert: unknown = (spec as unknown as Record<string, unknown>)[wanted];
   if (typeof convert !== 'function') throw new Error(`its options on "rowbly ${path}" need ${wanted}(values)`);
-  return (values) => convert.call(spec, values);
+  return (values, host) => convert.call(spec, values, host);
 }
 
 function publish(program: Command, attached: ProgramPlugins, { group, options }: StagedCli): void {

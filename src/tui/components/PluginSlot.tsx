@@ -12,13 +12,15 @@ import { PluginSlotContent } from './PluginSlotContent';
 export function PluginSlot({
   pluginId,
   render,
+  onFailure,
 }: {
   pluginId: string;
+  onFailure?(): void;
   render(context: PluginContext, ui: PluginUi): ReactNode;
 }) {
   const loaded = usePlugins().plugins.find((plugin) => plugin.id === pluginId);
   return (
-    <PluginBoundary pluginId={pluginId} resetKeys={[pluginId, loaded]}>
+    <PluginBoundary onFailure={onFailure} pluginId={pluginId} resetKeys={[pluginId, loaded]}>
       <PluginLayerScope pluginId={pluginId} resetKeys={[pluginId, loaded]}>
         <PluginSlotContent pluginId={pluginId} render={render} />
       </PluginLayerScope>

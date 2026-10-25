@@ -1,10 +1,13 @@
-import { mkdir, readFile, symlink } from 'node:fs/promises';
+import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
-import { definePlugin, type PluginChangeSet } from '../../src/plugin-api';
+import { definePlugin, type PluginChangeSet, readBinaryInput } from '../../src/plugin-api';
+import { attachments } from '../../src/plugins/attachments';
+import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
+import { specs } from '../../src/plugins/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
 import { addLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
@@ -17,6 +20,65 @@ import { echo, faulty, notes, order, tracer } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
 
 describe('transform (ADR-0012)', () => {
+  it('creates Plugin bags, Story Spec files and incoming links atomically; rejected input saves nothing', async () => {
+    const t = await pluginRoot({ tasks: true, specs: true, 'story-linking': true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-10', plugins: { ghost: { kept: true } } });
+    const { services } = await withPlugins(t, [tasks, specs, storyLinking]);
+    const input = {
+      name: 'Atomic Story',
+      plugins: {
+        tasks: { tasks: [{ name: 'First' }, { name: 'Second', stage: 'todo' }] },
+        specs: {
+          storySpecs: [
+            { slug: 'design', text: '# Design' },
+            { slug: 'checks', text: 'Checks' },
+          ],
+        },
+        'story-linking': { blockedBy: ['WEB-10'] },
+      },
+    };
+    const created = await services.stories.create('web', input);
+    const specPath = (key: string, slug: string) => join(t.path, `boards/web/stories/${key}/plugins/specs/${slug}.md`);
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Design');
+    expect(await readFile(specPath(created.key, 'checks'), 'utf8')).toBe('# checks\n\nChecks');
+    expect(created.plugins?.tasks).toMatchObject({
+      nextNumber: 3,
+      tasks: [
+        { number: 1, stage: 'backlog' },
+        { number: 2, stage: 'todo' },
+      ],
+    });
+    expect((await services.stories.get('WEB-10')).plugins).toEqual({
+      ghost: { kept: true },
+      'story-linking': { blocks: [created.key] },
+    });
+    const before = await services.stories.list('web', {});
+    const boardBefore = await services.boards.get('web');
+    // A later transform fails after Tasks and Spec files were staged.
+    await expect(
+      services.stories.create('web', {
+        ...input,
+        plugins: { ...input.plugins, 'story-linking': { blockedBy: ['WEB-999'] } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await services.boards.get('web')).toEqual(boardBefore);
+    await expect(
+      services.stories.create('web', {
+        ...input,
+        plugins: {
+          specs: {
+            storySpecs: [
+              { slug: 'same', text: 'A' },
+              { slug: 'same', text: 'B' },
+            ],
+          },
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+  });
+
   it('runs before guards, which run before the save, which runs before reactions', async () => {
     const t = await pluginRoot({ tracer: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
@@ -44,7 +106,7 @@ describe('transform (ADR-0012)', () => {
 });
 
 describe('guard', () => {
-  it('Story Linking deletion and repair are atomic and preserve other Plugin Data', async () => {
+  it('Story Linking and Attachments mutations and repairs are atomic and preserve other Plugin Data', async () => {
     let refuse = true;
     const gate = definePlugin({
       id: 'gate',
@@ -53,9 +115,17 @@ describe('guard', () => {
       hooks: {
         'stories.remove': { guard: () => (refuse ? { reject: 'hold deletion' } : undefined) },
         'doctor.fix': { guard: () => (refuse ? { reject: 'hold repair' } : undefined) },
+        'stories.create': {
+          guard: ({ input }) => (refuse && input.plugins?.attachments ? { reject: 'hold image create' } : undefined),
+        },
+        'stories.update': {
+          guard: ({ input }) => (refuse && input.plugins?.attachments ? { reject: 'hold image update' } : undefined),
+        },
+        'attachments.add': { guard: () => (refuse ? { reject: 'hold add' } : undefined) },
+        'attachments.remove': { guard: () => (refuse ? { reject: 'hold remove' } : undefined) },
       },
     });
-    const t = await pluginRoot({ 'story-linking': true, gate: true });
+    const t = await pluginRoot({ 'story-linking': true, attachments: true, gate: true });
     const other = { ghost: { nested: ['kept'] } };
     await makeStory(t.path, {
       boardId: 'web',
@@ -63,11 +133,42 @@ describe('guard', () => {
       plugins: {
         ...other,
         'story-linking': { blocks: ['WEB-2', 'WEB-99'] },
+        attachments: {
+          attachments: [
+            {
+              id: 'missing',
+              name: 'lost.png',
+              type: 'image/png',
+              size: 8,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              createdBy: null,
+            },
+          ],
+        },
       },
     });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1', plugins: other });
-    const { services } = await withPlugins(t, [storyLinking, gate]);
+    const { services } = await withPlugins(t, [storyLinking, attachments, gate]);
+    const attachment = services.plugins.context('attachments');
+    const png = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 255]);
+    const folder = join(t.path, 'boards/web/stories/WEB-1/plugins/attachments');
+    await mkdir(folder, { recursive: true });
+    await writeFile(join(folder, 'recover.png'), png);
     const before = await services.stories.list('web', {});
+    await expect(addAttachment(attachment, 'WEB-1', { name: 'image.png', bytes: png })).rejects.toMatchObject({
+      code: 'CONFLICT',
+    });
+    expect(await attachment.files.list({ story: 'WEB-1' })).toEqual(['recover.png']);
+    const images = { images: [{ name: 'pending.png', png: Buffer.from(png).toString('base64') }] };
+    await expect(
+      services.stories.create('web', { name: 'Pending', plugins: { attachments: images } }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    await expect(
+      services.stories.update('WEB-1', { name: 'Unsaved', plugins: { attachments: images } }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await attachment.files.list({ story: 'WEB-1' })).toEqual(['recover.png']);
+
     await expect(services.stories.remove('WEB-2')).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(await services.stories.list('web', {})).toEqual(before);
     await expect(services.doctor.fix()).rejects.toMatchObject({ code: 'CONFLICT' });
@@ -75,13 +176,45 @@ describe('guard', () => {
     refuse = false;
     await services.doctor.fix();
     expect((await services.stories.get('WEB-1')).plugins).toEqual({ ...other, 'story-linking': { blocks: ['WEB-2'] } });
+    expect(await readFile(join(folder, 'recover.png'))).toEqual(Buffer.from(png));
+    expect((await services.doctor.check()).findings).toContainEqual(
+      expect.objectContaining({ code: 'ATTACHMENTS_ORPHAN_FILE', fixable: false }),
+    );
+    const image = await addAttachment(attachment, 'WEB-1', { name: 'image.png', bytes: png });
+    const withImage = await services.stories.get('WEB-1');
+    refuse = true;
+    await expect(removeAttachment(attachment, 'WEB-1', image.id)).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(await services.stories.get('WEB-1')).toEqual(withImage);
+    expect(await attachment.files.readBinary({ story: 'WEB-1' }, `${image.id}.png`)).toEqual(png);
+    refuse = false;
+    await removeAttachment(attachment, 'WEB-1', image.id);
+    expect(await attachment.files.readBinary({ story: 'WEB-1' }, `${image.id}.png`)).toBeNull();
+    const created = await services.stories.create('web', { name: 'With image', plugins: { attachments: images } });
+    const first = (await listAttachments(attachment, created.key))[0];
+    expect(first).toMatchObject({ name: 'pending.png', size: png.length });
+    expect(await attachment.files.readBinary({ story: created.key }, `${first?.id}.png`)).toEqual(png);
+    await services.stories.update(created.key, { name: 'With two images', plugins: { attachments: images } });
+    expect(await listAttachments(attachment, created.key)).toHaveLength(2);
+    const saved = await services.stories.get(created.key);
+    await expect(
+      services.stories.update(created.key, {
+        name: 'Invalid image',
+        plugins: {
+          attachments: {
+            images: [images.images[0], { name: 'bad.png', png: Buffer.alloc(9).toString('base64') }],
+          },
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await services.stories.get(created.key)).toEqual(saved);
+    expect(await attachment.files.list({ story: created.key })).toHaveLength(2);
     await services.stories.remove('WEB-2');
     expect((await services.stories.get('WEB-1')).plugins).toEqual(other);
     await expect(services.stories.get('WEB-2')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
   it('invalid owned bags reject mutations and deletion cleanup without saving staged changes', async () => {
-    const t = await pluginRoot({ 'story-linking': true, tasks: true, comments: true });
+    const t = await pluginRoot({ 'story-linking': true, tasks: true, comments: true, attachments: true });
     const timestamp = '2026-01-01T00:00:00.000Z';
     const task = {
       number: 1,
@@ -102,10 +235,11 @@ describe('guard', () => {
         'story-linking': { blocks: 'unknown shape' },
         tasks: { nextNumber: 2, tasks: [task, { ...task, name: 'Second' }] },
         comments: { comments: [comment, { ...comment, body: 'Second' }] },
+        attachments: { attachments: 'unknown data' },
       },
     });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-3', rank: 'a2' });
-    const { services } = await withPlugins(t, [storyLinking, tasks, comments]);
+    const { services } = await withPlugins(t, [storyLinking, tasks, comments, attachments]);
     const before = await services.stories.list('web', {});
     const file = join(t.path, 'boards/web/stories/WEB-2/story.json');
     const bytes = await readFile(file);
@@ -126,7 +260,13 @@ describe('guard', () => {
       exitCode: 6,
     });
     const findings = (await services.doctor.check()).findings;
-    for (const id of ['tasks', 'comments'])
+    await expect(
+      addAttachment(services.plugins.context('attachments'), 'WEB-2', {
+        name: 'image.png',
+        bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+      }),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    for (const id of ['tasks', 'comments', 'attachments'])
       expect(findings).toContainEqual(
         expect.objectContaining({
           code: 'PLUGIN_DATA_INVALID',
@@ -280,9 +420,17 @@ describe('binary Plugin files', () => {
       expect(changes.changes.find((c) => c.type === 'file')?.before).toBe('unchanged text API');
     });
     await expect(writer?.writeBinaryFile(scope, 'late.png', bytes)).rejects.toMatchObject({ code: 'INTERNAL' });
+    const input = await readBinaryInput(join(t.path, 'plugins/binary/image.png'), bytes.length);
+    expect(input).toEqual({ name: 'image.png', bytes });
+    await expect(readBinaryInput(join(t.path, 'plugins/binary/image.png'), bytes.length - 1)).rejects.toMatchObject({
+      code: 'VALIDATION',
+    });
+    await expect(plugin.openFile('dataRoot', '../outside.png')).rejects.toMatchObject({ code: 'VALIDATION' });
+    await expect(plugin.openFile('dataRoot', 'missing.png')).rejects.toMatchObject({ code: 'NOT_FOUND' });
     // Binary paths must use the existing symlink policy for both reads and writes.
     await mkdir(join(t.path, 'elsewhere'));
     await symlink(join(t.path, 'elsewhere'), join(t.path, 'plugins/binary/linked'), 'dir');
+    await expect(plugin.openFile('dataRoot', 'linked/image.png')).rejects.toMatchObject({ code: 'VALIDATION' });
     await expect(plugin.files.readBinary('dataRoot', 'linked/image.png')).rejects.toMatchObject({ code: 'VALIDATION' });
     await expect(
       plugin.operation('linked', {}, (changes) => changes.writeBinaryFile('dataRoot', 'linked/image.png', bytes)),
