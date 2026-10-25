@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.895Z",
-  "updatedAt": "2026-10-25T21:19:44.318Z",
+  "updatedAt": "2026-10-25T21:26:24.929Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -25,6 +25,13 @@
           "body": "Research complete. Waiting for codex/row-29-attachments to incorporate ROW-28 commit 91a238a, including ROW-24's tabbed Story form. Merging current main produced conflicts and was aborted cleanly. ROW-30 worktree is ready at /home/sgolovine/Projects/rowbly-worktrees/row-30-attachments-tui on codex/row-30-attachments-tui. No implementation edits or Board writes.",
           "createdAt": "2026-10-25T21:19:44.317Z",
           "updatedAt": "2026-10-25T21:19:44.317Z"
+        },
+        {
+          "id": "9wrPBleH",
+          "author": "sunny",
+          "body": "Plan accepted: integrate updated ROW-29 and main, add transactional pending-image form handling, implement Attachments paste/tab/badges, update docs, then independently validate and capture screenshots. Branch codex/row-30-attachments-tui. Implementation waits for ROW-29's main merge.",
+          "createdAt": "2026-10-25T21:26:24.928Z",
+          "updatedAt": "2026-10-25T21:26:24.928Z"
         }
       ]
     }
