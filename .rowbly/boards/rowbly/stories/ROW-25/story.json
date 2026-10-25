@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Check which paste keys reach Rowbly in each terminal",
   "description": "Part of the Epic `clipboard-image-attachments`; read its description first. This is a check: it produces findings, not code.\n\n## Goal\n\nFind out which paste keys reach Rowbly (Ink 8) in each common terminal, and what each terminal's own paste key sends when the clipboard holds **only an image**. The answers decide which keys the paste hook binds and what the user guide tells people.\n\n## What to check\n\nUse a throwaway Ink script that logs every `useInput` event (`input`, `key.ctrl`, `key.meta`) and every `usePaste` event (including empty ones). Put an image on the clipboard, then press:\n\n- Ctrl+V\n- Alt+V\n- Ctrl+Alt+V\n- the terminal's own paste key (Cmd+V, Ctrl+Shift+V, Shift+Insert, right click)\n\nTerminals:\n\n| OS | Terminals |\n| --- | --- |\n| macOS | Terminal.app, iTerm2, Ghostty, kitty, WezTerm |\n| Windows | Windows Terminal, the VS Code terminal, conhost |\n| Linux | GNOME Terminal, Konsole, kitty, Alacritty, Ghostty |\n\nTest the VS Code terminal on all three OSes. Also note whether each terminal turns on bracketed paste when Ink asks for it.\n\n## Done when\n\n- A Comment on this Story holds a table: terminal × key → what Ink receives (`ctrl+v`, `meta+v`, `ctrl+meta+v`, empty paste, nothing, or the terminal pasted something itself).\n- The Comment ends with a recommendation for the key set and the key hint on each platform. Default assumption: Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste where terminals send one.\n- No repository files change, and no screenshots are committed.",
-  "stage": "todo",
-  "rank": "a1",
+  "stage": "in-progress",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:09.530Z",
-  "updatedAt": "2026-10-25T17:38:31.326Z",
+  "updatedAt": "2026-10-25T17:40:39.964Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
