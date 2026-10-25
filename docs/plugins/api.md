@@ -182,6 +182,31 @@ The journal stages and recovers exact bytes. Doctor accepts scoped Plugin files 
 as core JSON, and Git Automatic Commits and synchronization include them as ordinary raw files.
 See [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md).
 
+### External binary input and associated applications
+
+`readBinaryInput(path, maxBytes)` returns `{ name, bytes }`: the basename and detached bytes of an
+explicitly chosen regular file. It reads at most `maxBytes + 1` bytes and rejects oversized input;
+the limit must be between 1 byte and 10 MiB. A missing path raises `NOT_FOUND`. Source paths may be
+symbolic links, since the caller explicitly chooses them. Read before starting an operation; the
+helper never writes or takes the Data Root lock. Validate the media format before saving it.
+
+`plugin.openFile(scope, name)` is available on command/screen contexts only. It checks the normal
+Plugin scope, name and symbolic link rules and file existence under the Data Root lock, then invokes
+the associated application outside the lock. It uses `open` on macOS, `xdg-open` on Linux and the
+Windows `start` via a fixed `cmd.exe` command, with the path supplied through an environment variable.
+macOS and Linux use argument arrays without a shell. Failure raises
+`USAGE`. It cannot run inside an operation or hook, and gives no arbitrary process execution.
+The filesystem remains trusted, with the same check-then-use limits as other Plugin file access.
+
+```ts
+/** Read external bytes before saving; opening is limited to the caller's own Plugin files. */
+export async function importImage(plugin: PluginContext, key: string, path: string): Promise<void> {
+  const input = await readBinaryInput(path, 10 * 1024 * 1024);
+  await saveImage(plugin, key, input.bytes);
+  await plugin.openFile({ story: key }, 'image.png');
+}
+```
+
 ## Errors
 
 What a Plugin callback throws becomes (ADR-0020 §5):

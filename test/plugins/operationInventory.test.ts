@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import { CORE_OPERATION_NAMES, definePlugin } from '../../src/plugin-api';
 import { assignees } from '../../src/plugins/assignees';
 import { addAssignee, editAssignee, removeAssignee } from '../../src/plugins/assignees/service';
+import { attachments } from '../../src/plugins/attachments';
+import { addAttachment, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { addComment, deleteComment, editComment } from '../../src/plugins/comments/comments';
 import { epics } from '../../src/plugins/epics';
@@ -66,6 +68,7 @@ describe('the operation inventory (ARCH-02)', () => {
       epics: true,
       specs: true,
       comments: true,
+      attachments: true,
       'story-linking': true,
       git: true,
       rec: true,
@@ -76,7 +79,17 @@ describe('the operation inventory (ARCH-02)', () => {
     execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: t.dir });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1' });
-    const { services } = await withPlugins(t, [assignees, tasks, epics, specs, comments, storyLinking, git, recorder]);
+    const { services } = await withPlugins(t, [
+      assignees,
+      tasks,
+      epics,
+      specs,
+      comments,
+      attachments,
+      storyLinking,
+      git,
+      recorder,
+    ]);
     await configure(services.plugins.context('git'), { frequency: 'interval', intervalSeconds: 86400 });
     const assignee = services.plugins.context('assignees');
     const epic = services.plugins.context('epics');
@@ -97,6 +110,12 @@ describe('the operation inventory (ARCH-02)', () => {
     await createSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' }, '# Story');
     await deleteSpec(spec, { board: 'web', story: 'WEB-1', slug: 'spec' });
     await deleteSpec(spec, { board: 'web', slug: 'login' });
+    const attachment = services.plugins.context('attachments');
+    const image = await addAttachment(attachment, 'WEB-1', {
+      name: 'image.png',
+      bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+    });
+    await removeAttachment(attachment, 'WEB-1', image.id);
     const added = await addComment(comment, 'WEB-1', 'Hello');
     await editComment(comment, 'WEB-1', added.id, 'Hello again');
     await deleteComment(comment, 'WEB-1', added.id);

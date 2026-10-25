@@ -5,7 +5,7 @@ description: "Use whenever an agent works with Rowbly, the file-backed Kanban
   (--json, --no-prompt, --yes, exit codes, JSON errors), setting up a Data Root,
   Boards, Me, Stages and Custom Fields, tracking Stories (keys like WEB-42),
   turning Plugins on and using them (Assignees, Tasks, Epics, Specs, Comments,
-  automatic Git commits and synchronization), and checking or repairing a Data Root with rowbly
+  PNG Attachments, automatic Git commits and synchronization), and checking or repairing a Data Root with rowbly
   doctor after a git merge or an exit 6. Not for writing a new Plugin."
 ---
 
@@ -27,6 +27,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Smaller items inside a Story (`rowbly tasks`, `WEB-42.1`) | [Tasks Plugin](references/plugin-tasks.md) |
 | Group Stories from any Boards (`rowbly epics`, `--epic`) | [Epics Plugin](references/plugin-epics.md) |
 | Markdown documents for Stories and Boards (`rowbly specs`, `--spec`) | [Specs Plugin](references/plugin-specs.md) |
+| PNG images on a Story (`rowbly attachments`) | [Attachments Plugin](references/plugin-attachments.md) |
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
 | Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
@@ -137,7 +138,7 @@ Data Root in context. Change global Me only when the user asks.
 
 ## 6. Plugins are off until the Data Root turns them on
 
-Rowbly ships seven Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Story Linking and Git. Each is off until
+Rowbly ships eight Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Attachments, Story Linking and Git. Each is off until
 the Data Root turns it on, and turning one on changes the Data Root for everyone who uses it. While a
 Plugin is off, its command is unknown (`rowbly tasks` exits 2 with the hint `Plugin "tasks" is off`)
 and so are its options on core commands (`--assignee` exits 2 with `unknown option`). Check with
@@ -195,6 +196,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 | Priority / Label | `P0` (most urgent) to `P4` / a lower-kebab-case tag | severity / tag |
 | Epic | A group of Stories from any Boards (the Epics Plugin) | — |
 | Story Spec / Board Spec | A Markdown document of one Story / of a Board that Stories link to (the Specs Plugin) | — |
+| Attachment | A PNG image on a Story (Attachments Plugin) | upload, file blob |
 | Comment | A note on a Story (the Comments Plugin) | — |
 
 ## Common mistakes

@@ -395,6 +395,32 @@ rowbly story-linking remove WEB-2 --blocked-by WEB-1 --yes
   the old key cannot identify which Story was intended. See [Story Linking details](plugins/built-in.md#story-linking).
 <!-- END story-linking -->
 
+<!-- BEGIN attachments -->
+### Attachments
+
+Enable the Built-in Plugin with `rowbly plugins enable attachments`.
+
+```text
+rowbly attachments add <KEY> <file>
+rowbly attachments add <KEY> --from-clipboard
+rowbly attachments list <KEY> [--json]
+rowbly attachments remove <KEY> <id>     # confirms; pass --yes when not interactive
+rowbly attachments open <KEY> <id>
+```
+
+- Attachments are PNG images, at most 10 MiB, on Stories. Give exactly one source when adding.
+  A file keeps its basename; a clipboard image is named `image-YYYYMMDD-HHMM.png` (UTC).
+  Clipboard failure reports a reason and saves nothing.
+- `list --json` returns an ordered array of `{ id, name, type, size, createdAt, createdBy }`;
+  `type` is `image/png`, `size` is bytes, and `createdBy` is Me or `null`. `add --json` returns one
+  entry, `remove --json` returns `{ removed }`, and `open --json` returns `{ opened }`.
+- `open` uses `open` on macOS, `start` on Windows or `xdg-open` on Linux; it requires an available
+  associated application. The PNG and Story bag save or delete together. Disabling keeps both.
+- An invalid bag exits 6 and doctor reports `PLUGIN_DATA_INVALID`; repair by hand without dropping
+  entries or files. A Story tab and paste handling are planned.
+
+<!-- END attachments -->
+
 <!-- BEGIN doctor -->
 ### Doctor
 
@@ -424,6 +450,8 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `PLUGIN_DATA_INVALID` | warning | Plugin Data of a Plugin that is on that does not match its schema | — |
 | `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or that this version does not have, reported once per Plugin | — |
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
+| `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
+| `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |

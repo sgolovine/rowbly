@@ -99,6 +99,12 @@ ambiguous; inspect and correct those links explicitly after a merge or key reuse
 - Deleting a Story or Board deletes its folder with every Plugin's files. Renumbering a Story moves its whole folder.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused. A symlinked Data Root is fine.
 
+Attachment PNGs live at `boards/<board>/stories/<KEY>/plugins/attachments/<id>.png`; their ordered
+entries are in the Story's `plugins.attachments.attachments` bag. With the Attachments Plugin on,
+doctor reports `ATTACHMENTS_MISSING_FILE` and removes dangling entries from valid bags with `--fix`.
+`ATTACHMENTS_ORPHAN_FILE` preserves unreferenced bytes for recovery. Invalid bags are reported as
+`PLUGIN_DATA_INVALID` and never repaired automatically. See [Attachments](../plugins/built-in.md#attachments).
+
 ## ROWBLY.md
 
 `ROWBLY.md` is an optional Markdown file at the top of the Data Root. The people who use the Data Root write down in it how they work with its Boards, the rituals that Rowbly's configuration cannot hold: what each Stage means and when a Story enters it, which Labels, Priorities or Comments they expect, who moves a Story to `done`. It has no schema and no version. Rowbly does not read it, enforce it or create it: no command, operation or Plugin hook depends on it, and `rowbly init` does not write one. Doctor accepts it as part of the layout, so it is not an `UNKNOWN_FILE`.

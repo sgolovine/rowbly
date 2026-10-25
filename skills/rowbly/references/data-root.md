@@ -47,6 +47,10 @@ are marked default, every command without `--data-root` exits 2 listing them.
 - Commit `.rowbly/` with the code it describes, except `local.json`, `.lock`, `.lock.break` and `.txn/`.
   `rowbly doctor --fix` restores missing `.gitignore` lines.
 
+Attachment entries live in `plugins.attachments.attachments` on a Story, in insertion order;
+PNG bytes live at `boards/<board>/stories/<KEY>/plugins/attachments/<id>.png`. Add/remove changes
+both together, and doctor renumbering moves the files with the Story.
+
 ## ROWBLY.md: how this Data Root is used
 
 Every Board is set up a little differently, and the people who use it have their own rituals: what a

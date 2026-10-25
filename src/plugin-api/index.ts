@@ -155,6 +155,7 @@ export function definePlugin<
   return definition;
 }
 
+export { readBinaryInput } from '../services/binaryInput';
 export { type ClipboardImageResult, clipboard } from '../services/clipboard';
 export type { GitSyncOptions, GitSyncOptionsSource, GitSyncStatus } from '../services/plugins/gitSync';
 export type {

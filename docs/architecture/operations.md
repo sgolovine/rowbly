@@ -83,6 +83,8 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `specs.create` | `{ board, slug, story?, text }` | `Spec` |
 | `specs.edit` | `{ board, slug, story?, text }` | `Spec` |
 | `specs.delete` | `{ board, slug, story? }` | the number of Stories unlinked |
+| `attachments.add` | `{ target, name }` | `Attachment` |
+| `attachments.remove` | `{ target, id }` | `{ removed }` |
 | `comments.add` | `{ target, body }` | `Comment` |
 | `comments.update` | `{ target, id, body }` | `Comment` |
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
@@ -90,6 +92,12 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
+
+Attachments' `target` is a Story Key. An `Attachment` result is
+`{ id, name, type: 'image/png', size, createdAt, createdBy }`. Binary source bytes are read and
+validated before `attachments.add` and are not included in the hook input. Add and remove update
+both the ordered Story bag and `<id>.png` through the same Change Set. No Operation opens an
+associated application; `attachments open` reads and opens an existing scoped PNG without saving.
 
 Story Linking's `blocker` and `blocked` name the same-Board source and target of a directed link.
 `add` validates both Stories and rejects a self link; duplicates save no changes. `remove` can remove

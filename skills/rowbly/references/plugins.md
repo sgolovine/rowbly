@@ -2,7 +2,7 @@
 
 Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships seven Built-in Plugins, each with its own reference:
+Plugins add optional features. Rowbly ships eight Built-in Plugins, each with its own reference:
 
 | Plugin | Adds | Reference |
 | --- | --- | --- |
@@ -10,6 +10,7 @@ Plugins add optional features. Rowbly ships seven Built-in Plugins, each with it
 | `tasks` | Tasks inside a Story (`WEB-42.1`) | [Tasks](plugin-tasks.md) |
 | `epics` | Epics that group Stories from any Boards; `--epic` | [Epics](plugin-epics.md) |
 | `specs` | Story Specs and Board Specs (Markdown); `--spec` | [Specs](plugin-specs.md) |
+| `attachments` | PNG images on Stories | [Attachments](plugin-attachments.md) |
 | `comments` | Comments on a Story | [Comments](plugin-comments.md) |
 | `story-linking` | Blocking relationships between Stories on the same Board | [Story Linking](plugin-story-linking.md) |
 | `git` | Automatic Commits of Rowbly changes | [Git](plugin-git.md) |
@@ -59,7 +60,7 @@ hand: this is the only hand edit allowed under `.rowbly/`.
 - Keep the `enabled` key as it is. Only `plugins enable` / `plugins disable` should change it.
 - If a Plugin needs a setting, `plugins enable` exits 2 with the hint
   ``fix "plugins.<id>" in rowbly.config.json``. Add the setting, then enable it again.
-- Assignees, Tasks, Epics, Specs, Comments and Story Linking have no settings today. Git has personal preferences in
+- Assignees, Tasks, Epics, Specs, Comments, Attachments and Story Linking have no settings today. Git has personal preferences in
   Local State instead; change them with `rowbly git configure` ([Git](plugin-git.md)).
 - Run `rowbly doctor --json --no-prompt` after a hand edit.
 
