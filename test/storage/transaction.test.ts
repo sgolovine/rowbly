@@ -356,6 +356,7 @@ describe('Git local publication', () => {
               expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
                 intended ? f.plan.indexAfter : f.plan.indexBefore,
               );
+              expect(await readFile(join(f.repo.gitDir, 'HEAD'), 'utf8')).toBe(`ref: ${f.plan.branch}\n`);
               expect(await f.head()).toBe(intended ? f.plan.candidate : f.plan.old);
               for (const edit of f.plan.edits)
                 expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
