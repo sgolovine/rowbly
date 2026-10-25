@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:50:48.215Z",
+  "updatedAt": "2026-10-25T17:51:15.032Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -39,6 +39,13 @@
           "body": "User decision (2026-10-25): run the native clipboard calls in a short-lived subprocess with a hard ~3 s kill, instead of an in-process Promise.race, because hasImage() is synchronous and can hang on X11. ADR number: ROW-26 takes 0036 and ROW-27 0037 if it needs one.",
           "createdAt": "2026-10-25T17:50:48.214Z",
           "updatedAt": "2026-10-25T17:50:48.214Z"
+        },
+        {
+          "id": "dNEuLIOE",
+          "author": "sunny",
+          "body": "Complexity 4/10. Plan accepted for codex/row-27-clipboard-reader: pinned lazy clipboard dependency, isolated native child with a shared deadline and size cap, wl-paste fallback, Plugin API capability, compiled documentation fixture and ADR-0037. User approved subprocess isolation. Draft PR will stack on ROW-26. Existing .rowbly lint errors remain untouched pending ROW-33.",
+          "createdAt": "2026-10-25T17:51:15.031Z",
+          "updatedAt": "2026-10-25T17:51:15.031Z"
         }
       ]
     }
