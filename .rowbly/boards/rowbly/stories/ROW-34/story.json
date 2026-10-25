@@ -14,5 +14,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T21:06:58.964Z",
-  "updatedAt": "2026-10-25T21:06:58.964Z"
+  "updatedAt": "2026-10-25T21:08:59.988Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "zRwsvX8P",
+          "author": "sunny",
+          "body": "Started ROW-34 on rook. Investigating the fault-injection timeout and spy leak; Board changes remain owned by the thinkpad supervisor.",
+          "createdAt": "2026-10-25T21:08:59.987Z",
+          "updatedAt": "2026-10-25T21:08:59.987Z"
+        }
+      ]
+    }
+  }
 }
