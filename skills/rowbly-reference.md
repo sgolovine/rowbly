@@ -234,8 +234,9 @@ rowbly stages add review --name "Review" --after in-progress --board web --level
 rowbly fields add estimate --name "Estimate" --type number --board web --json --no-prompt   # text|number|boolean|date|url|select|multiselect
 rowbly doctor --json --no-prompt                  # {findings, fixed, summary}; exit 6 while errors remain
 rowbly doctor --fix --json --no-prompt            # safe repairs only; never deletes a Story
+rowbly skills install <path|official-name> --harness claude --json --no-prompt  # {name, description, harnesses, path, official}; exit 4 if there
 rowbly skills create <name> --harness claude --description "…" --json --no-prompt   # generic|claude|codex|gemini|pi|cursor
-rowbly skills list --json --no-prompt             # [{name, description, harnesses, path}]: skills here that hold this page
+rowbly skills list --json --no-prompt             # {official: [{name, description, installed}], custom: [{name, description, harnesses, path}]}
 ```
 
 Run `doctor` after a git merge, pull or rebase that touched `.rowbly/`, after any exit 6, and after a

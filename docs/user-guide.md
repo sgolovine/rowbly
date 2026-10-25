@@ -416,18 +416,22 @@ rowbly plugins disable <id>    # keeps its settings and data
 <!-- BEGIN skills -->
 ### Skills
 
-`rowbly skills` starts agent skills that use Rowbly. A new skill holds the Rowbly reference (the
-`skills/rowbly-reference.md` page of this version of Rowbly) in its `references/` folder, and its
-`SKILL.md` opens with a short paragraph that sends the agent there. Both commands work in the current
-folder and need no Data Root.
+`rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
+folders that ship in the npm package's `skills/` folder (today `rowbly`, which teaches an agent to run
+Rowbly). A new skill holds the Rowbly reference (the `skills/rowbly-reference.md` page of this version
+of Rowbly) in its `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the
+agent there. Every `skills` command works in the current folder and needs no Data Root.
 
 ```text
+rowbly skills install [path] [--harness <harness>]
 rowbly skills create [name] [--harness <harness>] [--description <text>]
-rowbly skills list             # the skills here that hold the Rowbly reference
+rowbly skills list             # the official skills, then the custom skills here
 ```
 
+- `install` copies a skill folder, with everything in it, to `<harness folder>/<name>`. `path` is a folder that holds `SKILL.md`, or, when no such path exists, the name of an official skill (`rowbly skills install rowbly --harness claude`). Without `path` it shows a menu of the official skills, marking the ones already installed for that harness, or exits 2 with `--no-prompt`. The skill keeps the `name` of its `SKILL.md` frontmatter, else its folder name. A path that is not a skill folder exits 2; a name that is neither a path nor an official skill exits 3; a skill folder that already exists is not changed (exit 4). `--json` prints `{name, description, harnesses, path, official}`.
+
 - `create` writes `<harness folder>/<name>/SKILL.md` and `<harness folder>/<name>/references/rowbly-reference.md`. Without `name` it asks for one, or exits 2 with `--no-prompt`. The name uses lowercase letters, digits and single hyphens, at most 64 characters (exit 2 otherwise). A skill folder that already exists is not changed (exit 4).
-- `--harness` picks the agent whose skills folder gets the skill. Without `--description`, `SKILL.md` gets a placeholder description to replace.
+- `--harness` picks the agent whose skills folder gets the skill, for `install` and `create`. Without `--description`, `SKILL.md` gets a placeholder description to replace.
 
   | `--harness` | Skills folder |
   | --- | --- |
@@ -437,8 +441,8 @@ rowbly skills list             # the skills here that hold the Rowbly reference
   | `pi` | `.pi/skills` |
   | `cursor` | `.cursor/skills` |
 
-- `list` looks in every folder of the table and shows each skill that holds `SKILL.md` and `references/rowbly-reference.md`, with the harnesses that read it. `--json` prints `[{name, description, harnesses, path}]`, with `path` relative to the current folder.
-- The reference is a copy: after you upgrade Rowbly, copy `skills/rowbly-reference.md` from the npm package over it again.
+- `list` looks in every folder of the table and shows two sections. **Official skills** lists each official skill with the skill folders that hold it, or `not installed`. **Custom skills** lists every other skill that holds `SKILL.md` and `references/rowbly-reference.md`, with the harnesses that read it. `--json` prints `{official: [{name, description, installed: [{harnesses, path}]}], custom: [{name, description, harnesses, path}]}`, with each `path` relative to the current folder.
+- Installed skills and the reference are copies: after you upgrade Rowbly, delete an installed official skill and install it again, and copy `skills/rowbly-reference.md` from the npm package over a skill's reference.
 <!-- END skills -->
 
 <!-- BEGIN tui -->
