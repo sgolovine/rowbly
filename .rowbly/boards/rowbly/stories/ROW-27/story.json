@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:38:33.312Z",
+  "updatedAt": "2026-10-25T17:38:33.971Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,7 +20,8 @@
     "story-linking": {
       "blocks": [
         "ROW-28",
-        "ROW-29"
+        "ROW-29",
+        "ROW-31"
       ]
     }
   }
