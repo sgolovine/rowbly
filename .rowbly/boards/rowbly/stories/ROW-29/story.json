@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T21:29:56.673Z",
+  "updatedAt": "2026-10-25T21:33:14.135Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -93,6 +93,13 @@
           "body": "Main integrated at 2cec02f; ROW-29-only diff and all local checks pass. CI Unit failed on the existing transaction.test.ts:236 timeout; Verify and CLI passed. Awaiting the separately owned storage-test fix before final CI completion.",
           "createdAt": "2026-10-25T21:29:56.050Z",
           "updatedAt": "2026-10-25T21:29:56.050Z"
+        },
+        {
+          "id": "EOICbISN",
+          "author": "sunny",
+          "body": "PR #114 updated with main and the ROW-34 fix at f0d1a81. All three CI checks passed. Branch clean and pushed; ready for supervisor review.",
+          "createdAt": "2026-10-25T21:33:14.134Z",
+          "updatedAt": "2026-10-25T21:33:14.134Z"
         }
       ]
     }
