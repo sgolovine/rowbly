@@ -420,10 +420,11 @@ rowbly plugins disable <id>    # keeps its settings and data
 ### Skills
 
 `rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
-folders that ship in the npm package's `skills/` folder (today `rowbly`, which teaches an agent to run
-Rowbly). A new skill holds the Rowbly reference (the `skills/rowbly-reference.md` page of this version
-of Rowbly) in its `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the
-agent there. Every `skills` command works in the current folder and needs no Data Root.
+folders that ship in the npm package's `skills/` folder: today `rowbly`, which teaches an agent to run
+Rowbly, and `rowbly-dev`, which takes a Story from its Key to a draft pull request. A new skill holds
+the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
+`references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.
+Every `skills` command works in the current folder and needs no Data Root.
 
 ```text
 rowbly skills install [path] [--harness <harness>]

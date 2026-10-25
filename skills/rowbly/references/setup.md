@@ -147,8 +147,9 @@ rowbly fields remove estimate --board web
 ## 5. Install or start a skill that uses Rowbly
 
 Run these from the folder the skill is for (usually the repository root). To install an official
-skill (one shipped with Rowbly, such as `rowbly`) or copy an existing skill folder, use `install`; for
-a new agent skill that works with Rowbly, use `create`:
+skill (one shipped with Rowbly: `rowbly`, or `rowbly-dev` to take a Story to a draft pull request) or
+copy an existing skill folder, use `install`; for a new agent skill that works with Rowbly, use
+`create`:
 
 ```sh
 rowbly skills install rowbly --harness claude --json --no-prompt   # {name, description, harnesses, path, official}
