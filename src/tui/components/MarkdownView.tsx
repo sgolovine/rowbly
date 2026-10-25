@@ -1,6 +1,6 @@
-import { Box, Text, useInput } from 'ink';
-import { useEffect, useMemo, useState } from 'react';
-import { useIsActive } from '../hooks';
+import { Box, type DOMElement, Text, useInput } from 'ink';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useIsActive, useMouse, WHEEL_LINES } from '../hooks';
 import { moveDelta } from '../keymap';
 import { theme } from '../theme';
 import { loadMarkdownRenderer, markdownRenderer, plainMarkdownRows } from './markdown';
@@ -19,7 +19,7 @@ export interface MarkdownViewProps {
 }
 
 /**
- * Markdown rendered for the terminal in a scrolling viewport: `↑/↓` (or `j/k`) scroll, and a row
+ * Markdown rendered for the terminal in a scrolling viewport: `↑/↓` (or `j/k`) and the mouse wheel scroll, and a row
  * under the text shows the position when it does not all fit. The first time one is shown, the text
  * shows without its markdown syntax until the renderer has loaded.
  */
@@ -54,9 +54,18 @@ export function MarkdownView({
     },
     { isActive: isActive && max > 0 },
   );
+  const ref = useRef<DOMElement>(null);
+  useMouse(
+    ref,
+    {
+      onWheel: (direction) =>
+        setOffset((current) => Math.max(0, Math.min(max, Math.min(current, max) + direction * WHEEL_LINES))),
+    },
+    isActive && max > 0,
+  );
   if (!text.trim()) return <Text color={theme.inkFaint}>{emptyText}</Text>;
   return (
-    <Box flexDirection="column" flexShrink={0}>
+    <Box ref={ref} flexDirection="column" flexShrink={0}>
       {lines.slice(start, start + rows).map((line, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their position.
         <Text key={i} wrap="truncate-end">

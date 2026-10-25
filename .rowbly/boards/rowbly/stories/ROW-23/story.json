@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "key": "ROW-23",
+  "boardId": "rowbly",
+  "name": "TextArea: Make \"ctrl+s\" escape fullscreen",
+  "description": "Right now when in full-screen on a textarea, I can only exit by pressing \"esc\". Make it so I can also exit by pressing \"ctrl+s\" since more users are familiar with that action to save their current work and \"esc\" feels jarring after you have entered a bunch of text",
+  "stage": "in-progress",
+  "rank": "a3",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T16:55:25.261Z",
+  "updatedAt": "2026-10-25T17:02:51.926Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "zDHZHrDR",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-23-textarea-ctrl-s from origin/main at 0abb49c. Plan: make ctrl+s close expanded TextArea fields while retaining text, preserve document save behavior, update hints and docs, capture before/after PTY evidence, and run all four required checks. Companion branches inspected; shared guide changes will be reconciled before the PR.",
+          "createdAt": "2026-10-25T17:02:51.925Z",
+          "updatedAt": "2026-10-25T17:02:51.925Z"
+        }
+      ]
+    }
+  }
+}

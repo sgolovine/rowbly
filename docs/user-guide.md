@@ -66,6 +66,7 @@ With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to crea
   rowbly.config.json                 # optional Stages / Custom Fields, Plugin entries
   local.json                         # Local State (git-ignored)
   .gitignore                         # keeps local.json out of git
+  ROWBLY.md                          # optional: how you work with these Boards, for agents (below)
   plugins/<id>/                      # files of a Plugin, for the whole Data Root
   boards/<board>/
     board.config.json                # name, key prefix, optional Stages / Custom Fields
@@ -78,6 +79,8 @@ With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to crea
 Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data Root. Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing and never replaces an existing one. Rowbly keeps keys it does not know when it changes the file, and changes a symlinked one at its target. If the file is not valid JSON, Rowbly leaves it alone and a command that needs it fails with exit code 6 naming the file; fix or move it.
 
 Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to open it from any folder. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
+
+`ROWBLY.md` is an optional Markdown file you write by hand to record how you work with these Boards: what each Stage means, when a Story moves, which Labels and Comments you expect. Rowbly does not read or enforce it, but the Rowbly agent skill and reference tell an agent to read it before changing data and to follow it. Commit it with the rest of `.rowbly/`; `rowbly doctor` treats it as part of the Data Root.
 
 Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
@@ -413,6 +416,39 @@ rowbly plugins disable <id>    # keeps its settings and data
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 
+<!-- BEGIN skills -->
+### Skills
+
+`rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
+folders that ship in the npm package's `skills/` folder: today `rowbly`, which teaches an agent to run
+Rowbly, and `rowbly-dev`, which takes a Story from its Key to a draft pull request. A new skill holds
+the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
+`references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.
+Every `skills` command works in the current folder and needs no Data Root.
+
+```text
+rowbly skills install [path] [--harness <harness>]
+rowbly skills create [name] [--harness <harness>] [--description <text>]
+rowbly skills list             # the official skills, then the custom skills here
+```
+
+- `install` copies a skill folder, with everything in it, to `<harness folder>/<name>`. `path` is a folder that holds `SKILL.md`, or, when no such path exists, the name of an official skill (`rowbly skills install rowbly --harness claude`). Without `path` it shows a menu of the official skills, marking the ones already installed for that harness, or exits 2 with `--no-prompt`. The skill keeps the `name` of its `SKILL.md` frontmatter, else its folder name. A path that is not a skill folder exits 2; a name that is neither a path nor an official skill exits 3; a skill folder that already exists is not changed (exit 4). `--json` prints `{name, description, harnesses, path, official}`.
+
+- `create` writes `<harness folder>/<name>/SKILL.md` and `<harness folder>/<name>/references/rowbly-reference.md`. Without `name` it asks for one, or exits 2 with `--no-prompt`. The name uses lowercase letters, digits and single hyphens, at most 64 characters (exit 2 otherwise). A skill folder that already exists is not changed (exit 4).
+- `--harness` picks the agent whose skills folder gets the skill, for `install` and `create`. Without `--description`, `SKILL.md` gets a placeholder description to replace.
+
+  | `--harness` | Skills folder |
+  | --- | --- |
+  | `generic` (the default), `codex` | `.agents/skills` |
+  | `claude` | `.claude/skills` |
+  | `gemini` | `.gemini/skills` |
+  | `pi` | `.pi/skills` |
+  | `cursor` | `.cursor/skills` |
+
+- `list` looks in every folder of the table and shows two sections. **Official skills** lists each official skill with the skill folders that hold it, or `not installed`. **Custom skills** lists every other skill that holds `SKILL.md` and `references/rowbly-reference.md`, with the harnesses that read it. `--json` prints `{official: [{name, description, installed: [{harnesses, path}]}], custom: [{name, description, harnesses, path}]}`, with each `path` relative to the current folder.
+- Installed skills and the reference are copies: after you upgrade Rowbly, delete an installed official skill and install it again, and copy `skills/rowbly-reference.md` from the npm package over a skill's reference.
+<!-- END skills -->
+
 <!-- BEGIN tui -->
 ### Automatic Git commits
 
@@ -480,7 +516,7 @@ The header does not show the Board name (the Boards sidebar marks the open Board
 
 `n` on the board, in the list view or in the Stories list opens the new Story form. After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
 
-Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
+Story and Settings open in fixed-size screen modals over the Board, up to 120 columns wide. Their headers stay in place while `page up`/`page down` or the mouse wheel scroll the body. Forms, pickers, Help and Plugin screens open in smaller task modals; opening a task from Story or Settings keeps that screen underneath and returns to its selection when the task closes. Opening Settings from a Story replaces the Story. In Settings, `esc` returns from the section to its sidebar, then closes Settings.
 
 The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light theme, with dark as the fallback. Rowbly leaves the terminal background visible. Dates in the TUI use local time (for example, `20 Oct 2026, 23:03`); command JSON keeps ISO timestamps.
 
@@ -503,7 +539,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 
 In a form, `enter`, `tab` and `↓` move to the next field and `shift+tab` and `↑` to the previous one; the focused field scrolls into view, and after the last field `enter` saves. Saving is shown in the modal's key strip, with no separate Save button. `ctrl+enter` saves from any field; terminals without the kitty keyboard protocol send it as a plain `enter`, so `ctrl+s` saves there too. Text fields edit at the caret (`←`/`→`, `home`/`end`). Descriptions are written in place in a multi-line text box: `enter` starts a new line, and `↑`/`↓` leave the box from its first and last lines. `ctrl+f`, or a click on the **[Full screen]** button below the box, opens the text in the full-screen editor, titled with the field's name; `esc`, `ctrl+f` or a click on the `✕` in its border closes it and keeps what you wrote. `space` toggles a yes/no field or a multi-choice option, and `←`/`→` change a choice.
 
-The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`) and `page up`/`page down` scroll it. **Edit** shows the raw text in a multi-line text box. `tab`, or a click on **View** or **Edit**, switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
+The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`), `page up`/`page down` and the mouse wheel scroll it. **Edit** shows the raw text in a multi-line text box. `tab`, or a click on **View** or **Edit**, switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.
 
 ### Keys per screen
 

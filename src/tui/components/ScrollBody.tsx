@@ -1,10 +1,10 @@
 import { Box, type DOMElement, measureElement, Text, useBoxMetrics, useInput } from 'ink';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
-import { useIsActive } from '../hooks';
+import { useIsActive, useMouse, WHEEL_LINES } from '../hooks';
 import { theme } from '../theme';
 import { ScrollFocusContext } from './scrollFocus';
 
-/** A bounded viewport; Page Up/Down scroll without taking a screen's selection keys. */
+/** A bounded viewport; Page Up/Down and the mouse wheel scroll without taking a screen's selection keys. */
 export function ScrollBody({
   children,
   height,
@@ -16,6 +16,7 @@ export function ScrollBody({
 }) {
   const active = useIsActive() && enabled;
   const ref = useRef<DOMElement>(null);
+  const frame = useRef<DOMElement>(null);
   const viewport = useRef<DOMElement>(null);
   const { height: lines } = useBoxMetrics(ref);
   const [offset, setOffset] = useState(0);
@@ -44,8 +45,17 @@ export function ScrollBody({
     },
     { isActive: active && max > 0 },
   );
+  useMouse(
+    frame,
+    {
+      // Several notches can arrive before a render, so each one scrolls from the latest offset.
+      onWheel: (direction) =>
+        setOffset((current) => Math.max(0, Math.min(max, Math.min(current, max) + direction * WHEEL_LINES))),
+    },
+    active && max > 0,
+  );
   return (
-    <Box flexDirection="column" flexGrow={1} flexShrink={1}>
+    <Box ref={frame} flexDirection="column" flexGrow={1} flexShrink={1}>
       <Box
         ref={viewport}
         flexDirection="column"
