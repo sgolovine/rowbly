@@ -40,9 +40,13 @@ export interface FormProps {
   isActive?: boolean;
   /** What the `ctrl+s` hint says the form does: `save` (the default), or e.g. `apply` for a filter. */
   submitLabel?: string;
+  /** Screen-specific keys shown after save, before navigation hints. */
+  extraHints?: readonly KeyHint[];
 }
 
 type Raw = string | boolean | string[] | null;
+
+const NO_EXTRA_HINTS: readonly KeyHint[] = [];
 
 /** Kinds edited in a `TextInput`, where letters are text rather than keys. */
 const TYPED_KINDS: readonly FieldKind[] = ['text', 'number', 'date'];
@@ -145,7 +149,14 @@ function useFormKeys(active: boolean, keys: readonly KeyHint[]): void {
  * first and last rows and `ctrl+f` opens it full screen; `space` toggles booleans and multiselect options; `←/→` change selects.
  * `ctrl+enter` (or `ctrl+s`) submits from anywhere, and `enter` after the last field submits.
  */
-export function Form({ fields, initialValues = {}, onSubmit, isActive = true, submitLabel = 'save' }: FormProps) {
+export function Form({
+  fields,
+  initialValues = {},
+  onSubmit,
+  isActive = true,
+  submitLabel = 'save',
+  extraHints = NO_EXTRA_HINTS,
+}: FormProps) {
   const active = useIsActive() && isActive;
   const toast = useToast();
   const layout = useLayout();
@@ -162,7 +173,10 @@ export function Form({ fields, initialValues = {}, onSubmit, isActive = true, su
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
   const keys = useMemo(() => (submitLabel === 'save' ? FORM_KEYS : formKeys(submitLabel)), [submitLabel]);
-  useFormKeys(active, keys);
+  useFormKeys(
+    active,
+    useMemo(() => [...keys.slice(0, 1), ...extraHints, ...keys.slice(1)], [keys, extraHints]),
+  );
   const dirty = fields.some((f) => JSON.stringify(values[f.name]) !== JSON.stringify(initial[f.name]));
   useDirty(dirty);
 
