@@ -3,7 +3,7 @@
   "key": "ROW-20",
   "boardId": "rowbly",
   "name": "Add `rowbly skills install`",
-  "description": "Users that use rowbly have two options for skills:\n\n- Import pre-built skills\n- Create their own skills\n\n\nI want a command that allows users to import pre-built skills for rowbly into their project.\n\n\n",
+  "description": "Users that use rowbly have two options for skills:\n\n- Import pre-built skills\n- Create their own skills\n\n\nI want a command that allows users to import pre-built skills for rowbly into their project. For this I want to introduce one command and update an existing:\n\n- `rowbly skills install`: Installs a new skill, can either be run with <path_to_skill> OR when run by itself it will show a menu of skills available for install. Clack prompts should be used for menu\n- `rowbly skills list`: Update this command to list out two sections: official skills and custom skills\n\n\n",
   "stage": "todo",
   "rank": "a5",
   "priority": null,
@@ -12,5 +12,5 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:26:27.648Z",
-  "updatedAt": "2026-10-25T15:26:27.648Z"
+  "updatedAt": "2026-10-25T15:29:18.055Z"
 }
