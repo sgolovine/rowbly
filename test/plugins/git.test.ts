@@ -299,8 +299,34 @@ describe('Git automatic commits', () => {
     expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
     await access(queue);
 
+    // A crash after the landing's read-tree and before its update-ref: the next Sync moves the
+    // branch to the rebased commit instead of pushing a reversal of the upstream's change.
+    await theirs('other.txt', () => 'theirs\n');
+    await f.services.stories.update(story.key, { name: 'Crashed' });
+    await drainGitQueue(f.t.root);
+    const beforeCrash = await f.command('rev-parse', 'HEAD');
+    const run = gitStorage.runGit;
+    let crashed = false;
+    const crash = vi.spyOn(gitStorage, 'runGit').mockImplementation((cwd, args, options) => {
+      crashed ||= args[0] === 'update-ref' && args.includes('rowbly: Sync');
+      return crashed ? Promise.reject(new Error('injected crash')) : run(cwd, args, options);
+    });
+    try {
+      await expect(sync()).rejects.toThrow('The branch changed during Sync');
+    } finally {
+      crash.mockRestore();
+    }
+    expect(await f.command('rev-parse', 'HEAD')).toBe(beforeCrash);
+    expect(await f.command('show', ':other.txt')).toBe('theirs');
+    await expect(sync()).resolves.toEqual({ committed: false, pulled: 0, pushed: 1, upstream: 'origin/main' });
+    expect(await remoteHead()).toBe(await f.command('rev-parse', 'HEAD'));
+    expect(await command(remote, 'show', 'main:other.txt')).toBe('theirs');
+    expect(await command(remote, 'show', `main:${file}`)).toContain('Crashed');
+    expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
+    await expect(access(join(queue, 'sync-landing.json'))).rejects.toThrow();
+
     // The upstream and a local Automatic Commit change the same Story.
-    await theirs(file, (text) => text.replace('Pending', 'Theirs'));
+    await theirs(file, (text) => text.replace('Crashed', 'Theirs'));
     const pushed = await remoteHead();
     await f.services.stories.update(story.key, { name: 'Mine' });
     const local = await f.command('rev-parse', 'HEAD');
