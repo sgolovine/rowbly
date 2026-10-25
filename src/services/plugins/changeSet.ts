@@ -267,8 +267,12 @@ export class CoreChangeSet implements ChangeSet {
       check();
       return fn();
     };
+    const view = this.pluginView(id);
     return {
-      ...this.pluginView(id),
+      ...view,
+      get changes() {
+        return view.changes;
+      },
       putStory: (story) => write(async () => frozenCopy(await this.putStory(story, check))),
       updateStory: (key, update) => write(async () => frozenCopy(await this.updateStory(key, update, check))),
       deleteStory: (key) => write(() => this.deleteStory(key, check)),
@@ -295,8 +299,12 @@ export class CoreChangeSet implements ChangeSet {
 
   /** What a guard of Plugin `id` gets: the snapshot and its own pending files, no writers. */
   pluginView(id: string): PluginChangeSetView {
+    const view = this.view();
     return {
-      ...this.view(),
+      ...view,
+      get changes() {
+        return view.changes;
+      },
       readFile: async (scope, name) => {
         checkName(name);
         const ref = await this.resolveScope(scope);
