@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.859Z",
-  "updatedAt": "2026-10-25T17:51:15.032Z",
+  "updatedAt": "2026-10-25T18:11:28.967Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -46,6 +46,13 @@
           "body": "Complexity 4/10. Plan accepted for codex/row-27-clipboard-reader: pinned lazy clipboard dependency, isolated native child with a shared deadline and size cap, wl-paste fallback, Plugin API capability, compiled documentation fixture and ADR-0037. User approved subprocess isolation. Draft PR will stack on ROW-26. Existing .rowbly lint errors remain untouched pending ROW-33.",
           "createdAt": "2026-10-25T17:51:15.031Z",
           "updatedAt": "2026-10-25T17:51:15.031Z"
+        },
+        {
+          "id": "nWmrivDs",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/110 targets main. Independent validation signed off on 3d55f84; all four required checks, build, package installation and Linux clipboard probes passed. Screenshots published and verified. CI pending at handoff. macOS/Windows remain untested. Board unchanged on rook.",
+          "createdAt": "2026-10-25T18:11:28.967Z",
+          "updatedAt": "2026-10-25T18:11:28.967Z"
         }
       ]
     }
