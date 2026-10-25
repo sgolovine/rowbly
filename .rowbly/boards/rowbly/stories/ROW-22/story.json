@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Right click on epic should show context menu to edit/delete",
   "description": "Right now if you right click on a board you get a context menu to edit/delete the board. We should have the same for epics.",
-  "stage": "in-progress",
-  "rank": "a2",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T16:54:23.896Z",
-  "updatedAt": "2026-10-25T17:07:47.378Z",
+  "updatedAt": "2026-10-25T17:07:47.925Z",
   "plugins": {
     "comments": {
       "comments": [
