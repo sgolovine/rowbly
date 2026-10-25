@@ -180,7 +180,10 @@ async function sync(
   // 3. Rebase onto the upstream without touching the live tree, then land the result.
   let tip = head;
   if (pulled > 0) {
-    step(`rebasing onto ${upstream}`, 'run Sync again; nothing was pushed and the branch is unchanged');
+    const kept = committed
+      ? 'your Rowbly changes are committed locally and nothing was pushed'
+      : 'nothing was pushed and the branch is unchanged';
+    step(`rebasing onto ${upstream}`, `run Sync again; ${kept}`);
     tip = (await git(['merge-base', '--is-ancestor', head, theirs]).then(
       () => true,
       () => false,
@@ -202,7 +205,7 @@ async function sync(
     } catch (err) {
       await io.rm(marker);
       throw new ConflictError(`Sync could not update your working tree: ${gitReason(err)}`, {
-        hint: 'commit or stash your own changes to those files, then run Sync again; nothing was pushed and the branch is unchanged',
+        hint: `commit or stash your own changes to those files, then run Sync again; ${kept}`,
       });
     }
     try {
@@ -266,6 +269,7 @@ async function landingMarker(root: DataRoot): Promise<string> {
  * still at `old` and the index already holds `new` on every path the landing changes, the branch
  * moves to `new`. Otherwise the marker is stale and is removed. Either way the checkout ends in the
  * complete old or new state, so the next push can never carry a reversal of the upstream's changes.
+ * A marker for another branch is left in place, so Sync on that branch can still finish its landing.
  */
 async function finishLanding(root: DataRoot, branch: string, git: (args: string[]) => Promise<string>) {
   const marker = await landingMarker(root);
@@ -278,6 +282,7 @@ async function finishLanding(root: DataRoot, branch: string, git: (args: string[
     /* A torn marker is stale. */
   }
   const { old, new: tip } = landing;
+  if (typeof landing.branch === 'string' && landing.branch !== branch) return;
   const ref = `refs/heads/${branch}`;
   if (landing.branch === branch && typeof old === 'string' && typeof tip === 'string') {
     const at = (await git(['rev-parse', '--verify', '--quiet', ref]).catch(() => '')).trim();
