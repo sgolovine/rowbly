@@ -24,6 +24,8 @@ export interface MouseHandlers {
   onPull?(x: number, y: number): void;
   /** A right click here, at cell `x`, `y`: open a context menu there. */
   onContextMenu?(x: number, y: number): void;
+  /** A notch of the wheel over this box: `-1` up, `1` down. */
+  onWheel?(direction: -1 | 1): void;
   /**
    * Boxes on a higher layer hide the ones below them: the pointer reaches only the boxes of the highest
    * layer under it. The default is 0; an open context menu and the backdrop around it use 1.
@@ -39,7 +41,7 @@ interface Target {
 /**
  * The clickable boxes on screen. A press goes to the smallest box under the pointer, on the highest
  * layer there. A right click (`menu`) goes to the smallest such box with `onContextMenu`, and ends a drag
- * or pull in progress.
+ * or pull in progress. A wheel notch goes to the smallest such box with `onWheel`.
  */
 export interface MouseRegistry {
   register(target: Target): () => void;
@@ -92,6 +94,10 @@ export function createMouseRegistry(): MouseRegistry {
       };
     },
     dispatch(event) {
+      if (event.kind === 'wheelUp' || event.kind === 'wheelDown') {
+        hit(event, (h) => Boolean(h.onWheel))?.handlers.current.onWheel?.(event.kind === 'wheelUp' ? -1 : 1);
+        return;
+      }
       if (event.kind === 'menu') {
         pulling = null;
         dragging = null;
