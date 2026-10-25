@@ -29,7 +29,9 @@ export function StoryCreateForm({
   onSubmit,
   isActive: enabled = true,
   extraHints,
+  pendingSummary,
 }: {
+  pendingSummary?: { label: string; value: string };
   isActive?: boolean;
   extraHints: readonly KeyHint[];
   boardId: string;
@@ -172,6 +174,11 @@ export function StoryCreateForm({
               submitRequest={request}
               onInvalid={() => setTab(0)}
             />
+            {pendingSummary && (
+              <Text>
+                {pendingSummary.label}: {pendingSummary.value}
+              </Text>
+            )}
             <PluginFailures failures={extra.failures} note="its fields are unavailable" />
           </Box>
           {tabs.map((t, i) => {

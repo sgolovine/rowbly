@@ -716,8 +716,20 @@ An open Story saves through the Plugin immediately. New/edit forms keep images p
 Story saves; validation/save failures keep them, and cancellation writes nothing. With no claimant,
 the gesture says `Turn on a Plugin that takes pasted images`. An empty clipboard says `No image on
 the clipboard`; oversized images and timeouts have their own messages. Unavailable clipboard access
-shows environment guidance; on Wayland, install `wl-clipboard` when prompted. Rowbly ships the
-contribution API; an image-consuming Plugin must supply its behavior.
+shows environment guidance; on Wayland, install `wl-clipboard` when prompted. Enable the Attachments Plugin to use this flow: `rowbly plugins enable attachments`.
+An open Story shows `Attached image-YYYYMMDD-HHMM.png (412 KB)` after saving. Its Attachments tab
+lists name, size and date; `n` adds a PNG by file path, `o` opens it, and `d` removes it after
+confirmation. A `📎2` badge shows the number on Stories and cards. New Story's Details tab and the
+edit form show pending images as `Attachments: 2 images (612 KB)`. Pending images stay in memory,
+with a 10 MiB total limit; Escape asks before discarding them.
+
+To copy a screenshot to the clipboard, use **Cmd+Ctrl+Shift+4** on macOS (**Cmd+Shift+4** saves a file),
+**Win+Shift+S** on Windows, or your Linux desktop's screenshot-to-clipboard shortcut. The paste
+keys above work when the terminal forwards them; on Windows prefer Alt+V if Ctrl+V is handled by
+the terminal. Sway/Hyprland and other Wayland desktops may need the `wl-clipboard` package (`wl-paste`).
+SSH, headless sessions and unsupported clipboard environments may have no access to the desktop
+clipboard. Save or transfer a PNG file and run `rowbly attachments add <KEY> <file>` instead,
+or use `n` on the Attachments tab to enter that file path.
 
 
 The full-screen editor fills the terminal and has two modes. **View** shows the markdown rendered, with headings, emphasis, lists, code and tables; `↑`/`↓` (or `j`/`k`), `page up`/`page down` and the mouse wheel scroll it. **Edit** shows the raw text in a multi-line text box. `tab`, or a click on **View** or **Edit**, switches mode, and `e` also edits from view. A field's text opens in edit mode. A document that the editor saves itself, such as a Spec, opens in view mode: `ctrl+s` saves it, the bar above the text says whether it is saved, and closing with unsaved changes asks before discarding them.

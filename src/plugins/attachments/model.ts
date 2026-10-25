@@ -31,3 +31,23 @@ export const AttachmentsBag = z
       seen.add(id);
     }
   });
+
+/** Strings survive the operation input's deep freeze; decoding is deferred until the transform. */
+export const AttachmentsInput = z.object({
+  images: z
+    .array(
+      z.object({
+        name: AttachmentSchema.shape.name,
+        png: z
+          .string()
+          .min(12)
+          .max(4 * Math.ceil(MAX_ATTACHMENT_BYTES / 3))
+          .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+      }),
+    )
+    .min(1)
+    .refine(
+      (images) => images.reduce((size, image) => size + image.png.length, 0) <= 4 * Math.ceil(MAX_ATTACHMENT_BYTES / 3),
+      'pending images exceed 10 MiB',
+    ),
+});

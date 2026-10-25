@@ -2,7 +2,9 @@ import {
   type Bagged,
   ConflictError,
   NotFoundError,
+  type PluginChangeSet,
   type PluginContext,
+  type PluginHookContext,
   type PluginReadContext,
   toTimestamp,
   ValidationError,
@@ -26,7 +28,7 @@ export async function getAttachment(plugin: PluginContext, target: string, id: s
   return attachment;
 }
 
-/** UTC clipboard name, shared by CLI and the future Story paste handler. */
+/** UTC clipboard name, shared by CLI and Story paste. */
 export function clipboardName(now: Date): string {
   const iso = now.toISOString();
   return `image-${iso.slice(0, 10).replaceAll('-', '')}-${iso.slice(11, 16).replace(':', '')}.png`;
@@ -48,26 +50,7 @@ export function addAttachment(
     async (changes) => {
       const story = await plugin.services.stories.get(target);
       ownerKey = story.key;
-      const entries = requireAttachments(plugin, story);
-      const attachment: Attachment = {
-        id: `a${plugin.newId()}`,
-        name,
-        type: 'image/png',
-        size: bytes.length,
-        createdAt: toTimestamp(plugin.now()),
-        createdBy: plugin.me,
-      };
-      // Never replace recoverable bytes, even when the bag does not reference them.
-      if (
-        entries.some((entry) => entry.id === attachment.id) ||
-        (await changes.readBinaryFile({ story: story.key }, `${attachment.id}.png`)) !== null
-      )
-        throw new ConflictError('Attachment id already exists; try again');
-      await changes.updateStory(story.key, (current) => ({
-        ...plugin.writeBag(current, { attachments: [...requireAttachments(plugin, current), attachment] }),
-        updatedAt: toTimestamp(plugin.now()),
-      }));
-      await changes.writeBinaryFile({ story: story.key }, `${attachment.id}.png`, bytes);
+      const attachment = await appendAttachment(changes, plugin, story.key, { name, bytes });
       return attachment;
     },
     {
@@ -80,6 +63,37 @@ export function addAttachment(
       },
     },
   );
+}
+
+/** Shared by direct adds and Story create/update transforms, in their existing Change Set. */
+export async function appendAttachment(
+  changes: PluginChangeSet,
+  plugin: PluginHookContext,
+  target: string,
+  input: { name: string; bytes: Uint8Array },
+): Promise<Attachment> {
+  validatePng(input.bytes);
+  const attachment: Attachment = {
+    id: `a${plugin.newId()}`,
+    name: input.name,
+    type: 'image/png',
+    size: input.bytes.length,
+    createdAt: toTimestamp(plugin.now()),
+    createdBy: plugin.me,
+  };
+  if ((await changes.readBinaryFile({ story: target }, `${attachment.id}.png`)) !== null)
+    throw new ConflictError('Attachment id already exists; try again');
+  await changes.updateStory(target, (current) => {
+    const entries = requireAttachments(plugin, current);
+    if (entries.some((entry) => entry.id === attachment.id))
+      throw new ConflictError('Attachment id already exists; try again');
+    return {
+      ...plugin.writeBag(current, { attachments: [...entries, attachment] }),
+      updatedAt: toTimestamp(plugin.now()),
+    };
+  });
+  await changes.writeBinaryFile({ story: target }, `${attachment.id}.png`, input.bytes);
+  return attachment;
 }
 
 export function removeAttachment(plugin: PluginContext, target: string, id: string): Promise<{ removed: string }> {

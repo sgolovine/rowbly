@@ -219,8 +219,14 @@ those entries from valid bags. `ATTACHMENTS_ORPHAN_FILE` (warning) reports files
 preserves their bytes, including with `--fix`, for recovery. Invalid bags receive the core
 `PLUGIN_DATA_INVALID` warning and no automatic repair.
 
-**TUI:** an Attachments Story tab and paste handling are planned; this Plugin currently provides
-storage, commands and doctor checks. The reusable add/remove/open functions serve the future tab.
+**TUI:** the **Attachments** Story tab lists names, sizes and creation dates. `n` adds a PNG by file
+path, `o` opens the selected image, and `d` removes it after confirmation. Paste on any Story tab
+saves immediately and shows `Attached image-YYYYMMDD-HHMM.png (412 KB)`. Story and card badges show
+`📎2` using only the Story bag. On new/edit forms, pasted images stay in memory until save; the
+Details tab (or edit form) shows an Attachments summary such as `2 images (612 KB)`. Pending images
+are limited to 10 MiB in total. Failed saves preserve them; Escape asks before discarding them.
+Story create/update inputs accept `{ images: [{ name, png }] }`, where `png` is base64. Their
+transforms save all entries and PNGs in the Story's own Change Set, so cancellation saves nothing.
 
 ## Story Linking
 

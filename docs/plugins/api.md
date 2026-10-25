@@ -609,7 +609,7 @@ The installed package also includes `rowbly/dist/clipboard.js`, which exports `r
 and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
 [ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
 child isolation and the bounds' limits. Story paste keys are described below; an image-storage
-consumer is planned separately.
+consumer is provided by the Built-in Attachments Plugin.
 
 
 ## Story image paste
@@ -638,6 +638,10 @@ and clears after success. Cancellation writes nothing. Object input merges over 
 field and create-tab input (pending keys win); another value replaces it. Core merges field and
 create-tab input first, then converts and applies pending paste input once per submission. Declare matching operation input schemas
 and transforms in the Plugin definition; the example below shows only its TUI contribution.
+
+`PluginStoryForm.pendingSummary?({ pending, story })` may return `{ label, value }` strings for a
+read-only row below Details fields (or the edit form). It runs in the `field` stage after a paste,
+only for defined pending data. It must use memory only. The row clears on successful save.
 
 ```ts
 import type { PluginPasteImage, PluginTui } from '../../plugin-api';

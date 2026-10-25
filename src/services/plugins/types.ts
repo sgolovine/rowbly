@@ -805,6 +805,9 @@ export interface PluginFormField {
  * | any | `fields` threw | never called | bag kept as stored |
  */
 export interface PluginStoryForm<S = Record<string, unknown>> {
+  /** Optional read-only row beneath the fields for pending paste data; no file reads. */
+  pendingSummary?(args: { pending: unknown; story: Story | null }): { label: string; value: string };
+
   /** The Plugin's fields for a new Story (`story: null`) or an existing one, read when the form opens and when the Plugins load again. */
   fields(args: { boardId: Slug; story: Story | null; plugin: PluginContext<S> }): Promise<PluginFormField[]>;
   /**

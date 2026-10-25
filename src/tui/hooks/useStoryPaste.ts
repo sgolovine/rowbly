@@ -63,6 +63,7 @@ export function useStoryPaste({
   const pending = useRef<unknown>(undefined);
   const pendingOwner = useRef<string | undefined>(undefined);
   const [dirty, setDirty] = useState(false);
+  const [summary, setSummary] = useState<{ label: string; value: string } | undefined>(undefined);
   const generation = useRef(0);
   const progress = useRef<number | undefined>(undefined);
   const latest = useRef({ allowed, router, claimant, services });
@@ -143,6 +144,13 @@ export function useStoryPaste({
           pending.current = next;
           pendingOwner.current = claimant.id;
           setDirty(next !== undefined);
+          setSummary(
+            next === undefined
+              ? undefined
+              : invokePluginSync({ plugin: claimant.id, stage: 'field' }, () =>
+                  claimant.tui.storyForm?.pendingSummary?.({ pending: next, story: story ?? null }),
+                ),
+          );
         }
       } else if (story) {
         await invokePlugin({ plugin: claimant.id, stage: 'screen' }, () => handler.story({ story, image, plugin, ui }));
@@ -172,10 +180,12 @@ export function useStoryPaste({
   return {
     busy,
     hints,
+    summary,
     saved() {
       pending.current = undefined;
       pendingOwner.current = undefined;
       setDirty(false);
+      setSummary(undefined);
     },
     input(base?: PluginInput): PluginInput | undefined {
       if (pending.current === undefined || !claimant?.tui.storyPaste || pendingOwner.current !== claimant.id)
