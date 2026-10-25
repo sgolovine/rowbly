@@ -536,7 +536,8 @@ failures return their own reasons. The PNG signature is checked; image contents 
 The installed package also includes `rowbly/dist/clipboard.js`, which exports `readClipboardImage`
 and `clipboard` for smoke checks. This entry uses the same reader as the Plugin API. See
 [ADR-0037](../agents/adr/0037-clipboard-reads-use-an-isolated-native-child.md) for dependency review,
-child isolation and the bounds' limits. Paste keys and image storage are planned separately.
+child isolation and the bounds' limits. Story paste keys are described below; an image-storage
+consumer is planned separately.
 
 
 ## Story image paste
