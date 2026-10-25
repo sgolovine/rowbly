@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:10.201Z",
-  "updatedAt": "2026-10-25T17:40:40.741Z",
+  "updatedAt": "2026-10-25T17:47:49.330Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,6 +20,17 @@
     "story-linking": {
       "blocks": [
         "ROW-29"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "g8W7OcsF",
+          "author": "sunny",
+          "body": "Complexity 5/10. Branch codex/row-26-binary-plugin-files starts at e084d06. Plan accepted: expose binary Plugin reads/writes over the existing byte-capable journal, preserve text APIs, add exact-byte recovery coverage, verify doctor/Git integration, and document the API in ADR-0036 if still available.",
+          "createdAt": "2026-10-25T17:47:49.329Z",
+          "updatedAt": "2026-10-25T17:47:49.329Z"
+        }
       ]
     }
   }

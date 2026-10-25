@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "key": "ROW-33",
+  "boardId": "rowbly",
+  "name": "Chore: Fix linting",
+  "description": "Linting currently runs over stories within `.rowbly` and causes failures. Fix this by ignoring the `.rowbly` folder for any linting/formatting.",
+  "stage": "in-pr",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T17:45:29.830Z",
+  "updatedAt": "2026-10-25T17:51:28.121Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "JGfQ5Map",
+          "author": "sunny",
+          "body": "Starting the lint configuration fix on rook; Board updates remain with the supervisor.",
+          "createdAt": "2026-10-25T17:51:26.185Z",
+          "updatedAt": "2026-10-25T17:51:26.185Z"
+        },
+        {
+          "id": "gAPZ0j9a",
+          "author": "sunny",
+          "body": "Plan accepted. Complexity 1/10; branch codex/row-33-fix-linting, based on origin/main. Add a shared Biome exclusion for .rowbly/, preserve its files, run all four required checks, and attach lint-output screenshot evidence.",
+          "createdAt": "2026-10-25T17:51:26.841Z",
+          "updatedAt": "2026-10-25T17:51:26.841Z"
+        },
+        {
+          "id": "t3cHqQxq",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/107 excludes .rowbly/ from Biome linting and formatting. All four required checks passed; validation signed off at a90dfb1. Screenshot evidence attached and verified HTTP 200. No Board files edited.",
+          "createdAt": "2026-10-25T17:51:27.488Z",
+          "updatedAt": "2026-10-25T17:51:27.488Z"
+        }
+      ]
+    }
+  }
+}
