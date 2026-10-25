@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships seven Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on wit
 | [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
 | [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
+| [Story Linking](#story-linking) | Blocking relationships between Stories on the same Board | [`story-linking/CONTEXT.md`](../../src/plugins/story-linking/CONTEXT.md) | [Plugin Data, ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md) |
 | [Git](#git) | Automatic Commits for saved Rowbly changes | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
@@ -182,6 +183,60 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
 **TUI:** a **Comments** tab on the Story screen (`n` new Comment, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
+
+## Story Linking
+
+Story Linking records that a Story **blocks** another Story on the same Board. The other Story shows
+**Blocked by** with the blocker's Story Key. Both directions can have any number of links, including
+opposing links and cycles. These relationships do not restrict Stage changes.
+
+**Data**
+
+Each link lives once on its blocker: `"plugins": { "story-linking": { "blocks": ["WEB-2"] } }`.
+Incoming links are derived by reading Stories on the same Board. A mutation stamps only the blocker's
+`updatedAt`; its last outgoing link removes the bag. The strict bag schema rejects unknown fields,
+and mutations never overwrite malformed data. Other Plugin Data is preserved.
+
+**Commands**
+
+```text
+rowbly plugins enable story-linking
+rowbly story-linking list <KEY>
+rowbly story-linking add <KEY> --blocks <KEY>
+rowbly story-linking add <KEY> --blocked-by <KEY>
+rowbly story-linking remove <KEY> --blocks <KEY>       # confirms; --yes when not interactive
+rowbly story-linking remove <KEY> --blocked-by <KEY>
+```
+
+- `add` and `remove` need exactly one direction flag. Keys are case-insensitive. Adding a link needs
+  existing Stories on the same Board; cross-Board and self links are `VALIDATION` (exit 2), and a
+  missing Story is `NOT_FOUND` (exit 3). Adding an existing link succeeds without changing data.
+- `list --json` is an array of `{ relation, key, name, available }`, with `relation` equal to `blocks`
+  or `blocked-by` relative to the requested Story. Missing targets have `name: null`, `available: false`.
+  `add` and `remove` return `{ blocker, blocked }` with canonical Story Keys.
+- Removing from either Story edits the same outgoing link on its blocker; no second edit is needed.
+  Removing a missing link is `NOT_FOUND`. A saved outgoing link to a missing target can still be removed.
+- `stories show` and the TUI Details tab show **Blocks** and **Blocked by** rows. `stories show --json`
+  returns the stored Story; use `story-linking list --json` for derived incoming links.
+- With the Plugin enabled, `stories.remove` removes incoming references in the same Change Set as
+  the deletion. An invalid linking bag on the Board refuses the whole deletion with `DATA_INTEGRITY`
+  (exit 6), so partial cleanup is never saved.
+- Disabling keeps all bags and hides the commands and tab. If a target is deleted while off, the
+  saved links remain until removed or repaired after re-enabling. Story Key reuse and collision
+  renumbering can make old links ambiguous ([ADR-0003](../agents/adr/0003-story-keys.md)); inspect
+  and correct them explicitly. The Plugin never guesses a new target for an old key.
+
+**TUI:** a **Links** tab on the Story screen, showing the direction, Story Key and name on every row.
+`↑`/`↓` selects a link; `enter` or a click opens its Story directly; `esc` returns. `/` filters rows.
+`n` opens the form with **Blocks** / **Blocked by** and a Story choice limited to this Board;
+`ctrl+s` adds the link. `d` removes the selected link after confirmation, from either end.
+Returning from a linked Story or the form refreshes the relationships.
+
+**Doctor:** `STORY_LINKING_INVALID_TARGET` (warning) reports missing, cross-Board and self targets;
+`--fix` removes those links atomically and preserves other Plugin Data. Invalid bags produce
+`PLUGIN_DATA_INVALID`, are never repaired as empty, and mutations of them fail with `DATA_INTEGRITY`.
+CLI `list` also exits 6 if any linking bag on the Board is invalid, because incoming links could be
+concealed. The TUI shows readable links with an explicit warning that the view may be incomplete.
 
 ## Upgrading from before Plugins
 

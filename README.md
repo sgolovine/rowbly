@@ -219,6 +219,7 @@ rowbly plugins enable tasks
 | --- | --- |
 | [Tasks](docs/plugins/built-in.md#tasks) | Tasks inside a Story (`WEB-42.1`), each with its own Stage |
 | [Comments](docs/plugins/built-in.md#comments) | Comment Threads on Stories |
+| [Story Linking](docs/plugins/built-in.md#story-linking) | Blocking relationships between Stories on the same Board |
 | [Assignees](docs/plugins/built-in.md#assignees) | A roster of Assignees, and the Assignees of each Story |
 | [Epics](docs/plugins/built-in.md#epics) | Groups of Stories across Boards, with Epic Progress |
 | [Specs](docs/plugins/built-in.md#specs) | Markdown Spec documents for Boards and Stories |
