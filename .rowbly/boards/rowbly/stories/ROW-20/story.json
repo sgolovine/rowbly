@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:26:27.648Z",
-  "updatedAt": "2026-10-25T16:22:57.962Z",
+  "updatedAt": "2026-10-25T16:22:58.527Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -22,6 +22,13 @@
           "body": "Complexity 3 (one development agent, no separate research or validation agent). Branch claude/row-20-skills-install, built on ROW-18's skills command group. Plan: add `rowbly skills install [path]` (with no path, a Clack menu of the official skills shipped in the package; copies into the --harness skills folder), split `rowbly skills list` into Official and Custom sections (text and --json), and update the user guide and skill references. No new tests, per AGENTS.md. Validation is the four repository checks, a manual run and agentic-tui screenshots.",
           "createdAt": "2026-10-25T16:22:57.961Z",
           "updatedAt": "2026-10-25T16:22:57.961Z"
+        },
+        {
+          "id": "mSMERakl",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/100 (depends on ROW-18's PR #99; land after it). Adds `rowbly skills install [path|official-name] [--harness]` with a Clack menu of official skills when run with no path, and splits `rowbly skills list` into Official skills and Custom skills (JSON {official, custom}). Validation: typecheck, lint, test:unit (66) and test:cli (20) pass; manual runs of the built CLI cover menu, name and path installs and every exit code; agentic-tui screenshots are on the PR. The Board has no review Stage, so the Story stays in In Progress.",
+          "createdAt": "2026-10-25T16:22:58.526Z",
+          "updatedAt": "2026-10-25T16:22:58.526Z"
         }
       ]
     }
