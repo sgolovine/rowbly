@@ -8,6 +8,7 @@ import {
   type PluginContext,
   type RequiredStage,
   type RequiredStory,
+  readBinaryInput,
   z,
 } from '../../../src/plugin-api';
 
@@ -105,5 +106,14 @@ export async function readPastedImage(): Promise<ClipboardImageResult> {
   const image = await clipboard.readImage();
   if ('reason' in image) return image;
   return { bytes: image.bytes, type: image.type };
+}
+// #endregion
+
+// #region binary-input
+/** Read external bytes before saving; opening is limited to the caller's own Plugin files. */
+export async function importImage(plugin: PluginContext, key: string, path: string): Promise<void> {
+  const input = await readBinaryInput(path, 10 * 1024 * 1024);
+  await saveImage(plugin, key, input.bytes);
+  await plugin.openFile({ story: key }, 'image.png');
 }
 // #endregion

@@ -525,6 +525,8 @@ export interface PluginOperationOptions<R> {
 /** The context of commands, screens, fields, filters, rows, option input and Actions. */
 export interface PluginContext<S = unknown> extends PluginReadContext<S> {
   services: PluginServices;
+  /** Opens an existing file in this Plugin's scope with the platform's associated application. */
+  openFile(scope: FileScope, name: string): Promise<void>;
   /**
    * Runs one of this Plugin's own operations, named `<id>.<name>`, through the whole pipeline. It
    * returns `options.result` when given, else what `body` returned; reactions get the same value.
