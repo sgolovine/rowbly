@@ -157,3 +157,20 @@ JSON error on stderr and the safe run summary in `error.details.synchronizationR
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
 `git show` remains an inspection command and can successfully display a previous failed result.
+
+## Manual header Sync
+
+With Git enabled, press `S` / **Sync** in the TUI. Both automatic preferences may be Off. Sync commits
+pending Rowbly data/configuration additions, edits and deletions **before fetching**, skips empty
+capture commits, rebases local linear commits onto the configured upstream with automatic Rowbly
+conflict reconciliation/evidence, publishes recoverably, then pushes normally. Unrelated staged,
+working and untracked content stays intact. Local State, locks and transactions remain excluded.
+`Sync…` ignores duplicate input; success appears only after this manual run pushes. A scheduled merge
+already running completes before a distinct manual rebase. `git show` displays progress/results.
+
+Failures retain local work, including the pre-fetch capture. Fix the reported upstream/authentication,
+network or push rejection and retry. Finish any existing Git operation; commit or unstage already
+staged Rowbly files. Resolve non-Rowbly conflicts with Git. Divergent local merge commits require
+explicit `git rebase --rebase-merges` outside Rowbly before retrying. Never force-push or discard work.
+No stash or Git under a Data Root lock. The existing `rowbly git sync` command and scheduling retain
+merge behavior and require Automatic Merge Conflict Resolution On; no new CLI command is added.

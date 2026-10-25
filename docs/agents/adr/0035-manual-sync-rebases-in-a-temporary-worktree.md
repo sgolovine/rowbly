@@ -1,15 +1,68 @@
-# ADR-0035: Manual Sync rebases in a temporary worktree and never force-pushes
+# ADR-0035: Manual Sync rebases in isolation and never force-pushes
 
-**Status:** Accepted. Built. Narrowly amends [ADR-0017](0017-actions-are-tui-only.md): an Action may change only Git state without a matching command. Keeps [ADR-0030](0030-git-work-runs-outside-the-data-root-lock.md)'s lock rules. To be reconciled with ADR-0034 on `develop` when `develop` reaches `main`: Sync should then run through `PluginGit.requestSync`.
+**Status:** Accepted. Built (ROW-17). Amends ADR-0034 §1, §5–6 for explicit manual Sync and ADR-0017's Action boundary. Keeps ADR-0030's no-Git-under-Data-Root-lock rule.
 
-Teams share a Data Root through Git. With Automatic Commits on, each person still had to leave Rowbly to pull and push. Story ROW-17 asks for a **Sync** control in the TUI header, through the Git Plugin, that sends Rowbly changes to the current branch's upstream and brings in others'. The working tree may hold unrelated work, staged or not, and Rowbly may be writing while Git runs.
+## Context
 
-**§1 Sequence.** `PluginGit.sync` (1) checks that HEAD is on a branch with an upstream, that no rebase, merge, cherry-pick or revert is in progress, and that an author is set; (2) commits pending Rowbly data under the Data Root, found with `git status` and committed from a snapshot exactly as an Automatic Commit is (ADR-0026 §3, ADR-0030 §2), and only when there is some; (3) fetches the upstream's remote; (4) when the upstream has new commits, fast-forwards or rebases; (5) pushes the result to the upstream's branch without force. It resolves only after the push, and every failure is a `RowblyError` naming the cause and the next step. Local commits are never discarded.
+The Git Plugin contributes a header **Sync** Action (`S`) whenever enabled. A manual request must
+commit pending Rowbly changes before network work, even with Automatic Commits and Automatic Merge
+Conflict Resolution Off. Scheduled synchronization and the existing `git sync` command retain their
+merge semantics. The manual request must await its own pushed result, including when a scheduled
+merge is already running.
 
-**§2 Rebase aside, land like checkout.** The rebase runs in a temporary detached worktree (`git worktree add --detach`) under the system temp folder, with hooks and signing off. A conflict aborts it there and removes the worktree, so the live HEAD, index and working tree are unchanged and the user resolves with `git pull --rebase`. A success lands in two steps, with HEAD still at the old commit for the first: `git read-tree -m -u <old> <new>`, the two-tree merge `git checkout` uses, which keeps unrelated staged and unstaged changes and refuses to overwrite a local change (then nothing has changed), and then `git update-ref refs/heads/<branch> <new> <old>`, a compare-and-swap that fails if the branch moved, in which case `read-tree -m -u <new> <old>` puts the tree back. Before the first step Sync writes `<git-dir>/rowbly/sync-landing.json` (`branch`, `old`, `new`) and removes it after the second. If a crash leaves the marker, the next Sync's preflight moves the branch to `new` when it is still at `old` and the index holds `new` on every path the landing changes, and otherwise drops the marker as stale. So a crash between the steps ends in the complete old or new state, and HEAD never stays at `old` under a tree at `new`, where the upstream's changes would look like staged reversals that a later commit could push. Landing writes files under the Data Root without the Data Root lock (§3), so a Rowbly save racing with `read-tree`'s write of the same file could be overwritten in that short window; we accept this risk, since the alternative is a Git process under the Data Root lock. Sync never stashes, never runs `reset --hard` and never passes `--force` to `push`.
+## Decision
 
-**§3 Coordination.** A module-level guard allows one Sync per Git directory; a second call is refused at once. Sync joins the Automatic Commits queue and holds the Git `rowbly/` lock for its whole run. The order is guard, then Git lock, then (briefly, to copy pending files) the Data Root lock; the Git lock is never taken under the Data Root lock, and no Git process runs under the Data Root lock (ADR-0030 §1). Fetch, rebase, worktree and push commands get a 60 s limit; other Git calls keep 3.5 s.
+### 1. Commit, fetch, replay, publish, push
 
-**§4 An Action that changes Git state.** ADR-0017 lets an Action only open or show something, so that every data change is also a command. Sync changes Git state: commits, the branch and the remote. The Rowbly data it commits was already saved by Operations, and what it brings in is what `git pull` would. So Sync is an Action with no `rowbly` command; in command mode, people use Git directly. This amends ADR-0017 only for Actions that change Git state and no Rowbly data. `PluginGit.sync` is allowed in the `screen` stage for this. While a `none` Action's `run` is pending, the header shows it busy (`Sync…`) and ignores its key and click.
+`PluginGit.requestSync(liveResolver, 'rebase')` uses the shared synchronization service and common
+Git worker. Before fetching, it captures valid pending Rowbly data/configuration additions, edits
+and deletions through an alternate index and publishes a nonempty capture commit using ADR-0034's
+recoverable publication engine. No empty capture commit is created. Fetch/push still run with no
+pending changes. Local State, locks and transactions remain excluded. Already-staged Rowbly changes
+remain an explicit ambiguity error; unrelated staged entries and working/untracked files survive.
 
-We rejected rebasing in the live checkout, which leaves a half-applied rebase and conflict markers in the user's files on failure; `git stash`, which can lose or entangle unrelated work; `git reset --keep` for landing, which unstages unrelated staged changes; a merge commit instead of a rebase, which the request (`git pull --rebase`) does not want; and force-pushing after a rejected push.
+Fetch the configured upstream into a private pinned ref. Replay linear local commits in order onto
+that exact upstream using isolated `merge-tree --merge-base=<original-parent>` and alternate-index
+plumbing. For every replay, run ROW-15's pure reconciliation on the original parent, replayed tip and
+original commit, even for textually clean JSON merges. Validate each candidate and retain conflict
+alternatives, identities, remaps and committed evidence. Preserve original author identity/date and
+message. Original empty commits are retained; no extra empty capture commit is created.
+
+When divergent history contains a local merge commit, refuse before replay publication with guidance
+to use `git rebase --rebase-merges`, then retry Sync. Never silently flatten or drop merge topology.
+Replay is bounded to 512 commits and the existing run/process/output limits. Non-Rowbly conflicts
+require manual Git resolution. The pre-fetch capture remains recoverable on every later failure.
+
+### 2. One recoverable publication path
+
+Both the pre-fetch capture and final replay result use ADR-0034 §4–5: common worker, publication gate,
+short Data Root capture/transaction locks, expected-ref CAS, carried-forward reserved index, durable
+payload journal and local recovery before cooperating reads/writes. Capture drift recomputes the
+candidate; a later save is never overwritten or acknowledged as an earlier revision. No Git process
+runs under a Data Root lock. There is no separate landing marker, live checkout rebase, stash or
+accepted save-overwrite window. External Git/editors remain outside cooperative locking.
+
+Push normally to the configured remote/ref only after validated local publication. A push failure
+leaves local commits available for retry and never causes force-push or rollback of saved work.
+
+### 3. Admission and completion
+
+A manual rebase is independent of both automatic preferences, but requires the Git Plugin enabled.
+A scheduled merge already running completes first; the manual request then admits a distinct rebase.
+Overlapping manual requests join the same rebase. The shared worker serializes Automatic Commits,
+scheduled synchronization and manual Sync across processes/worktrees. Admission checks the current
+branch/upstream. An admitted run may finish after preferences change; host disposal stops future work.
+
+Manual completion returns the exact joined run's identity/result and throws on failure. It never
+reports success from stale persisted `last` data or from another mode's completion.
+
+### 4. Action boundary and feedback
+
+This narrowly amends ADR-0017: an Action may request host-owned Git synchronization without a new
+matching command, including the validated Rowbly import it publishes. It does not gain arbitrary
+filesystem or Git execution. `S` shows `Sync…` while pending; a synchronous guard ignores duplicate
+keys/clicks before a render. Progress phases are persisted for inspection. Only a completed normal
+push produces the success toast. Failure toasts include the cause and recovery guidance.
+
+The existing `rowbly git sync` command remains an immediate enabled **merge** request. The header is
+the explicit rebase surface. No new CLI command or strategy preference is introduced.

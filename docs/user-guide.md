@@ -590,30 +590,35 @@ run owned by another process returns its run summary with exit 0; this means pen
 
 ### Sync with Git
 
-When the Git Plugin is on, the TUI header shows **Sync** (key `S`). Sync sends your Rowbly changes to the current branch's upstream and brings in your team's, like `git pull --rebase` followed by `git push`:
+When the Git Plugin is on, the TUI header shows **Sync** (key `S`). It works with
+Automatic Commits and Automatic Merge Conflict Resolution either On or Off:
 
-1. It commits pending Rowbly changes to Stories and configuration, including new and deleted files, as one `chore: update Rowbly data` commit. With nothing pending it makes no commit. Local State (`local.json`), lock, transaction and temporary files, dot files and folders (such as `.DS_Store` or an editor's `.story.json.swp`), and files outside the Data Root are never committed; the Data Root's own `.gitignore` is.
-2. It fetches the upstream's remote.
-3. When the upstream has new commits, it rebases your commits onto them in a temporary Git worktree, then moves your branch to the result the way `git checkout` would. Your other staged and unstaged changes stay as they were.
-4. It pushes to the upstream. It never force-pushes.
+1. Commit pending Rowbly Story, Plugin and configuration additions, edits and deletions before any
+   network work. Skip the commit when nothing changed; still fetch and push. Local State, locks,
+   transactions and unrelated files remain excluded.
+2. Fetch the current branch's configured upstream.
+3. Replay local commits onto that upstream in isolation, reconciling Rowbly data/configuration with
+   the same rules and committed conflict evidence as automatic synchronization above. Validate and
+   publish the result recoverably. Unrelated staged, working and untracked changes stay intact.
+4. Push normally to that same upstream. Never force-push.
 
-While Sync runs, the header shows `Sync…` and `S` does nothing; Automatic Commits wait for it. A toast says `Synced with <upstream>` only after the push succeeds, with what it committed, pulled and pushed. Any failure shows an error toast with its cause, and keeps your local commits:
+While running, the header shows `Sync…` and ignores repeated `S` or clicks. Automatic Commits and
+synchronization share one Git worker. A scheduled merge finishes before a waiting manual rebase;
+the toast says `Synced with <upstream>` only after that manual run's push succeeds. Inspect progress
+and the last result with `rowbly git show`.
 
-| Error | What to do |
-| --- | --- |
-| HEAD is detached | Check out a branch |
-| The branch has no upstream | `git push -u origin <branch>`, or `git branch --set-upstream-to origin/<branch>` |
-| A rebase, merge, cherry-pick or revert is in progress | Finish or abort it in Git |
-| No Git author name or email | Set `git config user.name` and `user.email`, or the author in the Git settings |
-| A Rowbly file you changed is already staged | Commit or unstage it |
-| Fetch or push failed (network, credentials) | The toast shows Git's message; fix it and press `S` again |
-| The remote refused the push (for example a server hook) | The toast shows the remote's message; do what it asks and press `S` again |
-| Your commits conflict with the upstream | Nothing was pushed and your branch is unchanged; commit or stash your other changes, run `git pull --rebase` (or `git pull --rebase --autostash`), resolve the conflict, and press `S` again |
-| A file you changed locally would be overwritten | Commit or stash your change to that file |
-| The branch or the upstream changed during Sync | Press `S` again |
-| Sync stopped while <step>: <reason> | Follow the hint under it, then press `S` again |
+Failures show the cause and keep local work, including a capture committed before a failed fetch.
+Fix missing upstream with `git push -u origin <branch>` or `git branch --set-upstream-to=origin/<branch>`.
+Configure Git author and noninteractive authentication first. Finish any existing merge/rebase before
+Sync; commit or unstage already-staged Rowbly files. Resolve non-Rowbly conflicts and dirty files that
+upstream would overwrite with Git before retrying. Divergent local merge commits require explicit
+`git rebase --rebase-merges` outside Rowbly before retrying; Sync never silently flattens them. Network,
+authentication and push rejection errors retain the local result so you can fix the cause and retry.
 
-Sync runs Git without hooks or commit signing, like Automatic Commits. There is no `rowbly` command for Sync; use `git pull --rebase` and `git push` in command mode.
+Sync suppresses hooks and signing, never stashes, and never runs Git under the Data Root lock.
+The existing `rowbly git sync` command and scheduled synchronization retain their **merge** behavior
+and require Automatic Merge Conflict Resolution On. The header provides manual **rebase** Sync;
+no new command or strategy setting is added.
 
 
 ## Interactive mode (TUI)
