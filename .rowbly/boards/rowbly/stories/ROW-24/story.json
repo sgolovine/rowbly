@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-24",
+  "boardId": "rowbly",
+  "name": "Story create updates",
+  "description": "- Create view should move to a tabbed layout just like when viewing the story\n- Show tabs based on enabled plugins and allow setting options just like when viewing the story\n- Example: if story linking is enabled, allow adding story links just like when viewing the story\n- Example 2: Allow creating multiple specs at create time\n- Also allow doing this via the CLI for agents.\n",
+  "stage": "todo",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T17:29:04.286Z",
+  "updatedAt": "2026-10-25T17:29:04.286Z"
+}
