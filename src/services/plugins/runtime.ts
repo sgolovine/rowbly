@@ -14,7 +14,14 @@ import { coordinated, outsideCoordination } from '../coordination';
 import { effectiveMe } from '../identity';
 import type { PluginInput, RowblyContext, Services } from '../types';
 import { pluginReadServices, pluginServices } from './capabilities';
-import { CoreChangeSet, frozenCopy, isRootConfigCopy, listPluginFiles, readPluginFile } from './changeSet';
+import {
+  CoreChangeSet,
+  frozenCopy,
+  isRootConfigCopy,
+  listPluginFiles,
+  readPluginBinaryFile,
+  readPluginFile,
+} from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
 import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
@@ -513,6 +520,8 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       // Each read is one participating read, under the Data Root lock (ADR-0019 §5).
       read: (scope, name) =>
         coordinated(ctx.root, `${id}.files.read`, () => readPluginFile(ctx.root, repos, id, scope, name)),
+      readBinary: (scope, name) =>
+        coordinated(ctx.root, `${id}.files.readBinary`, () => readPluginBinaryFile(ctx.root, repos, id, scope, name)),
       list: (scope) => coordinated(ctx.root, `${id}.files.list`, () => listPluginFiles(ctx.root, repos, id, scope)),
     },
     get me() {

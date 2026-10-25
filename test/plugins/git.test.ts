@@ -182,6 +182,17 @@ describe('Git automatic commits', () => {
     expect(await f.command('show', '--format=', '--name-only', 'HEAD')).toBe(
       `.rowbly/boards/web/stories/${story.key}/story.json`,
     );
+    const plugin = f.services.plugins.context('comments');
+    const scope = { story: story.key };
+    const binaryPath = `.rowbly/boards/web/stories/${story.key}/plugins/comments/image.png`;
+    const binary = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
+    await plugin.operation('image', {}, (changes) => changes.writeBinaryFile(scope, 'image.png', binary));
+    const committed = await exec('git', ['show', `HEAD:${binaryPath}`], { cwd: f.t.dir, encoding: 'buffer' });
+    expect(committed.stdout).toEqual(Buffer.from(binary));
+    await plugin.operation('image', {}, (changes) =>
+      changes.writeBinaryFile(scope, 'image.png', new Uint8Array([...binary, 254])),
+    );
+    expect(await plugin.files.readBinary(scope, 'image.png')).toEqual(new Uint8Array([...binary, 254]));
     await f.services.stories.update(story.key, { name: 'Changed' });
     await f.services.stories.remove(story.key);
     expect(await f.command('show', '--format=', '--name-status', 'HEAD')).toContain('D\t.rowbly/boards/web/stories/');
@@ -939,8 +950,12 @@ describe('isolated upstream synchronization', () => {
     const board = JSON.parse(await readFile(boardFile, 'utf8'));
     board.description = 'Peer Board';
     await writeFile(boardFile, JSON.stringify(board));
+    const png = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
+    const pngPath = '.rowbly/boards/web/plugins/unknown/image.png';
+    await mkdir(join(f.peer, pngPath, '..'), { recursive: true });
+    await writeFile(join(f.peer, pngPath), png);
     await writeFile(join(f.peer, 'code.txt'), 'peer clean code\n');
-    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', 'code.txt');
+    await command(f.peer, 'add', '.rowbly/boards/web/board.config.json', pngPath, 'code.txt');
     await command(f.peer, 'commit', '-m', 'peer data and code');
     await command(f.peer, 'push');
     const storyPath = join(f.t.path, 'boards/web/stories', story.key, 'story.json');
@@ -1053,6 +1068,7 @@ describe('isolated upstream synchronization', () => {
       expect(await readFile(join(f.t.dir, 'staged.txt'), 'utf8')).toBe('unstaged over staged');
       expect(await readFile(join(f.t.dir, 'untracked.txt'), 'utf8')).toBe('untracked');
       expect(await readFile(join(f.t.dir, 'code.txt'), 'utf8')).toBe('peer clean code\n');
+      expect(await readFile(join(f.t.dir, pngPath))).toEqual(Buffer.from(png));
       expect(await f.command('ls-tree', '-r', '--name-only', 'HEAD')).not.toContain('staged.txt');
       await command(f.peer, 'pull', '--ff-only');
       expect(await readFile(join(f.peer, '.rowbly/boards/web/stories', story.key, 'story.json'), 'utf8')).toContain(

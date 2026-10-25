@@ -97,7 +97,7 @@ Each Plugin callback runs in a **stage** (ADR-0020 §1):
 | `body` (an operation's body) | writer | read only | no |
 | `replacement` | writer, plus `core()` once | read only | no |
 | `transform` | writer, for as long as the transform runs | read only | no |
-| `guard` | read-only view, plus pending `readFile` | read only | no |
+| `guard` | read-only view, plus pending `readFile` / `readBinaryFile` | read only | no |
 | `commit` | — (Rowbly saves; holds the lock) | — | — |
 | `reaction` | read-only view of the saved Change Set | read only, `warn` | no |
 | `doctor-check` | — (`DoctorData`) | read only | no |
@@ -129,10 +129,11 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 | Read | Sees |
 | --- | --- |
 | `plugin.services.*` (lists and gets) | stored records |
-| `plugin.files.read` / `files.list` | stored files |
+| `plugin.files.read` / `files.readBinary` / `files.list` | stored files |
 | `changes.changes`, `changes.story(key)`, `changes.board(id)` | the Change Set as it is when called, including this stage's own writes |
 | `changes.updateStory(key, fn)` | the latest version: the Change Set's, else the stored one |
 | `changes.readFile(scope, name)` | the pending text: the Change Set's, else the stored file; `null` for none |
+| `changes.readBinaryFile(scope, name)` | detached `Uint8Array` of the pending file, else the stored file; `null` for none |
 | `doctor.check`'s `data` | the records doctor read, and `local` (Local State); only Stories stored at their own key's folder |
 
 A hook that must see what earlier hooks of the same operation did reads through `changes`. File scopes in a Change Set:
@@ -141,6 +142,44 @@ A hook that must see what earlier hooks of the same operation did reads through 
 - Writing a file of a Story or Board that the same operation deletes fails with `CONFLICT`. Reading it gives `null`, and deleting it does nothing: the whole folder goes.
 - `updateStory` cannot change `key` or `boardId` (`VALIDATION`). Putting again a Story or Board that the operation deleted fails with `CONFLICT`.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused for reading, writing, listing and deleting.
+
+### Binary Plugin files
+
+`changes.writeBinaryFile(scope, name, bytes: Uint8Array)` creates or replaces a file in the same
+Change Set as records and text files. It copies the input before any asynchronous work, so callers
+may reuse their buffer immediately. `changes.readBinaryFile` reads pending bytes; `plugin.files.readBinary`
+reads only stored bytes under the Data Root lock. Both return detached arrays, or `null` for absence.
+They use the same names, scopes, symbolic link checks and stage lifetime rules as the text API.
+`changes.deleteFile` deletes either kind of file, without decoding invalid UTF-8. Await every write.
+
+`writeFile`, `readFile` and `plugin.files.read` keep their UTF-8 text behavior; an explicit text read
+of binary content decodes it as UTF-8. Binary writes and reads do not parse or serialize JSON.
+`FileChange` keeps `type: 'file'`, `plugin` and `path`. Text writes retain string `before`/`after` values.
+A binary write describes each present version as `{ kind: 'binary', size, sha256 }`, with size in
+bytes and a lowercase hexadecimal SHA-256; absent/deleted versions are `null`. Deletion or replacement
+through the text API describes stored valid UTF-8 as text and other bytes as a binary summary. This
+is a view convention, not a persisted file type: a deleted file containing valid UTF-8 is shown as
+text even if it was originally written through the binary API. Narrow each value with `typeof` or
+`kind` before using it. Snapshots contain no buffers and stay deeply frozen; payload bytes are private.
+
+```ts
+/** Saves PNG bytes and the Story's bag together in one recoverable operation. */
+export async function saveImage(plugin: PluginContext, key: string, png: Uint8Array): Promise<void> {
+  await plugin.operation('save-image', { key }, async (changes) => {
+    const scope = { story: key };
+    await changes.writeBinaryFile(scope, 'image.png', png);
+    await changes.updateStory(key, (story) => plugin.writeBag(story, { image: 'image.png' }));
+    const pending = await changes.readBinaryFile(scope, 'image.png');
+    if (pending === null) throw new Error('Missing pending image');
+  });
+  const stored = await plugin.files.readBinary({ story: key }, 'image.png');
+  if (stored === null) throw new Error('Missing saved image');
+}
+```
+
+The journal stages and recovers exact bytes. Doctor accepts scoped Plugin files without treating them
+as core JSON, and Git Automatic Commits and synchronization include them as ordinary raw files.
+See [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md).
 
 ## Errors
 

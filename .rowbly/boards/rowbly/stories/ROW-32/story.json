@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:41:19.763Z",
-  "updatedAt": "2026-10-25T17:42:25.428Z"
+  "updatedAt": "2026-10-25T18:01:23.905Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "huH8QYl3",
+          "author": "sunny",
+          "body": "Complexity 4/10. Plan accepted for codex/row-32-rowbly-grill: adapt the upstream interview and UI to Story Specs and Story-scoped ADRs, integrate packaging/docs, verify disposable sessions and packed installs, then run independent validation and capture evidence.",
+          "createdAt": "2026-10-25T18:01:23.904Z",
+          "updatedAt": "2026-10-25T18:01:23.904Z"
+        }
+      ]
+    }
+  }
 }
