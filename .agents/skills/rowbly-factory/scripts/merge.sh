@@ -13,11 +13,12 @@ pr=$1 key=$2
 rowbly=(${FACTORY_ROWBLY:-pnpm --silent dev})
 data_root=${FACTORY_DATA_ROOT:-$(git rev-parse --show-toplevel)/.rowbly}
 
-# GitHub reports UNKNOWN for a while after any push to the base branch, and checks may be pending.
+# GitHub reports UNKNOWN for a while after any push to the base branch. Checks may be pending, or not
+# registered yet right after a push to the PR (an empty list).
 for _ in $(seq 1 45); do
   state=$(gh pr view "$pr" --json mergeable,mergeStateStatus,reviewDecision,statusCheckRollup \
     -q '"\(.mergeable)|\(.mergeStateStatus)|\(.reviewDecision)|\([.statusCheckRollup[] | (.conclusion // .status)] | unique | join(","))"')
-  case "$state" in UNKNOWN* | *IN_PROGRESS* | *QUEUED* | *PENDING* | *"|BLOCKED|"*) sleep 10 ;; *) break ;; esac
+  case "$state" in UNKNOWN* | *IN_PROGRESS* | *QUEUED* | *PENDING* | *"|BLOCKED|"* | *"|") sleep 10 ;; *) break ;; esac
 done
 echo "#$pr $state"
 IFS='|' read -r mergeable merge_state review checks <<<"$state"
