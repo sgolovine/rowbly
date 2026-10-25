@@ -14,6 +14,7 @@ import {
 import { commands } from './commands';
 import { type EpicFileProblem, epicFileName, isUnavailable, readEpicFiles } from './epicFile';
 import { EpicBag, EpicFilter, EpicInput } from './model';
+import { reconcile } from './reconcile';
 import { storyEpic } from './service';
 
 /** Epic input, already parsed by `inputs`: `{ epic: id }` links, `{ epic: null }` unlinks. */
@@ -72,6 +73,7 @@ const FILE_FINDINGS: Record<EpicFileProblem, string> = {
 };
 
 export const epics = definePlugin({
+  reconcile,
   id: 'epics',
   name: 'Epics',
   description: 'Group Stories from any Boards into Epics',

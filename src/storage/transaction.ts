@@ -20,7 +20,7 @@ export const TRANSACTIONS_DIR = '.txn';
  */
 export type TransactionChange =
   /** Create or replace a file with `text`. Missing parent folders are created. */
-  | { kind: 'write'; path: string; text: string }
+  | { kind: 'write'; path: string; text: string | Uint8Array; mode?: number }
   /**
    * Delete a file or a whole folder. A missing path is nothing to do. After a file is deleted, its
    * empty parent folders are removed up to, but not including, `pruneTo`.
@@ -41,6 +41,8 @@ export type TransactionCheckpoint = 'staged' | 'prepared' | `applied:${number}` 
 export interface TransactionOptions {
   /** The operation clock; it stamps the manifest and orders transaction ids. */
   now?: () => Date;
+  /** Publication precondition, checked immediately before a live write or delete. */
+  beforeStep?: (step: TransactionStep) => void | Promise<void>;
   /** Called after each durable checkpoint. For tests. */
   onCheckpoint?: (checkpoint: TransactionCheckpoint) => void | Promise<void>;
 }
@@ -113,7 +115,8 @@ export async function prepareTransaction(
   const txnDir = join(canonical, TRANSACTIONS_DIR, id);
   try {
     for (const name of STAGING_DIRS) await io.mkdir(join(txnDir, name));
-    for (const [n, text] of writes.entries()) await io.writeFile(join(txnDir, 'staged', String(n)), text);
+    for (const [n, write] of writes.entries())
+      await io.writeFile(join(txnDir, 'staged', String(n)), write.text, 'wx', write.mode);
   } catch (err) {
     await removeQuietly(txnDir);
     throw err;
@@ -152,8 +155,8 @@ async function planSteps(
   root: string,
   canonical: string,
   plan: TransactionPlan,
-): Promise<{ steps: TransactionStep[]; writes: string[] }> {
-  const writes: { path: string; text: string }[] = [];
+): Promise<{ steps: TransactionStep[]; writes: { text: string | Uint8Array; mode?: number }[] }> {
+  const writes: { path: string; text: string | Uint8Array; mode?: number }[] = [];
   const deletes: { path: string; pruneTo?: string }[] = [];
   const moves: { from: string; to: string }[] = [];
   const seen = new Map<string, string>();
@@ -169,7 +172,7 @@ async function planSteps(
     if (change.kind === 'write') {
       const path = toRelative(root, canonical, change.path);
       claim(path, 'written');
-      writes.push({ path, text: change.text });
+      writes.push({ path, text: change.text, mode: change.mode });
     } else if (change.kind === 'delete') {
       const path = toRelative(root, canonical, change.path);
       const pruneTo = change.pruneTo === undefined ? undefined : toRelative(root, canonical, change.pruneTo, true);
@@ -248,7 +251,7 @@ async function planSteps(
   for (const [n, write] of writes.entries()) {
     steps.push({ kind: 'write', path: write.path, staged: `staged/${n}`, existed: await entryExists(abs(write.path)) });
   }
-  return { steps, writes: writes.map((w) => w.text) };
+  return { steps, writes: writes.map(({ text, mode }) => ({ text, mode })) };
 }
 
 /** A plan path as a normalized `/`-separated path relative to the Data Root; rejects escapes. */
@@ -440,7 +443,7 @@ async function commitPrepared(
   } catch {
     // Retry once, as recovery would, while the lock is still held.
     try {
-      await rollForward(canonical, txnDir, manifest, {});
+      await rollForward(canonical, txnDir, manifest, { beforeStep: options.beforeStep });
     } catch (err) {
       throw await partialSave(canonical, txnDir, manifest, err);
     }
@@ -467,7 +470,7 @@ async function rollForward(
       movedOut = true;
     }
     if (movedOut && (step.kind === 'moveOut' || step.kind === 'delete')) continue;
-    await applyStep(ctx, step, touched);
+    await applyStep(ctx, step, touched, options.beforeStep);
     await options.onCheckpoint?.(`applied:${n}`);
   }
   for (const dir of touched) await io.syncDir(dir);
@@ -485,7 +488,12 @@ function stepContext(canonical: string, txnDir: string): StepContext {
 }
 
 /** One step, done only if it is not done yet (ADR-0019 §2, "Recovery policy"). */
-async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<string>): Promise<void> {
+async function applyStep(
+  ctx: StepContext,
+  step: TransactionStep,
+  touched: Set<string>,
+  beforeStep?: TransactionOptions['beforeStep'],
+): Promise<void> {
   switch (step.kind) {
     case 'moveOut': {
       const from = ctx.at(step.from);
@@ -500,6 +508,7 @@ async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<s
       const path = ctx.at(step.path);
       const trash = ctx.at(step.trash);
       if ((await entryExists(path)) && !(await entryExists(trash))) {
+        await beforeStep?.(step);
         await io.rename(path, trash);
         if (!step.path.startsWith('moving/')) touched.add(dirname(path));
       }
@@ -523,6 +532,7 @@ async function applyStep(ctx: StepContext, step: TransactionStep, touched: Set<s
       const path = ctx.at(step.path);
       if (!(await entryExists(staged))) return;
       await io.mkdir(dirname(path));
+      await beforeStep?.(step);
       await io.rename(staged, path);
       touched.add(dirname(path));
       return;

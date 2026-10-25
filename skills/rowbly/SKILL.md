@@ -28,6 +28,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Group Stories from any Boards (`rowbly epics`, `--epic`) | [Epics Plugin](references/plugin-epics.md) |
 | Markdown documents for Stories and Boards (`rowbly specs`, `--spec`) | [Specs Plugin](references/plugin-specs.md) |
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
+| Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
 | What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
@@ -136,7 +137,7 @@ Data Root in context. Change global Me only when the user asks.
 
 ## 6. Plugins are off until the Data Root turns them on
 
-Rowbly ships six Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments and Git. Each is off until
+Rowbly ships seven Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Story Linking and Git. Each is off until
 the Data Root turns it on, and turning one on changes the Data Root for everyone who uses it. While a
 Plugin is off, its command is unknown (`rowbly tasks` exits 2 with the hint `Plugin "tasks" is off`)
 and so are its options on core commands (`--assignee` exits 2 with `unknown option`). Check with
@@ -145,19 +146,23 @@ say that you did; ask first for Assignees and Git. See [Plugins](references/plug
 
 ## 7. Keep the Story's Stage current
 
-When you work on a Story, its Stage shows the user where the work is. Move it yourself, without being
-asked. These are the defaults; where the Data Root's `ROWBLY.md` says otherwise, follow it (§8):
+When you work on a Story, its Stage shows the user where the work is. Read the Story and its Board's
+ordered Stages with `stories show` and `config show --board <id>` before choosing a destination.
+Use the configured keys, names and Stage order to match the work you were assigned
+([Stories](references/stories.md) §1). These are the defaults; where the Data Root's `ROWBLY.md` says
+otherwise, follow it (§8):
 
 - **Create** a Story in the `backlog` Stage (the default; leave out `--stage`) unless the user names
   another Stage.
-- **Start development**: before you change any code, move the Story to the in-progress Stage
-  (`in-progress` on most Boards; see [Stories](references/stories.md) §1 for a Board without one).
-- **Complete the work**: move the Story to `done` as your last step.
+- **Start work**: use the Stage for the activity, whether preparation, refinement, development or
+  review. Before changing code, move to the Board's development Stage if the Story is not there.
+- **Finish your assignment**: move the Story to the next appropriate Stage without waiting to be
+  asked. Refinement may hand off to a ready Stage; implementation may hand off to review. Move to
+  `done` only when the Story's workflow is complete, including any required review or approval.
 
-```sh
-rowbly stories move WEB-42 in-progress --json --no-prompt
-rowbly stories move WEB-42 done --json --no-prompt
-```
+Follow explicit user instructions about destinations and who updates the Board. If a supervisor is
+the designated Board writer, report the completed work and intended next Stage to that supervisor
+instead of moving the Story yourself. Otherwise make the move and verify it with `stories show`.
 
 ## 8. Follow the Data Root's `ROWBLY.md`
 
@@ -215,6 +220,7 @@ Rowbly's help, errors and files use these names; use them in commands, commit me
 ## Completion
 
 Each call you made exited 0, or you handled its exit code as described in the table above. A Story you
-worked on is in the Stage that matches its work (§7) and follows the Data Root's `ROWBLY.md` (§8).
-Report any change you could not make, with its `error.code` and message, any Plugin you turned on, and
-any part of `ROWBLY.md` that is out of date or that you changed.
+worked on is in the Stage that matches its next workflow step (§7) and follows the Data Root's
+`ROWBLY.md` (§8), or you reported the intended move to the designated Board writer. Report any change
+you could not make, with its `error.code` and message, any Plugin you turned on, and any part of
+`ROWBLY.md` that is out of date or that you changed.

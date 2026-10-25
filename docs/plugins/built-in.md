@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships seven Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -9,7 +9,8 @@ Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on wit
 | [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
 | [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
-| [Git](#git) | Automatic Commits for saved Rowbly changes | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
+| [Story Linking](#story-linking) | Blocking relationships between Stories on the same Board | [`story-linking/CONTEXT.md`](../../src/plugins/story-linking/CONTEXT.md) | [Plugin Data, ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md) |
+| [Git](#git) | Automatic Commits and upstream synchronization | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
@@ -59,6 +60,7 @@ A Task is a smaller unit of work inside exactly one Story, with its own name, de
 - A Story's Tasks are its bag: `"plugins": { "tasks": { "nextNumber": 4, "tasks": [ … ] } }`. The bag is kept, with `nextNumber`, when the last Task is deleted.
 - Each Task has `number`, `name`, `description`, `stage`, `createdAt` and `updatedAt`. Its Task Id is derived from the Story Key, so a Story that doctor renumbers keeps its Tasks; command output and `--json` add it as `id`.
 - A Task's Stage is one of its Board's effective Stages.
+- Task numbers are unique within a Story. A repeated number makes the bag invalid, even if its records are identical.
 
 **Commands**
 
@@ -82,6 +84,7 @@ Task Ids are case-insensitive (`web-42.3`). `stories show` has a Tasks row (`2/5
 **TUI:** a **Tasks** tab on the Story screen (`n` new Task, `enter` open, `m` move Stage, `e` edit, `d` delete), the Task screen and the Task form; a `✓ done/total` badge on a Story with Tasks in the board's Stages view and on its list view line.
 
 **Doctor:** `TASKS_UNKNOWN_STAGE` (error): a Task is in a Stage its Board does not have; move it with `rowbly tasks move`. `TASKS_COUNTER_BEHIND` (warning): `nextNumber` is not above the highest Task number; `--fix` raises it.
+Duplicate numbers produce `PLUGIN_DATA_INVALID` (warning) while Tasks is on; `--fix` leaves them unchanged.
 
 ## Epics
 
@@ -178,10 +181,65 @@ rowbly comments delete <KEY> <comment-id>                            # confirms;
 
 - A body is stored as given; a body that is empty or only whitespace is refused. `--body` is kept exactly; `--body-file`, stdin and `--edit` lose trailing whitespace, as every long-text flag does.
 - The author is Me when the Comment is added, read on each add.
+- Comment ids are unique within a Story. A repeated id makes the Thread invalid, even if its records are identical. Doctor reports `PLUGIN_DATA_INVALID` (warning) while Comments is on; `--fix` leaves it unchanged.
 - `comments.add` and `comments.update` return the Comment as other Plugins' transforms left it; a transform that removes it fails the operation with `CONFLICT`.
 - A change to a Thread that is stored invalid fails with `DATA_INTEGRITY` (exit 6) and saves nothing; repair it by hand, with `rowbly doctor` to find it. `comments list` exits 6 for it, `stories show` prints `Comments: unavailable (invalid)`, and the TUI tab says so.
 
 **TUI:** a **Comments** tab on the Story screen (`n` new Comment, `e` edit, `d` delete) with the Comment form, a multi-line text box. `stories show` and the Details tab have a Comments row with the count.
+
+## Story Linking
+
+Story Linking records that a Story **blocks** another Story on the same Board. The other Story shows
+**Blocked by** with the blocker's Story Key. Both directions can have any number of links, including
+opposing links and cycles. These relationships do not restrict Stage changes.
+
+**Data**
+
+Each link lives once on its blocker: `"plugins": { "story-linking": { "blocks": ["WEB-2"] } }`.
+Incoming links are derived by reading Stories on the same Board. A mutation stamps only the blocker's
+`updatedAt`; its last outgoing link removes the bag. The strict bag schema rejects unknown fields,
+and mutations never overwrite malformed data. Other Plugin Data is preserved.
+
+**Commands**
+
+```text
+rowbly plugins enable story-linking
+rowbly story-linking list <KEY>
+rowbly story-linking add <KEY> --blocks <KEY>
+rowbly story-linking add <KEY> --blocked-by <KEY>
+rowbly story-linking remove <KEY> --blocks <KEY>       # confirms; --yes when not interactive
+rowbly story-linking remove <KEY> --blocked-by <KEY>
+```
+
+- `add` and `remove` need exactly one direction flag. Keys are case-insensitive. Adding a link needs
+  existing Stories on the same Board; cross-Board and self links are `VALIDATION` (exit 2), and a
+  missing Story is `NOT_FOUND` (exit 3). Adding an existing link succeeds without changing data.
+- `list --json` is an array of `{ relation, key, name, available }`, with `relation` equal to `blocks`
+  or `blocked-by` relative to the requested Story. Missing targets have `name: null`, `available: false`.
+  `add` and `remove` return `{ blocker, blocked }` with canonical Story Keys.
+- Removing from either Story edits the same outgoing link on its blocker; no second edit is needed.
+  Removing a missing link is `NOT_FOUND`. A saved outgoing link to a missing target can still be removed.
+- `stories show` and the TUI Details tab show **Blocks** and **Blocked by** rows. `stories show --json`
+  returns the stored Story; use `story-linking list --json` for derived incoming links.
+- With the Plugin enabled, `stories.remove` removes incoming references in the same Change Set as
+  the deletion. An invalid linking bag on the Board refuses the whole deletion with `DATA_INTEGRITY`
+  (exit 6), so partial cleanup is never saved.
+- Disabling keeps all bags and hides the commands and tab. If a target is deleted while off, the
+  saved links remain until removed or repaired after re-enabling. Story Key reuse and collision
+  renumbering can make old links ambiguous ([ADR-0003](../agents/adr/0003-story-keys.md)); inspect
+  and correct them explicitly. The Plugin never guesses a new target for an old key.
+
+**TUI:** a **Links** tab on the Story screen, showing the direction, Story Key and name on every row.
+`↑`/`↓` selects a link; `enter` or a click opens its Story directly; `esc` returns. `/` filters rows.
+`n` opens the form with **Blocks** / **Blocked by** and a Story choice limited to this Board;
+`ctrl+s` adds the link. `d` removes the selected link after confirmation, from either end.
+Returning from a linked Story or the form refreshes the relationships.
+
+**Doctor:** `STORY_LINKING_INVALID_TARGET` (warning) reports missing, cross-Board and self targets;
+`--fix` removes those links atomically and preserves other Plugin Data. Invalid bags produce
+`PLUGIN_DATA_INVALID`, are never repaired as empty, and mutations of them fail with `DATA_INTEGRITY`.
+CLI `list` also exits 6 if any linking bag on the Board is invalid, because incoming links could be
+concealed. The TUI shows readable links with an explicit warning that the view may be incomplete.
 
 ## Upgrading from before Plugins
 
@@ -194,7 +252,7 @@ So **commit or back up the Data Root first**, then recreate what you need with t
 
 ## Git
 
-![Git settings in the TUI](../assets/git-settings.png)
+![Automatic Commits preferences in the TUI](../assets/git-settings.png)
 
 Enable with `rowbly plugins enable git`. The Data Root must be inside a Git repository; activation outside one fails with `VALIDATION` (exit 2). An enabled Plugin loaded outside Git is reported as failed with the same explanation.
 
@@ -204,14 +262,93 @@ Reactions persist work in a queue and return before Git runs. The worker copies 
 
 Personal preferences are in `local.json` under `plugins.git`:
 
+- `automaticCommits`: `true` (default, also when absent in older preferences) or `false`.
+- `synchronization`: `{ enabled: false, intervalSeconds: 300 }` by default. Its interval is independently configurable from 1 to 86400 seconds.
 - `frequency`: `change` (default) or `interval`.
 - `intervalSeconds`: an integer from 1 to 86400; default 300.
 - `authorName` and `authorEmail`: optional; omitted fields use effective `git config user.name` and `user.email`, including repository and global `.gitconfig` settings.
 
-Use `rowbly git show` to inspect these preferences and defaults. Use `rowbly git configure --frequency interval --interval 600`, optionally with `--author-name` and `--author-email`. An empty author flag restores the Git default. In the TUI settings (`,`), **Git** appears when the Plugin is enabled and loaded and offers the same fields. Preferences take effect immediately and are never committed.
+Use `rowbly git show` to inspect these preferences and defaults, including Automatic Commits On/Off (`automaticCommits` in JSON). Use `rowbly git configure --automatic-commits off` to pause locally while keeping the Plugin enabled, and `--automatic-commits on` to resume. Use `rowbly git configure --frequency interval --interval 600`, optionally with `--author-name` and `--author-email`. An empty author flag restores the Git default. In the TUI settings (`,`), **Git** appears when the Plugin is enabled and loaded and offers the same fields. Preferences take effect immediately and are never committed.
 
-Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. The next Rowbly load resumes pending work and commits it if due. There is no daemon or flush of future interval work on exit. Disabling the Plugin pauses waiting work and retains the pending paths for re-enabling; an already running commit may finish.
+Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. When Automatic Commits are On, the next Rowbly load resumes pending work and commits it if due. There is no daemon or flush of future interval work on exit. Turning Automatic Commits Off cancels its waiting timers and prevents queued Automatic Commits on changes, due intervals and restarts. Saved changes still add pending paths. Frequency, interval and author preferences remain saved and editable without turning Automatic Commits back On. Turning On resumes at the selected frequency, preserving the first-pending deadline (adjusted only by interval edits); an overdue interval commits immediately. Disabling the Plugin also pauses waiting work and retains the pending paths for re-enabling. An already running commit may finish; later edits remain pending.
 
-Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. There is no push, automatic branching or hook installation.
+Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. Automatic Commits do not push, create branches or install hooks.
 
 Doctor repair passes are Operations too. To inspect a complete repair before the next Automatic Commit, disable Git before `doctor --fix` and re-enable it after doctor exits 0; keep other Plugins on for their checks.
+
+
+### Automatic Merge Conflict Resolution
+
+This separate section in **Git** settings is Off by default. `m` opens its enable/interval form;
+`e` opens Automatic Commits preferences. Save either with `ctrl+s`. **Run now** and its `r` equivalent
+are disabled while Off, pending or active. The overview shows the configured upstream or prerequisite,
+next deadline, active phase, last attempt/result/finish time, local commit, repair count and evidence
+paths. Status refreshes while the section has focus; long results remain scrollable.
+
+```sh
+rowbly git configure --automatic-merge-resolution on --merge-interval 600
+rowbly git sync
+rowbly git show --json --no-prompt
+rowbly git configure --automatic-merge-resolution off
+```
+
+`git configure` patches only supplied fields, merging nested synchronization preferences under the
+Operation lock. An omitted author flag preserves the saved value; an explicit empty one clears it.
+Neither feature's On/Off or interval changes the other's preferences. Synchronization captures pending
+Rowbly data even with Automatic Commits Off. Both preferences are personal Local State, never shared.
+
+The scheduler uses persisted fixed-delay deadlines: initial scheduling time or last attempt completion
+plus the current interval. An interval edit recalculates from that anchor. Timers run anywhere in the
+open TUI, without keeping settings open; one overdue attempt resumes on the next Rowbly load. Command
+mode drains due/admitted work outside reactions, then exits without waiting for a future deadline.
+No daemon runs while closed. Off blocks future admission, including stale timer callbacks, and disables
+on-demand runs. Already admitted work may finish, including push. Host replacement, root switching
+and shutdown dispose future scheduling; saved preferences, deadlines and last results remain.
+
+An attempt fetches the configured upstream, prepares a merge in isolation, reconciles and validates
+Rowbly files, publishes a recoverable local result, then pushes normally to that same upstream. It
+runs without prompts or an editor. No rebase, force-push, automatic branching or hook installation is
+performed. Worker serialization spans processes and linked Git worktrees; short publication gates
+coordinate Rowbly reads/writes without holding a Data Root lock during Git subprocesses. Later saves
+remain pending rather than being cleared by an earlier capture.
+
+The deterministic rules are defined in [ADR-0034](../agents/adr/0034-git-synchronization-publishes-recoverably.md):
+
+- Combine independent fields and non-overlapping Markdown hunks, even when Git could merge JSON text
+  cleanly. For conflicting leaves or overlapping hunks, select by stable content/source ordering and
+  retain the exact base, both alternatives, provenance and decisions in committed content-addressed
+  `plugins/git/merge-evidence/` files. Evidence failure blocks publication.
+- Keep edits over deletions, including edited descendants. Distinct concurrent additions keep both
+  complete record/file subtrees with source-qualified Board/Story remapping; identical additions coalesce.
+- Keep Configuration Cascade levels separate. Restore referenced definitions, split incompatible
+  field types or relax constraints only to preserve valid retained data, recording original values.
+- Registered format handlers reconcile only their own supported Plugin Data and files, including
+  when their Plugin is Off. Unknown, invalid or future formats remain opaque; unsafe reconciliation
+  stops with an explanation and preserves alternatives, rather than stripping or migrating them.
+- Recognized current Tasks or Comments bags with repeated numbers or ids in BASE or either source
+  stop the attempt before local publication or push (`CONFLICT`, exit 4). Inputs, live branch,
+  index and remote stay unchanged. A future shape on another side does not hide a known duplicate.
+  Distinct additions in individually valid sources still retain both records with evidence.
+
+Unrelated staged, dirty and untracked content remains intact. Non-Rowbly conflicts, unsafe local
+path overlap, staged Rowbly ambiguity, detached HEAD, missing upstream and bounded authentication or
+network errors stop safely. A rejected push leaves a valid local merge and a **failed** result; the
+next enabled attempt fetches and reconciles again. Interrupted durable local publication completes
+before cooperating reads or writes, including when Off, without performing network work or newly
+pushing. External Git and editors are outside Rowbly's coordination; unexpected changes are reported.
+
+Run summaries persist in Git metadata per Data Root/worktree. `git show --json` returns them under
+`synchronizationRun`, while `git sync --json` returns a summary directly. Required `enabled` and
+`intervalSeconds` reflect current preferences; optional `branch`, `upstream` and `prerequisite`
+explain setup. `requested` denotes pending work; `active` has identity, process, host, start time and
+phase. `last` has `kind` (`synchronized`, `failed`, `interrupted`), message, start/finish time, optional
+commit/upstream, evidence paths and repair count. Times are epoch milliseconds. An active/pending run
+can coexist with an older last result; only a completed `synchronized` result proves success. A local
+commit after a rejected push does not. See the [user guide](../user-guide.md#automatic-merge-conflict-resolution).
+
+
+For explicit `git sync`, a completed failed attempt returns `CONFLICT` (exit 4), with the usual
+JSON error on stderr and the safe run summary in `error.details.synchronizationRun`, including any
+retained local commit and evidence paths. It prints no success result on stdout. An active or pending
+run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
+`git show` remains an inspection command and can successfully display a previous failed result.

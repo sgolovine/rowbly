@@ -27,6 +27,7 @@ rowbly tasks delete WEB-42.1 --yes --json --no-prompt
   their Story's Assignees.
 - Task Ids are case-insensitive (`web-42.1`) and need no `--board`.
 - Task numbers are never reused: after deleting `WEB-42.3`, the next Task is `WEB-42.4`.
+- Task numbers must be unique within one Story; repeated numbers make the stored bag invalid.
 - Moving every Task to a done Stage does **not** move the Story. Move the Story yourself.
 - Tasks have no Comments: comment on their Story.
 - `tasks edit` needs `--name` or a description flag, or it exits 2. Every change also stamps the
@@ -46,5 +47,7 @@ When doctor renumbers a Story after a merge, its Task Ids follow the new key.
 - `TASKS_UNKNOWN_STAGE` (error): a Task in a Stage its Board does not have. Move it with
   `rowbly tasks move <TASK-ID> <stage>`.
 - `TASKS_COUNTER_BEHIND` (warning): `nextNumber` is not above the highest Task number; `--fix` raises it.
+- Duplicate Task numbers produce `PLUGIN_DATA_INVALID` (warning) while Tasks is on. `--fix` leaves
+  the bag unchanged; preserve both records while resolving the duplicate identity by hand.
 - A change to the Tasks of a Story whose stored Tasks are invalid exits 6 and saves nothing;
   `tasks list` exits 6 for it. Repair the file by hand, using `rowbly doctor` to find it.

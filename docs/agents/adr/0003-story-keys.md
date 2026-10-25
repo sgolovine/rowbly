@@ -1,6 +1,6 @@
 # ADR-0003: Stories are identified by sequential keys
 
-**Status:** Accepted.
+**Status:** Accepted. Amended narrowly by [ADR-0034](0034-git-synchronization-publishes-recoverably.md).
 
 Boards and Epics are identified by their slugs. Stories are identified by a Story Key, such as `WEB-42`. The key is made of the Board's key prefix and a number, and it is also the story's filename. When you rename a story, its file is not renamed. Developers can type the key directly in commands, branch names and commit messages.
 

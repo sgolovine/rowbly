@@ -4,7 +4,7 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 
 | Page | What it covers |
 | --- | --- |
-| [Built-in Plugins](built-in.md) | Tasks, Epics, Specs and Comments: their data, commands, TUI and doctor checks |
+| [Built-in Plugins](built-in.md) | Each Plugin's data, commands, TUI and doctor checks |
 | [Writing a Plugin](writing-a-plugin.md) | Tutorial: from a five-line Plugin to fields, commands, screens, guards, files, doctor and tests |
 | [Plugin API reference](api.md) | Every contract a Plugin can rely on |
 | [Compatibility policy](compatibility.md) | API versions, data formats, migrations and dependencies |
@@ -15,7 +15,7 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 Built:
 
 - The Plugin API, the registry and loading; the operation pipeline (guard, transform, replace, react) with the Data Root lock and commit journal; Plugin Data and Plugin files; the `plugins` commands and the TUI **Plugins** settings section; every slot listed under [Surfaces](#surfaces).
-- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs) [Comments](built-in.md#comments) and [Git](built-in.md#git).
+- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs), [Comments](built-in.md#comments), [Story Linking](built-in.md#story-linking) and [Git](built-in.md#git).
 
 Planned, not built:
 

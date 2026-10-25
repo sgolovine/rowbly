@@ -74,7 +74,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 
 | Operation | Input | Result |
 | --- | --- | --- |
-| `git.configure` | `{ frequency, intervalSeconds, authorName?, authorEmail? }` | personal Git commit preferences |
+| `git.configure` | `{ automaticCommits?, synchronization?, frequency?, intervalSeconds?, authorName?, authorEmail? }` | personal Git preferences, merged with the latest Local State |
 | `epics.create` | `{ id, name, description }` | `Epic` |
 | `epics.edit` | `{ id, name?, description? }` | `Epic` |
 | `epics.close` | `{ id }` | `Epic` |
@@ -86,8 +86,17 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `comments.add` | `{ target, body }` | `Comment` |
 | `comments.update` | `{ target, id, body }` | `Comment` |
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
+| `story-linking.add` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
+| `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
+
+Story Linking's `blocker` and `blocked` name the same-Board source and target of a directed link.
+`add` validates both Stories and rejects a self link; duplicates save no changes. `remove` can remove
+an outgoing link whose target no longer exists. Only the blocker's bag and `updatedAt` change;
+the reciprocal view is derived. Its `stories.remove` transform removes incoming references in the
+deletion's Change Set, refusing the entire operation if an invalid linking bag on the Board prevents
+safe cleanup. Its `doctor.fix` repairs only invalid targets in valid bags and keeps other Plugin Data.
 
 ## Plugin input of core operations
 
