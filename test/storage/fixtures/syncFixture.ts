@@ -57,7 +57,9 @@ export async function syncFixture(
   await gitText(dir, ['read-tree', old], { index: temporary });
   await gitText(dir, ['update-index', '-z', '--index-info'], { index: temporary, input });
   const tree = await gitText(dir, ['write-tree'], { index: temporary });
-  const candidate = await gitText(dir, ['commit-tree', tree, '-p', old, '-m', 'prepared local merge']);
+  // Rewritten history need not descend from the old live tip. A root candidate proves the
+  // journal has no old-tip ancestry assumption, without adding setup work to the fault sweep.
+  const candidate = await gitText(dir, ['commit-tree', tree, '-m', 'prepared rewritten history']);
   const stagedOid = await gitText(dir, ['rev-parse', ':staged.txt']);
   // Carry forward the live index, including the unrelated staged blob.
   await writeFile(temporary, Buffer.from(indexBefore ?? '', 'base64'));

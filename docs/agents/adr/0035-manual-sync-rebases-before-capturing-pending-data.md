@@ -1,6 +1,6 @@
 # ADR-0035: Manual Sync rebases before capturing pending data
 
-**Status:** Accepted (ROW-17); private replay mechanism proven, feature implementation in progress.
+**Status:** Accepted (ROW-17). Built.
 
 ## Context
 

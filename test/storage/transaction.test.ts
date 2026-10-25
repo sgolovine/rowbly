@@ -228,6 +228,15 @@ describe('Git local publication', () => {
     const seed = await tempRoot();
     try {
       const template = await syncFixture(seed.dir, seed.path);
+      expect(
+        (
+          await template.process(
+            seed.dir,
+            ['merge-base', '--is-ancestor', template.plan.old, template.plan.candidate],
+            { allowFailure: true },
+          )
+        ).code,
+      ).toBe(1);
       // Copy only pristine preparation: no worker/root lock, reservation or publication journal.
       expect(await readdir(join(template.repo.gitDir, 'rowbly'))).toEqual(['test-index']);
       expect((await readdir(seed.path)).sort()).toEqual(['.gitignore', 'rowbly.config.json']);

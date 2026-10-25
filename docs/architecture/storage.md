@@ -133,7 +133,8 @@ before any Plugin is staged or started.
 `test/storage/transaction.test.ts` injects failures at every filesystem boundary and kills real
 processes before and after index reservation, durable intent, ref effects, file installation and index
 installation/phase recording. It verifies complete local recovery through a second linked worktree
-while synchronization is Off, binary bytes/executable modes, unrelated staged/dirty/untracked content,
+while synchronization is Off, a rewritten candidate that does not descend from the old live tip,
+binary bytes/executable modes, unrelated staged/dirty/untracked content,
 refusal of unexpected editor bytes and preservation of fresh identical-byte foreign index locks. The
 kept Plugin loading scenario verifies recovery before actual command registration and startup.
 
