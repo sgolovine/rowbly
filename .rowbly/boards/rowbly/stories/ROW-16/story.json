@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Create ROWBLY.md concept for agents using Rowbly",
   "description": "- Every rowbly board is setup a little differently\n- Teams and individuals often times have their own rituals around using a kanban board.\n- These rituals aren't really written down anywhere and seldom inforced in the application.\n\n- Because of the above, we want to encode those rituals into a ROWBLY.md file.\n- This file will live in the data root's `.rowbly/` folder.\n- Update rowbly reference to have the agent look for this and use it within the reference\n- Update official skill references so official skills know how to use/respect/read this file and update when necissary.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aQ",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:35:40.032Z",
-  "updatedAt": "2026-10-25T16:24:36.552Z",
+  "updatedAt": "2026-10-25T16:50:58.002Z",
   "plugins": {
     "comments": {
       "comments": [
