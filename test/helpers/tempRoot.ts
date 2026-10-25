@@ -16,10 +16,10 @@ export interface TempRoot {
 
 /**
  * Creates `<tmp>/.rowbly/` with a minimal `rowbly.config.json`. Inside a test it is removed when the
- * test finishes; elsewhere call `cleanup()`.
+ * test finishes; elsewhere call `cleanup()`. An optional parent selects the scratch filesystem.
  */
-export async function tempRoot(): Promise<TempRoot> {
-  const dir = await mkdtemp(join(tmpdir(), 'rowbly-test-'));
+export async function tempRoot(parent = tmpdir()): Promise<TempRoot> {
+  const dir = await mkdtemp(join(parent, 'rowbly-test-'));
   const path = join(dir, '.rowbly');
   await mkdir(path);
   await writeFile(join(path, 'rowbly.config.json'), `${JSON.stringify({ version: 1 }, null, 2)}\n`);
