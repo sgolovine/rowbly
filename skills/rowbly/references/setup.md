@@ -158,5 +158,7 @@ rowbly fields remove estimate --board web
 ## Completion
 
 `rowbly config show --board <id> --json --no-prompt` shows the Stages and Custom Fields you intended,
-from the level you intended, and `rowbly doctor --json --no-prompt` exits 0. If doctor reports
+from the level you intended, and `rowbly doctor --json --no-prompt` exits 0. If the Data Root's
+`ROWBLY.md` mentions a Stage, Custom Field or Plugin you changed, tell the user and, with their
+agreement, update it ([Data Root layout](data-root.md#rowblymd-how-this-data-root-is-used)). If doctor reports
 findings, follow [Check and repair a Data Root](doctor.md).
