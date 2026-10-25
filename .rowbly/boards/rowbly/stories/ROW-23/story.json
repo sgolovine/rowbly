@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-23",
+  "boardId": "rowbly",
+  "name": "TextArea: Make \"ctrl+s\" escape fullscreen",
+  "description": "Right now when in full-screen on a textarea, I can only exit by pressing \"esc\". Make it so I can also exit by pressing \"ctrl+s\" since more users are familiar with that action to save their current work and \"esc\" feels jarring after you have entered a bunch of text",
+  "stage": "todo",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-25T16:55:25.261Z",
+  "updatedAt": "2026-10-25T16:55:25.261Z"
+}
