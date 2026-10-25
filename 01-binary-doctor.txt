@@ -1,0 +1,26 @@
+ROW-26 read-only doctor validation
+Data Root: /tmp/row-26-validation-okjkakva/binary-doctor/.rowbly
+File: boards/web/stories/WEB-1/plugins/attachments/image.png
+PNG bytes: 68
+SHA-256: 273349097030afc74d6a4afea6cb1928960e75202fa459677adf617672ac3466
+Fixture seeded through filesystem only; no Rowbly mutation command.
+{
+  "findings": [
+    {
+      "code": "PLUGIN_DATA_UNCHECKED",
+      "severity": "info",
+      "path": "boards/web/stories/WEB-1/plugins/attachments/image.png",
+      "message": "Plugin \"attachments\" is not in this version of Rowbly; its data (1 file) is kept but not checked",
+      "fixable": false,
+      "details": {
+        "plugin": "attachments"
+      }
+    }
+  ],
+  "fixed": [],
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 1
+  }
+}
