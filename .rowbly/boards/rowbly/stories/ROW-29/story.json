@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T21:12:31.189Z",
+  "updatedAt": "2026-10-25T21:29:56.051Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -86,6 +86,13 @@
           "body": "Draft PR #114 opened on ROW-28 with verified screenshots. All four checks passed at f2f4f31; functional validation signed off. Current main’s ROW-24 merge conflicts require supervisor review. Board unchanged on rook.",
           "createdAt": "2026-10-25T21:12:30.586Z",
           "updatedAt": "2026-10-25T21:12:30.586Z"
+        },
+        {
+          "id": "W4TH3GBR",
+          "author": "sunny",
+          "body": "Main integrated at 2cec02f; ROW-29-only diff and all local checks pass. CI Unit failed on the existing transaction.test.ts:236 timeout; Verify and CLI passed. Awaiting the separately owned storage-test fix before final CI completion.",
+          "createdAt": "2026-10-25T21:29:56.050Z",
+          "updatedAt": "2026-10-25T21:29:56.050Z"
         }
       ]
     }
