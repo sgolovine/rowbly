@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:13.579Z",
-  "updatedAt": "2026-10-25T17:40:44.219Z",
+  "updatedAt": "2026-10-25T18:30:25.059Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "ybWdXYeP",
+          "author": "sunny",
+          "body": "Starting the CI clipboard smoke job from main; the draft PR will wait for ROW-30’s stack branch.",
+          "createdAt": "2026-10-25T18:30:25.058Z",
+          "updatedAt": "2026-10-25T18:30:25.058Z"
+        }
+      ]
     }
   }
 }

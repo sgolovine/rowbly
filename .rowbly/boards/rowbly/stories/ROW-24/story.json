@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:29:04.286Z",
-  "updatedAt": "2026-10-25T18:21:36.528Z",
+  "updatedAt": "2026-10-25T18:33:41.238Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -36,6 +36,13 @@
           "body": "Independent validation passed typecheck, lint, 81 unit tests and 20 CLI tests, plus atomic CLI/TUI checks. Signoff withheld: latest main needs an API-doc merge resolution, the suite exceeds 100 tests, and duplicate-Spec errors need visible placement. Fresh correction and revalidation assigned. Screenshots preserved outside checkouts.",
           "createdAt": "2026-10-25T18:21:36.527Z",
           "updatedAt": "2026-10-25T18:21:36.527Z"
+        },
+        {
+          "id": "DkZl5gCO",
+          "author": "sunny",
+          "body": "Corrections pushed at 1b967ba: latest-main integration preserves both create and Clipboard APIs, Plugin errors stay visible above drafts, and redundant test coverage was consolidated to restore the 100-test limit. Typecheck, lint, 80 unit tests and 20 CLI tests passed. Fresh independent validation and screenshots are next.",
+          "createdAt": "2026-10-25T18:33:41.237Z",
+          "updatedAt": "2026-10-25T18:33:41.237Z"
         }
       ]
     }

@@ -227,11 +227,18 @@ belongs to a Board (`--board`) and Stories link to it. The default Story Spec sl
 rowbly specs list --story WEB-42 --json --no-prompt                      # [{slug, title, text}]
 rowbly specs show --story WEB-42 --json --no-prompt                      # the Story Spec `spec`
 rowbly specs show design --story WEB-42 --json --no-prompt               # another slug
+rowbly specs show auth-flow --board web --json --no-prompt               # a linked Board Spec
 rowbly specs create --story WEB-42 --title "Login page" --file ./spec.md --json --no-prompt   # or --text, --file -
+rowbly specs edit spec --story WEB-42 --file - --json --no-prompt        # replace main Spec from stdin
+rowbly specs create adr-0001-storage --story WEB-42 --title "ADR 0001: Storage" --file - --json --no-prompt
 rowbly specs edit design --story WEB-42 --file ./design.md --json --no-prompt
 rowbly specs list --board web --json --no-prompt                         # Board Specs
 rowbly stories edit WEB-42 --add-spec auth-flow --json --no-prompt       # --spec replaces, --remove-spec unlinks
 ```
+
+`create` requires `--title`, including with `--file -`; an explicit slug allows multiple Story Specs.
+`show`, `create` and `edit` return `{slug, title, text}`. `plugins.specs.specs` holds linked Board Spec
+slugs; `plugins.epics.epic` holds the linked Epic id (or null).
 
 Always name a Story Spec with `--story WEB-42`; `specs show web-42` looks for a Board Spec.
 
