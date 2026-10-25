@@ -1169,7 +1169,7 @@ describe('isolated upstream synchronization', () => {
     try {
       const f = await remoteFixture();
       const { builtInPlugins } = await import('../../src/plugins');
-      const { mergeData } = await import('../../src/services/plugins/mergeData');
+      const { mergeData, evidenceSource } = await import('../../src/services/plugins/mergeData');
       const { createReplayHistory } = await import('../../src/services/plugins/replayHistory');
       const { synchronizeGitRebase } = await import('../../src/storage/gitRebaseSync');
       const { withGitWorker } = await import('../../src/storage/gitRepository');
@@ -1255,6 +1255,7 @@ describe('isolated upstream synchronization', () => {
       pending.plugins.comments.comments.find((value: { body: string }) => value.body === 'later').body = 'pending';
       await save(f.t.dir, pending);
       const phases: string[] = [];
+      let finalMergeChecked = false;
       const run = () =>
         withGitWorker(f.repo, () =>
           synchronizeGitRebase(
@@ -1262,7 +1263,35 @@ describe('isolated upstream synchronization', () => {
             f.t.root,
             { automaticCommits: false, frequency: 'change', intervalSeconds: 300 },
             (read) => coordinated(f.t.root, 'rebase regression capture', read),
-            (history) => createReplayHistory(history, builtInPlugins),
+            (history) => {
+              const replay = createReplayHistory(history, builtInPlugins);
+              let finalMerge: ReturnType<typeof createReplayHistory> | undefined;
+              return {
+                async replay(step, current) {
+                  finalMerge ??= createReplayHistory(
+                    { ...history, old: await history.read(editedMerge) },
+                    builtInPlugins,
+                  );
+                  if (step.base === editedMerge) {
+                    // The same captured graph, ending at its merge with descendant edits treated as pending.
+                    const pendingId = 'pending:final-merge-regression';
+                    const result = await finalMerge.finish(current, {
+                      id: pendingId,
+                      files: (await history.read(old)).files,
+                    });
+                    const proof = Object.entries(result.files)
+                      .filter(([path]) => result.evidence.includes(path))
+                      .map(([, file]) => JSON.parse(Buffer.from(file.data, 'base64').toString()))
+                      .find((proof) => proof.kind === 'replay' && proof.original.commit.id === pendingId);
+                    expect(proof.original.current).toEqual(evidenceSource(current));
+                    expect(proof.projected.current.files).not.toEqual(proof.original.current.files);
+                    finalMergeChecked = true;
+                  } else await finalMerge.replay(step, current);
+                  return replay.replay(step, current);
+                },
+                finish: (current, pending) => replay.finish(current, pending),
+              };
+            },
             async (phase) => {
               phases.push(phase);
             },
@@ -1278,6 +1307,7 @@ describe('isolated upstream synchronization', () => {
         );
       const result = await run();
       expect(result.pushed).toBe(true);
+      expect(finalMergeChecked).toBe(true);
       const final = await read(f.t.dir);
       expect(final).toMatchObject({ name: 'New upstream', description: 'resolution only\n' });
       expect(final.plugins.tasks.tasks.map((value: { name: string }) => value.name).sort()).toEqual([
