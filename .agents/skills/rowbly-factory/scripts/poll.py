@@ -15,6 +15,7 @@ import re
 import sys
 import time
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the skill folder
 from factory_common import load, rowbly, save, ssh, thread_show, threads
 
 MARKERS = {"ROWBLY-UPDATE": r"ROWBLY-UPDATE \S+", "QUESTIONS FOR USER": r"QUESTIONS FOR USER", "DONE": r"\bDONE [A-Z][A-Z0-9]*-\d+"}

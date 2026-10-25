@@ -12,6 +12,7 @@ import hashlib
 import re
 import sys
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the skill folder
 from factory_common import load, rowbly, save, thread_show, threads
 
 BLOCK = re.compile(r"ROWBLY-UPDATE (\S+)\n(.*?)(?:```|\n\n|\Z)", re.S)
