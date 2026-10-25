@@ -413,6 +413,34 @@ rowbly plugins disable <id>    # keeps its settings and data
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 
+<!-- BEGIN skills -->
+### Skills
+
+`rowbly skills` starts agent skills that use Rowbly. A new skill holds the Rowbly reference (the
+`skills/rowbly-reference.md` page of this version of Rowbly) in its `references/` folder, and its
+`SKILL.md` opens with a short paragraph that sends the agent there. Both commands work in the current
+folder and need no Data Root.
+
+```text
+rowbly skills create [name] [--harness <harness>] [--description <text>]
+rowbly skills list             # the skills here that hold the Rowbly reference
+```
+
+- `create` writes `<harness folder>/<name>/SKILL.md` and `<harness folder>/<name>/references/rowbly-reference.md`. Without `name` it asks for one, or exits 2 with `--no-prompt`. The name uses lowercase letters, digits and single hyphens, at most 64 characters (exit 2 otherwise). A skill folder that already exists is not changed (exit 4).
+- `--harness` picks the agent whose skills folder gets the skill. Without `--description`, `SKILL.md` gets a placeholder description to replace.
+
+  | `--harness` | Skills folder |
+  | --- | --- |
+  | `generic` (the default), `codex` | `.agents/skills` |
+  | `claude` | `.claude/skills` |
+  | `gemini` | `.gemini/skills` |
+  | `pi` | `.pi/skills` |
+  | `cursor` | `.cursor/skills` |
+
+- `list` looks in every folder of the table and shows each skill that holds `SKILL.md` and `references/rowbly-reference.md`, with the harnesses that read it. `--json` prints `[{name, description, harnesses, path}]`, with `path` relative to the current folder.
+- The reference is a copy: after you upgrade Rowbly, copy `skills/rowbly-reference.md` from the npm package over it again.
+<!-- END skills -->
+
 <!-- BEGIN tui -->
 ### Automatic Git commits
 
