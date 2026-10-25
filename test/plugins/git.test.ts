@@ -12,6 +12,7 @@ import { drainGitQueue } from '../../src/services/plugins/git';
 import * as gitStorage from '../../src/storage/git';
 import { pendingPath, readGitPending } from '../../src/storage/git';
 import { deferred } from '../helpers/deferred';
+import { tempRoot } from '../helpers/tempRoot';
 import { pluginRoot, withPlugins } from './helpers';
 
 const exec = promisify(execFile);
@@ -249,5 +250,60 @@ describe('Git automatic commits', () => {
       spy.mockRestore();
       writing.mockRestore();
     }
+  });
+
+  it('Sync rebases and pushes without touching staging, and keeps local work when the upstream conflicts', async () => {
+    const f = await fixture();
+    const story = await f.services.stories.create('web', { name: 'Base' });
+    await writeFile(join(f.t.dir, 'notes.txt'), 'notes\n');
+    await f.command('add', 'notes.txt');
+    await f.command('commit', '-m', 'notes');
+    const base = (await tempRoot()).dir;
+    const remote = join(base, 'remote.git');
+    const other = join(base, 'other');
+    await command(base, 'init', '--bare', '-b', 'main', remote);
+    await f.command('remote', 'add', 'origin', remote);
+    await f.command('push', '-u', 'origin', 'main');
+    await command(base, 'clone', remote, other);
+    await command(other, 'config', 'user.name', 'Other');
+    await command(other, 'config', 'user.email', 'other@example.com');
+    const theirs = async (file: string, edit: (text: string) => string) => {
+      await command(other, 'pull', '--rebase');
+      await writeFile(join(other, file), edit(await readFile(join(other, file), 'utf8').catch(() => '')));
+      await command(other, 'add', file);
+      await command(other, 'commit', '-m', `edit ${file}`);
+      await command(other, 'push');
+    };
+    const file = `.rowbly/boards/web/stories/${story.key}/story.json`;
+    const sync = () => f.services.plugins.context('git').git.sync({});
+    const remoteHead = () => command(remote, 'rev-parse', 'main');
+    await writeFile(join(f.t.dir, 'staged.txt'), 'staged');
+    await f.command('add', 'staged.txt');
+    await writeFile(join(f.t.dir, 'notes.txt'), 'unstaged\n');
+    const staging = async () => [
+      await f.command('diff', '--cached', '--name-only'),
+      await f.command('diff', '--name-only'),
+    ];
+
+    // A Rowbly change made by hand is pending; the upstream has an unrelated commit.
+    await theirs('other.txt', () => 'other\n');
+    await writeFile(join(f.t.dir, file), (await readFile(join(f.t.dir, file), 'utf8')).replace('Base', 'Pending'));
+    await expect(sync()).resolves.toEqual({ committed: true, pulled: 1, pushed: 1, upstream: 'origin/main' });
+    expect(await remoteHead()).toBe(await f.command('rev-parse', 'HEAD'));
+    expect(await f.command('show', `HEAD:${file}`)).toContain('Pending');
+    expect(await f.command('ls-files', '--', '.rowbly/local.json')).toBe('');
+    expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
+
+    // The upstream and a local Automatic Commit change the same Story.
+    await theirs(file, (text) => text.replace('Pending', 'Theirs'));
+    const pushed = await remoteHead();
+    await f.services.stories.update(story.key, { name: 'Mine' });
+    const local = await f.command('rev-parse', 'HEAD');
+    await expect(sync()).rejects.toThrow(`conflict with origin/main in ${file}`);
+    expect(await f.command('rev-parse', 'HEAD')).toBe(local);
+    expect(await f.command('show', `HEAD:${file}`)).toContain('Mine');
+    expect(await staging()).toEqual(['staged.txt', 'notes.txt']);
+    expect(await remoteHead()).toBe(pushed);
+    expect(await f.command('worktree', 'list')).not.toContain('rowbly-sync-');
   });
 });
