@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:11.570Z",
-  "updatedAt": "2026-10-25T21:06:07.683Z",
+  "updatedAt": "2026-10-25T21:22:54.504Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -51,6 +51,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/113 opened against main. Validation signed off at 95a9f1d: typecheck, lint, 80 unit tests, 20 CLI tests, and build PASS. Screenshots published; all 20 raw URLs return HTTP 200. ROW-24 integration and native clipboard/Windows PTY limitations documented. No checkout Board changes made.",
           "createdAt": "2026-10-25T21:06:07.078Z",
           "updatedAt": "2026-10-25T21:06:07.078Z"
+        },
+        {
+          "id": "JLGfpei3",
+          "author": "sunny",
+          "body": "PR #113 conflicts resolved by merging main and integrating ROW-24’s tabbed form hooks. Pushed 5249d7c. Independent validation signed off: typecheck/lint/80 unit/20 CLI PASS, tabbed paste flow verified. Ten refreshed screenshots published and verified. PR mergeable; CI passes. ROW-29 can merge the updated branch.",
+          "createdAt": "2026-10-25T21:22:54.503Z",
+          "updatedAt": "2026-10-25T21:22:54.503Z"
         }
       ]
     }
