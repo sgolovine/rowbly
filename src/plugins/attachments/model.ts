@@ -42,7 +42,8 @@ export const AttachmentsInput = z.object({
           .string()
           .min(12)
           .max(4 * Math.ceil(MAX_ATTACHMENT_BYTES / 3))
-          .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+          // A repeated quartet group can overflow the regex stack on supported large images.
+          .refine((png) => png.length % 4 === 0 && /^[A-Za-z0-9+/]*={0,2}$/.test(png), 'Invalid base64'),
       }),
     )
     .min(1)
