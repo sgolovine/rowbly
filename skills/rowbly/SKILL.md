@@ -27,7 +27,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Group Stories from any Boards (`rowbly epics`, `--epic`) | [Epics Plugin](references/plugin-epics.md) |
 | Markdown documents for Stories and Boards (`rowbly specs`, `--spec`) | [Specs Plugin](references/plugin-specs.md) |
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
-| Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
+| Commit Rowbly changes to git automatically (`rowbly git`), or the TUI's Sync (`S`) | [Git Plugin](references/plugin-git.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
 | What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
 | The user asks how to do something in the TUI | [The TUI, for the user](references/tui.md) |

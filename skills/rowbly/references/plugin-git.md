@@ -1,4 +1,4 @@
-# Git Plugin: Automatic Commits
+# Git Plugin: Automatic Commits and Sync
 
 Every command below takes `--json --no-prompt`.
 
@@ -40,8 +40,8 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
   `.txn/` are excluded; git ignores still apply.
 - Other paths and unrelated staged files stay untouched. An affected path that already has staged
   changes is refused with a warning instead of committed.
-- Hooks and commit signing are turned off for Automatic Commits. It never pushes, creates branches or
-  installs hooks.
+- Hooks and commit signing are turned off for Automatic Commits. They never push, create branches or
+  install hooks; only Sync pushes (§6).
 
 ## 4. When it commits
 
@@ -62,6 +62,34 @@ rowbly git configure --author-name '' --author-email '' --json --no-prompt  # ba
 Git first (`rowbly plugins disable git`), remember that it was on, run the repairs until
 `rowbly doctor` exits 0, then `rowbly plugins enable git`. Keep other Plugins on so their checks run.
 
+## 6. Sync (TUI only)
+
+When the Git Plugin is on, the TUI header shows **Sync** (key `S`). There is no `rowbly` command for it:
+tell the user to press `S`, or do the same with git yourself (`git pull --rebase`, then `git push`)
+only when they ask you to push.
+
+Sync, in order: commits pending Rowbly changes under the Data Root (changed, added and deleted files;
+never `local.json`, `.lock`, `.lock.break`, `.txn/` or `.*.tmp`), only when there are some; fetches;
+rebases onto the branch's upstream in a temporary worktree, then moves the branch like `git checkout`,
+keeping the user's other staged and unstaged changes; pushes to the upstream, never forced. The header
+shows `Sync…` while it runs and `S` does nothing until it ends. The success toast
+(`Synced with origin/main · …`) shows only after the push.
+
+Every failure shows an error toast and keeps local commits:
+
+| Toast says | Fix |
+| --- | --- |
+| HEAD is detached | check out a branch |
+| branch … has none (no upstream) | `git push -u origin <branch>` or `git branch --set-upstream-to origin/<branch>` |
+| a rebase, merge, cherry-pick or revert is in progress | finish or abort it |
+| needs a Git author name and email | `git config user.name` / `user.email`, or `rowbly git configure --author-name … --author-email …` |
+| already have staged changes | commit or unstage the staged Rowbly file |
+| could not fetch / could not push | the toast quotes git; fix the network or credentials |
+| your commits conflict with origin/main in <files> | nothing was pushed and the branch is unchanged; `git pull --rebase`, resolve, then Sync again |
+| could not update your working tree | commit or stash the user's change to the named file |
+| branch changed / upstream moved during Sync | Sync again |
+| Sync is already running | wait for it |
+
 ## Common mistakes
 
 - **HIGH: picking `change` when the user asked for commits every N minutes.** Use
@@ -70,3 +98,5 @@ Git first (`rowbly plugins disable git`), remember that it was on, run the repai
   deadline; the next Rowbly run commits it.
 - **MEDIUM: enabling it with unrelated edits under `.rowbly/`.** They are swept into the next Automatic
   Commit. Start from a clean baseline.
+- **MEDIUM: looking for a `rowbly git sync` command.** There is none; Sync is the TUI's `S`. Never
+  force-push to recover from a failed Sync.

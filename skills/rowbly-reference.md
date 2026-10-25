@@ -223,6 +223,8 @@ Always name a Story Spec with `--story WEB-42`; `specs show web-42` looks for a 
 **Git** (`git`): commits saved Rowbly changes automatically (`chore: update Rowbly data`). Enable it
 only when the user asks. `rowbly git show` and `rowbly git configure --frequency change|interval
 --interval <seconds>` manage personal preferences. When it is on, do not also commit `.rowbly/` yourself.
+In the TUI, `S` (**Sync**) commits pending Rowbly changes, rebases onto the branch's upstream and pushes,
+never forced; there is no Sync command. On a failed Sync, keep local commits and never force-push.
 
 ## 9. Setup and repair
 

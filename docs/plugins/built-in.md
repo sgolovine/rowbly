@@ -9,7 +9,7 @@ Rowbly ships six Built-in Plugins. Each is off until a Data Root turns it on wit
 | [Epics](#epics) | Groups of Stories across Boards, with Epic Progress | [`epics/CONTEXT.md`](../../src/plugins/epics/CONTEXT.md) | [ADR-0014](../agents/adr/0014-epics-return-as-a-built-in-plugin.md) |
 | [Specs](#specs) | Markdown Spec documents for Boards and Stories | [`specs/CONTEXT.md`](../../src/plugins/specs/CONTEXT.md) | [ADR-0015](../agents/adr/0015-specs-are-markdown-files.md) |
 | [Comments](#comments) | Comment Threads on Stories | [`comments/CONTEXT.md`](../../src/plugins/comments/CONTEXT.md) | [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md) |
-| [Git](#git) | Automatic Commits for saved Rowbly changes | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
+| [Git](#git) | Automatic Commits for saved Rowbly changes, and Sync with the upstream | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md), [ADR-0035](../agents/adr/0035-manual-sync-rebases-in-a-temporary-worktree.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
@@ -212,6 +212,16 @@ Use `rowbly git show` to inspect these preferences and defaults. Use `rowbly git
 
 Interval mode starts the deadline with the first pending change and batches later changes without moving the deadline. Changing the configured interval adjusts that deadline from the first pending change, and deferred commits use the latest saved author preferences. No change means no commit. Pending paths and the deadline persist under Git's own directory, separate for each Data Root and worktree. Timers run only while Rowbly is alive; command mode does not wait for a future deadline. The next Rowbly load resumes pending work and commits it if due. There is no daemon or flush of future interval work on exit. Disabling the Plugin pauses waiting work and retains the pending paths for re-enabling; an already running commit may finish.
 
-Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. There is no push, automatic branching or hook installation.
+Git failures warn after the Rowbly change has saved; the Operation still succeeds. Pending paths remain for the next run to retry. Missing author configuration, an index lock or a merge conflict can prevent a commit. Commit hooks and signing are disabled for Automatic Commits to prevent hook loops and interactive signing prompts. Automatic Commits never push; there is no automatic branching or hook installation.
+
+**Sync.** The Plugin adds the **Sync** Action (key `S`, target `none`) to the TUI header. It runs `git.sync` (ADR-0035) on the Automatic Commits queue, under the same lock in Git's directory, and holds the Data Root lock only while it copies pending files:
+
+1. Preflight: HEAD is on a branch with an upstream, no rebase, merge, cherry-pick or revert is in progress, and an author is set.
+2. Pending Rowbly data under the Data Root, found with `git status` (changed, added and deleted files, without Local State, `.lock`, `.lock.break`, `.txn/` or `.*.tmp` files), is committed as an Automatic Commit would be, from a snapshot. With nothing pending, there is no commit. A path the user staged is refused.
+3. `git fetch <remote>`.
+4. When the upstream has commits that HEAD lacks: a fast-forward when HEAD has no commits of its own, else a rebase in a temporary detached worktree under the system temp folder, with hooks and signing off. A conflict aborts the rebase, removes the worktree and reports the conflicting files; the live HEAD, index and working tree are unchanged. The result lands with `git update-ref <branch> <new> <old>` (refused if the branch moved) and `git read-tree -m -u <old> <new>`, which keeps unrelated staged and unstaged changes and refuses to overwrite local changes.
+5. `git push <remote> <new>:<upstream branch>`, never forced, with hooks off. A rejected push reports that the upstream moved; local commits stay.
+
+The TUI shows `Sync…` while it runs, ignores `S` until it ends, and shows the success toast only after the push. There is no Sync command; in command mode, use Git.
 
 Doctor repair passes are Operations too. To inspect a complete repair before the next Automatic Commit, disable Git before `doctor --fix` and re-enable it after doctor exits 0; keep other Plugins on for their checks.

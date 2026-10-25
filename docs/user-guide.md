@@ -434,6 +434,31 @@ Interval mode batches changes from the first pending write without postponing th
 
 Git failures warn without undoing a saved Rowbly change; pending work is retried on a later run. Git hooks and commit signing are disabled for these commits. Git never pushes automatically. See [Git Plugin details](plugins/built-in.md#git).
 
+### Sync with Git
+
+When the Git Plugin is on, the TUI header shows **Sync** (key `S`). Sync sends your Rowbly changes to the current branch's upstream and brings in your team's, like `git pull --rebase` followed by `git push`:
+
+1. It commits pending Rowbly changes to Stories and configuration, including new and deleted files, as one `chore: update Rowbly data` commit. With nothing pending it makes no commit. Local State (`local.json`), lock and transaction files, and files outside the Data Root are never committed.
+2. It fetches the upstream's remote.
+3. When the upstream has new commits, it rebases your commits onto them in a temporary Git worktree, then moves your branch to the result the way `git checkout` would. Your other staged and unstaged changes stay as they were.
+4. It pushes to the upstream. It never force-pushes.
+
+While Sync runs, the header shows `Sync…` and `S` does nothing; Automatic Commits wait for it. A toast says `Synced with <upstream>` only after the push succeeds, with what it committed, pulled and pushed. Any failure shows an error toast with its cause, and keeps your local commits:
+
+| Error | What to do |
+| --- | --- |
+| HEAD is detached | Check out a branch |
+| The branch has no upstream | `git push -u origin <branch>`, or `git branch --set-upstream-to origin/<branch>` |
+| A rebase, merge, cherry-pick or revert is in progress | Finish or abort it in Git |
+| No Git author name or email | Set `git config user.name` and `user.email`, or the author in the Git settings |
+| A Rowbly file you changed is already staged | Commit or unstage it |
+| Fetch or push failed (network, credentials) | The toast shows Git's message; fix it and press `S` again |
+| Your commits conflict with the upstream | Nothing was pushed and your branch is unchanged; run `git pull --rebase`, resolve the conflict, and press `S` again |
+| A file you changed locally would be overwritten | Commit or stash your change to that file |
+| The branch or the upstream changed during Sync | Press `S` again |
+
+Sync runs Git without hooks or commit signing, like Automatic Commits. There is no `rowbly` command for Sync; use `git pull --rebase` and `git push` in command mode.
+
 
 ## Interactive mode (TUI)
 
@@ -470,6 +495,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
+| `S` | with the Git Plugin on: Sync with the branch's upstream (or click **Sync** in the header; see [Sync with Git](#sync-with-git)) |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
@@ -503,7 +529,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
 <!-- END tui -->
 
 ## Exit codes

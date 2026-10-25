@@ -23,6 +23,7 @@ place or what they typed in a form.
 | `ctrl+b` | hide or show the Board sidebar. With the sidebar focused (click it), `n` new Board, `e` edit and `d` delete the selected Board; a right click on a Board opens a menu with Edit and Delete for it |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |
 | `{`/`}` | previous / next entry of the Plugin Sidebar |
+| `S` | with the Git Plugin on: Sync, which commits pending Rowbly changes, rebases onto the branch's upstream and pushes (never forced); shows `Sync…` while it runs. See [Git Plugin](plugin-git.md) §6 |
 | `?` | the keys of the current screen |
 | `q` | quit (from the first screen) |
 
