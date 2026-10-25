@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T17:26:51.700Z",
+  "updatedAt": "2026-10-25T17:30:12.475Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -50,6 +50,20 @@
           "body": "Rebuilding PR #106 on main’s Git sync service, restoring Automatic Commits-off support and automatic conflict resolution while adopting rebase integration.",
           "createdAt": "2026-10-25T17:26:51.699Z",
           "updatedAt": "2026-10-25T17:26:51.699Z"
+        },
+        {
+          "id": "kqJ5Gek1",
+          "author": "sunny",
+          "body": "Complexity 8/10. Research started for rebuilding #106 on main’s sync service; development and independent validation will run sequentially. Board data remains untouched on rook.",
+          "createdAt": "2026-10-25T17:30:11.809Z",
+          "updatedAt": "2026-10-25T17:30:11.809Z"
+        },
+        {
+          "id": "Y4spy4t1",
+          "author": "sunny",
+          "body": "Research accepted. Plan: rebuild header Sync on main’s coordinated sync service with commit-first rebase and ROW-15 reconciliation; retain existing CLI/scheduled merge behavior, update ADR-0035 and docs, then independently validate recovery, races, and TUI feedback.",
+          "createdAt": "2026-10-25T17:30:12.474Z",
+          "updatedAt": "2026-10-25T17:30:12.474Z"
         }
       ]
     }
