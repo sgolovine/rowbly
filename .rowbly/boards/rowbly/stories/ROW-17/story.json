@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T17:23:55.913Z",
+  "updatedAt": "2026-10-25T17:24:35.498Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -29,6 +29,13 @@
           "body": "Draft PR #106 https://github.com/sgolovine/rowbly/pull/106 from `claude/row-17-header-sync`, head 0c70c9e. The Git Plugin adds a header Sync Action (`S`): commit pending Rowbly data, fetch, rebase in a temporary worktree, land keeping unrelated changes, push without force. The success toast appears only after the push, and errors show recovery hints. New ADR-0035. Validation: typecheck, lint, unit (67) and CLI (20) tests pass, plus manual two-clone TUI runs across success, no-change, conflict, missing upstream, network failure, rejected push, crash recovery and dirty-tree cases; screenshots are on the PR. Left for when `develop` reaches `main`: ROW-15 conflict resolution, handling Automatic Commits off, and moving onto `requestSync`.",
           "createdAt": "2026-10-25T17:23:55.358Z",
           "updatedAt": "2026-10-25T17:23:55.358Z"
+        },
+        {
+          "id": "45eh6pcE",
+          "author": "sunny",
+          "body": "On hold by the user's decision: #106 (the reduced Sync on main) will not merge yet. After #105 (develop → main) merges, ROW-17 will be rebuilt on main using develop's sync service and ROW-15's conflict resolution, including the criteria that were dropped.",
+          "createdAt": "2026-10-25T17:24:35.497Z",
+          "updatedAt": "2026-10-25T17:24:35.497Z"
         }
       ]
     }
