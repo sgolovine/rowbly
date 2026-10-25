@@ -49,10 +49,10 @@ async function pendingRowblyPaths(top: string, prefix: string): Promise<string[]
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i] ?? '';
     if (entry.length < 4) continue;
-    const status = entry.slice(0, 2);
+    const xy = entry.slice(0, 2);
     const names = [entry.slice(3)];
     // A rename or copy is followed by its source path.
-    if (status[0] === 'R' || status[0] === 'C') {
+    if (xy[0] === 'R' || xy[0] === 'C') {
       i += 1;
       names.push(entries[i] ?? '');
     }

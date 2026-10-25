@@ -98,30 +98,48 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const { plugins } = usePlugins();
   const focus = useScreenFocus(depth);
 
+  // `none` Actions whose run has not settled, by Plugin and key: shown busy, their key and click ignored.
+  const [running, setRunning] = useState<ReadonlySet<string>>(new Set());
+  const setActionRunning = (id: string, on: boolean) =>
+    setRunning((was) => {
+      const next = new Set(was);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
   // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
   const actions: HeaderAction[] = services
     ? plugins.flatMap((plugin) =>
         plugin.actions.flatMap((action) => {
           const run = bindAction(action, focus);
           if (!run) return [];
+          const id = `${plugin.id}:${action.key}`;
+          const busy = action.target === 'none' && running.has(id);
           return [
             {
               key: action.key,
-              label: action.label,
+              label: busy ? `${action.label}…` : action.label,
+              busy,
               run: () => {
+                if (busy) return;
                 const ui = pluginUi(plugin.id, router, toast);
                 // The adapter turns a synchronous throw and a rejection alike into one attributed
                 // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
-                invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
+                const settled = invokePlugin({ plugin: plugin.id, stage: 'screen' }, () =>
                   run({ plugin: services.plugins.context(plugin.id), ui }),
                 ).catch((err: unknown) => toast.error(err));
+                if (action.target !== 'none') return;
+                setActionRunning(id, true);
+                void settled.finally(() => setActionRunning(id, false));
               },
             },
           ];
         }),
       )
     : [];
-  const actionHints: KeyHint[] = actions.map((action) => ({ key: action.key, description: action.label }));
+  const actionHints: KeyHint[] = actions
+    .filter((action) => !action.busy)
+    .map((action) => ({ key: action.key, description: action.label }));
 
   const selection = useMemo<BoardSelection>(
     () => ({

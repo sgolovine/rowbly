@@ -731,7 +731,11 @@ export interface PluginActionOf<T extends ActionTarget, S = Record<string, unkno
   run(args: { focus: ActionFocusOf[T]; plugin: PluginContext<S>; ui: PluginUi }): void | Promise<void>;
 }
 
-/** A key, with a header button, wherever its target is in focus. It may only open or show something. */
+/**
+ * A key, with a header button, wherever its target is in focus. It may only open or show something,
+ * or change only Git state (ADR-0017, ADR-0035). While a `none` Action's `run` is pending, the header
+ * shows it busy and ignores its key and click.
+ */
 export type PluginAction<S = Record<string, unknown>> = {
   [T in ActionTarget]: PluginActionOf<T, S>;
 }[ActionTarget];
