@@ -1,7 +1,7 @@
 import { execFile, fork } from 'node:child_process';
-import { mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { createServer, type Socket } from 'node:net';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -1167,7 +1167,21 @@ describe('isolated upstream synchronization', () => {
     const home = await tempRoot();
     vi.stubEnv('HOME', home.dir);
     try {
+      const temporary = join(home.dir, `long-${'x'.repeat(80)}`);
+      await mkdir(temporary);
+      vi.stubEnv('TMPDIR', temporary);
       const f = await remoteFixture();
+      expect(
+        Buffer.byteLength(join(f.repo.gitDir, 'rowbly', `rebase-${'a'.repeat(32)}`, 'replay.sock')),
+      ).toBeGreaterThan(107);
+      const bridge = await import('../../src/storage/gitRebaseBridge');
+      const openBridge = bridge.openRebaseBridge;
+      const endpoints: string[] = [];
+      vi.spyOn(bridge, 'openRebaseBridge').mockImplementation(async (...args) => {
+        const result = await openBridge(...args);
+        endpoints.push(result.environment.ROWBLY_REBASE_SOCKET);
+        return result;
+      });
       const { builtInPlugins } = await import('../../src/plugins');
       const { mergeData } = await import('../../src/services/plugins/mergeData');
       const { createReplayHistory } = await import('../../src/services/plugins/replayHistory');
@@ -1265,6 +1279,14 @@ describe('isolated upstream synchronization', () => {
             (history) => createReplayHistory(history, builtInPlugins),
             async (phase) => {
               phases.push(phase);
+              if (phase === 'pulling') {
+                const endpoint = endpoints.at(-1);
+                if (!endpoint) throw new Error('Missing private replay endpoint');
+                expect(Buffer.byteLength(join(dirname(endpoint), 'b', 's'))).toBeLessThanOrEqual(100);
+                expect((await lstat(dirname(endpoint))).mode & 0o777).toBe(0o700);
+                expect((await lstat(endpoint)).mode & 0o777).toBe(0o600);
+                await expect(lstat(join(dirname(endpoint), 'b'))).rejects.toMatchObject({ code: 'ENOENT' });
+              }
             },
             async (files) => {
               mergeData(
@@ -1301,6 +1323,9 @@ describe('isolated upstream synchronization', () => {
       const noop = await run();
       expect(noop.commit).toBe(result.commit);
       expect(noop.evidence).toEqual([]);
+      expect(endpoints).toHaveLength(2);
+      for (const endpoint of endpoints)
+        await expect(lstat(dirname(endpoint))).rejects.toMatchObject({ code: 'ENOENT' });
       expect((await readdir(join(f.repo.gitDir, 'rowbly'))).some((name) => name.startsWith('rebase-'))).toBe(false);
       expect((await preferences(f.services.plugins.context('git'))).automaticCommits).toBe(false);
     } finally {
