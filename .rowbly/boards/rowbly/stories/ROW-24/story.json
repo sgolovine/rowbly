@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:29:04.286Z",
-  "updatedAt": "2026-10-25T17:42:26.248Z"
+  "updatedAt": "2026-10-25T17:51:24.108Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "udTMUQ21",
+          "author": "sunny",
+          "body": "Plan accepted; complexity 7. Branch codex/row-24-story-create at 5b327969e783dfe7c36617a199970abe483fbd41. Implement atomic Plugin create inputs and CLI flags, tabbed New Story with Tasks/Specs/Links drafts, then docs and pipeline coverage. Baseline typecheck, 78 unit tests and 20 CLI tests passed. Lint is blocked by existing formatting in Board Stories ROW-25 through ROW-29; please format those Board records on thinkpad and push main.",
+          "createdAt": "2026-10-25T17:51:24.107Z",
+          "updatedAt": "2026-10-25T17:51:24.107Z"
+        }
+      ]
+    }
+  }
 }

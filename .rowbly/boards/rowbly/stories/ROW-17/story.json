@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add a Sync button to the header through the Git Plugin",
   "description": "## Goal\nWhen the Git Plugin is enabled, add a \"Sync\" button to the TUI header so users can synchronize Rowbly changes with the current branch’s configured upstream.\n\n## Dependencies\nBlocked by ROW-13 (Allow disabling Automatic Commits while the Git Plugin is enabled) and ROW-15 (Add Automatic Merge Conflict Resolution to the Git Plugin). Both Stories must be done before starting this Story.\n\n## Acceptance criteria\n- The Git Plugin contributes a \"Sync\" button to the header when enabled.\n- Pressing Sync runs the following sequence: pull the current branch with `git pull --rebase`; stage pending Rowbly Story and configuration changes, including additions and deletions; create a commit when there are changes to commit; and push the current branch to its configured upstream.\n- Include pending Rowbly changes when Automatic Commits are disabled. Handle a dirty working tree safely so the pull/rebase can run before the final staging and commit without losing local changes.\n- Reuse the conflict-resolution behavior delivered by ROW-15 for Rowbly data and configuration during the rebase. Keep the explicit `git pull --rebase` behavior for this action.\n- Coordinate with Automatic Commits, scheduled synchronization and other Rowbly writes. Show progress and prevent duplicate Sync runs while one is active.\n- Preserve unrelated working-tree and staged changes; keep Local State, locks and transaction files out of the commit. Do not force-push.\n- Show a success toast only after the push succeeds. If pulling, rebasing, staging, committing or pushing fails, show an error toast with an actionable cause and preserve local work for recovery.\n- If no Rowbly changes need a commit, skip creating an empty commit and still complete the pull/push synchronization.\n- Update the user guide, Git Plugin documentation and published Rowbly skill Git reference for the header action and its interaction with Automatic Commits and automatic synchronization.\n\n## Verification\nUse two clones of a temporary remote to verify pulling upstream changes with rebase, committing pending Rowbly Story/configuration changes and pushing successfully. Check success/error toasts, Automatic Commits on and off, no-change runs, overlapping synchronization, Rowbly conflicts, and safe handling of unrelated changes, missing upstream and network/authentication or push failures. Follow the repository test policy for any required data-loss or race regression coverage.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aY",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-24T17:38:29.326Z",
-  "updatedAt": "2026-10-25T17:44:28.086Z",
+  "updatedAt": "2026-10-25T17:58:21.507Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -71,6 +71,20 @@
           "body": "Rebuild pushed at a75f90a. Typecheck passed; unit 79/79 and CLI 20/20 passed. Full lint is blocked by inherited formatting in ROW-25 through ROW-29 Board JSON; task-scoped lint passes. Independent validation and screenshot evidence are next.",
           "createdAt": "2026-10-25T17:44:28.086Z",
           "updatedAt": "2026-10-25T17:44:28.086Z"
+        },
+        {
+          "id": "W1fozcpI",
+          "author": "sunny",
+          "body": "Independent validation passed at a1a00b9: typecheck, 79 unit tests, 20 CLI tests, two-clone synchronization/failure scenarios, and TUI feedback. Screenshots uploaded to #106. Full lint remains blocked by inherited ROW-25–ROW-29 JSON formatting; no Board files were edited on rook.",
+          "createdAt": "2026-10-25T17:51:02.087Z",
+          "updatedAt": "2026-10-25T17:51:02.087Z"
+        },
+        {
+          "id": "T7OMuUoc",
+          "author": "sunny",
+          "body": "Rebuild complete in draft PR #106 at 36051ab. Independent validation signed off; typecheck, lint, 79 unit tests and 20 CLI tests pass. Screenshots uploaded and PR title/body updated. GitHub unit/CLI CI still running. No Board changes authored on rook.",
+          "createdAt": "2026-10-25T17:57:52.583Z",
+          "updatedAt": "2026-10-25T17:57:52.583Z"
         }
       ]
     }

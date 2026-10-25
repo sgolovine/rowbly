@@ -235,9 +235,16 @@ rowbly stories edit WEB-42 --add-spec auth-flow --json --no-prompt       # --spe
 
 Always name a Story Spec with `--story WEB-42`; `specs show web-42` looks for a Board Spec.
 
-**Git** (`git`): commits saved Rowbly changes automatically (`chore: update Rowbly data`). Enable it
-only when the user asks. `rowbly git show` and `rowbly git configure --frequency change|interval
---interval <seconds>` manage personal preferences. When it is on, do not also commit `.rowbly/` yourself.
+**Git** (`git`): personal preferences: `rowbly git show`; `rowbly git configure
+--automatic-commits on|off --frequency change|interval --interval <seconds>
+--automatic-merge-resolution on|off --merge-interval <seconds>`. Enable only when asked.
+`rowbly git sync` requests an immediate enabled merge. TUI `S` (**Sync**) works with both automatic
+preferences Off: commit pending Rowbly data/config additions/deletions first (skip empty), fetch,
+rebase with Rowbly reconciliation/evidence, publish recoverably and push normally. Unrelated staged
+and working content stays intact; Local State/locks/transactions excluded. Success follows its own
+push; errors keep local work. Divergent local merge commits require `git rebase --rebase-merges` in
+Git before retrying. Never force-push. No new CLI command. Do not separately commit Rowbly data when
+Automatic Commits is On.
 
 ## 9. Setup and repair
 
