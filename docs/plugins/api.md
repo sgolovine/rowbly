@@ -45,7 +45,7 @@ The types a Plugin meets at run time, by where it meets them:
 | Options | `PluginOption`, `PluginInputOptions`, `PluginFilterOptions`, `PluginOptionValues`, `PluginOptionCommand` |
 | TUI | `PluginScreenProps`, `PluginStoryTabProps`, `PluginBoardSectionProps`, `PluginUi`, `PluginLink`, `PluginStoryForm`, `PluginStoryFilter`, `PluginFormField`, `PluginFormValue`, `ActionFocusOf` |
 | Doctor | `DoctorData`, `PluginFinding` |
-| Git | `PluginGit`, `GitCommitOptions`, `GitOptionsSource`, `GitSyncOptions`, `GitSyncOptionsSource`, `GitSyncStatus` |
+| Git | `PluginGit`, `GitCommitOptions`, `GitOptionsSource`, `GitSyncOptions`, `GitSyncOptionsSource`, `GitSyncStatus`, `GitManualSyncResult` |
 | Reconciliation | `PluginReconciler`, `PluginReconciliation`, `PluginMergeSnapshot`, `PluginIdentityMap`, `PluginReplayProjection`, `MergeFile`, `MergeFiles`, `MergeHelpers`, `IdentityRemap`, `RequiredStory`, `RequiredStage` |
 
 Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring (a Plugin gets `PluginServices` or `PluginReadServices`), `PluginError` (the framework's own attribution error), and the TUI's `useToast` (use `ui.toast` and `ui.error`).
@@ -487,13 +487,36 @@ export const mergeNotes = definePlugin({
 ### Synchronization capability
 
 `PluginGit.syncStatus(liveResolver)` reads current preferences and persisted run details, including
-the optional scheduled `target` (`branch`, `remote`, `mergeRef`). A stale timer cannot synchronize a
-changed branch/upstream in that attempt.
-`resumeSync(liveResolver)` schedules persisted work only at start or in a live reaction.
-`requestSync(liveResolver)` requests/coalesces an immediate enabled run only from a command/screen
-boundary, waits outside Data Root coordination and returns its current result. Its live resolver
-returns independent `enabled` and `intervalSeconds`, with optional author name/email. Latest saved
-Off prevents admission; an admitted run may finish. The host supplies the registered format owners,
-recovers local publication before reads, and owns cleanup. No arbitrary Git argv is exposed.
-Synchronization has bounded local/merge/network processes (3.5/10/30 seconds), 16 MiB child output
-and a 120-second overall deadline. Unrelated staged/working content remains uncommitted.
+`manualAvailable`, one pending `manual` request, and the optional scheduled `target` (`branch`,
+`remote`, `mergeRef`). Active and terminal results include their `id` and `mode` (`merge` or `rebase`;
+legacy state reads as `merge`). Status performs host-local recovery but never schedules network work.
+A stale timer cannot synchronize a changed branch/upstream in that attempt.
+`resumeSync(liveResolver)` schedules persisted automatic work only at start or in a live reaction.
+`requestSync(liveResolver)` requests/coalesces an immediate enabled automatic merge only from a live
+command/screen boundary, waits outside Data Root coordination and returns its current status.
+
+`requestRebaseSync(liveResolver)` requests manual Sync from the same live boundaries, independently
+of the resolver's automatic `enabled` flag. Actual Git enablement still governs admission. Its resolver
+returns `enabled` and `intervalSeconds`, with optional author name/email; it changes no preference.
+Concurrent callers, including other processes and aliases, join one immutable manual id. An admitted
+automatic merge finishes before a queued manual rebase and cannot fulfill that request. The returned
+`GitManualSyncResult` has that id, `mode: 'rebase'`, `commit`, `upstream`, `evidence`, `repairs` and
+`pushed: true`, only after its normal push is acknowledged. Failures reject with an actionable cause;
+a failed push retains the local result and evidence. A previous successful `last` is never completion.
+
+```ts
+/** Called from a live Plugin command or screen; the host waits for this exact push. */
+export async function manualSync(plugin: PluginContext, options: GitSyncOptionsSource): Promise<GitManualSyncResult> {
+  return plugin.git.requestRebaseSync(options);
+}
+```
+
+Exact terminal receipts live in private Git metadata for at least 15 minutes, beyond the five-minute
+waiter deadline. A missing receipt reports interrupted/unknown result rather than guessing success.
+Latest saved Git Off or a closed requesting host cancels unadmitted manual work. An admitted run may
+finish after Off/disposal and remains tracked by drains. Restart never automatically replays manual
+network intent. Automatic preferences retain their independent scheduling behavior. The host supplies
+registered format owners, recovers local publication before reads, and owns cleanup. No arbitrary Git
+argv is exposed. Synchronization has bounded local/merge/network processes (3.5/10/30 seconds),
+16 MiB child output and a 120-second overall deadline per admitted run. Unrelated staged/working
+content remains uncommitted.

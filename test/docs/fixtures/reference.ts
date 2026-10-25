@@ -3,6 +3,8 @@
 import {
   DataIntegrityError,
   definePlugin,
+  type GitManualSyncResult,
+  type GitSyncOptionsSource,
   type PluginContext,
   type RequiredStage,
   type RequiredStory,
@@ -87,4 +89,11 @@ export const mergeNotes = definePlugin({
     };
   },
 });
+// #endregion
+
+// #region manual-sync
+/** Called from a live Plugin command or screen; the host waits for this exact push. */
+export async function manualSync(plugin: PluginContext, options: GitSyncOptionsSource): Promise<GitManualSyncResult> {
+  return plugin.git.requestRebaseSync(options);
+}
 // #endregion

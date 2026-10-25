@@ -1,6 +1,6 @@
 # ADR-0035: Manual Sync rebases before capturing pending data
 
-**Status:** Accepted (ROW-17); implementation in progress. Publication is gated on the private replay proof.
+**Status:** Accepted (ROW-17); private replay mechanism proven, feature implementation in progress.
 
 ## Context
 
@@ -66,7 +66,9 @@ private exclusions, unrelated staging, dirty/untracked bytes, modes and later pe
 ### 4. Admission, publication and completion
 
 Use the existing canonical worker, live admission, jobs and drains. One coalesced manual id has its own
-terminal receipt; an automatic merge or an older successful result cannot fulfill it. Git Off cancels
+terminal receipt; an automatic merge or an older successful result cannot fulfill it. Keep receipts for
+at least 15 minutes, beyond the five-minute waiter deadline; report a missing result as unknown.
+Only the requesting process can admit pending manual intent; other processes join its receipt. Git Off cancels
 unadmitted work; admitted work may finish. Automatic preferences govern only automatic work. Restart
 does not replay a manual network request, and an unknown push response is never historical success.
 

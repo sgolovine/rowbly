@@ -1,6 +1,8 @@
 import { execFile, fork } from 'node:child_process';
 import { mkdir, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { createServer, type Socket } from 'node:net';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { definePlugin, type GitOptionsSource } from '../../src/plugin-api';
@@ -1302,6 +1304,135 @@ describe('isolated upstream synchronization', () => {
       expect((await readdir(join(f.repo.gitDir, 'rowbly'))).some((name) => name.startsWith('rebase-'))).toBe(false);
       expect((await preferences(f.services.plugins.context('git'))).automaticCommits).toBe(false);
     } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it('queues one exact cross-process manual receipt after an automatic run and waits for its push while retaining later edits', async () => {
+    const { tempRoot } = await import('../helpers');
+    const home = await tempRoot();
+    vi.stubEnv('HOME', home.dir);
+    const f = await remoteFixture(),
+      plugin = f.services.plugins.context('git');
+    const { createGitSync, disposeSyncOwner, drainSyncQueue } = await import('../../src/services/plugins/gitSync');
+    const storage = await import('../../src/storage/gitSync');
+    const owner = {},
+      sync = createGitSync(f.t.root, 'git', [git, comments], f.ctx.warn, owner);
+    const returned = deferred(),
+      releaseAutomatic = deferred(),
+      pushing = deferred();
+    const original = storage.synchronizeGit;
+    const spy = vi.spyOn(storage, 'synchronizeGit').mockImplementation(async (...args) => {
+      const result = await original(...args);
+      returned.resolve();
+      await releaseAutomatic.promise;
+      return result;
+    });
+    const socketPath = join(home.dir, 'push.sock');
+    let connection: Socket | undefined;
+    const server = createServer((socket) => {
+      connection = socket;
+      pushing.resolve();
+    });
+    await new Promise<void>((resolve) => server.listen(socketPath, resolve));
+    const children: {
+      child: ReturnType<typeof fork>;
+      exited: Promise<number | null>;
+      errors: () => string;
+      pending: Promise<string>;
+      result: Promise<{ id: string; pushed: boolean; commit: string }>;
+    }[] = [];
+    let automatic: Promise<unknown> | undefined;
+    try {
+      await configure(plugin, { synchronization: { enabled: true, intervalSeconds: 3600 } });
+      automatic = sync.requestSync(resolveSyncOptions);
+      await returned.promise;
+      const automaticId = (await sync.syncStatus(resolveSyncOptions)).active?.id;
+      f.ctx.backgroundReactions = true;
+      const story = await f.services.stories.create('web', { name: 'Manual capture' });
+      await f.command(
+        'config',
+        'remote.origin.receivepack',
+        `${process.execPath} ${fileURLToPath(new URL('./fixtures/pushBarrier.mjs', import.meta.url))} ${socketPath}`,
+      );
+      for (const name of ['manual-a', 'manual-b']) {
+        const path = join(home.dir, name);
+        await symlink(f.t.path, path, 'dir');
+        const child = fork(new URL('./fixtures/manualSyncProcess.ts', import.meta.url), [path], {
+          execArgv: ['--import', 'tsx'],
+          stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+        });
+        let errors = '';
+        child.stderr?.on('data', (bytes) => {
+          errors += bytes.toString();
+        });
+        const pending = deferred<string>(),
+          result = deferred<{ id: string; pushed: boolean; commit: string }>();
+        child.on('message', (message: unknown) => {
+          const value = message as { pending?: string; result?: { id: string; pushed: boolean; commit: string } };
+          if (value.pending) pending.resolve(value.pending);
+          if (value.result) result.resolve(value.result);
+        });
+        const exited = new Promise<number | null>((resolve) => child.once('exit', resolve));
+        const failure = exited.then((code) => {
+          throw new Error(`Manual requester exited before its response (${code}): ${errors}`);
+        });
+        void failure.catch(() => undefined);
+        children.push({
+          child,
+          exited,
+          errors: () => errors,
+          pending: Promise.race([pending.promise, failure]),
+          result: Promise.race([result.promise, failure]),
+        });
+        await children[children.length - 1]?.pending;
+      }
+      const ids = await Promise.all(children.map((child) => child.pending));
+      expect(ids[0]).toBe(ids[1]);
+      expect(ids[0]).not.toBe(automaticId);
+      const completed: unknown[] = [];
+      for (const child of children) void child.result.then((value) => completed.push(value));
+      releaseAutomatic.resolve();
+      await automatic;
+      await pushing.promise;
+      expect(completed).toEqual([]);
+      const state = await sync.syncStatus(resolveSyncOptions);
+      expect(state.active).toMatchObject({ id: ids[0], mode: 'rebase', phase: 'pushing' });
+      expect(state.last?.id).toBe(automaticId);
+      // Admission authorizes this push, but does not authorize clearing a subsequent same-path edit.
+      await f.services.stories.update(story.key, { name: 'Later same-path edit' });
+      await configure(plugin, { synchronization: { enabled: false } });
+      await f.services.plugins.disable('git');
+      connection?.end();
+      const results = await Promise.all(children.map((child) => child.result));
+      const result = results[0];
+      if (!result) throw new Error('Expected manual result');
+      expect(result).toEqual(results[1]);
+      expect(results[0]).toMatchObject({ id: ids[0], pushed: true });
+      expect(await command(f.remote, 'rev-parse', 'refs/heads/main')).toBe(result.commit);
+      const remoteStory = await command(f.remote, 'show', `main:.rowbly/boards/web/stories/${story.key}/story.json`);
+      expect(JSON.parse(remoteStory).name).toBe('Manual capture');
+      expect((await f.services.stories.get(story.key)).name).toBe('Later same-path edit');
+      expect(await readGitPending(await pendingPath(f.t.root, 'git'))).not.toBeNull();
+      for (const child of children) expect(await child.exited, child.errors()).toBe(0);
+      await drainSyncQueue(f.t.root);
+      const finished = await sync.syncStatus(resolveSyncOptions);
+      expect(finished.last).toMatchObject({ id: ids[0], mode: 'rebase', kind: 'synchronized', pushed: true });
+      expect(finished.manualAvailable).toBe(false);
+      await expect(sync.requestRebaseSync(resolveSyncOptions)).rejects.toMatchObject({ code: 'CONFLICT' });
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      releaseAutomatic.resolve();
+      connection?.end();
+      for (const child of children) {
+        if (child.child.exitCode === null) child.child.kill('SIGKILL');
+        await child.exited;
+      }
+      await automatic;
+      await drainSyncQueue(f.t.root);
+      await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+      disposeSyncOwner(owner);
+      f.host.dispose?.();
+      spy.mockRestore();
       vi.unstubAllEnvs();
     }
   });

@@ -177,8 +177,14 @@ before durable publication intent or push, including while the owner is Off and 
 is opaque. The live input bytes, branch, index and remote remain unchanged. Unknown fields and future
 or unrecognized shapes retain opaque preservation; no identity repair or migration is inferred.
 
-Synchronization deadlines/results live separately under the worktree Git directory. The feature is
-Off by default. Saved preferences govern worker admission; timer/button/process bursts coalesce.
+Synchronization deadlines/results live separately under the worktree Git directory. Automatic Merge
+Conflict Resolution is Off by default. Manual rebase admission is independent of both automatic
+preferences and requires Git On. One pending manual id coalesces callers across processes and aliases;
+an automatic merge cannot satisfy it. Exact immutable terminal receipts survive changes to last/active
+for at least 15 minutes, beyond the five-minute waiter deadline. A missing/interrupted result is an
+explicit unknown-push error. Restart cancels pending manual intent rather than replaying its network
+work. Git Off/host disposal prevents new admission; admitted jobs finish and remain visible to drains.
+Saved preferences govern worker admission; timer/button/process bursts coalesce.
 Private Git bindings resolve the Data Root with `realpath` before choosing repository-relative paths,
 state filenames, resources or jobs. A real root and its symlink aliases share one state, deadline and
 admitted run; root-specific drains use that identity even after the owning host is disposed. Linked
