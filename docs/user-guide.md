@@ -66,6 +66,7 @@ With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to crea
   rowbly.config.json                 # optional Stages / Custom Fields, Plugin entries
   local.json                         # Local State (git-ignored)
   .gitignore                         # keeps local.json out of git
+  ROWBLY.md                          # optional: how you work with these Boards, for agents (below)
   plugins/<id>/                      # files of a Plugin, for the whole Data Root
   boards/<board>/
     board.config.json                # name, key prefix, optional Stages / Custom Fields
@@ -78,6 +79,8 @@ With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to crea
 Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data Root. Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing and never replaces an existing one. Rowbly keeps keys it does not know when it changes the file, and changes a symlinked one at its target. If the file is not valid JSON, Rowbly leaves it alone and a command that needs it fails with exit code 6 naming the file; fix or move it.
 
 Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to open it from any folder. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
+
+`ROWBLY.md` is an optional Markdown file you write by hand to record how you work with these Boards: what each Stage means, when a Story moves, which Labels and Comments you expect. Rowbly does not read or enforce it, but the Rowbly agent skill and reference tell an agent to read it before changing data and to follow it. Commit it with the rest of `.rowbly/`; `rowbly doctor` treats it as part of the Data Root.
 
 Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
