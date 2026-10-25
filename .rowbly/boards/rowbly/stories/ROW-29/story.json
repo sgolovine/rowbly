@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:12.222Z",
-  "updatedAt": "2026-10-25T17:40:47.205Z",
+  "updatedAt": "2026-10-25T18:18:28.958Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -20,6 +20,17 @@
     "story-linking": {
       "blocks": [
         "ROW-30"
+      ]
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "XzldtkbM",
+          "author": "sunny",
+          "body": "Started ROW-29 on rook. Inspecting the Plugin API, binary file support, and adjacent stack branches before planning.",
+          "createdAt": "2026-10-25T18:18:28.957Z",
+          "updatedAt": "2026-10-25T18:18:28.957Z"
+        }
       ]
     }
   }
