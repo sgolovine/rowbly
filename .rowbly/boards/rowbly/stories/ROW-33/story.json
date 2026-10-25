@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:45:29.830Z",
-  "updatedAt": "2026-10-25T17:45:36.378Z"
+  "updatedAt": "2026-10-25T17:51:26.186Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "JGfQ5Map",
+          "author": "sunny",
+          "body": "Starting the lint configuration fix on rook; Board updates remain with the supervisor.",
+          "createdAt": "2026-10-25T17:51:26.185Z",
+          "updatedAt": "2026-10-25T17:51:26.185Z"
+        }
+      ]
+    }
+  }
 }
