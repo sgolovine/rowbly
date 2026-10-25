@@ -1,4 +1,4 @@
-import { Box, Text, useInput } from 'ink';
+import { Box, type DOMElement, Text, useBoxMetrics, useInput } from 'ink';
 import { useMemo, useRef, useState } from 'react';
 import { errorMessage, RowblyError } from '../../../core';
 import { invokePluginSync, type PluginInput } from '../../../services';
@@ -47,6 +47,8 @@ export function StoryCreateForm({
   const [draftFocus, setDraftFocus] = useState(false);
   const [busy, setBusy] = useState(false);
   const editing = useRef(new Set<string>());
+  const header = useRef<DOMElement>(null);
+  const { height: headerHeight } = useBoxMetrics(header);
   const navigation = useMemo(
     () => ({
       register(id: string, on: boolean) {
@@ -66,6 +68,8 @@ export function StoryCreateForm({
       pluginId: p.id,
     })),
   );
+  const selectedTab = tabs[tab - 1];
+  const tabError = selectedTab ? errors[selectedTab.id] : undefined;
   const tabPlugins = new Set(tabs.map((t) => t.pluginId));
   const detailsFields = [
     ...fields,
@@ -129,11 +133,12 @@ export function StoryCreateForm({
     <FormNavigationContext.Provider value={navigation}>
       <Box flexDirection="column" flexGrow={1} height={layout.height}>
         <Box
+          ref={header}
           backgroundColor={theme.overlayRaised}
           flexDirection="column"
           flexShrink={0}
           paddingX={1}
-          marginBottom={1}
+          paddingBottom={1}
           gap={1}
         >
           <Text bold>New Story on {boardId}</Text>
@@ -143,8 +148,12 @@ export function StoryCreateForm({
             active={active && !busy}
             onSelect={setTab}
           />
+          {tabError && <Text color={theme.danger}>! {tabError}</Text>}
         </Box>
-        <ScrollBody active={active} height={layout.height === undefined ? undefined : Math.max(1, layout.height - 4)}>
+        <ScrollBody
+          active={active}
+          height={layout.height === undefined ? undefined : Math.max(1, layout.height - headerHeight)}
+        >
           <Box display={tab === 0 ? 'flex' : 'none'} flexDirection="column">
             <Form
               fields={detailsFields}
@@ -190,7 +199,6 @@ export function StoryCreateForm({
                     </>
                   )}
                 />
-                {errors[t.id] && <Text color={theme.danger}>{errors[t.id]}</Text>}
               </Box>
             );
           })}
