@@ -1,14 +1,26 @@
 // The recoverable commit engine (ADR-0019 §2; RES-01/ARCH-41 engine, RES-04 engine part).
-import { mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
-import { FIXED_NOW, fixedClock, tempRoot } from '../helpers';
-import { fixtureScript, injectFaults, runScript, snapshotTree } from './engineHelpers';
+import { deferred, FIXED_NOW, fixedClock, tempRoot } from '../helpers';
+import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree } from './engineHelpers';
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+let publicationRun: Promise<void> | undefined;
+
+async function finishPublicationRun(): Promise<void> {
+  // A timeout aborts the context but does not await the test body. Drain it before
+  // restoring mocks or removing temp roots, so it cannot spy on the next test.
+  try {
+    await publicationRun?.catch(() => undefined);
+  } finally {
+    publicationRun = undefined;
+    vi.restoreAllMocks();
+  }
+}
+
+afterEach(finishPublicationRun);
 
 const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
 const NEXT_PNG = new Uint8Array([...PNG, 1, 254]);
@@ -233,7 +245,7 @@ describe('a killed process', () => {
 });
 
 describe('Git local publication', () => {
-  it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', async () => {
+  async function publicationFaults(signal: AbortSignal): Promise<void> {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { requireRepository, withGitWorker } = await import('../../src/storage/gitRepository');
     const { gitText } = await import('../../src/storage/gitProcess');
@@ -242,13 +254,32 @@ describe('Git local publication', () => {
     );
     const { coordinated } = await import('../../src/services/coordination');
     const { lstat, rm } = await import('node:fs/promises');
-    const seed = await tempRoot();
+    // The fault matrix exercises real syscalls, including fsync, but models failures through
+    // injection rather than power loss. Linux tmpfs avoids paying disk flush latency 130 times;
+    // the separate SIGKILL tests still use ordinary temporary roots.
+    const scratch =
+      process.platform === 'linux' &&
+      (await access('/dev/shm', constants.W_OK).then(
+        () => true,
+        () => false,
+      ))
+        ? '/dev/shm'
+        : undefined;
+    const seed = await tempRoot(scratch);
     try {
       const template = await syncFixture(seed.dir, seed.path);
       // Copy only pristine preparation: no worker/root lock, reservation or publication journal.
       expect(await readdir(join(template.repo.gitDir, 'rowbly'))).toEqual(['test-index']);
       expect((await readdir(seed.path)).sort()).toEqual(['.gitignore', 'rowbly.config.json']);
       const seedIndex = await lstat(template.repo.index);
+      expect(await readFile(join(template.repo.gitDir, 'HEAD'), 'utf8')).toBe(`ref: ${template.plan.branch}\n`);
+      // Every case compares the entire raw index, which includes this staged blob, against
+      // these two images. Resolve it through Git once instead of spawning Git in every case.
+      expect(
+        await gitText(seed.dir, ['rev-parse', ':staged.txt'], {
+          index: join(template.repo.gitDir, 'rowbly', 'test-index'),
+        }),
+      ).toBe(template.stagedOid);
       // Read the pristine repository once. Rewalking and copying it for all 130 faults
       // spends the CI budget on fixture setup; fresh writes still give each run its own inodes.
       const directories: string[] = [];
@@ -262,9 +293,13 @@ describe('Git local publication', () => {
           files.push({ path: relative, bytes: await readFile(path), mode: (await lstat(path)).mode & 0o777 });
         }
       }
+      // Recreate the whole tree at one stable path. Files/inodes are fresh for every case,
+      // while repository discovery can reuse its immutable location cache.
+      const t = await tempRoot(scratch);
       const run = async (failAt?: number, crash = false): Promise<string[]> => {
-        const t = await tempRoot();
+        signal.throwIfAborted();
         try {
+          await mkdir(t.path, { recursive: true });
           await Promise.all(directories.map((path) => mkdir(join(t.dir, path), { recursive: true })));
           await Promise.all(files.map(({ path, bytes, mode }) => writeFile(join(t.dir, path), bytes, { mode })));
           const repo = await requireRepository(t.root);
@@ -276,13 +311,15 @@ describe('Git local publication', () => {
           const f = {
             repo,
             plan: { ...structuredClone(template.plan), roots: [t.path] },
-            stagedOid: template.stagedOid,
-            git: (...args: string[]) => gitText(t.dir, args),
+            // This fixture has a loose branch ref; read its actual bytes instead of launching
+            // rev-parse twice per case. Production still uses real Git for all publication work.
+            head: async () => (await readFile(join(repo.common, template.plan.branch), 'utf8')).trim(),
           };
           let calls: string[] = [],
             intended = false;
           await withGitWorker(f.repo, () =>
             withPublication(f.repo, async (hold) => {
+              signal.throwIfAborted();
               const faults = injectFaults();
               if (failAt !== undefined) {
                 if (crash) faults.crashAt(failAt);
@@ -304,7 +341,7 @@ describe('Git local publication', () => {
                 (await readFile(f.repo.journal, 'utf8').then(
                   () => true,
                   () => false,
-                )) || (await f.git('rev-parse', 'HEAD')) === f.plan.candidate;
+                )) || (await f.head()) === f.plan.candidate;
               // Persistent injected I/O emulates death; remove only this test process's abandoned root lock.
               const lock = join(t.path, '.lock');
               const owner = await readFile(lock, 'utf8').then(
@@ -319,10 +356,8 @@ describe('Git local publication', () => {
               expect(await readIndex(f.repo), `index at fault ${failAt}`).toBe(
                 intended ? f.plan.indexAfter : f.plan.indexBefore,
               );
-              expect((await f.git('rev-parse', 'HEAD', ':staged.txt')).split('\n')).toEqual([
-                intended ? f.plan.candidate : f.plan.old,
-                f.stagedOid,
-              ]);
+              expect(await readFile(join(f.repo.gitDir, 'HEAD'), 'utf8')).toBe(`ref: ${f.plan.branch}\n`);
+              expect(await f.head()).toBe(intended ? f.plan.candidate : f.plan.old);
               for (const edit of f.plan.edits)
                 expect(await readPublicationFile(f.repo, edit.path)).toEqual(intended ? edit.after : edit.before);
               expect(await readFile(join(t.dir, 'staged.txt'), 'utf8')).toBe('unstaged bytes over staged blob\n');
@@ -355,6 +390,7 @@ describe('Git local publication', () => {
     }
     // External editors and Git do not take Rowbly's locks. Refuse at the actual effect boundary.
     for (const scenario of ['root-ref', 'root-step', 'nonroot-ref', 'nonroot-staging', 'foreign-lock']) {
+      signal.throwIfAborted();
       const t = await tempRoot(),
         f = await syncFixture(t.dir, t.path);
       const path =
@@ -375,6 +411,7 @@ describe('Git local publication', () => {
       };
       await withGitWorker(f.repo, () =>
         withPublication(f.repo, async (hold) => {
+          signal.throwIfAborted();
           const originalWrite = io.writeFile;
           const spy = vi.spyOn(io, 'writeFile').mockImplementation(async (file, ...args) => {
             await originalWrite(file, ...args);
@@ -438,6 +475,7 @@ describe('Git local publication', () => {
       });
       await t.cleanup();
     }
+    signal.throwIfAborted();
     const t = await tempRoot(),
       f = await syncFixture(t.dir, t.path);
     await withGitWorker(f.repo, () =>
@@ -457,6 +495,7 @@ describe('Git local publication', () => {
           'external ref advance',
         );
         const { io } = await import('../../src/storage/io');
+        signal.throwIfAborted();
         const remove = io.rm;
         let foreignLock = false;
         const cleanup = vi.spyOn(io, 'rm').mockImplementation(async (path) => {
@@ -485,6 +524,69 @@ describe('Git local publication', () => {
         for (const edit of f.plan.edits) expect(await readPublicationFile(f.repo, edit.path)).toEqual(edit.before);
       }),
     );
+  }
+
+  it('rolls forward after faults at every filesystem boundary, preserving binary data, mode, staged blobs and unrelated working bytes', ({
+    signal,
+  }) => {
+    publicationRun = publicationFaults(signal);
+    return publicationRun;
+  });
+
+  it('drains a cancelled fault sweep before restoring spies and opening the next Data Root', async ({ signal }) => {
+    const { io } = await import('../../src/storage/io');
+    const { coordinated } = await import('../../src/services/coordination');
+    const controller = new AbortController();
+    const entered = deferred();
+    const release = deferred();
+    const originals = MUTATING.map((name) => io[name]);
+    const readBytes = io.readBytes;
+    let held = false;
+    vi.spyOn(io, 'readBytes').mockImplementation(async (path) => {
+      // Hold real publication I/O only after the sweep has installed its mutating spies.
+      if (!held && vi.isMockFunction(io.rename)) {
+        held = true;
+        entered.resolve();
+        await release.promise;
+      }
+      return readBytes(path);
+    });
+    const stop = () => {
+      controller.abort(new Error('simulated test timeout'));
+      release.resolve();
+    };
+    signal.addEventListener('abort', stop, { once: true });
+    publicationRun = publicationFaults(controller.signal);
+    const outcome = publicationRun.catch((error: unknown) => error);
+    try {
+      await Promise.race([
+        entered.promise,
+        outcome.then(() => {
+          throw new Error('Fault sweep ended before the held I/O');
+        }),
+      ]);
+      controller.abort(new Error('simulated test timeout'));
+      let finished = false;
+      const finishing = finishPublicationRun().then(() => {
+        finished = true;
+      });
+      // Teardown must keep the current spies until the held operation has drained.
+      expect(vi.isMockFunction(io.rename)).toBe(true);
+      expect(finished).toBe(false);
+      release.resolve();
+      await finishing;
+      expect(await outcome).toBe(controller.signal.reason);
+      expect(MUTATING.map((name) => io[name])).toEqual(originals);
+      expect(vi.isMockFunction(io.readBytes)).toBe(false);
+      const next = await tempRoot();
+      await coordinated(next.root, 'read after cancelled fault sweep', async () => {
+        expect(await readFile(join(next.path, 'rowbly.config.json'), 'utf8')).toContain('"version": 1');
+      });
+    } finally {
+      stop();
+      await finishPublicationRun();
+      signal.removeEventListener('abort', stop);
+    }
   });
 
   it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
