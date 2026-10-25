@@ -24,6 +24,7 @@ erDiagram
   local.json                    # Local State: current Board and the local Me; never committed
   .gitignore                    # local.json, .lock, .lock.break, .txn/
   .lock, .lock.break, .txn/     # the lock and the commit journal (see storage.md); never committed
+  ROWBLY.md                     # optional: how the people who use this Data Root work with its Boards
   plugins/<id>/…                # Plugin files for the whole Data Root (Epics, the Assignee roster)
   boards/<board>/
     board.config.json           # the Board record, optional Stages / Custom Fields, Board Plugin settings
@@ -89,6 +90,12 @@ Plugin settings follow the same two levels, but merge: a Board's bag in `board.c
 - **Plugin files** sit in a `plugins/<id>/` folder beside what they belong to: the Data Root, a Board or a Story ([ADR-0013](../agents/adr/0013-plugin-files-live-beside-what-they-belong-to.md)).
 - Deleting a Story or Board deletes its folder with every Plugin's files. Renumbering a Story moves its whole folder.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused. A symlinked Data Root is fine.
+
+## ROWBLY.md
+
+`ROWBLY.md` is an optional Markdown file at the top of the Data Root. The people who use the Data Root write down in it how they work with its Boards, the rituals that Rowbly's configuration cannot hold: what each Stage means and when a Story enters it, which Labels, Priorities or Comments they expect, who moves a Story to `done`. It has no schema and no version. Rowbly does not read it, enforce it or create it: no command, operation or Plugin hook depends on it, and `rowbly init` does not write one. Doctor accepts it as part of the layout, so it is not an `UNKNOWN_FILE`.
+
+It is written for agents. The [agent skill](../../skills/rowbly/SKILL.md) and the [Rowbly reference](../../skills/rowbly-reference.md) tell an agent to read it before it changes data, to follow it over their own defaults (never over the user's request or Rowbly's command rules), and to edit it by hand, only with the user's agreement, when a ritual changes. The Git Plugin commits only the files a Rowbly operation saved, so an edit to `ROWBLY.md` is committed like any other file.
 
 ## Integrity and doctor
 

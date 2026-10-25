@@ -33,6 +33,7 @@ The supervisor does this before it scores complexity.
 4. **Read the request.** Run `rowbly stories show <KEY>` and `rowbly plugins list`. Then, for each Plugin that is on, read the Story's Tasks (`tasks list`), Specs (`specs list --story <KEY>`), Comments (`comments list`) and Epic (`epics show <id>`), plus any Board Specs that the Story links. The Story's name, description, Specs and Comments together are the change request.
 5. **Check that the Story can start.** If it is in a Stage of category `done`, stop and ask. If its Comments name an open draft PR or a task branch for it, report that work and ask whether to continue it or start again. If the request is materially ambiguous, ask the smallest set of blocking questions before you touch files. If the Comments Plugin is on, record the answers as a Comment.
 6. **Read the Stages** of the Story's Board with `rowbly config show --board <id>`. Do not assume their keys.
+7. **Read the Data Root's `ROWBLY.md`** if it has one (reference §4). Where its rituals name other Stages, required Comments, or someone else who moves the Story, follow them over the [Story updates](#story-updates) below, and give them to workers with the Story.
 
 ### Story updates
 

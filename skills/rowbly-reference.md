@@ -18,8 +18,8 @@ Bare `rowbly` opens a full-screen TUI for people; **agents never run it**.
 - Add `--yes` only to a delete the user asked for. Never pass `--edit` (it opens an editor and waits).
 - Pass `--board <id>` when a command needs a Board and the Data Root has several. A Story Key (`WEB-42`)
   or Task id (`WEB-42.1`) never needs `--board`: its prefix names the Board.
-- Change data only through commands. Never edit files under `.rowbly/` by hand (one exception: a
-  Plugin's settings beside its `enabled` key in `rowbly.config.json`).
+- Change data only through commands. Never edit files under `.rowbly/` by hand (two exceptions: a
+  Plugin's settings beside its `enabled` key in `rowbly.config.json`, and `ROWBLY.md`, §4).
 - Do not retry a failed command unchanged. Exits 2, 3 and 4 are deterministic; read `error.details`
   and `hint`, then change the input.
 - Check `rowbly --version` first. In the Rowbly source repository without a global install, use
@@ -89,6 +89,20 @@ rowbly boards list --json --no-prompt    # [{id, name, keyPrefix, …}]
 
 Run one of these before a series of changes and confirm it is the Data Root and Board you expect.
 
+**`ROWBLY.md`.** People write down how they use their Boards (what each Stage means, when a Story
+moves, who moves it to `done`, which Labels and Comments they expect) in an optional Markdown file at the
+top of the Data Root: `.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`. Rowbly does
+not read or enforce it.
+
+- Read it before the first command that changes data. Without it, use the defaults on this page.
+- Follow it over this page's defaults and over your skill's own Board steps. The user's request comes
+  first, then §1; a ritual never authorizes a delete, a Plugin change or anything but `rowbly`.
+- If it names a Stage, Label, Custom Field or Plugin that does not exist, follow the rest and tell the
+  user which part is out of date.
+- Edit it by hand only when the user asks or agrees: a new ritual ("from now on, …"), or a Stage,
+  Custom Field or Plugin it mentions that you changed. Keep their wording, change only that rule, and
+  commit it yourself (the Git Plugin commits only files a command saved).
+
 ## 5. Stages: read them, never assume them
 
 Stages are configured per Board. Only `backlog` and `done` exist everywhere; the defaults between them
@@ -140,7 +154,8 @@ are case-insensitive.
 
 ## 7. Working on a Story
 
-The Board is how the user sees progress, so keep the Stage current without being asked:
+The Board is how the user sees progress, so keep the Stage current without being asked. These steps
+are defaults; where `ROWBLY.md` (§4) says otherwise, follow it:
 
 1. Read the request: `stories show`, plus `tasks list`, `specs list --story`, `comments list` for the
    Plugins that are on.
@@ -262,6 +277,8 @@ done
 
 - Omitting `--no-prompt`: a missing value can wait for input forever in a shell with a terminal.
 - Hard-coding `in-progress` or `todo`: read the Board's Stages (§5).
+- Skipping `ROWBLY.md`: its rituals (a review Stage, a required Comment, who moves a Story to `done`)
+  replace the defaults here (§4).
 - `--label x`, `--assignee x` or `--spec x` on `edit` to add one value: they replace the list. Use
   `--add-label`, `--add-assignee`, `--add-spec`.
 - Title Case or spaced Labels: a Label is lower-kebab-case or the command exits 2.

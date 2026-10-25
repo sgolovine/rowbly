@@ -258,7 +258,8 @@ export function createDoctorService(ctx: RowblyContext, _repos: Repositories, op
     for (const file of layoutFiles) {
       const parts = file.split('/');
       const [top, id = '', sub, key = '', name, plugin = ''] = parts;
-      if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore'].includes(file)) continue;
+      if (parts.length === 1 && ['rowbly.config.json', 'local.json', '.gitignore', 'ROWBLY.md'].includes(file))
+        continue;
       if (top === 'plugins' && parts.length >= 3 && isSlug(id)) {
         seen(id, file, 'files');
         continue;
