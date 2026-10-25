@@ -47,10 +47,13 @@ export function runScript(script: string, args: string[], options: { shell?: str
 
 /**
  * Every entry under `dir` (skipping `skip` names at the top), as a sorted map of `/`-separated
- * relative path → file text, `<dir>` or `-> <link target>`.
+ * relative path → exact file bytes, `<dir>` or `-> <link target>`.
  */
-export async function snapshotTree(dir: string, skip: readonly string[] = ['.txn']): Promise<Record<string, string>> {
-  const out: Record<string, string> = {};
+export async function snapshotTree(
+  dir: string,
+  skip: readonly string[] = ['.txn'],
+): Promise<Record<string, string | Buffer>> {
+  const out: Record<string, string | Buffer> = {};
   async function walk(rel: string): Promise<void> {
     const names = (await readdir(join(dir, rel))).sort();
     for (const name of names) {
@@ -62,7 +65,7 @@ export async function snapshotTree(dir: string, skip: readonly string[] = ['.txn
       else if (info.isDirectory()) {
         out[childRel] = '<dir>';
         await walk(childRel);
-      } else out[childRel] = await readFile(path, 'utf8');
+      } else out[childRel] = await readFile(path);
     }
   }
   await walk('');

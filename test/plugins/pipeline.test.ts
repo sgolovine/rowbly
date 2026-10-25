@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
-import { definePlugin } from '../../src/plugin-api';
+import { definePlugin, type PluginChangeSet } from '../../src/plugin-api';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -206,5 +206,86 @@ describe('react', () => {
     await services.boards.update('web', { name: 'Renamed' });
     expect((await services.boards.get('web')).name).toBe('Renamed');
     expect(warnings).toEqual(['Plugin "echo" failed to react to boards.update: echo failed']);
+  });
+});
+
+describe('binary Plugin files', () => {
+  it('keeps bytes private through transforms, guards, stored reads and sealed writers', async () => {
+    const bytes = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
+    let writer: PluginChangeSet | undefined;
+    const binary = definePlugin({
+      id: 'binary',
+      name: 'Binary',
+      description: '',
+      hooks: {
+        'stories.create': {
+          async transform({ changes, result, plugin }) {
+            writer = changes;
+            const scope = { story: result.key };
+            const input = new Uint8Array(bytes);
+            const writing = changes.writeBinaryFile(scope, 'image.png', input);
+            input.fill(0); // The copy must precede the first asynchronous scope read.
+            await writing;
+            const pending = await changes.readBinaryFile(scope, 'image.png');
+            expect(pending).toEqual(bytes);
+            pending?.fill(0);
+            expect(await changes.readBinaryFile(scope, 'image.png')).toEqual(bytes);
+            expect(await plugin.files.readBinary('dataRoot', 'image.png')).toBeNull();
+            await changes.writeBinaryFile('dataRoot', 'image.png', bytes);
+            await changes.writeBinaryFile({ board: 'web' }, 'image.png', bytes);
+            await changes.writeFile(scope, 'note.txt', 'unchanged text API');
+            expect(await changes.readFile(scope, 'note.txt')).toBe('unchanged text API');
+          },
+          async guard({ changes, result }) {
+            expect('writeBinaryFile' in changes).toBe(false);
+            await expect(writer?.writeBinaryFile('dataRoot', 'late.png', bytes)).rejects.toMatchObject({
+              code: 'INTERNAL',
+            });
+            const files = changes.changes.filter((change) => change.type === 'file');
+            expect(files[0]?.after).toMatchObject({
+              kind: 'binary',
+              size: bytes.length,
+              sha256: expect.stringMatching(/^[a-f0-9]{64}$/),
+            });
+            expect(Object.isFrozen(files[0]?.after)).toBe(true);
+            expect(await changes.readBinaryFile({ story: result.key }, 'image.png')).toEqual(bytes);
+          },
+        },
+      },
+    });
+    const t = await pluginRoot({ binary: true });
+    const { services } = await withPlugins(t, [binary]);
+    const story = await services.stories.create('web', { name: 'Binary' });
+    const plugin = services.plugins.context('binary');
+    const scope = { story: story.key };
+    const stored = await plugin.files.readBinary(scope, 'image.png');
+    expect(stored).toEqual(bytes);
+    stored?.fill(0);
+    expect(await plugin.files.readBinary(scope, 'image.png')).toEqual(bytes);
+    expect(await readFile(join(t.path, `boards/web/stories/${story.key}/plugins/binary/image.png`))).toEqual(
+      Buffer.from(bytes),
+    );
+    expect((await services.doctor.check()).findings.filter((f) => f.code === 'DATA_INTEGRITY')).toEqual([]);
+    await plugin.operation('delete', {}, async (changes) => {
+      await changes.deleteFile(scope, 'image.png');
+      expect(await changes.readBinaryFile(scope, 'image.png')).toBeNull();
+      expect(changes.changes.find((c) => c.type === 'file')?.before).toMatchObject({
+        kind: 'binary',
+        size: bytes.length,
+      });
+    });
+    expect(await plugin.files.readBinary(scope, 'image.png')).toBeNull();
+    await plugin.operation('delete-text', {}, async (changes) => {
+      await changes.deleteFile(scope, 'note.txt');
+      expect(changes.changes.find((c) => c.type === 'file')?.before).toBe('unchanged text API');
+    });
+    await expect(writer?.writeBinaryFile(scope, 'late.png', bytes)).rejects.toMatchObject({ code: 'INTERNAL' });
+    // Binary paths must use the existing symlink policy for both reads and writes.
+    await mkdir(join(t.path, 'elsewhere'));
+    await symlink(join(t.path, 'elsewhere'), join(t.path, 'plugins/binary/linked'), 'dir');
+    await expect(plugin.files.readBinary('dataRoot', 'linked/image.png')).rejects.toMatchObject({ code: 'VALIDATION' });
+    await expect(
+      plugin.operation('linked', {}, (changes) => changes.writeBinaryFile('dataRoot', 'linked/image.png', bytes)),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
   });
 });

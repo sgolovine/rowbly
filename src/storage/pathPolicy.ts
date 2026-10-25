@@ -60,6 +60,17 @@ export async function readPluginFile(folder: string, plugin: string, name: strin
   }
 }
 
+/** Stored bytes, with the same scope and symbolic link checks as text reads. */
+export async function readPluginBinaryFile(folder: string, plugin: string, name: string): Promise<Uint8Array | null> {
+  const path = await resolvePluginFile(folder, plugin, name);
+  try {
+    return new Uint8Array(await io.readBytes(path));
+  } catch (err) {
+    if (errorCode(err) === 'ENOENT') return null;
+    throw err;
+  }
+}
+
 function checkedId(plugin: string): string {
   if (isSlug(plugin)) return plugin;
   throw new ValidationError(`invalid Plugin id "${plugin}"`, { details: { plugin } });

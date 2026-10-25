@@ -10,6 +10,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 255, 128]);
+const NEXT_PNG = new Uint8Array([...PNG, 1, 254]);
+
 const clock = fixedClock(FIXED_NOW);
 
 /** The transaction folders left in `.txn/`. */
@@ -23,7 +26,7 @@ async function journal(root: string): Promise<string[]> {
  */
 async function fixtureRoot(): Promise<string> {
   const t = await tempRoot();
-  const put = async (rel: string, text: string) => {
+  const put = async (rel: string, text: string | Uint8Array) => {
     await mkdir(join(t.path, rel, '..'), { recursive: true });
     await writeFile(join(t.path, rel), text);
   };
@@ -32,7 +35,9 @@ async function fixtureRoot(): Promise<string> {
     await put(`boards/web/stories/WEB-${n}/story.json`, `{"key":"WEB-${n}","assignee":"bob"}\n`);
     await put(`boards/web/stories/WEB-${n}/plugins/specs/spec.md`, `spec of WEB-${n}\n`);
   }
-  await put('boards/web/stories/WEB-3/plugins/unknown/data.bin', 'opaque\n');
+  await put('boards/web/stories/WEB-3/plugins/unknown/data.bin', PNG);
+  await put('boards/web/stories/WEB-1/plugins/unknown/moved.png', PNG);
+  await put('plugins/unknown/deleted.png', PNG);
   await put('boards/ops/board.config.json', '{"id":"ops"}\n');
   await put('boards/ops/stories/OPS-1/story.json', '{"key":"OPS-1"}\n');
   await put('plugins/epics/epics.json', '{"epics":["e1"]}\n');
@@ -61,10 +66,13 @@ const BIG_PLAN: TransactionPlan = {
     },
     { kind: 'delete', path: 'plugins/epics/epics.json', pruneTo: '' },
     { kind: 'delete', path: 'boards/ops' },
+    { kind: 'write', path: 'plugins/unknown/new.png', text: PNG },
+    { kind: 'write', path: 'boards/web/stories/WEB-3/plugins/unknown/data.bin', text: NEXT_PNG },
+    { kind: 'delete', path: 'plugins/unknown/deleted.png' },
   ],
 };
 
-async function expectedNewState(): Promise<Record<string, string>> {
+async function expectedNewState(): Promise<Record<string, string | Buffer>> {
   const root = await fixtureRoot();
   const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
   await tx.commit();
@@ -75,21 +83,22 @@ describe('Transaction.commit', () => {
   it('applies every change and removes its journal', async () => {
     const root = await fixtureRoot();
     const tx = await prepareTransaction(root, BIG_PLAN, { now: clock.now });
-    expect(tx.manifest.steps).toHaveLength(12);
+    expect(tx.manifest.steps).toHaveLength(15);
     expect(await tx.commit()).toEqual({ id: tx.id, leftover: false });
 
     const after = await snapshotTree(root);
     expect(after).toEqual(await expectedNewState());
-    expect(after['rowbly.config.json']).toBe('{"version":1,"assignees":[]}\n');
+    expect(after['rowbly.config.json']).toEqual(Buffer.from('{"version":1,"assignees":[]}\n'));
     // The swap: WEB-1's old folder (and its Spec) is now WEB-2, minus the deleted Spec.
-    expect(after['boards/web/stories/WEB-2/story.json']).toBe('{"key":"WEB-2","from":"WEB-1"}\n');
-    expect(after['boards/web/stories/WEB-2/plugins']).toBeUndefined();
-    expect(after['boards/web/stories/WEB-1/plugins/specs/spec.md']).toBe('spec of WEB-2\n');
-    expect(after['boards/web/stories/WEB-1/plugins/specs/new.md']).toBe('new spec\n');
-    // The unknown Plugin's file is untouched; the deleted Board takes every Plugin's files.
-    expect(after['boards/web/stories/WEB-3/plugins/unknown/data.bin']).toBe('opaque\n');
+    expect(after['boards/web/stories/WEB-2/story.json']).toEqual(Buffer.from('{"key":"WEB-2","from":"WEB-1"}\n'));
+    expect(after['boards/web/stories/WEB-2/plugins/unknown/moved.png']).toEqual(Buffer.from(PNG));
+    expect(after['boards/web/stories/WEB-1/plugins/specs/spec.md']).toEqual(Buffer.from('spec of WEB-2\n'));
+    expect(after['boards/web/stories/WEB-1/plugins/specs/new.md']).toEqual(Buffer.from('new spec\n'));
+    // Binary replacement, creation and deletion; the deleted Board takes every Plugin's files.
+    expect(after['boards/web/stories/WEB-3/plugins/unknown/data.bin']).toEqual(Buffer.from(NEXT_PNG));
+    expect(after['plugins/unknown/new.png']).toEqual(Buffer.from(PNG));
+    expect(after['plugins/unknown/deleted.png']).toBeUndefined();
     expect(Object.keys(after).filter((p) => p.startsWith('boards/ops'))).toEqual([]);
-    expect(after.plugins).toBeUndefined();
     expect(await journal(root)).toEqual([]);
   });
 
@@ -196,7 +205,15 @@ describe('recoverTransactions', () => {
 describe('a killed process', () => {
   async function planFile(root: string): Promise<string> {
     const path = join(root, '..', 'plan.json');
-    await writeFile(path, JSON.stringify(BIG_PLAN));
+    const changes = await Promise.all(
+      BIG_PLAN.changes.map(async (change, n) => {
+        if (change.kind !== 'write' || typeof change.text === 'string') return change;
+        const payload = join(root, '..', `payload-${n}.bin`);
+        await writeFile(payload, change.text);
+        return { ...change, text: { payload } };
+      }),
+    );
+    await writeFile(path, JSON.stringify({ ...BIG_PLAN, changes }));
     return path;
   }
 
