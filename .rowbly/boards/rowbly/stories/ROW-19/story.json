@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "Scroll description with scroll-wheel",
   "description": "The story description currently can only be scrolled with page up + page down buttons. Make it so I can also scroll it with my mouse scroll wheel just like a regular UI application.",
-  "stage": "todo",
-  "rank": "a3",
+  "stage": "in-progress",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:17:59.534Z",
-  "updatedAt": "2026-10-25T15:17:59.534Z"
+  "updatedAt": "2026-10-25T16:33:29.572Z"
 }
