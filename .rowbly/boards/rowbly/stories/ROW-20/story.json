@@ -12,5 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T15:26:27.648Z",
-  "updatedAt": "2026-10-25T15:29:25.987Z"
+  "updatedAt": "2026-10-25T16:22:57.962Z",
+  "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "uowBLSfj",
+          "author": "sunny",
+          "body": "Complexity 3 (one development agent, no separate research or validation agent). Branch claude/row-20-skills-install, built on ROW-18's skills command group. Plan: add `rowbly skills install [path]` (with no path, a Clack menu of the official skills shipped in the package; copies into the --harness skills folder), split `rowbly skills list` into Official and Custom sections (text and --json), and update the user guide and skill references. No new tests, per AGENTS.md. Validation is the four repository checks, a manual run and agentic-tui screenshots.",
+          "createdAt": "2026-10-25T16:22:57.961Z",
+          "updatedAt": "2026-10-25T16:22:57.961Z"
+        }
+      ]
+    }
+  }
 }
