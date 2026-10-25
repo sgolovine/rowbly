@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-25T17:38:09.530Z",
-  "updatedAt": "2026-10-25T17:43:02.875Z",
+  "updatedAt": "2026-10-25T23:19:02.925Z",
   "plugins": {
     "epics": {
       "epic": "clipboard-image-attachments"
@@ -30,6 +30,13 @@
           "body": "The user decided (2026-10-25) not to wait for this check: ROW-28 goes ahead with the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste where terminals send one). The user will run the terminal check later and post the findings table here. It needs real macOS, Windows and Linux terminals, which the rook workers don't have.",
           "createdAt": "2026-10-25T17:43:02.874Z",
           "updatedAt": "2026-10-25T17:43:02.874Z"
+        },
+        {
+          "id": "R4RWenIY",
+          "author": "sunny",
+          "body": "Completion audit (2026-10-25): ROW-25 has no Tasks or Story Specs, and the required real-terminal findings table is still absent. Related paste-hook PR #113 (ROW-28) merged at 2026-10-25T21:23:01Z, but it does not supply this Story’s terminal measurements. This environment cannot run the required macOS and Windows terminal matrix. ROW-25 remains In Progress pending actual findings or a user-approved scope change; no terminal results have been inferred from simulated key input.",
+          "createdAt": "2026-10-25T23:19:02.924Z",
+          "updatedAt": "2026-10-25T23:19:02.924Z"
         }
       ]
     }
