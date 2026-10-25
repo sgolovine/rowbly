@@ -10,7 +10,7 @@ export const syncAction: PluginAction = {
   label: 'Sync',
   target: 'none',
   async run({ plugin, ui }) {
-    const result = await plugin.git.requestSync(resolveSyncOptions);
+    const result = await plugin.git.requestSync(resolveSyncOptions, 'rebase');
     if (result.last?.kind !== 'synchronized') throw new Error(result.last?.message ?? 'Sync did not finish');
     ui.toast(`Synced with ${result.last.upstream}`);
   },

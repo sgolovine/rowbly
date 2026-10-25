@@ -1,7 +1,7 @@
 import { definePlugin, z } from '../../plugin-api';
 import { commands } from './commands';
-import { syncAction } from './syncAction';
 import { Preferences, resolveCommitOptions, resolveSyncOptions } from './model';
+import { syncAction } from './syncAction';
 
 export const git = definePlugin({
   id: 'git',

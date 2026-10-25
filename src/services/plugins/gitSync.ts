@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { PluginError } from '../../core';
+import { ConflictError, PluginError } from '../../core';
 import type { DataRoot } from '../../schemas';
 import { createRepositories } from '../../storage';
 import { gitText } from '../../storage/gitProcess';
@@ -43,7 +43,11 @@ interface Resource {
   timer?: ReturnType<typeof setTimeout>;
 }
 const resources = new Map<string, Resource>();
-const jobs = new Map<string, { root: string; done: Promise<void> }>();
+interface ManualRequest {
+  id: string;
+  result?: GitSyncState['last'];
+}
+const jobs = new Map<string, { root: string; done: Promise<void>; manual?: ManualRequest }>();
 const disposed = new WeakSet<object>();
 export function disposeSyncOwner(owner: object): void {
   disposed.add(owner);
@@ -94,9 +98,16 @@ function arm(file: string, resource: Resource, due: number) {
   );
   resource.timer.unref();
 }
-function enqueue(file: string, resource: Resource): Promise<void> {
+function enqueue(file: string, resource: Resource, manual?: ManualRequest): Promise<void> {
   const prior = jobs.get(file);
-  if (prior) return prior.done;
+  if (prior) {
+    if (!manual) return prior.done;
+    // A scheduled merge cannot satisfy a manual rebase. Join a rebase, or wait then admit one.
+    return prior.done.then(async () => {
+      if (prior.manual) manual.result = prior.manual.result;
+      else await enqueue(file, resource, manual);
+    });
+  }
   const startedAt = Date.now();
   let admittedId: string | undefined;
   const done = outsideCoordination(async () => {
@@ -107,12 +118,18 @@ function enqueue(file: string, resource: Resource): Promise<void> {
         const current = await preferences(resource);
         const state = (await readSyncState(file)) ?? initial(current.intervalSeconds);
         clearTimeout(resource.timer);
-        if (!current.enabled) {
+        if (
+          manual &&
+          (await createRepositories(resource.root).rootConfig.get()).plugins?.[resource.id]?.enabled !== true
+        )
+          throw new Error('The Git Plugin is Off');
+        if (manual && resource.owner && disposed.has(resource.owner)) throw new Error('This Git host has closed');
+        if (!manual && !current.enabled) {
           delete state.requested;
           await writeSyncState(file, state);
           return null;
         }
-        if (state.target && !isDeepStrictEqual(state.target, target)) {
+        if (!manual && state.target && !isDeepStrictEqual(state.target, target)) {
           state.target = target;
           await writeSyncState(file, state);
           throw new Error('Git branch or upstream changed since scheduling; next interval uses the current branch');
@@ -133,13 +150,13 @@ function enqueue(file: string, resource: Resource): Promise<void> {
           };
           delete state.active;
         }
-        if (!state.requested && state.nextDue > Date.now()) {
+        if (!manual && !state.requested && state.nextDue > Date.now()) {
           await writeSyncState(file, state);
           arm(file, resource, state.nextDue);
           return null;
         }
         const active = {
-          id: state.requested ?? randomBytes(8).toString('hex'),
+          id: manual?.id ?? state.requested ?? randomBytes(8).toString('hex'),
           pid: process.pid,
           host: localHost(),
           startedAt: Date.now(),
@@ -177,8 +194,10 @@ function enqueue(file: string, resource: Resource): Promise<void> {
             );
           },
           target,
+          manual ? 'rebase' : 'merge',
         );
         last = {
+          id: admitted.active.id,
           kind: 'synchronized',
           message: 'Synchronized with configured upstream',
           startedAt: admitted.active.startedAt,
@@ -191,6 +210,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
       } catch (err) {
         const commit = await gitText(repo.top, ['rev-parse', 'HEAD']).catch(() => undefined);
         last = {
+          id: admitted.active.id,
           kind: 'failed',
           message: errorText(err),
           startedAt: admitted.active.startedAt,
@@ -201,6 +221,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
           upstream: err instanceof GitSyncPushError ? err.local.upstream : undefined,
         };
       }
+      if (manual) manual.result = last;
       await coordinated(resource.root, 'git.sync.finish', async () => {
         const live = resources.get(file) ?? resource;
         const current = await preferences(live),
@@ -216,6 +237,16 @@ function enqueue(file: string, resource: Resource): Promise<void> {
       });
     });
   }).catch(async (err) => {
+    if (manual)
+      manual.result = {
+        id: manual.id,
+        kind: 'failed',
+        message: errorText(err),
+        startedAt,
+        finishedAt: Date.now(),
+        evidence: [],
+        repairs: 0,
+      };
     resource.warn(`Git synchronization: ${errorText(err)}`);
     const live = resources.get(file);
     if (!live) return;
@@ -249,7 +280,7 @@ function enqueue(file: string, resource: Resource): Promise<void> {
       if (!(live.owner && disposed.has(live.owner))) arm(file, live, Date.now() + 30_000);
     }
   });
-  jobs.set(file, { root: resource.root.path, done });
+  jobs.set(file, { root: resource.root.path, done, manual });
   void done.finally(() => {
     if (jobs.get(file)?.done === done) jobs.delete(file);
   });
@@ -356,7 +387,7 @@ export function createGitSync(
         else arm(file, resource, state.nextDue);
       });
     },
-    async requestSync(source: GitSyncOptionsSource): Promise<GitSyncStatus> {
+    async requestSync(source: GitSyncOptionsSource, mode: 'merge' | 'rebase' = 'merge'): Promise<GitSyncStatus> {
       const scope = currentScope();
       if (scope && (!['command', 'screen'].includes(scope.stage) || scope.ended))
         throw new PluginError('Git synchronization can be requested only from a command or screen');
@@ -365,6 +396,17 @@ export function createGitSync(
       if (!found) throw new Error('This Git host has closed');
       const { file, resource } = found;
       const root = resource.root;
+      if (mode === 'rebase') {
+        const manual: ManualRequest = { id: randomBytes(8).toString('hex') };
+        await enqueue(file, resource, manual);
+        // Use this exact run's completion, never a possibly newer persisted last result.
+        const result = manual.result;
+        if (result?.kind !== 'synchronized')
+          throw new ConflictError(result?.message ?? 'Sync did not complete', {
+            hint: 'Local work is retained. Check the configured upstream, network and Git diagnostics; resolve any reported conflict, then run Sync again.',
+          });
+        return { ...(await status(source)), last: result };
+      }
       const target = await configuredUpstream(await requireRepository(root)).catch(() => undefined);
       const request = await coordinated(root, 'git.sync.request', async () => {
         if (owner && disposed.has(owner)) throw new Error('This Git host has closed');

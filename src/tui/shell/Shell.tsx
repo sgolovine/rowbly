@@ -108,6 +108,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       return next;
     });
   // The Plugin Actions whose target is in focus on the top screen (ADR-0017).
+  const runningActions = useRef(new Set<string>());
   const actions: HeaderAction[] = services
     ? plugins.flatMap((plugin) =>
         plugin.actions.flatMap((action) => {
@@ -121,7 +122,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
               label: busy ? `${action.label}…` : action.label,
               busy,
               run: () => {
-                if (busy) return;
+                if (action.target === 'none' && runningActions.current.has(id)) return;
+                if (action.target === 'none') runningActions.current.add(id);
                 const ui = pluginUi(plugin.id, router, toast);
                 // The adapter turns a synchronous throw and a rejection alike into one attributed
                 // error, shown once as a toast (ADR-0020 §5). Work the Action leaves running is outside it.
@@ -130,7 +132,10 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 ).catch((err: unknown) => toast.error(err));
                 if (action.target !== 'none') return;
                 setActionRunning(id, true);
-                void settled.finally(() => setActionRunning(id, false));
+                void settled.finally(() => {
+                  runningActions.current.delete(id);
+                  setActionRunning(id, false);
+                });
               },
             },
           ];
