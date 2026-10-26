@@ -24,7 +24,7 @@
     "software-factory": {
       "stagePrompts": {
         "backlog": {
-          "enabled": true,
+          "enabled": false,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/backlog.md"
         }
       }
