@@ -120,7 +120,12 @@ export function StagePromptsScreen({ plugin, ui }: PluginScreenProps) {
   );
   useInput(
     (input) => {
-      if (input === 'l' && board) setLevel(level === 'board' ? 'global' : 'board');
+      if (input === 'l' && board) {
+        // The other level's list starts at its first row, so no key acts on the Stage highlighted before.
+        setHighlighted(undefined);
+        setLevel(level === 'board' ? 'global' : 'board');
+        return;
+      }
       if (!current) return;
       if (input === ' ') toggle(current);
       else if (input === 'e') open(current, 'edit');
@@ -148,6 +153,7 @@ export function StagePromptsScreen({ plugin, ui }: PluginScreenProps) {
         <Text color={theme.danger}>Could not load Stage Prompts.</Text>
       ) : (
         <SelectList
+          key={level}
           items={data.stages.map((row) => ({ value: row.key, label: row.name, description: describe(row) }))}
           onFilteringChange={setFiltering}
           onHighlight={(item) => setHighlighted(item?.value)}
