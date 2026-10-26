@@ -30,6 +30,10 @@
         "todo": {
           "enabled": true,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/todo.md"
+        },
+        "in-progress": {
+          "enabled": true,
+          "path": "boards/rowbly/plugins/software-factory/stage-prompts/in-progress.md"
         }
       }
     }
