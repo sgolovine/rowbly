@@ -19,5 +19,15 @@
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-25T16:53:38.207Z"
+  "updatedAt": "2026-10-25T16:53:38.207Z",
+  "plugins": {
+    "software-factory": {
+      "stagePrompts": {
+        "backlog": {
+          "enabled": true,
+          "path": "boards/rowbly/plugins/software-factory/stage-prompts/backlog.md"
+        }
+      }
+    }
+  }
 }
