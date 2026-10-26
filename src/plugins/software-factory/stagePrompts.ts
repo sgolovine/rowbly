@@ -10,7 +10,6 @@ import {
   type Stage,
   type StageCategory,
   UsageError,
-  ValidationError,
   z,
 } from '../../plugin-api';
 
@@ -382,7 +381,7 @@ export async function showStagePrompt(
 export function parseLevel(value: string | undefined): Level | undefined {
   if (value === undefined) return undefined;
   if (value === 'board' || value === 'global') return value;
-  throw new ValidationError('--level must be board or global');
+  throw new UsageError('--level must be board or global');
 }
 
 /** One Stage as a line of the human table. */
