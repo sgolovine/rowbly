@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships eight Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships nine Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -12,6 +12,7 @@ Rowbly ships eight Built-in Plugins. Each is off until a Data Root turns it on w
 | [Story Linking](#story-linking) | Blocking relationships between Stories on the same Board | [`story-linking/CONTEXT.md`](../../src/plugins/story-linking/CONTEXT.md) | [Plugin Data, ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md) |
 | [Attachments](#attachments) | PNG images on Stories | [`attachments/CONTEXT.md`](../../src/plugins/attachments/CONTEXT.md) | Binary journal: [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md) |
 | [Git](#git) | Automatic Commits and upstream synchronization | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
+| [Software Factory](#software-factory) | A Markdown Stage Prompt for each Stage, for agents | [`software-factory/CONTEXT.md`](../../src/plugins/software-factory/CONTEXT.md) | [ADR-0039](../agents/adr/0039-software-factory-stage-prompts.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
 
@@ -411,3 +412,65 @@ JSON error on stderr and the safe run summary in `error.details.synchronizationR
 retained local commit and evidence paths. It prints no success result on stdout. An active or pending
 run owned by another process returns its run summary with exit 0; this means pending, not synchronized.
 `git show` remains an inspection command and can successfully display a previous failed result.
+
+## Software Factory
+
+A **Stage Prompt** is a Markdown file of instructions for an agent working on a Story in one Stage.
+Every Stage has one place for it, Backlog and Done included, and each is on or off; all are off by
+default. `rowbly software-factory stages` gives an agent every Stage of a Board with its Stage
+Prompt in one call. `ROWBLY.md` stays the place for how people work with the whole Data Root; a
+Stage Prompt is one Stage's instructions.
+
+**Data**
+
+- Settings are keyed by Stage key under `stagePrompts`: global ones in `rowbly.config.json`
+  (`"plugins": { "software-factory": { "enabled": true, "stagePrompts": { "todo": { "enabled": true, "path": "plugins/software-factory/stage-prompts/todo.md" } } } }`),
+  a Board's own in its `board.config.json` bag (`"plugins": { "software-factory": { "stagePrompts": { … } } }`).
+- Files: `plugins/software-factory/stage-prompts/<key>.md` (global) and
+  `boards/<board>/plugins/software-factory/stage-prompts/<key>.md` (Board). `path` is relative to the
+  Data Root.
+- A Board's entry for a Stage replaces the global entry for that Stage, whole; other Stages keep the
+  global entry ([ADR-0039](../agents/adr/0039-software-factory-stage-prompts.md)). Global entries for
+  Stages the Board does not have are not shown for it.
+
+**Commands**
+
+```text
+rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
+rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
+rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
+```
+
+Writes default to the Board level (`--board`, then the current Board). `stages` and `prompt show`
+show the effective Stage Prompts without `--level`, and one level alone with it.
+
+`stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt }] }`, where
+`prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
+setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
+
+**Rules**
+
+- `enabled` is true only when the setting is on, `path` points inside the Plugin's folder for its
+  level, and the file exists. A file that cannot be read, such as a symbolic link (which Rowbly does
+  not follow), counts as missing. Agents use a Stage Prompt only when `enabled` is true.
+- `enable` without a file writes a template headed with the Stage name; on a Board, it copies the
+  global Stage Prompt's file for that Stage instead when that file can be read. `disable` keeps the
+  file; `remove` deletes the entry and its file at that level only, so a Board falls back to the
+  global entry. A file that cannot be read, such as a symbolic link, is left in place.
+- `edit` creates the file and entry when there are none. A new Board entry starts with the global
+  entry's on/off setting.
+- `enable`, `disable` and `edit` need a Stage of that level: the global (or default) Stages for
+  `--level global`, the Board's effective Stages otherwise (`NOT_FOUND`, exit 3).
+
+**TUI:** a **Stage Prompts** section in Settings (`,`) lists the current Board's Stages with their
+effective Stage Prompts (`on · board`, `on · global`, `off`), or the global level. `space` turns the
+highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the
+full-screen editor (`ctrl+s` saves), `d` removes the shown level's entry and its file, and `l`
+switches between the Board and global levels.
+
+**Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
+path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
+is no fix: create the file with `prompt edit`, or turn it off.

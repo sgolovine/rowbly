@@ -421,6 +421,39 @@ rowbly attachments open <KEY> <id>
 
 <!-- END attachments -->
 
+<!-- BEGIN software-factory -->
+### Software Factory
+
+Software Factory is a Built-in Plugin: run `rowbly plugins enable software-factory` first. It gives
+each Stage, Backlog and Done included, a Markdown **Stage Prompt** that tells an agent what to do
+with a Story in that Stage. Each Stage Prompt is on or off; all are off by default.
+
+```text
+rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
+rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
+rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
+rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
+```
+
+- Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
+  (`board.config.json`). A Board's entry for a Stage replaces the global entry for that Stage; the
+  other Stages keep the global one. Writes go to the Board level unless `--level global`.
+- Files are `.rowbly/plugins/software-factory/stage-prompts/<key>.md` (global) and
+  `.rowbly/boards/<board>/plugins/software-factory/stage-prompts/<key>.md`; the setting records the
+  path relative to the Data Root.
+- `enable` writes a template when the Stage Prompt has no file (on a Board, a copy of the global
+  Stage Prompt's file for that Stage when there is one); `disable` keeps the file; `edit`
+  replaces the text (and creates the file); `remove` deletes the entry and file at that level.
+  `enable`, `disable` and `edit` exit 3 (`NOT_FOUND`) for a Stage that level does not have.
+- `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt: { enabled, configured, source, path, exists, text } }] }`.
+  `enabled` is true only when the setting is on (`configured`), the path is inside the Plugin's
+  folder for its level, and the file exists. A file that cannot be read, such as a symbolic link,
+  counts as missing, and `remove` leaves it in place. `source` is `board`, `global` or `null`.
+- In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts.
+<!-- END software-factory -->
+
 <!-- BEGIN doctor -->
 ### Doctor
 
@@ -452,6 +485,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
+| `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing or cannot be read (a symbolic link is not followed) | — (create the file with `prompt edit`, or turn it off) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |
@@ -758,6 +792,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
+| Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 

@@ -54,6 +54,7 @@ default; kept in `~/.rowblyrc.json`).
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
+| Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch Board / global level |
 
 Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.
 

@@ -56,6 +56,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0026](0026-git-automatic-commits.md) | Git Automatic Commits implement a bounded subset of Git automation | Accepted; amended by 0030 |
 | [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
 | [0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) | Manual Sync rebases in isolation and never force-pushes | Accepted |
+| [0039](0039-software-factory-stage-prompts.md) | Stage Prompts are per-Stage settings with Markdown files in the Plugin's folder | Accepted |
 
 ### Development
 
