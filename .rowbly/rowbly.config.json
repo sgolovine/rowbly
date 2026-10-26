@@ -28,6 +28,9 @@
     },
     "story-linking": {
       "enabled": true
+    },
+    "attachments": {
+      "enabled": true
     }
   }
 }
