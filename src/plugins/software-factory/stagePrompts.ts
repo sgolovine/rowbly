@@ -147,7 +147,7 @@ async function rows(
 
 /**
  * Every Stage of the Board with its Stage Prompt: the Board's entry for a Stage replaces the global
- * one (ADR-0039 §1); global entries for Stages the Board does not have are left out.
+ * one (ADR-0039 §2); global entries for Stages the Board does not have are left out.
  */
 export async function boardOverview(plugin: PluginContext, board: string): Promise<StagePromptsOverview> {
   const [effective, global] = await Promise.all([
