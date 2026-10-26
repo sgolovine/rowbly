@@ -58,7 +58,8 @@ rowbly software-factory prompt remove todo --board web --yes --json --no-prompt 
 ## Doctor
 
 `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on but its path is not set, points
-outside the Plugin's folder, or its file is missing. Nothing is fixed; create the file with
+outside the Plugin's folder, or its file is missing or cannot be read (Rowbly does not follow a
+symbolic link). Nothing is fixed; create the file with
 `prompt edit`, or turn the Stage Prompt off, when the user asks.
 
 ## Common mistakes

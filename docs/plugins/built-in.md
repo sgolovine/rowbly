@@ -454,10 +454,11 @@ setting, `source` is `board`, `global` or `null` (none), and `text` is the file'
 **Rules**
 
 - `enabled` is true only when the setting is on, `path` points inside the Plugin's folder for its
-  level, and the file exists. Agents use a Stage Prompt only when `enabled` is true.
+  level, and the file exists. A file that cannot be read, such as a symbolic link (which Rowbly does
+  not follow), counts as missing. Agents use a Stage Prompt only when `enabled` is true.
 - `enable` without a file writes a template headed with the Stage name; `disable` keeps the file;
   `remove` deletes the entry and its file at that level only, so a Board falls back to the global
-  entry.
+  entry. A file that cannot be read, such as a symbolic link, is left in place.
 - `edit` creates the file and entry when there are none. A new Board entry starts with the global
   entry's on/off setting.
 - `enable`, `disable` and `edit` need a Stage of that level: the global (or default) Stages for
@@ -470,5 +471,5 @@ full-screen editor (`ctrl+s` saves), `d` removes the shown level's entry and its
 switches between the Board and global levels.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
-path is not set, points outside the Plugin's folder, or its file is missing. There is no fix: create
-the file with `prompt edit`, or turn it off.
+path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
+is no fix: create the file with `prompt edit`, or turn it off.

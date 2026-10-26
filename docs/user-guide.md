@@ -448,7 +448,8 @@ rowbly software-factory prompt remove <stage> [--board <id>] [--level board|glob
   `enable`, `disable` and `edit` exit 3 (`NOT_FOUND`) for a Stage that level does not have.
 - `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt: { enabled, configured, source, path, exists, text } }] }`.
   `enabled` is true only when the setting is on (`configured`), the path is inside the Plugin's
-  folder for its level, and the file exists. `source` is `board`, `global` or `null`.
+  folder for its level, and the file exists. A file that cannot be read, such as a symbolic link,
+  counts as missing, and `remove` leaves it in place. `source` is `board`, `global` or `null`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts.
 <!-- END software-factory -->
 
@@ -483,7 +484,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
-| `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing | — (create the file with `prompt edit`, or turn it off) |
+| `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing or cannot be read (a symbolic link is not followed) | — (create the file with `prompt edit`, or turn it off) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
 | `TEMP_FILE_LEFTOVER` | warning | A temporary file of an interrupted write (the file beside it is intact), or a `.moving` folder from an older Rowbly | Removes a temporary file; a `.moving` folder is only reported (move its Story back by hand) |

@@ -107,6 +107,18 @@ function boardBag(plugins: Record<string, unknown> | undefined): Record<string, 
   return bag;
 }
 
+/**
+ * The text of a Stage Prompt file, or `null` when it is missing or cannot be read: a symbolic link,
+ * which Rowbly does not follow (ADR-0019 §10), reads as no file.
+ */
+export async function readPrompt(read: () => Promise<string | null>): Promise<string | null> {
+  try {
+    return await read();
+  } catch {
+    return null;
+  }
+}
+
 async function promptOf(
   plugin: PluginReadContext,
   level: Level,
@@ -115,7 +127,7 @@ async function promptOf(
 ): Promise<StagePrompt> {
   if (!entry) return { enabled: false, configured: false, source: null, path: null, exists: false, text: null };
   const name = resolvePath(level, board, entry.path);
-  const text = name === null ? null : await plugin.files.read(scopeOf(level, board), name);
+  const text = name === null ? null : await readPrompt(() => plugin.files.read(scopeOf(level, board), name));
   return {
     enabled: entry.enabled && text !== null,
     configured: entry.enabled,
@@ -286,7 +298,7 @@ export async function setStagePrompt(
         name = defaultName(checked.stage);
         path = `${folderOf(checked.level, checked.board)}${name}`;
       }
-      let text = name === null ? null : await changes.readFile(scope, name);
+      let text = name === null ? null : await readPrompt(() => changes.readFile(scope, name as string));
       if (name !== null && change.text !== undefined) text = change.text;
       else if (name !== null && needsFile && text === null) text = templateText(stage);
       if (name !== null && text !== null && needsFile) await changes.writeFile(scope, name, text);
@@ -327,7 +339,9 @@ export async function removeStagePrompt(plugin: PluginContext, target: Target): 
           `No Stage Prompt for Stage "${checked.stage}" at the ${checked.level} level${checked.board ? ` of Board "${checked.board}"` : ''}`,
         );
       const name = resolvePath(checked.level, checked.board, current.path);
-      if (name !== null && (await changes.readFile(scope, name)) !== null) await changes.deleteFile(scope, name);
+      // A file that cannot be read, such as a symbolic link, is left where it is; only the entry goes.
+      if (name !== null && (await readPrompt(() => changes.readFile(scope, name))) !== null)
+        await changes.deleteFile(scope, name);
       await updateEntries(changes, plugin, checked, (entries) => {
         const { [checked.stage]: _removed, ...rest } = entries;
         return rest;
