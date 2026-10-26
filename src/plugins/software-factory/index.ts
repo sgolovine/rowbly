@@ -10,4 +10,5 @@ export const softwareFactory = definePlugin({
   settings: Settings,
   commands,
   doctor,
+  tui: () => import('./tui').then((m) => m.tui),
 });
