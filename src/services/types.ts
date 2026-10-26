@@ -8,6 +8,7 @@ import type {
   CustomFieldValue,
   DataRoot,
   EffectiveBoardConfig,
+  EffectiveGlobalConfig,
   IsoDate,
   KeyPrefix,
   Label,
@@ -22,7 +23,7 @@ import type {
 import type { PluginHost, PluginStatus } from './plugins/host';
 import type { PluginContext } from './plugins/types';
 
-export type { ConfigLevel, DataRoot, EffectiveBoardConfig };
+export type { ConfigLevel, DataRoot, EffectiveBoardConfig, EffectiveGlobalConfig };
 
 export interface RowblyContext {
   /** Resolved path + kind ('local' | 'global'). */
@@ -254,6 +255,8 @@ export interface SetupService {
 
 export interface ConfigService {
   effective(boardId: Slug): Promise<EffectiveBoardConfig>;
+  /** The global level alone: the stored `rowbly.config.json` and the Stages and Custom Fields a Board without its own gets. */
+  global(): Promise<EffectiveGlobalConfig>;
 }
 
 export interface BoardsService {

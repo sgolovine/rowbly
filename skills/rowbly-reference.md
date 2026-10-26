@@ -273,6 +273,18 @@ push; errors keep local work. Divergent local merge commits require `git rebase 
 Git before retrying. Never force-push. No new CLI command. Do not separately commit Rowbly data when
 Automatic Commits is On.
 
+**Software Factory** (`software-factory`): a Markdown Stage Prompt per Stage (Backlog and Done
+included), off by default, set globally or per Board; a Board's entry for a Stage replaces the global one.
+
+```sh
+rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
+rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
+rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
+```
+
+Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path inside the Plugin folder,
+file exists). `SOFTWARE_FACTORY_MISSING_PROMPT` (doctor warning) is one that is on without its file.
+
 ## 9. Setup and repair
 
 ```sh

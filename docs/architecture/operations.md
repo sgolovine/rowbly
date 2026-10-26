@@ -90,6 +90,8 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `comments.remove` | `{ target, id }` | `{ deleted }` |
 | `story-linking.add` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
+| `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
+| `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 
@@ -105,6 +107,16 @@ an outgoing link whose target no longer exists. Only the blocker's bag and `upda
 the reciprocal view is derived. Its `stories.remove` transform removes incoming references in the
 deletion's Change Set, refusing the entire operation if an invalid linking bag on the Board prevents
 safe cleanup. Its `doctor.fix` repairs only invalid targets in valid bags and keeps other Plugin Data.
+
+Software Factory's `level` is `global` (the entry in `rowbly.config.json`) or `board` (the bag in
+`boards/<board>/board.config.json`, with `board`); `stage` is a Stage key that `set` checks against
+that level's Stages, Backlog and Done included. `set` turns the Stage Prompt on or off (`enabled`),
+saves its Markdown (`text`), or both; turning it on without a file writes a template, and a new Board
+entry starts with the global entry's on/off setting. Turning it off keeps the file. `remove` deletes
+the entry and its file at that level only. A `StagePrompt` result is
+`{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off setting,
+`enabled` is true only when it is on, `path` (relative to the Data Root) resolves inside the
+Plugin's folder for the level, and the file exists.
 
 ## Plugin input of core operations
 

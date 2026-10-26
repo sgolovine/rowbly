@@ -14,6 +14,8 @@ import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic, editEpic, setEpicClosed } from '../../src/plugins/epics/service';
 import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
+import { softwareFactory } from '../../src/plugins/software-factory';
+import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -71,6 +73,7 @@ describe('the operation inventory (ARCH-02)', () => {
       attachments: true,
       'story-linking': true,
       git: true,
+      'software-factory': true,
       rec: true,
     });
     const { execFileSync } = await import('node:child_process');
@@ -88,6 +91,7 @@ describe('the operation inventory (ARCH-02)', () => {
       attachments,
       storyLinking,
       git,
+      softwareFactory,
       recorder,
     ]);
     await configure(services.plugins.context('git'), { frequency: 'interval', intervalSeconds: 86400 });
@@ -126,6 +130,10 @@ describe('the operation inventory (ARCH-02)', () => {
     const linking = services.plugins.context('story-linking');
     await addLink(linking, 'WEB-1', 'WEB-2');
     await removeLink(linking, 'WEB-1', 'WEB-2');
+    const factory = services.plugins.context('software-factory');
+    await setStagePrompt(factory, { level: 'global', stage: 'backlog' }, { enabled: true });
+    await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'done' }, { text: '# Done' });
+    await removeStagePrompt(factory, { level: 'global', stage: 'backlog' });
 
     expect(new Set(seen.map((s) => s.name))).toEqual(new Set(listed.keys()));
     for (const { name, keys } of seen) {

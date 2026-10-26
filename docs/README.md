@@ -34,7 +34,7 @@ docs/
     storage.md               the Data Root lock, the commit journal, recovery and its guarantees
   plugins/
     README.md                the plugin system: loading, settings, Plugin Data, names, surfaces, doctor
-    built-in.md              the Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Attachments, Story Linking and Git
+    built-in.md              the Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Attachments, Story Linking, Git and Software Factory
     writing-a-plugin.md      tutorial: build a Plugin step by step
     api.md                   reference: every contract a Plugin can rely on
     compatibility.md         policy: API versions, data formats, migrations, dependencies

@@ -5,7 +5,7 @@ description: "Use whenever an agent works with Rowbly, the file-backed Kanban
   (--json, --no-prompt, --yes, exit codes, JSON errors), setting up a Data Root,
   Boards, Me, Stages and Custom Fields, tracking Stories (keys like WEB-42),
   turning Plugins on and using them (Assignees, Tasks, Epics, Specs, Comments,
-  PNG Attachments, automatic Git commits and synchronization), and checking or repairing a Data Root with rowbly
+  PNG Attachments, automatic Git commits and synchronization, Stage Prompts), and checking or repairing a Data Root with rowbly
   doctor after a git merge or an exit 6. Not for writing a new Plugin."
 ---
 
@@ -31,6 +31,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
 | Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
+| Instructions for an agent in each Stage (`rowbly software-factory stages`) | [Software Factory Plugin](references/plugin-software-factory.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
 | What each file under `.rowbly/` is, what to commit, the Home Config | [Data Root layout](references/data-root.md) |
 | Read, follow or update the Data Root's `ROWBLY.md` (how its people use their Boards) | [Data Root layout](references/data-root.md#rowblymd-how-this-data-root-is-used) |
@@ -138,7 +139,7 @@ Data Root in context. Change global Me only when the user asks.
 
 ## 6. Plugins are off until the Data Root turns them on
 
-Rowbly ships eight Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Attachments, Story Linking and Git. Each is off until
+Rowbly ships nine Built-in Plugins: Assignees, Tasks, Epics, Specs, Comments, Attachments, Story Linking, Git and Software Factory. Each is off until
 the Data Root turns it on, and turning one on changes the Data Root for everyone who uses it. While a
 Plugin is off, its command is unknown (`rowbly tasks` exits 2 with the hint `Plugin "tasks" is off`)
 and so are its options on core commands (`--assignee` exits 2 with `unknown option`). Check with

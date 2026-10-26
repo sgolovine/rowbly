@@ -5,6 +5,7 @@ import {
   type DataRoot,
   DEFAULT_STAGES,
   type EffectiveBoardConfig,
+  type EffectiveGlobalConfig,
   type RowblyConfig,
   type Slug,
   type StageConfig,
@@ -17,6 +18,20 @@ export async function resolveCascade(root: DataRoot, boardId: Slug): Promise<Eff
   const repos = createRepositories(root);
   const [global, board] = await Promise.all([repos.rootConfig.get(), repos.boards.get(boardId)]);
   return cascade(global, board);
+}
+
+/** Effective Stages and Custom Fields at the global level, with the stored `rowbly.config.json`. */
+export async function resolveGlobal(root: DataRoot): Promise<EffectiveGlobalConfig> {
+  const config = await createRepositories(root).rootConfig.get();
+  const [configured, stagesSource] = pick<StageConfig>(undefined, config.stages, DEFAULT_STAGES);
+  const [customFields, customFieldsSource] = pick<CustomFieldDef>(undefined, config.customFields, []);
+  return {
+    config,
+    stages: withFixedStages(configured),
+    stagesSource: stagesSource === 'global' ? 'global' : 'default',
+    customFields,
+    customFieldsSource: customFieldsSource === 'global' ? 'global' : 'default',
+  };
 }
 
 /**

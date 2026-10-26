@@ -10,6 +10,7 @@
 - [Comments](../../src/plugins/comments/CONTEXT.md) — a Built-in Plugin that keeps Comments on Stories
 - [Story Linking](../../src/plugins/story-linking/CONTEXT.md) — a Built-in Plugin that records blocking relationships between Stories on the same Board
 - [Attachments](../../src/plugins/attachments/CONTEXT.md) — a Built-in Plugin that keeps PNG images on Stories
+- [Software Factory](../../src/plugins/software-factory/CONTEXT.md) — a Built-in Plugin that gives each Stage a Markdown Stage Prompt for agents
 
 ## Relationships
 
@@ -20,6 +21,7 @@
 - **Comments → Rowbly**: a Story's Thread is Plugin Data on that Story; a Comment's author is Me, or no one (`null`) when Me is not set
 - **Story Linking → Rowbly**: outgoing Story links are Plugin Data on the blocking Story; incoming links are derived from the same Board's Stories
 - **Attachments → Rowbly**: ordered Attachment entries are Plugin Data on a Story; PNG bytes live in its Plugin folder and move with it when doctor renumbers the Story
+- **Software Factory → Rowbly**: a Stage Prompt belongs to one Stage key at the global level or on one Board; its setting is Plugin Data in `rowbly.config.json` or `board.config.json`, a Board's entry for a Stage replaces the global one, and its file lives in the Plugin's folder for that level
 - **Rowbly → Plugins**: none. Plugins use core terms; core never uses a Plugin's terms
 
 - [Git](../../src/plugins/git/CONTEXT.md) reacts to saved Operations with Automatic Commits; its personal preferences live in Local State.
