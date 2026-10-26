@@ -2,7 +2,7 @@
 
 Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships eight Built-in Plugins, each with its own reference:
+Plugins add optional features. Rowbly ships nine Built-in Plugins, each with its own reference:
 
 | Plugin | Adds | Reference |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ Plugins add optional features. Rowbly ships eight Built-in Plugins, each with it
 | `comments` | Comments on a Story | [Comments](plugin-comments.md) |
 | `story-linking` | Blocking relationships between Stories on the same Board | [Story Linking](plugin-story-linking.md) |
 | `git` | Automatic Commits of Rowbly changes | [Git](plugin-git.md) |
+| `software-factory` | A Markdown Stage Prompt for each Stage, for agents | [Software Factory](plugin-software-factory.md) |
 
 Each is off until the Data Root turns it on. Turning a Plugin on applies to everyone who uses that Data
 Root, because the setting is in the committed `rowbly.config.json`.
