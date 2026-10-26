@@ -215,6 +215,12 @@ export function templateText(stage: Pick<Stage, 'name'>): string {
   return `# ${stage.name}\n\nWhat an agent does with a Story in the ${stage.name} Stage: what to read first, what to change, and when the Story is ready to leave it.\n`;
 }
 
+/** The text of the global Stage Prompt `entry`, which a new Board file starts from, or `null`. */
+async function globalText(plugin: PluginReadContext, entry: StagePromptEntry | undefined): Promise<string | null> {
+  const name = resolvePath('global', undefined, entry?.path);
+  return name === null ? null : readPrompt(() => plugin.files.read('dataRoot', name));
+}
+
 export interface Target {
   level: Level;
   board?: string;
@@ -267,7 +273,8 @@ async function readEntries(changes: PluginChangeSet, plugin: PluginContext, targ
 /**
  * Turns a Stage Prompt on or off, or saves its text (`software-factory.set`). Turning one on, or
  * saving text, gives it a file when its path does not resolve; turning one on without a file writes
- * a template. Turning one off keeps the file.
+ * a copy of the global Stage Prompt's file at the Board level when there is one, else a template.
+ * Turning one off keeps the file.
  */
 export async function setStagePrompt(
   plugin: PluginContext,
@@ -299,14 +306,16 @@ export async function setStagePrompt(
         path = `${folderOf(checked.level, checked.board)}${name}`;
       }
       let text = name === null ? null : await readPrompt(() => changes.readFile(scope, name as string));
-      if (name !== null && change.text !== undefined) text = change.text;
-      else if (name !== null && needsFile && text === null) text = templateText(stage);
-      if (name !== null && text !== null && needsFile) await changes.writeFile(scope, name, text);
-      // A new Board entry starts with the setting it replaces, so saving text alone changes no on/off setting.
-      const inherited =
-        current || checked.level === 'global'
+      const global =
+        checked.level === 'global'
           ? undefined
           : entriesOf((await plugin.services.config.global()).config.plugins?.[PLUGIN_ID])[checked.stage];
+      if (name !== null && change.text !== undefined) text = change.text;
+      else if (name !== null && needsFile && text === null)
+        text = (await globalText(plugin, global)) ?? templateText(stage);
+      if (name !== null && text !== null && needsFile) await changes.writeFile(scope, name, text);
+      // A new Board entry starts with the setting it replaces, so saving text alone changes no on/off setting.
+      const inherited = current ? undefined : global;
       const entry: StagePromptEntry = {
         enabled: change.enabled ?? current?.enabled ?? inherited?.enabled ?? false,
         ...(path ? { path } : {}),

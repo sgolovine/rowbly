@@ -30,7 +30,8 @@ the Board's bag over the Data Root's entry instead.
   to the Data Root, as doctor paths are. A path that does not point inside the Plugin's folder for
   its level is never read.
 - A Stage Prompt is on for an agent only when all three hold: its setting is on, its path resolves,
-  and the file exists. Turning one on without a file writes a template; turning one off keeps the
+  and the file exists. Turning one on without a file writes a template, or on a Board a copy of
+  the global Stage Prompt's file for that Stage when it can be read; turning one off keeps the
   file; removing one deletes the entry and the file at that level only. Doctor warns
   `SOFTWARE_FACTORY_MISSING_PROMPT` for an entry that is on without a readable file, and fixes
   nothing.

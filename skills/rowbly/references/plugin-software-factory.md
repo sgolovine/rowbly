@@ -19,7 +19,7 @@ rowbly software-factory stages --board web --json --no-prompt
 rowbly software-factory stages --level global --json --no-prompt   # the global level alone
 
 rowbly software-factory prompt show todo --board web --json --no-prompt   # {key, name, category, prompt}
-rowbly software-factory prompt enable todo --board web --json --no-prompt  # writes a template if no file
+rowbly software-factory prompt enable todo --board web --json --no-prompt  # no file: copies the global file, else a template
 rowbly software-factory prompt enable todo --level global --json --no-prompt
 rowbly software-factory prompt edit todo --board web --file ./todo.md --json --no-prompt
 rowbly software-factory prompt disable todo --board web --json --no-prompt # keeps the file

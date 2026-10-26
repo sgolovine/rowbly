@@ -443,7 +443,8 @@ rowbly software-factory prompt remove <stage> [--board <id>] [--level board|glob
 - Files are `.rowbly/plugins/software-factory/stage-prompts/<key>.md` (global) and
   `.rowbly/boards/<board>/plugins/software-factory/stage-prompts/<key>.md`; the setting records the
   path relative to the Data Root.
-- `enable` writes a template when the Stage Prompt has no file; `disable` keeps the file; `edit`
+- `enable` writes a template when the Stage Prompt has no file (on a Board, a copy of the global
+  Stage Prompt's file for that Stage when there is one); `disable` keeps the file; `edit`
   replaces the text (and creates the file); `remove` deletes the entry and file at that level.
   `enable`, `disable` and `edit` exit 3 (`NOT_FOUND`) for a Stage that level does not have.
 - `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt: { enabled, configured, source, path, exists, text } }] }`.
@@ -791,7 +792,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
-| Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level, `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |
+| Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
