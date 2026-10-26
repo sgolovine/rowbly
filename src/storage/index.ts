@@ -1,5 +1,5 @@
 // Storage & Configuration Layer (contracts §9). The only layer allowed to touch `node:fs`.
-export { cascade, resolveCascade } from './cascade';
+export { cascade, resolveCascade, resolveGlobal } from './cascade';
 export {
   assertNoRootEnv,
   canonicalDataRootPath,

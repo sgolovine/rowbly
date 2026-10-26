@@ -23,7 +23,7 @@ export function pluginReadServices(services: Services): PluginReadServices {
   const { context, config, boards, stages, fields, stories } = services;
   return {
     context: { resolveBoard: (flag) => context.resolveBoard(flag) },
-    config: { effective: (boardId) => config.effective(boardId) },
+    config: { effective: (boardId) => config.effective(boardId), global: () => config.global() },
     boards: { list: () => boards.list(), get: (id) => boards.get(id) },
     stages: { list: (boardId) => stages.list(boardId) },
     fields: { list: (boardId) => fields.list(boardId) },

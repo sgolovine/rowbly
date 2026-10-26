@@ -80,7 +80,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | Context | Given to | Has |
 | --- | --- | --- |
 | `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
-| `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration and Board resolution only), `warn` |
+| `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration (`config.effective(boardId)` for a Board, `config.global()` for the global level with the stored `rowbly.config.json`) and Board resolution only), `warn` |
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
 
@@ -398,6 +398,7 @@ failure is raised when a Plugin calls `start.localData`, preserving per-Plugin l
 
 - Plugins load in registry order when Rowbly starts: each command-mode run, and the TUI at start, each time a Plugin is turned on or off in its **Plugins** section, and each time `rowbly.config.json` changes on disk. `start` runs on every load; there is no teardown, so `start` must be safe to run again.
 - `settings` parses the Data Root entry without `enabled`. Without a schema the settings are the raw entry (`Record<string, unknown>`). `z.object` drops unknown keys from the parsed value; `z.strictObject` fails the load on one. The stored entry is never rewritten.
+- `settings` is read when the Plugin loads. To read the stored Data Root entry later in the same run, such as after one of the Plugin's own operations changed it, use `services.config.global()`, whose `config.plugins[<id>]` is the raw entry.
 - `boardSettings(boardId)` is the Board's bag deep-merged over the Data Root entry (objects merge, lists replace), parsed again. An invalid Board bag is `VALIDATION` naming the Board.
 - Changing settings from code: a Plugin operation with an explicit merge that keeps `enabled` and every other Plugin's entry (`writeBag` refuses the root config):
 

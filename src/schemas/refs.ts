@@ -2,7 +2,7 @@
 // storage can return them without importing from services (README §3). `services/types.ts`
 // re-exports them as part of the contracts §8 surface.
 
-import type { BoardConfig } from './config';
+import type { BoardConfig, RowblyConfig } from './config';
 import type { CustomFieldDef } from './customField';
 import type { Stage } from './stage';
 
@@ -22,4 +22,13 @@ export interface EffectiveBoardConfig {
   stagesSource: ConfigLevel;
   customFields: CustomFieldDef[];
   customFieldsSource: ConfigLevel;
+}
+
+/** The global level of the Configuration Cascade: what a Board without its own lists gets. */
+export interface EffectiveGlobalConfig {
+  config: RowblyConfig;
+  stages: Stage[];
+  stagesSource: Exclude<ConfigLevel, 'board'>;
+  customFields: CustomFieldDef[];
+  customFieldsSource: Exclude<ConfigLevel, 'board'>;
 }

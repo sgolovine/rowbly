@@ -37,6 +37,7 @@ export type {
   CustomFieldDef,
   CustomFieldValue,
   EffectiveBoardConfig,
+  EffectiveGlobalConfig,
   Label,
   LocalState,
   PluginBags,

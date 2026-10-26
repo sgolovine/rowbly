@@ -427,7 +427,7 @@ export interface PluginFiles {
  */
 export interface PluginReadServices {
   context: Pick<ContextService, 'resolveBoard'>;
-  config: Pick<ConfigService, 'effective'>;
+  config: Pick<ConfigService, 'effective' | 'global'>;
   boards: Pick<BoardsService, 'list' | 'get'>;
   stages: Pick<StagesService, 'list'>;
   fields: Pick<FieldsService, 'list'>;
