@@ -28,7 +28,7 @@
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/backlog.md"
         },
         "todo": {
-          "enabled": true,
+          "enabled": false,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/todo.md"
         },
         "in-progress": {
