@@ -26,6 +26,10 @@
         "backlog": {
           "enabled": false,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/backlog.md"
+        },
+        "todo": {
+          "enabled": true,
+          "path": "boards/rowbly/plugins/software-factory/stage-prompts/todo.md"
         }
       }
     }
