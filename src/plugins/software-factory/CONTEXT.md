@@ -13,6 +13,22 @@ replaces the global entry for that Stage. An agent treats it as on only when its
 path points inside the Plugin's folder for its level, and the file exists.
 _Avoid_: column prompt, lane prompt, status prompt
 
+**Stage Run**:
+One agent's work on a Story during the Story's current visit to a Stage whose Stage Prompt is on:
+running, finished or failed, with its attempt number and the worker that does it. A Story has at
+most one, and a change of Stage ends it, so the next visit starts unworked.
+_Avoid_: job, claim, lock
+
+**Supervisor**:
+The one agent that watches a Board, starts a Stage Run and a worker for each Story that arrives in a
+Stage whose Stage Prompt is on, and makes every change to the Board that its workers report.
+_Avoid_: orchestrator, manager, dispatcher
+
+**Worker**:
+An agent the Supervisor starts for one Stage Run. It follows the Stage Prompt and reports the Board
+changes it wants instead of making them.
+_Avoid_: runner, bot
+
 ## Stage Prompts and ROWBLY.md
 
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not

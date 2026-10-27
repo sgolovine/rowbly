@@ -203,6 +203,24 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     await json('stories', 'move', story.key, 'done');
     expect((await rowbly('epics', 'show', 'auth')).stdout).toContain('1/1 Stories done');
 
+    // plugin-software-factory.md: a Story with a Stage Run in this visit is left alone; a move ends the visit.
+    await json('plugins', 'enable', 'software-factory');
+    await json('software-factory', 'prompt', 'enable', 'todo', '--board', 'web');
+    const worked = await json('stories', 'create', '--board', 'web', '--name', 'Signup', '--stage', 'todo');
+    expect((await json('software-factory', 'run', 'start', worked.key, '--worker', 'w1')).stageRun).toMatchObject({
+      stage: 'todo',
+      status: 'running',
+      attempt: 1,
+    });
+    expect(
+      jsonError(await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json')).code,
+    ).toBe('CONFLICT');
+    await json('stories', 'move', worked.key, 'in-progress');
+    await json('stories', 'move', worked.key, 'todo');
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([
+      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null },
+    ]);
+
     expect((await rowbly('plugins', 'disable', 'comments')).exitCode).toBe(0);
     expect((await json('stories', 'show', story.key)).plugins.comments.comments).toHaveLength(1);
   });

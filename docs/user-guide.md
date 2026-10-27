@@ -426,7 +426,9 @@ rowbly attachments open <KEY> <id>
 
 Software Factory is a Built-in Plugin: run `rowbly plugins enable software-factory` first. It gives
 each Stage, Backlog and Done included, a Markdown **Stage Prompt** that tells an agent what to do
-with a Story in that Stage. Each Stage Prompt is on or off; all are off by default.
+with a Story in that Stage. Each Stage Prompt is on or off; all are off by default. A **Stage Run**
+records one agent's work on a Story during its current visit to such a Stage, so an agent that
+watches the Board knows what is already being worked.
 
 ```text
 rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
@@ -435,6 +437,11 @@ rowbly software-factory prompt enable <stage> [--board <id>] [--level board|glob
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
+rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run finish <story>
+rowbly software-factory run fail <story> [--reason <text>]
+rowbly software-factory run clear <story>
 ```
 
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
@@ -451,7 +458,13 @@ rowbly software-factory prompt remove <stage> [--board <id>] [--level board|glob
   `enabled` is true only when the setting is on (`configured`), the path is inside the Plugin's
   folder for its level, and the file exists. A file that cannot be read, such as a symbolic link,
   counts as missing, and `remove` leaves it in place. `source` is `board`, `global` or `null`.
-- In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts.
+- A Stage Run is `running`, `finished` or `failed`, with an attempt number and the worker's name.
+  Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
+  `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
+  Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
+  the Story screen shows the Story's **Stage Run**.
 <!-- END software-factory -->
 
 <!-- BEGIN doctor -->
@@ -525,14 +538,21 @@ rowbly plugins disable <id>    # keeps its settings and data
 
 `rowbly skills` installs and starts agent skills that use Rowbly. The official skills are the skill
 folders that ship in the npm package's `skills/` folder: today `rowbly`, which teaches an agent to run
-Rowbly; `rowbly-dev`, which takes a Story from its Key to a draft pull request; and `rowbly-grill`,
-which interviews a person about a Story and saves its specification and qualifying ADRs as Story
+Rowbly; `rowbly-dev`, which takes a Story from its Key to a draft pull request; `rowbly-factory`,
+which works a Board's Stories with agents through its Stage Prompts; and `rowbly-grill`, which interviews a person about a Story and saves its specification and qualifying ADRs as Story
 Specs. Invoke `$rowbly-grill WEB-42`, `/rowbly-grill WEB-42`, or name the skill with a Key
 (case-insensitive); a bare number uses the current Board. Without a Key it asks, never chooses.
 Specs must be enabled and loaded and the Story must have a description before the interview starts.
 The browser form has a numbered chat fallback. The skill leaves the description and Stage unchanged
 and grants no implementation permission. Install with
 `rowbly skills install rowbly-grill --harness codex` (or `--harness claude`).
+
+`rowbly-factory` runs a software factory on one Board. It needs the Software Factory Plugin, at least
+one Stage Prompt that is on and written (not the template), and an agent harness that can start
+threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
+records a Stage Run for it, and is the only agent that changes the Board: workers report the
+`rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
+once unless `ROWBLY.md` or the Stage Prompt says otherwise. It runs until you stop it.
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its

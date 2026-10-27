@@ -11,6 +11,7 @@ import {
   setStagePrompt,
   showStagePrompt,
 } from './stagePrompts';
+import { clearRun, endRun, type RunsOverview, runsOverview, runText, type StageRunResult, startRun } from './stageRuns';
 
 interface PromptOptions {
   board?: string;
@@ -24,6 +25,18 @@ const HEAD = ['Stage', 'Name', 'Stage Prompt', 'Source', 'Path'];
 
 function table(overview: StagePromptsOverview): string {
   return renderTable(HEAD, overview.stages.map(rowLine));
+}
+
+function runLine(result: StageRunResult): string {
+  return `Stage Run of ${result.key} in ${result.stageRun.stage}: ${runText(result.stageRun)}`;
+}
+
+function runsTable(overview: RunsOverview): string {
+  if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}`;
+  return renderTable(
+    ['Story', 'Stage', 'Stage Run', 'Name'],
+    overview.stories.map((s) => [s.key, s.stage, runText(s.stageRun), s.name]),
+  );
 }
 
 function promptLine(stage: string, prompt: StagePrompt): string {
@@ -105,4 +118,51 @@ export const commands: PluginCommands = (group, cli) => {
       }),
     );
   }
+
+  group
+    .command('runs')
+    .description('List the Stories in Stages whose Stage Prompt is on, with their Stage Runs')
+    .option('--board <id>', 'the Board')
+    .action((opts: { board?: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
+        print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+      }),
+    );
+
+  const run = group.command('run').description("Start, finish, fail or clear a Story's Stage Run");
+  run
+    .command('start <story>')
+    .description("Start a Stage Run on the Story's current Stage, whose Stage Prompt must be on")
+    .requiredOption('--worker <name>', 'the agent or thread that works the Story')
+    .option('--retry', 'start a failed Stage Run again, as its next attempt')
+    .action((key: string, opts: { worker: string; retry?: boolean }, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await startRun(plugin, key, { worker: opts.worker, retry: opts.retry }), runLine);
+      }),
+    );
+  run
+    .command('finish <story>')
+    .description("Mark the Story's running Stage Run finished")
+    .action((key: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await endRun(plugin, key, { status: 'finished' }), runLine);
+      }),
+    );
+  run
+    .command('fail <story>')
+    .description("Mark the Story's running Stage Run failed")
+    .option('--reason <text>', 'why it failed')
+    .action((key: string, opts: { reason?: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await endRun(plugin, key, { status: 'failed', reason: opts.reason }), runLine);
+      }),
+    );
+  run
+    .command('clear <story>')
+    .description("Remove the Story's Stage Run, so its Stage is worked again")
+    .action((key: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await clearRun(plugin, key), (r) => `Cleared the Stage Run of ${r.cleared}`);
+      }),
+    );
 };

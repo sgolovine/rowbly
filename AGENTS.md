@@ -24,8 +24,9 @@ explains how it is built. Start at `docs/README.md`.
 | The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
 | The agent skill for developing a Rowbly Story into a draft pull request (`rowbly-dev`) | `skills/rowbly-dev/SKILL.md` and its `references/`, published in the npm package; self-contained (see Agent skills below) |
 | The agent skill for interviewing a Story and saving its specification (`rowbly-grill`) | `skills/rowbly-grill/SKILL.md` and its `references/`, browser `scripts/` and `assets/`, published in the npm package |
+| The agent skill for running a software factory over a Board's Stage Prompts (`rowbly-factory`) | `skills/rowbly-factory/SKILL.md` and its `references/`, published in the npm package; self-contained. This repository's own factory setup is its Stage Prompts and `.rowbly/ROWBLY.md` |
 | The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
-| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system, `rowbly-factory` to run remote workers over the Board's In Progress Stories and merge their pull requests) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev` and `.agents/skills/rowbly-grill` symlink to their published folders in `skills/` |
+| Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev`, `.agents/skills/rowbly-grill` and `.agents/skills/rowbly-factory` symlink to their published folders in `skills/` |
 
 ## Domain language and decisions
 
@@ -89,13 +90,19 @@ Rowbly and in this one. Steps that only apply here (`pnpm dev`, the `rowbly-scre
 resolved glossary and qualifying ADRs as Story Specs. It keeps the Story description and Stage
 unchanged and does not authorize implementation. Its browser UI has a numbered chat fallback.
 
+`skills/rowbly-factory/` supervises a Board: it starts a worker for each Story that arrives in a
+Stage whose Stage Prompt is on, records Stage Runs (ADR-0040) and applies the Board changes workers
+report. The Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no Stage, server or
+model.
+
 `skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
 an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to
 nothing. It repeats the essentials of `skills/rowbly` in less space, so a change that updates a
 `skills/rowbly` page updates this page too when it touches a command, flag, JSON shape, exit code or
 Plugin that the page shows. Keep it concise: commands with their options, not procedures.
-`skills/rowbly-dev/references/rowbly-reference.md` and
-`skills/rowbly-grill/references/rowbly-reference.md` are byte-identical copies of this page; refresh
+`skills/rowbly-dev/references/rowbly-reference.md`,
+`skills/rowbly-grill/references/rowbly-reference.md` and
+`skills/rowbly-factory/references/rowbly-reference.md` are byte-identical copies of this page; refresh
 all copies whenever it changes (the `.agents/skills/` symlinks use these same files).
 
 ## Screenshots

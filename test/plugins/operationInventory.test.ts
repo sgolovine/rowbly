@@ -16,6 +16,7 @@ import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
 import { softwareFactory } from '../../src/plugins/software-factory';
 import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
+import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -134,6 +135,12 @@ describe('the operation inventory (ARCH-02)', () => {
     await setStagePrompt(factory, { level: 'global', stage: 'backlog' }, { enabled: true });
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'done' }, { text: '# Done' });
     await removeStagePrompt(factory, { level: 'global', stage: 'backlog' });
+    await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'backlog' }, { enabled: true });
+    await startRun(factory, 'WEB-1', { worker: 'w1' });
+    await endRun(factory, 'WEB-1', { status: 'failed', reason: 'checks failed' });
+    await startRun(factory, 'WEB-1', { worker: 'w2', retry: true });
+    await endRun(factory, 'WEB-1', { status: 'finished' });
+    await clearRun(factory, 'WEB-1');
 
     expect(new Set(seen.map((s) => s.name))).toEqual(new Set(listed.keys()));
     for (const { name, keys } of seen) {
