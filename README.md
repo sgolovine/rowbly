@@ -45,7 +45,7 @@ With pnpm, use `pnpm add -g rowbly`. Check the install with `rowbly --version`.
 
 ### Agent skill
 
-Rowbly ships three skills, each one self-contained folder in `skills/`:
+Rowbly ships four skills, each one self-contained folder in `skills/`:
 
 - `rowbly` teaches coding agents to run Rowbly from a shell (see
   [For coding agents](#for-coding-agents)). Its `SKILL.md` holds the rules for every command, and its
@@ -57,6 +57,9 @@ Rowbly ships three skills, each one self-contained folder in `skills/`:
   specification and qualifying decisions as Story Specs, and leaves its description and Stage
   unchanged. Enable the Specs Plugin before starting. It uses a browser form with a numbered chat
   fallback; grilling does not start implementation.
+- `rowbly-factory` supervises a Board as a software factory: with the Software Factory Plugin on, it
+  starts a worker agent for each Story that arrives in a Stage whose Stage Prompt is on, records its
+  Stage Run and applies the Board changes the worker reports.
 
 With the [`skills`](https://github.com/vercel-labs/skills) CLI, install it from GitHub into your
 project, or add `-g` to install it for your user:
@@ -65,7 +68,7 @@ project, or add `-g` to install it for your user:
 npx skills add sgolovine/rowbly --skill rowbly
 ```
 
-Name the skill (`--skill rowbly-dev` or `--skill rowbly-grill` for the others): the repository also holds skills for developing
+Name the skill (`--skill rowbly-dev`, `--skill rowbly-grill` or `--skill rowbly-factory` for the others): the repository also holds skills for developing
 Rowbly, which you do not need. Add `--agent claude-code` (or another agent) to skip the agent prompt.
 
 Or copy it from the npm package. After `npm install -g rowbly` it is in
@@ -78,7 +81,7 @@ cp -r "$(npm root -g)"/rowbly/skills/rowbly ~/.claude/skills/
 
 For another agent, copy the same folder wherever it loads skills from. Copy it again after you
 upgrade Rowbly, so it matches the CLI. Or let Rowbly copy it into the project:
-`rowbly skills install rowbly --harness claude` (or `rowbly-dev` or `rowbly-grill`; run `rowbly skills install` alone for
+`rowbly skills install rowbly --harness claude` (or `rowbly-dev`, `rowbly-grill` or `rowbly-factory`; run `rowbly skills install` alone for
 a menu).
 
 ### Rowbly in your own skills

@@ -280,10 +280,16 @@ included), off by default, set globally or per Board; a Board's entry for a Stag
 rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
 rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
+rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null}]}
+rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-prompt   # {key, stageRun}; exit 4 if one exists
+rowbly software-factory run finish|clear WEB-42 --json --no-prompt
+rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
 ```
 
 Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path inside the Plugin folder,
 file exists). `SOFTWARE_FACTORY_MISSING_PROMPT` (doctor warning) is one that is on without its file.
+A Stage Run (`{stage, status: running|finished|failed, attempt, worker, by, startedAt, finishedAt?,
+reason?}`) is one agent's work on a Story's current visit to a Stage; a Stage change removes it.
 
 ## 9. Setup and repair
 

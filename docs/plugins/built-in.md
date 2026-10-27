@@ -419,7 +419,10 @@ A **Stage Prompt** is a Markdown file of instructions for an agent working on a 
 Every Stage has one place for it, Backlog and Done included, and each is on or off; all are off by
 default. `rowbly software-factory stages` gives an agent every Stage of a Board with its Stage
 Prompt in one call. `ROWBLY.md` stays the place for how people work with the whole Data Root; a
-Stage Prompt is one Stage's instructions.
+Stage Prompt is one Stage's instructions. A **Stage Run** records one agent's work on a Story during
+its current visit to a Stage whose Stage Prompt is on, so a supervisor that watches the Board (the
+`rowbly-factory` skill) does not start the same work twice and starts it again when the Story comes
+back ([ADR-0040](../agents/adr/0040-stage-runs-record-the-current-visit.md)).
 
 **Data**
 
@@ -432,6 +435,8 @@ Stage Prompt is one Stage's instructions.
 - A Board's entry for a Stage replaces the global entry for that Stage, whole; other Stages keep the
   global entry ([ADR-0039](../agents/adr/0039-software-factory-stage-prompts.md)). Global entries for
   Stages the Board does not have are not shown for it.
+- A Story's Stage Run is in its bag: `"plugins": { "software-factory": { "stageRun": { "stage": "in-progress", "status": "running", "attempt": 1, "worker": "ROW-12 worker", "by": "alex", "startedAt": "…" } } }`,
+  with `finishedAt` once it ends and `reason` when it failed.
 
 **Commands**
 
@@ -442,6 +447,11 @@ rowbly software-factory prompt enable <stage> [--board <id>] [--level board|glob
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
+rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run finish <story>
+rowbly software-factory run fail <story> [--reason <text>]
+rowbly software-factory run clear <story>
 ```
 
 Writes default to the Board level (`--board`, then the current Board). `stages` and `prompt show`
@@ -450,6 +460,11 @@ show the effective Stage Prompts without `--level`, and one level alone with it.
 `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt }] }`, where
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
+
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`: `stages` are the
+Board's Stages whose Stage Prompt is on, `stories` every Story in them, and `stageRun` the Story's
+Stage Run for its current visit or `null`. `run start`, `finish` and `fail` return
+`{ key, stageRun }`; `run clear` returns `{ cleared }`.
 
 **Rules**
 
@@ -464,12 +479,21 @@ setting, `source` is `board`, `global` or `null` (none), and `text` is the file'
   entry's on/off setting.
 - `enable`, `disable` and `edit` need a Stage of that level: the global (or default) Stages for
   `--level global`, the Board's effective Stages otherwise (`NOT_FOUND`, exit 3).
+- A Story has at most one Stage Run, and it counts only while the Story stays in its Stage: moving
+  the Story, or changing its Stage with `stories.update`, removes it, and one recorded for another
+  Stage is ignored. No history is kept.
+- `run start` needs the Story's Stage to have a Stage Prompt that is on, and no Stage Run for this
+  visit (`CONFLICT`, exit 4). `--retry` starts a failed one again as its next `attempt`. `by` is Me,
+  or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
+  Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
 
 **TUI:** a **Stage Prompts** section in Settings (`,`) lists the current Board's Stages with their
 effective Stage Prompts (`on · board`, `on · global`, `off`), or the global level. `space` turns the
 highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the
 full-screen editor (`ctrl+s` saves), `d` removes the shown level's entry and its file, and `l`
-switches between the Board and global levels.
+switches between the Board and global levels. The Story screen shows a **Stage Run** row while the
+Story has one for its current Stage, such as `running (ROW-12 worker)` or
+`failed (ROW-12 worker, attempt 2): tests failed`.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There

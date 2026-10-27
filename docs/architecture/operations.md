@@ -92,6 +92,10 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
+| `software-factory.start` | `{ key, worker, retry? }` | `{ key, stageRun }` |
+| `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
+| `software-factory.fail` | `{ key, reason? }` | `{ key, stageRun }` |
+| `software-factory.clear` | `{ key }` | `{ cleared }` (the Story Key) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 
@@ -117,6 +121,16 @@ the entry and its file at that level only. A `StagePrompt` result is
 `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off setting,
 `enabled` is true only when it is on, `path` (relative to the Data Root) resolves inside the
 Plugin's folder for the level, and the file exists.
+
+Software Factory's `start`, `finish`, `fail` and `clear` change a Story's Stage Run, the
+`stageRun` in its bag: `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`
+([ADR-0040](../agents/adr/0040-stage-runs-record-the-current-visit.md)). `key` is a Story Key.
+`start` refuses (`CONFLICT`) a Story whose Stage has no Stage Prompt that is on, or that has a Stage
+Run for its current Stage, unless that one failed and `retry` is set, which starts it again with the
+next `attempt`. `by` is Me or `null`. `finish` and `fail` end a running Stage Run of the current Stage,
+else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set the Story's
+`updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
+the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
 
 ## Plugin input of core operations
 
