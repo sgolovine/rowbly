@@ -900,3 +900,5 @@ With the corresponding Plugins enabled, `stories create` also accepts repeatable
 | `--blocked-by <key>` | Link an existing same-Board Story that blocks this new Story. |
 
 All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.
+
+In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
