@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:15:25.063Z",
-  "updatedAt": "2026-10-28T16:35:55.480Z",
+  "updatedAt": "2026-10-28T16:35:56.163Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-10-28T16:19:27.748Z",
         "finishedAt": "2026-10-28T16:35:55.479Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "3DBpnC4L",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/123 — Level tabs are clickable in Stages, Custom Fields and Stage Prompts, preserving keyboard switching and disabling clicks during forms/dialogs. Documentation updated and real-TUI screenshots uploaded. Validation accepted: typecheck, lint, 76 unit tests, 20 CLI tests and build passed. Head: 03a5221; CI pending.",
+          "createdAt": "2026-10-28T16:35:56.162Z",
+          "updatedAt": "2026-10-28T16:35:56.162Z"
+        }
+      ]
     }
   }
 }
