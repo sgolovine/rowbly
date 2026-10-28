@@ -172,6 +172,13 @@ rowbly skills list --json --no-prompt    # {official: [{name, description, insta
 - `list` shows the official skills with where each is installed, and the custom skills: the other
   skills below the current folder that hold the reference.
 
+The TUI also manages these copies in Settings → Global → Skills, in the current working folder.
+`i` installs a bundled name or local folder, `n` creates a custom skill, and each form chooses its
+harness. `u` updates with confirmation: official skills are reinstalled from the bundle; custom
+skills get only a fresh `references/rowbly-reference.md`, preserving their instructions and other
+files. `d` deletes a listed installation's whole folder after confirmation. Other skills are
+excluded, and update/delete reject symbolic links in the managed path. The TUI has no instruction editor.
+
 ## Common mistakes
 
 - **HIGH: editing at the wrong level.** Adding a Stage without `--board`/`--level` while a Board is in
