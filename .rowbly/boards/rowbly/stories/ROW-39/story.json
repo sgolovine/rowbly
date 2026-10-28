@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:14:24.235Z",
-  "updatedAt": "2026-10-28T16:19:05.145Z",
+  "updatedAt": "2026-10-28T16:35:56.800Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-10-28T16:19:05.144Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "bVeDtbj3",
+          "author": "sunny",
+          "body": "Scope clarification needed before implementation: what should updating official and custom skills do? Existing services support list, install and create only.",
+          "createdAt": "2026-10-28T16:35:56.799Z",
+          "updatedAt": "2026-10-28T16:35:56.799Z"
+        }
+      ]
     }
   }
 }
