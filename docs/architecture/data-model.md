@@ -44,7 +44,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 
 | Record | File | Holds |
 | --- | --- | --- |
-| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages` and `customFields`, and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
+| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages`, `customFields` and `featureFlags` (Experimental Features), and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
 | Local State | `local.json` | optional `board` (the current Board) and `me` (the local Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
 | Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
@@ -124,3 +124,11 @@ Git merges and hand edits can leave the Data Root in a state no Rowbly command w
 ## Sharing through git
 
 Commit `.rowbly/` with the code. `rowbly init` writes the Data Root's `.gitignore` so that Local State, the lock and the journal are never committed; doctor reports a `.gitignore` that lacks one of them (`GITIGNORE_INCOMPLETE`). Editors, git and scripts do not take Rowbly's lock: Rowbly detects what it can from them (conflict markers, schema failures, leftovers) but does not protect against them ([Storage and commits](storage.md)).
+
+## Experimental Features
+
+`rowbly.config.json` optionally holds `featureFlags`, an object of registry keys and boolean
+values. Definitions in `src/services/featureFlags.ts` supply each feature's name, description and
+`enabled` default. An absent key uses that default; an explicit `false` overrides a `true` default.
+These settings apply to the whole Data Root, with no Board or Home Config level. Unknown stored
+keys survive updates but are not listed or accepted by `feature-flags set`.

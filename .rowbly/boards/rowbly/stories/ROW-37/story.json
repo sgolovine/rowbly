@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "New Story Editor - Update TAB behavior",
   "description": "In the new story / edit story editor, update the hotkeys:\n\nTAB - takes you to the next field in the current form\nSHIFT + TAB - takes you to the next tab (Details, Tasks, Specs, etc)",
-  "stage": "in-progress",
+  "stage": "in-pr",
   "rank": "a2",
   "priority": null,
   "labels": [],
@@ -12,17 +12,42 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:19:25.985Z",
-  "updatedAt": "2026-10-28T00:21:02.856Z",
+  "updatedAt": "2026-10-28T00:39:00.911Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
-        "stage": "in-progress",
+        "stage": "in-pr",
         "status": "running",
         "attempt": 1,
-        "worker": "rook: ROW-37 In Progress",
+        "worker": "rook: ROW-37 In PR",
         "by": "sunny",
-        "startedAt": "2026-10-28T00:21:02.855Z"
+        "startedAt": "2026-10-28T00:36:52.728Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SVxaCTX6",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-37-story-tab-keys, based on origin/main. Plan: make Tab advance fields within create-editor forms, Shift+Tab advance create-editor tabs, update hints and documentation, verify create and edit behavior with agentic-tui, and run all required checks.",
+          "createdAt": "2026-10-28T00:36:20.308Z",
+          "updatedAt": "2026-10-28T00:36:20.308Z"
+        },
+        {
+          "id": "N8AdsQ8S",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/120 implements Tab for next field and Shift+Tab for next create tab, including wrapping and Plugin draft forms. Updated hints and documentation; verified create/edit behavior in agentic-tui and uploaded screenshots. Typecheck, lint, 20 CLI tests and 76 unit tests passed; unit tests used one worker after an initial storage-test timeout. Validation signed off at c1b2416.",
+          "createdAt": "2026-10-28T00:36:21.541Z",
+          "updatedAt": "2026-10-28T00:36:21.541Z"
+        },
+        {
+          "id": "Vj7MDZFp",
+          "author": "sunny",
+          "body": "Factory: PR #120 conflicted with main after #121 (ROW-36) merged, in docs only (skills/rowbly/references/tui.md and rowbly-reference.md with its copies). Decision: stay in In PR; the In PR worker merges origin/main into the branch, keeps both sides, reruns the four checks and merges when ready.",
+          "createdAt": "2026-10-28T00:39:00.910Z",
+          "updatedAt": "2026-10-28T00:39:00.910Z"
+        }
+      ]
     }
   }
 }

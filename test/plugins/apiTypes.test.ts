@@ -53,6 +53,10 @@ function hookContextsHaveNoOperationOrEditor(plugin: PluginHookContext, context:
   plugin.editText('');
   // @ts-expect-error hooks get read services only
   plugin.services.stories.update('WEB-1', {});
+  plugin.services.featureFlags.isEnabled('example');
+  // @ts-expect-error hooks get feature flag reads only
+  plugin.services.featureFlags.set('example', true);
+  context.services.featureFlags.set('example', false);
   // @ts-expect-error no other Plugin's context
   context.services.plugins.context('other');
   // @ts-expect-error no setup

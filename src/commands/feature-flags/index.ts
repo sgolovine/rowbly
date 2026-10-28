@@ -1,0 +1,1 @@
+export { registerFeatureFlags } from './command';

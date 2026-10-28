@@ -120,6 +120,7 @@ export type {
   PluginServices,
   PluginSidebar,
   PluginSidebarItem,
+  PluginStageHeaderProps,
   PluginStatus,
   PluginStoryCreateTab,
   PluginStoryCreateTabProps,

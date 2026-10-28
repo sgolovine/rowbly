@@ -56,6 +56,13 @@ default; kept in `~/.rowblyrc.json`).
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
 | Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch Board / global level |
 
+With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
+It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
+is off or missing (a missing file starts with a template). `tab` or `e` switches to editing;
+`ctrl+s` saves, and closing unsaved edits asks before discarding them. Saving writes the shown
+Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
+entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
+
 Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.
 
 
@@ -78,3 +85,10 @@ macOS screenshot to clipboard: Cmd+Ctrl+Shift+4 (Cmd+Shift+4 saves a file). Wind
 Linux shortcuts depend on the desktop; Sway/Hyprland may need wl-clipboard. For SSH/headless or
 unsupported clipboard access, use `rowbly attachments add <KEY> <file>` or the tab's `n` file path.
 New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab moves to the next field in the current form; Shift+Tab switches to the next tab, wrapping to Details. Arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.
+
+### Experimental Features
+
+In Settings → Global → Experimental Features, select a feature to read its description and press
+`enter` to turn it on or off for every Board in the Data Root. Saves and errors show as toasts. With
+no features in this version, the section explains that features will appear when available and
+shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.

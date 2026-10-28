@@ -84,6 +84,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
 
+- `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
 - `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
@@ -122,7 +123,7 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 - **Order:** the Plugin input is parsed → the body (or a replacement) → every transform → every guard (each in registry order) → the save → every reaction.
 - **Results.** Hooks and callers see an operation's public result. Transforms and guards get `result`, the body's or replacement's result before any transform; for `stories.create`, `result.key` is the new Story. Callers and reactions get the **final** result, read back from the Change Set after the transforms: a created Story includes the bags transforms wrote. A Plugin operation passes `{ result(changes, bodyResult) }` to `plugin.operation` to read its own final record the same way. A transform that deletes the record an operation returns fails the operation with `CONFLICT` before the save.
 - **Stage changes.** `stories.update` can change a Stage, as `stories.move` does. A hook about Stage changes compares `before.stage` with `after.stage` in both.
-- **Hook names** in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
+- **Hook names** in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `feature-flags`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
 - **Reactions** have 5 s each. On timeout Rowbly warns and goes on with the next reaction; nothing is undone. The CLI waits for reactions; the TUI runs them in the background, one operation after another. A timeout cannot stop a synchronous loop or detached work. A rejection the reaction did not return is not caught and ends the process: return or await all work.
 
 ## Stored and pending reads
@@ -330,6 +331,7 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
 - **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
 - **Plugin Sidebar.** `sidebar: { title, allLabel, items({ plugin }), filter(value), create?, menu?(value) }` adds a list beside the Board sidebar, shown and hidden by a header button titled `title` or by `\` ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)). `items` returns `{ value, label }` entries; it runs in the `field` stage when the sidebar shows and each time a screen opened over the board closes. The first entry is `allLabel`, such as `All Epics`, and clears the pick. Picking an entry (a click, or `{`/`}`) sets this Plugin's board filter (`StoryFilter.plugins.<id>`) to `filter(value)`, run in the `filter` stage, so it must pass `storyFilterSchema` and `filterStories`; a filter the filter form sets for the same Plugin wins. `create` is a link to one of the Plugin's screens, shown as the button at the bottom; a link to a missing screen fails the load. A failing `items` or `filter` is a toast. `menu(value)` optionally returns screen links with a `key` of `e` (edit) or `d` (delete). Links are loaded with the entries in the `field` stage; a failure is a toast. A right click offers these links without changing the filter; the same keys work on the picked entry while the sidebar has focus. The `allLabel` entry has no menu or edit/delete keys. Menu callbacks run only while the entry remains available.
+- **Stage headers.** `stageHeader` is a compact component beside each Stage heading in the Board's Stages view. It receives `{ boardId, stage, active, plugin, ui }` for the Board actually shown, including a Board opened for viewing without changing the context. Keep it small so the Stage name can truncate beside it. Gate clicks on `active && useIsActive()`; the host isolates render errors in the Plugin boundary. It is mounted only while its Stage is visible and the Plugin is loaded. Use the existing fullscreen editor for long text.
 - **Board badges.** `cardBadge({ story, stages, plugin })` returns a short text for a Story in the board's Stages view and its line in the board's list view, such as the Tasks Plugin's `✓ 2/5`, or `null` for none. It runs for every Story on the board each time the board renders, so it must be quick and must not read files: use the Story and the Board's effective Stages it is given. A badge that throws shows nothing for that Story.
 - **Focus.** `useIsActive()` is false while a dialog is open or another screen is on top. A tab is active only when it is selected: use `useIsActive() && active`. Give one flag (also covering your own modes, e.g. `active && !confirming`) to `useInput`'s `isActive`, `useKeyHints` (pass `[]` when inactive) and `useKeyCapture`.
 - **List filters.** `SelectList` reports its filter mode through `onFilteringChange(filtering)`. Pass a stable state setter and disable the screen's shortcuts and hints while filtering, while keeping the list active so it can accept text and finish filtering. The callback reports false when filtering ends or the list unmounts.
@@ -694,3 +696,19 @@ failures are core messages: no image, size limit, timeout, or unavailable enviro
 `wl-clipboard` guidance on Wayland. The claimant supplies its own success messages and any guidance
 for using its commands; core never names those commands. See
 [ADR-0038](../agents/adr/0038-story-image-paste-is-an-exclusive-plugin-contribution.md).
+
+### Stage header contribution
+
+```tsx
+import type { PluginStageHeaderProps, PluginTui } from '../../plugin-api';
+import { Button, useIsActive } from '../../plugin-api/tui';
+
+function StageHeader({ boardId, stage, active, ui }: PluginStageHeaderProps) {
+  const focused = useIsActive();
+  return (
+    <Button label="✎" compact clickable={active && focused} onClick={() => ui.toast(`${boardId}: ${stage.name}`)} />
+  );
+}
+
+export const stageHeaderTui: PluginTui = { stageHeader: StageHeader };
+```

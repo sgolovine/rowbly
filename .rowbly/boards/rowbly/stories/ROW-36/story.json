@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add icon for editing stage prompt",
   "description": "Whenever the factory plugin is enabled, show an icon in the header of the column that allows a user to quickly pull up and view/edit the stage prompt. Should automatically open in a fullscreen editor. Modify full-screen editor if required\n",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "ak",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:18:02.090Z",
-  "updatedAt": "2026-10-28T00:21:02.230Z",
+  "updatedAt": "2026-10-28T00:38:45.111Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,15 +26,30 @@
         }
       ]
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-36 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:21:02.229Z"
-      }
+    "comments": {
+      "comments": [
+        {
+          "id": "mCbSd1wd",
+          "author": "sunny",
+          "body": "Complexity 3/10. Working on codex/row-36-stage-prompt-shortcut from origin/main. Plan: add a Plugin-owned Stage-header shortcut, reuse the fullscreen editor to view/edit the selected Stage Prompt, update documentation, run all four required checks, and capture/upload TUI screenshots.",
+          "createdAt": "2026-10-28T00:35:52.857Z",
+          "updatedAt": "2026-10-28T00:35:52.857Z"
+        },
+        {
+          "id": "H8hWUL0O",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/121 — Added a Stage-header icon when Software Factory is enabled, opening the selected Stage Prompt fullscreen for viewing and editing while preserving its on/off setting. Documentation and screenshots included. Typecheck, lint, 76 unit tests, and 20 CLI tests passed; manual checks covered saving, discarding, inherited/missing prompts, narrow terminals, and Plugin-off behavior. Head 163f9ee; CI pending at handoff.",
+          "createdAt": "2026-10-28T00:35:54.083Z",
+          "updatedAt": "2026-10-28T00:35:54.083Z"
+        },
+        {
+          "id": "kPWXIWAl",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/121 — merge commit 3a413b3. All six PR checks passed; seven screenshot URLs returned HTTP 200. CI on main is queued.",
+          "createdAt": "2026-10-28T00:38:44.481Z",
+          "updatedAt": "2026-10-28T00:38:44.481Z"
+        }
+      ]
     }
   }
 }

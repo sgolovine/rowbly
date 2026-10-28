@@ -2,7 +2,7 @@ import { readdir, readFile, realpath, rename, symlink, writeFile } from 'node:fs
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { DataIntegrityError, DataRootNotFoundError, UsageError } from '../../src/core';
-import { BoardConfigSchema } from '../../src/schemas';
+import { BoardConfigSchema, RowblyConfigSchema } from '../../src/schemas';
 import {
   ensureHomeConfig,
   findDataRoot,
@@ -46,6 +46,15 @@ describe('writeJson', () => {
     expect(text).toBe(
       `{\n  "version": 1,\n  "id": "web",\n  "name": "Web",\n  "description": "",\n  "keyPrefix": "WEB",\n` +
         `  "createdAt": "${FIXED_NOW}",\n  "updatedAt": "${FIXED_NOW}"\n}\n`,
+    );
+    const rootPath = join(t.path, 'rowbly.config.json');
+    await writeJson(rootPath, RowblyConfigSchema, {
+      plugins: { future: { enabled: false, data: { kept: true } } },
+      featureFlags: { unknown: false },
+      version: 1,
+    });
+    expect(await readFile(rootPath, 'utf8')).toBe(
+      `${JSON.stringify({ version: 1, featureFlags: { unknown: false }, plugins: { future: { enabled: false, data: { kept: true } } } }, null, 2)}\n`,
     );
   });
 

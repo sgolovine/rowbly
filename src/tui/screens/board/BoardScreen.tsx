@@ -578,6 +578,7 @@ export function BoardScreen({ params }: ScreenProps) {
             return (
               <BoardColumn
                 key={stage.key}
+                boardId={shown.boardId}
                 stage={stage}
                 cards={cards}
                 stages={stages}

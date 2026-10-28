@@ -349,3 +349,10 @@ Create with enabled Plugins (all in one operation, invalid input saves nothing):
 Tasks: literal names, flag order, first effective Stage. Story Specs: unique slugs, first `#` heading or
 slug as title; file `-` uses stdin at most once including description. Links: existing same-Board Stories.
 New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift+Tab next tab (wraps); ctrl+s saves all, esc confirms changed drafts.
+
+## Experimental Features
+
+- `feature-flags list` → `[{ key, name, description, enabled }]` (effective booleans); an empty registry is `[]`.
+- `feature-flags set <key> <true|false>` → changed entry; unknown key exits 3 (`NOT_FOUND`), invalid boolean exits 2 (`USAGE`).
+- Data Root `rowbly.config.json` → `featureFlags: { [key]: boolean }`; absent uses code default, explicit false wins, unknown keys kept; no Board/Home Config level.
+- TUI: Settings → Global → Experimental Features; `enter` turns the selected feature on/off. Empty registry has no toggle hint.

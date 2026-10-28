@@ -4,26 +4,16 @@
   "boardId": "rowbly",
   "name": "Add feature flagging support",
   "description": "Add feature flag support to Rowbly. \n\n- Expose via settings and call it \"Experemental Features\".\n- Create a feature flag service that will make it easy for every part of the app to get feature flags.\n- Store feature flags in code. Should be a k/v object, each object should contain: name, description and enabled. \n- Feature flags overrides are stored at data root level in config file.\n- k/v object, key lines up with config key, value is boolean.\n",
-  "stage": "in-progress",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aj",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-26T19:44:27.419Z",
-  "updatedAt": "2026-10-28T00:19:19.771Z",
+  "updatedAt": "2026-10-28T00:36:31.861Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-35 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:15:27.578Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -32,6 +22,20 @@
           "body": "Complexity 3. Branch: codex/row-35-feature-flags, based on origin/main. Plan: add a shared feature flag registry/service, Data Root boolean overrides, Experimental Features in Settings, matching CLI access, and documentation. No existing experimental features were found, so the initial registry will be empty. Validate with all four required checks and agentic-tui screenshots.",
           "createdAt": "2026-10-28T00:19:19.770Z",
           "updatedAt": "2026-10-28T00:19:19.770Z"
+        },
+        {
+          "id": "coU9bFx3",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/122 — Added Experimental Features settings, shared feature flag service, Data Root boolean overrides, CLI access, and documentation. Initial registry is empty. Signed off at a5dc89b. Validation: typecheck PASS, lint PASS, unit 76 PASS, CLI 20 PASS. Nine screenshots: https://github.com/sgolovine/rowbly/pull/122#issuecomment-6457402649. CI pending.",
+          "createdAt": "2026-10-28T00:33:53.978Z",
+          "updatedAt": "2026-10-28T00:33:53.978Z"
+        },
+        {
+          "id": "UNukmyNB",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/122",
+          "createdAt": "2026-10-28T00:36:31.226Z",
+          "updatedAt": "2026-10-28T00:36:31.226Z"
         }
       ]
     }

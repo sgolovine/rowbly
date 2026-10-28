@@ -318,7 +318,25 @@ export interface PluginsService {
   context(id: string): PluginContext;
 }
 
+export interface FeatureFlagDefinition {
+  name: string;
+  description: string;
+  /** The default when the Data Root has no override. */
+  enabled: boolean;
+}
+
+export interface FeatureFlag extends FeatureFlagDefinition {
+  key: string;
+}
+
+export interface FeatureFlagsService {
+  list(): Promise<FeatureFlag[]>;
+  isEnabled(key: string): Promise<boolean>;
+  set(key: string, enabled: boolean, opts?: OperationOptions): Promise<FeatureFlag>;
+}
+
 export interface Services {
+  featureFlags: FeatureFlagsService;
   context: ContextService;
   setup: SetupService;
   config: ConfigService;

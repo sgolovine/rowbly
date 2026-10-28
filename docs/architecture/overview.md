@@ -71,3 +71,12 @@ registers every area; the top-level `index.ts` exports the command API.
 - [Operations](operations.md): the pipeline and every operation's input and result.
 - [Storage and commits](storage.md): the lock, the journal and the guarantees.
 - [The plugin system](../plugins/README.md).
+
+### Feature flag service
+
+`services.featureFlags.list()` returns registered Experimental Features with their effective
+boolean values; `isEnabled(key)` reads one feature. Both read the current Data Root config on each
+call. `set(key, enabled)` runs `feature-flags.set` through the coordinated Operation pipeline and
+merges into the latest root config through `changes.updateRootConfig`, preserving other settings,
+unknown flag keys and Plugin Data. Definitions and defaults live only in
+`src/services/featureFlags.ts`; the registry starts empty. Unknown keys are `NotFoundError`.

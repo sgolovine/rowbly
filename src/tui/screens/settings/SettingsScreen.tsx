@@ -101,6 +101,7 @@ export function SettingsScreen() {
         groups={groups}
         selected={section?.id ?? ''}
         clickable={active}
+        focused={active && focus === 'nav'}
         onSelect={(id) => {
           setSelectedId(id);
           setFocus('section');

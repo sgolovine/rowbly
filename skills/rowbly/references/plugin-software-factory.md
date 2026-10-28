@@ -73,6 +73,13 @@ visit. `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageR
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
 
+With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
+It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
+is off or missing (a missing file starts with a template). `tab` or `e` switches to editing;
+`ctrl+s` saves, and closing unsaved edits asks before discarding them. Saving writes the shown
+Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
+entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
+
 ## Data
 
 - Global: `"plugins": { "software-factory": { "enabled": true, "stagePrompts": { "todo": { "enabled": true, "path": "plugins/software-factory/stage-prompts/todo.md" } } } }` in `rowbly.config.json`.
