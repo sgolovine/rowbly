@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:18:02.090Z",
-  "updatedAt": "2026-10-28T00:38:43.868Z",
+  "updatedAt": "2026-10-28T00:38:44.482Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "rook: ROW-36 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T00:36:52.101Z",
+        "finishedAt": "2026-10-28T00:38:43.868Z"
+      }
     },
     "comments": {
       "comments": [
@@ -41,19 +52,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/121 — Added a Stage-header icon when Software Factory is enabled, opening the selected Stage Prompt fullscreen for viewing and editing while preserving its on/off setting. Documentation and screenshots included. Typecheck, lint, 76 unit tests, and 20 CLI tests passed; manual checks covered saving, discarding, inherited/missing prompts, narrow terminals, and Plugin-off behavior. Head 163f9ee; CI pending at handoff.",
           "createdAt": "2026-10-28T00:35:54.083Z",
           "updatedAt": "2026-10-28T00:35:54.083Z"
+        },
+        {
+          "id": "kPWXIWAl",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/121 — merge commit 3a413b3. All six PR checks passed; seven screenshot URLs returned HTTP 200. CI on main is queued.",
+          "createdAt": "2026-10-28T00:38:44.481Z",
+          "updatedAt": "2026-10-28T00:38:44.481Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-36 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:36:52.101Z",
-        "finishedAt": "2026-10-28T00:38:43.868Z"
-      }
     }
   }
 }
