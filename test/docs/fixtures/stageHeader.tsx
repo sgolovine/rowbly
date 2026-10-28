@@ -9,7 +9,7 @@ function StageHeader({ boardId, stage, active, ui }: PluginStageHeaderProps) {
       label="✎"
       compact
       clickable={active && focused}
-      onClick={() => ui.open('stage', { boardId, stage: stage.key })}
+      onClick={() => ui.toast(`${boardId}: ${stage.name}`)}
     />
   );
 }

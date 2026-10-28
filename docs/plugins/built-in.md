@@ -487,6 +487,13 @@ Stage Run for its current visit or `null`. `run start`, `finish` and `fail` retu
   or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
 
+With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
+It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
+is off or missing (a missing file starts with a template). `tab` or `e` switches to editing;
+`ctrl+s` saves, and closing unsaved edits asks before discarding them. Saving writes the shown
+Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
+entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
+
 **TUI:** a **Stage Prompts** section in Settings (`,`) lists the current Board's Stages with their
 effective Stage Prompts (`on · board`, `on · global`, `off`), or the global level. `space` turns the
 highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the

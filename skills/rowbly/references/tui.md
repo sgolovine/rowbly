@@ -56,6 +56,13 @@ default; kept in `~/.rowblyrc.json`).
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
 | Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch Board / global level |
 
+With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
+It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
+is off or missing (a missing file starts with a template). `tab` or `e` switches to editing;
+`ctrl+s` saves, and closing unsaved edits asks before discarding them. Saving writes the shown
+Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
+entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
+
 Right-click an Epic in the Epics sidebar for **Edit** (`e`) and **Delete** (`d`), without changing the filter. With that sidebar focused, `e`/`d` act on the picked Epic. Delete asks first; **All Epics** has no record menu.
 
 
