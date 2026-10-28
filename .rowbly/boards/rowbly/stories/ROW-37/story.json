@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:19:25.985Z",
-  "updatedAt": "2026-10-28T00:46:04.474Z",
+  "updatedAt": "2026-10-28T00:46:05.088Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "rook: ROW-37 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T00:36:52.728Z",
+        "finishedAt": "2026-10-28T00:46:04.473Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -36,19 +47,15 @@
           "body": "Factory: PR #120 conflicted with main after #121 (ROW-36) merged, in docs only (skills/rowbly/references/tui.md and rowbly-reference.md with its copies). Decision: stay in In PR; the In PR worker merges origin/main into the branch, keeps both sides, reruns the four checks and merges when ready.",
           "createdAt": "2026-10-28T00:39:00.910Z",
           "updatedAt": "2026-10-28T00:39:00.910Z"
+        },
+        {
+          "id": "Wqu6LuMM",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/120",
+          "createdAt": "2026-10-28T00:46:05.087Z",
+          "updatedAt": "2026-10-28T00:46:05.087Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-37 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:36:52.728Z",
-        "finishedAt": "2026-10-28T00:46:04.473Z"
-      }
     }
   }
 }
