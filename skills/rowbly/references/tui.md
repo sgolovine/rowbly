@@ -84,4 +84,4 @@ New Story has Details, then enabled create tabs in registry order (Tasks, Specs,
 In Settings → Global → Experimental Features, select a feature to read its description and press
 `enter` to turn it on or off for every Board in the Data Root. Saves and errors show as toasts. With
 no features in this version, the section explains that features will appear when available and
-shows no toggle hint. The long section label wraps within the Settings sidebar.
+shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.
