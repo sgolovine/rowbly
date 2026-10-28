@@ -348,4 +348,4 @@ Create with enabled Plugins (all in one operation, invalid input saves nothing):
 [--blocks <KEY>…] [--blocked-by <KEY>…]`.
 Tasks: literal names, flag order, first effective Stage. Story Specs: unique slugs, first `#` heading or
 slug as title; file `-` uses stdin at most once including description. Links: existing same-Board Stories.
-New Story tabs: Details, Tasks, Specs, Links when enabled; ctrl+s saves all, esc confirms changed drafts.
+New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift+Tab next tab (wraps); ctrl+s saves all, esc confirms changed drafts.

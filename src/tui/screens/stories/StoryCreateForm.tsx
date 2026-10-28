@@ -89,7 +89,7 @@ export function StoryCreateForm({
     ) || Object.values(drafts).some((draft) => draft !== undefined),
   );
   useKeyHints([
-    { key: 'shift+tab/←/→', description: 'switch tab' },
+    { key: 'shift+tab', description: 'next tab' },
     { key: 'ctrl+s', description: 'save Story' },
     ...extraHints,
   ]);
