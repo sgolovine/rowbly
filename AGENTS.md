@@ -92,8 +92,9 @@ unchanged and does not authorize implementation. Its browser UI has a numbered c
 
 `skills/rowbly-factory/` supervises a Board: it starts a worker for each Story that arrives in a
 Stage whose Stage Prompt is on, records Stage Runs (ADR-0040) and applies the Board changes workers
-report. The Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no Stage, server or
-model.
+report. At start it pulls the checkout, first moving any uncommitted changes to a cleanup PR. The
+Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no Stage, server, model or way of
+starting threads.
 
 `skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
 an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to

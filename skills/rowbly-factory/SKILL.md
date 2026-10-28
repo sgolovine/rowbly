@@ -21,17 +21,43 @@ All optional, given when the user starts the skill:
 - **Board**: a Board id. Without one, use the current Board (`rowbly use`), else the only Board.
 - **Worker limit**: how many workers run at once. Default 4.
 - **Worker model**: default your own model.
-- **Other instructions**, such as where workers run. These take precedence over `ROWBLY.md`, which
-  takes precedence over this file.
+- **Other instructions**, such as where workers run and how to start them. These take precedence
+  over `ROWBLY.md`, which takes precedence over this file.
+
+Keep this file free of machine and user specifics: servers, paths, models, thread tools and limits
+belong in `ROWBLY.md` or the user's instructions.
+
+## Update the checkout
+
+Do this first, in the git repository that holds the Data Root (find it as the reference says). Skip
+it when the Data Root is not in a git repository.
+
+1. Run `git status --porcelain`. If it prints nothing, go to step 3.
+2. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
+   --cached` and each new file). If one must not be committed (a secret, build output, a large
+   binary), stop and ask the user. Otherwise:
+   - Create a branch `factory-cleanup/<YYYY-MM-DD-HHMM>` at the current commit, commit every change
+     on it as one **cleanup commit** whose message sums up the changes, in the repository's commit
+     style, and push it.
+   - Open a **cleanup PR** against the branch you started on. Its description says what each change
+     is and that the factory found it uncommitted at start. Do not merge it.
+   - Switch back to the branch you started on.
+3. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
+
+Tell the user in one line whether the checkout was clean, the cleanup PR if you opened one, and the
+commit you pulled to. When workers use another checkout, `ROWBLY.md` says whether and how to update
+it.
 
 ## Before you start
 
 Check everything below, then report every problem at once. If any check fails, start nothing:
 tell the user what is missing and how to fix it, and stop.
 
-1. **Threads.** You must be able to start agent threads or sub-agents that run on their own, read
-   what they write, and send them messages. If the harness cannot do this, say that the factory
-   needs it.
+1. **Threads.** You must be able to start agent threads that run on their own, read what they write,
+   and send them messages. Any way that does this is fine: sub-agents, ordinary top-level threads, a
+   CLI, or threads on another machine reached over SSH. Running the factory is the user's request for
+   these threads, so start top-level threads when that is the way you have. Follow `ROWBLY.md` or the
+   user on how to start them. Fail this check only when you have no way at all.
 2. **Data Root and Board.** Find the Data Root as the reference says. Resolve the Board as in
    [Inputs](#inputs). If several Boards could match and none is current, ask the user to start the
    skill again with a Board.
@@ -83,7 +109,7 @@ Report each start, retry, finish, failure, question and Board change to the user
 2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
    Comments, Epic and Story links.
 3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
-   worker model, where `ROWBLY.md` or the user says workers run.
+   worker model, where and how `ROWBLY.md` or the user says.
 4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
 
 ## Worker messages

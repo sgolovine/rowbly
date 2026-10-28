@@ -17,6 +17,12 @@ Rowbly data is committed on `main` and pushed; the Git Plugin commits each chang
   `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It pushes `main` after it applies
   Board changes, so workers get them by merging `origin/main`.
 - **Workers run on the server `rook`** (`ssh 192.168.68.62`), never on the supervisor's computer.
+  They are ordinary top-level T3 threads on rook, started as below; that is intended, not a
+  fallback for sub-agents.
+- **Rook's checkout.** After the supervisor updates its own checkout, it updates rook's shared
+  checkout `~/Projects/rowbly` over SSH the same way: a cleanup commit and cleanup PR for any
+  uncommitted changes, then `git pull --ff-only` on `main`. Only the supervisor pulls there, at
+  start, before any worker runs.
 - **At most 4 threads on rook at once**, counting the launcher while it runs. Check `free -h` there
   before each start, and start nothing while less than about 6 GB is available.
 - **Worker model**: Codex `gpt-6.1-sol` at `reasoningEffort: medium`, unless the user names another.
@@ -56,8 +62,8 @@ thread id as its Stage Run `--worker`.
 
 Give these to every worker with its brief:
 
-- Do not `git pull` in the shared control checkout `~/Projects/rowbly`; other threads use it.
-  Worktrees go under `~/Projects/rowbly-worktrees/`.
+- Do not `git pull` or change files in the shared checkout `~/Projects/rowbly`; other threads use
+  it. Worktrees go under `~/Projects/rowbly-worktrees/`.
 - Keep sub-agents to the minimum `rowbly-dev` allows, one at a time when you can, and leave no dev
   server, watcher or TUI running.
 - The browser upload route does not work on rook. Push screenshots as an orphan commit to a branch
