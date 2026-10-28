@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:19:25.985Z",
-  "updatedAt": "2026-10-28T00:21:02.856Z",
+  "updatedAt": "2026-10-28T00:36:20.309Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-10-28T00:21:02.855Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SVxaCTX6",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-37-story-tab-keys, based on origin/main. Plan: make Tab advance fields within create-editor forms, Shift+Tab advance create-editor tabs, update hints and documentation, verify create and edit behavior with agentic-tui, and run all required checks.",
+          "createdAt": "2026-10-28T00:36:20.308Z",
+          "updatedAt": "2026-10-28T00:36:20.308Z"
+        }
+      ]
     }
   }
 }
