@@ -58,6 +58,7 @@ default; kept in `~/.rowblyrc.json`).
 | Fields | `n` new, `e` edit, `d` remove, `l` switch level |
 | Me | `enter` edit Global or This Data Root |
 | Doctor | `f` fix, `r` check again |
+| Skills (in Settings) | `i` install bundled or local skill, `n` new custom skill, `u` update, `d` delete (both ask first); `↑`/`↓` select, `/` filter |
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
@@ -101,3 +102,14 @@ no features in this version, the section explains that features will appear when
 shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.
 
 In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
+
+In Settings → Global → Skills, the managed folder is the current working folder, independent of
+the Data Root. Installed entries show official/custom, harnesses and relative installation paths;
+bundled names are shown above the list. Installation accepts a bundled name or local skill folder;
+creation asks for name and description. Both forms choose the harness destination and save with
+`ctrl+s`. Custom instructions are edited outside the TUI. Update reinstalls the bundled version for
+an official skill, or refreshes only `references/rowbly-reference.md` for a custom skill, keeping
+`SKILL.md` and every other file. Delete removes the selected whole folder only after confirmation;
+`n`, `esc`, or Enter on the default Cancel button cancels without writing. Only official installations
+and custom folders holding `SKILL.md` and the Rowbly reference are managed. Update/delete reject
+symbolic links in the managed path, including harness folders and a custom reference path.

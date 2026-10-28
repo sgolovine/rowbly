@@ -4,26 +4,16 @@
   "boardId": "rowbly",
   "name": "TUI for rowbly skills",
   "description": "- Currently we have CLI commands to list, install and create custom rowbly skills.\n- This should be expanded so we also support this in the TUI\n- Should be accessable via settings. Allows installation, creation, update and deletion of skills.",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:14:24.235Z",
-  "updatedAt": "2026-10-28T16:37:25.479Z",
+  "updatedAt": "2026-10-28T17:06:34.206Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-39 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-10-28T16:19:05.144Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -39,8 +29,25 @@
           "body": "Answers to FACTORY-QUESTIONS ROW-39 (from the user):\n\n1. **Update** does both: for an official skill, reinstall the bundled version over the installed copy; for a custom skill, refresh its bundled Rowbly reference page and keep its `SKILL.md` instructions unchanged. No in-TUI editing of `SKILL.md`.\n2. **Delete** removes only Rowbly skills: official Rowbly skills and custom skills that hold the Rowbly reference. Never other skill folders. Ask for confirmation in a modal first.",
           "createdAt": "2026-10-28T16:37:25.478Z",
           "updatedAt": "2026-10-28T16:37:25.478Z"
+        },
+        {
+          "id": "oQ7Jy7P7",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/124. Added Settings → Skills for installation, creation, update and confirmed deletion through shared services. Official updates reinstall the bundled version; custom updates refresh only the Rowbly reference, preserving instructions. Deletion is restricted to Rowbly skills. Independent validation signed off e74140d: typecheck and lint passed, 77 unit and 20 CLI tests passed, manual workflows verified. Nine screenshots uploaded and verified. Worktree clean; CI pending.",
+          "createdAt": "2026-10-28T17:06:29.350Z",
+          "updatedAt": "2026-10-28T17:06:29.350Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "rook: ROW-39 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T17:06:34.206Z"
+      }
     }
   }
 }

@@ -4,6 +4,7 @@
 import { basename, join, relative, resolve } from 'node:path';
 import { NotFoundError, ValidationError } from '../core';
 import {
+  assertSkillPath,
   copyFolder,
   createFolder,
   isFolder,
@@ -12,6 +13,9 @@ import {
   pathExists,
   readPackageFile,
   readTextFile,
+  refreshSkillReference,
+  removeSkillFolder,
+  replaceSkillFolder,
 } from '../storage';
 
 /**
@@ -238,4 +242,39 @@ function frontmatterField(text: string, field: string): string {
     }
   }
   return raw.replace(/^'(.*)'$/, '$1');
+}
+
+/** A listed installation, identified by its exact relative path, never an arbitrary folder. */
+export interface ManageSkillInput {
+  cwd: string;
+  path: string;
+}
+
+async function managedSkill(input: ManageSkillInput): Promise<{ officialDir?: string }> {
+  const list = await listAllSkills(input.cwd);
+  const official = list.official.find((skill) => skill.installed.some((entry) => entry.path === input.path));
+  if (!official && !list.custom.some((skill) => skill.path === input.path))
+    throw new ValidationError('select an installed Rowbly skill');
+  await assertSkillPath(input.cwd, input.path);
+  await assertSkillPath(input.cwd, join(input.path, 'SKILL.md'));
+  if (official) {
+    const bundled = (await officialSkills()).find((skill) => skill.name === official.name);
+    if (!bundled) throw new NotFoundError(`no bundled skill named "${official.name}"`);
+    return { officialDir: bundled.dir };
+  }
+  await assertSkillPath(input.cwd, join(input.path, REFERENCE));
+  return {};
+}
+
+/** Reinstall the bundled copy, or refresh only a custom skill's Rowbly reference. */
+export async function updateSkill(input: ManageSkillInput): Promise<void> {
+  const skill = await managedSkill(input);
+  if (skill.officialDir) await replaceSkillFolder(input.cwd, input.path, skill.officialDir);
+  else await refreshSkillReference(input.cwd, join(input.path, REFERENCE), await reference());
+}
+
+/** Delete an enumerated official installation or custom skill carrying the Rowbly reference. */
+export async function deleteSkill(input: ManageSkillInput): Promise<void> {
+  await managedSkill(input);
+  await removeSkillFolder(input.cwd, input.path);
 }

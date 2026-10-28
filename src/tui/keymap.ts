@@ -46,7 +46,8 @@ export const CORE_KEYS: readonly string[] = [
   // bindings of text inputs and forms.
   // `v` also reserves ctrl+v / alt+v Story image paste.
   // `g` is New Story's ctrl+g, switching focus between Plugin fields and drafts.
-  ...'nedmTBcAfvosrag',
+  // Skills: install and update.
+  ...'nedmTBcAfvosragiu',
 ];
 
 /**

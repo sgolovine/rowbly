@@ -1,8 +1,9 @@
-import { readdir, readFile, realpath, rename, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, realpath, rename, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { DataIntegrityError, DataRootNotFoundError, UsageError } from '../../src/core';
 import { BoardConfigSchema, RowblyConfigSchema } from '../../src/schemas';
+import { createSkill, deleteSkill, installSkill, updateSkill } from '../../src/services/skills';
 import {
   ensureHomeConfig,
   findDataRoot,
@@ -204,5 +205,60 @@ describe('findDataRoot and the known Data Roots', () => {
     expect(missing).toBeInstanceOf(DataRootNotFoundError);
     expect((missing as DataRootNotFoundError).details.path).toBe(join(home, 'gone'));
     await expect(find(project.path, { ROWBLY_ROOT: project.path })).rejects.toBeInstanceOf(UsageError);
+  });
+});
+
+describe('managed skill files', () => {
+  it('preserves custom instructions, restores failed replacements, and refuses paths or links outside managed skills', async () => {
+    const t = await tempRoot();
+    const outside = await tempRoot();
+    const custom = await createSkill({ cwd: t.dir, name: 'my-work', harness: 'codex' });
+    const customDir = join(t.dir, custom.path);
+    await writeFile(join(customDir, 'SKILL.md'), 'my instructions');
+    await writeFile(join(customDir, 'notes.txt'), 'keep me');
+    await writeFile(join(customDir, 'references/rowbly-reference.md'), 'old reference');
+    await updateSkill({ cwd: t.dir, path: custom.path });
+    expect(await readFile(join(customDir, 'SKILL.md'), 'utf8')).toBe('my instructions');
+    expect(await readFile(join(customDir, 'notes.txt'), 'utf8')).toBe('keep me');
+    expect(await readFile(join(customDir, 'references/rowbly-reference.md'), 'utf8')).not.toBe('old reference');
+
+    const official = await installSkill({ cwd: t.dir, source: 'rowbly', harness: 'claude' });
+    const officialDir = join(t.dir, official.path);
+    await writeFile(join(officialDir, 'SKILL.md'), 'old bundled copy');
+    const { rename: renameReal } = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
+    const fail = vi.spyOn(io, 'rename').mockImplementation(async (from, to) => {
+      if (String(from).endsWith('.tmp') && to === officialDir) throw new Error('publication failed');
+      return renameReal(from, to);
+    });
+    try {
+      await expect(updateSkill({ cwd: t.dir, path: official.path })).rejects.toThrow('publication failed');
+      expect(await readFile(join(officialDir, 'SKILL.md'), 'utf8')).toBe('old bundled copy');
+    } finally {
+      fail.mockRestore();
+    }
+    await updateSkill({ cwd: t.dir, path: official.path });
+    expect(await readFile(join(officialDir, 'SKILL.md'), 'utf8')).toContain('name: rowbly');
+
+    await mkdir(join(t.dir, '.agents/skills/unrelated'));
+    await writeFile(join(t.dir, '.agents/skills/unrelated/SKILL.md'), 'unrelated');
+    await expect(deleteSkill({ cwd: t.dir, path: '.agents/skills/unrelated' })).rejects.toThrow('select an installed');
+    await expect(deleteSkill({ cwd: t.dir, path: '../outside' })).rejects.toThrow('select an installed');
+    await expect(deleteSkill({ cwd: t.dir, path: join(t.dir, custom.path) })).rejects.toThrow('select an installed');
+    await symlink(customDir, join(t.dir, '.agents/skills/linked'));
+    await expect(deleteSkill({ cwd: t.dir, path: '.agents/skills/linked' })).rejects.toThrow('symbolic link');
+    await rename(join(customDir, 'references'), join(customDir, 'saved-references'));
+    await symlink(join(customDir, 'saved-references'), join(customDir, 'references'));
+    await expect(updateSkill({ cwd: t.dir, path: custom.path })).rejects.toThrow('symbolic link');
+    await expect(deleteSkill({ cwd: t.dir, path: custom.path })).rejects.toThrow('symbolic link');
+    await rename(join(t.dir, '.claude'), join(outside.dir, 'claude'));
+    await symlink(join(outside.dir, 'claude'), join(t.dir, '.claude'));
+    await expect(deleteSkill({ cwd: t.dir, path: official.path })).rejects.toThrow('symbolic link');
+    expect(await readFile(join(outside.dir, 'claude/skills/rowbly/SKILL.md'), 'utf8')).toContain('name: rowbly');
+    // Deletion must unlink nested links rather than following them to unrelated content.
+    const removable = await createSkill({ cwd: t.dir, name: 'remove-me', harness: 'pi' });
+    await symlink(customDir, join(t.dir, removable.path, 'outside'));
+    await deleteSkill({ cwd: t.dir, path: removable.path });
+    expect(await readFile(join(customDir, 'notes.txt'), 'utf8')).toBe('keep me');
+    expect(await readFile(join(t.dir, '.agents/skills/unrelated/SKILL.md'), 'utf8')).toBe('unrelated');
   });
 });
