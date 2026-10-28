@@ -5,6 +5,7 @@ import { doctorScreens } from './doctor';
 import { fieldsScreens } from './fields';
 import { homeScreens } from './home';
 import { meScreens } from './me';
+import { onboardingScreens } from './onboarding';
 import { pluginsScreens } from './plugins';
 import { settingsScreens } from './settings';
 import { setupScreens } from './setup';
@@ -17,6 +18,7 @@ export type { ScreenComponent, ScreenProps, ScreenRegistry } from './types';
 /** Every screen the router can open. One line per area; each area adds screens in its own folder. */
 export const screens: ScreenRegistry = {
   ...homeScreens,
+  ...onboardingScreens,
   ...setupScreens,
   ...meScreens,
   ...boardsScreens,

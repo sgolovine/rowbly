@@ -751,7 +751,7 @@ no new command or strategy setting is added.
 
 ## Interactive mode (TUI)
 
-Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. With no Data Root, a first-run screen offers to create one here or globally. With a Board in context (`rowbly use <board>`, or the only Board in the Data Root) the app opens on that Board's Kanban board; otherwise it opens the home menu.
+Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. On first launch, onboarding opens before the Board or home menu, including for existing users whose completion flags are absent. With no Data Root, setup can create one after global onboarding. After onboarding, a Board in context (`rowbly use <board>`, or the only Board in the Data Root) opens its Kanban board; otherwise the home menu opens.
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. With the mouse, a click selects a Story, a click on the selected Story opens it, and dragging a Story moves it to the place you drop it: onto another Stage, or up or down its own. While you drag, a blue block the size of a Story marks where it will land, under the pointer; the Stories around it move up or down to make room, and the Story lands there when you let go. A right click on a Story selects it and opens a menu beside the pointer with what its keys do: **Open** (`enter`), **Edit** (`e`), **Move to previous Stage** and **Move to next Stage** (`shift+←`/`shift+→`), **Move up** and **Move down** (`shift+↑`/`shift+↓`), **Move to top** and **Move to bottom** (`T`/`B`) and **Delete** (`d`, which asks first). Items that do not apply, such as moving the first Story up, are dimmed. In the menu, `↑`/`↓` (or `j`/`k`) pick an item and `enter` or a click runs it; `esc`, or a click or right click outside the menu, closes it without doing anything else. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
@@ -902,3 +902,30 @@ With the corresponding Plugins enabled, `stories create` also accepts repeatable
 All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.
 
 In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
+
+### Onboarding
+
+Global onboarding sets your existing **Me** handle in the Home Config and registers existing Data
+Roots by their Data Root folder path, with an optional label and default. It never creates a Data Root
+and preserves local Me. Invalid or missing registration paths create nothing. Without an open Data
+Root, Continue opens the registered default (or first known Data Root); with none, it opens setup.
+An explicit missing `--data-root` or missing default still fails before onboarding.
+
+Data Root onboarding asks how you work: **Plain Kanban**, **Software Factory**, or **Both**.
+Plain Kanban turns Software Factory off; the other modes turn it on. Choose an existing Board, or
+create the first Board. Kanban and Both then offer optional Plugins; Software Factory goes straight
+to factory guidance. Unchecked Plugins are turned off with their Plugin Data kept.
+
+The separate AI usage question offers official agent skills. Choose a skill, destination folder and
+harness to install it through the same service as `rowbly skills install`; existing folders are never
+overwritten. The screen also explains creating and installing custom skills. Factory guidance opens
+Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Onboarding adds no
+starter Stage Prompts; use the editor to write and enable the instructions you want.
+
+Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for
+global onboarding, or in the Data Root's committed `rowbly.config.json` for Data Root onboarding.
+Absent or false means incomplete. Data Root completion is shared: once that configuration reaches
+other people, onboarding stays suppressed for them too. Switching to an incomplete Data Root opens
+its onboarding. Reopen either flow with **Settings › Onboarding**; revisiting leaves the flag set and
+existing records intact. Errors keep the current step available for retry. In registration and skill
+installation forms, **esc** returns to the preceding choice. Demo mode bypasses onboarding.
