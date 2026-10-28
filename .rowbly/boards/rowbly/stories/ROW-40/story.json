@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Allow clicking on \"levels\"",
   "description": "In any place in settings where we have a header for project and global levels, allow the user to click on them to switch tabs.",
-  "stage": "todo",
+  "stage": "in-progress",
   "rank": "a2",
   "priority": null,
   "labels": [],
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:15:25.063Z",
-  "updatedAt": "2026-10-28T16:15:25.067Z",
+  "updatedAt": "2026-10-28T16:17:07.207Z",
   "plugins": {
     "attachments": {
       "attachments": [
