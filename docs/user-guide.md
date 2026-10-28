@@ -614,7 +614,18 @@ rowbly skills list             # the official skills, then the custom skills her
   | `cursor` | `.cursor/skills` |
 
 - `list` looks in every folder of the table and shows two sections. **Official skills** lists each official skill with the skill folders that hold it, or `not installed`. **Custom skills** lists every other skill that holds `SKILL.md` and `references/rowbly-reference.md`, with the harnesses that read it. `--json` prints `{official: [{name, description, installed: [{harnesses, path}]}], custom: [{name, description, harnesses, path}]}`, with each `path` relative to the current folder.
-- Installed skills and the reference are copies: after you upgrade Rowbly, delete an installed official skill and install it again, and copy `skills/rowbly-reference.md` from the npm package over a skill's reference.
+- Installed skills and the reference are copies. After upgrading Rowbly, use **Settings → Global → Skills** to update them: an official skill is replaced with the bundled version; a custom skill gets only a fresh `references/rowbly-reference.md`, keeping `SKILL.md` and every other file.
+
+In **Settings → Global → Skills**, the managed folder is the current working folder, even when the
+TUI uses a Data Root elsewhere. The section lists bundled names and installed official and custom
+skills with their harnesses and relative installation paths. `i` opens installation (a bundled name
+or local skill folder); `n` opens creation (name, description and harness). Both forms choose the
+harness destination shown above and save with `ctrl+s`. Edit custom instructions outside the TUI.
+`u` updates the selected installation after confirmation. `d` asks before deleting its entire folder;
+`n`, `esc`, or Enter on the default Cancel button cancels without writing. Only official installations
+and custom folders holding both `SKILL.md` and the Rowbly reference can be updated or deleted.
+Other skills are excluded. Update and delete reject symbolic links in the selected managed path,
+including harness folders, `SKILL.md`, and a custom skill's reference path.
 <!-- END skills -->
 
 <!-- BEGIN tui -->
@@ -784,7 +795,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
 | `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, create one, `e` edit its label and default, or `d` forget or delete it |
-| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Skills, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
@@ -846,6 +857,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Me | `enter` edit the highlighted level (Global or This Data Root); in the form, `ctrl+s` saves the handle (empty clears that level) |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
+| Skills (in Settings) | `i` install bundled or local skill, `n` new custom skill, `u` update, `d` delete (both ask first); `↑`/`↓` select, `/` filter |
 | Plugins | `enter` turn the Plugin on or off |
 | Experimental Features | `enter` turn the selected feature on or off; no toggle is offered when none are available |
 | Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |

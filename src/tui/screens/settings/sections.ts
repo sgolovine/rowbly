@@ -8,6 +8,7 @@ import { meScreens } from '../me';
 import { pluginsScreens } from '../plugins';
 import { preferencesScreens } from '../preferences';
 import { setupScreens } from '../setup';
+import { skillsScreens } from '../skills';
 import { stagesScreens } from '../stages';
 import type { ScreenComponent, ScreenRegistry } from '../types';
 
@@ -45,6 +46,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'preferences', label: 'Preferences', screen: 'preferences' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
+        { id: 'skills', label: 'Skills', screen: 'skills' },
         { id: 'experimental-features', label: 'Experimental Features', screen: 'experimental-features' },
       ],
     },
@@ -79,6 +81,7 @@ const SECTION_SCREENS: ScreenRegistry = {
   ...preferencesScreens,
   ...doctorScreens,
   ...pluginsScreens,
+  ...skillsScreens,
   ...experimentalFeaturesScreens,
 };
 
