@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:14:24.235Z",
-  "updatedAt": "2026-10-28T17:20:09.241Z",
+  "updatedAt": "2026-10-28T17:20:09.876Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "rook: ROW-39 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T17:06:34.206Z",
+        "finishedAt": "2026-10-28T17:20:09.240Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -36,19 +47,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/124. Added Settings → Skills for installation, creation, update and confirmed deletion through shared services. Official updates reinstall the bundled version; custom updates refresh only the Rowbly reference, preserving instructions. Deletion is restricted to Rowbly skills. Independent validation signed off e74140d: typecheck and lint passed, 77 unit and 20 CLI tests passed, manual workflows verified. Nine screenshots uploaded and verified. Worktree clean; CI pending.",
           "createdAt": "2026-10-28T17:06:29.350Z",
           "updatedAt": "2026-10-28T17:06:29.350Z"
+        },
+        {
+          "id": "Dhav7lTB",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/124. All PR checks passed; nine screenshot URLs returned 200. Post-merge CI queued.",
+          "createdAt": "2026-10-28T17:20:09.875Z",
+          "updatedAt": "2026-10-28T17:20:09.875Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-39 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T17:06:34.206Z",
-        "finishedAt": "2026-10-28T17:20:09.240Z"
-      }
     }
   }
 }
