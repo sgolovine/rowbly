@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Add feature flagging support",
   "description": "Add feature flag support to Rowbly. \n\n- Expose via settings and call it \"Experemental Features\".\n- Create a feature flag service that will make it easy for every part of the app to get feature flags.\n- Store feature flags in code. Should be a k/v object, each object should contain: name, description and enabled. \n- Feature flags overrides are stored at data root level in config file.\n- k/v object, key lines up with config key, value is boolean.\n",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "aj",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-26T19:44:27.419Z",
-  "updatedAt": "2026-10-28T00:36:31.227Z",
+  "updatedAt": "2026-10-28T00:36:31.861Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-35 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:34:09.217Z",
-        "finishedAt": "2026-10-28T00:36:30.522Z"
-      }
-    },
     "comments": {
       "comments": [
         {
