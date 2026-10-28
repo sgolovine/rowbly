@@ -27,6 +27,8 @@ import type {
   DoctorFix,
   DoctorService,
   DoctorSeverity,
+  FeatureFlag,
+  FeatureFlagsService,
   FieldsService,
   OperationOptions,
   Position,
@@ -231,6 +233,7 @@ export const CORE_OPERATION_NAMES = [
   'stories.move',
   'stories.rank',
   'stories.remove',
+  'feature-flags.set',
   'plugins.enable',
   'plugins.disable',
   'doctor.fix',
@@ -275,6 +278,7 @@ export interface CoreOperations {
   'stories.move': { input: { key: string; stage: Slug; top: boolean } & OperationOptions; result: Story };
   'stories.rank': { input: { key: string; position: RankPosition } & OperationOptions; result: Story };
   'stories.remove': { input: { key: string } & OperationOptions; result: undefined };
+  'feature-flags.set': { input: { key: string; enabled: boolean } & OperationOptions; result: FeatureFlag };
   'plugins.enable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   'plugins.disable': { input: { id: string } & OperationOptions; result: { id: string; enabled: boolean } };
   /** One pass of `doctor --fix`: the findings it fixes. */
@@ -426,6 +430,7 @@ export interface PluginFiles {
  * time with only these methods.
  */
 export interface PluginReadServices {
+  featureFlags: Pick<FeatureFlagsService, 'list' | 'isEnabled'>;
   context: Pick<ContextService, 'resolveBoard'>;
   config: Pick<ConfigService, 'effective' | 'global'>;
   boards: Pick<BoardsService, 'list' | 'get'>;

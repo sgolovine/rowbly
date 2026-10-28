@@ -1,5 +1,6 @@
 import { Box, type DOMElement, Text } from 'ink';
 import { useRef } from 'react';
+import { useScrollFocus } from '../../components';
 import { useMouse } from '../../hooks';
 import { theme } from '../../theme';
 
@@ -16,13 +17,24 @@ export function SectionNavItem({
   onClick(): void;
 }) {
   const ref = useRef<DOMElement>(null);
+  useScrollFocus(ref, selected);
   useMouse(ref, { onClick }, clickable);
   return (
-    <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.selection : undefined}>
-      <Text wrap="truncate-end" color={theme.ink} bold={selected}>
+    <Box
+      ref={ref}
+      flexShrink={0}
+      width="100%"
+      paddingRight={1}
+      backgroundColor={selected ? theme.selection : undefined}
+    >
+      <Box width={2} flexShrink={0}>
         <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
-        {label}
-      </Text>
+      </Box>
+      <Box flexGrow={1} flexShrink={1}>
+        <Text color={theme.ink} bold={selected}>
+          {label}
+        </Text>
+      </Box>
     </Box>
   );
 }

@@ -2,6 +2,7 @@ import type { BoardConfig } from '../../../schemas';
 import { pluginRoute, type TuiPlugin } from '../../hooks';
 import { boardsScreens } from '../boards';
 import { doctorScreens } from '../doctor';
+import { experimentalFeaturesScreens } from '../experimental-features';
 import { fieldsScreens } from '../fields';
 import { meScreens } from '../me';
 import { pluginsScreens } from '../plugins';
@@ -44,6 +45,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'preferences', label: 'Preferences', screen: 'preferences' },
         { id: 'doctor', label: 'Doctor', screen: 'doctor' },
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
+        { id: 'experimental-features', label: 'Experimental Features', screen: 'experimental-features' },
       ],
     },
     {
@@ -77,6 +79,7 @@ const SECTION_SCREENS: ScreenRegistry = {
   ...preferencesScreens,
   ...doctorScreens,
   ...pluginsScreens,
+  ...experimentalFeaturesScreens,
 };
 
 export function sectionScreen(section: SettingsSection): ScreenComponent | undefined {

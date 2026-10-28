@@ -84,6 +84,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
 
+- `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
 - `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
@@ -122,7 +123,7 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 - **Order:** the Plugin input is parsed → the body (or a replacement) → every transform → every guard (each in registry order) → the save → every reaction.
 - **Results.** Hooks and callers see an operation's public result. Transforms and guards get `result`, the body's or replacement's result before any transform; for `stories.create`, `result.key` is the new Story. Callers and reactions get the **final** result, read back from the Change Set after the transforms: a created Story includes the bags transforms wrote. A Plugin operation passes `{ result(changes, bodyResult) }` to `plugin.operation` to read its own final record the same way. A transform that deletes the record an operation returns fails the operation with `CONFLICT` before the save.
 - **Stage changes.** `stories.update` can change a Stage, as `stories.move` does. A hook about Stage changes compares `before.stage` with `after.stage` in both.
-- **Hook names** in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
+- **Hook names** in a core namespace (`context`, `boards`, `stages`, `fields`, `stories`, `feature-flags`, `plugins`, `doctor`) must be core operations, or the Plugin fails to load. Hooks on another Plugin's operations (`'epics.create'`) are allowed and untyped.
 - **Reactions** have 5 s each. On timeout Rowbly warns and goes on with the next reaction; nothing is undone. The CLI waits for reactions; the TUI runs them in the background, one operation after another. A timeout cannot stop a synchronous loop or detached work. A rejection the reaction did not return is not caught and ends the process: return or await all work.
 
 ## Stored and pending reads

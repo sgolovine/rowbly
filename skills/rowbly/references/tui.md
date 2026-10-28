@@ -78,3 +78,10 @@ macOS screenshot to clipboard: Cmd+Ctrl+Shift+4 (Cmd+Shift+4 saves a file). Wind
 Linux shortcuts depend on the desktop; Sway/Hyprland may need wl-clipboard. For SSH/headless or
 unsupported clipboard access, use `rowbly attachments add <KEY> <file>` or the tab's `n` file path.
 New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab switches tabs; arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.
+
+### Experimental Features
+
+In Settings → Global → Experimental Features, select a feature to read its description and press
+`enter` to turn it on or off for every Board in the Data Root. Saves and errors show as toasts. With
+no features in this version, the section explains that features will appear when available and
+shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.

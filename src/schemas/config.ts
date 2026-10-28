@@ -15,6 +15,8 @@ export const RowblyConfigSchema = z.object({
   version: VersionSchema,
   stages: StageListSchema.optional(),
   customFields: CustomFieldListSchema.optional(),
+  /** Experimental feature overrides, shared by every Board in this Data Root. */
+  featureFlags: z.record(z.string(), z.boolean()).optional(),
   /** The Data Root's Plugin entries, which are also its bags. */
   plugins: z.record(z.string(), PluginEntrySchema).optional(),
 });
