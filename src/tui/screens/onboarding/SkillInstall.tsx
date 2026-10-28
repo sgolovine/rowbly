@@ -9,24 +9,25 @@ import { theme } from '../../theme';
 export function SkillInstall({ onDone }: { onDone(): void }) {
   const skills = useAsync(officialSkills, []);
   const toast = useToast();
-  const [source, setSource] = useState<string | null>(null);
+  const [skill, setSkill] = useState<{ name: string; dir: string } | null>(null);
   const active = useIsActive();
   useKeyHints(
-    source
+    skill
       ? [{ key: 'esc', description: 'back to skills' }]
       : [
           { key: '↑/↓', description: 'select skill' },
           { key: 'enter', description: 'choose' },
         ],
   );
-  useKeyCapture(active && source !== null, { text: false, escape: true });
-  useEscape(active && source !== null, () => setSource(null));
+  useKeyCapture(active && skill !== null, { text: false, escape: true });
+  useEscape(active && skill !== null, () => setSkill(null));
   if (!skills.data)
     return skills.loading ? (
       <Loading label="Reading official skills…" />
     ) : (
       <SelectList items={[{ value: 'retry', label: 'Retry reading skills' }]} onSelect={skills.reload} />
     );
+  const availableSkills = skills.data;
   return (
     <Box flexDirection="column" gap={1}>
       <Text bold>Agent skills</Text>
@@ -38,10 +39,10 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
         For your own workflow, run rowbly skills create &lt;name&gt; --harness &lt;harness&gt; in its folder, then edit
         SKILL.md. Install a custom skill with rowbly skills install &lt;folder&gt;.
       </Text>
-      {source ? (
+      {skill ? (
         <>
           <Text>
-            Install {source}. The selected harness’s skills folder is created below the folder you choose. Existing
+            Install {skill.name}. The selected harness’s skills folder is created below the folder you choose. Existing
             skills are never overwritten.
           </Text>
           <Form
@@ -61,11 +62,11 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
             onSubmit={async (values) => {
               const result = await installSkill({
                 cwd: String(values.cwd),
-                source,
+                source: skill.dir,
                 harness: values.harness as Harness,
               });
               toast.push('info', `Installed ${result.name} at ${result.path}`);
-              setSource(null);
+              setSkill(null);
             }}
           />
           <Text color={theme.inkFaint}>esc returns to onboarding; ctrl+k skips onboarding.</Text>
@@ -73,10 +74,12 @@ export function SkillInstall({ onDone }: { onDone(): void }) {
       ) : (
         <SelectList
           items={[
-            ...skills.data.map((skill) => ({ value: skill.name, label: `Install ${skill.name}` })),
+            ...availableSkills.map((skill) => ({ value: skill.dir, label: `Install ${skill.name}` })),
             { value: '', label: 'Continue without installing more skills' },
           ]}
-          onSelect={(item) => (item.value ? setSource(item.value) : onDone())}
+          onSelect={(item) =>
+            item.value ? setSkill(availableSkills.find((skill) => skill.dir === item.value) ?? null) : onDone()
+          }
         />
       )}
     </Box>
