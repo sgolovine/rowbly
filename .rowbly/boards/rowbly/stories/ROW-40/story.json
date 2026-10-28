@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-40",
+  "boardId": "rowbly",
+  "name": "Allow clicking on \"levels\"",
+  "description": "In any place in settings where we have a header for project and global levels, allow the user to click on them to switch tabs.",
+  "stage": "todo",
+  "rank": "a2",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-10-28T16:15:25.063Z",
+  "updatedAt": "2026-10-28T16:15:25.067Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aJjGQOA7G",
+          "name": "image-20261028-1614.png",
+          "type": "image/png",
+          "size": 21190,
+          "createdAt": "2026-10-28T16:15:25.066Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
