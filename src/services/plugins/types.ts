@@ -950,6 +950,15 @@ export interface PluginStoryCreateTab<S = Record<string, unknown>> {
   input(draft: unknown): unknown | undefined;
 }
 
+/** A compact contribution beside a Stage's heading in the Board's Stages view. */
+export interface PluginStageHeaderProps<S = Record<string, unknown>> {
+  boardId: Slug;
+  stage: Stage;
+  active: boolean;
+  plugin: PluginContext<S>;
+  ui: PluginUi;
+}
+
 /** A Plugin's TUI part, loaded only when the TUI starts. */
 export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
@@ -961,6 +970,7 @@ export interface PluginTui<S = Record<string, unknown>> {
   storyCreateTabs?: PluginStoryCreateTab<S>[];
   storyFilter?: PluginStoryFilter<S>;
   sidebar?: PluginSidebar<S>;
+  stageHeader?: ComponentType<PluginStageHeaderProps<S>>;
   /**
    * Short texts about a Story, such as `@ada`, shown on its board card and its Story list row. They
    * only show something, so a Plugin that throws shows none there.
