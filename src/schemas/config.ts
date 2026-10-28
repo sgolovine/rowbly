@@ -13,6 +13,8 @@ export type PluginEntry = z.infer<typeof PluginEntrySchema>;
 /** `rowbly.config.json`: the global level of the Configuration Cascade, and the Plugin entries. */
 export const RowblyConfigSchema = z.object({
   version: VersionSchema,
+  /** Shared completion of Data Root onboarding (ADR-0041). */
+  onboardingComplete: z.boolean().optional(),
   stages: StageListSchema.optional(),
   customFields: CustomFieldListSchema.optional(),
   /** Experimental feature overrides, shared by every Board in this Data Root. */

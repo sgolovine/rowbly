@@ -20,6 +20,8 @@ export type KnownDataRoot = z.infer<typeof KnownDataRootSchema>;
  */
 export const HomeConfigSchema = z.looseObject({
   version: VersionSchema.default(1),
+  /** Completed or skipped global onboarding; absent means incomplete. */
+  onboardingComplete: z.boolean().optional(),
   /** Me for every Data Root, a handle (the same form as Local State's `me`). */
   me: SlugSchema.optional(),
   dataRoots: z.array(KnownDataRootSchema).optional(),

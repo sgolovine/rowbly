@@ -14,6 +14,7 @@ import type {
   Label,
   LocalState,
   Priority,
+  RowblyConfig,
   Slug,
   Stage,
   StageCategory,
@@ -254,6 +255,7 @@ export interface SetupService {
 }
 
 export interface ConfigService {
+  updateRootConfig(patch: { onboardingComplete: boolean }, opts?: OperationOptions): Promise<RowblyConfig>;
   effective(boardId: Slug): Promise<EffectiveBoardConfig>;
   /** The global level alone: the stored `rowbly.config.json` and the Stages and Custom Fields a Board without its own gets. */
   global(): Promise<EffectiveGlobalConfig>;

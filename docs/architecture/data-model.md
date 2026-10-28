@@ -63,6 +63,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | Key | Holds |
 | --- | --- |
 | `version` | `1`; a file without it is read as version 1 |
+| `onboardingComplete` | optional boolean; completed or skipped global onboarding, absent means incomplete |
 | `me` | optional, a handle: global Me, Me in every Data Root without a local Me |
 | `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
 | `openStoryAfterCreation` | optional, a boolean: whether the TUI opens a Story it has just created (the **Preferences** section of the settings); missing means off, and the TUI returns to the Board or list |
@@ -132,3 +133,12 @@ values. Definitions in `src/services/featureFlags.ts` supply each feature's name
 `enabled` default. An absent key uses that default; an explicit `false` overrides a `true` default.
 These settings apply to the whole Data Root, with no Board or Home Config level. Unknown stored
 keys survive updates but are not listed or accepted by `feature-flags set`.
+
+## Onboarding completion
+
+`rowbly.config.json` has an optional `onboardingComplete` boolean, absent meaning incomplete.
+It is shared and committed: one person completing or skipping Data Root onboarding suppresses it
+for everyone sharing that configuration. The Home Config flag is independent and per person.
+`config.updateRootConfig` saves the Data Root flag through the normal Operation pipeline;
+`updateHomeConfig` saves the global flag. Reopening either flow in Settings keeps the flags set.
+See [ADR-0041](../agents/adr/0041-onboarding-completion-has-two-levels.md).

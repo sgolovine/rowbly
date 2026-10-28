@@ -100,7 +100,7 @@ export function createServices(ctx: RowblyContext): Services {
     context: each('context', createContextService(ctx, repos, ops)),
     // `init` creates a Data Root that does not exist yet: nothing to coordinate with.
     setup: createSetupService(ctx, repos),
-    config: each('config', createConfigService(ctx, repos)),
+    config: each('config', createConfigService(ctx, repos, ops)),
     featureFlags: each('featureFlags', createFeatureFlagsService(repos, ops)),
     boards: each('boards', createBoardsService(ctx, repos, ops)),
     stages: each('stages', createStagesService(ctx, repos, ops)),
