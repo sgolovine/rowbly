@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:13:28.661Z",
-  "updatedAt": "2026-10-28T17:18:11.089Z",
+  "updatedAt": "2026-10-28T17:18:11.729Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "rook: ROW-38 In Progress",
+        "by": "sunny",
+        "startedAt": "2026-10-28T16:18:36.621Z",
+        "finishedAt": "2026-10-28T17:18:11.089Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -43,19 +54,15 @@
           "body": "Independent validation passed all four checks and the onboarding flows, but found one bug: an official skill selection can resolve a same-named local folder. Correction is underway; screenshots are captured. The new commit will receive independent revalidation before the draft PR.",
           "createdAt": "2026-10-28T17:07:27.586Z",
           "updatedAt": "2026-10-28T17:07:27.586Z"
+        },
+        {
+          "id": "dBW2F8qg",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/125 adds global and shared Data Root onboarding, skip/reopen from Settings, existing Data Root registration, usage modes, Plugin choices, official skill installation and Stage Prompt guidance. Independent validation signed off commit 1d4a921; typecheck, lint, unit 77/77 and CLI 20/20 passed. Seven screenshots are published in the PR. Branch codex/row-38-onboarding is clean and pushed; no outstanding concerns.",
+          "createdAt": "2026-10-28T17:18:11.729Z",
+          "updatedAt": "2026-10-28T17:18:11.729Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-38 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-10-28T16:18:36.621Z",
-        "finishedAt": "2026-10-28T17:18:11.089Z"
-      }
     }
   }
 }
