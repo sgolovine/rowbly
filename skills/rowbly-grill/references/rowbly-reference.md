@@ -356,3 +356,5 @@ New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift
 - `feature-flags set <key> <true|false>` → changed entry; unknown key exits 3 (`NOT_FOUND`), invalid boolean exits 2 (`USAGE`).
 - Data Root `rowbly.config.json` → `featureFlags: { [key]: boolean }`; absent uses code default, explicit false wins, unknown keys kept; no Board/Home Config level.
 - TUI: Settings → Global → Experimental Features; `enter` turns the selected feature on/off. Empty registry has no toggle hint.
+
+TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared.

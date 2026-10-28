@@ -85,6 +85,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
 
 - `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
+- `config.updateRootConfig({ onboardingComplete })` saves the shared onboarding flag as a core Operation. Hook services remain read-only.
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
 - `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.

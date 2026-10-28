@@ -52,10 +52,11 @@ describe('writeJson', () => {
     await writeJson(rootPath, RowblyConfigSchema, {
       plugins: { future: { enabled: false, data: { kept: true } } },
       featureFlags: { unknown: false },
+      onboardingComplete: true,
       version: 1,
     });
     expect(await readFile(rootPath, 'utf8')).toBe(
-      `${JSON.stringify({ version: 1, featureFlags: { unknown: false }, plugins: { future: { enabled: false, data: { kept: true } } } }, null, 2)}\n`,
+      `${JSON.stringify({ version: 1, onboardingComplete: true, featureFlags: { unknown: false }, plugins: { future: { enabled: false, data: { kept: true } } } }, null, 2)}\n`,
     );
   });
 
@@ -138,6 +139,8 @@ describe('updateHomeConfig', () => {
     }
     const saved = await readHomeConfig(home);
     expect(saved).toMatchObject({ version: 1, editor: 'vim' });
+    await updateHomeConfig(home, (config) => ({ ...config, onboardingComplete: true }));
+    expect((await readHomeConfig(home)).onboardingComplete).toBe(true);
     expect(saved.dataRoots?.map((root) => root.path)).toEqual(['/a', '/first', '/second']);
     expect(saved.dataRoots?.[0]).toEqual({ path: '/a', note: 'kept' });
     expect((await readdir(home)).sort()).toEqual(['.rowbly', HOME_CONFIG_FILE]);

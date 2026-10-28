@@ -1,6 +1,6 @@
 // The known Data Roots of the Home Config as the TUI's Data Root switcher shows and opens them (ADR-0033 §2).
 import { join } from 'node:path';
-import { DataIntegrityError, DataRootNotFoundError, UsageError } from '../core';
+import { DataIntegrityError, DataRootNotFoundError, NotFoundError, UsageError } from '../core';
 import { type DataRoot, type KnownDataRoot, RowblyConfigSchema } from '../schemas';
 import {
   canonicalDataRootPath,
@@ -75,6 +75,26 @@ export async function openKnownDataRoot(opts: {
       cause: err,
     });
   }
+}
+
+/** Registers an existing Data Root only after validating its configuration; never creates one. */
+export async function registerExistingDataRoot(
+  home: string,
+  path: string,
+  changes: { label: string; default: boolean },
+): Promise<string> {
+  const canonical = await canonicalDataRootPath(path, home);
+  try {
+    await readJson(join(canonical, 'rowbly.config.json'), RowblyConfigSchema);
+  } catch (err) {
+    if (!(err instanceof NotFoundError)) throw err;
+    throw new DataRootNotFoundError(`Data Root not found: ${canonical}`, {
+      details: { path: canonical },
+      hint: 'choose an existing Data Root folder containing rowbly.config.json; use setup to create a missing Data Root',
+    });
+  }
+  await updateKnownDataRoot(home, canonical, changes);
+  return canonical;
 }
 
 /**

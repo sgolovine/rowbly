@@ -64,6 +64,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `stories.move` | `{ key, stage, top }` | `Story` |
 | `stories.rank` | `{ key, position }` | `Story` |
 | `stories.remove` | `{ key }` | `undefined` |
+| `config.updateRootConfig` | `{ onboardingComplete }` | saved `RowblyConfig` |
 | `feature-flags.set` | `{ key, enabled }` | `FeatureFlag` (`key`, `name`, `description`, effective `enabled`) |
 | `plugins.enable` | `{ id }` | `{ id, enabled }` |
 | `plugins.disable` | `{ id }` | `{ id, enabled }` |

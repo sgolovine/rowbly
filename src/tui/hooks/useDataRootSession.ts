@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createServices, type RowblyContext, type Services } from '../../services';
 import { type PluginLoader, withPlugins } from '../loadPlugins';
+import { onboardingRoute } from '../onboardingRoute';
 import type { Route } from '../router';
 import type { TuiPlugin } from './plugins';
 import type { ToastStore } from './toasts';
@@ -19,11 +20,18 @@ export function useDataRootSession(opts: {
   services: Services | null;
   plugins: readonly TuiPlugin[];
   initial: Route;
+  onboarding: boolean;
   loadPlugins: PluginLoader | undefined;
   toasts: ToastStore;
 }) {
   const { loadPlugins, toasts } = opts;
-  const [current, setCurrent] = useState({ ctx: opts.ctx, services: opts.services, plugins: opts.plugins, key: 0 });
+  const [current, setCurrent] = useState({
+    ctx: opts.ctx,
+    services: opts.services,
+    plugins: opts.plugins,
+    key: 0,
+    initial: opts.initial,
+  });
   const latest = useRef(0);
   useEffect(
     () => () => {
@@ -44,15 +52,22 @@ export function useDataRootSession(opts: {
         next.plugins?.dispose?.();
         return false;
       }
+      const services = createServices(next);
+      const initial = opts.onboarding ? await onboardingRoute(next, services) : HOME;
+      if (run !== latest.current) {
+        next.plugins?.dispose?.();
+        return false;
+      }
       setCurrent((was) => ({
         ctx: next,
-        services: createServices(next),
+        services,
+        initial: was.ctx?.root.path === next.root.path ? was.initial : initial,
         plugins: loaded,
         key: was.ctx?.root.path === next.root.path ? was.key : was.key + 1,
       }));
       return true;
     },
-    [loadPlugins, toasts],
+    [loadPlugins, toasts, opts.onboarding],
   );
   const services = useMemo(() => ({ ctx: current.ctx, services: current.services, activate }), [current, activate]);
   const plugins = useMemo(
@@ -66,5 +81,5 @@ export function useDataRootSession(opts: {
     }),
     [current, activate],
   );
-  return { services, plugins, key: current.key, initial: current.key === 0 ? opts.initial : HOME };
+  return { services, plugins, key: current.key, initial: current.initial };
 }

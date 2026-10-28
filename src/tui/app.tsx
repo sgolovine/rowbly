@@ -37,6 +37,8 @@ export interface AppProps {
   loadPlugins?: PluginLoader;
   /** Watch the open Data Root and reload what is on screen when it changes on disk. */
   watch?: boolean;
+  /** Enable first-run routing when activating another Data Root. */
+  onboarding?: boolean;
 }
 
 /** The whole TUI: providers around the shell. */
@@ -50,12 +52,13 @@ export function App({
   plugins = [],
   loadPlugins,
   watch = false,
+  onboarding = false,
 }: AppProps) {
   const toastStore = useMemo(() => toasts ?? createToastStore(), [toasts]);
   const shell = useMemo(createShellRegistry, []);
   const mouseRegistry = useMemo(createMouseRegistry, []);
   useMouseSource(mouseRegistry, mouse);
-  const session = useDataRootSession({ ctx, services, plugins, initial, loadPlugins, toasts: toastStore });
+  const session = useDataRootSession({ ctx, services, plugins, initial, onboarding, loadPlugins, toasts: toastStore });
   // The Plugins that are on, and their settings, come from `rowbly.config.json` when they load.
   const changes = useDataRootWatch(watch ? session.services.ctx?.root : undefined, toastStore, (paths) => {
     if (!paths || paths.includes('rowbly.config.json')) void session.plugins.reload();

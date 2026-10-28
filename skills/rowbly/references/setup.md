@@ -208,3 +208,14 @@ changed entry. Use a key from `list`: an unknown key exits 3 (`NOT_FOUND`), an i
 `featureFlags`, shared by every Board and kept across restarts. An absent key uses the code default;
 explicit `false` overrides an on default. Unknown saved keys are preserved but not listed. There is
 no Board or Home Config level.
+
+## TUI onboarding
+
+Bare `rowbly` first offers global onboarding (Me and registration of existing Data Roots), then shared
+Data Root onboarding (mode, Board, Plugins, AI skills and Stage Prompts). `ctrl+k` skips and saves
+completion. `onboardingComplete` is optional in the Home Config and in `rowbly.config.json`; absent
+means incomplete. The latter flag is committed and suppresses onboarding for everyone sharing it.
+Settings › Onboarding reopens either flow without clearing completion. Registration never creates a
+Data Root; setup still creates missing Data Roots. Named missing paths still fail. Plain Kanban turns
+Software Factory off; Factory/Both turn it on. Skill installs choose a folder and harness and never
+overwrite existing skills. Onboarding adds no Stage Prompt templates.

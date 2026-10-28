@@ -7,6 +7,7 @@ import { App } from './app';
 import { createToastStore, type ToastStore, type TuiPlugin } from './hooks';
 import { type PluginLoader, withPlugins } from './loadPlugins';
 import { MOUSE_OFF, MOUSE_ON, MouseStdin } from './mouse';
+import { onboardingRoute } from './onboardingRoute';
 import type { Route } from './router';
 
 /** Stops mouse reporting, shows the cursor and leaves the alternate screen buffer. Harmless when already restored. */
@@ -111,7 +112,8 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
     createElement(App, {
       ctx: resolved,
       services,
-      initial: initialRoute(resolved, env),
+      initial: env.ROWBLY_TUI_DEMO === '1' ? initialRoute(resolved, env) : await onboardingRoute(resolved, services),
+      onboarding: env.ROWBLY_TUI_DEMO !== '1',
       toasts,
       mouse: stdin?.mouse,
       plugins,

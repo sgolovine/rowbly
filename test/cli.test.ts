@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
@@ -41,6 +41,9 @@ describe.skipIf(!hasScript)('rowbly in a terminal', () => {
     // The cwd has no Data Root of its own, so the board can only come from --data-root.
     const cwd = await mkdtemp(join(tmpdir(), 'rowbly-tty-'));
     onTestFinished(() => rm(cwd, { recursive: true, force: true }));
+    // This routing scenario starts after onboarding at both levels.
+    await writeFile(join(cwd, '.rowblyrc.json'), JSON.stringify({ version: 1, onboardingComplete: true }));
+    await writeFile(join(t.path, 'rowbly.config.json'), JSON.stringify({ version: 1, onboardingComplete: true }));
     const { output, exitCode } = await runInTty(['--data-root', t.path, '--json'], cwd, '● Backlog 0');
     expect(exitCode).toBe(0);
     expect(output).toContain('● Backlog 0');
