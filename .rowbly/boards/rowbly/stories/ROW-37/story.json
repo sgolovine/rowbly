@@ -4,13 +4,13 @@
   "boardId": "rowbly",
   "name": "New Story Editor - Update TAB behavior",
   "description": "In the new story / edit story editor, update the hotkeys:\n\nTAB - takes you to the next field in the current form\nSHIFT + TAB - takes you to the next tab (Details, Tasks, Specs, etc)",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:19:25.985Z",
-  "updatedAt": "2026-10-28T00:19:25.985Z"
+  "updatedAt": "2026-10-28T00:19:27.782Z"
 }
