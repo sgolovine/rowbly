@@ -199,8 +199,8 @@ export function Form({
       navigation
         ? [
             { key: 'ctrl+s', description: 'save Story' },
-            { key: 'tab', description: 'switch tab' },
-            { key: '↑/↓/enter', description: 'field' },
+            { key: 'shift+tab', description: 'next tab' },
+            { key: 'tab/↑/↓/enter', description: 'field' },
           ]
         : submitLabel === 'save'
           ? FORM_KEYS
@@ -288,7 +288,7 @@ export function Form({
         return;
       }
       if (key.tab) {
-        if (navigation) return;
+        if (navigation && key.shift) return;
         moveFocus(key.shift ? -1 : 1);
         return;
       }
