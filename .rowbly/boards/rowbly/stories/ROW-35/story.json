@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-26T19:44:27.419Z",
-  "updatedAt": "2026-10-28T00:36:30.522Z",
+  "updatedAt": "2026-10-28T00:36:31.227Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "rook: ROW-35 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T00:34:09.217Z",
+        "finishedAt": "2026-10-28T00:36:30.522Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -29,19 +40,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/122 — Added Experimental Features settings, shared feature flag service, Data Root boolean overrides, CLI access, and documentation. Initial registry is empty. Signed off at a5dc89b. Validation: typecheck PASS, lint PASS, unit 76 PASS, CLI 20 PASS. Nine screenshots: https://github.com/sgolovine/rowbly/pull/122#issuecomment-6457402649. CI pending.",
           "createdAt": "2026-10-28T00:33:53.978Z",
           "updatedAt": "2026-10-28T00:33:53.978Z"
+        },
+        {
+          "id": "UNukmyNB",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/122",
+          "createdAt": "2026-10-28T00:36:31.226Z",
+          "updatedAt": "2026-10-28T00:36:31.226Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-35 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:34:09.217Z",
-        "finishedAt": "2026-10-28T00:36:30.522Z"
-      }
     }
   }
 }
