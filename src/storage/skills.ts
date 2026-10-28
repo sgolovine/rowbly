@@ -1,11 +1,11 @@
 // The files of agent skills that `rowbly skills` creates and lists, outside any Data Root.
 import { randomBytes } from 'node:crypto';
 import { cp } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ConflictError, NotFoundError } from '../core';
+import { ConflictError, NotFoundError, ValidationError } from '../core';
 import { errorCode, io } from './io';
-import { pathExists, readTextFile, writeTextFile } from './system';
+import { pathExists, readTextFile, writeFileAtomic, writeTextFile } from './system';
 
 /**
  * The text of a file shipped in the Rowbly package (for example `skills/rowbly-reference.md`), found
@@ -89,4 +89,53 @@ export async function listFoldersWith(
     if (present.every(Boolean)) found.push({ name, text: await readTextFile(files[0] as string) });
   }
   return found;
+}
+
+/** Reject links in a managed path, including harness folders and the reference's parent. */
+export async function assertSkillPath(cwd: string, path: string): Promise<void> {
+  const root = resolve(cwd);
+  const rel = relative(root, resolve(root, path));
+  if (!rel || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel))
+    throw new ValidationError('skill path must be below the current folder');
+  let current = root;
+  for (const part of rel.split(sep)) {
+    current = join(current, part);
+    if ((await io.lstat(current)).isSymbolicLink())
+      throw new ValidationError(`cannot change a skill through a symbolic link: ${current}`);
+  }
+}
+
+/** Refresh one reference without following links or changing any other custom skill files. */
+export async function refreshSkillReference(cwd: string, path: string, text: string): Promise<void> {
+  await assertSkillPath(cwd, path);
+  await writeFileAtomic(join(cwd, path), text, undefined, () => assertSkillPath(cwd, path));
+}
+
+/** Remove only the selected folder; links inside it are removed without following their targets. */
+export async function removeSkillFolder(cwd: string, path: string): Promise<void> {
+  await assertSkillPath(cwd, path);
+  await io.rm(join(cwd, path));
+}
+
+/** Stage a bundled replacement before moving the old copy, restoring it if publication fails. */
+export async function replaceSkillFolder(cwd: string, path: string, source: string): Promise<void> {
+  const target = join(cwd, path);
+  const suffix = randomBytes(8).toString('hex');
+  const staged = `${target}.${suffix}.tmp`;
+  const backup = `${target}.${suffix}.old`;
+  await assertSkillPath(cwd, path);
+  try {
+    await cp(source, staged, { recursive: true, errorOnExist: true, force: false });
+    await assertSkillPath(cwd, path);
+    await io.rename(target, backup);
+    try {
+      await io.rename(staged, target);
+    } catch (err) {
+      await io.rename(backup, target);
+      throw err;
+    }
+    await io.rm(backup);
+  } finally {
+    await io.rm(staged);
+  }
 }
