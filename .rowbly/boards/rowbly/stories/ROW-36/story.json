@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add icon for editing stage prompt",
   "description": "Whenever the factory plugin is enabled, show an icon in the header of the column that allows a user to quickly pull up and view/edit the stage prompt. Should automatically open in a fullscreen editor. Modify full-screen editor if required\n",
-  "stage": "in-pr",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "ak",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:18:02.090Z",
-  "updatedAt": "2026-10-28T00:38:44.482Z",
+  "updatedAt": "2026-10-28T00:38:45.111Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-36 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:36:52.101Z",
-        "finishedAt": "2026-10-28T00:38:43.868Z"
-      }
     },
     "comments": {
       "comments": [
