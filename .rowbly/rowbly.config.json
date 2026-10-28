@@ -33,7 +33,7 @@
       "enabled": true
     },
     "software-factory": {
-      "enabled": false
+      "enabled": true
     }
   }
 }
