@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-26T19:44:27.419Z",
-  "updatedAt": "2026-10-28T00:15:27.579Z",
+  "updatedAt": "2026-10-28T00:19:19.771Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-10-28T00:15:27.578Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "xCdMUXNv",
+          "author": "sunny",
+          "body": "Complexity 3. Branch: codex/row-35-feature-flags, based on origin/main. Plan: add a shared feature flag registry/service, Data Root boolean overrides, Experimental Features in Settings, matching CLI access, and documentation. No existing experimental features were found, so the initial registry will be empty. Validate with all four required checks and agentic-tui screenshots.",
+          "createdAt": "2026-10-28T00:19:19.770Z",
+          "updatedAt": "2026-10-28T00:19:19.770Z"
+        }
+      ]
     }
   }
 }
