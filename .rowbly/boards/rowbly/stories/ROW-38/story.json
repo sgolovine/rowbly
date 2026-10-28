@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:13:28.661Z",
-  "updatedAt": "2026-10-28T16:40:07.244Z",
+  "updatedAt": "2026-10-28T17:07:27.587Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -46,6 +46,13 @@
           "body": "Accepted complexity-7 plan on codex/row-38-onboarding: persist completion flags, add global and Data Root onboarding, reuse existing Plugin/Board/skill services, expose reopening in Settings, and update documentation. Baseline typecheck, lint, unit 76/76, and CLI 20/20 passed. Implementation underway; independent validation and screenshots follow.",
           "createdAt": "2026-10-28T16:40:07.243Z",
           "updatedAt": "2026-10-28T16:40:07.243Z"
+        },
+        {
+          "id": "NcumVl2w",
+          "author": "sunny",
+          "body": "Independent validation passed all four checks and the onboarding flows, but found one bug: an official skill selection can resolve a same-named local folder. Correction is underway; screenshots are captured. The new commit will receive independent revalidation before the draft PR.",
+          "createdAt": "2026-10-28T17:07:27.586Z",
+          "updatedAt": "2026-10-28T17:07:27.586Z"
         }
       ]
     }
