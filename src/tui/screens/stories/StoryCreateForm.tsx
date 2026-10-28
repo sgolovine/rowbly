@@ -89,7 +89,7 @@ export function StoryCreateForm({
     ) || Object.values(drafts).some((draft) => draft !== undefined),
   );
   useKeyHints([
-    { key: 'tab/←/→', description: 'switch tab' },
+    { key: 'shift+tab', description: 'next tab' },
     { key: 'ctrl+s', description: 'save Story' },
     ...extraHints,
   ]);
@@ -99,7 +99,7 @@ export function StoryCreateForm({
       if (busy || !active) return;
       if ((key.ctrl && input === 's') || (key.ctrl && key.return)) setRequest((n) => n + 1);
       else if (key.ctrl && input === 'g') setDraftFocus((value) => !value);
-      else if (key.tab) switchTab(key.shift ? -1 : 1);
+      else if (key.tab && key.shift) switchTab(1);
       else if (editing.current.size === 0 && (key.leftArrow || key.rightArrow)) switchTab(key.leftArrow ? -1 : 1);
     },
     { isActive: active },

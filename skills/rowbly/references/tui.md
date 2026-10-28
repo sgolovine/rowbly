@@ -84,7 +84,7 @@ Details/in the edit form, keep at most 10 MiB pending in memory, and ask before 
 macOS screenshot to clipboard: Cmd+Ctrl+Shift+4 (Cmd+Shift+4 saves a file). Windows: Win+Shift+S.
 Linux shortcuts depend on the desktop; Sway/Hyprland may need wl-clipboard. For SSH/headless or
 unsupported clipboard access, use `rowbly attachments add <KEY> <file>` or the tab's `n` file path.
-New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab switches tabs; arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.
+New Story has Details, then enabled create tabs in registry order (Tasks, Specs, Links). Plugin fields move into their create tab; Assignees/Epic remain on Details. Tab moves to the next field in the current form; Shift+Tab switches to the next tab, wrapping to Details. Arrows switch from lists or after the final field and edit values while in a field. Up/down and Enter move fields. Ctrl+g switches between a Plugin's fields and draft list. In draft lists n creates, Enter edits, d removes. Ctrl+s or Ctrl+enter saves all tabs; Enter after the final Details field saves. Plugin errors select their tab and preserve drafts. Esc asks before discarding changed drafts and exits directly untouched. Edit stays flat.
 
 ### Experimental Features
 
