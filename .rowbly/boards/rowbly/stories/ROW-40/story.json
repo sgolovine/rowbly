@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Allow clicking on \"levels\"",
   "description": "In any place in settings where we have a header for project and global levels, allow the user to click on them to switch tabs.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "am",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:15:25.063Z",
-  "updatedAt": "2026-10-28T16:36:10.624Z",
+  "updatedAt": "2026-10-28T16:37:44.467Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -34,18 +34,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/123 — Level tabs are clickable in Stages, Custom Fields and Stage Prompts, preserving keyboard switching and disabling clicks during forms/dialogs. Documentation updated and real-TUI screenshots uploaded. Validation accepted: typecheck, lint, 76 unit tests, 20 CLI tests and build passed. Head: 03a5221; CI pending.",
           "createdAt": "2026-10-28T16:35:56.162Z",
           "updatedAt": "2026-10-28T16:35:56.162Z"
+        },
+        {
+          "id": "yjmkYoyj",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/123 — merge commit eb972dd6315cfa59a3d42a3e19f2c311ca93fcc8. All PR checks passed; screenshots returned HTTP 200. Main CI is running: https://github.com/sgolovine/rowbly/actions/runs/40727681490",
+          "createdAt": "2026-10-28T16:37:43.832Z",
+          "updatedAt": "2026-10-28T16:37:43.832Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-40 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T16:36:10.624Z"
-      }
     }
   }
 }
