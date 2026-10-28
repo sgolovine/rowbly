@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Add onboarding screen for a first run",
   "description": "When rowbly runs for the first time, we should present the user with an onboarding screen\n\n- One screen is shown when rowbly is started for the first time. This is keyed off the users `.rowblyrc.json` in thier home folder.\n- For the global onboarding we ask the user for their name and any projects they want to include right away.\n\n\n- The other screen is on a per-data-root basis.\n- Config for this is stored in teh data root and determines if it opens.\n- Data root will ask the user how they plan on using rowbly, either as a plain Kanban, a Software Factory or both.\n- From there will ask them to create their first board, then whether they want any plugins enabled.\n- If software factory plugin is enabled, we guide them through what they need to do for stage prompts, skills, etc.\n- Also ask if they plan on using AI (in general, different from software factory) on the project. If they say yes then we guide them through installing default skills + how they can create their own skills.",
-  "stage": "in-progress",
-  "rank": "a0",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:13:28.661Z",
-  "updatedAt": "2026-10-28T17:18:11.729Z",
+  "updatedAt": "2026-10-28T17:18:12.376Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-38 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-10-28T16:18:36.621Z",
-        "finishedAt": "2026-10-28T17:18:11.089Z"
-      }
-    },
     "comments": {
       "comments": [
         {
