@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:13:28.661Z",
-  "updatedAt": "2026-10-28T16:18:36.621Z",
+  "updatedAt": "2026-10-28T16:20:18.568Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-10-28T16:18:36.621Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "P7zjpu4M",
+          "author": "sunny",
+          "body": "Initial inspection found blocking onboarding decisions: completion behavior for existing installations, name versus Me handle, registering versus creating Data Roots, and guidance versus automatic factory/skill configuration. Awaiting clarification before implementation.",
+          "createdAt": "2026-10-28T16:20:18.567Z",
+          "updatedAt": "2026-10-28T16:20:18.567Z"
+        }
+      ]
     }
   }
 }
