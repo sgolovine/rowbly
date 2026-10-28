@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T00:19:25.985Z",
-  "updatedAt": "2026-10-28T00:36:52.729Z",
+  "updatedAt": "2026-10-28T00:39:00.911Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "rook: ROW-37 In PR",
+        "by": "sunny",
+        "startedAt": "2026-10-28T00:36:52.728Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -29,18 +39,15 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/120 implements Tab for next field and Shift+Tab for next create tab, including wrapping and Plugin draft forms. Updated hints and documentation; verified create/edit behavior in agentic-tui and uploaded screenshots. Typecheck, lint, 20 CLI tests and 76 unit tests passed; unit tests used one worker after an initial storage-test timeout. Validation signed off at c1b2416.",
           "createdAt": "2026-10-28T00:36:21.541Z",
           "updatedAt": "2026-10-28T00:36:21.541Z"
+        },
+        {
+          "id": "Vj7MDZFp",
+          "author": "sunny",
+          "body": "Factory: PR #120 conflicted with main after #121 (ROW-36) merged, in docs only (skills/rowbly/references/tui.md and rowbly-reference.md with its copies). Decision: stay in In PR; the In PR worker merges origin/main into the branch, keeps both sides, reruns the four checks and merges when ready.",
+          "createdAt": "2026-10-28T00:39:00.910Z",
+          "updatedAt": "2026-10-28T00:39:00.910Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-37 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T00:36:52.728Z"
-      }
     }
   }
 }
