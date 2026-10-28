@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "TUI for rowbly skills",
   "description": "- Currently we have CLI commands to list, install and create custom rowbly skills.\n- This should be expanded so we also support this in the TUI\n- Should be accessable via settings. Allows installation, creation, update and deletion of skills.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "ao",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:14:24.235Z",
-  "updatedAt": "2026-10-28T17:20:09.876Z",
+  "updatedAt": "2026-10-28T17:20:10.516Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "rook: ROW-39 In PR",
-        "by": "sunny",
-        "startedAt": "2026-10-28T17:06:34.206Z",
-        "finishedAt": "2026-10-28T17:20:09.240Z"
-      }
-    },
     "comments": {
       "comments": [
         {
