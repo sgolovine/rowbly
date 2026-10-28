@@ -3,6 +3,7 @@ import { Box, Text } from 'ink';
 import { UsageError } from '../../../core';
 import type { ConfigLevel, Slug } from '../../../schemas';
 import type { ConfigTarget } from '../../../services';
+import { Tabs } from '../../components';
 import { useAsync, useServices } from '../../hooks';
 import { theme } from '../../theme';
 
@@ -42,19 +43,30 @@ export function targetFor(scope: ConfigScope, level: LevelName): ConfigTarget {
 }
 
 /** Which level is being edited and where its list currently comes from. */
-export function LevelBar({ levels, level, source }: { levels: LevelName[]; level: LevelName; source?: ConfigLevel }) {
+export function LevelBar({
+  levels,
+  level,
+  source,
+  active,
+  onSelect,
+}: {
+  levels: LevelName[];
+  level: LevelName;
+  source?: ConfigLevel;
+  active: boolean;
+  onSelect(level: LevelName): void;
+}) {
   return (
     <Box gap={1}>
       <Box flexShrink={0}>
         <Text color={theme.inkFaint}>Level:</Text>
       </Box>
-      {levels.map((name) => (
-        <Box key={name} flexShrink={0}>
-          <Text backgroundColor={name === level ? theme.selection : undefined} color={theme.ink}>
-            {` ${name} `}
-          </Text>
-        </Box>
-      ))}
+      <Tabs
+        tabs={levels}
+        selected={levels.indexOf(level)}
+        active={active}
+        onSelect={(index) => onSelect(levels[index] ?? level)}
+      />
       {source && (
         <Text color={theme.inkFaint} wrap="truncate-end">
           {source === level ? '· own list' : `· inherited from ${source} (copied to ${level} on first edit)`}

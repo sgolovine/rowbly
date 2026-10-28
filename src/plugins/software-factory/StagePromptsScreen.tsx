@@ -4,6 +4,7 @@ import {
   ConfirmDialog,
   Loading,
   SelectList,
+  Tabs,
   Text,
   theme,
   useAsync,
@@ -143,11 +144,15 @@ export function StagePromptsScreen({ plugin, ui }: PluginScreenProps) {
     <Box flexDirection="column">
       <Box gap={1}>
         <Text color={theme.inkFaint}>Level:</Text>
-        {(board ? (['board', 'global'] as const) : (['global'] as const)).map((name) => (
-          <Text key={name} backgroundColor={name === level ? theme.selection : undefined} color={theme.ink}>
-            {` ${name === 'board' ? `Board ${board}` : 'global'} `}
-          </Text>
-        ))}
+        <Tabs
+          tabs={board ? [`Board ${board}`, 'global'] : ['global']}
+          selected={level === 'board' ? 0 : board ? 1 : 0}
+          active={keys}
+          onSelect={(index) => {
+            setHighlighted(undefined);
+            setLevel(board && index === 0 ? 'board' : 'global');
+          }}
+        />
       </Box>
       {!data ? (
         <Text color={theme.danger}>Could not load Stage Prompts.</Text>

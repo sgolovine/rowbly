@@ -92,3 +92,5 @@ In Settings → Global → Experimental Features, select a feature to read its d
 `enter` to turn it on or off for every Board in the Data Root. Saves and errors show as toasts. With
 no features in this version, the section explains that features will appear when available and
 shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.
+
+In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
