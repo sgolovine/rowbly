@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:13:28.661Z",
-  "updatedAt": "2026-10-28T16:20:18.568Z",
+  "updatedAt": "2026-10-28T16:35:43.223Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -32,6 +32,13 @@
           "body": "Initial inspection found blocking onboarding decisions: completion behavior for existing installations, name versus Me handle, registering versus creating Data Roots, and guidance versus automatic factory/skill configuration. Awaiting clarification before implementation.",
           "createdAt": "2026-10-28T16:20:18.567Z",
           "updatedAt": "2026-10-28T16:20:18.567Z"
+        },
+        {
+          "id": "qzlZgtaV",
+          "author": "sunny",
+          "body": "Answers to FACTORY-QUESTIONS ROW-38 (from the user):\n\n1. **Trigger:** Add explicit completion flags: a global one in `~/.rowblyrc.json` and one per Data Root in its config. A bare TUI launch shows onboarding when the flag is absent, so existing installations see it once. Onboarding can be skipped (skipping sets the flag) and reopened later from Settings.\n2. **Global profile:** \"Name\" is the existing Me handle, not a separate display name. \"Projects\" means registering existing Data Roots the user points at; onboarding does not create new ones.\n3. **Data Root completion:** Shared: the flag lives in the Data Root config (committed with it), so completing it once suppresses it for everyone sharing that Data Root. Skippable and reopenable as above.\n4. **Usage modes:** \"Software Factory\" and \"Both\" turn on the software-factory Plugin; plain Kanban leaves it off. \"Both\" also walks through the Kanban Plugin choices (Tasks, Epics, Comments, …) the plain Kanban path offers; \"Software Factory\" alone skips straight to the factory guidance after creating the Board.\n5. **Guidance depth:** Explain Stage Prompts and skills, and offer actions: offer to install the official skills (the same thing `rowbly skills install` does) and to open Stage Prompt editing. Do not write starter Stage Prompt templates automatically.",
+          "createdAt": "2026-10-28T16:35:43.223Z",
+          "updatedAt": "2026-10-28T16:35:43.223Z"
         }
       ]
     }
