@@ -27,6 +27,7 @@ export {
   type KnownDataRootChoice,
   knownDataRoots,
   openKnownDataRoot,
+  registerExistingDataRoot,
   removeKnownDataRoot,
   updateKnownDataRoot,
 } from './dataRoots';

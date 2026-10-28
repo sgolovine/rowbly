@@ -1,15 +1,14 @@
 import { Box, Text } from 'ink';
 import { useState } from 'react';
-import { applyGlobalMe, openKnownDataRoot, setGlobalMe, updateKnownDataRoot } from '../../../services';
-import { canonicalDataRootPath, readHomeConfig } from '../../../storage';
+import { applyGlobalMe, registerExistingDataRoot, setGlobalMe } from '../../../services';
+import { readHomeConfig } from '../../../storage';
 import { Form, Loading, SelectList } from '../../components';
-import { useAsync, useEscape, useIsActive, useKeyCapture, useKeyHints, useRowblyContext, useToast } from '../../hooks';
+import { useAsync, useEscape, useIsActive, useKeyCapture, useKeyHints, useRowblyContext } from '../../hooks';
 import { theme } from '../../theme';
 
 /** Global Me and existing Data Roots only; creating a Data Root belongs to setup. */
 export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Promise<void> }) {
   const ctx = useRowblyContext();
-  const toast = useToast();
   const [step, setStep] = useState<'welcome' | 'me' | 'roots' | 'register'>('welcome');
   const saved = useAsync(() => readHomeConfig(home), [home]);
   const [registered, setRegistered] = useState<string | null>(null);
@@ -79,15 +78,7 @@ export function GlobalOnboarding({ home, onDone }: { home: string; onDone(): Pro
             ]}
             submitLabel="register"
             onSubmit={async (values) => {
-              const path = await canonicalDataRootPath(String(values.path), home);
-              // Validate before registration. Opening checks the config before createContext records it.
-              await openKnownDataRoot({
-                path,
-                home,
-                cwd: process.cwd(),
-                warn: (message) => toast.push('warning', message),
-              });
-              await updateKnownDataRoot(home, path, {
+              const path = await registerExistingDataRoot(home, String(values.path), {
                 label: String(values.label ?? ''),
                 default: values.default === true,
               });
