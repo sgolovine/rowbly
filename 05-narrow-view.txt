@@ -1,0 +1,24 @@
+╭──────────────────────────────────────────────────────────────────────────────╮
+│╭─Stage Prompt Backlog · Board launch───────────────────────────────────── ✕ ╮│
+╰│                                                                            │╯
+╭│   View   Edit                                                              │╮
+││                                                                            ││
+││  # Backlog                                                                 ││
+││                                                                            ││
+││  What an agent does with a Story in the Backlog Stage: what to read        ││
+││  first, what to change, and when the Story is ready to leave it. ROW-36    ││
+││  saved:                                                                    ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││                                                                            ││
+││────────────────────────────────────────────────────────────────────────────││
+││  tab/e edit  ↑/↓ scroll  ctrl+s save  esc close                            ││
+╰╰────────────────────────────────────────────────────────────────────────────╯╯
+ ←/→ ↑/↓ select  enter open  n new Story  / filter  v list view  ? help  q quit
