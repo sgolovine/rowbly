@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-28T16:14:24.235Z",
-  "updatedAt": "2026-10-28T16:35:56.800Z",
+  "updatedAt": "2026-10-28T16:37:25.479Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -32,6 +32,13 @@
           "body": "Scope clarification needed before implementation: what should updating official and custom skills do? Existing services support list, install and create only.",
           "createdAt": "2026-10-28T16:35:56.799Z",
           "updatedAt": "2026-10-28T16:35:56.799Z"
+        },
+        {
+          "id": "bwk7QC2z",
+          "author": "sunny",
+          "body": "Answers to FACTORY-QUESTIONS ROW-39 (from the user):\n\n1. **Update** does both: for an official skill, reinstall the bundled version over the installed copy; for a custom skill, refresh its bundled Rowbly reference page and keep its `SKILL.md` instructions unchanged. No in-TUI editing of `SKILL.md`.\n2. **Delete** removes only Rowbly skills: official Rowbly skills and custom skills that hold the Rowbly reference. Never other skill folders. Ask for confirmation in a modal first.",
+          "createdAt": "2026-10-28T16:37:25.478Z",
+          "updatedAt": "2026-10-28T16:37:25.478Z"
         }
       ]
     }
