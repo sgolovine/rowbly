@@ -5,6 +5,7 @@ import { createConfigService } from './config';
 import { createContextService } from './context';
 import { coordinated, coordinatedRepositories, coordinatedServices, mutationCoordinator } from './coordination';
 import { createDoctorService } from './doctor';
+import { createFeatureFlagsService } from './featureFlags';
 import { createFieldsService } from './fields';
 import { effectiveMe, readGlobalMe } from './identity';
 import type { PluginHost } from './plugins/host';
@@ -100,6 +101,7 @@ export function createServices(ctx: RowblyContext): Services {
     // `init` creates a Data Root that does not exist yet: nothing to coordinate with.
     setup: createSetupService(ctx, repos),
     config: each('config', createConfigService(ctx, repos)),
+    featureFlags: each('featureFlags', createFeatureFlagsService(repos, ops)),
     boards: each('boards', createBoardsService(ctx, repos, ops)),
     stages: each('stages', createStagesService(ctx, repos, ops)),
     fields: each('fields', createFieldsService(ctx, repos, ops)),
