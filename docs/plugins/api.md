@@ -330,6 +330,7 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
 - **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
 - **Plugin Sidebar.** `sidebar: { title, allLabel, items({ plugin }), filter(value), create?, menu?(value) }` adds a list beside the Board sidebar, shown and hidden by a header button titled `title` or by `\` ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)). `items` returns `{ value, label }` entries; it runs in the `field` stage when the sidebar shows and each time a screen opened over the board closes. The first entry is `allLabel`, such as `All Epics`, and clears the pick. Picking an entry (a click, or `{`/`}`) sets this Plugin's board filter (`StoryFilter.plugins.<id>`) to `filter(value)`, run in the `filter` stage, so it must pass `storyFilterSchema` and `filterStories`; a filter the filter form sets for the same Plugin wins. `create` is a link to one of the Plugin's screens, shown as the button at the bottom; a link to a missing screen fails the load. A failing `items` or `filter` is a toast. `menu(value)` optionally returns screen links with a `key` of `e` (edit) or `d` (delete). Links are loaded with the entries in the `field` stage; a failure is a toast. A right click offers these links without changing the filter; the same keys work on the picked entry while the sidebar has focus. The `allLabel` entry has no menu or edit/delete keys. Menu callbacks run only while the entry remains available.
+- **Stage headers.** `stageHeader` is a compact component beside each Stage heading in the Board's Stages view. It receives `{ boardId, stage, active, plugin, ui }` for the Board actually shown, including a Board opened for viewing without changing the context. Keep it small so the Stage name can truncate beside it. Gate clicks on `active && useIsActive()`; the host isolates render errors in the Plugin boundary. It is mounted only while its Stage is visible and the Plugin is loaded. Use the existing fullscreen editor for long text.
 - **Board badges.** `cardBadge({ story, stages, plugin })` returns a short text for a Story in the board's Stages view and its line in the board's list view, such as the Tasks Plugin's `✓ 2/5`, or `null` for none. It runs for every Story on the board each time the board renders, so it must be quick and must not read files: use the Story and the Board's effective Stages it is given. A badge that throws shows nothing for that Story.
 - **Focus.** `useIsActive()` is false while a dialog is open or another screen is on top. A tab is active only when it is selected: use `useIsActive() && active`. Give one flag (also covering your own modes, e.g. `active && !confirming`) to `useInput`'s `isActive`, `useKeyHints` (pass `[]` when inactive) and `useKeyCapture`.
 - **List filters.** `SelectList` reports its filter mode through `onFilteringChange(filtering)`. Pass a stable state setter and disable the screen's shortcuts and hints while filtering, while keeping the list active so it can accept text and finish filtering. The callback reports false when filtering ends or the list unmounts.
@@ -694,3 +695,24 @@ failures are core messages: no image, size limit, timeout, or unavailable enviro
 `wl-clipboard` guidance on Wayland. The claimant supplies its own success messages and any guidance
 for using its commands; core never names those commands. See
 [ADR-0038](../agents/adr/0038-story-image-paste-is-an-exclusive-plugin-contribution.md).
+
+### Stage header contribution
+
+```tsx
+import type { PluginStageHeaderProps, PluginTui } from '../../plugin-api';
+import { Button, useIsActive } from '../../plugin-api/tui';
+
+function StageHeader({ boardId, stage, active, ui }: PluginStageHeaderProps) {
+  const focused = useIsActive();
+  return (
+    <Button
+      label="✎"
+      compact
+      clickable={active && focused}
+      onClick={() => ui.open('stage', { boardId, stage: stage.key })}
+    />
+  );
+}
+
+export const stageHeaderTui: PluginTui = { stageHeader: StageHeader };
+```

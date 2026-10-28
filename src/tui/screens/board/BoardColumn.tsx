@@ -1,8 +1,8 @@
 import { Box, type DOMElement, measureElement, Text } from 'ink';
 import { useRef } from 'react';
-import type { Stage, Story } from '../../../schemas';
-import { StageBadge } from '../../components';
-import { type StoryBadges, useMouse } from '../../hooks';
+import type { Slug, Stage, Story } from '../../../schemas';
+import { PluginSlot, StageBadge } from '../../components';
+import { type StoryBadges, useMouse, usePlugins } from '../../hooks';
 import { theme } from '../../theme';
 import { CARD_HEIGHT, CHROME_HEIGHT, dropSlot, follow } from './layout';
 import { StoryCard } from './StoryCard';
@@ -10,6 +10,7 @@ import { StoryShadow } from './StoryShadow';
 import { useCardBadges } from './useCardBadges';
 
 export interface BoardColumnProps {
+  boardId: Slug;
   stage: Stage;
   /** Every Story in the Stage, in Rank order. */
   cards: readonly Story[];
@@ -47,6 +48,7 @@ type Item = Story | null;
 
 /** One Stage: header with name, Stage Category colour and count, then its cards, scrolled to `first`. */
 export function BoardColumn({
+  boardId,
   stage,
   cards,
   stages,
@@ -74,6 +76,7 @@ export function BoardColumn({
   const inner = width - 2;
   const ref = useRef<DOMElement>(null);
   const badgesOf = useCardBadges();
+  const { plugins } = usePlugins();
   // The pointer's line picks the slot, measured against what is on screen; the dragged card does not count.
   const slotAt = (key: unknown, y: number) => {
     const count = cards.filter((s) => s.key !== key).length;
@@ -99,9 +102,26 @@ export function BoardColumn({
       paddingRight={2}
       flexShrink={0}
     >
-      <Text wrap="truncate-end">
-        <StageBadge stage={stage} /> <Text color={theme.inkFaint}>{cards.length}</Text>
-      </Text>
+      <Box>
+        <Box flexGrow={1} flexShrink={1} overflow="hidden">
+          <Text wrap="truncate-end">
+            <StageBadge stage={stage} /> <Text color={theme.inkFaint}>{cards.length}</Text>
+          </Text>
+        </Box>
+        {plugins.map(({ id, tui }) => {
+          const Header = tui.stageHeader;
+          return Header ? (
+            <Box key={id} flexShrink={0}>
+              <PluginSlot
+                pluginId={id}
+                render={(plugin, ui) => (
+                  <Header boardId={boardId} stage={stage} active={active} plugin={plugin} ui={ui} />
+                )}
+              />
+            </Box>
+          ) : null;
+        })}
+      </Box>
       {selected === null ? (
         <Text color={theme.border}>{'─'.repeat(inner)}</Text>
       ) : (
