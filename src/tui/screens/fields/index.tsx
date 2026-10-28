@@ -98,7 +98,16 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
 
   return (
     <Box flexDirection="column" gap={1}>
-      <LevelBar levels={levels} level={level} source={list.data?.source} />
+      <LevelBar
+        levels={levels}
+        level={level}
+        source={list.data?.source}
+        active={active && listing}
+        onSelect={(next) => {
+          setLevel(next);
+          setCursor(0);
+        }}
+      />
       {list.loading && !list.data ? (
         <Loading label="Loading Custom Fields…" />
       ) : fields.length === 0 ? (
