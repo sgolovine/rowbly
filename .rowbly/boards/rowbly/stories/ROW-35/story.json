@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-10-26T19:44:27.419Z",
-  "updatedAt": "2026-10-28T00:33:53.349Z",
+  "updatedAt": "2026-10-28T00:33:53.979Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "xCdMUXNv",
-          "author": "sunny",
-          "body": "Complexity 3. Branch: codex/row-35-feature-flags, based on origin/main. Plan: add a shared feature flag registry/service, Data Root boolean overrides, Experimental Features in Settings, matching CLI access, and documentation. No existing experimental features were found, so the initial registry will be empty. Validate with all four required checks and agentic-tui screenshots.",
-          "createdAt": "2026-10-28T00:19:19.770Z",
-          "updatedAt": "2026-10-28T00:19:19.770Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -35,6 +24,24 @@
         "startedAt": "2026-10-28T00:15:27.578Z",
         "finishedAt": "2026-10-28T00:33:53.348Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "xCdMUXNv",
+          "author": "sunny",
+          "body": "Complexity 3. Branch: codex/row-35-feature-flags, based on origin/main. Plan: add a shared feature flag registry/service, Data Root boolean overrides, Experimental Features in Settings, matching CLI access, and documentation. No existing experimental features were found, so the initial registry will be empty. Validate with all four required checks and agentic-tui screenshots.",
+          "createdAt": "2026-10-28T00:19:19.770Z",
+          "updatedAt": "2026-10-28T00:19:19.770Z"
+        },
+        {
+          "id": "coU9bFx3",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/122 — Added Experimental Features settings, shared feature flag service, Data Root boolean overrides, CLI access, and documentation. Initial registry is empty. Signed off at a5dc89b. Validation: typecheck PASS, lint PASS, unit 76 PASS, CLI 20 PASS. Nine screenshots: https://github.com/sgolovine/rowbly/pull/122#issuecomment-6457402649. CI pending.",
+          "createdAt": "2026-10-28T00:33:53.978Z",
+          "updatedAt": "2026-10-28T00:33:53.978Z"
+        }
+      ]
     }
   }
 }
