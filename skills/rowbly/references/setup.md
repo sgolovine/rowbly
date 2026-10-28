@@ -190,3 +190,14 @@ from the level you intended, and `rowbly doctor --json --no-prompt` exits 0. If 
 `ROWBLY.md` mentions a Stage, Custom Field or Plugin you changed, tell the user and, with their
 agreement, update it ([Data Root layout](data-root.md#rowblymd-how-this-data-root-is-used)). If doctor reports
 findings, follow [Check and repair a Data Root](doctor.md).
+
+## Experimental Features
+
+`rowbly feature-flags list --json --no-prompt` lists the Experimental Features this version knows:
+`[{ key, name, description, enabled }]`, with effective boolean values. An empty registry returns
+`[]`. `rowbly feature-flags set <key> <true|false> --json --no-prompt` saves a boolean and returns the
+changed entry. Use a key from `list`: an unknown key exits 3 (`NOT_FOUND`), an invalid boolean exits
+2 (`USAGE`). No current Board is needed. Values are in the Data Root's `rowbly.config.json` under
+`featureFlags`, shared by every Board and kept across restarts. An absent key uses the code default;
+explicit `false` overrides an on default. Unknown saved keys are preserved but not listed. There is
+no Board or Home Config level.

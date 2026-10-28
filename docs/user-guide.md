@@ -533,6 +533,34 @@ rowbly plugins disable <id>    # keeps its settings and data
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 
+<!-- BEGIN feature-flags -->
+### Experimental Features
+
+Open **Settings** (`,`) → **Global** → **Experimental Features** to see each feature's name,
+on/off value and description. `enter` saves the opposite value; a toast confirms the save or
+reports an error. This version has no Experimental Features, so the section explains that features
+will appear when available and offers no toggle.
+
+```sh
+rowbly feature-flags list
+rowbly feature-flags set <key> true
+rowbly feature-flags set <key> false
+```
+
+`list --json` returns an array of `{ key, name, description, enabled }` with effective booleans;
+`set --json` returns the changed entry. Use a key from `list`: an unknown key exits 3
+(`NOT_FOUND`), and a value other than the literal `true` or `false` exits 2 (`USAGE`).
+These commands need a Data Root, but no current Board. With no definitions, `list` returns `[]`.
+
+Values are saved under `featureFlags` in the Data Root's `rowbly.config.json`, survive restarts and
+apply to every Board there. They do not use Board settings or the Home Config. Missing keys use
+the defaults defined by this version of Rowbly; explicit `false` values override defaults that are
+on. Saved keys this version does not recognize are kept but not listed or accepted by `set`.
+Code that uses a feature reads its current value; behavior that is already running may take until
+its next check to reflect a change.
+
+<!-- END feature-flags -->
+
 <!-- BEGIN skills -->
 ### Skills
 
@@ -749,7 +777,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `/` | filter a list by typing (on the board and the Stories list: open the filter form); while typing in a Specs list, letter keys enter filter text |
 | `esc` | back (or cancel the open form) |
 | `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, create one, `e` edit its label and default, or `d` forget or delete it |
-| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
@@ -812,6 +840,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Plugins | `enter` turn the Plugin on or off |
+| Experimental Features | `enter` turn the selected feature on or off; no toggle is offered when none are available |
 | Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.

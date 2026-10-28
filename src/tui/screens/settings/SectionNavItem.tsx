@@ -19,10 +19,14 @@ export function SectionNavItem({
   useMouse(ref, { onClick }, clickable);
   return (
     <Box ref={ref} width="100%" paddingRight={1} backgroundColor={selected ? theme.selection : undefined}>
-      <Text wrap="truncate-end" color={theme.ink} bold={selected}>
+      <Box width={2} flexShrink={0}>
         <Text color={theme.accent}>{selected ? '▌ ' : '  '}</Text>
-        {label}
-      </Text>
+      </Box>
+      <Box flexGrow={1} flexShrink={1}>
+        <Text color={theme.ink} bold={selected}>
+          {label}
+        </Text>
+      </Box>
     </Box>
   );
 }
