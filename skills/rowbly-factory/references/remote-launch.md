@@ -34,7 +34,9 @@ In order, the script:
    `~/.rowbly-factory/briefs`) and reads it back to compare.
 4. Uses the newest thread titled `--launcher-title` (default `Launcher: workers`), or starts one from
    [`assets/launcher.md`](../assets/launcher.md) with `--launcher-provider` and `--launcher-model`.
-   It waits until the launcher is idle, then lists the titles again.
+   It waits until the launcher is idle, then lists the titles again. To reuse a launcher started
+   some other way, first send it `assets/launcher.md` (`t3 thread send --wait <launcherId> -`) and
+   wait for `LAUNCHER-READY`.
 5. Sends the launcher one `LAUNCH` request with a fresh id and waits for the answer line that
    carries that id.
 6. Whatever the answer, and also when there is none, it lists the threads itself. Exactly one thread
@@ -64,7 +66,9 @@ passed.
 
 **Retrying.** The title is the request's identity, so a retry is always the same command with the
 same title. A second call starts nothing while a thread has the title, and it waits for a busy
-launcher before it looks. Never change the title to get past `unknown` or `conflict`.
+launcher before it looks. Never change the title to get past `unknown` or `conflict`. The thread
+list leaves out archived threads, so archive a worker only when you are done with it, and never run
+its launch again after that.
 
 ## Titles
 

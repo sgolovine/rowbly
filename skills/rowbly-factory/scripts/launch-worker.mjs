@@ -68,7 +68,7 @@ async function launch() {
   const [key, title] = required('key', 'title', 'brief', 'model-selection', 'project');
   const brief = readFileSync(flags.brief, 'utf8');
   const modelSelection = parseSelection(flags['model-selection']);
-  const expected = { key, title, modelSelection, briefSha256: hash(brief) };
+  const expected = { key, title, modelSelection, brief, briefSha256: sha256(brief) };
 
   const existing = await threadsTitled(title);
   if (existing.length) return settle(existing, expected, 'existing');
@@ -116,7 +116,7 @@ async function launch() {
 
 // Verify the one thread with the title: identity from the CLI, options from the launcher.
 async function settle(found, expected, status, reply) {
-  const { key, title, modelSelection, briefSha256, briefPath } = expected;
+  const { key, title, modelSelection, brief, briefSha256, briefPath } = expected;
   const base = { key, title, briefSha256, ...(briefPath && { briefPath }) };
   if (found.length > 1) {
     stop('conflict', { ...base, threadIds: found.map((t) => t.threadId), reason: 'several threads have the title' });
@@ -133,7 +133,7 @@ async function settle(found, expected, status, reply) {
   if (thread.runtimeMode !== 'full-access') mismatches.push(`runtimeMode ${thread.runtimeMode}`);
   if (thread.worktreePath || thread.branch) mismatches.push(`workspace ${thread.worktreePath ?? thread.branch}`);
   const first = messages.find((m) => m.role === 'user');
-  if (!first || hash(first.text) !== briefSha256) mismatches.push('first message is not the brief');
+  if (!first || !sameText(first.text, brief)) mismatches.push('first message is not the brief');
   if (mismatches.length) stop('conflict', { ...base, threadId, reason: `mismatch: ${mismatches.join(', ')}` });
 
   const identity = { ...base, threadId, provider: thread.providerInstanceId, model: thread.model };
@@ -176,10 +176,10 @@ async function settle(found, expected, status, reply) {
 async function send() {
   const [threadId, title] = required('thread', 'title', 'message', 'project');
   const message = readFileSync(flags.message, 'utf8');
-  const messageSha256 = hash(message);
+  const messageSha256 = sha256(message);
   const base = { threadId, title, messageSha256 };
   const delivered = async () =>
-    (await show(threadId, 100000)).messages.some((m) => m.role === 'user' && hash(m.text) === messageSha256);
+    (await show(threadId, 100000)).messages.some((m) => m.role === 'user' && sameText(m.text, message));
 
   const { thread } = await show(threadId, 1);
   if (thread.title !== title || thread.archived) {
@@ -348,9 +348,15 @@ function parseArgs(argv) {
   return { command: name, flags: parsed };
 }
 
+// The hash `sha256sum` gives for the file, so the launcher can check its copy.
+function sha256(text) {
+  return createHash('sha256').update(text).digest('hex');
+}
+
 // Message text as T3 stores it may differ in line endings and trailing space only.
-function hash(text) {
-  return createHash('sha256').update(text.replace(/\r\n/g, '\n').trimEnd()).digest('hex');
+function sameText(a, b) {
+  const normal = (text) => text.replace(/\r\n/g, '\n').trimEnd();
+  return normal(a) === normal(b);
 }
 
 function q(value) {
