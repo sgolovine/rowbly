@@ -221,6 +221,35 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null },
     ]);
 
+    // A worker's reported block: one line about another Story refuses all of it; a move waits for `run finish`.
+    await json('software-factory', 'run', 'start', worked.key, '--worker', 'w3');
+    const block = (...lines: string[]) => ['```rowbly', ...lines, '```'].join('\n');
+    const own = `rowbly comments add ${worked.key} --body 'PR opened'`;
+    const move = `rowbly stories move ${worked.key} done`;
+    const refused = jsonError(
+      await rowbly(
+        'software-factory',
+        'apply',
+        worked.key,
+        '--text',
+        block(own, `rowbly stories move ${story.key} todo`),
+        '--json',
+      ),
+    );
+    expect(refused.code).toBe('USAGE');
+    expect((refused.details.commands as { decision: string }[]).map((c) => c.decision)).toEqual(['apply', 'reject']);
+    expect(await json('comments', 'list', worked.key)).toEqual([]);
+    const applied = await json('software-factory', 'apply', worked.key, '--text', block(move, own));
+    expect(applied.commands.map((c: { line: number; decision: string }) => [c.line, c.decision])).toEqual([
+      [3, 'apply'],
+      [2, 'hold'],
+    ]);
+    await json('software-factory', 'run', 'finish', worked.key);
+    await json('software-factory', 'apply', worked.key, '--text', move);
+    const moved = await json('stories', 'show', worked.key);
+    expect([moved.stage, moved.plugins['software-factory']]).toEqual(['done', undefined]);
+    expect(await json('comments', 'list', worked.key)).toHaveLength(1);
+
     expect((await rowbly('plugins', 'disable', 'comments')).exitCode).toBe(0);
     expect((await json('stories', 'show', story.key)).plugins.comments.comments).toHaveLength(1);
   });
