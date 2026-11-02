@@ -32,8 +32,14 @@ belong in `ROWBLY.md` or the user's instructions.
 Do this first, in the git repository that holds the Data Root (find it as the reference says). Skip
 it when the Data Root is not in a git repository.
 
-1. Run `git status --porcelain`. If it prints nothing, go to step 3.
-2. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
+1. **Board changes first.** If `rowbly plugins list` shows `git` on, set up
+   [Board persistence](#board-persistence), then run `rowbly git sync`. It commits Rowbly changes
+   that were saved but not yet committed, merges the upstream and pushes, and leaves other staged,
+   changed and untracked files as they are. If it fails, stop and tell the user its message. It
+   handles only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is
+   still uncommitted after it.
+2. Run `git status --porcelain`. If it prints nothing, go to step 4.
+3. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
    --cached` and each new file). If one must not be committed (a secret, build output, a large
    binary), stop and ask the user. Otherwise:
    - Create a branch `factory-cleanup/<YYYY-MM-DD-HHMM>` at the current commit, commit every change
@@ -42,11 +48,29 @@ it when the Data Root is not in a git repository.
    - Open a **cleanup PR** against the branch you started on. Its description says what each change
      is and that the factory found it uncommitted at start. Do not merge it.
    - Switch back to the branch you started on.
-3. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
+4. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
 
 Tell the user in one line whether the checkout was clean, the cleanup PR if you opened one, and the
 commit you pulled to. When workers use another checkout, `ROWBLY.md` says whether and how to update
 it.
+
+## Board persistence
+
+Workers see your Board changes only after they are committed and pushed. Skip this section when the
+Git Plugin is off.
+
+- **Commit each change.** The Git Plugin's preferences are personal: read them with `rowbly git
+  show`. When `ROWBLY.md` or the user says Board changes are committed or pushed as they happen, and
+  Automatic Commits are Off or `frequency` is `interval`, run `rowbly git configure
+  --automatic-commits on --frequency change` and tell the user. Otherwise leave them as they are.
+- **Push with the Git Plugin.** `rowbly git sync` needs Automatic Merge Conflict Resolution On
+  (`rowbly git show`). If it is Off, turn it on only when `ROWBLY.md` or the user says to
+  (`rowbly git configure --automatic-merge-resolution on`); otherwise ask the user before you start.
+- **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
+  after `run start` and before you send the brief, after each worker block you apply, and after
+  `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
+  fails, retry it once; then tell the user and send nothing that relies on the change.
+- Never run `git rebase`, `git reset` or a force push yourself.
 
 ## Before you start
 
@@ -141,7 +165,7 @@ run a block, check every line:
 
 Ask the user about any line that fails a check, and run the others. Run each command against your
 Data Root, in order, with `--json --no-prompt`. On an error, stop the block and tell the worker and
-the user. If the Git Plugin commits Rowbly data, push it when `ROWBLY.md` says to.
+the user. Then push as [Board persistence](#board-persistence) says.
 
 ## Stopping
 
