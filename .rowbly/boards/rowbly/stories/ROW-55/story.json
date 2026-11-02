@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-02T23:28:05.451Z",
+  "updatedAt": "2026-11-02T23:43:24.680Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:6843535a-6b80-40cc-ad45-9933d86eee81",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:37:21.081Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "Pn4OEDFN",
+          "author": "sunny",
+          "body": "Supervisor accepted plan: Plan accepted with refinements. Reject the whole block before any mutation when any line is invalid; return every line's decision so supervisor can explicitly resubmit allowed lines. Keep bounded own-Story allowlist and never pass through a shell. Host runCommand must pin the opened Data Root and noninteractive JSON flags and reject caller-supplied root/global/interactive overrides, rather than relying only on the Software Factory parser; avoid arbitrary shell capability or recursion. Keep execution outside an enclosing mutation/lock so child commands don't deadlock; each child operation owns its lock. Document partial success on later runtime failure. Guard move using current-visit finished Stage Run; hold while running/absent, drop failed; do not silently lose returned held commands. Read-only dry-run changes nothing. Reserve ADR-0045 (0043 hold,0044 brief reserved) and recheck. Extend an existing test in test/plugins or agentWorkflows instead of new file; keep total suite <=100 (currently97), one representative failure contract. No worker-brief changes yet: ROW-63/66 template updates are opening PRs, so merge them first; add only necessary quoting note. Parent remains main; no stack without approval. Run/report all four checks and screenshot scenarios. Proceed.",
+          "createdAt": "2026-11-02T23:43:24.679Z",
+          "updatedAt": "2026-11-02T23:43:24.679Z"
+        }
+      ]
     }
   }
 }
