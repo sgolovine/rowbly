@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:26:59.446Z",
-  "updatedAt": "2026-11-02T22:27:30.361Z",
+  "updatedAt": "2026-11-02T22:31:33.583Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -23,6 +23,34 @@
           "size": 110829,
           "createdAt": "2026-11-02T22:26:59.451Z",
           "createdBy": "sunny"
+        }
+      ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "rook: ROW-45 In Progress retry",
+        "by": "sunny",
+        "startedAt": "2026-11-02T22:31:07.461Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "0xKSmN55",
+          "author": "sunny",
+          "body": "Supervisor correction: the launcher reported a capacity failure after successfully creating worker mcp:18ba8bd8-eedd-4a46-9e62-1c3ca6b8be96 (rook: ROW-45 In Progress). That existing worker is active and retained. The supervisor prematurely recorded failure and attempt 2; no duplicate worker was started.",
+          "createdAt": "2026-11-02T22:31:32.890Z",
+          "updatedAt": "2026-11-02T22:31:32.890Z"
+        },
+        {
+          "id": "TJfEUq2w",
+          "author": "sunny",
+          "body": "Complexity 3/10. Branch codex/row-45-settings-scopes, based on current origin/main (1435f6f). Plan: keep Global and Board settings entries fixed to their scope, remove Stages/Fields level tabs and shortcut, explain inheritance and first-edit overrides, update docs, run all four checks, and capture screenshots. ROW-42 coordination: preserve Preferences and its search-scope setting; expected shared interface is the existing settings route table.",
+          "createdAt": "2026-11-02T22:31:33.582Z",
+          "updatedAt": "2026-11-02T22:31:33.582Z"
         }
       ]
     }
