@@ -285,6 +285,7 @@ rowbly software-factory runs --board web --json --no-prompt   # {board, stages, 
 rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-prompt   # {key, stageRun}; exit 4 if one exists
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
+rowbly software-factory brief WEB-42 [--instructions-file <path|->] [--retry-file <path|->] [--allow-incomplete] --json --no-prompt   # {key, board, stage, attempt, complete, incomplete, sections, markdown}; exit 4 when incomplete
 ```
 
 Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path inside the Plugin folder,

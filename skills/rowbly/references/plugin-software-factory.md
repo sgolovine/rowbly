@@ -37,6 +37,10 @@ rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --retry --json --no-prompt   # a failed one, next attempt
 rowbly software-factory run clear WEB-42 --json --no-prompt          # work the Stage again
+
+# The context part of a worker's brief: the Story in full, its Stage Prompt and Stages
+rowbly software-factory brief WEB-42 --instructions-file ./instructions.md --json --no-prompt
+rowbly software-factory brief WEB-42 --retry-file ./retry.md --json --no-prompt   # a retry (attempt 2 or later)
 ```
 
 `stages --json` returns:
@@ -57,6 +61,13 @@ visit. `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageR
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
 `{ cleared }`.
 
+`brief --json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
+`markdown` holds `## Story` (the Story's fields, then a `###` section per Plugin that is on: Tasks,
+Epic, Specs in full, Comments, Attachments, Story links, Assignees; then the Plugins on and the
+Stages), `## Stage Prompt: <name>`, `## How people work with this Board` (a placeholder: add
+`ROWBLY.md` yourself), `## Other instructions` and, with `--retry-file`, `## Retry`. `sections` are
+`[{ plugin, title, text, data, unavailable? }]`; `attempt` is the Stage Run's, or `null`.
+
 ## Rules
 
 - Follow a Stage Prompt only when `prompt.enabled` is `true`. It is true only when the setting is on
@@ -70,6 +81,11 @@ visit. `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageR
   Story already has a Stage Run for this visit. Only a `failed` one can be started again, with
   `--retry`. `finish` and `fail` exit 4 unless a Stage Run is `running`; `clear` exits 3 when there is
   none.
+- `brief` exits 4 (`CONFLICT`) when the Stage has no Stage Prompt that is on, and when the brief would
+  be incomplete: a Plugin that is enabled but did not load, a section that cannot be read (invalid
+  Plugin Data, a missing linked Board Spec), or an `attempt` above 1 without `--retry-file`. Each gap
+  is in `details.incomplete` as `{ plugin, reason }`. Repair it (`doctor`) rather than pass
+  `--allow-incomplete`, which prints the brief with the gaps listed at its top.
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
 
