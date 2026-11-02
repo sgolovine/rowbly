@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:57.517Z",
-  "updatedAt": "2026-11-02T23:34:10.306Z",
+  "updatedAt": "2026-11-02T23:36:24.232Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -26,6 +26,17 @@
         "by": "sunny",
         "startedAt": "2026-11-02T23:34:10.305Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "rg0ZyCru",
+          "author": "sunny",
+          "body": "Supervisor accepted implementation plan. Plan accepted. Implement the bounded ownership fixes and brief rule, preserving ROW-52 baseline/push sections and ROW-63 retry section. Plan acceptance remains required in this assignment; clarify general assigned-worker behavior without removing standalone supervisor gates. Skip ROWBLY.md edits: current minimum-subagents language evaluates to zero under Assigned worker mode; report proposed replacement in final handoff for supervisor review. In Progress Stage Prompt already matches and needs no edit. Capture one agentic-tui terminal PNG of rendered changed guidance, publish orphan assets, verify HTTP 200. Run/report all four checks. Proceed.",
+          "createdAt": "2026-11-02T23:36:24.231Z",
+          "updatedAt": "2026-11-02T23:36:24.231Z"
+        }
+      ]
     }
   }
 }
