@@ -138,15 +138,15 @@ describe('board view', () => {
     try {
       await app.press(KEYS.right, KEYS.shiftRight);
       // Shown at once, before the commit; the keys are ignored while it writes, so their hints are hidden.
-      await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && !f.includes('n new'));
+      await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && !f.includes('enter open'));
       expect((await story(t, 'WEB-4')).stage).toBe('todo');
       commit();
       await arrived(1);
       expect((await story(t, 'WEB-4')).stage).toBe('doing');
       // Saved on disk but still writing: the keys are still ignored.
-      expect(app.lastFrame()).not.toContain('n new');
+      expect(app.lastFrame()).not.toContain('enter open');
       held[0]?.();
-      await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && f.includes('n new'));
+      await waitForFrame(app, (f) => f.includes('● Todo 0') && f.includes('● Doing 2') && f.includes('enter open'));
       const lines = frameLines(app).join('\n');
       expect(lines.indexOf('WEB-5')).toBeLessThan(lines.indexOf('WEB-4'));
       expect((await story(t, 'WEB-4')).rank > (await story(t, 'WEB-5')).rank).toBe(true);
@@ -155,7 +155,7 @@ describe('board view', () => {
       await arrived(2);
       expect((await story(t, 'WEB-4')).stage).toBe('todo');
       held[1]?.();
-      await waitForFrame(app, (f) => f.includes('● Todo 1') && f.includes('n new'));
+      await waitForFrame(app, (f) => f.includes('● Todo 1') && f.includes('enter open'));
     } finally {
       commit();
       for (const release of held) release();
@@ -188,7 +188,7 @@ describe('board view', () => {
       await waitForFrame(app, (f) => /▌ +WEB-4 Dark mode/.test(f));
       await app.press(KEYS.shiftUp);
       await waitForFrame(app, (f) => f.includes('▾ Backlog (4)') && /▌ +WEB-4 Dark mode/.test(f));
-      expect(app.lastFrame()).not.toContain('v Stages view');
+      expect(app.lastFrame()).not.toContain('enter open/fold');
       release();
       const frame = await waitForFrame(
         app,
@@ -196,7 +196,7 @@ describe('board view', () => {
           f.includes('✕ the Story changed on disk') &&
           f.includes('▸ Backlog (3)') &&
           /▌ +WEB-4 Dark mode/.test(f) &&
-          f.includes('v Stages view'),
+          f.includes('enter open/fold'),
       );
       expect(frame).not.toContain('WEB-2');
       expect((await story(t, 'WEB-4')).stage).toBe('todo');
