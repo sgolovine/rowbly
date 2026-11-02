@@ -544,6 +544,12 @@ export interface PluginContext<S = unknown> extends PluginReadContext<S> {
     body: (changes: PluginChangeSet) => Promise<R>,
     options?: PluginOperationOptions<R>,
   ): Promise<R>;
+  /**
+   * The Story `key` with the context sections of every Plugin that is on, this one included, read
+   * from one committed state; it saves nothing (ADR-0044). Not available while giving a section or
+   * a row.
+   */
+  storyContext(key: string): Promise<StoryContext>;
   /** Shown after the command, or as a toast in the TUI. */
   warn(message: string): void;
 }
@@ -677,6 +683,35 @@ export type PluginOptionsMap<In = Record<never, never>, FS extends ZodType = Zod
 export interface PluginRow {
   label: string;
   value: string;
+}
+
+/**
+ * One Plugin's part of a Story's context (ADR-0044): everything an agent needs to read about the
+ * Story from this Plugin, in full rather than summed up as a row.
+ */
+export interface PluginStoryContextSection {
+  /** A short heading, such as `Tasks`. */
+  title: string;
+  /** The content as Markdown. */
+  text: string;
+  /** The same content as plain JSON, in the shape the Plugin's own `--json` output uses. */
+  data: unknown;
+  /** Why the section is partial, when the Plugin could read only some of its data. */
+  unavailable?: string;
+}
+
+/** A Story with the context sections of the Plugins that are on (`PluginContext.storyContext`). */
+export interface StoryContext {
+  story: Story;
+  /** The Plugins that are on, in registry order. */
+  plugins: string[];
+  /** In registry order; a Plugin without a section for this Story has none. */
+  sections: (PluginStoryContextSection & { plugin: string })[];
+  /**
+   * Each Plugin whose part is missing or partial: enabled but not loaded, its `storyContext` threw,
+   * or it marked its section `unavailable`. Empty when the context is complete.
+   */
+  incomplete: { plugin: string; reason: string }[];
 }
 
 // ── Doctor ──────────────────────────────────────────────────────────────────
@@ -1066,6 +1101,11 @@ export interface PluginDefinition<
   filterStories?(story: Story, filter: z.output<FS>, plugin: PluginContext<S>): boolean;
   /** Rows for `stories show` and the TUI Story screen. */
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
+  /**
+   * This Plugin's section of the Story's context (`PluginContext.storyContext`), or `null` when it
+   * has nothing about the Story. It only reads; a failure leaves the context incomplete (ADR-0044).
+   */
+  storyContext?(story: Story, plugin: PluginContext<S>): Promise<PluginStoryContextSection | null>;
   doctor?: PluginDoctor<S>;
   actions?: PluginAction<S>[];
   /** Loads the TUI part, e.g. `() => import('./tui').then((m) => m.tui)`. */

@@ -1,4 +1,4 @@
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadProgram, reservedNames } from '../../src/main';
@@ -10,7 +10,7 @@ import { publishPublication, withPublication } from '../../src/storage/gitSyncJo
 import { createToastStore } from '../../src/tui/hooks';
 import { loadTuiPlugins, withPlugins as withTuiPlugins } from '../../src/tui/loadPlugins';
 import { settingsGroups } from '../../src/tui/screens/settings/sections';
-import { tempRoot } from '../helpers';
+import { makeStory, tempRoot } from '../helpers';
 import { syncFixture } from '../storage/fixtures/syncFixture';
 import { boom, notes, stamp, strict } from './fixtures';
 import { paste } from './fixtures/paste';
@@ -246,5 +246,39 @@ describe('loading Plugins (ADR-0010)', () => {
     ]);
     expect(isolated.host.active().map((plugin) => plugin.definition.id)).toEqual(['notes']);
     expect(isolated.host.failures().map((plugin) => plugin.id)).toEqual(['probe']);
+
+    // A Story Context keeps the sections it could read and lists every gap: a Plugin that did not
+    // load and one whose section throws. An off Plugin is no gap. It saves nothing (ADR-0044, ADR-0011).
+    const lens: AnyPluginDefinition = {
+      id: 'lens',
+      name: 'Lens',
+      description: 'Fails to give its section',
+      async storyContext() {
+        throw new Error('lens failed');
+      },
+    };
+    const read = await pluginRoot({ notes: true, lens: true, boom: true });
+    await makeStory(read.path, {
+      key: 'WEB-1',
+      boardId: 'web',
+      plugins: { notes: { note: 'read me' }, later: { kept: 1 } },
+    });
+    const files = async () => {
+      const names = (await readdir(read.path, { recursive: true, withFileTypes: true }))
+        .filter((entry) => entry.isFile())
+        .map((entry) => join(entry.parentPath, entry.name))
+        .sort();
+      return Promise.all(names.map(async (name) => [name, await readFile(name, 'utf8')]));
+    };
+    const before = await files();
+    const reader = await withPlugins(read, [notes, lens, boom]);
+    const context = await reader.services.plugins.context('notes').storyContext('WEB-1');
+    expect(context.plugins).toEqual(['notes', 'lens']);
+    expect(context.sections).toEqual([{ plugin: 'notes', title: 'Note', text: 'read me', data: { note: 'read me' } }]);
+    expect(context.incomplete).toEqual([
+      { plugin: 'boom', reason: 'failed to load: boom at start' },
+      { plugin: 'lens', reason: 'lens failed' },
+    ]);
+    expect(await files()).toEqual(before);
   });
 });

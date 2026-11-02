@@ -30,6 +30,7 @@ import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
+import { readStoryContext } from './storyContext';
 import { countChanges, failure, type TraceEvent, trace, traceClock, tracing } from './trace';
 import {
   type Bagged,
@@ -611,6 +612,7 @@ function pluginContext(
       });
       await openAssociatedFile(path);
     },
+    storyContext: (key: string) => readStoryContext(ctx, services(), key),
     warn: (message: string) => ctx.warn(message),
   });
 }
