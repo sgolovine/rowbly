@@ -55,7 +55,7 @@ rowbly software-factory brief WEB-42 --retry-file ./retry.md --json --no-prompt 
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`, where `stages`
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`, where `stages`
 are the Stages whose Stage Prompt is on and `stageRun` is `null` for a Story nobody works in this
 visit. `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
@@ -88,6 +88,16 @@ Stages), `## Stage Prompt: <name>`, `## How people work with this Board` (a plac
   `--allow-incomplete`, which prints the brief with the gaps listed at its top.
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

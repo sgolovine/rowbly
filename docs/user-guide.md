@@ -472,7 +472,7 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`.
 - `brief` prints what an agent needs to work the Story in its Stage, as Markdown: the Story with
   everything each Plugin that is on keeps about it (Specs, Tasks, Comments, Epic, Story links,
   Attachments, Assignees), the Stage Prompt, the Board's Stages, and the text of
@@ -483,6 +483,16 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   the gaps listed at the top. `--json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

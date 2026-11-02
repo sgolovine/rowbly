@@ -32,8 +32,14 @@ belong in `ROWBLY.md` or the user's instructions.
 Do this first, in the git repository that holds the Data Root (find it as the reference says). Skip
 it when the Data Root is not in a git repository.
 
-1. Run `git status --porcelain`. If it prints nothing, go to step 3.
-2. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
+1. **Board changes first.** If `rowbly plugins list` shows `git` on, set up
+   [Board persistence](#board-persistence), then run `rowbly git sync`. It commits Rowbly changes
+   that were saved but not yet committed, merges the upstream and pushes, and leaves other staged,
+   changed and untracked files as they are. If it fails, stop and tell the user its message. It
+   handles only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is
+   still uncommitted after it.
+2. Run `git status --porcelain`. If it prints nothing, go to step 4.
+3. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
    --cached` and each new file). If one must not be committed (a secret, build output, a large
    binary), stop and ask the user. Otherwise:
    - Create a branch `factory-cleanup/<YYYY-MM-DD-HHMM>` at the current commit, commit every change
@@ -42,11 +48,31 @@ it when the Data Root is not in a git repository.
    - Open a **cleanup PR** against the branch you started on. Its description says what each change
      is and that the factory found it uncommitted at start. Do not merge it.
    - Switch back to the branch you started on.
-3. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
+4. Run `git pull --ff-only`. If it fails (diverged history, no upstream), stop and tell the user.
 
 Tell the user in one line whether the checkout was clean, the cleanup PR if you opened one, and the
 commit you pulled to. When workers use another checkout, `ROWBLY.md` says whether and how to update
 it.
+
+## Board persistence
+
+Workers see your Board changes only after they are committed and pushed. Skip this section when the
+Git Plugin is off.
+
+- **Commit each change.** The Git Plugin's preferences are personal: read them with `rowbly git
+  show`. When `ROWBLY.md` or the user says Board changes are committed or pushed as they happen, and
+  Automatic Commits are Off or `frequency` is `interval`, run `rowbly git configure
+  --automatic-commits on --frequency change` and tell the user. Otherwise leave them as they are.
+- **Push with the Git Plugin.** The CLI's `rowbly git sync` needs Automatic Merge Conflict
+  Resolution On (`synchronization.enabled` in `rowbly git show`); while it is Off the command
+  fails. Only the TUI's **Sync** (`S`) works with it Off, and you work in the CLI. If it is Off,
+  turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
+  --automatic-merge-resolution on`); otherwise ask the user before you start.
+- **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
+  after `run start` and before you send the brief, after each worker block you apply, and after
+  `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
+  fails, retry it once; then tell the user and send nothing that relies on the change.
+- Never run `git rebase`, `git reset` or a force push yourself.
 
 ## Before you start
 
@@ -88,15 +114,21 @@ Run until the user stops you. Do not wait for the user between events.
    worker reports. Use the harness's way to wait or watch; do not busy-loop. Re-read
    `software-factory stages` before each start, so a Stage Prompt the user changed or turned off
    takes effect.
-2. **Start** each Story whose `stageRun` is `null`, in the order `runs` lists them, while fewer
-   workers run than the limit. See [Start a Story](#start-a-story).
-3. **Retry** each Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
+2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
+   `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
+3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
    [Retry context](#retry-context) before `run start <KEY> --worker <name> --retry`, then start a new
    worker with that context in its brief. Leave it failed after that and tell the user.
    `ROWBLY.md` or the Stage Prompt may set another retry limit; follow it.
 4. Leave `finished` Stage Runs alone. The Story is worked again only after it moves to another Stage
    and comes back, or the user clears the Stage Run.
-5. **Act on each worker message**, as in [Worker messages](#worker-messages).
+5. **Blocked Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
+   skip both starts and retries. A `BLOCKED` reason lists unfinished blocking Stories in `blockers`.
+   Reconsider on the next Board change or `runs` result: a blocker reaching a Stage of category
+   `done` removes that restriction automatically. Do not clear a failed Run or move a Story to
+   bypass its blockers. If eligibility cannot be read, report the error and start nothing from
+   that result. Existing running workers are still supervised normally.
+6. **Act on each worker message**, as in [Worker messages](#worker-messages).
 
 Report each start, retry, finish, failure, question and Board change to the user in one short line.
 
@@ -105,7 +137,8 @@ Report each start, retry, finish, failure, question and Board change to the user
 1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
    worker you are about to start (its thread title or id). Start a worker only when this succeeds.
    Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off: skip it.
+   off, or unresolved blocking Stories remain: report the returned reason and skip it.
+   Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
 2. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
    for workers and the other Stories workers are on, and on a retry `--retry-file` with the
    [retry context](#retry-context). Its `markdown` is every section of
@@ -182,7 +215,7 @@ run a block, check every line:
 
 Ask the user about any line that fails a check, and run the others. Run each command against your
 Data Root, in order, with `--json --no-prompt`. On an error, stop the block and tell the worker and
-the user. If the Git Plugin commits Rowbly data, push it when `ROWBLY.md` says to.
+the user. Then push as [Board persistence](#board-persistence) says.
 
 ## Stopping
 

@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-02T23:41:13.205Z",
+  "updatedAt": "2026-11-02T23:48:23.068Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -29,6 +29,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "9DqKZpVE",
+          "author": "sunny",
+          "body": "Supervisor decision: Revised plan accepted with separate per-Story hold.json and no Stage Run bag format change/migration. Canonical row field is eligibility and startRun rechecks it under the operation lock; ROW-58 owns eligibility.ts. Its implementation branch factory/row-58 is now pushed/being finalized: inspect it for interface reference, but base your task on main (no stack/merge companion branch without approval). Own holds.ts and hold/release registrations; minimally integrate heldReason with canonical eligibility once compatible. If ROW-58 lands first merge main; do not independently redesign its interfaces. Valid held and unreadable/future hold both fail closed; hold/release refuse unknown/invalid file bytes unchanged. Include doctor reporting for unreadable/unsupported hold via existing Plugin doctor mechanism, because compatibility policy requires unknown data be reported, and document any finding in guide/operating refs. Extend existing checks for hold surviving move and unchanged Stage Run, invalid/future bytes preserved, and a failing hook writing no partial hold. New v1 file has no migration so do not invent migration machinery. Required tests remain in existing homes and suite<=100. Read rowbly-tui-design for Story row. ADR0043 reserved; recheck. All four checks/manual scenarios and screenshots required. Proceed.",
+          "createdAt": "2026-11-02T23:48:23.067Z",
+          "updatedAt": "2026-11-02T23:48:23.067Z"
+        },
         {
           "id": "VN09vVeh",
           "author": "sunny",
