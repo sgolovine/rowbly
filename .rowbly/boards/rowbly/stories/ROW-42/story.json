@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Add fuzzy finding for stories",
   "description": "- Add a fuzzy finder feature to search for stories\n- Search across all fields\n- Add a search bar input in the header. It should act as a button and only visually look like an input. Use emoji for icon\n- When a user presses \"CTRL + F\" or clicks the input in the header, open a modal that shows a fuzzy finder, text input at top, list of items at the bottom.\n- User can select items by either clicking with mouse of navigating with keyboard and pressing enter.\n- When user selects an item, fuzzy finder closes and card comes up.\n",
-  "stage": "todo",
+  "stage": "in-progress",
   "rank": "a1",
   "priority": null,
   "labels": [],
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:00:03.727Z",
-  "updatedAt": "2026-11-02T22:06:14.317Z",
+  "updatedAt": "2026-11-02T22:07:51.978Z",
   "plugins": {
     "attachments": {
       "attachments": [
