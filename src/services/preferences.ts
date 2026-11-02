@@ -11,3 +11,13 @@ export async function setOpenStoryAfterCreation(home: string, on: boolean): Prom
   const saved = await updateHomeConfig(home, (config) => ({ ...config, openStoryAfterCreation: on }));
   return saved.openStoryAfterCreation ?? false;
 }
+
+/** Whether the Story finder searches the whole Data Root; off by default. */
+export async function readStoryFinderAllBoards(home: string): Promise<boolean> {
+  return (await readHomeConfig(home)).storyFinderAllBoards ?? false;
+}
+
+export async function setStoryFinderAllBoards(home: string, on: boolean): Promise<boolean> {
+  const saved = await updateHomeConfig(home, (config) => ({ ...config, storyFinderAllBoards: on }));
+  return saved.storyFinderAllBoards ?? false;
+}

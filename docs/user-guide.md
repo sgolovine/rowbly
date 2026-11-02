@@ -774,6 +774,22 @@ A Plugin can add a **Plugin Sidebar** beside the Board sidebar, with a header bu
 
 A click in the Board sidebar or a Plugin Sidebar focuses it, and its border lights up like the board's. While a sidebar has focus, `↑`/`↓` (or `j`/`k`) pick the previous / next entry, `n` creates one (a new Board, or what its button creates, such as a new Epic), in the Board sidebar `e` edits the selected Board and `d` deletes it (asking first), and `esc` or a click in the main area gives focus back to the board, where `n` makes a new Story. Drag a sidebar's right edge with the mouse to make it wider or narrower; the board keeps at least 24 columns, and the widths last until you quit. In the Epics sidebar, `e` edits the picked Epic and `d` opens its delete confirmation. A right click on an Epic opens **Edit** (`e`) and **Delete** (`d`) for that Epic without changing the filter. Delete asks first, naming the Epic and how many Stories will be unlinked. **All Epics** has no edit/delete menu. A right click on a Board in the Board sidebar opens a menu with **Edit** (`e`) and **Delete** (`d`) for that Board, without switching to it. **Edit** opens a form with the Board's name and description; its id and key prefix show above the form and cannot be changed. **Delete** asks first, naming the Board; deleting a Board that still has Stories asks again before deleting it with all its Stories and Plugin files, and a deletion that is refused shows an error and deletes nothing. Deleting the Board on screen opens the home screen, which shows the Board in context if one is left.
 
+**Find Stories** (`ctrl+p`, or click the input-like **🔎 Find Stories** control after the Data Root)
+opens a finder from main screens. Type at the top to search Story fields, including descriptions,
+labels, Custom Fields and dates, plus related Comments, Tasks, Story Specs, linked Board Specs,
+Epics, Assignee handles, outgoing Story Links and attachment names from enabled Plugins. Search is
+case-insensitive: exact and contiguous matches rank before fuzzy subsequence matches (for example,
+`kbd` matches `Keyboard`). Space-separated terms may match different fields. Use `↑`/`↓` then
+`enter`, or click a result, to close the finder and open its Story. `esc` closes without navigating.
+The finder loads current data each time it opens; unavailable Plugin content is skipped.
+
+Search covers the current Board by default, independently of Board filters. Turn on **Find Stories
+in full Data Root** in Settings › Global › Preferences to search every Board. Results then show
+the Board name; opening one selects its Board and opens the Story there. Without a current Board,
+the default scope asks you to select one. The preference is off by default and saved as
+`storyFinderAllBoards` in `~/.rowblyrc.json` across restarts and Data Roots. The finder stays closed
+while a form or modal is open, preserving its text and keys.
+
 The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left and global keys on the right; framed messages appear at bottom-right.
 
 `n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
@@ -796,6 +812,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `esc` | back (or cancel the open form) |
 | `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, create one, `e` edit its label and default, or `d` forget or delete it |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Skills, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |

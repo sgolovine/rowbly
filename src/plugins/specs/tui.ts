@@ -12,7 +12,7 @@ export const tui: PluginTui<Record<string, unknown>> = {
     const linked = await Promise.all(
       slugs.map((slug) => readSpec(plugin, { board: story.boardId, slug }).catch(() => null)),
     );
-    const own = await listStorySpecs(plugin, story);
+    const own = await listStorySpecs(plugin, story).catch(() => []);
     return [...slugs, ...[...linked, ...own].flatMap((spec) => (spec ? [spec.slug, spec.title, spec.text] : []))];
   },
   screens: { list: SpecsScreen, form: SpecFormScreen },
