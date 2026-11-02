@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:01:24.317Z",
-  "updatedAt": "2026-11-02T22:34:30.630Z",
+  "updatedAt": "2026-11-02T22:44:08.304Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -66,6 +66,13 @@
           "body": "Factory scope decision from sunny: editing must match the full creation window, including Tasks, Specs and Links tabs, with changes saved together.",
           "createdAt": "2026-11-02T22:18:26.929Z",
           "updatedAt": "2026-11-02T22:18:26.929Z"
+        },
+        {
+          "id": "XlkLIo8e",
+          "author": "sunny",
+          "body": "Revalidation confirmed metadata preservation, but found that saving a stale Task draft can delete a concurrently added Task. Adding atomic stale-draft protection and a regression check before fresh validation.",
+          "createdAt": "2026-11-02T22:44:08.303Z",
+          "updatedAt": "2026-11-02T22:44:08.303Z"
         }
       ]
     }
