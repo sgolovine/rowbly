@@ -53,16 +53,22 @@ export async function findDataRoot(opts: FindDataRootOptions): Promise<DataRoot>
     return toRoot(fallback === (await canonicalDataRootPath(homeRoot, opts.home)) ? homeRoot : fallback);
   }
 
-  for (let dir = resolve(opts.cwd); ; dir = dirname(dir)) {
-    const candidate = join(dir, DIR_NAME);
-    if (await isDirectory(candidate)) return toRoot(candidate);
-    if (dirname(dir) === dir) break;
-  }
+  const local = await discoverLocalDataRoot(opts.cwd);
+  if (local) return toRoot(local);
 
   if (await isDirectory(homeRoot)) return toRoot(homeRoot);
   throw new DataRootNotFoundError('no Data Root found', {
     hint: 'run `rowbly init` to create one, or pass `--data-root <path>` to use one elsewhere',
   });
+}
+
+/** The nearest `.rowbly/` walking up from cwd, without a default or home-folder fallback. */
+export async function discoverLocalDataRoot(cwd: string): Promise<string | null> {
+  for (let dir = resolve(cwd); ; dir = dirname(dir)) {
+    const candidate = join(dir, DIR_NAME);
+    if (await isDirectory(candidate)) return candidate;
+    if (dirname(dir) === dir) return null;
+  }
 }
 
 /** `ROWBLY_ROOT` no longer selects a Data Root; a run that sets it fails rather than open another one. */
