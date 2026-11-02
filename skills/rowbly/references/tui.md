@@ -62,7 +62,7 @@ default; kept in `~/.rowblyrc.json`).
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
-| Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch Board / global level |
+| Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file |
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
@@ -103,7 +103,7 @@ shows no toggle hint. The long section label wraps within the Settings sidebar. 
 
 In Settings, choose **Stages** or **Fields** under **Global** to edit the defaults for Boards without their own list. Choose the matching section under **Board: <name>** to edit that Board's list. A Board without its own list uses the global list (or built-in defaults); its first edit copies that list to the Board. A Board with its own list no longer follows changes to global defaults. These sections have no scope tabs or scope-switching key. Opened outside Settings, Stages and Fields use the Board in context, or global defaults without a Board.
 
-In Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Without a Board, only the global tab appears.
+In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The selected section fixes the scope for reading and writing; there are no scope tabs or `l` shortcut. Without a Board, only Global is available. Board Stages without their own Stage Prompt use the global one. Editing or toggling creates a Board entry for that Stage; removing the Board entry and file restores the global Stage Prompt. Turning a Board entry off keeps it and prevents the global prompt from applying.
 
 In Settings → Global → Skills, the managed folder is the current working folder, independent of
 the Data Root. Installed entries show official/custom, harnesses and relative installation paths;
