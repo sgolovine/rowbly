@@ -322,6 +322,14 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 - `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story in the board's Stages view, its line in the board's list view and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
 - `loadStoryBadges({ plugin })` is for badges that need the Plugin's files, such as the Epics Plugin's `◆ <Epic name>`. It reads them once each time the board, the Stories list or a Story detail loads its Stories, so a change shows when the screen reloads, and returns a function from a Story to its badges, shown after the Plugin's `storyBadges` in the same places. The returned function runs while the screen renders, so it reads only what was loaded and the Story. A Plugin whose load or badges throw shows none.
 
+`storySearchText({ story, plugin })` on `PluginTui` returns an array of searchable strings (or a
+Promise of one). The Story finder calls it once per Story when opened, only for loaded, enabled
+Plugins. Read bags and related files through the Plugin context; include display names and text,
+not binary attachment contents. Core indexes its own Story fields separately and never inspects
+Plugin bags. Missing related records should be skipped individually. If the contribution throws,
+its text is skipped for that Story and core fields remain searchable. This is a read-only display
+contribution; it must not run operations or save data.
+
 ## Screens, focus and Actions
 
 Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains both palettes and `stageColors` maps Stage Categories. `formatDate(isoTimestamp)` formats a timestamp in the terminal's local time. Never use named colours, literal hex values or `dimColor` in a Plugin component. `SelectionRow` takes `selected`, `active`, optional `onClick` and children; it supplies the shared selection bar, fill and focus-following scroll.
@@ -330,6 +338,17 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 
 - **Screens** get `{ params, plugin, ui }`. `ui.open(screen, params)` opens one of the Plugin's screens on top. `params.title` is the breadcrumb (without one, the screen name with a capital letter); `plugin` and `screen` are reserved route params that Rowbly sets and the screen never gets. Params are not checked: validate them, for example with a schema, and show an error instead of using a bad value.
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
+- **Settings links** in `tui.settings` name a Plugin screen. Without `scopes`, they appear under `Plugins: <id>` with their params unchanged. Optional `scopes: ['global', 'board']` places the same link under Global and the Board in context; either scope can be listed alone. Board entries are omitted without a Board. Scoped screens receive `params.scope` (`global` or `board`) and `params.boardId` (the Board ID for Board scope, `undefined` for Global), replacing those keys in the link's params. The screen owns reading and writing that scope; core only places and routes the link.
+
+```ts
+import type { PluginTui } from '../../plugin-api';
+
+export const scopedSettings: PluginTui = {
+  screens: { settings: () => null },
+  settings: [{ label: 'Prompts', screen: 'settings', scopes: ['global', 'board'] }],
+};
+```
+
 - **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
 - **Plugin Sidebar.** `sidebar: { title, allLabel, items({ plugin }), filter(value), create?, menu?(value) }` adds a list beside the Board sidebar, shown and hidden by a header button titled `title` or by `\` ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)). `items` returns `{ value, label }` entries; it runs in the `field` stage when the sidebar shows and each time a screen opened over the board closes. The first entry is `allLabel`, such as `All Epics`, and clears the pick. Picking an entry (a click, or `{`/`}`) sets this Plugin's board filter (`StoryFilter.plugins.<id>`) to `filter(value)`, run in the `filter` stage, so it must pass `storyFilterSchema` and `filterStories`; a filter the filter form sets for the same Plugin wins. `create` is a link to one of the Plugin's screens, shown as the button at the bottom; a link to a missing screen fails the load. A failing `items` or `filter` is a toast. `menu(value)` optionally returns screen links with a `key` of `e` (edit) or `d` (delete). Links are loaded with the entries in the `field` stage; a failure is a toast. A right click offers these links without changing the filter; the same keys work on the picked entry while the sidebar has focus. The `allLabel` entry has no menu or edit/delete keys. Menu callbacks run only while the entry remains available.
 - **Stage headers.** `stageHeader` is a compact component beside each Stage heading in the Board's Stages view. It receives `{ boardId, stage, active, plugin, ui }` for the Board actually shown, including a Board opened for viewing without changing the context. Keep it small so the Stage name can truncate beside it. Gate clicks on `active && useIsActive()`; the host isolates render errors in the Plugin boundary. It is mounted only while its Stage is visible and the Plugin is loaded. Use the existing fullscreen editor for long text.

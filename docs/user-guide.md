@@ -774,6 +774,23 @@ A Plugin can add a **Plugin Sidebar** beside the Board sidebar, with a header bu
 
 A click in the Board sidebar or a Plugin Sidebar focuses it, and its border lights up like the board's. While a sidebar has focus, `↑`/`↓` (or `j`/`k`) pick the previous / next entry, `n` creates one (a new Board, or what its button creates, such as a new Epic), in the Board sidebar `e` edits the selected Board and `d` deletes it (asking first), and `esc` or a click in the main area gives focus back to the board, where `n` makes a new Story. Drag a sidebar's right edge with the mouse to make it wider or narrower; the board keeps at least 24 columns, and the widths last until you quit. In the Epics sidebar, `e` edits the picked Epic and `d` opens its delete confirmation. A right click on an Epic opens **Edit** (`e`) and **Delete** (`d`) for that Epic without changing the filter. Delete asks first, naming the Epic and how many Stories will be unlinked. **All Epics** has no edit/delete menu. A right click on a Board in the Board sidebar opens a menu with **Edit** (`e`) and **Delete** (`d`) for that Board, without switching to it. **Edit** opens a form with the Board's name and description; its id and key prefix show above the form and cannot be changed. **Delete** asks first, naming the Board; deleting a Board that still has Stories asks again before deleting it with all its Stories and Plugin files, and a deletion that is refused shows an error and deletes nothing. Deleting the Board on screen opens the home screen, which shows the Board in context if one is left.
 
+**Find Stories** (`ctrl+p`, or click the input-like **🔎 Find Stories** control after the Data Root)
+opens a finder from main screens. Type at the top to search Story fields, including descriptions,
+labels, Custom Fields and dates, plus related Comments, Tasks, Story Specs, linked Board Specs,
+Epics, Assignee handles, outgoing Story Links and attachment names from enabled Plugins. Search is
+case-insensitive: exact and contiguous matches rank before fuzzy subsequence matches (for example,
+`kbd` matches `Keyboard`). Space-separated terms may match different fields. Use `↑`/`↓` then
+`enter`, or click a result, to close the finder and open its Story. `esc` closes without navigating.
+Use the mouse wheel over the results to move through longer lists. The finder loads current data
+each time it opens; unavailable Plugin content is skipped.
+
+Search covers the current Board by default, independently of Board filters. Turn on **Find Stories
+in full Data Root** in Settings › Global › Preferences to search every Board. Results then show
+the Board name; opening one selects its Board and opens the Story there. Without a current Board,
+the default scope asks you to select one. The preference is off by default and saved as
+`storyFinderAllBoards` in `~/.rowblyrc.json` across restarts and Data Roots. The finder stays closed
+while a form or modal is open, preserving its text and keys.
+
 The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
 
 `n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
@@ -796,6 +813,7 @@ The palette follows `COLORFGBG`: ANSI backgrounds 7 and 15 select the light them
 | `esc` | back (or cancel the open form) |
 | `D` | switch Data Root (or click the Data Root's name at the left of the header): open another known Data Root, create one, `e` edit its label and default, or `d` forget or delete it |
 | `,` | settings (or click **Settings** in the header), in a sidebar grouped into Global (Boards, global Stages and Fields, Me, Preferences, Doctor, Plugins, Skills, Experimental Features), the Board in context (Config, Stages, Fields), and a group for each Plugin with settings. `↑`/`↓` pick a section, `tab` (or `enter`) moves between the sidebar and the section |
+| `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar; it shows again at every launch |
 | `\` | show the next Plugin Sidebar, or none (or click its button in the header) |
 | `{`/`}` | pick the previous / next entry of the Plugin Sidebar on screen |
@@ -852,15 +870,15 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new Board, `e` edit (the id and key prefix cannot be changed), `d` delete. A click selects a Board; a right click selects it and opens a menu with **Open**, **Edit** and **Delete**. In Settings, click the section first to focus it |
 | Epics (Epics Plugin) | `enter` open the Epic, `n` new Epic, `a` open / closed / all, `e` edit, `c` close or reopen, `d` delete (asks first, naming the Epic and how many Stories it unlinks). A right click on an Epic highlights it and opens a menu with **Open**, **Edit**, **Close** or **Reopen** and **Delete**; an unavailable Epic has no menu |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
-| Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
-| Fields | `n` new Custom Field, `e` edit, `d` remove, `l` switch level |
+| Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it). Backlog and Done are marked fixed and ignore `e`, `d` and moves |
+| Fields | `n` new Custom Field, `e` edit, `d` remove |
 | Me | `enter` edit the highlighted level (Global or This Data Root); in the form, `ctrl+s` saves the handle (empty clears that level) |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
 | Skills (in Settings) | `i` install bundled or local skill, `n` new custom skill, `u` update, `d` delete (both ask first); `↑`/`↓` select, `/` filter |
 | Plugins | `enter` turn the Plugin on or off |
 | Experimental Features | `enter` turn the selected feature on or off; no toggle is offered when none are available |
-| Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch between the Board and global levels |
+| Stage Prompts (Software Factory Plugin) | `space` turn the highlighted Stage's Stage Prompt on or off at the shown level (as `prompt enable` does, a new Board file starts from the global file), `enter` read it, `e` edit it (`ctrl+s` saves), `d` remove the shown level's entry and file |
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
@@ -913,7 +931,9 @@ With the corresponding Plugins enabled, `stories create` also accepts repeatable
 
 All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.
 
-In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
+In Settings, choose **Stages** or **Fields** under **Global** to edit the defaults for Boards without their own list. Choose the matching section under **Board: <name>** to edit that Board's list. A Board without its own list uses the global list (or built-in defaults); its first edit copies that list to the Board. A Board with its own list no longer follows changes to global defaults. These sections have no scope tabs or scope-switching key. Opened outside Settings, Stages and Fields use the Board in context, or global defaults without a Board.
+
+In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The selected section fixes the scope for reading and writing; there are no scope tabs or `l` shortcut. Without a Board, only Global is available. Board Stages without their own Stage Prompt use the global one. Editing or toggling creates a Board entry for that Stage; removing the Board entry and file restores the global Stage Prompt. Turning a Board entry off keeps it and prevents the global prompt from applying.
 
 ### Onboarding
 

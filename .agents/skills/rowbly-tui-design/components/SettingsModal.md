@@ -9,4 +9,4 @@ A screen Modal: the settings, opened with `,`. A section list on the left, the s
   - the list in focus: its highlighted row has the `selection` fill and `accent` bar; hints `↑↓ section · enter open section · esc close`;
   - the section in focus: the list's selected row keeps its bar and fill; the section's own rows take the `selection` fill; hints are the section's keys, ending `esc back to sections`.
 - Title in the frame: `Board › Settings`. Forms opened from a section (New Stage, edit Board) are generic Modals on top.
-- Plugin settings appear as sections under a `Plugins: <name>` group; Plugins do not open their own settings Modal.
+- Plugin settings appear as sections under a `Plugins: <name>` group unless the Plugin declares Global and/or Board scopes; scoped links appear in those groups. Plugins do not open their own settings Modal.

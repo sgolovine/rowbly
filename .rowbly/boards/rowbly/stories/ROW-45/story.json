@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Rework tabs within settings page.",
   "description": "Right now we have a concept of \"global\" and \"own list\" for many settings inside of preferences.\n\nIt's hard for the user to navigate this.\n\n- Remove tabs from the UI\n\n- Instead of tabs, duplicate the sidebar item, once for global and once for the board sections. Ie. stages should have an item under the \"Global\" section AND under \"Board: <board name>\". Under global it shows items that are global, under board it shows the board level items. Make sure to include verbiage about inhertance.",
-  "stage": "in-progress",
-  "rank": "a1V",
+  "stage": "done",
+  "rank": "ar",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:26:59.446Z",
-  "updatedAt": "2026-11-02T22:41:37.814Z",
+  "updatedAt": "2026-11-02T23:06:07.736Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,16 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "rook: ROW-45 In Progress retry",
-        "by": "sunny",
-        "startedAt": "2026-11-02T22:31:07.461Z"
-      }
     },
     "comments": {
       "comments": [
@@ -58,6 +48,20 @@
           "body": "Complexity 3/10. Branch codex/row-45-settings-scopes, based on current origin/main (1435f6f). Plan: keep Global and Board settings entries fixed to their scope, remove Stages/Fields level tabs and shortcut, explain inheritance and first-edit overrides, update docs, run all four checks, and capture screenshots. ROW-42 coordination: preserve Preferences and its search-scope setting; expected shared interface is the existing settings route table.",
           "createdAt": "2026-11-02T22:31:33.582Z",
           "updatedAt": "2026-11-02T22:31:33.582Z"
+        },
+        {
+          "id": "V1u6cy91",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/128. Replaced settings scope tabs with fixed Global/Board entries for Stages, Fields and Stage Prompts, preserving Plugin ownership and inheritance semantics. Added inheritance wording and updated docs/API fixtures. Typecheck, lint, 77 unit tests and 20 CLI tests pass; screenshots uploaded and verified. Earlier storage fault-sweep timeout remains unexplained and is disclosed. Final main merge changes only upstream Board data; validated source is unchanged. Branch codex/row-45-settings-scopes, head 0c2e621. ROW-42 Preferences preserved; shared interface changes are optional PluginTui.settings.scopes and generic settings routing. No watchers remain.",
+          "createdAt": "2026-11-02T23:04:46.855Z",
+          "updatedAt": "2026-11-02T23:04:46.855Z"
+        },
+        {
+          "id": "pjf2vWLj",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/128 as 738d7df. Merge state was clean, all six PR checks passed, no review requested changes, and all ten screenshot URLs returned HTTP 200. Main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41542622176. No watchers remain.",
+          "createdAt": "2026-11-02T23:06:07.097Z",
+          "updatedAt": "2026-11-02T23:06:07.097Z"
         }
       ]
     }

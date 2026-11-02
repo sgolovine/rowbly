@@ -973,7 +973,8 @@ export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
   screens?: Record<string, ComponentType<PluginScreenProps<S>>>;
   home?: PluginLink[];
-  settings?: PluginLink[];
+  /** Omit scopes to keep a section under Plugins; scoped links appear under Global and/or Board. */
+  settings?: (PluginLink & { scopes?: ('global' | 'board')[] })[];
   storyForm?: PluginStoryForm<S>;
   storyPaste?: PluginStoryPaste<S>;
   storyCreateTabs?: PluginStoryCreateTab<S>[];
@@ -991,6 +992,8 @@ export interface PluginTui<S = Record<string, unknown>> {
    * They only show something, so a Plugin whose load or badges throw shows none there.
    */
   loadStoryBadges?(args: { plugin: PluginContext<S> }): Promise<(story: Story) => string[]>;
+  /** Searchable text owned by this Plugin, loaded when the Story finder opens. Failure skips its text. */
+  storySearchText?(args: { story: Story; plugin: PluginContext<S> }): Promise<string[]> | string[];
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
   /**

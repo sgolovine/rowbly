@@ -2,9 +2,11 @@ import type { PluginTui } from '../../plugin-api';
 import { type LinkDraft, LinksCreateTab } from './LinksCreateTab';
 import { LinksTab } from './LinksTab';
 import { readLinks } from './links';
+import { LinksBag } from './model';
 import { NewLinkForm } from './NewLinkForm';
 
 export const tui: PluginTui = {
+  storySearchText: ({ story, plugin }) => plugin.readBag(story, LinksBag)?.blocks ?? [],
   screens: { new: NewLinkForm },
   storyCreateTabs: [
     {

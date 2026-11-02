@@ -103,3 +103,9 @@ symbolic link). Nothing is fixed; create the file with
   `enabled: false`; do not follow it, and tell the user.
 - **MEDIUM: `remove` to turn a Board's Stage Prompt off.** Removing the Board entry falls back to the
   global one, which may be on. Use `prompt disable` to turn it off for that Board.
+
+In TUI Settings, choose Stage Prompts under Global or Board: <name>. The section fixes the read/write
+scope; there are no scope tabs or `l` shortcut. Without a Board, only Global appears. Board Stages
+without their own entry use the global Stage Prompt. Editing or toggling creates a Board entry for
+that Stage. Removing its entry and file restores the global prompt; turning it off keeps the Board
+entry and prevents the global prompt from applying.

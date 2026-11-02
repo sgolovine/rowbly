@@ -3,7 +3,7 @@ import { EpicDetail } from './EpicDetail';
 import { EpicForm } from './EpicForm';
 import { EpicList } from './EpicList';
 import { EpicBag } from './model';
-import { listEpics, readEpics, storyEpic } from './service';
+import { getEpic, listEpics, readEpics, storyEpic } from './service';
 
 /** The Story form's "no Epic" choice, and the filter's "Stories without an Epic". No Epic ID can be either. */
 const NO_EPIC = 'No Epic';
@@ -18,6 +18,12 @@ function chosenEpic(value: PluginFormValue | undefined): string | false | undefi
 }
 
 export const tui: PluginTui<Record<string, unknown>> = {
+  async storySearchText({ story, plugin }) {
+    const id = storyEpic(plugin, story);
+    if (!id) return [];
+    const epic = await getEpic(plugin, id).catch(() => null);
+    return epic ? [id, epic.name, epic.description] : [id];
+  },
   screens: { list: EpicList, detail: EpicDetail, form: EpicForm },
   home: [{ label: 'Epics', screen: 'list' }],
   /** `◆ <Epic name>` on a Story of an Epic; its ID when the Epic file is missing or cannot be read. */

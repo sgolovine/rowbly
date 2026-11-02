@@ -26,8 +26,8 @@ import {
   useToast,
 } from '../../hooks';
 import { theme } from '../../theme';
-import { type ConfigScope, LevelBar, type LevelName, levelsFor, targetFor, useConfigScope } from '../stages';
-import type { ScreenProps, ScreenRegistry } from '../types';
+import { type ConfigScope, ConfigScopeNote, targetFor } from '../stages';
+import { describeField } from './describeField';
 
 type Mode =
   | { kind: 'list' }
@@ -36,33 +36,19 @@ type Mode =
   | { kind: 'edit'; field: CustomFieldDef }
   | { kind: 'confirm-remove'; field: CustomFieldDef };
 
-/** Custom Field management: a list, a type-specific form, and a level switcher. */
-function FieldsScreen({ params }: ScreenProps) {
-  const scope = useConfigScope(params);
-  if (!scope.data) {
-    return scope.loading ? (
-      <Loading label="Loading Custom Fields…" />
-    ) : (
-      <Text color={theme.danger}>No Custom Fields to show.</Text>
-    );
-  }
-  return <FieldsEditor scope={scope.data} />;
-}
-
-function FieldsEditor({ scope }: { scope: ConfigScope }) {
+export function FieldsEditor({ scope }: { scope: ConfigScope }) {
   const services = useServices();
   const ctx = useRowblyContext();
   const toast = useToast();
   const active = useIsActive();
-  const levels = levelsFor(scope);
-  const [level, setLevel] = useState<LevelName>(levels[0] ?? 'global');
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
-  const target = targetFor(scope, level);
+  const target = targetFor(scope);
+  const level = target.level;
   const list = useAsync(async () => (ctx ? readLevel(ctx, target, 'customFields') : null), [ctx, level, scope]);
   useReloadOnReturn(list.reload);
   const fields = list.data?.items ?? [];
   const listing = mode.kind === 'list';
-  const [cursor, setCursor] = useCursor(fields.length, active && listing);
+  const [cursor] = useCursor(fields.length, active && listing);
   const current = fields[cursor];
 
   const done = (message: string) => {
@@ -79,35 +65,22 @@ function FieldsEditor({ scope }: { scope: ConfigScope }) {
           { key: 'n', description: 'new Custom Field' },
           { key: 'e', description: 'edit' },
           { key: 'd', description: 'remove' },
-          { key: 'l', description: 'switch level' },
         ]
       : [{ key: 'esc', description: 'cancel' }],
   );
 
   useInput(
     (input) => {
-      if (input === 'l') {
-        setLevel(levels[(levels.indexOf(level) + 1) % levels.length] ?? level);
-        setCursor(0);
-      } else if (input === 'n') setMode({ kind: 'pick-type' });
+      if (input === 'n') setMode({ kind: 'pick-type' });
       else if (current && input === 'e') setMode({ kind: 'edit', field: current });
       else if (current && input === 'd') setMode({ kind: 'confirm-remove', field: current });
     },
-    { isActive: active && listing && !list.loading },
+    { isActive: active && listing },
   );
 
   return (
     <Box flexDirection="column" gap={1}>
-      <LevelBar
-        levels={levels}
-        level={level}
-        source={list.data?.source}
-        active={active && listing}
-        onSelect={(next) => {
-          setLevel(next);
-          setCursor(0);
-        }}
-      />
+      <ConfigScopeNote level={level} source={list.data?.source} />
       {list.loading && !list.data ? (
         <Loading label="Loading Custom Fields…" />
       ) : fields.length === 0 ? (
@@ -258,22 +231,3 @@ function toProps(type: CustomFieldType, values: FormValues, editing: boolean): C
   }
   return props;
 }
-
-/** A Custom Field's type and its settings, e.g. `select: s, m, l` or `number (≥ 0)`. */
-export function describeField(f: CustomFieldDef): string {
-  if (f.type === 'select' || f.type === 'multiselect') return `${f.type}: ${f.options.join(', ')}`;
-  if (f.type === 'number') {
-    const limits = [
-      f.integer ? 'integer' : '',
-      f.min !== undefined ? `≥ ${f.min}` : '',
-      f.max !== undefined ? `≤ ${f.max}` : '',
-    ];
-    const text = limits.filter(Boolean).join(', ');
-    return text ? `number (${text})` : 'number';
-  }
-  return f.type;
-}
-
-export const fieldsScreens: ScreenRegistry = {
-  fields: FieldsScreen,
-};

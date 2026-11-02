@@ -27,6 +27,7 @@ place or what they typed in a form.
 | `esc` | back, or cancel the open form |
 | `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
 | `,` | settings: Boards, Stages, Fields, Me, Preferences, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
+| `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar. With the sidebar focused (click it), `n` new Board, `e` edit and `d` delete the selected Board; a right click on a Board opens a menu with Edit and Delete for it |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |
 | `{`/`}` | previous / next entry of the Plugin Sidebar |
@@ -54,15 +55,15 @@ default; kept in `~/.rowblyrc.json`).
 | Story › Links | `↑`/`↓` select, `enter` or a click opens the linked Story, `/` filter, `n` new link (direction and same-Board Story), `d` remove the selected link after confirmation |
 | Specs lists | `enter` open in the full-screen editor, `e` edit, `n` new Spec, `d` delete; `ctrl+s` saves in the editor |
 | Boards | `enter` Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new, `e` edit (id and key prefix cannot change), `d` delete (asks first; a Board with Stories asks again). A right click on a Board opens a menu with Open, Edit and Delete |
-| Stages | `n` new, `e` edit, `shift+↑`/`shift+↓` move, `T`/`B` first / last, `d` remove, `l` switch level |
-| Fields | `n` new, `e` edit, `d` remove, `l` switch level |
+| Stages | `n` new, `e` edit, `shift+↑`/`shift+↓` move, `T`/`B` first / last, `d` remove |
+| Fields | `n` new, `e` edit, `d` remove |
 | Me | `enter` edit Global or This Data Root |
 | Doctor | `f` fix, `r` check again |
 | Skills (in Settings) | `i` install bundled or local skill, `n` new custom skill, `u` update, `d` delete (both ask first); `↑`/`↓` select, `/` filter |
 | Plugins | `enter` turn the Plugin on or off |
 | Assignees | `enter` open (Edit, Remove), `n` new Assignee |
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
-| Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file, `l` switch Board / global level |
+| Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file |
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
@@ -101,7 +102,9 @@ In Settings → Global → Experimental Features, select a feature to read its d
 no features in this version, the section explains that features will appear when available and
 shows no toggle hint. The long section label wraps within the Settings sidebar. In a short terminal the sidebar scrolls to keep the selected section visible; `page up`/`page down` or the mouse wheel scroll it while it has focus.
 
-In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
+In Settings, choose **Stages** or **Fields** under **Global** to edit the defaults for Boards without their own list. Choose the matching section under **Board: <name>** to edit that Board's list. A Board without its own list uses the global list (or built-in defaults); its first edit copies that list to the Board. A Board with its own list no longer follows changes to global defaults. These sections have no scope tabs or scope-switching key. Opened outside Settings, Stages and Fields use the Board in context, or global defaults without a Board.
+
+In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The selected section fixes the scope for reading and writing; there are no scope tabs or `l` shortcut. Without a Board, only Global is available. Board Stages without their own Stage Prompt use the global one. Editing or toggling creates a Board entry for that Stage; removing the Board entry and file restores the global Stage Prompt. Turning a Board entry off keeps it and prevents the global prompt from applying.
 
 In Settings → Global → Skills, the managed folder is the current working folder, independent of
 the Data Root. Installed entries show official/custom, harnesses and relative installation paths;
@@ -113,3 +116,16 @@ an official skill, or refreshes only `references/rowbly-reference.md` for a cust
 `n`, `esc`, or Enter on the default Cancel button cancels without writing. Only official installations
 and custom folders holding `SKILL.md` and the Rowbly reference are managed. Update/delete reject
 symbolic links in the managed path, including harness folders and a custom reference path.
+
+## Find Stories
+
+`ctrl+p` or the input-like header control opens a fuzzy finder on main screens. Use the mouse wheel
+over the results to move through longer lists. Type a query;
+`↑`/`↓` selects, `enter` or a click opens the Story, and `esc` closes. Search matches Story fields
+and related Comments, Tasks, Specs, Epics, Assignee handles, outgoing Story Links and attachment
+names from enabled Plugins. It ignores case, ranks exact/contiguous matches ahead of subsequences,
+and lets space-separated terms match different fields. Missing Plugin content is skipped.
+The current Board is the default scope, independent of Board filters. Settings › Global ›
+Preferences › **Find Stories in full Data Root** searches every Board and shows Board names;
+opening a result selects its Board. This off-by-default preference is `storyFinderAllBoards`
+in `~/.rowblyrc.json`. A form or modal keeps its keys and never opens the finder.

@@ -39,10 +39,12 @@ import { HelpOverlay } from './HelpOverlay';
 import { FOOTER_HEIGHT, HEADER_HEIGHT, MAIN_MIN_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_WIDTH } from './layout';
 import { ScreenSlot } from './ScreenSlot';
 import { Sidebar } from './Sidebar';
+import { StoryFinder } from './StoryFinder';
 import { ToastArea } from './ToastArea';
 import { usePluginSidebars } from './usePluginSidebars';
 
 type Overlay =
+  | { kind: 'finder' }
   | { kind: 'help' }
   | { kind: 'dataRoots' }
   | { kind: 'confirm'; action: 'quit' | 'back' | 'settings' }
@@ -170,6 +172,9 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
         roots.data?.find((root) => root.current) ?? { path: ctx.root.path, global: ctx.root.kind === 'global' },
       )
     : 'Rowbly';
+  const openFinder = () => {
+    if (services && idle && !shell.captured().text) setOverlay({ kind: 'finder' });
+  };
   const openDataRoots = () => setOverlay({ kind: 'dataRoots' });
 
   const pluginSidebars = usePluginSidebars(depth, contextMenu);
@@ -251,6 +256,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
       return;
     }
     if (captured.text && !key.escape) return;
+    if (idle && key.ctrl && input === 'p') return openFinder();
     if (atRoot && key.ctrl && input === 'b') return toggleBoards();
     const pluginAction = actions.find((a) => a.key === input);
     if (pluginAction && !key.ctrl && !key.meta) return pluginAction.run();
@@ -286,6 +292,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
     ...(sidebarFocused && pane === 'plugin' ? (pluginSidebars.shown?.hints ?? []) : []),
     ...(sidebarFocused ? sidebarHints(pane, pluginCreate?.label, focusedBoard !== undefined) : screenHints),
     ...actionHints,
+    ...(services && atRoot ? [{ key: 'ctrl+p', description: 'find Stories' }] : []),
   ];
   const label = useScreenLabel(0);
   const gaps = services ? Number(boardsShown) + Number(pluginShown) : 0;
@@ -313,6 +320,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                 <Header
                   root={{ name: rootName, onClick: openDataRoots, clickable: overlay === null }}
                   label={label}
+                  finder={services ? { onClick: openFinder, clickable: idle } : undefined}
                   onNewStory={services ? newStory : undefined}
                   newStoryKey={!sidebarFocused}
                   onSettings={services ? openSettings : undefined}
@@ -405,8 +413,8 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                                   .some(
                                     (next) =>
                                       next.screen === 'story' ||
-                                      next.screen === 'settings' ||
-                                      next.screen === 'story-form',
+                                      next.screen === 'story-form' ||
+                                      next.screen === 'settings',
                                   ));
                             const focused = routeDepth === depth && overlay === null;
                             // A context menu over the top modal keeps its hints, so the modal keeps its
@@ -446,6 +454,26 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                             );
                           })}
                         </Box>
+                      )}
+                      {overlay?.kind === 'finder' && services && (
+                        <StoryFinder
+                          boardId={focusedBoard?.id}
+                          onClose={() => setOverlay(null)}
+                          onSelect={async (found) => {
+                            try {
+                              // Resolve again in case the Story disappeared while the finder was open.
+                              const current = await services.stories.get(found.key);
+                              await services.context.use(current.boardId);
+                              setBoardVersion((version) => version + 1);
+                              setPane('main');
+                              router.reset('board');
+                              router.push('story', { key: current.key, title: current.key });
+                              setOverlay(null);
+                            } catch (err) {
+                              toast.error(err);
+                            }
+                          }}
+                        />
                       )}
                       {overlay?.kind === 'help' && (
                         <Modal title="Keys" size="dialog" onClose={() => setOverlay(null)}>
