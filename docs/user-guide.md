@@ -852,8 +852,8 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 | Boards | `enter` open the Board detail, `v` view its board without changing the context, `s` Stages, `f` Custom Fields, `n` new Board, `e` edit (the id and key prefix cannot be changed), `d` delete. A click selects a Board; a right click selects it and opens a menu with **Open**, **Edit** and **Delete**. In Settings, click the section first to focus it |
 | Epics (Epics Plugin) | `enter` open the Epic, `n` new Epic, `a` open / closed / all, `e` edit, `c` close or reopen, `d` delete (asks first, naming the Epic and how many Stories it unlinks). A right click on an Epic highlights it and opens a menu with **Open**, **Edit**, **Close** or **Reopen** and **Delete**; an unavailable Epic has no menu |
 | Board detail (and Config) | `v` view its board, `o` its Stories list (both without changing the context), `s` Stages, `f` Custom Fields |
-| Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it), `l` switch level. Backlog and Done are marked fixed and ignore `e`, `d` and moves |
-| Fields | `n` new Custom Field, `e` edit, `d` remove, `l` switch level |
+| Stages | `n` new Stage, `e` edit, `shift+↑`/`shift+↓` move up / down, `T`/`B` move first / last (just after Backlog / before Done), `d` remove (asks where to move Stories still in it). Backlog and Done are marked fixed and ignore `e`, `d` and moves |
+| Fields | `n` new Custom Field, `e` edit, `d` remove |
 | Me | `enter` edit the highlighted level (Global or This Data Root); in the form, `ctrl+s` saves the handle (empty clears that level) |
 | Context | `enter` switch Board (or create the global Data Root while it does not exist), `c` clear the current Board |
 | Doctor | `f` fix, `r` check again |
@@ -913,7 +913,9 @@ With the corresponding Plugins enabled, `stories create` also accepts repeatable
 
 All create options join one `stories.create` operation. Invalid Plugin input saves nothing, including Spec files and the existing blockers' bags. Files and stdin are read before the operation starts. These options do not change `stories edit`.
 
-In Stages, Fields and Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Global-only sections show only the global tab.
+In Settings, choose **Stages** or **Fields** under **Global** to edit the defaults for Boards without their own list. Choose the matching section under **Board: <name>** to edit that Board's list. A Board without its own list uses the global list (or built-in defaults); its first edit copies that list to the Board. A Board with its own list no longer follows changes to global defaults. These sections have no scope tabs or scope-switching key. Opened outside Settings, Stages and Fields use the Board in context, or global defaults without a Board.
+
+In Stage Prompts, click a tab in the **Level:** row to switch between the Board and global levels, or press `l`. In Settings, focus the section first. Level switching is disabled while a form or dialog is open. Without a Board, only the global tab appears.
 
 ### Onboarding
 
