@@ -24,7 +24,7 @@ export function InitForm({ root, cwd, home, stay }: { root: DataRoot; cwd: strin
     <Box flexDirection="column">
       <Text bold>Create {root.path}</Text>
       <Text color={theme.inkFaint}>
-        The label names it in ~/.rowblyrc.json. The default Data Root is opened from every directory.
+        The label names it in ~/.rowblyrc.json. Commands use the default Data Root unless --data-root names another.
       </Text>
       <Text color={theme.inkFaint}>Leave the Board name and id empty to skip the first Board.</Text>
       <Text color={theme.inkFaint}>

@@ -52,14 +52,23 @@ The exact meaning of each term is in [`CONTEXT.md`](agents/CONTEXT.md). In short
 
 ## Data Root and git workflow
 
-Each run opens the first of:
+Each CLI command opens the first of:
 
 1. `--data-root <path>`, the `.rowbly` folder itself (`--data-root ~/notes/.rowbly`, not `~/notes`).
 2. The known Data Root marked `"default": true` in the Home Config, `~/.rowblyrc.json` (see below).
 3. `.rowbly/` in the current directory or the nearest parent, like git looks for `.git`.
 4. `~/.rowbly` (create it with `rowbly init --global`).
 
-With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to create one. If the Data Root named by `--data-root` or by the default is missing, Rowbly exits 5 naming it rather than opening another one. If several known Data Roots are marked default, commands without `--data-root` exit 2 listing them; keep one, or pass `--data-root`. `rowbly doctor --data-root <path>` reports them as `MULTIPLE_DEFAULT_DATA_ROOTS` and never picks one for you. `ROWBLY_ROOT` and `--root` are no longer supported: a run with `ROWBLY_ROOT` set exits 2 asking you to unset it.
+With none of these a command exits 5 (`NO_DATA_ROOT`). If the Data Root named by `--data-root` or by the default is missing, Rowbly exits 5 naming it rather than opening another one. If several known Data Roots are marked default, commands without `--data-root` exit 2 listing them; keep one, or pass `--data-root`. `rowbly doctor --data-root <path>` reports them as `MULTIPLE_DEFAULT_DATA_ROOTS` and never picks one for you. `ROWBLY_ROOT` and `--root` are no longer supported: a run with `ROWBLY_ROOT` set exits 2 asking you to unset it.
+
+The TUI uses `--data-root` when given; otherwise it opens the nearest `.rowbly/` in the current
+directory or a parent. Outside one, it asks you to choose from the known Data Roots in
+`~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
+registered order, and **+ New Data Root** is last. Paths, labels and `missing` markers help identify
+roots. Use `↑`/`↓` and `enter`, or click a row; `n` opens the existing setup flow. A failed open
+keeps the picker available. Selection comes before incomplete global onboarding, followed by the
+selected Data Root's onboarding. With no known Data Roots, the existing home-folder fallback and
+first-run onboarding/setup apply. An explicit missing `--data-root` still fails before onboarding.
 
 ```text
 .rowbly/
@@ -78,7 +87,7 @@ With none of these a command exits 5 (`NO_DATA_ROOT`) and the TUI offers to crea
 
 Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data Root. Every run of `rowbly` creates it as `{ "version": 1 }` when it is missing and never replaces an existing one. Rowbly keeps keys it does not know when it changes the file, and changes a symlinked one at its target. If the file is not valid JSON, Rowbly leaves it alone and a command that needs it fails with exit code 6 naming the file; fix or move it.
 
-Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to open it from any folder. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
+Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to use it for commands from any folder and list it first in the TUI startup picker. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
 
 `ROWBLY.md` is an optional Markdown file you write by hand to record how you work with these Boards: what each Stage means, when a Story moves, which Labels and Comments you expect. Rowbly does not read or enforce it, but the Rowbly agent skill and reference tell an agent to read it before changing data and to follow it. Commit it with the rest of `.rowbly/`; `rowbly doctor` treats it as part of the Data Root.
 
@@ -135,7 +144,7 @@ rowbly config show [--board <id>]
   flags. In an interactive terminal it asks for them instead (suggesting the Board id upper-cased as the
   prefix).
 - `init` records the new Data Root in the `dataRoots` of `~/.rowblyrc.json`. `--label <label>` names it
-  there. `--default` makes it the default Data Root, opened from every directory unless `--data-root`
+  there. `--default` makes it the default Data Root for commands from every directory unless `--data-root`
   names another; any other Data Root marked default stops being the default in the same write. In an
   interactive terminal `init` asks for the label (leave it empty for none) and whether to make it the
   default. Without `--default` the defaults stay as they are, and `init` warns when another default
@@ -157,7 +166,7 @@ rowbly config show [--board <id>]
 - `config show` prints the effective Stages and Custom Fields of a Board and the Configuration
   Cascade level each list comes from (`board`, `global` or `default`). `--json` prints
   an `EffectiveBoardConfig`.
-- In the TUI, a first-run screen opens when no Data Root is found. It offers the same three locations
+- In the TUI, **+ New Data Root** in the startup picker opens setup; with no known Data Roots, first-run setup follows global onboarding when no Data Root is found. It offers the same three locations
   as `init` (this directory, the home folder, or another folder whose path you type; `esc` goes back to
   the choice), then asks for the label, whether to make it the default Data Root, the first Board and
   your handle, which becomes global Me (`~/.rowblyrc.json`). Leave the label, the Board or the handle
@@ -174,7 +183,7 @@ rowbly config show [--board <id>]
   `current` one, the `default` one and any that are `missing`. `enter` (or a click) opens the
   highlighted one with its own Boards, Plugins and Me, on the home screen; the screens, filters and
   sidebar picks of the previous one close. Switching changes nothing in `~/.rowblyrc.json`: the labels
-  and the default stay as they are, and the next run opens the default as before. A Data Root that
+  and the default stay as they are; the next TUI launch follows the startup choice described above. A Data Root that
   cannot be opened (moved, removed or broken) shows an error and the app stays where it was. The last
   row, **+ New Data Root** (or `n`), runs the setup form and opens the new Data Root. While a form holds
   unsaved changes, both ask before discarding them; `D` is typed as text while a text field has focus.
@@ -762,7 +771,7 @@ no new command or strategy setting is added.
 
 ## Interactive mode (TUI)
 
-Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. On first launch, onboarding opens before the Board or home menu, including for existing users whose completion flags are absent. With no Data Root, setup can create one after global onboarding. After onboarding, a Board in context (`rowbly use <board>`, or the only Board in the Data Root) opens its Kanban board; otherwise the home menu opens.
+Run `rowbly` with no command in a terminal to open the full-screen app; global flags such as `--data-root` still apply. Without a terminal `rowbly` prints help and exits 2. On first launch, onboarding opens before the Board or home menu, including for existing users whose completion flags are absent. Outside a local Data Root, the startup picker appears before onboarding when known Data Roots exist; New opens setup. With no known Data Roots, setup can create one after global onboarding. After onboarding, a Board in context (`rowbly use <board>`, or the only Board in the Data Root) opens its Kanban board; otherwise the home menu opens.
 
 The board shows the Board's Stages side by side, in Stage order. Each Stage header shows its name coloured by Stage Category and its number of Stories; Stories are in Rank order and show the Story Key, Priority, name and what Plugins add, such as Assignees and how many Tasks are done (`✓ 1/3`). When the Stages do not fit the terminal width the board scrolls sideways (`‹2` / `3›` count the hidden Stages), and a long Stage scrolls up and down. With the mouse, a click selects a Story, a click on the selected Story opens it, and dragging a Story moves it to the place you drop it: onto another Stage, or up or down its own. While you drag, a blue block the size of a Story marks where it will land, under the pointer; the Stories around it move up or down to make room, and the Story lands there when you let go. A right click on a Story selects it and opens a menu beside the pointer with what its keys do: **Open** (`enter`), **Edit** (`e`), **Move to previous Stage** and **Move to next Stage** (`shift+←`/`shift+→`), **Move up** and **Move down** (`shift+↑`/`shift+↓`), **Move to top** and **Move to bottom** (`T`/`B`) and **Delete** (`d`, which asks first). Items that do not apply, such as moving the first Story up, are dimmed. In the menu, `↑`/`↓` (or `j`/`k`) pick an item and `enter` or a click runs it; `esc`, or a click or right click outside the menu, closes it without doing anything else. Moves show at once; if a change cannot be saved, the Story goes back where it was and an error is shown. The board reloads from disk when you come back to it from another screen.
 
@@ -940,8 +949,8 @@ In Settings, choose **Stage Prompts** under **Global** or **Board: <name>**. The
 Global onboarding sets your existing **Me** handle in the Home Config and registers existing Data
 Roots by their Data Root folder path, with an optional label and default. It never creates a Data Root
 and preserves local Me. Invalid or missing registration paths create nothing. Without an open Data
-Root, Continue opens the registered default (or first known Data Root); with none, it opens setup.
-An explicit missing `--data-root` or missing default still fails before onboarding.
+Root, Continue returns to the startup picker when roots have been registered; with none, it opens setup.
+An explicit missing `--data-root` still fails before onboarding; a missing registered default is shown in the startup picker.
 
 Data Root onboarding asks how you work: **Plain Kanban**, **Software Factory**, or **Both**.
 Plain Kanban turns Software Factory off; the other modes turn it on. Choose an existing Board, or

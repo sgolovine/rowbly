@@ -24,9 +24,10 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
 | [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; amended by 0032, extended by 0033 |
 | [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
-| [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted |
+| [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted; amended by 0042 |
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
-| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted |
+| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042 |
+| [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted |
 
 ### Plugins
 

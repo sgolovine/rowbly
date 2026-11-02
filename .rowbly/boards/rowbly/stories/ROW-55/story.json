@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-55",
+  "boardId": "rowbly",
+  "name": "Validate worker-reported Board commands mechanically",
+  "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
+  "stage": "backlog",
+  "rank": "a8",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T23:12:50.805Z",
+  "updatedAt": "2026-11-02T23:12:50.805Z",
+  "plugins": {
+    "epics": {
+      "epic": "factory-improvements"
+    }
+  }
+}

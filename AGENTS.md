@@ -84,7 +84,9 @@ each one self-contained:
   or doctor finding, updates the matching page in the same change.
 
 `skills/rowbly-dev/` takes a Story from its Key to a draft pull request, in any repository tracked with
-Rowbly and in this one. Steps that only apply here (`pnpm dev`, the `rowbly-screenshots` skill) say so.
+Rowbly and in this one. Assigned workers execute their scope in their own thread without spawning
+agents; standalone invocations use the complexity-based supervisor workflow. Steps that only apply
+here (`pnpm dev`, the `rowbly-screenshots` skill) say so.
 
 `skills/rowbly-grill/` interviews a person about a Story and incrementally saves its main Spec,
 resolved glossary and qualifying ADRs as Story Specs. It keeps the Story description and Stage

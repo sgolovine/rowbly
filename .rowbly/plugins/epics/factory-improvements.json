@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "id": "factory-improvements",
+  "name": "Factory Improvements",
+  "description": "Improve the reliability, review quality, efficiency and visibility of the Rowbly software factory. These 20 Backlog Stories capture the recommendations from the factory implementation and configuration review. Each Story is a proposal to refine before implementation; historical observations should be rechecked when work starts.",
+  "closed": false,
+  "createdAt": "2026-11-02T23:12:45.458Z",
+  "updatedAt": "2026-11-02T23:12:45.458Z"
+}

@@ -5,14 +5,18 @@ user who asks how to do something in it, and do the work yourself with commands.
 screen, ask them to open it; do not start `rowbly` with no command in your own shell.
 
 `rowbly` with no command opens the TUI in a terminal (global flags such as `--data-root` still apply).
-Global onboarding opens first when its Home Config `onboardingComplete` flag is absent or false,
+Without `--data-root`, the TUI opens the nearest `.rowbly/` in the current directory or a parent.
+Outside one, known Data Roots appear before onboarding: default first, other registered roots next,
+**+ New Data Root** last. Labels, paths and missing markers identify them. `enter` or a click opens
+one; `n` opens setup. Failed opens leave the picker available. With no known roots, the home-folder
+fallback and first-run onboarding/setup remain available. After selection, global onboarding opens when its Home Config `onboardingComplete` flag is absent or false,
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
 existing Data Roots only. Data Root onboarding chooses Kanban/Factory/Both, a Board, optional Plugins,
 AI skills and factory guidance with Stage Prompt editing. Official skill installs choose a destination
 folder and harness and never overwrite; custom skill commands are explained. No starter Stage Prompts
-are added. Named missing Data Roots still fail. Without a Data Root, setup can create one. Once
+are added. An explicit missing `--data-root` still fails. Without a Data Root, setup can create one. Once
 onboarding is complete, a Board in context opens its Kanban board; otherwise the home menu. It reads the same files as command mode and watches the
 Data Root, so changes made with commands show on their own a moment later, without losing the user's
 place or what they typed in a form.

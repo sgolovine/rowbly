@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "key": "ROW-59",
+  "boardId": "rowbly",
+  "name": "Allow people to hold Stories out of automatic dispatch",
+  "description": "Factory review recommendation 13 of 20.\n\n## Context\n\nEvery Story entering an enabled Stage is currently eligible for dispatch, including work a person wants to handle manually.\n\n## Acceptance criteria\n\n- Define an explicit hold mechanism for individual Stories.\n- Exclude held Stories from automatic dispatch and show why they are held.\n- Allow releasing the hold to restore normal eligibility without losing Story or Stage Run context.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
+  "stage": "backlog",
+  "rank": "aC",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T23:12:53.175Z",
+  "updatedAt": "2026-11-02T23:12:53.175Z",
+  "plugins": {
+    "epics": {
+      "epic": "factory-improvements"
+    }
+  }
+}

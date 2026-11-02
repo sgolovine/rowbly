@@ -1,6 +1,6 @@
 ---
 name: rowbly-dev
-description: "Carry a Rowbly Story from its Story Key (or number) to a validated draft pull request through a supervisor and specialized workers: read the Story, keep its Stage and Comments current, rightsize the task, research, plan, implement in an isolated branch and linked worktree, publish coherent checkpoints, validate, and open a draft PR. Use when the user gives a Story Key such as ROW-18 and wants it developed autonomously."
+description: "Carry a Rowbly Story from its Story Key (or number) to a validated draft pull request, either directly as an assigned worker or through a supervisor and specialized workers: read the Story, keep its Stage and Comments current, rightsize the task, research, plan, implement in an isolated branch and linked worktree, publish coherent checkpoints, validate, and open a draft PR. Use when the user gives a Story Key such as ROW-18 and wants it developed autonomously."
 ---
 
 # Rowbly Dev
@@ -13,9 +13,24 @@ Rowbly is a file-backed Kanban tracker in a `.rowbly/` Data Root. Read
 
 ## Operating Principle
 
-Use the main thread as the supervisor. Perform complexity 1–2 tasks entirely in that thread; delegate execution for scores 3–10 according to the allocation below. Skipping an agent transfers its necessary work to the development role; it never removes that work. For scores 1–2, the supervisor also fills the development role. Preserve worktree isolation, an explicit parent, planning before implementation, coherent commits and pushes, and repository checks; require supervisor sign-off on validation before opening a draft PR and completing the task.
+Choose your role from the assignment before starting:
+
+- **Assigned worker:** when a supervisor has assigned you a Story, a factory Stage Prompt, or a development, validation or finalization role, follow [Assigned worker mode](#assigned-worker-mode). Do the assigned work in your own thread at every complexity score.
+- **Standalone:** when the user asks this thread to develop a Story directly, use this thread as the supervisor. Perform complexity 1–2 tasks entirely here; delegate execution for scores 3–10 according to [Supervisor And Worker Workflow](#supervisor-and-worker-workflow). Skipping an agent transfers its necessary work to the development role; it never removes that work. Require supervisor sign-off on validation before opening a draft PR and completing the task.
+
+In both modes, preserve worktree isolation, an explicit parent, planning before implementation, coherent commits and pushes, and repository checks.
 
 The supervisor owns the Story: it reads it, changes its Stage and adds its Comments. Workers report to the supervisor and do not run `rowbly` commands that change data.
+
+### Assigned worker mode
+
+You are the executor, and the assigning thread remains the supervisor. Do not spawn subagents or start other worker threads. The complexity-based allocation and fresh-agent requirements below apply only to standalone supervisors.
+
+- Use the Story, instructions, accepted plan and repository context supplied in your brief; read missing context as needed. Send blocking questions and decisions requiring supervisor acceptance to the assigning thread.
+- For an assignment to take a Story to a draft PR, perform research, baseline setup, planning, implementation, validation, screenshots, corrections, Git operations and PR creation yourself. Review your plan against the Story before implementation, and verify the final diff and checks before opening the PR. Report this as your own validation; any independent review or additional sign-off belongs to the assigning supervisor.
+- For a narrower assignment, perform only that role and return its handoff. A validation assignment does not authorize implementation fixes, and an implementation assignment does not authorize PR finalization unless included in its scope.
+- Follow the applicable execution sections below directly. You own screenshots, corrections and finalization when those belong to your assignment, regardless of complexity. Reuse the supplied worktree and branch when present; otherwise establish them under Baseline. Fix and recheck your own implementation without handing it to a fresh agent.
+- Report Story updates to the supervisor instead of applying them. In a factory assignment, use the brief's fenced `rowbly` blocks and final markers. Finish with the assigned deliverables, commit and PR details, validation evidence and blockers; the supervisor applies Board changes and decides acceptance.
 
 ## Inputs
 
@@ -25,7 +40,7 @@ Infer the target repository from the current working directory, which becomes th
 
 ## Rowbly Story
 
-The supervisor does this before it scores complexity.
+In standalone mode, the supervisor does this before it scores complexity. Assigned workers use their brief and read only missing context; they report all Board changes to the assigning supervisor.
 
 1. **Choose the command and the Data Root.** Run `rowbly --version`. In the Rowbly source repository without a global install, use `pnpm --dir <control-checkout> --silent dev` instead of `rowbly`. If the control checkout has a `.rowbly/` folder, add `--data-root <control-checkout>/.rowbly` to every call. Otherwise run the calls from the control checkout and confirm that the Story resolves. Add `--json --no-prompt` to every call.
 2. **Run every `rowbly` command against the control checkout's Data Root, never from the linked worktree.** The Board shows progress there. If the Git Plugin is on, it commits each Rowbly change in the checkout where the command runs, and those commits must not land on the task branch. Do not commit `.rowbly/` changes on the task branch unless the Story's change is to Rowbly data itself.
@@ -49,6 +64,8 @@ Keep the Story current without being asked. The supervisor makes each update whe
 Do not move the Story to `done`: the work is complete only when the PR merges, and that is outside this skill. Do not turn Plugins on, edit Story fields the request does not need, or delete records. If the Comments Plugin is off, put the same notes in the PR body and in the final report.
 
 ## Supervisor And Worker Workflow
+
+This section applies only to standalone mode. Assigned workers continue with the execution sections for their assigned role without allocating agents.
 
 1. **Score complexity first.** Before dispatching workers or starting repository work, the supervisor assigns an integer complexity score from **1 to 10** based on the request's scope, uncertainty, risk, dependencies, and available context. Use 1–3 for small, well-understood changes; 4–5 for bounded changes with moderate coordination or uncertainty; and 6–10 for broad, uncertain, or high-risk work. State the score, a brief rationale, and which worker types are needed, how many of each, and why. Do not automatically spawn research or validation agents; use the allocation below. Reassess the score and allocation when worker findings change the scope.
 2. **Allocate by score.** For scores **1–2**, spawn no subagents: the supervisor performs research, baseline setup, planning, implementation, checks, screenshots, corrections, Git operations, and PR creation in the same thread. For scores **3–10**, the supervisor owns assignments, handoffs, communication, and acceptance; workers execute the work. If required subagent tools are unavailable, report that blocker.
@@ -128,6 +145,8 @@ Assigned development worker:
 
 ## Validation
 
+In assigned worker mode, perform the checks yourself when validation is in scope, and fix and recheck your own implementation in the same thread. Return evidence to the assigning supervisor; the separate-agent and sign-off workflow below applies to standalone mode.
+
 When a separate validation agent is selected, a fresh validation worker reviews the diff and independently runs the repo's relevant checks against the completed implementation before opening the PR. Otherwise, the development role performs these checks and records the validation report (in the supervisor thread for scores 1–2, or the development handoff at score 3). Skipping a validation agent does not skip validation or supervisor sign-off. Prefer discovered project commands over generic guesses; run every check the repository's agent instructions name:
 
 - type checks,
@@ -147,13 +166,15 @@ Development workers review `git status --short` and the relevant diff before eac
 
 ## Screenshots
 
+Assigned workers capture and upload screenshots themselves when required by their assignment. The score-based ownership below applies to standalone mode.
+
 Screenshots are a required deliverable for **every task**, separate from validation. Capture and include them even when a validation agent is skipped or validation checks cannot be performed. Screenshots do not substitute for checks. At scores **1–2**, the supervisor captures them in the same thread; at score **3**, the development agent owns them; at scores **4–10**, the validation agent owns them. If an optional validator is used at score 3, screenshot ownership stays with development.
 
 Capture actual task-relevant output, including for non-UI changes: rendered documentation, CLI behavior, or API responses as appropriate. For UI changes, capture comparable before-and-after states. Use the screenshot tool or skill that the repository's agent instructions name; in the Rowbly repository, that is the `rowbly-screenshots` skill. Inspect the images for readability, correct revision and state, and absence of secrets. When validation is performed, combine screenshots with its evidence and report while retaining screenshot completion as a separate requirement. Preserve the images and capture context for PR upload, outside every checkout; if checks are blocked, still capture any available screenshot evidence and report the check limitations separately.
 
 ## Finalize And Open PR
 
-After validation sign-off, the supervisor finalizes scores 1–2 in the same thread; for scores 3–10, assign a fresh development worker to finalize the branch and PR. The screenshot owner supplies the images and evidence for upload. Any delegated follow-up capture remains with the designated role in a fresh assignment.
+Assigned workers whose scope includes finalization perform it in their own thread after completing validation and any acceptance required by their brief. In standalone mode, after validation sign-off, the supervisor finalizes scores 1–2 in the same thread; for scores 3–10, assign a fresh development worker to finalize the branch and PR. The screenshot owner supplies the images and evidence for upload. Any delegated follow-up capture remains with the designated role in a fresh assignment.
 
 1. Confirm task changes are committed and the branch still matches the signed-off commit. If final changes are needed, return through development, fresh validation, and supervisor sign-off before opening the PR. Stage only files that belong to the task and follow the checkpoint rules.
 2. Confirm every commit has been pushed and the local task branch is synchronized with its upstream.
@@ -170,5 +191,7 @@ After validation sign-off, the supervisor finalizes scores 1–2 in the same thr
 Do not merge the PR, mark it ready, request reviewers, or modify remote repository settings unless the user explicitly asks.
 
 ## Completion Criteria
+
+Assigned workers return the deliverables and evidence required by their brief, including proposed Story updates, and leave acceptance and Board verification to the assigning supervisor. They do not wait for those proposed updates to appear on the Board before reporting completion.
 
 The supervisor finishes only after reviewing the finalization result (its own work for scores 1–2 or the worker's handoff for scores 3–10), confirming that the PR contains the signed-off commit and the uploaded screenshots, confirming the Story's Stage and Comments with `rowbly stories show <KEY>`, and reporting the Story Key and its Stage, branch, linked worktree path, pushed commits, PR URL, validation performed, supervisor sign-off, and any skipped checks or unresolved risks. Leave the linked worktree in place for review or follow-up unless the user explicitly asks to remove it. If pushing, opening a PR, or uploading required screenshots is blocked, keep the branch and commits reviewable, add a Comment to the Story with the blocker if the Comments Plugin is on, and report the exact blocker.

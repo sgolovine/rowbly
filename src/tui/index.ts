@@ -3,6 +3,7 @@ import { render } from 'ink';
 import { createElement } from 'react';
 import { DataRootNotFoundError, RowblyError } from '../core';
 import { createContext, createServices, type RowblyContext } from '../services';
+import { assertNoRootEnv, discoverLocalDataRoot, listKnownDataRoots } from '../storage';
 import { App } from './app';
 import { createToastStore, type ToastStore, type TuiPlugin } from './hooks';
 import { type PluginLoader, withPlugins } from './loadPlugins';
@@ -86,7 +87,7 @@ export interface StartTuiOptions {
   proc?: GuardedProcess;
   env?: NodeJS.ProcessEnv;
   cwd?: string;
-  /** `--data-root`. Like the default Data Root, a missing one fails instead of opening setup. */
+  /** `--data-root`. A missing one fails instead of opening setup. */
   root?: string;
   /** Loads the Plugins that a Data Root turns on; without it no Plugin runs. */
   loadPlugins?: PluginLoader;
@@ -143,8 +144,8 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
 }
 
 /**
- * The demo needs no data. Finding no Data Root routes to setup; a named one (`--data-root`, or the
- * Home Config's default) that is missing fails, so setup never hides it (ADR-0033 §1).
+ * The TUI prefers local discovery; elsewhere known Data Roots require a choice (ADR-0042 §1).
+ * An explicit `--data-root` keeps its normal resolution and errors.
  */
 async function resolveContext(
   env: NodeJS.ProcessEnv,
@@ -153,8 +154,14 @@ async function resolveContext(
   toasts: ToastStore,
 ): Promise<RowblyContext | null> {
   if (env.ROWBLY_TUI_DEMO === '1') return null;
+  assertNoRootEnv(env);
+  const home = homedir();
+  if (!root) {
+    root = (await discoverLocalDataRoot(cwd)) ?? undefined;
+    if (!root && (await listKnownDataRoots(home)).length > 0) return null;
+  }
   try {
-    return await createContext({ cwd, env, home: homedir(), root, warn: (message) => toasts.push('warning', message) });
+    return await createContext({ cwd, env, home, root, warn: (message) => toasts.push('warning', message) });
   } catch (err) {
     if (err instanceof DataRootNotFoundError && !root && err.details.path === undefined) return null;
     throw err;
