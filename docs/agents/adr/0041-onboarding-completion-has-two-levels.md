@@ -1,6 +1,6 @@
 # ADR-0041: Onboarding completion is per person and shared per Data Root
 
-**Status:** Accepted
+**Status:** Accepted; startup ordering amended by [ADR-0042](0042-tui-startup-asks-for-a-data-root.md).
 
 ## 1. Context
 

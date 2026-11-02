@@ -65,13 +65,19 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 | `version` | `1`; a file without it is read as version 1 |
 | `onboardingComplete` | optional boolean; completed or skipped global onboarding, absent means incomplete |
 | `me` | optional, a handle: global Me, Me in every Data Root without a local Me |
-| `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; the one marked `default` is opened before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
+| `dataRoots` | optional, a list of `{ "label"?, "path", "default"? }`, one per known Data Root, `path` being the `.rowbly/` folder; commands open the one marked `default` before discovery, and several `default` entries are accepted by the schema so a run can report them ([ADR-0033](../agents/adr/0033-known-data-roots-select-the-data-root.md)) |
 | `storyFinderAllBoards` | optional, a boolean: whether the TUI finder searches the full Data Root; missing means current Board only; saved through Preferences |
 | `openStoryAfterCreation` | optional, a boolean: whether the TUI opens a Story it has just created (the **Preferences** section of the settings); missing means off, and the TUI returns to the Board or list |
 
 Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are kept when Rowbly writes the file. Storage reads it with `readHomeConfig` (a missing file is `{ version: 1 }`) and changes it only through `updateHomeConfig`, under its own lock ([Storage and commits](storage.md#home-config)). A Home Config that cannot be read fails with `DATA_INTEGRITY` and is never replaced.
 
 **Known Data Roots** (`src/storage/dataRoot.ts`, ADR-0033). `findDataRoot` opens `--data-root`, else the one `default` entry, else the nearest `.rowbly/`, else `~/.rowbly`; a named Data Root that is missing fails with `NO_DATA_ROOT` and `details.path` instead of falling back, and more than one entry marked `default` (even two naming one folder) fails with `USAGE` unless the flag is given (so `rowbly doctor --data-root <path>` can report it); a Plugin command that is unknown because no Plugin could load then reports that error. Opening a Data Root that has a `rowbly.config.json` (in `createContext`) and `init` record it with `registerDataRoot`, which compares paths canonically (`~/` expanded, relative to the home folder, real path when the folder exists), leaves a folder that is already known exactly as stored, appends a new folder with its canonical path, and writes nothing (taking no lock) when nothing changes. Recording never changes a label or the default; setup (`createDataRoot` in `src/services/setup.ts`, behind `init --label`/`--default` and the TUI's setup screen) sets them with `registerDataRoot(home, path, { label, default })`, which does so first merging the entries that name the folder into the first without losing a label, `default` or an unknown key, and `default: true` clears it on every other entry. `listKnownDataRoots` returns the merged list without writing. The TUI's Data Root switcher edits an entry with `registerDataRoot` (a `null` label removes it), removes every entry that names a folder with `forgetDataRoot`, and deletes a Data Root with `deleteDataRoot`, which refuses a folder without a `rowbly.config.json` and, holding the Data Root lock, forgets it and then deletes the folder.
+
+TUI startup follows [ADR-0042](../agents/adr/0042-tui-startup-asks-for-a-data-root.md): explicit
+`--data-root`, otherwise `discoverLocalDataRoot` finds the nearest current/parent `.rowbly/`.
+Outside one, known roots require a choice before onboarding, with the default first and New last.
+No known roots preserves the home-folder fallback and first-run onboarding/setup. The shared CLI
+`findDataRoot` resolution above is unchanged.
 
 ## Configuration Cascade
 

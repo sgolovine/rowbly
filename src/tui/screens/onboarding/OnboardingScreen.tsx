@@ -1,8 +1,7 @@
 import { homedir } from 'node:os';
 import { Box, Text, useInput } from 'ink';
 import { useContext, useRef, useState } from 'react';
-import { openKnownDataRoot } from '../../../services';
-import { canonicalDataRootPath, readHomeConfig, updateHomeConfig } from '../../../storage';
+import { updateHomeConfig } from '../../../storage';
 import { ScrollBody } from '../../components';
 import { ActiveContext, ServicesContext, useIsActive, useKeyHints, useLayout, useToast } from '../../hooks';
 import { onboardingRoute } from '../../onboardingRoute';
@@ -14,7 +13,7 @@ import { RootOnboarding } from './RootOnboarding';
 
 /** Completion and explicit skip share the same durable flag; errors leave the flow retryable. */
 export function OnboardingScreen({ params }: ScreenProps) {
-  const { ctx, services, activate } = useContext(ServicesContext);
+  const { ctx, services } = useContext(ServicesContext);
   const toast = useToast();
   const router = useRouter();
   const active = useIsActive();
@@ -32,21 +31,6 @@ export function OnboardingScreen({ params }: ScreenProps) {
       else if (services) await services.config.updateRootConfig({ onboardingComplete: true });
       if (params.reopen) router.pop();
       else if (global) {
-        if (!ctx && activate) {
-          const roots = (await readHomeConfig(home)).dataRoots ?? [];
-          const root = roots.find((entry) => entry.default) ?? roots[0];
-          if (root) {
-            await activate(
-              await openKnownDataRoot({
-                path: await canonicalDataRootPath(root.path, home),
-                home,
-                cwd: process.cwd(),
-                warn: (message) => toast.push('warning', message),
-              }),
-            );
-            return;
-          }
-        }
         const next = await onboardingRoute(ctx, services);
         router.reset(next.screen, next.params);
       } else router.reset('home');

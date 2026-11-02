@@ -4,6 +4,7 @@ export {
   assertNoRootEnv,
   canonicalDataRootPath,
   deleteDataRoot,
+  discoverLocalDataRoot,
   type FindDataRootOptions,
   findDataRoot,
   forgetDataRoot,
