@@ -32,10 +32,22 @@ export interface SettingsGroup {
 /**
  * The settings shared by every Board in the Data Root first, then those of the Board in context.
  * Without a Board in context the Board group is empty. The sections that Plugins add follow the
- * global ones.
+ * global ones. Scoped Plugin sections join the matching core group.
  */
 export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiPlugin[] = []): SettingsGroup[] {
   const boardId = board?.id;
+  const scopedSections = (scope: 'global' | 'board'): SettingsSection[] =>
+    plugins.flatMap((plugin) =>
+      (plugin.tui.settings ?? []).flatMap((link, i) => {
+        if (!link.scopes?.includes(scope)) return [];
+        const route = pluginRoute(plugin.id, link.screen, {
+          ...link.params,
+          scope,
+          boardId: scope === 'board' ? boardId : undefined,
+        });
+        return [{ id: `plugin:${plugin.id}:${i}:${scope}`, label: link.label, ...route }];
+      }),
+    );
   return [
     {
       title: 'Global',
@@ -50,6 +62,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
         { id: 'plugins', label: 'Plugins', screen: 'plugins' },
         { id: 'skills', label: 'Skills', screen: 'skills' },
         { id: 'experimental-features', label: 'Experimental Features', screen: 'experimental-features' },
+        ...scopedSections('global'),
       ],
     },
     {
@@ -61,13 +74,15 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
             { id: 'board-config', label: 'Config', screen: 'board-detail', params: { boardId, title: 'Config' } },
             { id: 'board-stages', label: 'Stages', screen: 'stages', params: { boardId } },
             { id: 'board-fields', label: 'Fields', screen: 'fields', params: { boardId } },
+            ...scopedSections('board'),
           ]
         : [],
     },
     ...plugins.flatMap((plugin) => {
-      const sections = (plugin.tui.settings ?? []).map((link, i) => {
+      const sections = (plugin.tui.settings ?? []).flatMap((link, i) => {
+        if (link.scopes) return [];
         const route = pluginRoute(plugin.id, link.screen, link.params);
-        return { id: `plugin:${plugin.id}:${i}`, label: link.label, ...route };
+        return [{ id: `plugin:${plugin.id}:${i}`, label: link.label, ...route }];
       });
       return sections.length ? [{ title: `Plugins: ${plugin.id}`, sections }] : [];
     }),

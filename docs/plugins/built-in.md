@@ -494,12 +494,15 @@ is off or missing (a missing file starts with a template). `tab` or `e` switches
 Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
 entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
 
-**TUI:** a **Stage Prompts** section in Settings (`,`) lists the current Board's Stages with their
-effective Stage Prompts (`on · board`, `on · global`, `off`), or the global level. `space` turns the
+**TUI:** **Stage Prompts** appears under both **Global** and **Board: <name>** in Settings (`,`).
+The Global section reads and writes global prompts; the Board section lists that Board's Stages
+with their effective Stage Prompts (`on · board`, `on · global`, `off`) and writes only Board entries.
+Without a Board, only Global is available. A Stage without a Board entry uses the global prompt;
+editing or toggling creates a Board entry, removing it restores the global prompt, and turning it
+off keeps the Board entry so the global prompt does not apply. `space` turns the
 highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the
-full-screen editor (`ctrl+s` saves), `d` removes the shown level's entry and its file, and `l`
-switches between the Board and global levels. The Story screen shows a **Stage Run** row while the
-Story has one for its current Stage, such as `running (ROW-12 worker)` or
+full-screen editor (`ctrl+s` saves), and `d` removes the selected scope's entry and its file.
+The Story screen shows a **Stage Run** row while the Story has one for its current Stage, such as `running (ROW-12 worker)` or
 `failed (ROW-12 worker, attempt 2): tests failed`.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
