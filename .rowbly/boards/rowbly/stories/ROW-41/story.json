@@ -12,12 +12,22 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T21:58:46.322Z",
-  "updatedAt": "2026-11-02T22:07:50.496Z",
+  "updatedAt": "2026-11-02T22:09:15.444Z",
   "plugins": {
     "story-linking": {
       "blocks": [
         "ROW-42"
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "rook: ROW-41 In Progress",
+        "by": "sunny",
+        "startedAt": "2026-11-02T22:09:15.443Z"
+      }
     }
   }
 }
