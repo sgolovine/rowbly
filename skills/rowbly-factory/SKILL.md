@@ -109,7 +109,8 @@ Report each start, retry, finish, failure, question and Board change to the user
 2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
    Comments, Epic and Story links.
 3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
-   worker model, where and how `ROWBLY.md` or the user says.
+   worker model, where and how `ROWBLY.md` or the user says. To start it through a `t3` CLI on another
+   computer, follow [remote launches](references/remote-launch.md).
 4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
 
 ## Worker messages

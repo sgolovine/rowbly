@@ -24,7 +24,7 @@ explains how it is built. Start at `docs/README.md`.
 | The agent skill for operating Rowbly (CLI, TUI, Data Root, doctor, Plugins) | `skills/rowbly/SKILL.md` and its `references/`, published in the npm package; the folder is self-contained (see Agent skills below) |
 | The agent skill for developing a Rowbly Story into a draft pull request (`rowbly-dev`) | `skills/rowbly-dev/SKILL.md` and its `references/`, published in the npm package; self-contained (see Agent skills below) |
 | The agent skill for interviewing a Story and saving its specification (`rowbly-grill`) | `skills/rowbly-grill/SKILL.md` and its `references/`, browser `scripts/` and `assets/`, published in the npm package |
-| The agent skill for running a software factory over a Board's Stage Prompts (`rowbly-factory`) | `skills/rowbly-factory/SKILL.md` and its `references/`, published in the npm package; self-contained. This repository's own factory setup is its Stage Prompts and `.rowbly/ROWBLY.md` |
+| The agent skill for running a software factory over a Board's Stage Prompts (`rowbly-factory`) | `skills/rowbly-factory/SKILL.md`, its `references/`, and the remote launcher in `scripts/` and `assets/`, published in the npm package; self-contained. This repository's own factory setup is its Stage Prompts and `.rowbly/ROWBLY.md` |
 | The one-page Rowbly reference for people's own skills | `skills/rowbly-reference.md`, published in the npm package (see Agent skills below) |
 | Agent skills for developing Rowbly (screenshots with agentic-tui, the TUI design system) | `.agents/skills/<name>/SKILL.md`, with a pointer for Claude Code in `.claude/skills/<name>/`; not published. `.agents/skills/rowbly-dev`, `.agents/skills/rowbly-grill` and `.agents/skills/rowbly-factory` symlink to their published folders in `skills/` |
 
@@ -96,7 +96,9 @@ unchanged and does not authorize implementation. Its browser UI has a numbered c
 Stage whose Stage Prompt is on, records Stage Runs (ADR-0040) and applies the Board changes workers
 report. At start it pulls the checkout, first moving any uncommitted changes to a cleanup PR. The
 Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no Stage, server, model or way of
-starting threads.
+starting threads. Its `scripts/launch-worker.mjs` starts and verifies workers through a `t3` CLI on
+another computer; it takes every host, path and model as a flag, and `ROWBLY.md` holds this
+repository's values.
 
 `skills/rowbly-reference.md` is a single page that people copy into their own skills' `references/` so
 an agent can run Rowbly when a skill mentions it. It is not a skill (no frontmatter) and links to
