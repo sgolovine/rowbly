@@ -194,6 +194,6 @@ Do not merge the PR, mark it ready, request reviewers, or modify remote reposito
 
 ## Completion Criteria
 
-Assigned workers return the deliverables and evidence required by their brief, including their reported Story updates, and leave acceptance and Board verification to the assigning supervisor. They do not wait for those proposed updates to appear on the Board before reporting completion.
+Assigned workers return the deliverables and evidence required by their brief, including their reported Story updates, and leave acceptance and Board verification to the assigning supervisor. They do not wait for those reported updates to appear on the Board before reporting completion.
 
 The supervisor finishes only after reviewing the finalization result (its own work for scores 1–2 or the worker's handoff for scores 3–10), confirming that the PR contains the signed-off commit and the uploaded screenshots, confirming the Story's Stage and Comments with `rowbly stories show <KEY>`, and reporting the Story Key and its Stage, branch, linked worktree path, pushed commits, PR URL, validation performed, supervisor sign-off, and any skipped checks or unresolved risks. Leave the linked worktree in place for review or follow-up unless the user explicitly asks to remove it. If pushing, opening a PR, or uploading required screenshots is blocked, keep the branch and commits reviewable, add a Comment to the Story with the blocker if the Comments Plugin is on, and report the exact blocker.
