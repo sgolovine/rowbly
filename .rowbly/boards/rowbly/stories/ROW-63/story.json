@@ -20,6 +20,13 @@
     "comments": {
       "comments": [
         {
+          "id": "EgNUad11",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/132. Merge commit 216c558. All six pre-merge GitHub checks passed and screenshot URLs returned HTTP 200. Main CI was queued at the worker final check.",
+          "createdAt": "2026-11-02T23:48:21.757Z",
+          "updatedAt": "2026-11-02T23:48:21.757Z"
+        },
+        {
           "id": "ZikraSwM",
           "author": "sunny",
           "body": "Supervisor accepted implementation plan. Plan accepted. Capture known context BEFORE run start --retry replaces it. Keep continuation/restart authority explicit, do not infer identity or silently restart. Limit worker-brief changes to retry/context sections (ROW-66 changes ownership rules), factory SKILL changes to retry/context (ROW-54 changes launch and ROW-51 startup). Capture agentic-tui evidence as proposed, run all four checks and proceed.",
@@ -32,13 +39,6 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/132 preserves prior Run context before retry replacement and includes recorded existing work with explicit continuation or restart authority. Typecheck and lint passed. Unit tests 77 passed and CLI tests 20 passed. Screenshot evidence uploaded and both URLs returned HTTP 200. Branch codex/row-63-retry-context at d149f8195b2f9af54f50151c0f48b6cd4932a0ad. GitHub CI pending.",
           "createdAt": "2026-11-02T23:42:07.521Z",
           "updatedAt": "2026-11-02T23:42:07.521Z"
-        },
-        {
-          "id": "EgNUad11",
-          "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/132. Merge commit 216c558. All six pre-merge GitHub checks passed and screenshot URLs returned HTTP 200. Main CI was queued at the worker final check.",
-          "createdAt": "2026-11-02T23:48:21.757Z",
-          "updatedAt": "2026-11-02T23:48:21.757Z"
         }
       ]
     }
