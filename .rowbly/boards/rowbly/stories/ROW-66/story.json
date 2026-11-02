@@ -20,18 +20,18 @@
     "comments": {
       "comments": [
         {
-          "id": "rg0ZyCru",
-          "author": "sunny",
-          "body": "Supervisor accepted implementation plan. Plan accepted. Implement the bounded ownership fixes and brief rule, preserving ROW-52 baseline/push sections and ROW-63 retry section. Plan acceptance remains required in this assignment; clarify general assigned-worker behavior without removing standalone supervisor gates. Skip ROWBLY.md edits: current minimum-subagents language evaluates to zero under Assigned worker mode; report proposed replacement in final handoff for supervisor review. In Progress Stage Prompt already matches and needs no edit. Capture one agentic-tui terminal PNG of rendered changed guidance, publish orphan assets, verify HTTP 200. Run/report all four checks. Proceed.",
-          "createdAt": "2026-11-02T23:36:24.231Z",
-          "updatedAt": "2026-11-02T23:36:24.231Z"
-        },
-        {
           "id": "EKhXbv30",
           "author": "sunny",
           "body": "Draft PR open: https://github.com/sgolovine/rowbly/pull/133. Aligned rowbly-dev with factory worker ownership: defined 'report' as a fenced rowbly block, added a brief > Stage Prompt > skill precedence order, clarified Story updates and the plan gate for assigned workers (the standalone gate is unchanged), and added an Assigned worker rule to the worker brief template. Typecheck, lint, unit and CLI checks pass. Proposed ROWBLY.md change for supervisor review: replace the rook rule 'keep sub-agents to the minimum' with 'do not spawn subagents or other threads'.",
           "createdAt": "2026-11-02T23:42:11.227Z",
           "updatedAt": "2026-11-02T23:42:11.227Z"
+        },
+        {
+          "id": "rg0ZyCru",
+          "author": "sunny",
+          "body": "Supervisor accepted implementation plan. Plan accepted. Implement the bounded ownership fixes and brief rule, preserving ROW-52 baseline/push sections and ROW-63 retry section. Plan acceptance remains required in this assignment; clarify general assigned-worker behavior without removing standalone supervisor gates. Skip ROWBLY.md edits: current minimum-subagents language evaluates to zero under Assigned worker mode; report proposed replacement in final handoff for supervisor review. In Progress Stage Prompt already matches and needs no edit. Capture one agentic-tui terminal PNG of rendered changed guidance, publish orphan assets, verify HTTP 200. Run/report all four checks. Proceed.",
+          "createdAt": "2026-11-02T23:36:24.231Z",
+          "updatedAt": "2026-11-02T23:36:24.231Z"
         }
       ]
     },
