@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:00:03.727Z",
-  "updatedAt": "2026-11-02T22:15:54.465Z",
+  "updatedAt": "2026-11-02T22:19:16.993Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -35,6 +35,17 @@
         "by": "sunny",
         "startedAt": "2026-11-02T22:15:54.464Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "BqcqQLbx",
+          "author": "sunny",
+          "body": "Factory scope decisions from sunny: default fuzzy search to the current Board. Add a preference toggling search scope between current Board and entire Data Root. Search Story fields plus related Comments, Tasks, Specs, Epics and attachment names. Ctrl+F opens only from main screens; preserve active forms and modals.",
+          "createdAt": "2026-11-02T22:19:16.992Z",
+          "updatedAt": "2026-11-02T22:19:16.992Z"
+        }
+      ]
     }
   }
 }
