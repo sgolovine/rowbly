@@ -31,6 +31,14 @@ rowbly story-linking remove WEB-1 --blocks WEB-3 --yes --json --no-prompt
 - `stories show` adds **Blocks** and **Blocked by** rows. Its JSON is the stored Story; use
   `story-linking list` for derived incoming links.
 
+## Factory eligibility
+
+With Software Factory on, unfinished incoming blockers prevent `run start`, including retries.
+`software-factory runs` exposes them in `eligibility.reasons` with code `BLOCKED` and
+`blockers: [{ key, name, stage }]`. A blocker resolves in Stage category `done`; the link remains.
+The next overview recomputes eligibility. Blocking does not restrict manual Stage changes.
+With Story Linking off, its data remains stored and contributes no launch restriction.
+
 ## Data and preservation
 
 Only the blocking Story holds the relationship:

@@ -218,8 +218,34 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     await json('stories', 'move', worked.key, 'in-progress');
     await json('stories', 'move', worked.key, 'todo');
     expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([
-      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null },
+      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null, eligibility: { eligible: true, reasons: [] } },
     ]);
+
+    // A new incoming link invalidates launch eligibility without creating a Stage Run.
+    await json('plugins', 'enable', 'story-linking');
+    await json('stories', 'move', story.key, 'in-progress');
+    await json('story-linking', 'add', story.key, '--blocks', worked.key);
+    const blocked = {
+      eligible: false,
+      reasons: [
+        {
+          code: 'BLOCKED',
+          message: `Blocked by ${story.key}`,
+          blockers: [{ key: story.key, name: 'Login page', stage: 'in-progress' }],
+        },
+      ],
+    };
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility).toEqual(blocked);
+    const refused = await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w3', '--json');
+    expect(refused.exitCode).toBe(4);
+    expect(jsonError(refused)).toMatchObject({ code: 'CONFLICT', details: { eligibility: blocked } });
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].stageRun).toBeNull();
+    await json('stories', 'move', story.key, 'done');
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility).toEqual({
+      eligible: true,
+      reasons: [],
+    });
+    await json('software-factory', 'run', 'start', worked.key, '--worker', 'w3');
 
     expect((await rowbly('plugins', 'disable', 'comments')).exitCode).toBe(0);
     expect((await json('stories', 'show', story.key)).plugins.comments.comments).toHaveLength(1);

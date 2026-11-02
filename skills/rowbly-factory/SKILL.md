@@ -88,15 +88,21 @@ Run until the user stops you. Do not wait for the user between events.
    worker reports. Use the harness's way to wait or watch; do not busy-loop. Re-read
    `software-factory stages` before each start, so a Stage Prompt the user changed or turned off
    takes effect.
-2. **Start** each Story whose `stageRun` is `null`, in the order `runs` lists them, while fewer
-   workers run than the limit. See [Start a Story](#start-a-story).
-3. **Retry** each Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
+2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
+   `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
+3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
    [Retry context](#retry-context) before `run start <KEY> --worker <name> --retry`, then start a new
    worker with that context in its brief. Leave it failed after that and tell the user.
    `ROWBLY.md` or the Stage Prompt may set another retry limit; follow it.
 4. Leave `finished` Stage Runs alone. The Story is worked again only after it moves to another Stage
    and comes back, or the user clears the Stage Run.
-5. **Act on each worker message**, as in [Worker messages](#worker-messages).
+5. **Blocked Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
+   skip both starts and retries. A `BLOCKED` reason lists unfinished blocking Stories in `blockers`.
+   Reconsider on the next Board change or `runs` result: a blocker reaching a Stage of category
+   `done` removes that restriction automatically. Do not clear a failed Run or move a Story to
+   bypass its blockers. If eligibility cannot be read, report the error and start nothing from
+   that result. Existing running workers are still supervised normally.
+6. **Act on each worker message**, as in [Worker messages](#worker-messages).
 
 Report each start, retry, finish, failure, question and Board change to the user in one short line.
 
@@ -105,7 +111,8 @@ Report each start, retry, finish, failure, question and Board change to the user
 1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
    worker you are about to start (its thread title or id). Start a worker only when this succeeds.
    Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off: skip it.
+   off, or unresolved blocking Stories remain: report the returned reason and skip it.
+   Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
 2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
    Comments, Epic and Story links.
 3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the

@@ -7,6 +7,9 @@ import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
+import { softwareFactory } from '../../src/plugins/software-factory';
+import { setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
+import { endRun, runsOverview, startRun } from '../../src/plugins/software-factory/stageRuns';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec, listStorySpecs } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -247,6 +250,121 @@ describe('transform (ADR-0012)', () => {
 });
 
 describe('guard', () => {
+  it('refuses factory starts and retries after concurrent or pending blocker changes without saving the Run', async () => {
+    let pendingBlocker = false;
+    const linking = definePlugin({
+      ...storyLinking,
+      hooks: {
+        ...storyLinking.hooks,
+        'software-factory.start': {
+          ...storyLinking.hooks?.['software-factory.start'],
+          async transform({ changes, plugin }) {
+            if (pendingBlocker)
+              await changes.updateStory('WEB-1', (story) => ({
+                ...plugin.writeBag(story, { blocks: ['WEB-2'] }),
+                stage: 'todo',
+              }));
+          },
+        },
+      },
+    });
+    const t = await pluginRoot({ 'story-linking': true, 'software-factory': true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', stage: 'done' });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-2', stage: 'todo' });
+    const { services } = await withPlugins(t, [linking, softwareFactory]);
+    const factory = services.plugins.context('software-factory');
+    const links = services.plugins.context('story-linking');
+    await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'todo' }, { enabled: true });
+    const eligibility = async () =>
+      (await runsOverview(factory, 'web')).stories.find((s) => s.key === 'WEB-2')?.eligibility;
+    await expect(services.stories.list('web', { plugins: { 'story-linking': { blocks: 42 } } })).rejects.toMatchObject({
+      code: 'VALIDATION',
+      details: { plugin: 'story-linking' },
+    });
+    const file = join(t.path, 'boards/web/stories/WEB-2/story.json');
+    for (const retry of [false, true]) {
+      expect(await eligibility()).toEqual({ eligible: true, reasons: [] });
+      const bytes = await readFile(file);
+      // Hold the initial read so a link and Stage change commit before start takes its operation lock.
+      const entered = deferred();
+      const resume = deferred();
+      const get = factory.services.stories.get;
+      const spy = vi.spyOn(factory.services.stories, 'get').mockImplementationOnce(async (key) => {
+        const story = await get(key);
+        entered.resolve();
+        await resume.promise;
+        return story;
+      });
+      const starting = startRun(factory, 'WEB-2', { worker: 'worker', retry });
+      const refused = expect(starting).rejects.toMatchObject({
+        code: 'CONFLICT',
+        details: { eligibility: { eligible: false, reasons: [expect.objectContaining({ code: 'BLOCKED' })] } },
+      });
+      try {
+        await entered.promise;
+        await services.stories.move('WEB-1', 'todo');
+        await addLink(links, 'WEB-1', 'WEB-2');
+        resume.resolve();
+        await refused;
+      } finally {
+        resume.resolve();
+        spy.mockRestore();
+      }
+      expect(await readFile(file)).toEqual(bytes);
+      await services.stories.move('WEB-1', 'done');
+      expect(await eligibility()).toEqual({ eligible: true, reasons: [] });
+      // The owning Plugin's transform reopens the completed blocker in the pending Change Set.
+      const before = await services.stories.list('web', {});
+      pendingBlocker = true;
+      try {
+        await expect(startRun(factory, 'WEB-2', { worker: 'worker', retry })).rejects.toMatchObject({
+          code: 'CONFLICT',
+          details: { plugin: 'story-linking', stage: 'guard' },
+        });
+      } finally {
+        pendingBlocker = false;
+      }
+      expect(await services.stories.list('web', {})).toEqual(before);
+      expect(await readFile(file)).toEqual(bytes);
+      await startRun(factory, 'WEB-2', { worker: 'worker', retry });
+      if (!retry) await endRun(factory, 'WEB-2', { status: 'failed', reason: 'retry later' });
+    }
+    expect((await services.stories.get('WEB-2')).plugins?.['software-factory']).toMatchObject({
+      stageRun: { status: 'running', attempt: 2 },
+    });
+    await endRun(factory, 'WEB-2', { status: 'failed', reason: 'retry later' });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { 'story-linking': { blocks: 'future shape' } } });
+    const saved = await readFile(file);
+    await expect(eligibility()).rejects.toMatchObject({ code: 'DATA_INTEGRITY', details: { plugin: 'story-linking' } });
+    await expect(startRun(factory, 'WEB-2', { worker: 'worker', retry: true })).rejects.toMatchObject({
+      code: 'DATA_INTEGRITY',
+    });
+    expect(await readFile(file)).toEqual(saved);
+    // An enabled provider that cannot load is an error, not an empty blocker list.
+    const unavailable = await withPlugins(t, [softwareFactory]);
+    await expect(runsOverview(unavailable.services.plugins.context('software-factory'), 'web')).rejects.toMatchObject({
+      code: 'USAGE',
+    });
+    // Disabled Plugin data remains intact and contributes no eligibility restriction.
+    await services.plugins.disable('story-linking');
+    const disabled = await withPlugins(t, [storyLinking, softwareFactory]);
+    expect(await runsOverview(disabled.services.plugins.context('software-factory'), 'web')).toMatchObject({
+      stories: expect.arrayContaining([
+        expect.objectContaining({ key: 'WEB-2', eligibility: { eligible: true, reasons: [] } }),
+      ]),
+    });
+    expect((await disabled.services.stories.get('WEB-1')).plugins?.['story-linking']).toEqual({
+      blocks: 'future shape',
+    });
+    expect(
+      (
+        await startRun(disabled.services.plugins.context('software-factory'), 'WEB-2', {
+          worker: 'worker',
+          retry: true,
+        })
+      ).stageRun.attempt,
+    ).toBe(3);
+  });
   it('Story Linking and Attachments mutations and repairs are atomic and preserve other Plugin Data', async () => {
     let refuse = true;
     const gate = definePlugin({

@@ -1,7 +1,8 @@
 import { definePlugin, parseStoryKey, ValidationError } from '../../plugin-api';
 import { commands } from './commands';
+import { guardFactoryStart } from './factoryGuard';
 import { applyCreateLinks, applyUpdateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
-import { LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
+import { BlocksFilter, LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
 import { reconcile } from './reconcile';
 
 export const storyLinking = definePlugin({
@@ -11,6 +12,8 @@ export const storyLinking = definePlugin({
   description: 'Blocking relationships between Stories on the same Board',
   bags: { story: LinksBag },
   commands,
+  storyFilterSchema: BlocksFilter,
+  filterStories: (story, filter, plugin) => (plugin.requireBag(story, LinksBag)?.blocks ?? []).includes(filter.blocks),
   inputs: { 'stories.create': LinksCreateInput, 'stories.update': LinksUpdateInput },
   options: {
     'stories create': {
@@ -35,6 +38,7 @@ export const storyLinking = definePlugin({
     },
   },
   hooks: {
+    'software-factory.start': { guard: ({ plugin, changes, result }) => guardFactoryStart(plugin, changes, result) },
     'stories.create': {
       transform: ({ changes, result, pluginInput, plugin }) => applyCreateLinks(changes, result, pluginInput, plugin),
     },
