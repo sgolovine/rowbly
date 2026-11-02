@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Create factory branches without tracking origin/main",
   "description": "Factory review recommendation 6 of 20.\n\n## Context\n\nA reviewed task branch tracked origin/main, creating a risk that an upstream-style push targets main.\n\n## Acceptance criteria\n\n- Create task branches from the intended base with tracking disabled.\n- Require the first push to set the upstream to the task branch.\n- Update worktree guidance and verify branch/upstream configuration on a representative worktree.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "Zo",
+  "stage": "in-pr",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.511Z",
-  "updatedAt": "2026-11-02T23:36:16.597Z",
+  "updatedAt": "2026-11-02T23:48:20.461Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:ecfed425-b4fe-4368-944e-91febfc6ee7c",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:33:25.608Z"
-      }
     },
     "comments": {
       "comments": [
@@ -35,6 +25,13 @@
           "body": "Supervisor accepted implementation plan. Plan accepted. Implement the listed worktrees.md guidance and the three minimal SKILL.md edits outside ROW-66 ownership. Leave ROWBLY.md and worker-brief unchanged; propose any additional wording in your final handoff. Capture one agentic-tui terminal PNG of representative before/after upstream checks (the invoked development skill requires screenshot evidence for every task). Upload via orphan pr-assets branch and verify URLs. No new tests needed for text-only guidance unless an existing HIGH/CRITICAL skill check requires updating. Run/report all four checks. Proceed.",
           "createdAt": "2026-11-02T23:36:16.596Z",
           "updatedAt": "2026-11-02T23:36:16.596Z"
+        },
+        {
+          "id": "Ba9vaJOQ",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/135. The rowbly-dev worktree guidance now creates task branches with git worktree add --no-track, checks that a new branch has no upstream, and makes the first push set the upstream to the task's own branch (git push -u origin HEAD:<destination>) with a check that it never names the parent. SKILL.md Baseline, the Implementation push step and Finalize step 2 say the same. The old behavior (a branch tracking origin/main) was reproduced and the fix was checked on the ROW-52 worktree: no upstream before the first push, origin/claude/row-52-untracked-branches after. typecheck, lint, test:unit (77) and test:cli (20) pass; the screenshot is in a PR comment.",
+          "createdAt": "2026-11-02T23:48:19.825Z",
+          "updatedAt": "2026-11-02T23:48:19.825Z"
         }
       ]
     }
