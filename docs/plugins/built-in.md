@@ -448,6 +448,7 @@ rowbly software-factory prompt disable <stage> [--board <id>] [--level board|glo
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-file <path|->] [--allow-incomplete]
 rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -465,6 +466,16 @@ setting, `source` is `board`, `global` or `null` (none), and `text` is the file'
 Board's Stages whose Stage Prompt is on, `stories` every Story in them, and `stageRun` the Story's
 Stage Run for its current visit or `null`. `run start`, `finish` and `fail` return
 `{ key, stageRun }`; `run clear` returns `{ cleared }`.
+
+`brief` prints the context part of a Worker's brief, the sections the `rowbly-factory` skill's
+worker brief template leaves to fill in: `## Story` (the Story's fields and description, then one
+`###` section per Plugin from its Story Context, [ADR-0044](../agents/adr/0044-plugins-give-story-context-sections.md),
+then the Plugins that are on and the Board's Stages), `## Stage Prompt: <name>`, `## How people work
+with this Board` (a placeholder: `brief` does not read `ROWBLY.md`, so the supervisor adds it),
+`## Other instructions` (`--instructions-file`, else `None.`) and `## Retry` (`--retry-file`, only
+when given). The same Board data and input give the same brief. `--json` returns
+`{ key, board, stage, attempt, complete, incomplete, sections, markdown }`, where `attempt` is the
+Stage Run's for this visit or `null`.
 
 **Rules**
 
@@ -486,6 +497,11 @@ Stage Run for its current visit or `null`. `run start`, `finish` and `fail` retu
   visit (`CONFLICT`, exit 4). `--retry` starts a failed one again as its next `attempt`. `by` is Me,
   or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
+- `brief` needs the Story's Stage to have a Stage Prompt that is on (`CONFLICT`, exit 4). When the
+  Story Context is incomplete (a Plugin that is enabled but did not load, or whose section failed or
+  is partial), or the Stage Run's `attempt` is above 1 and no `--retry-file` is given, it exits 4
+  with `details.incomplete`, a list of `{ plugin, reason }`. `--allow-incomplete` prints the brief
+  instead, with every gap under `## Incomplete context` at its top.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

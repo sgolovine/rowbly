@@ -39,10 +39,11 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0012](0012-plugins-intercept-service-operations.md) | Plugins intercept Service Layer operations through Change Sets | Accepted; amended by 0019 and 0020 |
 | [0013](0013-plugin-files-live-beside-what-they-belong-to.md) | Plugin files live in a `plugins/<id>/` folder beside what they belong to | Accepted; amended by 0022 |
 | [0017](0017-actions-are-tui-only.md) | Actions are TUI only | Accepted; amended by 0022 and 0035 |
-| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022 |
+| [0020](0020-plugin-execution-and-data-contracts.md) | Plugin execution, data preservation and error contracts | Accepted; amended by 0022, extended by 0044 |
 | [0021](0021-plugin-format-and-compatibility-policy.md) | Plugins own their data formats; compatibility is a policy, not an engine | Accepted |
 | [0028](0028-plugin-badges-can-load-from-files.md) | Plugin badges can load what they show from the Plugin's files | Accepted |
 | [0029](0029-plugin-sidebars-filter-the-board.md) | A Plugin can add a Plugin Sidebar that filters the board | Accepted |
+| [0044](0044-plugins-give-story-context-sections.md) | Plugins give Story Context sections that a Plugin command can read | Accepted |
 
 ### Built-in Plugins
 

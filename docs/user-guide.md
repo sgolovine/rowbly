@@ -451,6 +451,7 @@ rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-file <path|->] [--allow-incomplete]
 ```
 
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
@@ -472,6 +473,14 @@ rowbly software-factory run clear <story>
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
 - `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- `brief` prints what an agent needs to work the Story in its Stage, as Markdown: the Story with
+  everything each Plugin that is on keeps about it (Specs, Tasks, Comments, Epic, Story links,
+  Attachments, Assignees), the Stage Prompt, the Board's Stages, and the text of
+  `--instructions-file` and `--retry-file`. It leaves a placeholder for `ROWBLY.md`, which it does
+  not read. It exits 4 (`CONFLICT`) when the Stage has no Stage Prompt that is on, and when part of
+  the Story cannot be read (a Plugin that did not load, invalid Plugin Data) or a retry has no
+  `--retry-file`, with each gap in `details.incomplete`; `--allow-incomplete` prints it anyway, with
+  the gaps listed at the top. `--json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
 

@@ -96,6 +96,10 @@ _Avoid_: first-party plugin, official plugin, core plugin
 The values a Plugin keeps under its own name on the Data Root, a Board or a Story, or in Local State; Rowbly keeps them unchanged while that Plugin is off.
 _Avoid_: custom data, extension data
 
+**Story Context**:
+A Story with the section each Plugin that is on gives about it, in full, and the list of Plugins whose section is missing or partial.
+_Avoid_: story dump, story export
+
 **Action**:
 A key, with a matching button, that a Plugin adds to the TUI wherever the Board or Story it acts on is in focus; an Action that acts on no particular record shows on every screen.
 _Avoid_: button, shortcut, hotkey
