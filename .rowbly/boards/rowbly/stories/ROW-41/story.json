@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Remove \"filter\" feature",
   "description": "Remove the filter feature entirely",
-  "stage": "todo",
+  "stage": "in-progress",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T21:58:46.322Z",
-  "updatedAt": "2026-11-02T22:04:03.808Z",
+  "updatedAt": "2026-11-02T22:07:50.496Z",
   "plugins": {
     "story-linking": {
       "blocks": [
