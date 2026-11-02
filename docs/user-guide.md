@@ -781,7 +781,8 @@ Epics, Assignee handles, outgoing Story Links and attachment names from enabled 
 case-insensitive: exact and contiguous matches rank before fuzzy subsequence matches (for example,
 `kbd` matches `Keyboard`). Space-separated terms may match different fields. Use `↑`/`↓` then
 `enter`, or click a result, to close the finder and open its Story. `esc` closes without navigating.
-The finder loads current data each time it opens; unavailable Plugin content is skipped.
+Use the mouse wheel over the results to move through longer lists. The finder loads current data
+each time it opens; unavailable Plugin content is skipped.
 
 Search covers the current Board by default, independently of Board filters. Turn on **Find Stories
 in full Data Root** in Settings › Global › Preferences to search every Board. Results then show

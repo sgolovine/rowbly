@@ -117,7 +117,8 @@ symbolic links in the managed path, including harness folders and a custom refer
 
 ## Find Stories
 
-`ctrl+p` or the input-like header control opens a fuzzy finder on main screens. Type a query;
+`ctrl+p` or the input-like header control opens a fuzzy finder on main screens. Use the mouse wheel
+over the results to move through longer lists. Type a query;
 `↑`/`↓` selects, `enter` or a click opens the Story, and `esc` closes. Search matches Story fields
 and related Comments, Tasks, Specs, Epics, Assignee handles, outgoing Story Links and attachment
 names from enabled Plugins. It ignores case, ranks exact/contiguous matches ahead of subsequences,

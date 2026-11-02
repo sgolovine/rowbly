@@ -1,10 +1,10 @@
 import { homedir } from 'node:os';
-import { Box, Text, useInput } from 'ink';
-import { useMemo, useState } from 'react';
+import { Box, type DOMElement, Text, useInput } from 'ink';
+import { useMemo, useRef, useState } from 'react';
 import type { Story } from '../../schemas';
 import { readStoryFinderAllBoards } from '../../services';
 import { Loading, Modal, modalSize, SelectListRow, TextInput } from '../components';
-import { useAsync, useLayout, usePlugins, useRowblyContext, useServices } from '../hooks';
+import { useAsync, useLayout, useMouse, usePlugins, useRowblyContext, useServices, WHEEL_LINES } from '../hooks';
 import { theme } from '../theme';
 import { findStories, loadStorySearch } from './storySearch';
 
@@ -25,6 +25,7 @@ export function StoryFinder({
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
   const [opening, setOpening] = useState(false);
+  const resultList = useRef<DOMElement>(null);
   const index = useAsync(async () => {
     const allBoards = await readStoryFinderAllBoards(ctx?.home ?? homedir());
     const entries =
@@ -35,6 +36,14 @@ export function StoryFinder({
   const selected = Math.min(cursor, Math.max(0, results.length - 1));
   const limit = Math.max(1, Math.min(10, (body.height ?? 18) - 7));
   const start = Math.max(0, Math.min(selected - Math.floor(limit / 2), results.length - limit));
+  useMouse(
+    resultList,
+    {
+      onWheel: (direction) =>
+        setCursor((current) => Math.max(0, Math.min(results.length - 1, current + direction * WHEEL_LINES))),
+    },
+    !opening && results.length > 0,
+  );
   const pick = async (story: Story) => {
     if (opening) return;
     setOpening(true);
@@ -88,7 +97,7 @@ export function StoryFinder({
               : 'No matching Stories.'}
           </Text>
         )}
-        <Box flexDirection="column">
+        <Box ref={resultList} flexDirection="column">
           {results.slice(start, start + limit).map((entry, i) => (
             <SelectListRow
               key={entry.story.key}
