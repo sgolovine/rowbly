@@ -1,11 +1,14 @@
 import { homedir } from 'node:os';
 import type { RowblyContext, Services } from '../services';
-import { readHomeConfig } from '../storage';
+import { listKnownDataRoots, readHomeConfig } from '../storage';
 import type { Route } from './router';
 
-/** Global onboarding precedes shared Data Root onboarding; callers resolve missing paths first. */
+/** Choose a known Data Root before onboarding; global onboarding precedes Data Root onboarding. */
 export async function onboardingRoute(ctx: RowblyContext | null, services: Services | null): Promise<Route> {
   const home = ctx?.home ?? homedir();
+  if (!ctx && (await listKnownDataRoots(home)).length > 0) {
+    return { screen: 'data-roots', params: { title: 'Choose a Data Root' } };
+  }
   if (!(await readHomeConfig(home)).onboardingComplete) {
     return { screen: 'onboarding', params: { level: 'global', home, title: 'Welcome to Rowbly' } };
   }

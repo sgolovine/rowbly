@@ -22,7 +22,7 @@ rowbly init --board web --board-name Website --prefix WEB --json --no-prompt
   current directory; it asks only in an interactive terminal.
 - `init` records the Data Root in `~/.rowblyrc.json`. `--label <label>` names it there, and the TUI
   shows that label in its header and its Data Root switcher. `--default`
-  makes it the default Data Root, which every directory then opens ahead of its own `.rowbly/`, and
+  makes it the default Data Root for commands, ahead of the current directory’s `.rowbly/`, and
   unmarks any other default. Pass `--default` only when the user asks for it. Without it, a warning
   says when another default Data Root is opened ahead of the new one; tell the user, and pass
   `--data-root <path>` to work in the new one.
