@@ -3,6 +3,9 @@ import { StoryKeySchema, z } from '../../plugin-api';
 /** Each relationship lives once, on the Story that blocks; incoming links are derived. */
 export const LinksBag = z.strictObject({ blocks: z.array(StoryKeySchema) });
 
+/** Public query: Stories whose outgoing links include this Story Key. */
+export const BlocksFilter = z.strictObject({ blocks: StoryKeySchema });
+
 export const LinksCreateInput = z.object({
   blocks: z.array(StoryKeySchema).optional(),
   blockedBy: z.array(StoryKeySchema).optional(),
