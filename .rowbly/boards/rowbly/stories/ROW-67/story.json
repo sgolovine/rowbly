@@ -4,24 +4,35 @@
   "boardId": "rowbly",
   "name": "Scrolling up/down with the mouse wheel in a column should scroll stories",
   "description": "If I am in a column and I use my mouse wheel, I should be able to scroll stories up and down.",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:16:01.265Z",
-  "updatedAt": "2026-11-02T23:17:05.276Z",
+  "updatedAt": "2026-11-02T23:22:01.762Z",
   "plugins": {
+    "comments": {
+      "comments": [
+        {
+          "id": "hGb7d9kD",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/130 — Scrolling the mouse wheel over a Stage column on the Board scrolls its Stories one at a time. In the column with the highlighted Story, the highlight moves along so it stays on screen. Other columns keep the position the wheel left them at, and the wheel does nothing while a Story is dragged. Checked in the built TUI with agentic-tui (screenshots in the PR); the user guide and the rowbly skill's TUI reference describe it. pnpm typecheck, lint, test:unit (77) and test:cli (20) all pass.",
+          "createdAt": "2026-11-02T23:21:47.162Z",
+          "updatedAt": "2026-11-02T23:21:47.162Z"
+        }
+      ]
+    },
     "software-factory": {
       "stageRun": {
-        "stage": "in-progress",
+        "stage": "in-pr",
         "status": "running",
         "attempt": 1,
         "worker": "mcp:c120a89d-4f53-4ec3-96b9-efd04250239c",
         "by": "sunny",
-        "startedAt": "2026-11-02T23:17:05.276Z"
+        "startedAt": "2026-11-02T23:22:01.761Z"
       }
     }
   }
