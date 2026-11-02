@@ -543,11 +543,11 @@ A transform can write Plugin files on a Story created by the current operation i
 
 ## Story create tabs
 
-`tui.storyCreateTabs` contributes `{ label, component, input(draft) }` entries separately from saved `storyTabs`. New Story shows Details, then enabled Plugins' create tabs in registry order. Details holds core fields, Custom Fields and `storyForm` fields of Plugins without create tabs. A Plugin with a create tab has its `storyForm` fields moved into that tab; `ctrl+g` switches focus between those fields and the draft component. Edit stays flat.
+`tui.storyCreateTabs` contributes `{ label, component, input(draft) }` entries separately from saved `storyTabs`. New Story shows Details, then enabled Plugins' create tabs in registry order. Details holds core fields, Custom Fields and `storyForm` fields of Plugins without create tabs. A Plugin with a create tab has its `storyForm` fields moved into that tab; `ctrl+g` switches focus between those fields and the draft component. Edit uses the same window, showing tabs that opt in with `edit: { load, input }`. `edit.load({ story, plugin })` reads the initial draft before the window opens; a failed load makes that tab unavailable and keeps its stored data. `edit.input(draft)` converts changed drafts to `stories.update` input. Create-only contributions remain on New Story; their `storyForm` fields stay on Details during editing.
 
-`PluginStoryCreateTabProps` supplies `draft`, `onChange`, `boardId`, `active`, `plugin` and `ui`. Drafts start as `undefined`; the host owns them and keeps them mounted across tab switches. Components change drafts through `onChange`, respect `active`, and never save or run operations. They may read choices through `plugin.services`. Throw an asynchronous load error during render to show the failure in `PluginSlot`; a failed tab contributes no input, including relocated fields, and the Story can still save.
+`PluginStoryCreateTabProps` supplies `draft`, `onChange`, `boardId`, optional `story` (editing), `active`, `plugin` and `ui`. Create drafts start as `undefined`; edit drafts start from `edit.load`; the host owns them and keeps them mounted across tab switches. Components change drafts through `onChange`, respect `active`, and never save or run operations. They may read choices through `plugin.services`. Throw an asynchronous load error during render to show the failure in `PluginSlot`; a failed tab contributes no input, including relocated fields, and the Story can still save.
 
-The host calls synchronous, attributed `input(draft)` only for changed drafts. It returns `plugins.<id>` input, or `undefined` to contribute nothing. If both `storyForm` and create tabs return objects, their keys are combined, with tab keys taking precedence. A Plugin with several create tabs should return disjoint object keys. Untouched fields and tabs add no input. `stories.create` parses the complete Plugin input and runs its transforms and guards before one commit; components must not follow creation with separate operations.
+The host calls synchronous, attributed `input(draft)` only for changed drafts. It returns `plugins.<id>` input, or `undefined` to contribute nothing. If both `storyForm` and create tabs return objects, their keys are combined, with tab keys taking precedence. A Plugin with several create tabs should return disjoint object keys. Untouched fields and tabs add no input. `stories.create` and `stories.update` parse the complete Plugin input and run their transforms and guards before one commit; components must not follow saving with separate operations.
 
 Tab switches tabs everywhere. Field editors retain their left/right arrows; left/right switch tabs from draft lists or after the last field. Up/down and Enter move through fields. The host owns `ctrl+s`/`ctrl+enter` for all tabs, including while a draft editor is open. Enter after the final Details field saves; Enter in a draft editor keeps that draft locally. A Plugin input error selects its tab and keeps every draft. Esc uses the host's discard confirmation for changed fields or drafts.
 
@@ -575,6 +575,14 @@ export const createNotesTui: PluginTui = {
     {
       label: 'Notes',
       component: CreateNotes,
+      edit: {
+        async load({ story, plugin }) {
+          return { note: (await plugin.files.read({ story: story.key }, 'note.md')) ?? '' };
+        },
+        input(draft) {
+          return Draft.parse(draft);
+        },
+      },
       input(draft) {
         const { note } = Draft.parse(draft);
         return note ? { note } : undefined;

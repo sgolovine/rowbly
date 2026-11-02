@@ -1,6 +1,7 @@
 import { Box, type DOMElement, Text, useBoxMetrics, useInput } from 'ink';
 import { useMemo, useRef, useState } from 'react';
 import { errorMessage, RowblyError } from '../../../core';
+import type { Story } from '../../../schemas';
 import { invokePluginSync, type PluginInput } from '../../../services';
 import {
   Form,
@@ -20,9 +21,12 @@ import { theme } from '../../theme';
 import { PluginFailures } from './PluginFailures';
 import { mergePluginInput, onPluginFields, type PluginFieldSet } from './pluginFields';
 
-/** Host-owned create drafts. Saved Story tabs and the flat edit form have separate lifecycles. */
-export function StoryCreateForm({
+/** Host-owned drafts for the shared Story creation and editing window. */
+export function StoryEditorForm({
   boardId,
+  story,
+  initialDrafts,
+  draftErrors,
   fields,
   initialValues,
   extra,
@@ -31,6 +35,9 @@ export function StoryCreateForm({
   extraHints,
   pendingSummary,
 }: {
+  story?: Story;
+  initialDrafts: Record<string, unknown>;
+  draftErrors: Record<string, string>;
   pendingSummary?: { label: string; value: string };
   isActive?: boolean;
   extraHints: readonly KeyHint[];
@@ -47,8 +54,8 @@ export function StoryCreateForm({
   const active = isActive && !covered && enabled;
   const [tab, setTab] = useState(0);
   const [values, setValues] = useState(initialValues);
-  const [drafts, setDrafts] = useState<Record<string, unknown>>({});
-  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set());
+  const [drafts, setDrafts] = useState(initialDrafts);
+  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set(Object.keys(draftErrors)));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [request, setRequest] = useState(0);
   const [draftFocus, setDraftFocus] = useState(false);
@@ -70,11 +77,17 @@ export function StoryCreateForm({
     [extraHints],
   );
   const tabs = plugins.flatMap((p) =>
-    (p.tui.storyCreateTabs ?? []).map((contribution, i) => ({
-      ...contribution,
-      id: `${p.id}:${i}`,
-      pluginId: p.id,
-    })),
+    (p.tui.storyCreateTabs ?? []).flatMap((contribution, i) =>
+      story && !contribution.edit
+        ? []
+        : [
+            {
+              ...contribution,
+              id: `${p.id}:${i}`,
+              pluginId: p.id,
+            },
+          ],
+    ),
   );
   const selectedTab = tabs[tab - 1];
   const tabError = selectedTab ? errors[selectedTab.id] : undefined;
@@ -86,7 +99,7 @@ export function StoryCreateForm({
   useDirty(
     [...fields, ...extra.fields].some(
       (f) => !sameFormValue(normalizeFormValue(f, values[f.name]), normalizeFormValue(f, initialValues[f.name])),
-    ) || Object.values(drafts).some((draft) => draft !== undefined),
+    ) || Object.entries(drafts).some(([id, draft]) => JSON.stringify(draft) !== JSON.stringify(initialDrafts[id])),
   );
   useKeyHints([
     { key: 'shift+tab', description: 'next tab' },
@@ -112,9 +125,15 @@ export function StoryCreateForm({
     try {
       let input: PluginInput = {};
       for (const t of tabs) {
-        if (failed.has(t.id) || !Object.hasOwn(drafts, t.id) || drafts[t.id] === undefined) continue;
-        const converted = invokePluginSync({ plugin: t.pluginId, stage: 'field', operation: 'stories.create' }, () =>
-          t.input(drafts[t.id]),
+        if (
+          failed.has(t.id) ||
+          drafts[t.id] === undefined ||
+          JSON.stringify(drafts[t.id]) === JSON.stringify(initialDrafts[t.id])
+        )
+          continue;
+        const converted = invokePluginSync(
+          { plugin: t.pluginId, stage: 'field', operation: story ? 'stories.update' : 'stories.create' },
+          () => (story ? t.edit?.input(drafts[t.id]) : t.input(drafts[t.id])),
         );
         if (converted !== undefined) input = mergePluginInput(input, { [t.pluginId]: converted }) ?? input;
       }
@@ -150,7 +169,7 @@ export function StoryCreateForm({
           paddingBottom={1}
           gap={1}
         >
-          <Text bold>New Story on {boardId}</Text>
+          <Text bold>{story ? `Edit ${story.key}` : `New Story on ${boardId}`}</Text>
           <Tabs
             tabs={['Details', ...tabs.map((t) => t.label)]}
             selected={tab}
@@ -187,32 +206,37 @@ export function StoryCreateForm({
             return (
               <Box key={t.id} display={tab === i + 1 ? 'flex' : 'none'} flexDirection="column" gap={1}>
                 {ownFields.length > 0 && <Text color={theme.inkFaint}>ctrl+g switch between fields and drafts</Text>}
-                <PluginSlot
-                  pluginId={t.pluginId}
-                  onFailure={() => setFailed((prev) => new Set([...prev, t.id]))}
-                  render={(plugin, ui) => (
-                    <>
-                      {ownFields.length > 0 && (
-                        <Form
-                          fields={ownFields}
-                          initialValues={initialValues}
-                          values={values}
-                          onChange={setValues}
-                          isActive={active && tab === i + 1 && !busy && !draftFocus}
-                          onSubmit={() => setDraftFocus(true)}
+                {draftErrors[t.id] ? (
+                  <Text color={theme.danger}>! {draftErrors[t.id]} · stored data kept</Text>
+                ) : (
+                  <PluginSlot
+                    pluginId={t.pluginId}
+                    onFailure={() => setFailed((prev) => new Set([...prev, t.id]))}
+                    render={(plugin, ui) => (
+                      <>
+                        {ownFields.length > 0 && (
+                          <Form
+                            fields={ownFields}
+                            initialValues={initialValues}
+                            values={values}
+                            onChange={setValues}
+                            isActive={active && tab === i + 1 && !busy && !draftFocus}
+                            onSubmit={() => setDraftFocus(true)}
+                          />
+                        )}
+                        <Component
+                          boardId={boardId}
+                          story={story}
+                          active={active && tab === i + 1 && !busy && (ownFields.length === 0 || draftFocus)}
+                          plugin={plugin}
+                          ui={ui}
+                          draft={drafts[t.id]}
+                          onChange={(draft) => setDrafts((prev) => ({ ...prev, [t.id]: draft }))}
                         />
-                      )}
-                      <Component
-                        boardId={boardId}
-                        active={active && tab === i + 1 && !busy && (ownFields.length === 0 || draftFocus)}
-                        plugin={plugin}
-                        ui={ui}
-                        draft={drafts[t.id]}
-                        onChange={(draft) => setDrafts((prev) => ({ ...prev, [t.id]: draft }))}
-                      />
-                    </>
-                  )}
-                />
+                      </>
+                    )}
+                  />
+                )}
               </Box>
             );
           })}

@@ -22,6 +22,14 @@ export const createNotesTui: PluginTui = {
     {
       label: 'Notes',
       component: CreateNotes,
+      edit: {
+        async load({ story, plugin }) {
+          return { note: (await plugin.files.read({ story: story.key }, 'note.md')) ?? '' };
+        },
+        input(draft) {
+          return Draft.parse(draft);
+        },
+      },
       input(draft) {
         const { note } = Draft.parse(draft);
         return note ? { note } : undefined;

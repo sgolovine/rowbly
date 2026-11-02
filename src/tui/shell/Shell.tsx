@@ -396,15 +396,18 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                           {router.stack.slice(1).map((route, i) => {
                             const routeDepth = i + 1;
                             const screen =
-                              route.screen === 'story' ||
-                              route.screen === 'settings' ||
-                              (route.screen === 'story-form' && !route.params.key);
+                              route.screen === 'story' || route.screen === 'settings' || route.screen === 'story-form';
                             const visible =
                               routeDepth === depth ||
                               (screen &&
                                 !router.stack
                                   .slice(routeDepth + 1)
-                                  .some((next) => next.screen === 'story' || next.screen === 'settings'));
+                                  .some(
+                                    (next) =>
+                                      next.screen === 'story' ||
+                                      next.screen === 'settings' ||
+                                      next.screen === 'story-form',
+                                  ));
                             const focused = routeDepth === depth && overlay === null;
                             // A context menu over the top modal keeps its hints, so the modal keeps its
                             // width and the row the menu acts on stays where it was clicked.
