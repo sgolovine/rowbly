@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.511Z",
-  "updatedAt": "2026-11-02T23:48:20.461Z",
+  "updatedAt": "2026-11-02T23:51:51.774Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -34,6 +34,16 @@
           "updatedAt": "2026-11-02T23:48:19.825Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:bc7a8beb-6e1e-48dd-9ba9-cc56737f1f2b",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:51:51.773Z"
+      }
     }
   }
 }
