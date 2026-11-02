@@ -52,6 +52,14 @@ describe('transform (ADR-0012)', () => {
       ghost: { kept: true },
       'story-linking': { blocks: [created.key] },
     });
+    // Seed fields an older schema cannot interpret; editing known fields must retain them.
+    const storyPath = join(t.path, `boards/web/stories/${created.key}/story.json`);
+    const raw = JSON.parse(await readFile(storyPath, 'utf8'));
+    raw.plugins.tasks.extraMetadata = { source: 'import' };
+    raw.plugins.tasks.tasks[0].provenance = { source: 'original' };
+    raw.plugins.tasks.tasks[1].provenance = { source: 'removed' };
+    raw.plugins.specs = { specs: ['board-guide'], extraMetadata: { source: 'specs' } };
+    await writeFile(storyPath, JSON.stringify(raw));
     const before = await services.stories.list('web', {});
     const boardBefore = await services.boards.get('web');
     // A later transform fails after Tasks and Spec files were staged.
@@ -82,8 +90,14 @@ describe('transform (ADR-0012)', () => {
     const patch = {
       name: 'Edited together',
       plugins: {
-        tasks: { tasks: [{ ...savedTasks[0], name: 'Renamed' }, { name: 'New Task' }] },
+        tasks: {
+          tasks: [
+            { ...savedTasks[0], name: 'Renamed', createdAt: 'spoofed', provenance: { source: 'spoofed' } },
+            { name: 'New Task', number: undefined, createdAt: 'spoofed' },
+          ],
+        },
         specs: {
+          specs: [],
           storySpecs: [
             { slug: 'design', text: '# Revised' },
             { slug: 'new-spec', text: 'New' },
@@ -110,7 +124,14 @@ describe('transform (ADR-0012)', () => {
       { number: 1, name: 'Renamed', createdAt: savedTasks[0]?.createdAt },
       { number: 3, name: 'New Task' },
     ]);
-    expect(edited.plugins?.tasks).toMatchObject({ nextNumber: 4 });
+    expect(edited.plugins?.tasks).toMatchObject({
+      nextNumber: 4,
+      extraMetadata: { source: 'import' },
+      tasks: [{ provenance: { source: 'original' } }, { number: 3 }],
+    });
+    expect(editedTasks).toHaveLength(2);
+    expect(editedTasks[1]?.createdAt).not.toBe('spoofed');
+    expect(edited.plugins?.specs).toEqual({ specs: [], extraMetadata: { source: 'specs' } });
     expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Revised');
     expect(await pathExists(specPath(created.key, 'checks'))).toBe(false);
     expect(await readFile(specPath(created.key, 'new-spec'), 'utf8')).toBe('# new-spec\n\nNew');

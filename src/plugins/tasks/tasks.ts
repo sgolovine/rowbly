@@ -179,10 +179,22 @@ export async function updateTasks(
   update: (bag: TasksBag) => TasksBag,
 ): Promise<void> {
   const updatedAt = toTimestamp(plugin.now());
-  await changes.updateStory(key, (story) => ({
-    ...plugin.writeBag(story, update(requireTasks(plugin, story))),
-    updatedAt,
-  }));
+  await changes.updateStory(key, (story) => {
+    const next = update(requireTasks(plugin, story));
+    // Validation above checks the shape; merge raw fields only for Tasks that remain.
+    const raw = story.plugins?.[plugin.id] as TasksBag | undefined;
+    return {
+      ...plugin.writeBag(story, {
+        ...raw,
+        ...next,
+        tasks: next.tasks.map((task) => ({
+          ...raw?.tasks.find((before) => before.number === task.number),
+          ...task,
+        })),
+      }),
+      updatedAt,
+    };
+  });
 }
 
 /**

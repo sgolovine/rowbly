@@ -263,7 +263,9 @@ function storedSpecs(plugin: PluginReadContext, story: Bagged): string[] {
 }
 
 export function setSpecs(plugin: PluginReadContext, story: Story, specs: string[]): Story {
-  return plugin.writeBag(story, specs.length ? { specs: [...new Set(specs)] } : undefined);
+  const { specs: _specs, ...extra } = story.plugins?.[plugin.id] ?? {};
+  const bag = specs.length || Object.keys(extra).length ? { ...extra, specs: [...new Set(specs)] } : undefined;
+  return plugin.writeBag(story, bag);
 }
 
 /**
