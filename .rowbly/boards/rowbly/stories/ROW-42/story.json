@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-42",
+  "boardId": "rowbly",
+  "name": "Add fuzzy finding for stories",
+  "description": "",
+  "stage": "todo",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T22:00:03.727Z",
+  "updatedAt": "2026-11-02T22:00:03.733Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aoXbGgF3E",
+          "name": "image-20261102-2159.png",
+          "type": "image/png",
+          "size": 30524,
+          "createdAt": "2026-11-02T22:00:03.732Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
