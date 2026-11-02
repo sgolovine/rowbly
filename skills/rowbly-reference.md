@@ -10,6 +10,7 @@ your skill's `references/` folder and point at it from your `SKILL.md`, for exam
 Rowbly is a Kanban tracker that stores its data as JSON and Markdown files in a `.rowbly/` folder (the
 **Data Root**), usually committed with the code. `rowbly <noun> <verb> …` runs one command and exits.
 Bare `rowbly` opens a full-screen TUI for people; **agents never run it**.
+TUI Story finder: `ctrl+p` on main screens or header 🔎; type fuzzy query, ↑/↓ select, Enter/click open, Esc close. Current Board by default; Preferences → Find Stories in full Data Root searches all Boards (`storyFinderAllBoards` in Home Config). Searches Story fields and enabled Plugin related text/attachment names. Forms/modals keep their keys.
 TUI Attachments tab: n new PNG by file path, o open, d remove (confirmation); Story/card count badge.
 TUI Story/new/edit image paste: `ctrl+v`, `alt+v`, `ctrl+alt+v` or empty bracketed paste; requires a Plugin claimant. Forms stage until save; cancellation writes nothing. Nonempty paste stays text.
 

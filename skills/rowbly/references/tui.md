@@ -31,6 +31,7 @@ place or what they typed in a form.
 | `esc` | back, or cancel the open form |
 | `D` | switch Data Root (or click its name at the left of the header); in the switcher `e` edits a Data Root's label and default, and `d` forgets it (the folder stays) or deletes its folder, asking first |
 | `,` | settings: Boards, Stages, Fields, Me, Preferences, Doctor, Plugins, Config, and Plugin sections such as Assignees and Git |
+| `ctrl+p` | find Stories from main screens (or click **🔎 Find Stories** after the Data Root); forms and modals keep their keys |
 | `ctrl+b` | hide or show the Board sidebar. With the sidebar focused (click it), `n` new Board, `e` edit and `d` delete the selected Board; a right click on a Board opens a menu with Edit and Delete for it |
 | `\` | show the next Plugin Sidebar (such as Epics), or none |
 | `{`/`}` | previous / next entry of the Plugin Sidebar |
@@ -117,3 +118,16 @@ an official skill, or refreshes only `references/rowbly-reference.md` for a cust
 `n`, `esc`, or Enter on the default Cancel button cancels without writing. Only official installations
 and custom folders holding `SKILL.md` and the Rowbly reference are managed. Update/delete reject
 symbolic links in the managed path, including harness folders and a custom reference path.
+
+## Find Stories
+
+`ctrl+p` or the input-like header control opens a fuzzy finder on main screens. Use the mouse wheel
+over the results to move through longer lists. Type a query;
+`↑`/`↓` selects, `enter` or a click opens the Story, and `esc` closes. Search matches Story fields
+and related Comments, Tasks, Specs, Epics, Assignee handles, outgoing Story Links and attachment
+names from enabled Plugins. It ignores case, ranks exact/contiguous matches ahead of subsequences,
+and lets space-separated terms match different fields. Missing Plugin content is skipped.
+The current Board is the default scope, independent of Board filters. Settings › Global ›
+Preferences › **Find Stories in full Data Root** searches every Board and shows Board names;
+opening a result selects its Board. This off-by-default preference is `storyFinderAllBoards`
+in `~/.rowblyrc.json`. A form or modal keeps its keys and never opens the finder.
