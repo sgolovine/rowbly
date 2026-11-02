@@ -447,6 +447,7 @@ rowbly software-factory prompt disable <stage> [--board <id>] [--level board|glo
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -471,7 +472,15 @@ rowbly software-factory run clear <story>
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }], digest }`.
+  `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
+- `wait` blocks until `runs` differs from `--since <digest>` (without it, from `runs` when the wait
+  starts), then prints `runs` with `changed: true`. That happens when a Story enters or leaves a
+  Stage whose Stage Prompt is on, a Stage Prompt is turned on or off, or a Stage Run starts, ends or
+  is cleared; Comments and other edits do not count. It watches the Data Root for changes by any
+  process, and checks once at the start, so a change made before it began is not missed. With
+  `--timeout`, it stops after that many seconds and prints `runs` with `changed: false`; exit 0 either
+  way. `ctrl+c` (or `SIGTERM`) stops it with nothing changed (exit 130 or 143).
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
 

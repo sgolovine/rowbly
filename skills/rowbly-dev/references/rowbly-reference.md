@@ -281,7 +281,8 @@ included), off by default, set globally or per Board; a Board's entry for a Stag
 rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
 rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
-rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null}]}
+rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null}], digest}
+rowbly software-factory wait --board web --since <digest> [--timeout <s>] --json --no-prompt   # blocks until runs differ; runs + changed
 rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-prompt   # {key, stageRun}; exit 4 if one exists
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
