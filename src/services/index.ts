@@ -65,7 +65,12 @@ export {
 } from './plugins/trace';
 export type * from './plugins/types';
 export { CORE_OPERATION_NAMES, PLUGIN_OPTION_COMMANDS } from './plugins/types';
-export { readOpenStoryAfterCreation, setOpenStoryAfterCreation } from './preferences';
+export {
+  readOpenStoryAfterCreation,
+  readStoryFinderAllBoards,
+  setOpenStoryAfterCreation,
+  setStoryFinderAllBoards,
+} from './preferences';
 export {
   type CreateSkillInput,
   createSkill,

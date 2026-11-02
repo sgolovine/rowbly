@@ -27,5 +27,7 @@ export const HomeConfigSchema = z.looseObject({
   dataRoots: z.array(KnownDataRootSchema).optional(),
   /** Whether the TUI opens a Story it has just created; missing means off. */
   openStoryAfterCreation: z.boolean().optional(),
+  /** Whether the Story finder searches every Board; missing means current Board only. */
+  storyFinderAllBoards: z.boolean().optional(),
 });
 export type HomeConfig = z.infer<typeof HomeConfigSchema>;
