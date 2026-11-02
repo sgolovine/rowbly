@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-41",
+  "boardId": "rowbly",
+  "name": "Remove \"filter\" feature",
+  "description": "Remove the filter feature entirely",
+  "stage": "todo",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T21:58:46.322Z",
+  "updatedAt": "2026-11-02T21:58:46.322Z"
+}
