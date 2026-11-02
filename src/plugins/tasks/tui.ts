@@ -6,6 +6,8 @@ import { TasksTab } from './TasksTab';
 import { doneCount, storedTasks } from './tasks';
 
 export const tui: PluginTui<Record<string, unknown>> = {
+  storySearchText: ({ story, plugin }) =>
+    (storedTasks(plugin, story) ?? []).flatMap((task) => Object.values(task).map(String)),
   screens: { task: TaskScreen, form: TaskFormScreen },
   storyCreateTabs: [{ label: 'Tasks', component: TasksCreateTab, input: (draft) => ({ tasks: draft }) }],
   storyTabs: [{ label: 'Tasks', component: TasksTab }],

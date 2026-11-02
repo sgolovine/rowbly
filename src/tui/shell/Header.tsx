@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { Button, Panel } from '../components';
 import { type BoardView, type HeaderLabel, ServicesContext } from '../hooks';
 import { theme } from '../theme';
+import { StoryFinderButton } from './StoryFinderButton';
 import { ViewSwitch } from './ViewSwitch';
 
 /** The longest Data Root name the header shows; a longer one is cut with `…`. */
@@ -19,6 +20,7 @@ export interface HeaderAction {
 
 export function Header({
   root,
+  finder,
   label,
   onNewStory,
   newStoryKey = true,
@@ -31,6 +33,7 @@ export function Header({
 }: {
   /** The far-left Button naming the Data Root that is open; it opens the Data Root switcher, like `D`. */
   root: { name: string; onClick(): void; clickable: boolean };
+  finder?: { onClick(): void; clickable: boolean };
   label: HeaderLabel | null;
   onNewStory?: () => void;
   /** Whether `n` makes a new Story: not while a sidebar has focus, where it creates there. */
@@ -54,7 +57,8 @@ export function Header({
   const rootName = root.name.length > ROOT_NAME_MAX ? `${root.name.slice(0, ROOT_NAME_MAX - 1)}…` : root.name;
   // The panel's border and padding, the gap after the label, the label itself (it may be cut) and the
   // Data Root Button with its `|`, whose key goes with the other Buttons' keys.
-  const room = columns - 6 - Math.min(labelText.length, 30) - buttonWidth(rootName) - 3;
+  const room =
+    columns - 6 - Math.min(labelText.length, 30) - buttonWidth(rootName) - 3 - (finder ? (columns >= 110 ? 31 : 7) : 0);
   const { showKeys, showMe, showExtras, showSettings, showSwitch } = headerFit(room, {
     me: me.length,
     extras: [...sidebars.map((s) => ({ label: s.label, key: '\\' })), ...actions],
@@ -75,6 +79,7 @@ export function Header({
         />
         <Text color={theme.borderControl}>|</Text>
       </Box>
+      {finder && <StoryFinderButton compact={columns < 110} {...finder} />}
       <Box flexGrow={1} flexShrink={1} minWidth={8}>
         {labelText && (
           <Text color={theme.inkMuted} wrap="truncate-end">

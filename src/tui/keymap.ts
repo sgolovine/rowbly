@@ -34,8 +34,9 @@ export const GLOBAL_KEYS: readonly KeyHint[] = [
 export const CORE_KEYS: readonly string[] = [
   // The shell: help, settings, quit, previous/next Board and Boards 1–9 in the sidebar, and the
   // Plugin Sidebars: show the next one, previous/next entry. `n` in a focused sidebar is below.
+  // `p` reserves the main-screen Story finder (ctrl+p).
   // `b` is the shell's `ctrl+b`, which hides and shows the Board sidebar; `D` switches the Data Root.
-  ...'?,q[]123456789\\{}bD',
+  ...'?,q[]123456789\\{}bDp',
   // Moving, as alternatives to the arrow keys: j/k up and down, h/l left and right; with shift
   // (like shift+arrows), moving a Story or a list entry.
   ...'jkhlJKHL',
