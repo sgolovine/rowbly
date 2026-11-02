@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add fuzzy finding for stories",
   "description": "- Add a fuzzy finder feature to search for stories\n- Search across all fields\n- Add a search bar input in the header. It should act as a button and only visually look like an input. Use emoji for icon\n- When a user presses \"CTRL + F\" or clicks the input in the header, open a modal that shows a fuzzy finder, text input at top, list of items at the bottom.\n- User can select items by either clicking with mouse of navigating with keyboard and pressing enter.\n- When user selects an item, fuzzy finder closes and card comes up.\n",
-  "stage": "in-progress",
-  "rank": "a1",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:00:03.727Z",
-  "updatedAt": "2026-11-02T22:21:49.077Z",
+  "updatedAt": "2026-11-02T23:02:19.497Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,16 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-42 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-11-02T22:15:54.464Z"
-      }
     },
     "comments": {
       "comments": [
@@ -58,8 +48,25 @@
           "body": "Complexity 4/10. Branch codex/row-42-fuzzy-stories from origin/main. Accepted plan, incorporating sunny’s shortcut correction: fuzzy Story search over Story fields and related Comments, Tasks, Specs, Epics and attachment names; header search button and Ctrl+P on main screens; Preferences toggle for Board versus Data Root scope. ROW-43 owns Story forms; ROW-42 owns Header/search/preferences and narrow Shell integration. Development and independent validation run sequentially.",
           "createdAt": "2026-11-02T22:21:49.076Z",
           "updatedAt": "2026-11-02T22:21:49.076Z"
+        },
+        {
+          "id": "cQj9GER9",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/127. Added Ctrl+P fuzzy Story finding from main screens, an input-styled header button, keyboard and mouse selection, related Plugin content search, and a Preferences toggle between current Board and full Data Root. Independent validation approved the wheel correction; final HEAD 5f8ccec8ebd0b84d23ed0941a52d862efd364618 passed typecheck, lint, 77 unit tests and 20 CLI tests. Eight screenshots are displayed in the PR. Historical storage fault-sweep timeout remains unexplained; no helpers or timeouts changed. CI pending at handoff.",
+          "createdAt": "2026-11-02T23:02:17.057Z",
+          "updatedAt": "2026-11-02T23:02:17.057Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:aab7766c-2b24-4a0f-b215-4a5c5ef32335",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:02:19.496Z"
+      }
     }
   }
 }
