@@ -574,6 +574,13 @@ export interface PluginCommandEnv<S> {
   editText(initial: string): Promise<string>;
   /** `--board`, then `ROWBLY_BOARD`, then the context (contracts §4). */
   resolveBoard(flag?: string): Promise<Slug>;
+  /**
+   * Waits for the Data Root to reach a state: runs `check` now, again after each change to the Data
+   * Root by any process, and every minute in case a change went unseen, and resolves with its first
+   * result that is not `undefined`; with `undefined` once `signal` aborts. Checks never overlap, and a
+   * change made during one is checked after it.
+   */
+  waitFor<T>(check: () => Promise<T | undefined>, opts?: { signal?: AbortSignal }): Promise<T | undefined>;
 }
 
 export interface PluginCli<S> {
