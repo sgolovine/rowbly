@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.135Z",
-  "updatedAt": "2026-11-02T23:28:22.011Z",
+  "updatedAt": "2026-11-02T23:41:09.529Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:34ff28cd-5337-4127-8abb-de2cd4ac372b",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:37:13.270Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "A7Ulj8AN",
+          "author": "sunny",
+          "body": "Supervisor plan review: Plan accepted with corrections. Confirmed thinkpad Git show now returns automaticCommits:true, frequency:\"change\", synchronization:{enabled:true,intervalSeconds:300}. Treat explicit Board workflow instructions as the authority for changing personal Git preferences; here ROWBLY.md requires each-change commits. When the Git Plugin is enabled, use its documented manual `git sync` path for pending Rowbly data and rejected pushes; do not gate manual sync on a nonexistent/old Automatic Merge Conflict Resolution flag or claim it never rebases internally. Say never run raw rebase/force-push yourself. Verify sync preserves unrelated staged/working content and handles saved pending Rowbly data before generic cleanup; don't infer arbitrary hand edits are tracked. Keep edits to startup/persistence sections only (ROW-54 launch; ROW-63 retry; ROW-53 later brief generation). ROWBLY.md exact diff remains proposal-only. Capture one agentic-tui terminal PNG of pertinent command output/guidance to meet invoked skill evidence requirement; all four checks required. Proceed.",
+          "createdAt": "2026-11-02T23:41:09.528Z",
+          "updatedAt": "2026-11-02T23:41:09.528Z"
+        }
+      ]
     }
   }
 }
