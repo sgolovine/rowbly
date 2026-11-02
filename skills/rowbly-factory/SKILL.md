@@ -88,12 +88,12 @@ Run until the user stops you. Do not wait for the user between events.
    worker reports. Use the harness's way to wait or watch; do not busy-loop. Re-read
    `software-factory stages` before each start, so a Stage Prompt the user changed or turned off
    takes effect.
-2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order `runs` lists them, while fewer
-   workers run than the limit. See [Start a Story](#start-a-story).
-3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, run
-   `run start <KEY> --worker <name> --retry` and start a new worker with the failure reason in its
-   brief. Leave it failed after that and tell the user. `ROWBLY.md` or the Stage Prompt may set
-   another retry limit; follow it.
+2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
+   `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
+3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
+   [Retry context](#retry-context) before `run start <KEY> --worker <name> --retry`, then start a new
+   worker with that context in its brief. Leave it failed after that and tell the user.
+   `ROWBLY.md` or the Stage Prompt may set another retry limit; follow it.
 4. Leave `finished` Stage Runs alone. The Story is worked again only after it moves to another Stage
    and comes back, or the user clears the Stage Run.
 5. **Blocked Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
@@ -118,6 +118,39 @@ Report each start, retry, finish, failure, question and Board change to the user
 3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
    worker model, where and how `ROWBLY.md` or the user says.
 4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
+
+## Retry context
+
+Prepare this before starting a retry: `run start --retry` replaces the failed Stage Run, including
+its worker, timestamps and reason. A retry starts another worker; it does not by itself authorize
+discarding earlier work.
+
+1. **Capture the previous attempt.** Read `stories show <KEY>` and the current `runs` result. Keep
+   the failed Stage Run's attempt, worker, status, reason (or "not recorded"), and start/finish
+   times. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
+   its recorded identifier resolves. Summarize what it completed, validation and publication
+   outcomes, and what remains; distinguish a failed worker or launch from failed implementation.
+2. **Recover existing work.** Include the prior branch, worktree path, machine and PR URL whenever
+   recorded in the Story, Comments or identified worker's handoff. Give the source for each detail
+   (for example a Comment id or worker message). Verify recorded branches and PRs with Git or the
+   hosting service when available, and paths on the recorded machine when accessible. Mark each
+   missing detail "unknown" and an inaccessible or stale detail as unverified. Do not derive a
+   worker identity or machine from a branch name, Story Key, Comment author or the current host;
+   the Stage Run's `by` is who started it, not the worker. Report conflicting evidence rather than
+   choosing an identity or treating unavailable work as absent.
+3. **Decide how to proceed.** Follow an explicit continuation or restart instruction from the user,
+   Stage Prompt or `ROWBLY.md`. Otherwise ask the user before choosing between existing work and a
+   restart, or when missing/conflicting context prevents a safe choice. The brief must say either
+   "Continue" with the exact known branch/worktree/PR and remaining work, or "Start again" with
+   the reason and the instruction authorizing that deliberate restart. Preserve previous work;
+   an unavailable machine or unknown branch is not permission to silently start again.
+4. **Preserve and hand off.** Assemble the retry section of
+   [the worker brief](references/worker-brief.md). If Comments are on, save the captured context,
+   evidence sources and continuation/restart decision as a Comment before replacing the Run, so
+   another supervisor can recover it. Otherwise retain it in the supervisor's messages and brief.
+   Only then run `run start <KEY> --worker <name> --retry`; launch only on success, using the
+   returned attempt number and the captured previous outcome. Do not substitute the new Run's
+   worker or status for the previous attempt's details.
 
 ## Worker messages
 
