@@ -26,7 +26,11 @@ they take precedence over the Stage Prompt and over any skill it names.
    applies them; it applies a move only after your final message.
 2. **Questions.** If you cannot go on without a decision, end your message with the questions under a
    line `FACTORY-QUESTIONS <KEY>` and wait for the answers.
-3. **Finish.** End your last message with `FACTORY-DONE <KEY>` when the Stage Prompt's work is done, or
+3. **Assigned worker.** If the Stage Prompt names `rowbly-dev`, run it in its Assigned worker mode: do
+   the research, planning, implementation, checks and PR yourself in this thread, and start no
+   subagents or other threads. Wait for the supervisor to accept your plan only when the
+   instructions below say so; never wait for a Board change.
+4. **Finish.** End your last message with `FACTORY-DONE <KEY>` when the Stage Prompt's work is done, or
    `FACTORY-FAILED <KEY> <one-line reason>` when you cannot do it. Put the last Board changes, such as
    the move the Stage Prompt asks for, in a block just above it.
 
