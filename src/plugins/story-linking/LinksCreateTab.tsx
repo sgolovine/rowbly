@@ -7,11 +7,14 @@ export interface LinkDraft {
   key: string;
 }
 
-export function LinksCreateTab({ draft, onChange, boardId, active, plugin }: PluginStoryCreateTabProps) {
+export function LinksCreateTab({ draft, onChange, boardId, story, active, plugin }: PluginStoryCreateTabProps) {
   const links = (draft ?? []) as LinkDraft[];
   const [editing, setEditing] = useState<number | null>(null);
   const [selected, setSelected] = useState(0);
-  const data = useAsync(() => plugin.services.stories.list(boardId, {}), [plugin, boardId]);
+  const data = useAsync(
+    () => plugin.services.stories.list(boardId, {}).then((stories) => stories.filter((s) => s.key !== story?.key)),
+    [plugin, boardId],
+  );
   useKeyHints(
     active && editing === null
       ? [

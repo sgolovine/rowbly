@@ -1,4 +1,5 @@
 import {
+  ConflictError,
   definePlugin,
   isSlug,
   type PluginFinding,
@@ -12,10 +13,10 @@ import {
   applySpecs,
   linkedSpecs,
   listSpecSlugs,
+  listStorySpecs,
   parseSpecsInput,
   SpecsBag,
   SpecsCreateInput,
-  SpecsInput,
   specFile,
   specTitle,
   titledText,
@@ -42,7 +43,7 @@ export const specs = definePlugin({
   description: 'Spec documents for Stories and Boards',
   bags: { story: SpecsBag },
   // Checked before the operation runs: a malformed payload is VALIDATION and nothing is saved (DX-07).
-  inputs: { 'stories.create': SpecsCreateInput, 'stories.update': SpecsInput },
+  inputs: { 'stories.create': SpecsCreateInput, 'stories.update': SpecsCreateInput },
   commands,
   hooks: {
     'stories.create': {
@@ -71,6 +72,33 @@ export const specs = definePlugin({
     'stories.update': {
       async transform({ changes, input, pluginInput, plugin }) {
         await applySpecs(changes, input.key, pluginInput, plugin);
+        if (pluginInput?.storySpecs !== undefined) {
+          const story = changes.story(input.key)?.after;
+          if (!story) return;
+          const before = await listStorySpecs(plugin, story);
+          const ordered = (specs: readonly (typeof before)[number][]) =>
+            [...specs].sort((a, b) => a.slug.localeCompare(b.slug));
+          if (
+            pluginInput.baselineStorySpecs !== undefined &&
+            JSON.stringify(ordered(pluginInput.baselineStorySpecs)) !== JSON.stringify(ordered(before))
+          )
+            throw new ConflictError(
+              'Story Specs changed since this editor opened. Close and reopen the editor before saving.',
+            );
+          for (const old of before) {
+            if (!pluginInput.storySpecs.some((s) => s.slug === old.slug))
+              await changes.deleteFile({ story: input.key }, specFile(old.slug));
+          }
+          for (const spec of pluginInput.storySpecs) {
+            const old = before.find((s) => s.slug === spec.slug);
+            if (old && old.text === spec.text && (spec.title === undefined || old.title === spec.title)) continue;
+            await changes.writeFile(
+              { story: input.key },
+              specFile(spec.slug),
+              titledText(spec.text, spec.title ?? (specTitle(spec.text) || spec.slug)),
+            );
+          }
+        }
       },
       // Only links this edit adds are checked. A stale link the Story already had is doctor's job,
       // so it neither blocks an unrelated edit nor keeps the person from removing it.

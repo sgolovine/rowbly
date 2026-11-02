@@ -33,6 +33,24 @@ export interface Task extends StoredTask {
   id: string;
 }
 
+export const TasksUpdateInput = z
+  .object({
+    baseline: z.array(StoredTaskSchema).optional(),
+    tasks: z.array(
+      z.object({
+        number: z.int().min(1).optional(),
+        name: z.string().min(1).max(200),
+        description: z.string().optional(),
+        stage: SlugSchema.optional(),
+      }),
+    ),
+  })
+  .superRefine(({ tasks }, ctx) => {
+    const numbers = tasks.flatMap((t) => (t.number === undefined ? [] : [t.number]));
+    if (new Set(numbers).size !== numbers.length)
+      ctx.addIssue({ code: 'custom', path: ['tasks'], message: 'duplicate Task number' });
+  });
+
 export const TasksCreateInput = z.object({
   tasks: z.array(
     z.object({

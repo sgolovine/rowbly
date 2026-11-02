@@ -932,7 +932,7 @@ export interface PluginSidebar<S = Record<string, unknown>> {
   menu?(value: string): (PluginLink & { key: 'e' | 'd' })[];
 }
 
-/** An unsaved create-tab draft. The host retains it across tabs and submits one stories.create.
+/** An unsaved Story form draft. The host retains it across tabs and submits one stories.create or stories.update.
  * Components only change drafts: they must never save records or call operations.
  * Throw a failed asynchronous load during render so PluginSlot excludes this tab's input.
  */
@@ -940,6 +940,7 @@ export interface PluginStoryCreateTabProps<S = Record<string, unknown>> {
   draft: unknown;
   onChange(draft: unknown): void;
   boardId: Slug;
+  story?: Story;
   active: boolean;
   plugin: PluginContext<S>;
   ui: PluginUi;
@@ -950,6 +951,12 @@ export interface PluginStoryCreateTab<S = Record<string, unknown>> {
   component: ComponentType<PluginStoryCreateTabProps<S>>;
   /** Pure conversion to plugins.<id>; undefined adds nothing. Called only for changed drafts. */
   input(draft: unknown): unknown | undefined;
+  /** Opt in to the shared edit window. Load without saving; only changed drafts become update input. */
+  edit?: {
+    load(args: { story: Story; plugin: PluginContext<S> }): Promise<unknown>;
+    /** Include the loaded baseline in input; check it inside the operation before replacing stored data. */
+    input(draft: unknown, initialDraft: unknown): unknown | undefined;
+  };
 }
 
 /** A compact contribution beside a Stage's heading in the Board's Stages view. */

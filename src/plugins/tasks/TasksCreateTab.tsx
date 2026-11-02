@@ -11,11 +11,11 @@ import {
   useKeyHints,
   useState,
 } from '../../plugin-api/tui';
-import type { TaskCreateInput } from './model';
+import type { StoredTask, TaskCreateInput } from './model';
 
 /** Task drafts never call tasks.create: the host submits them with the Story. */
 export function TasksCreateTab({ draft, onChange, boardId, active, plugin }: PluginStoryCreateTabProps) {
-  const tasks = (draft ?? []) as TaskCreateInput[];
+  const tasks = (draft ?? []) as (TaskCreateInput & Partial<StoredTask>)[];
   const [editing, setEditing] = useState<number | null>(null);
   const [selected, setSelected] = useState(0);
   const data = useAsync(() => plugin.services.config.effective(boardId), [plugin, boardId]);
@@ -45,6 +45,7 @@ export function TasksCreateTab({ draft, onChange, boardId, active, plugin }: Plu
       tasks.map((t, i) =>
         i === editing
           ? {
+              ...t,
               name: String(values.name ?? ''),
               description: String(values.description ?? ''),
               stage: String(values.stage),

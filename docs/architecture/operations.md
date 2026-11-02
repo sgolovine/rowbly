@@ -143,11 +143,15 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | Assignees | `stories.create`, `stories.update` | `{ assignees?, add?, remove? }`: handles or `me`; `assignees` replaces the list and cannot be combined with `add` or `remove` |
 | Epics | `stories.create`, `stories.update` | `{ epic: id \| null }` |
 | Attachments | `stories.create`, `stories.update` | `{ images: [{ name, png }] }`: PNGs encoded as base64, at most 10 MiB total; appends metadata and files in the Story Change Set |
-| Specs | `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset? }` |
+| Specs | `stories.update` | `{ specs?, addSpecs?, removeSpecs?, reset?, baselineSpecs?: [slug], baselineStorySpecs?: [{ slug, title, text }], storySpecs?: [{ slug?, title?, text }] }`; when given, Story Specs replace the current set; omitted files are deleted, unchanged text and unknown bag fields are kept |
 | Specs | `stories.create` | `{ specs?, addSpecs?, removeSpecs?, reset?, storySpecs?: [{ slug?, title?, text }] }`; Story Spec slugs default to `spec` and must be unique |
 | Tasks | `stories.create` | `{ tasks: [{ name, description?, stage? }] }`; Stage defaults to the first effective Stage, numbering follows draft order |
+| Tasks | `stories.update` | `{ tasks: [{ number?, name, description?, stage? }], baseline?: [StoredTask] }`; replaces the list, keeps existing numbers, creation dates and unknown Task/bag fields, allocates new numbers without reuse; missing or duplicate existing numbers reject the operation |
+| Story Linking | `stories.update` | `{ blocks?: [Story Key], blockedBy?: [Story Key], baseline?: { blocks?, blockedBy? } }`; replaces each given direction, including incoming blockers in the same Change Set; existing stale outgoing links may be kept or removed |
 | Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
 
 A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.
 
 `stories.create` collects these bags, Story Spec files and existing blockers’ bags in one Change Set and one journaled commit. Invalid input saves nothing. Story Spec titles use the supplied title, first `#` heading or slug.
+
+The Story editor supplies baselines only for changed Plugin drafts or fields. Tasks compare the loaded stored Task fields (including timestamps); Story Specs compare every slug and its full text/title; Links compare each replaced direction, including incoming links derived from current Board Stories; Board Spec links compare their loaded slugs. Comparisons run in transforms under the Data Root lock. A mismatch raises an attributed `CONFLICT` and saves none of the operation. Unknown Task/bag fields remain preserved and baseline fields never write provenance or identity. These optional baseline inputs opt into conflict detection; direct callers that omit them intentionally replace the current values. Unchanged tabs supply no input and cannot conflict with unrelated edits.

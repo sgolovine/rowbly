@@ -8,10 +8,11 @@ import { addAttachment, listAttachments, removeAttachment } from '../../src/plug
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
 import { specs } from '../../src/plugins/specs';
+import { createSpec, deleteSpec, editSpec, listStorySpecs } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
-import { addLink } from '../../src/plugins/story-linking/links';
+import { addLink, readLinks, removeLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
-import { updateTask } from '../../src/plugins/tasks/tasks';
+import { createTask, deleteTask, listTasks, updateTask } from '../../src/plugins/tasks/tasks';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import { makeStory } from '../helpers';
@@ -52,6 +53,14 @@ describe('transform (ADR-0012)', () => {
       ghost: { kept: true },
       'story-linking': { blocks: [created.key] },
     });
+    // Seed fields an older schema cannot interpret; editing known fields must retain them.
+    const storyPath = join(t.path, `boards/web/stories/${created.key}/story.json`);
+    const raw = JSON.parse(await readFile(storyPath, 'utf8'));
+    raw.plugins.tasks.extraMetadata = { source: 'import' };
+    raw.plugins.tasks.tasks[0].provenance = { source: 'original' };
+    raw.plugins.tasks.tasks[1].provenance = { source: 'removed' };
+    raw.plugins.specs = { specs: ['board-guide'], extraMetadata: { source: 'specs' } };
+    await writeFile(storyPath, JSON.stringify(raw));
     const before = await services.stories.list('web', {});
     const boardBefore = await services.boards.get('web');
     // A later transform fails after Tasks and Spec files were staged.
@@ -77,6 +86,138 @@ describe('transform (ADR-0012)', () => {
       }),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
     expect(await services.stories.list('web', {})).toEqual(before);
+
+    const savedTasks = await listTasks(services.plugins.context('tasks'), created.key);
+    const patch = {
+      name: 'Edited together',
+      plugins: {
+        tasks: {
+          baseline: savedTasks,
+          tasks: [
+            { ...savedTasks[0], name: 'Renamed', createdAt: 'spoofed', provenance: { source: 'spoofed' } },
+            { name: 'New Task', number: undefined, createdAt: 'spoofed' },
+          ],
+        },
+        specs: {
+          baselineSpecs: ['board-guide'],
+          baselineStorySpecs: await listStorySpecs(services.plugins.context('specs'), created),
+          specs: [],
+          storySpecs: [
+            { slug: 'design', text: '# Revised' },
+            { slug: 'new-spec', text: 'New' },
+          ],
+        },
+        'story-linking': { blocks: ['WEB-10'], blockedBy: [], baseline: { blocks: [], blockedBy: ['WEB-10'] } },
+      },
+    };
+    // The late Links transform rejects after core, Tasks and Spec writes/deletions were staged.
+    await expect(
+      services.stories.update(created.key, {
+        ...patch,
+        plugins: { ...patch.plugins, 'story-linking': { blocks: ['WEB-999'], blockedBy: [] } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'story-linking' } });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Design');
+    expect(await readFile(specPath(created.key, 'checks'), 'utf8')).toBe('# checks\n\nChecks');
+    expect(await pathExists(specPath(created.key, 'new-spec'))).toBe(false);
+    const edited = await services.stories.update(created.key, patch);
+    expect(edited.name).toBe('Edited together');
+    const editedTasks = await listTasks(services.plugins.context('tasks'), created.key);
+    expect(editedTasks).toMatchObject([
+      { number: 1, name: 'Renamed', createdAt: savedTasks[0]?.createdAt },
+      { number: 3, name: 'New Task' },
+    ]);
+    expect(edited.plugins?.tasks).toMatchObject({
+      nextNumber: 4,
+      extraMetadata: { source: 'import' },
+      tasks: [{ provenance: { source: 'original' } }, { number: 3 }],
+    });
+    expect(editedTasks).toHaveLength(2);
+    expect(editedTasks[1]?.createdAt).not.toBe('spoofed');
+    expect(edited.plugins?.specs).toEqual({ specs: [], extraMetadata: { source: 'specs' } });
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Revised');
+    expect(await pathExists(specPath(created.key, 'checks'))).toBe(false);
+    expect(await readFile(specPath(created.key, 'new-spec'), 'utf8')).toBe('# new-spec\n\nNew');
+    expect((await services.stories.get('WEB-10')).plugins).toEqual({ ghost: { kept: true } });
+    expect(edited.plugins?.['story-linking']).toEqual({ blocks: ['WEB-10'] });
+    const unchanged = await services.stories.update(created.key, { description: 'Only core' });
+    expect(unchanged.plugins).toEqual(edited.plugins);
+    const taskOnly = await services.stories.update(created.key, {
+      plugins: { tasks: { tasks: editedTasks, baseline: editedTasks } },
+    });
+    expect(taskOnly.plugins?.tasks).toEqual(edited.plugins?.tasks);
+
+    // Capture an editor draft, then complete another operation before the stale save.
+    // Every conflict must leave core fields, all bags and Spec files at their latest values.
+    const taskPlugin = services.plugins.context('tasks');
+    const specPlugin = services.plugins.context('specs');
+    const linkPlugin = services.plugins.context('story-linking');
+    const assertConflict = async (plugins: Record<string, unknown>, plugin: string) => {
+      const latest = await services.stories.list('web', {});
+      const files = await listStorySpecs(specPlugin, created);
+      await expect(services.stories.update(created.key, { name: 'Stale editor', plugins })).rejects.toMatchObject({
+        code: 'CONFLICT',
+        details: { plugin, stage: 'transform' },
+      });
+      expect(await services.stories.list('web', {})).toEqual(latest);
+      expect(await listStorySpecs(specPlugin, created)).toEqual(files);
+      // Unchanged tabs contribute no input and never block an unrelated core edit.
+      await services.stories.update(created.key, { description: 'Core after concurrent edit' });
+      expect((await services.stories.get(created.key)).plugins).toEqual(
+        latest.find((s) => s.key === created.key)?.plugins,
+      );
+    };
+    for (const mutate of [
+      () => createTask(taskPlugin, created.key, { name: 'Concurrent Task must survive' }),
+      () => updateTask(taskPlugin, `${created.key}.1`, { name: 'Concurrent rename' }),
+      () => deleteTask(taskPlugin, `${created.key}.1`),
+    ]) {
+      const baseline = await listTasks(taskPlugin, created.key);
+      await mutate();
+      await assertConflict(
+        { tasks: { baseline, tasks: baseline.map((t) => ({ ...t, name: 'Draft rename' })) } },
+        'tasks',
+      );
+    }
+    for (const mutate of [
+      () => createSpec(specPlugin, { board: 'web', story: created.key, slug: 'concurrent' }, '# Added'),
+      () => editSpec(specPlugin, { board: 'web', story: created.key, slug: 'design' }, '# CLI text edit'),
+      () => deleteSpec(specPlugin, { board: 'web', story: created.key, slug: 'concurrent' }),
+    ]) {
+      const baselineStorySpecs = await listStorySpecs(specPlugin, created);
+      await mutate();
+      await assertConflict(
+        {
+          tasks: { tasks: [], baseline: await listTasks(taskPlugin, created.key) },
+          specs: { baselineStorySpecs, storySpecs: [] },
+        },
+        'specs',
+      );
+    }
+    for (const mutate of [
+      () => addLink(linkPlugin, 'WEB-10', created.key),
+      () => removeLink(linkPlugin, created.key, 'WEB-10'),
+    ]) {
+      const view = await readLinks(linkPlugin, created.key);
+      const baseline = {
+        blocks: view.links.filter((l) => l.relation === 'blocks').map((l) => l.key),
+        blockedBy: view.links.filter((l) => l.relation === 'blocked-by').map((l) => l.key),
+      };
+      await mutate();
+      await assertConflict(
+        {
+          tasks: { tasks: [], baseline: await listTasks(taskPlugin, created.key) },
+          specs: { storySpecs: [], baselineStorySpecs: await listStorySpecs(specPlugin, created) },
+          'story-linking': { blocks: [], blockedBy: [], baseline },
+        },
+        'story-linking',
+      );
+    }
+    // A Board Spec link edit also uses the loaded links as its baseline.
+    await createSpec(specPlugin, { board: 'web', slug: 'guide' }, '# Guide');
+    await services.stories.update(created.key, { plugins: { specs: { specs: ['guide'] } } });
+    await assertConflict({ specs: { specs: [], baselineSpecs: [] } }, 'specs');
   });
 
   it('runs before guards, which run before the save, which runs before reactions', async () => {
@@ -259,6 +400,15 @@ describe('guard', () => {
       code: 'DATA_INTEGRITY',
       exitCode: 6,
     });
+    await expect(
+      services.stories.update('WEB-2', { name: 'Overwrite', plugins: { tasks: { tasks: [] } } }),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    await expect(
+      services.stories.update('WEB-2', {
+        name: 'Overwrite',
+        plugins: { 'story-linking': { blocks: [], blockedBy: [] } },
+      }),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
     const findings = (await services.doctor.check()).findings;
     await expect(
       addAttachment(services.plugins.context('attachments'), 'WEB-2', {
@@ -279,6 +429,8 @@ describe('guard', () => {
     await services.doctor.fix();
     expect(await services.stories.list('web', {})).toEqual(before);
     expect(await readFile(file)).toEqual(bytes);
+    const coreOnly = await services.stories.update('WEB-2', { description: 'Invalid bags kept' });
+    expect(coreOnly.plugins).toEqual(before.find((story) => story.key === 'WEB-2')?.plugins);
   });
 
   it('rejects: nothing is saved and the error is a CONFLICT naming the Plugin', async () => {

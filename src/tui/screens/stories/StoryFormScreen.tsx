@@ -1,17 +1,21 @@
 import { homedir } from 'node:os';
-import { Box, Text } from 'ink';
+import { Text } from 'ink';
 import { useRef, useState } from 'react';
 import { type CustomFieldDef, type CustomFieldValue, PrioritySchema, type Story } from '../../../schemas';
-import { type CustomFieldValuesInput, type PluginInput, readOpenStoryAfterCreation } from '../../../services';
+import {
+  type CustomFieldValuesInput,
+  invokePlugin,
+  type PluginInput,
+  readOpenStoryAfterCreation,
+} from '../../../services';
 import { type StoryChoices, storyChoices } from '../../../services/stories';
-import { Form, type FormField, type FormValue, type FormValues, Loading } from '../../components';
+import { type FormField, type FormValue, type FormValues, Loading } from '../../components';
 import { useAsync, usePlugins, useRowblyContext, useServices, useStoryPaste, useToast } from '../../hooks';
 import { useRouter } from '../../router';
 import { theme } from '../../theme';
 import type { ScreenProps } from '../types';
-import { PluginFailures } from './PluginFailures';
-import { mergePluginInput, onPluginFields, storyFormFields, storyFormInput } from './pluginFields';
-import { StoryCreateForm } from './StoryCreateForm';
+import { mergePluginInput, storyFormFields, storyFormInput } from './pluginFields';
+import { StoryEditorForm } from './StoryEditorForm';
 import { boardIdFor, NONE } from './shared';
 import { priorityValue } from './storyFormValues';
 
@@ -31,7 +35,24 @@ export function StoryFormScreen({ params }: ScreenProps) {
     const boardId = story ? story.boardId : await boardIdFor(services, params);
     if (!ctx) throw new Error('no Data Root');
     const extra = await storyFormFields(plugins, services, { boardId, story });
-    return { story, boardId, choices: await storyChoices(ctx, boardId), extra };
+    const drafts: Record<string, unknown> = {};
+    const draftErrors: Record<string, string> = {};
+    if (story) {
+      for (const p of plugins) {
+        for (const [i, tab] of (p.tui.storyCreateTabs ?? []).entries()) {
+          if (!tab.edit) continue;
+          const id = `${p.id}:${i}`;
+          try {
+            drafts[id] = await invokePlugin({ plugin: p.id, stage: 'field', operation: 'stories.update' }, () =>
+              tab.edit?.load({ story, plugin: services.plugins.context(p.id) }),
+            );
+          } catch (err) {
+            draftErrors[id] = err instanceof Error ? err.message : String(err);
+          }
+        }
+      }
+    }
+    return { story, boardId, choices: await storyChoices(ctx, boardId), extra, drafts, draftErrors };
   }, [services, ctx, key, params.boardId, plugins]);
 
   const [saving, setSaving] = useState(false);
@@ -45,13 +66,7 @@ export function StoryFormScreen({ params }: ScreenProps) {
 
   if (!data.data)
     return data.loading ? <Loading label="Loading…" /> : <Text color={theme.danger}>Cannot open the form.</Text>;
-  const { story, boardId, choices, extra } = data.data;
-
-  // A Plugin's invalid input shows on that Plugin's fields (DX-07).
-  const submit = (values: FormValues) =>
-    save(values).catch((err: unknown) => {
-      throw onPluginFields(err, extra);
-    });
+  const { story, boardId, choices, extra, drafts, draftErrors } = data.data;
 
   const save = async (values: FormValues, tabInput?: PluginInput) => {
     if (submitting.current || paste.busy) return;
@@ -91,38 +106,20 @@ export function StoryFormScreen({ params }: ScreenProps) {
     }
   };
 
-  if (!story)
-    return (
-      <StoryCreateForm
-        boardId={boardId}
-        fields={formFields(choices)}
-        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
-        extra={extra}
-        onSubmit={save}
-        isActive={!paste.busy && !saving}
-        extraHints={paste.hints}
-        pendingSummary={paste.summary}
-      />
-    );
-
   return (
-    <Box flexDirection="column" gap={1}>
-      <Text bold>{story ? `Edit ${story.key}` : `New Story on ${boardId}`}</Text>
-      <Form
-        fields={[...formFields(choices), ...extra.fields]}
-        initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
-        onSubmit={submit}
-        isActive={!paste.busy && !saving}
-        extraHints={paste.hints}
-      />
-      {paste.summary && (
-        <Text>
-          {paste.summary.label}: {paste.summary.value}
-        </Text>
-      )}
-      <PluginFailures failures={extra.failures} note="its fields are unavailable; stored data kept" />
-      {choices.labels.length > 0 && <Text color={theme.inkFaint}>Labels in use: {choices.labels.join(', ')}</Text>}
-    </Box>
+    <StoryEditorForm
+      boardId={boardId}
+      story={story ?? undefined}
+      initialDrafts={drafts}
+      draftErrors={draftErrors}
+      fields={formFields(choices)}
+      initialValues={{ ...initialValues(choices, story, params.stage as string | undefined), ...extra.values }}
+      extra={extra}
+      onSubmit={save}
+      isActive={!paste.busy && !saving}
+      extraHints={paste.hints}
+      pendingSummary={paste.summary}
+    />
   );
 }
 

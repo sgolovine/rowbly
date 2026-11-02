@@ -8,6 +8,10 @@ export const LinksCreateInput = z.object({
   blockedBy: z.array(StoryKeySchema).optional(),
 });
 
+export const LinksUpdateInput = LinksCreateInput.extend({
+  baseline: LinksCreateInput.optional(),
+});
+
 export type LinkDirection = 'blocks' | 'blocked-by';
 
 /** A relationship relative to the Story being inspected. */

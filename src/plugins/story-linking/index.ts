@@ -1,7 +1,7 @@
 import { definePlugin, parseStoryKey, ValidationError } from '../../plugin-api';
 import { commands } from './commands';
-import { applyCreateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
-import { LinksBag, LinksCreateInput } from './model';
+import { applyCreateLinks, applyUpdateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
+import { LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
 import { reconcile } from './reconcile';
 
 export const storyLinking = definePlugin({
@@ -11,7 +11,7 @@ export const storyLinking = definePlugin({
   description: 'Blocking relationships between Stories on the same Board',
   bags: { story: LinksBag },
   commands,
-  inputs: { 'stories.create': LinksCreateInput },
+  inputs: { 'stories.create': LinksCreateInput, 'stories.update': LinksUpdateInput },
   options: {
     'stories create': {
       options: [
@@ -37,6 +37,9 @@ export const storyLinking = definePlugin({
   hooks: {
     'stories.create': {
       transform: ({ changes, result, pluginInput, plugin }) => applyCreateLinks(changes, result, pluginInput, plugin),
+    },
+    'stories.update': {
+      transform: ({ changes, result, pluginInput, plugin }) => applyUpdateLinks(changes, result, pluginInput, plugin),
     },
     'stories.remove': {
       transform: ({ changes, plugin }) => unlinkDeleted(changes, plugin),
