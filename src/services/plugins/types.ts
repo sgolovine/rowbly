@@ -966,7 +966,8 @@ export interface PluginTui<S = Record<string, unknown>> {
   /** Screens by name; `ui.open(name)` opens one. */
   screens?: Record<string, ComponentType<PluginScreenProps<S>>>;
   home?: PluginLink[];
-  settings?: PluginLink[];
+  /** Omit scopes to keep a section under Plugins; scoped links appear under Global and/or Board. */
+  settings?: (PluginLink & { scopes?: ('global' | 'board')[] })[];
   storyForm?: PluginStoryForm<S>;
   storyPaste?: PluginStoryPaste<S>;
   storyCreateTabs?: PluginStoryCreateTab<S>[];
