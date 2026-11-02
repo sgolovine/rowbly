@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-45",
+  "boardId": "rowbly",
+  "name": "Rework tabs within settings page.",
+  "description": "Right now we have a concept of \"global\" and \"own list\" for many settings inside of preferences.\n\nIt's hard for the user to navigate this.\n\n- Remove tabs from the UI\n\n- Instead of tabs, duplicate the sidebar item, once for global and once for the board sections. Ie. stages should have an item under the \"Global\" section AND under \"Board: <board name>\". Under global it shows items that are global, under board it shows the board level items. Make sure to include verbiage about inhertance.",
+  "stage": "in-progress",
+  "rank": "a1V",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T22:26:59.446Z",
+  "updatedAt": "2026-11-02T22:27:30.361Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aQjuNkwTN",
+          "name": "image-20261102-2224.png",
+          "type": "image/png",
+          "size": 110829,
+          "createdAt": "2026-11-02T22:26:59.451Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
