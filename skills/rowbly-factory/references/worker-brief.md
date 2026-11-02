@@ -19,7 +19,9 @@ they take precedence over the Stage Prompt and over any skill it names.
    ```
 
    Each line is one `rowbly` command about this Story only, without `--data-root`. The supervisor
-   applies them; it applies a move only after your final message.
+   applies them; it applies a move only after your final message. Lines are not run by a shell and
+   a line with shell syntax is refused: put text holding `$`, `` ` ``, `!`, `*` or `#` in single
+   quotes.
 2. **Questions.** If you cannot go on without a decision, end your message with the questions under a
    line `FACTORY-QUESTIONS <KEY>` and wait for the answers.
 3. **Finish.** End your last message with `FACTORY-DONE <KEY>` when the Stage Prompt's work is done, or

@@ -451,6 +451,7 @@ rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-run]   # check a worker's reported block, then run what it allows
 ```
 
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
@@ -472,6 +473,18 @@ rowbly software-factory run clear <story>
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
 - `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
+  ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
+  `reject`. A line may only edit or move the Story given, or change its Comments, Tasks, Story
+  Specs or Story links; it is split with shell quoting but never run by a shell. Shell syntax
+  (`;`, `|`, `$(…)`, …), another Story, `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--edit` or `--*-file` are rejected, and then nothing runs (exit 2, every
+  line's decision in `details.commands`). A `stories move` runs last and only once the Story's
+  Stage Run is finished; it is held while the Stage Run runs or when there is none, and dropped
+  after a failed one. Each allowed line runs as its own `rowbly` command on the same Data Root with
+  `--json --no-prompt`; the first that fails stops the block, the lines before it stay applied, and
+  `apply` exits with that command's code. `--dry-run` only shows the decisions.
+  `--json` returns `{ key, stageRun, dryRun, commands: [{ line, text, argv, decision, reason?, exitCode?, output? }] }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
 
@@ -595,7 +608,8 @@ and grants no implementation permission. Install with
 one Stage Prompt that is on and written (not the template), and an agent harness that can start
 threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
-`rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
+`rowbly` commands their Stage Prompt asks for, and it checks and applies them with
+`rowbly software-factory apply`. A failed Stage Run is retried
 once unless `ROWBLY.md` or the Stage Prompt says otherwise. It runs until you stop it.
 
 A new skill holds

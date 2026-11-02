@@ -134,6 +134,11 @@ else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set 
 `updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
 the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
 
+`rowbly software-factory apply` runs no operation of its own: it holds no lock and runs each
+command of a worker's block that it allows as a separate `rowbly` process, so each runs its own
+operation, under its own lock, as that command always does
+([ADR-0045](../agents/adr/0045-reported-board-commands-are-checked-and-applied-by-rowbly.md)).
+
 ## Plugin input of core operations
 
 A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin's `inputs` schema for the operation before anything runs. The built-ins take this input:
