@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Include existing branch and PR context in retry briefs",
   "description": "Factory review recommendation 17 of 20.\n\n## Context\n\nRetry briefs contain the failure reason but omit existing work, prompting workers to ask whether to continue it.\n\n## Acceptance criteria\n\n- Include the prior branch, worktree/machine and PR when known, alongside the failure and previous attempt outcome.\n- State whether to continue existing work or start again and explain any deliberate restart.\n- Recover context from recorded Story/Run information and Comments without guessing identities.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "Zq",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.882Z",
-  "updatedAt": "2026-11-02T23:42:07.522Z",
+  "updatedAt": "2026-11-02T23:42:08.230Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:dde16219-9d1c-413a-b332-71e13a84ffb8",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:34:05.554Z",
-        "finishedAt": "2026-11-02T23:42:06.837Z"
-      }
     },
     "comments": {
       "comments": [
