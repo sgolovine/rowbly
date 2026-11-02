@@ -1,7 +1,7 @@
 import { definePlugin, parseStoryKey, ValidationError } from '../../plugin-api';
 import { commands } from './commands';
 import { applyCreateLinks, applyUpdateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
-import { LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
+import { directionLabel, LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
 import { reconcile } from './reconcile';
 
 export const storyLinking = definePlugin({
@@ -69,6 +69,20 @@ export const storyLinking = definePlugin({
             '—'),
       },
     ];
+  },
+  async storyContext(story, plugin) {
+    const view = await readLinks(plugin, story.key);
+    const text = view.links.map(
+      (link) =>
+        `- ${directionLabel(link.relation)} ${link.key}${link.name === null ? ' (not found)' : `: ${link.name}`}`,
+    );
+    return {
+      title: 'Story links',
+      text: text.join('\n') || 'None.',
+      data: view.links,
+      // Invalid bags may hide links, so the view is never shown as complete (ADR-0044).
+      ...(view.unavailable.length ? { unavailable: `invalid links on ${view.unavailable.join(', ')}` } : {}),
+    };
   },
   doctor: { check: ({ data, plugin }) => checkLinks(plugin, data.stories) },
   tui: () => import('./tui').then((m) => m.tui),
