@@ -149,17 +149,17 @@ async function settle(found, expected, status, reply) {
     stop('unverified', { ...identity, launcherId, reason: 'options not verified: launcher answer is not JSON' });
   }
   const options = actual.modelSelection?.options ?? [];
-  const wrong = (modelSelection.options ?? []).filter(
-    (o) => !options.some((a) => a.id === o.id && a.value === o.value),
-  );
-  if (
-    actual.threadId !== threadId ||
-    actual.modelSelection?.instanceId !== modelSelection.instanceId ||
-    actual.modelSelection?.model !== modelSelection.model ||
-    actual.runtimeMode !== 'full-access' ||
-    wrong.length
-  ) {
-    stop('conflict', { ...identity, options, launcherId, reason: `configuration mismatch: ${config.value}` });
+  const differences = [
+    actual.threadId !== threadId && `threadId ${actual.threadId}`,
+    actual.modelSelection?.instanceId !== modelSelection.instanceId && `provider ${actual.modelSelection?.instanceId}`,
+    actual.modelSelection?.model !== modelSelection.model && `model ${actual.modelSelection?.model}`,
+    actual.runtimeMode !== 'full-access' && `runtimeMode ${actual.runtimeMode}`,
+    ...(modelSelection.options ?? [])
+      .filter((o) => !options.some((a) => a.id === o.id && a.value === o.value))
+      .map((o) => `option ${o.id} is not ${o.value}`),
+  ].filter(Boolean);
+  if (differences.length) {
+    stop('conflict', { ...identity, options, launcherId, reason: `configuration mismatch: ${differences.join(', ')}` });
   }
   return new Result(status, {
     ...identity,
