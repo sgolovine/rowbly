@@ -25,27 +25,6 @@
     "comments": {
       "comments": [
         {
-          "id": "Z5DT1tVw",
-          "author": "sunny",
-          "body": "Not waiting for ROW-25 (user decision, 2026-10-25): use the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste). ROW-25's findings may adjust the keys later. Still blocked by ROW-27 (clipboard reader).",
-          "createdAt": "2026-10-25T17:43:03.619Z",
-          "updatedAt": "2026-10-25T17:43:03.619Z"
-        },
-        {
-          "id": "KvQNtxXV",
-          "author": "sunny",
-          "body": "Research complete; branch codex/row-28-story-paste created from origin/main. Plan covers exclusive storyPaste activation, shared paste dispatch, pending form state integrated with ROW-24, documentation, and independent validation/screenshots. Awaiting decisions on occupied ADR-0036 numbering and Plugin-supplied command guidance. Baseline typecheck, lint, test:unit (80), and test:cli (20) pass.",
-          "createdAt": "2026-10-25T18:18:26.881Z",
-          "updatedAt": "2026-10-25T18:18:26.881Z"
-        },
-        {
-          "id": "jUBWlXPW",
-          "author": "sunny",
-          "body": "Plan accepted, complexity 5/10, branch codex/row-28-story-paste. Implement exclusive storyPaste activation, shared paste dispatch, pending form state compatible with ROW-24, and docs/ADR-0038. Core owns generic clipboard errors; claiming Plugins supply command-specific guidance. Independent validation and screenshots follow.",
-          "createdAt": "2026-10-25T18:21:43.412Z",
-          "updatedAt": "2026-10-25T18:21:43.412Z"
-        },
-        {
           "id": "1hCrV4r9",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/113 opened against main. Validation signed off at 95a9f1d: typecheck, lint, 80 unit tests, 20 CLI tests, and build PASS. Screenshots published; all 20 raw URLs return HTTP 200. ROW-24 integration and native clipboard/Windows PTY limitations documented. No checkout Board changes made.",
@@ -58,6 +37,27 @@
           "body": "PR #113 conflicts resolved by merging main and integrating ROW-24’s tabbed form hooks. Pushed 5249d7c. Independent validation signed off: typecheck/lint/80 unit/20 CLI PASS, tabbed paste flow verified. Ten refreshed screenshots published and verified. PR mergeable; CI passes. ROW-29 can merge the updated branch.",
           "createdAt": "2026-10-25T21:22:54.503Z",
           "updatedAt": "2026-10-25T21:22:54.503Z"
+        },
+        {
+          "id": "KvQNtxXV",
+          "author": "sunny",
+          "body": "Research complete; branch codex/row-28-story-paste created from origin/main. Plan covers exclusive storyPaste activation, shared paste dispatch, pending form state integrated with ROW-24, documentation, and independent validation/screenshots. Awaiting decisions on occupied ADR-0036 numbering and Plugin-supplied command guidance. Baseline typecheck, lint, test:unit (80), and test:cli (20) pass.",
+          "createdAt": "2026-10-25T18:18:26.881Z",
+          "updatedAt": "2026-10-25T18:18:26.881Z"
+        },
+        {
+          "id": "Z5DT1tVw",
+          "author": "sunny",
+          "body": "Not waiting for ROW-25 (user decision, 2026-10-25): use the default key set (Ctrl+V, Alt+V and Ctrl+Alt+V, plus an empty bracketed paste). ROW-25's findings may adjust the keys later. Still blocked by ROW-27 (clipboard reader).",
+          "createdAt": "2026-10-25T17:43:03.619Z",
+          "updatedAt": "2026-10-25T17:43:03.619Z"
+        },
+        {
+          "id": "jUBWlXPW",
+          "author": "sunny",
+          "body": "Plan accepted, complexity 5/10, branch codex/row-28-story-paste. Implement exclusive storyPaste activation, shared paste dispatch, pending form state compatible with ROW-24, and docs/ADR-0038. Core owns generic clipboard errors; claiming Plugins supply command-specific guidance. Independent validation and screenshots follow.",
+          "createdAt": "2026-10-25T18:21:43.412Z",
+          "updatedAt": "2026-10-25T18:21:43.412Z"
         }
       ]
     }
