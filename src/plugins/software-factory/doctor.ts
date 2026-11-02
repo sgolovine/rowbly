@@ -1,10 +1,14 @@
 import type { PluginDoctor, PluginFinding } from '../../plugin-api';
+import { HOLD_FILE, readHold } from './holds';
 import { PLUGIN_ID, readPrompt, resolvePath, Settings } from './stagePrompts';
 
 /**
  * `MISSING_PROMPT` (reported as `SOFTWARE_FACTORY_MISSING_PROMPT`): a Stage Prompt that is turned on
  * at either level, but whose path does not resolve or whose file is gone or cannot be read (a
  * symbolic link is not followed). An agent reads it as off.
+ *
+ * `UNREADABLE_HOLD`: a Story's hold file that does not parse, or has a `version` this Rowbly does not
+ * support. The Story counts as held, and hold and release refuse to change the file (ADR-0043).
  */
 export const doctor: PluginDoctor<Settings> = {
   async check({ data, plugin }) {
@@ -40,6 +44,17 @@ export const doctor: PluginDoctor<Settings> = {
           details: { stage, ...(board ? { board } : {}), promptPath: entry.path ?? null },
         });
       }
+    }
+    for (const story of data.stories) {
+      const hold = await readHold(plugin, story.key);
+      if (hold.kind !== 'unreadable') continue;
+      findings.push({
+        code: 'UNREADABLE_HOLD',
+        severity: 'warning',
+        path: `boards/${story.boardId}/stories/${story.key}/plugins/${PLUGIN_ID}/${HOLD_FILE}`,
+        message: `${story.key} counts as held, but ${hold.message}`,
+        details: { key: story.key },
+      });
     }
     return findings;
   },

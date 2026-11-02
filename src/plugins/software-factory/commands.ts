@@ -1,4 +1,5 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
+import { holdStory, holdText, releaseStory } from './holds';
 import {
   boardOverview,
   type Level,
@@ -34,8 +35,14 @@ function runLine(result: StageRunResult): string {
 function runsTable(overview: RunsOverview): string {
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}`;
   return renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Name'],
-    overview.stories.map((s) => [s.key, s.stage, runText(s.stageRun), s.name]),
+    ['Story', 'Stage', 'Stage Run', 'Eligibility', 'Name'],
+    overview.stories.map((s) => [
+      s.key,
+      s.stage,
+      runText(s.stageRun),
+      s.eligibility.reasons.map((r) => r.message).join('; ') || 'Eligible',
+      s.name,
+    ]),
   );
 }
 
@@ -126,6 +133,27 @@ export const commands: PluginCommands = (group, cli) => {
     .action((opts: { board?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
         print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+      }),
+    );
+
+  group
+    .command('hold <story>')
+    .description('Hold a Story, so no Stage Run starts for it until it is released')
+    .requiredOption('--reason <text>', 'why it is held, shown wherever the hold is')
+    .action((key: string, opts: { reason: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await holdStory(plugin, key, { reason: opts.reason }),
+          (r) => `${r.key} is ${holdText({ kind: 'held', hold: r.hold })}`,
+        );
+      }),
+    );
+  group
+    .command('release <story>')
+    .description('Release a held Story, so Stage Runs start for it again; its Stage Run is kept')
+    .action((key: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await releaseStory(plugin, key), (r) => `Released ${r.key}`);
       }),
     );
 

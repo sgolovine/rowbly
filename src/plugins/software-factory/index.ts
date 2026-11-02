@@ -1,6 +1,7 @@
 import { definePlugin } from '../../plugin-api';
 import { commands } from './commands';
 import { doctor } from './doctor';
+import { holdText, readHold } from './holds';
 import { PLUGIN_ID, Settings } from './stagePrompts';
 import { currentRun, endVisit, runText, StageRunBag } from './stageRuns';
 
@@ -17,7 +18,11 @@ export const softwareFactory = definePlugin({
   },
   async storyRows(story, plugin) {
     const run = currentRun(plugin, story);
-    return run ? [{ label: 'Stage Run', value: runText(run) }] : [];
+    const hold = await readHold(plugin, story.key);
+    return [
+      ...(run ? [{ label: 'Stage Run', value: runText(run) }] : []),
+      ...(hold.kind !== 'none' ? [{ label: 'Hold', value: holdText(hold) }] : []),
+    ];
   },
   doctor,
   tui: () => import('./tui').then((m) => m.tui),
