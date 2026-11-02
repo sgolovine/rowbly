@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import {
   type Bagged,
   ConflictError,
@@ -179,9 +178,23 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
   return { board, stages, stories: rows, digest: digestOf({ stages, stories: rows }) };
 }
 
-/** A short hash of what `runs` lists, so a supervisor can wait until it changes. */
+/**
+ * A short hash of what `runs` lists, so a supervisor can wait until it changes. It tells states
+ * apart and nothing more (a Plugin imports no Node built-in): two 32-bit lanes of a multiply-xor
+ * hash over the JSON text.
+ */
 function digestOf(state: Pick<RunsOverview, 'stages' | 'stories'>): string {
-  return createHash('sha256').update(JSON.stringify(state)).digest('hex').slice(0, 16);
+  const text = JSON.stringify(state);
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
 }
 
 export interface WaitResult extends RunsOverview {
