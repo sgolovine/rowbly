@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Record verified worker identities on Stage Runs",
   "description": "Factory review recommendation 3 of 20.\n\n## Context\n\nStage Runs are claimed before worker launch and can contain guessed titles rather than real worker identities; ROW-45 exposed a recovery failure.\n\n## Acceptance criteria\n\n- Provide a supported way to attach the actual worker identity after a successful launch.\n- Record enough identity information to find the worker after supervisor restart, including machine and harness thread identity.\n- Reconcile launch failures and document the lifecycle; amend ADR-0040 through a new repository ADR if required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a2",
+  "stage": "in-progress",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.194Z",
-  "updatedAt": "2026-11-02T23:24:22.313Z",
+  "updatedAt": "2026-11-02T23:27:44.748Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"

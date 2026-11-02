@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Story creator / editor should be the same component",
   "description": "- Right now if I go to create a story, then go back in and edit the story, I get two different UI's.\n\n- Align UI so that when I edit the story, the UI matches the same window I see when I'm creating a story",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "au",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:01:24.317Z",
-  "updatedAt": "2026-11-02T23:25:06.701Z",
+  "updatedAt": "2026-11-02T23:28:13.505Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -70,18 +70,15 @@
           "body": "Revalidation confirmed metadata preservation, but found that saving a stale Task draft can delete a concurrently added Task. Adding atomic stale-draft protection and a regression check before fresh validation.",
           "createdAt": "2026-11-02T22:44:08.303Z",
           "updatedAt": "2026-11-02T22:44:08.303Z"
+        },
+        {
+          "id": "OCWEnVgN",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/131 as 4b21e9b. All six PR checks passed, merge state was clean, no reviews requested changes, and all screenshot URLs returned 200. Main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41545595365. No watcher remains.",
+          "createdAt": "2026-11-02T23:28:12.629Z",
+          "updatedAt": "2026-11-02T23:28:12.629Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:7acea499-e4ea-432d-a6c6-3367d39c06e4",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:25:06.700Z"
-      }
     }
   }
 }

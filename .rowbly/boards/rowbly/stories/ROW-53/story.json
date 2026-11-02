@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Generate complete factory worker briefs with one command",
   "description": "Factory review recommendation 7 of 20.\n\n## Context\n\nThe supervisor assembles briefs through several calls and a hand-filled template, which has already drifted across workers.\n\n## Acceptance criteria\n\n- Add a command that assembles Story, Specs, Tasks, Comments, Epic, links, Stage Prompt, ROWBLY.md and Stage context.\n- Produce a deterministic brief suitable for worker launch and include retry context when applicable.\n- Update the factory skill to consume the generated brief.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a6",
+  "stage": "in-progress",
+  "rank": "Zx",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-02T23:24:23.533Z",
+  "updatedAt": "2026-11-02T23:27:57.828Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"

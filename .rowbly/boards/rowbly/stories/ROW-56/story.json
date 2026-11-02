@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Wait for actionable factory changes without model polling",
   "description": "Factory review recommendation 10 of 20.\n\n## Context\n\nA minute-by-minute model polling loop spends turns while no actionable Board change has occurred.\n\n## Acceptance criteria\n\n- Provide a blocking CLI wait for Stories entering prompted Stages or relevant Stage Run changes.\n- Use file watching with an initial state check so changes around startup are not missed.\n- Support cancellation and update the factory skill to resume only when action is needed.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a9",
+  "stage": "in-progress",
+  "rank": "Zu",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:51.268Z",
-  "updatedAt": "2026-11-02T23:24:24.292Z",
+  "updatedAt": "2026-11-02T23:28:03.393Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"

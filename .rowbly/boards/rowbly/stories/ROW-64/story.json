@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Show Stage Run activity in the Board TUI",
   "description": "Factory review recommendation 18 of 20.\n\n## Context\n\nThe Software Factory Plugin does not provide a card badge even though the Plugin API supports one.\n\n## Acceptance criteria\n\n- Add Board badges for running and failed Stage Runs, including attempt where useful.\n- Provide an inspectable Stage Run view with worker identity, outcome and activity age.\n- Follow the TUI design system and verify the screens with agentic-tui captures.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "aH",
+  "stage": "in-progress",
+  "rank": "Zz",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:55.313Z",
-  "updatedAt": "2026-11-02T23:24:25.984Z",
+  "updatedAt": "2026-11-02T23:27:54.093Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"

@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Script and verify remote factory worker launches",
   "description": "Factory review recommendation 8 of 20.\n\n## Context\n\nThe rook launcher-thread protocol repeatedly relies on agents reconstructing fragile shell and harness steps.\n\n## Acceptance criteria\n\n- Provide a launcher script that transfers the brief, starts the worker and verifies its actual identity.\n- Check whether launch succeeded before retrying after an ambiguous response to avoid duplicate workers.\n- Return a compact structured result and keep reusable skill assets self-contained; isolate rook-specific settings in repository configuration.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a7",
+  "stage": "in-progress",
+  "rank": "Zp",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.416Z",
-  "updatedAt": "2026-11-02T23:24:31.860Z",
+  "updatedAt": "2026-11-02T23:28:28.899Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"

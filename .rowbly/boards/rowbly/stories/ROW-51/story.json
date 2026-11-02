@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Persist supervisor Board changes promptly",
   "description": "Factory review recommendation 5 of 20.\n\n## Context\n\nInterval Git commits in short CLI calls can leave Board changes unavailable to workers that synchronize through origin/main; startup cleanup may also misclassify pending Rowbly data.\n\n## Acceptance criteria\n\n- Configure the supervisor to commit Board changes promptly and define when it pushes them for worker synchronization.\n- Handle pending Rowbly data through the Git Plugin before the generic cleanup-PR path.\n- Preserve unrelated changes and update ROWBLY.md and the factory startup instructions consistently.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a4",
+  "stage": "in-progress",
+  "rank": "Zs",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.135Z",
-  "updatedAt": "2026-11-02T23:24:30.627Z",
+  "updatedAt": "2026-11-02T23:28:22.011Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"

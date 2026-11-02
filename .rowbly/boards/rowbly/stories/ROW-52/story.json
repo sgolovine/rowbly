@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Create factory branches without tracking origin/main",
   "description": "Factory review recommendation 6 of 20.\n\n## Context\n\nA reviewed task branch tracked origin/main, creating a risk that an upstream-style push targets main.\n\n## Acceptance criteria\n\n- Create task branches from the intended base with tracking disabled.\n- Require the first push to set the upstream to the task branch.\n- Update worktree guidance and verify branch/upstream configuration on a representative worktree.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "backlog",
-  "rank": "a5",
+  "stage": "in-progress",
+  "rank": "Zo",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.511Z",
-  "updatedAt": "2026-11-02T23:24:31.399Z",
+  "updatedAt": "2026-11-02T23:28:30.507Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
