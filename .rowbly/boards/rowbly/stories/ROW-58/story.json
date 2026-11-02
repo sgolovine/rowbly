@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.783Z",
-  "updatedAt": "2026-11-02T23:41:12.494Z",
+  "updatedAt": "2026-11-02T23:43:27.712Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -35,6 +35,13 @@
           "body": "Supervisor plan review: Plan direction accepted for eligibility shape, but hold implementation until we settle the cross-Plugin read contract. Canonical result: eligibility:{eligible:boolean,reasons:[{code,message,blockers?}]}, blockers:{key,name,stage}; Stage Run remains separate. ROW-59 will adapt to this shape; no separate waiting[] field. Preserve an explicit hold field if useful and derive table text from reasons. Reading/validating Story Linking's raw private bag in Software Factory contradicts ownership policy (docs/plugins/compatibility.md §3.1). Investigate the smallest existing legal API/hook integration; otherwise propose narrow read-only contribution/relationship interface with owning Plugin interpreting its own data, coordinating ROW-53. Do not add a duplicate private schema in another Plugin. Continue research and return adjusted plan before editing. Tests must cover race-aware start/retry guard and unchanged Run on refusal, plus eligibility after done. All four checks/screenshots as proposed.",
           "createdAt": "2026-11-02T23:41:12.493Z",
           "updatedAt": "2026-11-02T23:41:12.493Z"
+        },
+        {
+          "id": "cYImCL3c",
+          "author": "sunny",
+          "body": "Supervisor accepted plan: Adjusted plan accepted. Use owning Story Linking public blocks filter and its existing operation guard; no new core API, no private-bag reads in Software Factory. Keep public filter query validation and error propagation explicit, and disabled Plugin data preserved/ignored. Guard after transforms under the existing lock must use pending changes overlay, check Stage category done, and leave saved failed Run/attempt unchanged when retry refused. Own eligibility.ts canonical result and runsOverview integration; ROW-59 adapts HELD contribution. ROW-56 now accepted: digest all of runsOverview {stages,stories}, so keep eligibility there. ROW-53 was informed it can use the public filter; its ADR decision is separately pending. Extend existing pipeline/agent workflow fixtures, no redundant test suite; current count97 so stay<=100 and favor assertions to kept scenarios. Read docs/Plugin operation guard constraints and keep core layer independent of Plugin terms. All four checks/screenshots required. Proceed.",
+          "createdAt": "2026-11-02T23:43:27.712Z",
+          "updatedAt": "2026-11-02T23:43:27.712Z"
         }
       ]
     }
