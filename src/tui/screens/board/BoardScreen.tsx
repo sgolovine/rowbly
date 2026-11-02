@@ -1,5 +1,5 @@
 import { Box, type Key, Text, useInput, useWindowSize } from 'ink';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Slug, Stage, Story } from '../../../schemas';
 import { storyChoices } from '../../../services/stories';
 import { ConfirmDialog, Form, type FormValues, Loading, Modal } from '../../components';
@@ -101,6 +101,8 @@ export function BoardScreen({ params }: ScreenProps) {
   const [dragOver, setDragOver] = useState<{ col: number; key: string; slot: number } | null>(null);
   const firstCol = useRef(0);
   const firstRows = useRef(new Map<string, number>());
+  // Renders again after the wheel scrolls a column other than the cursor's, whose first card is kept in `firstRows`.
+  const [, rescroll] = useReducer((n: number) => n + 1, 0);
   // A Board opened for viewing only; picking a Board in the sidebar drops it.
   const [viewing, setViewing] = useState(params.boardId as Slug | undefined);
 
@@ -234,6 +236,19 @@ export function BoardScreen({ params }: ScreenProps) {
       }
       return services.stories.rank(moved.key, below ? { before: below.key } : above ? { after: above.key } : 'bottom');
     });
+  };
+
+  /** A wheel notch over a column scrolls it by one card; in the cursor's column the cursor stays on screen. */
+  const wheel = (at: number, direction: -1 | 1) => {
+    const stage = stages[at];
+    if (!stage || dragOver) return;
+    const current = firstRows.current.get(stage.key) ?? 0;
+    const top = Math.max(0, Math.min(current + direction, (columns[at]?.length ?? 0) - size));
+    if (top === current) return;
+    // Several notches can arrive before a render, so each one scrolls from the latest first card.
+    firstRows.current.set(stage.key, top);
+    if (at === col) setCursor({ col, row: Math.max(top, Math.min(row, top + size - 1)) });
+    rescroll();
   };
 
   /** A click selects a card (or a column, at row `-1`); a click on the selected card opens it. */
@@ -573,7 +588,9 @@ export function BoardScreen({ params }: ScreenProps) {
           {shownStages.map((stage, i) => {
             const index = hiddenLeft + i;
             const cards = columns[index] ?? [];
-            const first = follow(firstRows.current.get(stage.key) ?? 0, index === col ? row : 0, size, cards.length);
+            // The cursor's column follows the cursor; the others stay where the wheel left them.
+            const stored = firstRows.current.get(stage.key) ?? 0;
+            const first = follow(stored, index === col ? row : stored, size, cards.length);
             firstRows.current.set(stage.key, first);
             return (
               <BoardColumn
@@ -599,6 +616,7 @@ export function BoardScreen({ params }: ScreenProps) {
                   )
                 }
                 onDragLeave={() => setDragOver((over) => (over?.col === index ? null : over))}
+                onWheel={(direction) => wheel(index, direction)}
                 drag={dragOver?.col === index ? dragOver : null}
               />
             );
