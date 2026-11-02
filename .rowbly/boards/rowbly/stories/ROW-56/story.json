@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:51.268Z",
-  "updatedAt": "2026-11-02T23:43:26.971Z",
+  "updatedAt": "2026-11-02T23:45:03.524Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -35,6 +35,13 @@
           "body": "Supervisor accepted plan: Plan accepted with the canonical eligibility digest boundary. Keep digest computation in runsOverview over deterministic {stages,stories} and no duplicate eligibility logic. Coordinate host PluginCommandEnv additions with ROW-55 runCommand: add separate members without changing each other's behavior. Watch before initial read; serialize/coalesce rechecks and never drop an event arriving while check() is in flight. On all exit/error/abort paths close watchers, timers, abort/signal handlers and avoid lingering CLI processes. Manual verification must include a change during a delayed initial check, stale digest, timeout, watcher fallback and SIGINT/SIGTERM. Existing AGENTS test policy allows manual checks for this new read command; extend a kept test if you find an actual correctness race requiring a regression. ROW-58 eligibility computed in runsOverview, ROW-59 HELD reason, so wait remains independent. No ADR number needed. Implement only wait/poll section and your command/doc additions. Run/report all four checks and agentic-tui screenshot evidence. Proceed.",
           "createdAt": "2026-11-02T23:43:26.970Z",
           "updatedAt": "2026-11-02T23:43:26.970Z"
+        },
+        {
+          "id": "O49v47Zu",
+          "author": "sunny",
+          "body": "Plan accepted. Complexity 4. Branch factory/row-56. Adds rowbly software-factory wait [--since <digest>] [--timeout <s>]: watches the Data Root (initial check, then on each change) and returns the runs overview once it differs from --since; runs gains a digest field; Plugin API gains PluginCommandEnv.waitFor; the rowbly-factory loop waits in the background instead of polling once a minute.",
+          "createdAt": "2026-11-02T23:45:03.524Z",
+          "updatedAt": "2026-11-02T23:45:03.524Z"
         }
       ]
     }
