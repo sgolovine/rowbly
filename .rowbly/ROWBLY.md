@@ -16,17 +16,33 @@ Rowbly data is committed on `main` and pushed; the Git Plugin commits each chang
 - **Supervisor**: runs on the main computer, in the main checkout on `main`, with
   `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It pushes `main` after it applies
   Board changes, so workers get them by merging `origin/main`.
-- **Workers run on the server `rook`** (`ssh 192.168.68.62`), never on the supervisor's computer.
-  They are ordinary top-level T3 threads on rook, started as below; that is intended, not a
-  fallback for sub-agents.
+- **Workers run on the supervisor's computer (`thinkpad`) or the server `rook`**
+  (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
+  ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
+  that is intended, not a fallback for sub-agents.
 - **Rook's checkout.** After the supervisor updates its own checkout, it updates rook's shared
   checkout `~/Projects/rowbly` over SSH the same way: a cleanup commit and cleanup PR for any
   uncommitted changes, then `git pull --ff-only` on `main`. Only the supervisor pulls there, at
   start, before any worker runs.
-- **At most 4 threads on rook at once**, counting the launcher while it runs. Check `free -h` there
-  before each start, and start nothing while less than about 6 GB is available.
-- **Worker model**: Codex `gpt-6.1-sol` at `reasoningEffort: medium`, unless the user names another.
+- **Memory on rook.** Check `free -h` there before each start, and start nothing while less than
+  about 6 GB is available.
+- **Worker model**: chosen per Stage and usage (see Model Selection), unless the user names another.
 - **Retries**: the default, one.
+
+### Capacity and Remote Machines
+
+- Local machine (`thinkpad`) capacity is 4 running worker threads.
+- Remote machine (`rook`) capacity is 6 running worker threads, counting the launcher while it runs.
+- The supervisor spawns each worker on whichever machine has capacity, `thinkpad` or `rook`.
+
+### Model Selection
+
+- The supervisor chooses each worker's model from the Stage being run and the usage limits.
+- Coding uses Claude Opus (latest version) by default.
+- Bug hunting uses GPT Sol (latest version).
+- Refinement and PR writing use Claude Opus.
+- The supervisor checks how much usage is left in the current period for each provider. When Claude
+  usage is running low, it starts new threads on GPT, and vice versa.
 
 ### Starting workers on rook
 
@@ -50,8 +66,8 @@ ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread start --json --wait \
 ```
 
 `launcher.md` tells it to launch a thread with `t3_thread_launch` in this project with
-`workspaceStrategy: {"type":"root"}`, `runtimeMode: "full-access"`, modelSelection
-`{"instanceId":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"}]}`,
+`workspaceStrategy: {"type":"root"}`, `runtimeMode: "full-access"`, the given modelSelection (for
+example `{"instanceId":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"}]}`),
 the given title, and a brief file's exact contents as the message; then to check it with
 `t3_thread_read` and reply with one line, `LAUNCHED <threadId> <provider> <model> <options>` or
 `LAUNCH-FAILED <reason>`. Copy each brief to `~/rook-briefs/<KEY>.md` on rook first, and send the

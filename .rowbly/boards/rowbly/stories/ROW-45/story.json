@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:26:59.446Z",
-  "updatedAt": "2026-11-02T22:31:33.583Z",
+  "updatedAt": "2026-11-02T22:41:37.814Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -44,6 +44,13 @@
           "body": "Supervisor correction: the launcher reported a capacity failure after successfully creating worker mcp:18ba8bd8-eedd-4a46-9e62-1c3ca6b8be96 (rook: ROW-45 In Progress). That existing worker is active and retained. The supervisor prematurely recorded failure and attempt 2; no duplicate worker was started.",
           "createdAt": "2026-11-02T22:31:32.890Z",
           "updatedAt": "2026-11-02T22:31:32.890Z"
+        },
+        {
+          "id": "1yBDr8J1",
+          "author": "sunny",
+          "body": "Factory answer from the Story’s stated scope: include Stage Prompts. The description says to remove settings scope tabs and duplicate sidebar items under Global and Board sections; it does not exempt Plugin settings. Preserve Plugin ownership while making separate Global/Board entries and explaining inheritance.",
+          "createdAt": "2026-11-02T22:41:37.813Z",
+          "updatedAt": "2026-11-02T22:41:37.813Z"
         },
         {
           "id": "TJfEUq2w",
