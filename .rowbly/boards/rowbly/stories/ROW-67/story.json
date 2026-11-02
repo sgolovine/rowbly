@@ -17,18 +17,18 @@
     "comments": {
       "comments": [
         {
-          "id": "hGb7d9kD",
-          "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/130 — Scrolling the mouse wheel over a Stage column on the Board scrolls its Stories one at a time. In the column with the highlighted Story, the highlight moves along so it stays on screen. Other columns keep the position the wheel left them at, and the wheel does nothing while a Story is dragged. Checked in the built TUI with agentic-tui (screenshots in the PR); the user guide and the rowbly skill's TUI reference describe it. pnpm typecheck, lint, test:unit (77) and test:cli (20) all pass.",
-          "createdAt": "2026-11-02T23:21:47.162Z",
-          "updatedAt": "2026-11-02T23:21:47.162Z"
-        },
-        {
           "id": "ImUvjr1X",
           "author": "sunny",
           "body": "Merged https://github.com/sgolovine/rowbly/pull/130",
           "createdAt": "2026-11-02T23:24:56.093Z",
           "updatedAt": "2026-11-02T23:24:56.093Z"
+        },
+        {
+          "id": "hGb7d9kD",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/130 — Scrolling the mouse wheel over a Stage column on the Board scrolls its Stories one at a time. In the column with the highlighted Story, the highlight moves along so it stays on screen. Other columns keep the position the wheel left them at, and the wheel does nothing while a Story is dragged. Checked in the built TUI with agentic-tui (screenshots in the PR); the user guide and the rowbly skill's TUI reference describe it. pnpm typecheck, lint, test:unit (77) and test:cli (20) all pass.",
+          "createdAt": "2026-11-02T23:21:47.162Z",
+          "updatedAt": "2026-11-02T23:21:47.162Z"
         }
       ]
     }

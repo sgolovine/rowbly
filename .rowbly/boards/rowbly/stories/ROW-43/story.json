@@ -58,18 +58,18 @@
           "updatedAt": "2026-11-02T22:18:26.929Z"
         },
         {
-          "id": "XlkLIo8e",
-          "author": "sunny",
-          "body": "Revalidation confirmed metadata preservation, but found that saving a stale Task draft can delete a concurrently added Task. Adding atomic stale-draft protection and a regression check before fresh validation.",
-          "createdAt": "2026-11-02T22:44:08.303Z",
-          "updatedAt": "2026-11-02T22:44:08.303Z"
-        },
-        {
           "id": "OvKJ0pXS",
           "author": "sunny",
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/131. Creation and editing now share the full window with staged Tasks, Specs and Links saved atomically. Metadata is preserved and concurrent changes reject stale drafts. Independent validation passed; final head 84fcfaf passed typecheck, lint, 77 unit tests, 20 CLI tests and build. Screenshots uploaded and verified. CI running; historical storage fault-sweep timeout remains unexplained.",
           "createdAt": "2026-11-02T23:24:58.387Z",
           "updatedAt": "2026-11-02T23:24:58.387Z"
+        },
+        {
+          "id": "XlkLIo8e",
+          "author": "sunny",
+          "body": "Revalidation confirmed metadata preservation, but found that saving a stale Task draft can delete a concurrently added Task. Adding atomic stale-draft protection and a regression check before fresh validation.",
+          "createdAt": "2026-11-02T22:44:08.303Z",
+          "updatedAt": "2026-11-02T22:44:08.303Z"
         }
       ]
     },

@@ -36,6 +36,8 @@ export interface BoardColumnProps {
   /** A card (its Story Key) dragged over this column, to `slot`, and dragged off it again. */
   onDragOver?(key: unknown, slot: number): void;
   onDragLeave?(): void;
+  /** A notch of the mouse wheel over this column: `-1` up, `1` down. */
+  onWheel?(direction: -1 | 1): void;
   /**
    * A card dragged over this column: the drop shadow shows at `slot`, the cards from there on move down, and the
    * dragged card itself, when it is in this column, is left out.
@@ -63,6 +65,7 @@ export function BoardColumn({
   onDrop,
   onDragOver,
   onDragLeave,
+  onWheel,
   drag = null,
 }: BoardColumnProps) {
   const others = drag ? cards.filter((s) => s.key !== drag.key) : cards;
@@ -89,6 +92,7 @@ export function BoardColumn({
       onDrop: (key, _x, y) => onDrop?.(key, slotAt(key, y)),
       onDragOver: (key, _x, y) => onDragOver?.(key, slotAt(key, y)),
       onDragLeave,
+      onWheel,
     },
     active,
   );
