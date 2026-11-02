@@ -4,21 +4,28 @@
   "boardId": "rowbly",
   "name": "Include existing branch and PR context in retry briefs",
   "description": "Factory review recommendation 17 of 20.\n\n## Context\n\nRetry briefs contain the failure reason but omit existing work, prompting workers to ask whether to continue it.\n\n## Acceptance criteria\n\n- Include the prior branch, worktree/machine and PR when known, alongside the failure and previous attempt outcome.\n- State whether to continue existing work or start again and explain any deliberate restart.\n- Recover context from recorded Story/Run information and Comments without guessing identities.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "av",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.882Z",
-  "updatedAt": "2026-11-02T23:44:33.704Z",
+  "updatedAt": "2026-11-02T23:48:22.413Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
     },
     "comments": {
       "comments": [
+        {
+          "id": "EgNUad11",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/132. Merge commit 216c558. All six pre-merge GitHub checks passed and screenshot URLs returned HTTP 200. Main CI was queued at the worker final check.",
+          "createdAt": "2026-11-02T23:48:21.757Z",
+          "updatedAt": "2026-11-02T23:48:21.757Z"
+        },
         {
           "id": "ZikraSwM",
           "author": "sunny",
@@ -34,16 +41,6 @@
           "updatedAt": "2026-11-02T23:42:07.521Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:92bf2b19-b798-4570-a035-76b3fdc9dbb1",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:44:33.703Z"
-      }
     }
   }
 }
