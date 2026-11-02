@@ -1,4 +1,5 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
+import { workerBrief } from './brief';
 import {
   boardOverview,
   type Level,
@@ -126,6 +127,27 @@ export const commands: PluginCommands = (group, cli) => {
     .action((opts: { board?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
         print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+      }),
+    );
+
+  group
+    .command('brief <story>')
+    .description(
+      "Print the context part of a Worker's brief: the Story with every Plugin's section, its Stage Prompt and Stages",
+    )
+    .option('--retry-file <path|->', "the supervisor's retry context, from a file or stdin")
+    .option('--instructions-file <path|->', 'the instructions for workers, from a file or stdin')
+    .option('--allow-incomplete', 'print an incomplete brief, with its gaps listed at the top, instead of failing')
+    .action((key: string, opts: { retryFile?: string; instructionsFile?: string; allowIncomplete?: boolean }, cmd) =>
+      cli.run(cmd, async ({ plugin, print, readText }) => {
+        if (opts.retryFile === '-' && opts.instructionsFile === '-')
+          throw new UsageError('Only one of --retry-file and --instructions-file can read stdin');
+        const brief = await workerBrief(plugin, key, {
+          retry: await readText({ file: opts.retryFile }, { name: 'retry' }),
+          instructions: await readText({ file: opts.instructionsFile }, { name: 'instructions' }),
+          allowIncomplete: opts.allowIncomplete,
+        });
+        print(brief, (b) => b.markdown.trimEnd());
       }),
     );
 
