@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-43",
+  "boardId": "rowbly",
+  "name": "Story creator / editor should be the same component",
+  "description": "- Right now if I go to create a story, then go back in and edit the story, I get two different UI's.\n\n- Align UI so that when I edit the story, the UI matches the same window I see when I'm creating a story\n\n",
+  "stage": "todo",
+  "rank": "a2",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T22:01:24.317Z",
+  "updatedAt": "2026-11-02T22:01:24.317Z"
+}
