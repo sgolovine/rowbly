@@ -1,8 +1,10 @@
+import { createHash } from 'node:crypto';
 import {
   type Bagged,
   ConflictError,
   NotFoundError,
   type PluginChangeSet,
+  type PluginCommandEnv,
   type PluginContext,
   type PluginReadContext,
   SlugSchema,
@@ -163,6 +165,8 @@ export interface RunsOverview {
   /** The Stages whose Stage Prompt is on, in Board order. */
   stages: string[];
   stories: { key: string; name: string; stage: string; stageRun: StageRun | null }[];
+  /** A hash of `stages` and `stories`: any change to them changes it (`wait --since`). */
+  digest: string;
 }
 
 /** Every Story of the Board in a Stage whose Stage Prompt is on, with its Stage Run for this visit. */
@@ -171,11 +175,44 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
   const stages = overview.stages.filter((s) => s.prompt.enabled).map((s) => s.key);
   // An empty Stage filter would match every Stage.
   const stories = stages.length ? await plugin.services.stories.list(board, { stages }) : [];
-  return {
-    board,
-    stages,
-    stories: stories.map((s) => ({ key: s.key, name: s.name, stage: s.stage, stageRun: currentRun(plugin, s) })),
-  };
+  const rows = stories.map((s) => ({ key: s.key, name: s.name, stage: s.stage, stageRun: currentRun(plugin, s) }));
+  return { board, stages, stories: rows, digest: digestOf({ stages, stories: rows }) };
+}
+
+/** A short hash of what `runs` lists, so a supervisor can wait until it changes. */
+function digestOf(state: Pick<RunsOverview, 'stages' | 'stories'>): string {
+  return createHash('sha256').update(JSON.stringify(state)).digest('hex').slice(0, 16);
+}
+
+export interface WaitResult extends RunsOverview {
+  /** Whether `digest` differs from the one waited on; `false` when the wait timed out. */
+  changed: boolean;
+}
+
+/**
+ * Waits until the Board's `runs` differ from the digest `since`, or from the first read without it:
+ * a Story entering or leaving a Stage whose Stage Prompt is on, a Stage Prompt turned on or off, or a
+ * Stage Run started, ended or cleared. Rechecks on every change to the Data Root, so a change to
+ * another Board that alters what `runs` lists counts too. `signal` ends the wait unchanged.
+ */
+export async function waitForRuns(
+  plugin: PluginContext,
+  board: string,
+  waitFor: PluginCommandEnv<unknown>['waitFor'],
+  opts: { since?: string; signal?: AbortSignal },
+): Promise<WaitResult> {
+  let since = opts.since;
+  const read = () => runsOverview(plugin, board);
+  const next = await waitFor(
+    async () => {
+      const overview = await read();
+      since ??= overview.digest;
+      return overview.digest === since ? undefined : overview;
+    },
+    { signal: opts.signal },
+  );
+  const overview = next ?? (await read());
+  return { changed: overview.digest !== (since ?? overview.digest), ...overview };
 }
 
 /** A Stage Run in one line, for `stories show`, the TUI Story screen and the `runs` table. */
