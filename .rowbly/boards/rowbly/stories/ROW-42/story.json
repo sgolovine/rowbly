@@ -36,6 +36,13 @@
           "updatedAt": "2026-11-02T22:19:16.992Z"
         },
         {
+          "id": "cQj9GER9",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/127. Added Ctrl+P fuzzy Story finding from main screens, an input-styled header button, keyboard and mouse selection, related Plugin content search, and a Preferences toggle between current Board and full Data Root. Independent validation approved the wheel correction; final HEAD 5f8ccec8ebd0b84d23ed0941a52d862efd364618 passed typecheck, lint, 77 unit tests and 20 CLI tests. Eight screenshots are displayed in the PR. Historical storage fault-sweep timeout remains unexplained; no helpers or timeouts changed. CI pending at handoff.",
+          "createdAt": "2026-11-02T23:02:17.057Z",
+          "updatedAt": "2026-11-02T23:02:17.057Z"
+        },
+        {
           "id": "h7IzsFFN",
           "author": "sunny",
           "body": "Factory correction from sunny: use Ctrl+P to open the fuzzy finder instead of Ctrl+F. This supersedes the shortcut in the original description and prior scope Comment; main-screen-only behavior remains.",
@@ -48,13 +55,6 @@
           "body": "Complexity 4/10. Branch codex/row-42-fuzzy-stories from origin/main. Accepted plan, incorporating sunny’s shortcut correction: fuzzy Story search over Story fields and related Comments, Tasks, Specs, Epics and attachment names; header search button and Ctrl+P on main screens; Preferences toggle for Board versus Data Root scope. ROW-43 owns Story forms; ROW-42 owns Header/search/preferences and narrow Shell integration. Development and independent validation run sequentially.",
           "createdAt": "2026-11-02T22:21:49.076Z",
           "updatedAt": "2026-11-02T22:21:49.076Z"
-        },
-        {
-          "id": "cQj9GER9",
-          "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/127. Added Ctrl+P fuzzy Story finding from main screens, an input-styled header button, keyboard and mouse selection, related Plugin content search, and a Preferences toggle between current Board and full Data Root. Independent validation approved the wheel correction; final HEAD 5f8ccec8ebd0b84d23ed0941a52d862efd364618 passed typecheck, lint, 77 unit tests and 20 CLI tests. Eight screenshots are displayed in the PR. Historical storage fault-sweep timeout remains unexplained; no helpers or timeouts changed. CI pending at handoff.",
-          "createdAt": "2026-11-02T23:02:17.057Z",
-          "updatedAt": "2026-11-02T23:02:17.057Z"
         }
       ]
     },
