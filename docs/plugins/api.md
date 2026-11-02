@@ -338,6 +338,17 @@ Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains bo
 
 - **Screens** get `{ params, plugin, ui }`. `ui.open(screen, params)` opens one of the Plugin's screens on top. `params.title` is the breadcrumb (without one, the screen name with a capital letter); `plugin` and `screen` are reserved route params that Rowbly sets and the screen never gets. Params are not checked: validate them, for example with a schema, and show an error instead of using a bad value.
 - `ui.openStory(key)` and `ui.openBoard(id)` open core screens; back returns. `ui.back()`, `ui.toast(message, kind?)`, `ui.error(err)`.
+- **Settings links** in `tui.settings` name a Plugin screen. Without `scopes`, they appear under `Plugins: <id>` with their params unchanged. Optional `scopes: ['global', 'board']` places the same link under Global and the Board in context; either scope can be listed alone. Board entries are omitted without a Board. Scoped screens receive `params.scope` (`global` or `board`) and `params.boardId` (the Board ID for Board scope, `undefined` for Global), replacing those keys in the link's params. The screen owns reading and writing that scope; core only places and routes the link.
+
+```ts
+import type { PluginTui } from '../../plugin-api';
+
+export const scopedSettings: PluginTui = {
+  screens: { settings: () => null },
+  settings: [{ label: 'Prompts', screen: 'settings', scopes: ['global', 'board'] }],
+};
+```
+
 - **Story tabs** get `{ story, active, plugin, ui }`; **Board sections** `{ board, plugin, ui }`. Two tabs or settings sections of a Plugin with the same label, or a `home`/`settings` link to a missing screen, fail the load.
 - **Plugin Sidebar.** `sidebar: { title, allLabel, items({ plugin }), filter(value), create?, menu?(value) }` adds a list beside the Board sidebar, shown and hidden by a header button titled `title` or by `\` ([ADR-0029](../agents/adr/0029-plugin-sidebars-filter-the-board.md)). `items` returns `{ value, label }` entries; it runs in the `field` stage when the sidebar shows and each time a screen opened over the board closes. The first entry is `allLabel`, such as `All Epics`, and clears the pick. Picking an entry (a click, or `{`/`}`) sets this Plugin's board filter (`StoryFilter.plugins.<id>`) to `filter(value)`, run in the `filter` stage, so it must pass `storyFilterSchema` and `filterStories`; a filter the filter form sets for the same Plugin wins. `create` is a link to one of the Plugin's screens, shown as the button at the bottom; a link to a missing screen fails the load. A failing `items` or `filter` is a toast. `menu(value)` optionally returns screen links with a `key` of `e` (edit) or `d` (delete). Links are loaded with the entries in the `field` stage; a failure is a toast. A right click offers these links without changing the filter; the same keys work on the picked entry while the sidebar has focus. The `allLabel` entry has no menu or edit/delete keys. Menu callbacks run only while the entry remains available.
 - **Stage headers.** `stageHeader` is a compact component beside each Stage heading in the Board's Stages view. It receives `{ boardId, stage, active, plugin, ui }` for the Board actually shown, including a Board opened for viewing without changing the context. Keep it small so the Stage name can truncate beside it. Gate clicks on `active && useIsActive()`; the host isolates render errors in the Plugin boundary. It is mounted only while its Stage is visible and the Plugin is loaded. Use the existing fullscreen editor for long text.

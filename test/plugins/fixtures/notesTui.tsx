@@ -33,7 +33,15 @@ function NoteSection({ board, plugin }: PluginBoardSectionProps<NotesSettings>) 
 export const notesTui: PluginTui<NotesSettings> = {
   screens: { note: NoteScreen },
   home: [{ label: 'Notes', screen: 'note' }],
-  settings: [{ label: 'Notes', screen: 'note' }],
+  settings: [
+    { label: 'Notes', screen: 'note' },
+    {
+      label: 'Scoped Notes',
+      screen: 'note',
+      scopes: ['global', 'board'],
+      params: { marker: 'kept', boardId: 'stale' },
+    },
+  ],
   storyForm: {
     async fields({ story, plugin }) {
       const note = story ? plugin.readBag(story, NoteBag)?.note : undefined;

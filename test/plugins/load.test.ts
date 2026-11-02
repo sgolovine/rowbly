@@ -9,6 +9,7 @@ import { withGitWorker } from '../../src/storage/gitRepository';
 import { publishPublication, withPublication } from '../../src/storage/gitSyncJournal';
 import { createToastStore } from '../../src/tui/hooks';
 import { loadTuiPlugins, withPlugins as withTuiPlugins } from '../../src/tui/loadPlugins';
+import { settingsGroups } from '../../src/tui/screens/settings/sections';
 import { tempRoot } from '../helpers';
 import { syncFixture } from '../storage/fixtures/syncFixture';
 import { boom, notes, stamp, strict } from './fixtures';
@@ -18,7 +19,7 @@ import { pluginRoot, withPlugins } from './helpers';
 describe('loading Plugins (ADR-0010)', () => {
   it('turns on only the Plugins that rowbly.config.json enables, in registry order', async () => {
     const t = await pluginRoot({ stamp: true, notes: true });
-    const { host } = await withPlugins(t, [notes, stamp, boom]);
+    const { host, services } = await withPlugins(t, [notes, stamp, boom]);
     expect(host.active().map((p) => p.definition.id)).toEqual(['notes', 'stamp']);
     expect(host.status().map((s) => [s.id, onOff(s)])).toEqual([
       ['notes', 'on'],
@@ -26,6 +27,27 @@ describe('loading Plugins (ADR-0010)', () => {
       ['boom', 'off'],
     ]);
     expect(host.failures()).toEqual([]);
+    const plugins = await loadTuiPlugins(host);
+    const board = await services.boards.get('web');
+    const groups = settingsGroups(board, plugins);
+    expect(groups[0]?.sections.find((s) => s.label === 'Scoped Notes')?.params).toMatchObject({
+      plugin: 'notes',
+      screen: 'note',
+      scope: 'global',
+      boardId: undefined,
+      marker: 'kept',
+    });
+    expect(groups[1]?.sections.find((s) => s.label === 'Scoped Notes')?.params).toMatchObject({
+      plugin: 'notes',
+      screen: 'note',
+      scope: 'board',
+      boardId: 'web',
+      marker: 'kept',
+    });
+    expect(groups.find((g) => g.title === 'Plugins: notes')?.sections.map((s) => s.label)).toEqual(['Notes']);
+    const noBoard = settingsGroups(null, plugins);
+    expect(noBoard[1]?.sections).toEqual([]);
+    expect(noBoard[0]?.sections.some((s) => s.label === 'Scoped Notes')).toBe(true);
 
     // The real program loader registers only the recovered configuration, before createContext.
     for (const enabled of [false, true]) {
