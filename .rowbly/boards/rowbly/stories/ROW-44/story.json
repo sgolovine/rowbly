@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Update bottom status bar",
   "description": "Make the following updates to the bottom status bar:\n\n- Remove \"n\" for new story\n- Remove \"v\" for list view\n- Remove \"S\" for Sync.\n\n- Add the version to the bottom right. (to the right of help and quit).",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:17:47.582Z",
-  "updatedAt": "2026-11-02T22:17:47.587Z",
+  "updatedAt": "2026-11-02T22:17:49.732Z",
   "plugins": {
     "attachments": {
       "attachments": [
