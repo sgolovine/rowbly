@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Update bottom status bar",
   "description": "Make the following updates to the bottom status bar:\n\n- Remove \"n\" for new story\n- Remove \"v\" for list view\n- Remove \"S\" for Sync.\n\n- Add the version to the bottom right. (to the right of help and quit).",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "ap",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:17:47.582Z",
-  "updatedAt": "2026-11-02T22:21:31.079Z",
+  "updatedAt": "2026-11-02T22:29:06.799Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,15 +26,30 @@
         }
       ]
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-44 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-11-02T22:21:31.078Z"
-      }
+    "comments": {
+      "comments": [
+        {
+          "id": "cVl2OK04",
+          "author": "sunny",
+          "body": "Complexity 2; no subagents. Branch codex/row-44-bottom-status-bar. Plan: hide n new Story, v view toggle and S Sync in the footer only; show the package version after help/quit; preserve shortcuts and header controls. Capture before/after with agentic-tui, verify shortcuts and run all four repository checks.",
+          "createdAt": "2026-11-02T22:23:22.478Z",
+          "updatedAt": "2026-11-02T22:23:22.478Z"
+        },
+        {
+          "id": "hOAmBwHL",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/126. All PR checks passed; both screenshot URLs returned 200. Merge commit fb09ec8. CI on main is queued: https://github.com/sgolovine/rowbly/actions/runs/41537524281",
+          "createdAt": "2026-11-02T22:29:06.143Z",
+          "updatedAt": "2026-11-02T22:29:06.143Z"
+        },
+        {
+          "id": "j1xnap3Y",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/126. Removed the footer hints for n new Story, v view toggle and S Sync, and added the package version after help/quit while preserving shortcuts and header controls. Updated existing readiness checks and the user guide. Typecheck, lint, 77 unit tests, 20 CLI tests and build pass; before/after screenshots uploaded and verified HTTP 200. Validation signed off at 0d23865; CI pending. No production overlap with ROW-42/43.",
+          "createdAt": "2026-11-02T22:26:15.287Z",
+          "updatedAt": "2026-11-02T22:26:15.287Z"
+        }
+      ]
     }
   }
 }

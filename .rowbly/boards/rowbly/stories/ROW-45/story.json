@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "key": "ROW-45",
+  "boardId": "rowbly",
+  "name": "Rework tabs within settings page.",
+  "description": "Right now we have a concept of \"global\" and \"own list\" for many settings inside of preferences.\n\nIt's hard for the user to navigate this.\n\n- Remove tabs from the UI\n\n- Instead of tabs, duplicate the sidebar item, once for global and once for the board sections. Ie. stages should have an item under the \"Global\" section AND under \"Board: <board name>\". Under global it shows items that are global, under board it shows the board level items. Make sure to include verbiage about inhertance.",
+  "stage": "in-progress",
+  "rank": "a1V",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T22:26:59.446Z",
+  "updatedAt": "2026-11-02T22:31:33.583Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aQjuNkwTN",
+          "name": "image-20261102-2224.png",
+          "type": "image/png",
+          "size": 110829,
+          "createdAt": "2026-11-02T22:26:59.451Z",
+          "createdBy": "sunny"
+        }
+      ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "rook: ROW-45 In Progress retry",
+        "by": "sunny",
+        "startedAt": "2026-11-02T22:31:07.461Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "0xKSmN55",
+          "author": "sunny",
+          "body": "Supervisor correction: the launcher reported a capacity failure after successfully creating worker mcp:18ba8bd8-eedd-4a46-9e62-1c3ca6b8be96 (rook: ROW-45 In Progress). That existing worker is active and retained. The supervisor prematurely recorded failure and attempt 2; no duplicate worker was started.",
+          "createdAt": "2026-11-02T22:31:32.890Z",
+          "updatedAt": "2026-11-02T22:31:32.890Z"
+        },
+        {
+          "id": "TJfEUq2w",
+          "author": "sunny",
+          "body": "Complexity 3/10. Branch codex/row-45-settings-scopes, based on current origin/main (1435f6f). Plan: keep Global and Board settings entries fixed to their scope, remove Stages/Fields level tabs and shortcut, explain inheritance and first-edit overrides, update docs, run all four checks, and capture screenshots. ROW-42 coordination: preserve Preferences and its search-scope setting; expected shared interface is the existing settings route table.",
+          "createdAt": "2026-11-02T22:31:33.582Z",
+          "updatedAt": "2026-11-02T22:31:33.582Z"
+        }
+      ]
+    }
+  }
+}
