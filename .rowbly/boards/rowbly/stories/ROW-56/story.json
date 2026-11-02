@@ -27,18 +27,18 @@
           "updatedAt": "2026-11-02T23:45:03.524Z"
         },
         {
-          "id": "e8yO2pni",
-          "author": "sunny",
-          "body": "Supervisor accepted plan: Plan accepted with the canonical eligibility digest boundary. Keep digest computation in runsOverview over deterministic {stages,stories} and no duplicate eligibility logic. Coordinate host PluginCommandEnv additions with ROW-55 runCommand: add separate members without changing each other's behavior. Watch before initial read; serialize/coalesce rechecks and never drop an event arriving while check() is in flight. On all exit/error/abort paths close watchers, timers, abort/signal handlers and avoid lingering CLI processes. Manual verification must include a change during a delayed initial check, stale digest, timeout, watcher fallback and SIGINT/SIGTERM. Existing AGENTS test policy allows manual checks for this new read command; extend a kept test if you find an actual correctness race requiring a regression. ROW-58 eligibility computed in runsOverview, ROW-59 HELD reason, so wait remains independent. No ADR number needed. Implement only wait/poll section and your command/doc additions. Run/report all four checks and agentic-tui screenshot evidence. Proceed.",
-          "createdAt": "2026-11-02T23:43:26.970Z",
-          "updatedAt": "2026-11-02T23:43:26.970Z"
-        },
-        {
           "id": "Sz268Ck7",
           "author": "sunny",
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/138. Adds rowbly software-factory wait [--board] [--since <digest>] [--timeout <s>], which blocks until the Board's runs differ from the digest: a Story entering or leaving a prompted Stage, a Stage Prompt toggled, or a Stage Run started, ended or cleared. A stale digest returns at once, a timeout returns changed:false, and SIGINT/SIGTERM end it cleanly. runs gains a digest over {stages, stories}, so eligibility fields from ROW-58/59 are covered automatically. The Plugin API gains PluginCommandEnv.waitFor (watch before the first check, no overlapping checks, coalesced rechecks, 60 s fallback, full cleanup). The rowbly-factory loop now waits in the background on the digest instead of polling once a minute. Docs and skill references are updated. typecheck, lint, test:unit (77) and test:cli (20) pass; the race, stale digest, timeout, watcher fallback and signal paths were checked by hand; agentic-tui screenshots are in the PR.",
           "createdAt": "2026-11-02T23:55:35.775Z",
           "updatedAt": "2026-11-02T23:55:35.775Z"
+        },
+        {
+          "id": "e8yO2pni",
+          "author": "sunny",
+          "body": "Supervisor accepted plan: Plan accepted with the canonical eligibility digest boundary. Keep digest computation in runsOverview over deterministic {stages,stories} and no duplicate eligibility logic. Coordinate host PluginCommandEnv additions with ROW-55 runCommand: add separate members without changing each other's behavior. Watch before initial read; serialize/coalesce rechecks and never drop an event arriving while check() is in flight. On all exit/error/abort paths close watchers, timers, abort/signal handlers and avoid lingering CLI processes. Manual verification must include a change during a delayed initial check, stale digest, timeout, watcher fallback and SIGINT/SIGTERM. Existing AGENTS test policy allows manual checks for this new read command; extend a kept test if you find an actual correctness race requiring a regression. ROW-58 eligibility computed in runsOverview, ROW-59 HELD reason, so wait remains independent. No ADR number needed. Implement only wait/poll section and your command/doc additions. Run/report all four checks and agentic-tui screenshot evidence. Proceed.",
+          "createdAt": "2026-11-02T23:43:26.970Z",
+          "updatedAt": "2026-11-02T23:43:26.970Z"
         }
       ]
     },
