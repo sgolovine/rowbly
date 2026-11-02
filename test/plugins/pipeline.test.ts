@@ -7,6 +7,8 @@ import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
+import { softwareFactory } from '../../src/plugins/software-factory';
+import { holdStory } from '../../src/plugins/software-factory/holds';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec, listStorySpecs } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -231,8 +233,9 @@ describe('transform (ADR-0012)', () => {
   });
 
   it('a thrown error fails the operation as INTERNAL, naming the Plugin; nothing is saved', async () => {
-    const t = await pluginRoot({ faulty: true });
-    const { services } = await withPlugins(t, [faulty]);
+    const t = await pluginRoot({ faulty: true, 'software-factory': true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
+    const { services } = await withPlugins(t, [softwareFactory, faulty]);
     const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(PluginError);
     expect(err).toMatchObject({
@@ -243,6 +246,10 @@ describe('transform (ADR-0012)', () => {
       details: { plugin: 'faulty', operation: 'boards.update', stage: 'transform' },
     });
     expect((await services.boards.get('web')).name).toBe('Website');
+    // A hold the transform rejects leaves no hold file behind.
+    const hold = holdStory(services.plugins.context('software-factory'), 'WEB-1', { reason: 'By hand' });
+    await expect(hold).rejects.toMatchObject({ code: 'INTERNAL', details: { stage: 'transform' } });
+    expect(await pathExists(join(t.path, 'boards/web/stories/WEB-1/plugins/software-factory/hold.json'))).toBe(false);
   });
 });
 

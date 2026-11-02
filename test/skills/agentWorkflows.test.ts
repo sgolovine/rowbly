@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { readFile, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { type RunCliResult, runCli, tempRoot } from '../helpers';
@@ -151,7 +152,7 @@ describe('rowbly skill: references/stories.md', () => {
 
 describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
   it('turns Plugins on and uses Epics, Specs and Comments as documented', async () => {
-    const { rowbly, json } = await project();
+    const { tmp, rowbly, json } = await project();
     const off = await rowbly('epics', 'list');
     expect(off.exitCode).toBe(2);
     expect(off.stderr).toContain('rowbly plugins enable epics');
@@ -215,10 +216,31 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     expect(
       jsonError(await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json')).code,
     ).toBe('CONFLICT');
+    // A hold keeps the Stage Run, survives a move and refuses a start until it is released (ADR-0043).
+    const bag = (await json('stories', 'show', worked.key)).plugins['software-factory'];
+    expect((await json('software-factory', 'hold', worked.key, '--reason', 'By hand')).hold).toMatchObject({
+      version: 1,
+      reason: 'By hand',
+    });
+    expect((await json('stories', 'show', worked.key)).plugins['software-factory']).toEqual(bag);
     await json('stories', 'move', worked.key, 'in-progress');
     await json('stories', 'move', worked.key, 'todo');
+    const held = { eligible: false, reasons: [{ code: 'HELD', message: 'Held: By hand' }] };
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility).toEqual(held);
+    const refusedHeld = await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json');
+    expect(jsonError(refusedHeld)).toMatchObject({ code: 'CONFLICT', details: { eligibility: held } });
+    // A hold file this Rowbly cannot read counts as held, is left unchanged and is reported.
+    const holdPath = `${tmp.dir}/.rowbly/boards/web/stories/${worked.key}/plugins/software-factory/hold.json`;
+    const valid = await readFile(holdPath, 'utf8');
+    await writeFile(holdPath, '{"version":2,"reason":"later"}');
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility.eligible).toBe(false);
+    expect(jsonError(await rowbly('software-factory', 'release', worked.key, '--json')).code).toBe('DATA_INTEGRITY');
+    expect(await readFile(holdPath, 'utf8')).toBe('{"version":2,"reason":"later"}');
+    expect((await json('doctor')).findings).toMatchObject([{ code: 'SOFTWARE_FACTORY_UNREADABLE_HOLD' }]);
+    await writeFile(holdPath, valid);
+    await json('software-factory', 'release', worked.key);
     expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([
-      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null },
+      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null, eligibility: { eligible: true, reasons: [] } },
     ]);
 
     expect((await rowbly('plugins', 'disable', 'comments')).exitCode).toBe(0);
