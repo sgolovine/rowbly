@@ -301,6 +301,8 @@ export async function deleteSpec(plugin: PluginContext, target: SpecTarget): Pro
 export async function applySpecs(changes: PluginChangeSet, key: string, input: unknown, plugin: PluginReadContext) {
   if (input === undefined) return;
   const parsed = parseSpecsInput(input);
+  if (parsed.specs === undefined && parsed.addSpecs === undefined && parsed.removeSpecs === undefined && !parsed.reset)
+    return;
   await changes.updateStory(key, (story) => {
     const stored = parsed.reset ? [] : storedSpecs(plugin, story);
     const slugs = parsed.specs ?? stored;

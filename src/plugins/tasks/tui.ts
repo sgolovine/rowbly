@@ -3,11 +3,18 @@ import { TaskFormScreen } from './TaskFormScreen';
 import { TaskScreen } from './TaskScreen';
 import { TasksCreateTab } from './TasksCreateTab';
 import { TasksTab } from './TasksTab';
-import { doneCount, storedTasks } from './tasks';
+import { doneCount, listTasks, storedTasks } from './tasks';
 
 export const tui: PluginTui<Record<string, unknown>> = {
   screens: { task: TaskScreen, form: TaskFormScreen },
-  storyCreateTabs: [{ label: 'Tasks', component: TasksCreateTab, input: (draft) => ({ tasks: draft }) }],
+  storyCreateTabs: [
+    {
+      label: 'Tasks',
+      component: TasksCreateTab,
+      input: (draft) => ({ tasks: draft }),
+      edit: { load: ({ story, plugin }) => listTasks(plugin, story.key), input: (draft) => ({ tasks: draft }) },
+    },
+  ],
   storyTabs: [{ label: 'Tasks', component: TasksTab }],
   /** `✓ done/total` over the Story's Tasks, judged by Stage Category; none without Tasks. */
   cardBadge({ story, stages, plugin }) {

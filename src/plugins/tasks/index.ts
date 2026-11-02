@@ -10,7 +10,7 @@ import {
   withFixedStages,
 } from '../../plugin-api';
 import { commands } from './commands';
-import { TasksBag, TasksCreateInput } from './model';
+import { TasksBag, TasksCreateInput, TasksUpdateInput } from './model';
 import { reconcile } from './reconcile';
 import { checkStage, doneCount, stagesOf, storedTasks, updateTasks } from './tasks';
 
@@ -57,7 +57,7 @@ export const tasks = definePlugin({
   description: 'Tasks inside Stories, each with its own Stage',
   bags: { story: TasksBag },
   commands,
-  inputs: { 'stories.create': TasksCreateInput },
+  inputs: { 'stories.create': TasksCreateInput, 'stories.update': TasksUpdateInput },
   options: {
     'stories create': {
       options: [
@@ -92,6 +92,37 @@ export const tasks = definePlugin({
             };
           });
           return { nextNumber: bag.nextNumber + tasks.length, tasks: [...bag.tasks, ...tasks] };
+        });
+      },
+    },
+    'stories.update': {
+      async transform({ changes, result, pluginInput, plugin }) {
+        if (!pluginInput) return;
+        const stages = await stagesOf(plugin, result);
+        const now = toTimestamp(plugin.now());
+        await updateTasks(plugin, changes, result.key, (bag) => {
+          let nextNumber = bag.nextNumber;
+          const tasks = pluginInput.tasks.map((draft) => {
+            const before = draft.number === undefined ? undefined : bag.tasks.find((t) => t.number === draft.number);
+            if (draft.number !== undefined && !before)
+              throw new ValidationError(`Task ${draft.number} no longer exists`);
+            const stage = draft.stage ?? before?.stage ?? stages[0]?.key;
+            if (stage === undefined) throw new ValidationError('the Board has no Stages');
+            if (!before || stage !== before.stage) checkStage(stages, stage);
+            const description = draft.description ?? '';
+            if (before && draft.name === before.name && description === before.description && stage === before.stage)
+              return before;
+            return {
+              ...before,
+              name: draft.name,
+              description,
+              stage,
+              number: before?.number ?? nextNumber++,
+              createdAt: before?.createdAt ?? now,
+              updatedAt: now,
+            };
+          });
+          return { nextNumber, tasks };
         });
       },
     },

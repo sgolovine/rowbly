@@ -11,7 +11,7 @@ import { specs } from '../../src/plugins/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
 import { addLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
-import { updateTask } from '../../src/plugins/tasks/tasks';
+import { listTasks, updateTask } from '../../src/plugins/tasks/tasks';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import { makeStory } from '../helpers';
@@ -77,6 +77,49 @@ describe('transform (ADR-0012)', () => {
       }),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
     expect(await services.stories.list('web', {})).toEqual(before);
+
+    const savedTasks = await listTasks(services.plugins.context('tasks'), created.key);
+    const patch = {
+      name: 'Edited together',
+      plugins: {
+        tasks: { tasks: [{ ...savedTasks[0], name: 'Renamed' }, { name: 'New Task' }] },
+        specs: {
+          storySpecs: [
+            { slug: 'design', text: '# Revised' },
+            { slug: 'new-spec', text: 'New' },
+          ],
+        },
+        'story-linking': { blocks: ['WEB-10'], blockedBy: [] },
+      },
+    };
+    // The late Links transform rejects after core, Tasks and Spec writes/deletions were staged.
+    await expect(
+      services.stories.update(created.key, {
+        ...patch,
+        plugins: { ...patch.plugins, 'story-linking': { blocks: ['WEB-999'], blockedBy: [] } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION', details: { plugin: 'story-linking' } });
+    expect(await services.stories.list('web', {})).toEqual(before);
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Design');
+    expect(await readFile(specPath(created.key, 'checks'), 'utf8')).toBe('# checks\n\nChecks');
+    expect(await pathExists(specPath(created.key, 'new-spec'))).toBe(false);
+    const edited = await services.stories.update(created.key, patch);
+    expect(edited.name).toBe('Edited together');
+    const editedTasks = await listTasks(services.plugins.context('tasks'), created.key);
+    expect(editedTasks).toMatchObject([
+      { number: 1, name: 'Renamed', createdAt: savedTasks[0]?.createdAt },
+      { number: 3, name: 'New Task' },
+    ]);
+    expect(edited.plugins?.tasks).toMatchObject({ nextNumber: 4 });
+    expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Revised');
+    expect(await pathExists(specPath(created.key, 'checks'))).toBe(false);
+    expect(await readFile(specPath(created.key, 'new-spec'), 'utf8')).toBe('# new-spec\n\nNew');
+    expect((await services.stories.get('WEB-10')).plugins).toEqual({ ghost: { kept: true } });
+    expect(edited.plugins?.['story-linking']).toEqual({ blocks: ['WEB-10'] });
+    const unchanged = await services.stories.update(created.key, { description: 'Only core' });
+    expect(unchanged.plugins).toEqual(edited.plugins);
+    const taskOnly = await services.stories.update(created.key, { plugins: { tasks: { tasks: editedTasks } } });
+    expect(taskOnly.plugins?.tasks).toEqual(edited.plugins?.tasks);
   });
 
   it('runs before guards, which run before the save, which runs before reactions', async () => {
@@ -259,6 +302,15 @@ describe('guard', () => {
       code: 'DATA_INTEGRITY',
       exitCode: 6,
     });
+    await expect(
+      services.stories.update('WEB-2', { name: 'Overwrite', plugins: { tasks: { tasks: [] } } }),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    await expect(
+      services.stories.update('WEB-2', {
+        name: 'Overwrite',
+        plugins: { 'story-linking': { blocks: [], blockedBy: [] } },
+      }),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
     const findings = (await services.doctor.check()).findings;
     await expect(
       addAttachment(services.plugins.context('attachments'), 'WEB-2', {
@@ -279,6 +331,8 @@ describe('guard', () => {
     await services.doctor.fix();
     expect(await services.stories.list('web', {})).toEqual(before);
     expect(await readFile(file)).toEqual(bytes);
+    const coreOnly = await services.stories.update('WEB-2', { description: 'Invalid bags kept' });
+    expect(coreOnly.plugins).toEqual(before.find((story) => story.key === 'WEB-2')?.plugins);
   });
 
   it('rejects: nothing is saved and the error is a CONFLICT naming the Plugin', async () => {
