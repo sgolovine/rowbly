@@ -322,6 +322,14 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 - `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story in the board's Stages view, its line in the board's list view and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
 - `loadStoryBadges({ plugin })` is for badges that need the Plugin's files, such as the Epics Plugin's `◆ <Epic name>`. It reads them once each time the board, the Stories list or a Story detail loads its Stories, so a change shows when the screen reloads, and returns a function from a Story to its badges, shown after the Plugin's `storyBadges` in the same places. The returned function runs while the screen renders, so it reads only what was loaded and the Story. A Plugin whose load or badges throw shows none.
 
+`storySearchText({ story, plugin })` on `PluginTui` returns an array of searchable strings (or a
+Promise of one). The Story finder calls it once per Story when opened, only for loaded, enabled
+Plugins. Read bags and related files through the Plugin context; include display names and text,
+not binary attachment contents. Core indexes its own Story fields separately and never inspects
+Plugin bags. Missing related records should be skipped individually. If the contribution throws,
+its text is skipped for that Story and core fields remain searchable. This is a read-only display
+contribution; it must not run operations or save data.
+
 ## Screens, focus and Actions
 
 Use the semantic `theme` colours from `src/plugin-api/tui`; `themes` contains both palettes and `stageColors` maps Stage Categories. `formatDate(isoTimestamp)` formats a timestamp in the terminal's local time. Never use named colours, literal hex values or `dimColor` in a Plugin component. `SelectionRow` takes `selected`, `active`, optional `onClick` and children; it supplies the shared selection bar, fill and focus-following scroll.

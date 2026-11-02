@@ -18,6 +18,7 @@ function chosenHandles(values: Record<string, PluginFormValue>): string[] | unde
 }
 
 export const tui: PluginTui<Record<string, unknown>> = {
+  storySearchText: ({ story, plugin }) => storyAssignees(plugin, story),
   screens: { list: AssigneeList, detail: AssigneeDetail, form: AssigneeForm },
   settings: [{ label: 'Assignees', screen: 'list' }],
   storyBadges: ({ story, plugin }) => storyAssignees(plugin, story).map((handle) => `@${handle}`),

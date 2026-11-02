@@ -10,6 +10,8 @@ function pendingImages(pending: unknown): PendingImage[] {
   return (pending ?? []) as PendingImage[];
 }
 export const tui: PluginTui<unknown> = {
+  storySearchText: ({ story, plugin }) =>
+    plugin.readBag(story, AttachmentsBag)?.attachments.map((attachment) => attachment.name) ?? [],
   screens: { form: AttachmentFormScreen },
   storyTabs: [{ label: 'Attachments', component: AttachmentsTab }],
   storyBadges: ({ story, plugin }) => {
