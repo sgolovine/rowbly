@@ -1,4 +1,5 @@
 import {
+  ConflictError,
   definePlugin,
   isSlug,
   type PluginFinding,
@@ -75,6 +76,15 @@ export const specs = definePlugin({
           const story = changes.story(input.key)?.after;
           if (!story) return;
           const before = await listStorySpecs(plugin, story);
+          const ordered = (specs: readonly (typeof before)[number][]) =>
+            [...specs].sort((a, b) => a.slug.localeCompare(b.slug));
+          if (
+            pluginInput.baselineStorySpecs !== undefined &&
+            JSON.stringify(ordered(pluginInput.baselineStorySpecs)) !== JSON.stringify(ordered(before))
+          )
+            throw new ConflictError(
+              'Story Specs changed since this editor opened. Close and reopen the editor before saving.',
+            );
           for (const old of before) {
             if (!pluginInput.storySpecs.some((s) => s.slug === old.slug))
               await changes.deleteFile({ story: input.key }, specFile(old.slug));

@@ -21,6 +21,7 @@ import {
 export const SpecsBag = z.object({ specs: z.array(SlugSchema) });
 export const SpecsInput = z.object({
   specs: z.array(SlugSchema).optional(),
+  baselineSpecs: z.array(SlugSchema).optional(),
   addSpecs: z.array(SlugSchema).optional(),
   removeSpecs: z.array(SlugSchema).optional(),
   /** Replace the stored links even when they are invalid (an explicit reset); `specs` is the new set. */
@@ -28,6 +29,7 @@ export const SpecsInput = z.object({
 });
 export type SpecsInput = z.infer<typeof SpecsInput>;
 export const SpecsCreateInput = SpecsInput.extend({
+  baselineStorySpecs: z.array(z.object({ slug: SlugSchema, title: z.string(), text: z.string() })).optional(),
   storySpecs: z
     .array(
       z.object({
@@ -306,6 +308,13 @@ export async function applySpecs(changes: PluginChangeSet, key: string, input: u
   if (parsed.specs === undefined && parsed.addSpecs === undefined && parsed.removeSpecs === undefined && !parsed.reset)
     return;
   await changes.updateStory(key, (story) => {
+    if (
+      parsed.baselineSpecs !== undefined &&
+      JSON.stringify([...parsed.baselineSpecs].sort()) !== JSON.stringify([...storedSpecs(plugin, story)].sort())
+    )
+      throw new ConflictError(
+        'Board Spec links changed since this editor opened. Close and reopen the editor before saving.',
+      );
     const stored = parsed.reset ? [] : storedSpecs(plugin, story);
     const slugs = parsed.specs ?? stored;
     return setSpecs(

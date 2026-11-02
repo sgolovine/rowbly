@@ -1,5 +1,6 @@
 import {
   type Bagged,
+  ConflictError,
   NotFoundError,
   type PluginChangeSet,
   type PluginContext,
@@ -190,7 +191,13 @@ export async function applyCreateLinks(
 export async function applyUpdateLinks(
   changes: PluginChangeSet,
   story: Pick<Story, 'key' | 'boardId'>,
-  input: { readonly blocks?: readonly string[]; readonly blockedBy?: readonly string[] } | undefined,
+  input:
+    | {
+        readonly blocks?: readonly string[];
+        readonly blockedBy?: readonly string[];
+        readonly baseline?: { readonly blocks?: readonly string[]; readonly blockedBy?: readonly string[] };
+      }
+    | undefined,
   plugin: PluginHookContext,
 ): Promise<void> {
   if (!input) return;
@@ -199,6 +206,20 @@ export async function applyUpdateLinks(
   const current = changes.story(story.key)?.after;
   if (!current) return;
   const existing = requireBlocks(plugin, current);
+  const incoming =
+    input.blockedBy !== undefined && input.baseline?.blockedBy !== undefined
+      ? candidates.filter((s) => s.key !== story.key && requireBlocks(plugin, s).includes(story.key)).map((s) => s.key)
+      : [];
+  const equal = (a: readonly string[], b: readonly string[]) =>
+    JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
+  if (
+    input.baseline &&
+    ((input.blocks !== undefined && input.baseline.blocks !== undefined && !equal(input.baseline.blocks, existing)) ||
+      (input.blockedBy !== undefined &&
+        input.baseline.blockedBy !== undefined &&
+        !equal(input.baseline.blockedBy, incoming)))
+  )
+    throw new ConflictError('Links changed since this editor opened. Close and reopen the editor before saving.');
   for (const key of input.blocks ?? []) {
     if (key === story.key) throw new ValidationError('a Story cannot block itself');
     if (!keys.has(key) && !existing.includes(key))

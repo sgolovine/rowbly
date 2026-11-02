@@ -16,7 +16,11 @@ export const tui: PluginTui = {
             throw new Error(`Links unavailable: invalid data on ${view.unavailable.join(', ')}`);
           return view.links.map((l) => ({ direction: l.relation, key: l.key }));
         },
-        input: (draft) => ({
+        input: (draft, initialDraft) => ({
+          baseline: {
+            blocks: (initialDraft as LinkDraft[]).filter((l) => l.direction === 'blocks').map((l) => l.key),
+            blockedBy: (initialDraft as LinkDraft[]).filter((l) => l.direction === 'blocked-by').map((l) => l.key),
+          },
           blocks: (draft as LinkDraft[]).filter((l) => l.direction === 'blocks').map((l) => l.key),
           blockedBy: (draft as LinkDraft[]).filter((l) => l.direction === 'blocked-by').map((l) => l.key),
         }),

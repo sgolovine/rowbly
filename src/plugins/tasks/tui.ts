@@ -12,7 +12,10 @@ export const tui: PluginTui<Record<string, unknown>> = {
       label: 'Tasks',
       component: TasksCreateTab,
       input: (draft) => ({ tasks: draft }),
-      edit: { load: ({ story, plugin }) => listTasks(plugin, story.key), input: (draft) => ({ tasks: draft }) },
+      edit: {
+        load: ({ story, plugin }) => listTasks(plugin, story.key),
+        input: (draft, initialDraft) => ({ tasks: draft, baseline: initialDraft }),
+      },
     },
   ],
   storyTabs: [{ label: 'Tasks', component: TasksTab }],

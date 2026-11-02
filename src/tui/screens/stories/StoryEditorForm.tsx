@@ -133,7 +133,7 @@ export function StoryEditorForm({
           continue;
         const converted = invokePluginSync(
           { plugin: t.pluginId, stage: 'field', operation: story ? 'stories.update' : 'stories.create' },
-          () => (story ? t.edit?.input(drafts[t.id]) : t.input(drafts[t.id])),
+          () => (story ? t.edit?.input(drafts[t.id], initialDrafts[t.id]) : t.input(drafts[t.id])),
         );
         if (converted !== undefined) input = mergePluginInput(input, { [t.pluginId]: converted }) ?? input;
       }

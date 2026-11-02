@@ -26,8 +26,8 @@ export const createNotesTui: PluginTui = {
         async load({ story, plugin }) {
           return { note: (await plugin.files.read({ story: story.key }, 'note.md')) ?? '' };
         },
-        input(draft) {
-          return Draft.parse(draft);
+        input(draft, initialDraft) {
+          return { ...Draft.parse(draft), baseline: Draft.parse(initialDraft) };
         },
       },
       input(draft) {

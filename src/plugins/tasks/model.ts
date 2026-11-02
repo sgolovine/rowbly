@@ -35,6 +35,7 @@ export interface Task extends StoredTask {
 
 export const TasksUpdateInput = z
   .object({
+    baseline: z.array(StoredTaskSchema).optional(),
     tasks: z.array(
       z.object({
         number: z.int().min(1).optional(),

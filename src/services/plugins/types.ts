@@ -954,7 +954,8 @@ export interface PluginStoryCreateTab<S = Record<string, unknown>> {
   /** Opt in to the shared edit window. Load without saving; only changed drafts become update input. */
   edit?: {
     load(args: { story: Story; plugin: PluginContext<S> }): Promise<unknown>;
-    input(draft: unknown): unknown | undefined;
+    /** Include the loaded baseline in input; check it inside the operation before replacing stored data. */
+    input(draft: unknown, initialDraft: unknown): unknown | undefined;
   };
 }
 

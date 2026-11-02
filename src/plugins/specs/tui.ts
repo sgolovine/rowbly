@@ -14,7 +14,8 @@ export const tui: PluginTui<Record<string, unknown>> = {
       label: 'Specs',
       edit: {
         load: ({ story, plugin }) => listStorySpecs(plugin, story),
-        input: (draft) => ({
+        input: (draft, initialDraft) => ({
+          baselineStorySpecs: initialDraft,
           storySpecs: (draft as StorySpecDraft[]).map((s) => ({ ...s, title: s.title || undefined })),
         }),
       },
@@ -47,7 +48,9 @@ export const tui: PluginTui<Record<string, unknown>> = {
       // `null` is the reset of an invalid stored value: replace it with no links.
       if (values.specs === null) return { specs: [], reset: true };
       const specs = Array.isArray(values.specs) ? values.specs : [];
-      return !story && !specs.length ? undefined : { specs };
+      return !story && !specs.length
+        ? undefined
+        : { specs, ...(story ? { baselineSpecs: SpecsBag.parse(story.plugins?.specs ?? { specs: [] }).specs } : {}) };
     },
   },
   storyFilter: {

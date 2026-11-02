@@ -101,6 +101,10 @@ export const tasks = definePlugin({
         const stages = await stagesOf(plugin, result);
         const now = toTimestamp(plugin.now());
         await updateTasks(plugin, changes, result.key, (bag) => {
+          if (pluginInput.baseline !== undefined && JSON.stringify(pluginInput.baseline) !== JSON.stringify(bag.tasks))
+            throw new ConflictError(
+              'Tasks changed since this editor opened. Close and reopen the editor before saving.',
+            );
           let nextNumber = bag.nextNumber;
           const tasks = pluginInput.tasks.map((draft) => {
             const before = draft.number === undefined ? undefined : bag.tasks.find((t) => t.number === draft.number);

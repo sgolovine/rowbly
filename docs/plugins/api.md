@@ -543,7 +543,7 @@ A transform can write Plugin files on a Story created by the current operation i
 
 ## Story create tabs
 
-`tui.storyCreateTabs` contributes `{ label, component, input(draft) }` entries separately from saved `storyTabs`. New Story shows Details, then enabled Plugins' create tabs in registry order. Details holds core fields, Custom Fields and `storyForm` fields of Plugins without create tabs. A Plugin with a create tab has its `storyForm` fields moved into that tab; `ctrl+g` switches focus between those fields and the draft component. Edit uses the same window, showing tabs that opt in with `edit: { load, input }`. `edit.load({ story, plugin })` reads the initial draft before the window opens; a failed load makes that tab unavailable and keeps its stored data. `edit.input(draft)` converts changed drafts to `stories.update` input. Create-only contributions remain on New Story; their `storyForm` fields stay on Details during editing.
+`tui.storyCreateTabs` contributes `{ label, component, input(draft) }` entries separately from saved `storyTabs`. New Story shows Details, then enabled Plugins' create tabs in registry order. Details holds core fields, Custom Fields and `storyForm` fields of Plugins without create tabs. A Plugin with a create tab has its `storyForm` fields moved into that tab; `ctrl+g` switches focus between those fields and the draft component. Edit uses the same window, showing tabs that opt in with `edit: { load, input }`. `edit.load({ story, plugin })` reads the initial draft before the window opens; a failed load makes that tab unavailable and keeps its stored data. `edit.input(draft, initialDraft)` converts changed drafts to `stories.update` input. The second argument is the original loaded draft; use it as a baseline in operation input and compare it against current data inside the transform, under the Data Root lock, before replacing snapshots. A conflict rejects the whole save and retains drafts. Create-only contributions remain on New Story; their `storyForm` fields stay on Details during editing.
 
 `PluginStoryCreateTabProps` supplies `draft`, `onChange`, `boardId`, optional `story` (editing), `active`, `plugin` and `ui`. Create drafts start as `undefined`; edit drafts start from `edit.load`; the host owns them and keeps them mounted across tab switches. Components change drafts through `onChange`, respect `active`, and never save or run operations. They may read choices through `plugin.services`. Throw an asynchronous load error during render to show the failure in `PluginSlot`; a failed tab contributes no input, including relocated fields, and the Story can still save.
 
@@ -579,8 +579,8 @@ export const createNotesTui: PluginTui = {
         async load({ story, plugin }) {
           return { note: (await plugin.files.read({ story: story.key }, 'note.md')) ?? '' };
         },
-        input(draft) {
-          return Draft.parse(draft);
+        input(draft, initialDraft) {
+          return { ...Draft.parse(draft), baseline: Draft.parse(initialDraft) };
         },
       },
       input(draft) {
