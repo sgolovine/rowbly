@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "id": "factory-product-improvements",
+  "name": "Factory Product Improvements",
+  "description": "Improve Rowbly factory capabilities through changes to its CLI, Plugins, Stage Run data and TUI. Split from Factory Improvements.",
+  "closed": false,
+  "createdAt": "2026-11-02T23:24:18.687Z",
+  "updatedAt": "2026-11-02T23:24:18.687Z"
+}

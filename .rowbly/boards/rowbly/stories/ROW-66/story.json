@@ -12,10 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:57.517Z",
-  "updatedAt": "2026-11-02T23:12:57.517Z",
+  "updatedAt": "2026-11-02T23:24:32.959Z",
   "plugins": {
     "epics": {
-      "epic": "factory-improvements"
+      "epic": "factory-skill-tooling-improvements"
     }
   }
 }

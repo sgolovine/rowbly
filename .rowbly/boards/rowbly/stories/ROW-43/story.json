@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Story creator / editor should be the same component",
   "description": "- Right now if I go to create a story, then go back in and edit the story, I get two different UI's.\n\n- Align UI so that when I edit the story, the UI matches the same window I see when I'm creating a story",
-  "stage": "in-progress",
-  "rank": "a2",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:01:24.317Z",
-  "updatedAt": "2026-11-02T22:44:08.304Z",
+  "updatedAt": "2026-11-02T23:25:06.701Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -33,16 +33,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "rook: ROW-43 In Progress",
-        "by": "sunny",
-        "startedAt": "2026-11-02T22:09:16.142Z"
-      }
     },
     "comments": {
       "comments": [
@@ -73,8 +63,25 @@
           "body": "Revalidation confirmed metadata preservation, but found that saving a stale Task draft can delete a concurrently added Task. Adding atomic stale-draft protection and a regression check before fresh validation.",
           "createdAt": "2026-11-02T22:44:08.303Z",
           "updatedAt": "2026-11-02T22:44:08.303Z"
+        },
+        {
+          "id": "OvKJ0pXS",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/131. Creation and editing now share the full window with staged Tasks, Specs and Links saved atomically. Metadata is preserved and concurrent changes reject stale drafts. Independent validation passed; final head 84fcfaf passed typecheck, lint, 77 unit tests, 20 CLI tests and build. Screenshots uploaded and verified. CI running; historical storage fault-sweep timeout remains unexplained.",
+          "createdAt": "2026-11-02T23:24:58.387Z",
+          "updatedAt": "2026-11-02T23:24:58.387Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:7acea499-e4ea-432d-a6c6-3367d39c06e4",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:25:06.700Z"
+      }
     }
   }
 }

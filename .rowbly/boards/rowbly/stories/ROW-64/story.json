@@ -12,10 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:55.313Z",
-  "updatedAt": "2026-11-02T23:12:55.313Z",
+  "updatedAt": "2026-11-02T23:24:25.984Z",
   "plugins": {
     "epics": {
-      "epic": "factory-improvements"
+      "epic": "factory-product-improvements"
     }
   }
 }
