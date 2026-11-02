@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:01:24.317Z",
-  "updatedAt": "2026-11-02T22:21:09.860Z",
+  "updatedAt": "2026-11-02T22:34:30.630Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -52,6 +52,13 @@
           "body": "Complexity 5/10. Continuing codex/row-43-shared-story-editor from current origin/main. Plan: share the create/edit window; stage existing Tasks, Specs and Links; save all changes together; update affected docs; independently validate and capture screenshots before opening a draft PR.",
           "createdAt": "2026-11-02T22:21:09.859Z",
           "updatedAt": "2026-11-02T22:21:09.859Z"
+        },
+        {
+          "id": "J3rDLRia",
+          "author": "sunny",
+          "body": "Independent validation found Task edits dropping unknown stored Task and Plugin bag keys. Sign-off withheld; correction and a regression check are underway, followed by fresh independent validation and screenshots.",
+          "createdAt": "2026-11-02T22:34:30.630Z",
+          "updatedAt": "2026-11-02T22:34:30.630Z"
         },
         {
           "id": "Jy8zZhV2",
