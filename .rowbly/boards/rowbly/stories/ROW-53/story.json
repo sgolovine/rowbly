@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-02T23:27:57.828Z",
+  "updatedAt": "2026-11-02T23:41:11.810Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:a0b9183a-4671-4809-9a22-ff79b054034d",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:37:34.850Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "NrXfQbOh",
+          "author": "sunny",
+          "body": "Supervisor plan review: Do not implement the proposed ADR/API changes yet. I asked the user to approve a narrow exception permitting ROWBLY.md to be read as inert text; AGENTS.md requires user approval to reverse accepted ADR guidance. While waiting, refine the smallest read-only context design and inventory existing pipeline fixtures; no user-dependent changes. Reserve ADR-0044 provisionally (ROW-59 has proposed 0043), recheck before publishing. Do NOT delete references/worker-brief.md: ROW-63 and ROW-66 are completing changes to it. Generated briefs must preserve their retry and assigned-worker rules; merge their landed changes before replacing skill steps, and retain template as human fallback unless separately agreed. --retry-file passing captured context is acceptable in principle; coordinate with ROW-63's actual text. A new cross-Plugin contribution hook and failing-contributor behavior touches Plugin loading/pipeline: extend an existing fixture test for failure isolation and preserved Plugin Data; 'no new test' isn't sufficient. Need plan for disabled/missing contributors and an explicit incomplete result rather than silently launching an incomplete brief. ROW-58 needs blocker reads without interpreting another Plugin's private bag, so report a narrow shared read interface proposal for that as well.",
+          "createdAt": "2026-11-02T23:41:11.809Z",
+          "updatedAt": "2026-11-02T23:41:11.809Z"
+        }
+      ]
     }
   }
 }

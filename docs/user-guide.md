@@ -610,7 +610,14 @@ threads. It starts a worker for each Story that arrives in such a Stage, up to 4
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
 `rowbly` commands their Stage Prompt asks for, and it checks and applies them with
 `rowbly software-factory apply`. A failed Stage Run is retried
-once unless `ROWBLY.md` or the Stage Prompt says otherwise. It runs until you stop it.
+once unless `ROWBLY.md` or the Stage Prompt says otherwise. Before starting the retry, the supervisor
+captures the previous Run and recovers existing work from the Story, Comments and identified worker's
+messages: outcome, failure reason, branch, worktree/machine and PR when known, with sources and
+verification limits. It saves that context as a Comment when Comments are on (otherwise in its
+messages and brief), before the retry replaces the failed Run. The retry brief explicitly says
+whether to continue the existing work or start again, identifies the instruction authorizing that
+choice, and explains any deliberate restart. Missing context stays unknown; unresolved choices go
+to the user. It runs until you stop it.
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
