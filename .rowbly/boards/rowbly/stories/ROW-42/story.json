@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:00:03.727Z",
-  "updatedAt": "2026-11-02T22:15:54.465Z",
+  "updatedAt": "2026-11-02T22:21:49.077Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -35,6 +35,31 @@
         "by": "sunny",
         "startedAt": "2026-11-02T22:15:54.464Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "BqcqQLbx",
+          "author": "sunny",
+          "body": "Factory scope decisions from sunny: default fuzzy search to the current Board. Add a preference toggling search scope between current Board and entire Data Root. Search Story fields plus related Comments, Tasks, Specs, Epics and attachment names. Ctrl+F opens only from main screens; preserve active forms and modals.",
+          "createdAt": "2026-11-02T22:19:16.992Z",
+          "updatedAt": "2026-11-02T22:19:16.992Z"
+        },
+        {
+          "id": "h7IzsFFN",
+          "author": "sunny",
+          "body": "Factory correction from sunny: use Ctrl+P to open the fuzzy finder instead of Ctrl+F. This supersedes the shortcut in the original description and prior scope Comment; main-screen-only behavior remains.",
+          "createdAt": "2026-11-02T22:19:39.336Z",
+          "updatedAt": "2026-11-02T22:19:39.336Z"
+        },
+        {
+          "id": "rL6f6ab8",
+          "author": "sunny",
+          "body": "Complexity 4/10. Branch codex/row-42-fuzzy-stories from origin/main. Accepted plan, incorporating sunny’s shortcut correction: fuzzy Story search over Story fields and related Comments, Tasks, Specs, Epics and attachment names; header search button and Ctrl+P on main screens; Preferences toggle for Board versus Data Root scope. ROW-43 owns Story forms; ROW-42 owns Header/search/preferences and narrow Shell integration. Development and independent validation run sequentially.",
+          "createdAt": "2026-11-02T22:21:49.076Z",
+          "updatedAt": "2026-11-02T22:21:49.076Z"
+        }
+      ]
     }
   }
 }

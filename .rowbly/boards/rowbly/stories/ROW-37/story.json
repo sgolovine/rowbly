@@ -17,18 +17,18 @@
     "comments": {
       "comments": [
         {
-          "id": "SVxaCTX6",
-          "author": "sunny",
-          "body": "Complexity 2/10. Branch codex/row-37-story-tab-keys, based on origin/main. Plan: make Tab advance fields within create-editor forms, Shift+Tab advance create-editor tabs, update hints and documentation, verify create and edit behavior with agentic-tui, and run all required checks.",
-          "createdAt": "2026-10-28T00:36:20.308Z",
-          "updatedAt": "2026-10-28T00:36:20.308Z"
-        },
-        {
           "id": "N8AdsQ8S",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/120 implements Tab for next field and Shift+Tab for next create tab, including wrapping and Plugin draft forms. Updated hints and documentation; verified create/edit behavior in agentic-tui and uploaded screenshots. Typecheck, lint, 20 CLI tests and 76 unit tests passed; unit tests used one worker after an initial storage-test timeout. Validation signed off at c1b2416.",
           "createdAt": "2026-10-28T00:36:21.541Z",
           "updatedAt": "2026-10-28T00:36:21.541Z"
+        },
+        {
+          "id": "SVxaCTX6",
+          "author": "sunny",
+          "body": "Complexity 2/10. Branch codex/row-37-story-tab-keys, based on origin/main. Plan: make Tab advance fields within create-editor forms, Shift+Tab advance create-editor tabs, update hints and documentation, verify create and edit behavior with agentic-tui, and run all required checks.",
+          "createdAt": "2026-10-28T00:36:20.308Z",
+          "updatedAt": "2026-10-28T00:36:20.308Z"
         },
         {
           "id": "Vj7MDZFp",
