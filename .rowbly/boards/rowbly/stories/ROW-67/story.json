@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-67",
+  "boardId": "rowbly",
+  "name": "Scrolling up/down with the mouse wheel in a column should scroll stories",
+  "description": "If I am in a column and I use my mouse wheel, I should be able to scroll stories up and down.",
+  "stage": "in-progress",
+  "rank": "a3",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-02T23:16:01.265Z",
+  "updatedAt": "2026-11-02T23:16:03.338Z"
+}
