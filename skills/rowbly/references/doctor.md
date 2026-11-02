@@ -123,6 +123,7 @@ Each finding in `rowbly doctor --json` has `code`, `severity`, `path` (relative 
 | `PLUGIN_FAILED` | error | A Plugin that is on failed to load | nothing | Read the reason in `rowbly plugins list --json`; fix its settings, or turn it off with the user's approval |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry without its PNG | Removes the entry from a valid bag | Inspect remaining Attachments |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file without an entry | nothing; bytes are kept for recovery | Recover it or remove it only when explicitly asked |
+| `SOFTWARE_FACTORY_UNREADABLE_HOLD` | warning | A Story's `hold.json` this Rowbly cannot read; the Story counts as held | nothing | Ask the user: they repair the file, or delete it to release the Story |
 | `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on without a readable file | nothing | Ask the user: `software-factory prompt edit` creates the file, `prompt disable` turns it off |
 | `PLUGIN_DATA_INVALID` | warning | Data of a Plugin that is on that does not match its schema | nothing | Correct the `plugins.<id>` value on that record |
 | `PLUGIN_DATA_UNCHECKED` | info | Data of a Plugin that is off or unknown, reported once per Plugin | nothing | None needed |

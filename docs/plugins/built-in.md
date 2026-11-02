@@ -452,6 +452,8 @@ rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory hold <story> --reason <text>   # no Stage Run starts until it is released
+rowbly software-factory release <story>
 ```
 
 Writes default to the Board level (`--board`, then the current Board). `stages` and `prompt show`
@@ -486,6 +488,15 @@ Stage Run for its current visit or `null`. `run start`, `finish` and `fail` retu
   visit (`CONFLICT`, exit 4). `--retry` starts a failed one again as its next `attempt`. `by` is Me,
   or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
+- `hold` writes the Story's hold, `boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`
+  (`{ "version": 1, "reason", "by", "heldAt" }`, [ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)),
+  and returns `{ key, hold }`; `release` deletes it and returns `{ key, released }`. A held Story
+  has the eligibility reason `HELD`, whose message says who held it and why, so `run start`
+  refuses it (`CONFLICT`, exit 4), `--retry` included. The hold stays through Stage changes, and
+  neither command changes the Stage Run, so a released Story keeps its attempt. `hold` refuses a
+  held Story (`CONFLICT`), `release` one that is not held (`NOT_FOUND`, exit 3). A hold file that
+  is not JSON, invalid, or of another `version` counts as held; both commands refuse it
+  (`DATA_INTEGRITY`, exit 6) and leave it unchanged, and doctor reports it.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
@@ -503,8 +514,11 @@ off keeps the Board entry so the global prompt does not apply. `space` turns the
 highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the
 full-screen editor (`ctrl+s` saves), and `d` removes the selected scope's entry and its file.
 The Story screen shows a **Stage Run** row while the Story has one for its current Stage, such as `running (ROW-12 worker)` or
-`failed (ROW-12 worker, attempt 2): tests failed`.
+`failed (ROW-12 worker, attempt 2): tests failed`, and a **Hold** row while it is held, such as
+`held by alex: pairing on it by hand`.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
-is no fix: create the file with `prompt edit`, or turn it off.
+is no fix: create the file with `prompt edit`, or turn it off. `SOFTWARE_FACTORY_UNREADABLE_HOLD`
+(warning): a Story's hold file is not JSON, is invalid, or has a `version` this Rowbly does not
+support; the Story counts as held. There is no fix: repair the file, or delete it to release the Story.

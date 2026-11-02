@@ -29,6 +29,10 @@ An agent the Supervisor starts for one Stage Run. It follows the Stage Prompt an
 changes it wants instead of making them.
 _Avoid_: runner, bot
 
+**Hold**:
+A person's request, with a reason, that no Stage Run start for a Story until they release it, so they
+can work it by hand. It stays through Stage changes and leaves the Story's Stage Run as it is.
+
 ## Stage Prompts and ROWBLY.md
 
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not

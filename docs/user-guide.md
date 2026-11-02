@@ -451,6 +451,8 @@ rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory hold <story> --reason <text>   # no Stage Run starts until it is released
+rowbly software-factory release <story>
 ```
 
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
@@ -597,7 +599,8 @@ one Stage Prompt that is on and written (not the template), and an agent harness
 threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
 `rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
-once unless `ROWBLY.md` or the Stage Prompt says otherwise. It runs until you stop it.
+once unless `ROWBLY.md` or the Stage Prompt says otherwise. It skips a Story you hold
+(`rowbly software-factory hold <story> --reason <text>`) until you release it. It runs until you stop it.
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
