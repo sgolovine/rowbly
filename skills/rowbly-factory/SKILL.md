@@ -63,9 +63,11 @@ Git Plugin is off.
   show`. When `ROWBLY.md` or the user says Board changes are committed or pushed as they happen, and
   Automatic Commits are Off or `frequency` is `interval`, run `rowbly git configure
   --automatic-commits on --frequency change` and tell the user. Otherwise leave them as they are.
-- **Push with the Git Plugin.** `rowbly git sync` needs Automatic Merge Conflict Resolution On
-  (`rowbly git show`). If it is Off, turn it on only when `ROWBLY.md` or the user says to
-  (`rowbly git configure --automatic-merge-resolution on`); otherwise ask the user before you start.
+- **Push with the Git Plugin.** The CLI's `rowbly git sync` needs Automatic Merge Conflict
+  Resolution On (`synchronization.enabled` in `rowbly git show`); while it is Off the command
+  fails. Only the TUI's **Sync** (`S`) works with it Off, and you work in the CLI. If it is Off,
+  turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
+  --automatic-merge-resolution on`); otherwise ask the user before you start.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
   after `run start` and before you send the brief, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
