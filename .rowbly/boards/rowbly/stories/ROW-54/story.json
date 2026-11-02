@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.416Z",
-  "updatedAt": "2026-11-02T23:34:00.666Z",
+  "updatedAt": "2026-11-02T23:38:49.986Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -26,6 +26,17 @@
         "by": "sunny",
         "startedAt": "2026-11-02T23:34:00.665Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "JPPcglL7",
+          "author": "sunny",
+          "body": "Supervisor accepted the launcher plan with per-Stage-Run unique request identity, full identity and brief verification before reuse, duplicate recovery after timeouts, and reservation-before-GO preserved. Rook is full: implement and validate non-launch paths first; live launch test must wait for supervisor capacity clearance. ROWBLY.md changes remain proposed text only. All four checks and agentic-tui screenshot evidence required.",
+          "createdAt": "2026-11-02T23:38:49.985Z",
+          "updatedAt": "2026-11-02T23:38:49.985Z"
+        }
+      ]
     }
   }
 }
