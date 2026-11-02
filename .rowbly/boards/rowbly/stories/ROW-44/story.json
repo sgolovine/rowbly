@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T22:17:47.582Z",
-  "updatedAt": "2026-11-02T22:26:16.031Z",
+  "updatedAt": "2026-11-02T22:26:53.832Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -43,6 +43,16 @@
           "updatedAt": "2026-11-02T22:26:15.287Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "rook: ROW-44 In PR",
+        "by": "sunny",
+        "startedAt": "2026-11-02T22:26:53.832Z"
+      }
     }
   }
 }
