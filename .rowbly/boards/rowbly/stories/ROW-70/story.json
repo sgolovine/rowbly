@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:40:11.026Z",
+  "updatedAt": "2026-11-03T17:40:12.237Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:18:16.040Z",
+        "finishedAt": "2026-11-03T17:40:11.025Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -50,19 +61,15 @@
           "body": "PR watch event: GitHub reports PR157 at head 3bccb6f0b651735444c20e0c94a4263f0dfe3813 conflicts with main (DIRTY/CONFLICTING); rollup currently empty, which is not check failure. Story remains In Progress with its current verified implementation worker. Continue in the existing isolated worktree: fetch and merge current origin/main, resolve integration conflicts preserving ROW73 setup/ADR0053 and ROW70 Stats/ADR0054 intent, validate the changed integration under the shared lease, and push the existing branch without rebase or force push. Report exact resolved files/head/check results before final handoff; ask only if a semantic conflict cannot be settled by Story/accepted plans. No supervisor product edits.",
           "createdAt": "2026-11-03T17:32:05.356Z",
           "updatedAt": "2026-11-03T17:32:05.356Z"
+        },
+        {
+          "id": "Qy3pQymB",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/157 at c483974a6a271a109d3bd126a3ad87a57dc83969 implements the accepted current-record all-time Board Stats page and CLI with bounded Plugin-owned GitHub reads and truthful deduplicated counts. Merged main including ROW-73 and preserved both reference sections. Typecheck and lint passed. Unit tests 79 and CLI tests 21 passed under the shared validation lease. All six current-head CI checks passed with none pending. Seven screenshot URLs returned 200 at https://github.com/sgolovine/rowbly/pull/157#issuecomment-6610987383. Branch factory/row-70 and worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story are retained. Both private daemons are stopped. Ready for supervisor independent review.",
+          "createdAt": "2026-11-03T17:40:12.236Z",
+          "updatedAt": "2026-11-03T17:40:12.236Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:18:16.040Z",
-        "finishedAt": "2026-11-03T17:40:11.025Z"
-      }
     }
   }
 }
