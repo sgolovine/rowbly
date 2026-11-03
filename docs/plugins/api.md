@@ -571,7 +571,9 @@ rowbly trace lock-9 stories.get coordination ok wait=publication:2001.3,queue:0.
 `PluginBoardStats` declares `metrics: [{key, label}]` and an asynchronous
 `collect({board, stories, plugin})`. Keys are unique lower-kebab-case names; declare 1–16 metrics
 with nonempty labels of at most 100 characters. Declared labels remain visible if the Plugin is Off,
-fails to load or cannot collect. The result is one `BoardStatValue` per declared key:
+fails to load or cannot collect. Malformed declarations cannot prevent collection for core or
+other Plugins: valid, distinct labels are retained (up to 16); malformed entries are omitted.
+The result is one `BoardStatValue` per declared key:
 
 - `{status: 'complete', value: number}` is an exact nonnegative safe integer.
 - `{status: 'partial', value: number, reason: string}` is a validated known lower bound.

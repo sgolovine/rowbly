@@ -266,7 +266,8 @@ Leaving the page or replacing the Data Root cancels its requests.
   bounds, never estimates of the total.
 - GitHub refreshes use at most two requests concurrently, 100 candidate PRs, 10 pages per PR,
   200 pages overall and 30 seconds. Each page has at most 100 commits. A changed or incomplete PR
-  contributes no commit count. Local records and live GitHub reads are not one atomic snapshot.
+  contributes no commit count through any linked alias. A changed PR identity also makes the
+  linked-PR count incomplete. Local records and live GitHub reads are not one atomic snapshot.
 - `--json` returns `{board: {id, name}, window: "all-time", metrics, plugins: [{id, name, metrics}]}`.
   Metrics contain `key`, `label`, `status` (`complete`, `partial`, `unavailable`), `value` (a count,
   or `null` when unavailable) and a `reason` for partial/unavailable results. Source failures are

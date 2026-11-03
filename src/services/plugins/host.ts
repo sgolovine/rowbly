@@ -3,6 +3,7 @@ import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from
 import { createRepositories } from '../../storage';
 import { createExternalReads, type ExternalReads, isExternalReadName } from '../../storage/externalRead';
 import { coordinated } from '../coordination';
+import { boardStatDefinitions } from './boardStatDefinitions';
 import { createPluginGit, disposeGitOwner } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
@@ -338,15 +339,7 @@ function checkNames(
       !Array.isArray(stats.metrics) ||
       stats.metrics.length === 0 ||
       stats.metrics.length > 16 ||
-      stats.metrics.some(
-        (metric) =>
-          !metric ||
-          !isSlug(metric.key) ||
-          typeof metric.label !== 'string' ||
-          !metric.label.trim() ||
-          metric.label.length > 100,
-      ) ||
-      new Set(stats.metrics.map((metric) => metric.key)).size !== stats.metrics.length)
+      boardStatDefinitions(stats.metrics).length !== stats.metrics.length)
   )
     problem('boardStats', 'boardStats requires a collector and 1–16 distinct named metrics');
 

@@ -2,6 +2,7 @@ import { errorMessage, PluginError } from '../core';
 import type { Slug } from '../schemas';
 import { createRepositories } from '../storage';
 import { assertOutsideCoordination, coordinated } from './coordination';
+import { boardStatDefinitions } from './plugins/boardStatDefinitions';
 import { frozenCopy } from './plugins/changeSet';
 import { currentScope } from './plugins/executionScope';
 import { invokePlugin } from './plugins/invoke';
@@ -51,6 +52,8 @@ export async function boardStats(
   for (const definition of host?.registry ?? []) {
     const stats = definition.boardStats;
     if (!stats) continue;
+    const metrics = boardStatDefinitions(stats.metrics);
+    if (!metrics.length) continue;
     const status = host?.status().find((entry) => entry.id === definition.id);
     let values: Record<string, BoardStatValue> = {};
     const enabled = entries?.[definition.id]?.enabled === true;
@@ -77,7 +80,7 @@ export async function boardStats(
           const collected = await abortable(lifetime, () =>
             stats.collect({ board: frozenCopy(config.board), stories: frozenCopy(stories), plugin }),
           );
-          validateValues(stats.metrics, collected);
+          validateValues(metrics, collected);
           return frozenCopy(collected);
         });
       } catch (error) {
@@ -90,7 +93,7 @@ export async function boardStats(
     result.plugins.push({
       id: definition.id,
       name: definition.name,
-      metrics: stats.metrics.map((metric) => ({
+      metrics: metrics.map((metric) => ({
         ...metric,
         ...(values[metric.key] ?? { status: 'unavailable' as const, value: null, reason }),
       })),
