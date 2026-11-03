@@ -481,10 +481,15 @@ export function Shell({
                             try {
                               // Resolve again in case the Story disappeared while the finder was open.
                               const current = await services.stories.get(found.key);
-                              await services.context.use(current.boardId);
-                              setBoardVersion((version) => version + 1);
+                              // Only a Story on another Board switches the Board in context, and starts
+                              // its board from a clean view. One on the context Board saves nothing and
+                              // opens over the board as it is, or over a new board from another root.
+                              if (current.boardId !== ctx?.local.board) {
+                                await services.context.use(current.boardId);
+                                setBoardVersion((version) => version + 1);
+                                router.reset('board');
+                              } else if (router.stack[0]?.screen !== 'board') router.reset('board');
                               setPane('main');
-                              router.reset('board');
                               router.push('story', { key: current.key, title: current.key });
                               setOverlay(null);
                             } catch (err) {

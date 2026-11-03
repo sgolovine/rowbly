@@ -970,7 +970,9 @@ labels, Custom Fields and dates, plus related Comments, Tasks, Story Specs, link
 Epics, Assignee handles, outgoing Story Links and attachment names from enabled Plugins. Search is
 case-insensitive: exact and contiguous matches rank before fuzzy subsequence matches (for example,
 `kbd` matches `Keyboard`). Space-separated terms may match different fields. Use `↑`/`↓` then
-`enter`, or click a result, to close the finder and open its Story. `esc` closes without navigating.
+`enter`, or click a result, to close the finder and open its Story. A Story on the current Board
+opens over the board as you left it, with its filter and highlighted card; one on another Board
+selects that Board first. `esc` closes without navigating.
 Use the mouse wheel over the results to move through longer lists. The finder loads current data
 each time it opens; unavailable Plugin content is skipped.
 
