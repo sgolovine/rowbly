@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T04:37:18.027Z",
+  "updatedAt": "2026-11-03T04:37:18.658Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -141,6 +141,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/149 at c62461424c93a4e9dc1b3576a6391f4ff84d75eb by codex/gpt-6-astra: APPROVED. Fresh reviewer mcp:a75213d3-610d-4ae0-8ed4-6c98f127b65b is independent of all three verified implementing workers: b396dc5c (claude-opus-5-5), 3fa520ee (gpt-6.1-sol), and 37cf3370 (claude-opus-5-5); supplied provenance and published Run identity agree. Reviewed the exact four-file diff against the Story, accepted boundaries and prior numbered findings. Generated context and instructions/retry are preserved, with exactly one filled independent-review provenance section and none outside review; same-provider reviewers are allowed, but the model must differ from every implementer and options do not qualify. Returned work then Independent review each occur once; landed persistence, retention, cleanup/resource ownership, identity and hold rules remain intact. Records precede Stage changes, any pushed head invalidates approval, and merge requires matching-head approval plus passing checks. The remaining integration finding is resolved: current main 32df16c482f4a47203ac2a97bba04569088e29f1 merged locally without conflicts and changed only published Board data; no product resolution or commit was needed. Validation once under the bounded shared lease: typecheck PASS; lint PASS; unit 78 PASS; CLI 21 PASS, unchanged timeouts and no retries. Actual CLI brief assembly on a private copy of the synthetic demo passed, including all three Plugin sections, guide, instructions, Retry and the filled reviewer section; the real Story brief is complete with all six Plugin sections. Synthetic identities are fixtures, not attestations. All six GitHub checks are COMPLETED/SUCCESS, mergeability is CLEAN/MERGEABLE, and no formal review requests changes. All five linked PNGs returned HTTP 200; review, merge and assembled-brief images were inspected. Configuration remains supervisor-only: use the accepted live-catalog model rule rather than the superseded fixed Opus/Sol-pair proposal, apply ROW47 steps 3-4 from /tmp/row-47-correction-evidence/proposed-in-pr-steps-3-4.md, and preserve ROW57 step 2 and ROW48 step 5. No branch protection or product/Board edits. Evidence: /tmp/row-47-review-a75213d3 on rook. Any push invalidates this approval.",
           "createdAt": "2026-11-03T04:37:18.026Z",
           "updatedAt": "2026-11-03T04:37:18.026Z"
+        },
+        {
+          "id": "KVijcOlB",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/149 at approved head c62461424c93a4e9dc1b3576a6391f4ff84d75eb using --merge --match-head-commit; merge commit b2bda0d81bb2e03a18709ae0eb7aafb1ee400eba. Independent approval: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6595561689. Main CI run 41579099832 is queued; supervisor owns monitoring. No dependent PR uses this branch as its base. Configuration handoff: /tmp/row-47-review-a75213d3/supervisor-configuration.md on rook; no configuration applied.",
+          "createdAt": "2026-11-03T04:37:18.658Z",
+          "updatedAt": "2026-11-03T04:37:18.658Z"
         }
       ]
     }
