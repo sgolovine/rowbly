@@ -69,7 +69,7 @@ Git Plugin is off.
   turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
   --automatic-merge-resolution on`); otherwise ask the user before you start.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
-  after `run start` and before you send the brief, after each worker block you apply, and after
+  after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
   fails, retry it once; then tell the user and send nothing that relies on the change.
 - Never run `git rebase`, `git reset` or a force push yourself.
@@ -98,10 +98,14 @@ tell the user what is missing and how to fix it, and stop.
    Root has one. List every skill, tool, command, server, credential and permission they name, and
    check that you or the workers you start will have each. Name each one that is missing and the
    Stage that needs it.
-6. **Stage Runs already running.** In `rowbly software-factory runs --board <id>`, a Story whose
-   `stageRun.status` is `running` was started by an earlier supervisor. Look for its worker (by
-   `stageRun.worker`) and take it over if you find it. Otherwise ask the user whether to clear the
-   Stage Run and start again (`run clear`, then [start the Story](#start-a-story)).
+6. **Stage Runs already running.** Read `runMetadata` in `runs`. For a current verified identity,
+   resolve its `threadId` through its `harness` on its recorded `machine`, then take over the
+   verified worker. Never resolve remote IDs through local tools by assumption. An unavailable
+   machine does not prove the worker is gone. Missing identity, legacy worker strings and titles
+   require independent verification from a launch receipt or harness result, followed by
+   `run attach` for this exact Run and Board publication. Opaque metadata needs explicit repair.
+   Reconcile unknown/conflicting launch state before clearing or retrying; ask the user when it
+   cannot be resolved. Do not start a duplicate or infer failure from age alone.
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -110,10 +114,16 @@ where workers run. One supervisor works a Board: if the user says another one is
 
 Run until the user stops you. Do not wait for the user between events.
 
-1. **Poll.** Run `rowbly software-factory runs --board <id>` about once a minute, and whenever a
-   worker reports. Use the harness's way to wait or watch; do not busy-loop. Re-read
-   `software-factory stages` before each start, so a Stage Prompt the user changed or turned off
-   takes effect.
+1. **Read, then wait.** Run `rowbly software-factory runs --board <id>`, act on it (steps 2 to 5),
+   and keep its `digest`. If you changed the Board, read `runs` again; when you changed nothing, run
+   `rowbly software-factory wait --board <id> --since <digest> --timeout <seconds>` in the
+   background, with the harness's way to run a command and resume when it exits. It returns as soon
+   as `runs` differs from that digest (a Story entered a Stage whose Stage Prompt is on, or a Stage
+   Run or eligibility changed), at once if it already does, or with `changed: false` after the
+   timeout. Act on what it returns as on `runs`. Worker messages do not reach it: resume on them
+   as well, and keep the timeout as long as your check on quiet workers allows. Stop the wait (a signal) when you stop.
+   Never wait on a digest newer than the `runs` you acted on. Re-read `software-factory stages`
+   before each start, so a Stage Prompt the user changed or turned off takes effect.
 2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
    `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
 3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
@@ -134,23 +144,34 @@ Report each start, retry, finish, failure, question and Board change to the user
 
 ## Start a Story
 
-1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
-   worker you are about to start (its thread title or id). Start a worker only when this succeeds.
-   Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off, or unresolved blocking Stories remain: report the returned reason and skip it.
-   Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
+1. Run `rowbly software-factory run start <KEY> --worker "<launch identifier>"`. Keep its returned
+   `stage`, `attempt` and `startedAt` as the expected Run reference. The worker string alone is a
+   launch hint, not verified identity. If the harness can reserve a real thread waiting for GO,
+   use its actual ID. Start work only after this succeeds. Exit 4 means a Run already exists, its
+   Stage Prompt is off or eligibility changed: report the returned reason and skip it.
 2. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
    for workers and the other Stories workers are on, and on a retry `--retry-file` with the
    [retry context](#retry-context). Its `markdown` is every section of
-   [the worker brief](references/worker-brief.md) after the rules, with the Story in full. Exit 4
-   with `details.incomplete` means part of the Story cannot be read: do not start the worker; run
-   `run fail <KEY> --reason "<the gaps>"` and tell the user. Use `--allow-incomplete` only when the
-   user says so.
-3. Send the worker the template's rules, with `<KEY>` filled in, followed by `markdown`, with its
-   `ROWBLY.md` placeholder replaced by `ROWBLY.md` or "None.". Start the worker with the worker
-   model, where and how `ROWBLY.md` or the user says. Without the `brief` command, fill in the whole
-   template by hand from `stories show` and each Plugin's own commands.
-4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
+   [the worker brief](references/worker-brief.md) after the rules: the Story in full, the Stage
+   Prompt and `ROWBLY.md`. The brief is the template's rules, with `<KEY>` filled in, followed by
+   `markdown`. Exit 4 with `details.incomplete` means part of the Story or `ROWBLY.md` cannot be
+   read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
+   `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
+   template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
+3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
+   actual machine, harness, worker ID and thread ID from the launch receipt/harness result. For a
+   remote T3 CLI use [remote launches](references/remote-launch.md), including its durable receipt.
+4. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
+   <startedAt> --worker <actual-id> --machine <machine> --harness <harness> --thread-id <thread-id>
+   --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
+   attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
+   identity is refused. Preserve another section's values when adding current-Run metadata.
+5. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+   and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
+6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
+   reconcile the receipt and actual harness state first; do not retry, clear or start another worker
+   merely because a response was lost. If a worker exists but start/attach failed, keep it waiting
+   or cancel it through its harness, and verify that outcome before another launch.
 
 ## Retry context
 
@@ -160,7 +181,9 @@ discarding earlier work.
 
 1. **Capture the previous attempt.** Read `stories show <KEY>` and the current `runs` result. Keep
    the failed Stage Run's attempt, worker, status, reason (or "not recorded"), and start/finish
-   times. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
+   times, plus current identity/selection/heartbeat from `runMetadata` when available. A retry resets
+   recognized metadata even if timestamps repeat, so retain this evidence first. Read the Story's
+   Comments when that Plugin is on, and the prior worker's messages when
    its recorded identifier resolves. Summarize what it completed, validation and publication
    outcomes, and what remains; distinguish a failed worker or launch from failed implementation.
 2. **Recover existing work.** Include the prior branch, worktree path, machine and PR URL whenever
@@ -192,10 +215,10 @@ Workers end messages with these markers, as the brief asks:
 
 | Marker | Action |
 | --- | --- |
-| a fenced `rowbly` block | [Check it](#apply-a-workers-commands), then apply it, except `stories move`: hold a move until the worker's final message. |
+| a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
 | `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block, held moves last. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block without any move. |
+| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block with any move held earlier added at its end. |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block; Rowbly drops its move. |
 
 A worker that stops with no final marker, or has written nothing for a long time, needs a look:
 ask it for its state. If it is gone, run `run fail` with what you know.
@@ -204,18 +227,31 @@ Finish or fail the Stage Run before you move the Story: a move ends the Stage Ru
 
 ## Apply a worker's commands
 
-Workers never change the Board; they report the commands their Stage Prompt asks for. Before you
-run a block, check every line:
+Workers never change the Board; they report the commands their Stage Prompt asks for. Never run a
+reported line yourself. Save the block to a file exactly as the worker wrote it and let Rowbly check
+and run it:
 
-- It is one `rowbly` command, with no shell syntax (`;`, `|`, `&&`, `$(…)`, redirection), and no
-  `--data-root`.
-- It changes only the worker's own Story: `stories move|edit <KEY>`, and that Story's Comments,
-  Tasks, Story Specs, Attachments, Epic and Story links.
-- It is not a `software-factory` command. Stage Runs are yours.
+```sh
+rowbly software-factory apply <KEY> --file <block.md> --dry-run --json --no-prompt
+rowbly software-factory apply <KEY> --file <block.md> --json --no-prompt
+```
 
-Ask the user about any line that fails a check, and run the others. Run each command against your
-Data Root, in order, with `--json --no-prompt`. On an error, stop the block and tell the worker and
-the user. Then push as [Board persistence](#board-persistence) says.
+- Each line gets a `decision`: `apply`, `hold`, `drop` or `reject`, with a `reason`. Only the
+  worker's own Story may be changed, with `stories edit|move`, `comments add|edit`, `tasks
+  create|edit|move`, `specs create|edit --story` and `story-linking add|remove --blocks`; shell
+  syntax, `--blocked-by` (it writes the other Story), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--*-file` or `--finished-run` are rejected.
+- **Rejected (exit 2).** Nothing ran. Tell the worker and ask the user about each rejected line. To
+  run the allowed lines, write a new block with only those lines and apply it.
+- **Held.** A `stories move` waits until the Stage Run is `finished`. Keep every held line; after
+  `run finish`, add it to the end of the worker's last block. A move after `run fail` is dropped.
+- **Failed at a line.** The lines before it stay applied (`exitCode` 0 in `details.commands`); the
+  failed line and those after it did not run. Tell the worker and the user, and do not apply the
+  lines that ran again. A move that fails with `CONFLICT` found its Stage Run cleared or replaced
+  after `apply` read it (Rowbly ran it with `--finished-run`); it moved nothing. Check `runs` before
+  applying it again.
+
+Then push as [Board persistence](#board-persistence) says.
 
 ## Stopping
 

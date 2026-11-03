@@ -11,6 +11,7 @@ import {
   formatTrace,
   type LoadPluginsOptions,
   loadPlugins,
+  newerRelease,
   PLUGIN_OPTION_COMMANDS,
   type PluginHost,
   type PluginOptionCommand,
@@ -170,14 +171,19 @@ export async function main(argv: string[], registry: readonly AnyPluginDefinitio
     // Ink owns the terminal: the trace waits in a bounded buffer and goes to stderr on exit (OBS-01).
     const buffer = traceRequested(process.env) ? traceBuffer() : undefined;
     setTraceSink(buffer?.sink);
+    // Runs while the TUI starts and never delays it; quitting ends it (ADR-0049).
+    const updateCheck = new AbortController();
+    const skipCheck = process.env.ROWBLY_NO_UPDATE_CHECK === '1' || process.env.ROWBLY_TUI_DEMO === '1';
+    const newerVersion = skipCheck ? undefined : newerRelease(pkg.version, { signal: updateCheck.signal });
     try {
       // Loaded on demand: Ink and React take most of the start-up time of every other command.
       const { startTui } = await import('./tui');
-      await startTui(undefined, { root: globals.root, loadPlugins: load });
+      await startTui(undefined, { root: globals.root, loadPlugins: load, newerVersion });
       return ExitCode.ok;
     } catch (err) {
       return handleError(err, json);
     } finally {
+      updateCheck.abort();
       setTraceSink(undefined);
       for (const line of buffer?.lines() ?? []) process.stderr.write(`${line}\n`);
     }

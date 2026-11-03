@@ -1,18 +1,26 @@
 import {
   type Bagged,
+  type ChangeSetView,
   ConflictError,
+  type DeepReadonly,
+  type GuardResult,
   NotFoundError,
   type PluginChangeSet,
+  type PluginCommandEnv,
   type PluginContext,
+  type PluginHookContext,
   type PluginReadContext,
   SlugSchema,
   type Story,
   TimestampSchema,
   toTimestamp,
   UsageError,
+  ValidationError,
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
+import { endRunMetadata, freshRunMetadata, metadataOutput, readRunMetadata } from './runMetadata';
+import { RunRef } from './runRef';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -48,8 +56,48 @@ export async function endVisit(changes: PluginChangeSet, key: string, plugin: Pl
   const change = changes.story(key);
   if (!change?.before || !change.after || change.before.stage === change.after.stage) return;
   // An invalid bag is left for doctor to report rather than dropped (ADR-0011).
-  if (plugin.inspectBag(change.after, StageRunBag).kind !== 'valid') return;
-  await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  if (plugin.inspectBag(change.after, StageRunBag).kind === 'valid')
+    await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  await endRunMetadata(changes, key);
+}
+
+/** This Plugin's input of `stories.move`: move only while `finishedRun` is the visit's finished Stage Run. */
+export const MoveInput = z.strictObject({ finishedRun: RunRef });
+
+/** A Stage Run reference as `--finished-run` takes it: `<stage>/<attempt>/<startedAt>`. */
+export function formatRunRef(run: RunRef): string {
+  return `${run.stage}/${run.attempt}/${run.startedAt}`;
+}
+
+export function parseRunRef(text: string): RunRef {
+  const match = /^([^/]+)\/(\d+)\/([^/]+)$/.exec(text);
+  const parsed = match && RunRef.safeParse({ stage: match[1], attempt: Number(match[2]), startedAt: match[3] });
+  if (!parsed?.success)
+    throw new ValidationError(`--finished-run "${text}" is not <stage>/<attempt>/<startedAt> of a Stage Run`);
+  return parsed.data;
+}
+
+/**
+ * The `stories.move` guard for `--finished-run` (ADR-0045 §2). It runs after every transform and
+ * reads the Story as stored when the move took the Data Root lock, so a Stage Run cleared, replaced or
+ * started again since `apply` planned the move refuses it, and nothing is saved.
+ */
+export async function guardFinishedRun(
+  changes: ChangeSetView,
+  key: string,
+  input: DeepReadonly<{ finishedRun: RunRef }> | undefined,
+  plugin: PluginHookContext,
+): Promise<GuardResult> {
+  if (!input) return undefined;
+  const stored = changes.story(key)?.before ?? (await plugin.services.stories.get(key));
+  const run = currentRun(plugin, stored);
+  const want = input.finishedRun;
+  if (run?.status === 'finished' && formatRunRef(run) === formatRunRef(want)) return undefined;
+  return {
+    reject: `${stored.key} was not moved: its Stage Run ${formatRunRef(want)} is not this visit's finished Stage Run (now ${
+      run ? `${formatRunRef(run)}, ${run.status}` : 'none'
+    })`,
+  };
 }
 
 /** The latest Story `key`: as this operation left it, else as stored. */
@@ -115,6 +163,7 @@ export async function startRun(
         startedAt: toTimestamp(plugin.now()),
       };
       await saveRun(changes, plugin, story.key, run);
+      await freshRunMetadata(changes, story, run);
       return { key: story.key, stageRun: run };
     },
   );
@@ -160,6 +209,7 @@ export async function clearRun(plugin: PluginContext, key: string): Promise<{ cl
       ...plugin.writeBag(s, undefined),
       updatedAt: toTimestamp(plugin.now()),
     }));
+    await endRunMetadata(changes, story.key);
     return { cleared: story.key };
   });
 }
@@ -168,7 +218,16 @@ export interface RunsOverview {
   board: string;
   /** The Stages whose Stage Prompt is on, in Board order. */
   stages: string[];
-  stories: { key: string; name: string; stage: string; stageRun: StageRun | null; eligibility: Eligibility }[];
+  stories: {
+    key: string;
+    name: string;
+    stage: string;
+    stageRun: StageRun | null;
+    runMetadata: ReturnType<typeof metadataOutput>;
+    eligibility: Eligibility;
+  }[];
+  /** A hash of `stages` and `stories`: any change to them changes it (`wait --since`). */
+  digest: string;
 }
 
 /** Every Story of the Board in a Stage whose Stage Prompt is on, with its Stage Run for this visit. */
@@ -177,19 +236,67 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
   const stages = overview.stages.filter((s) => s.prompt.enabled).map((s) => s.key);
   // An empty Stage filter would match every Stage.
   const stories = stages.length ? await plugin.services.stories.list(board, { stages }) : [];
-  return {
-    board,
-    stages,
-    stories: await Promise.all(
-      stories.map(async (s) => ({
-        key: s.key,
-        name: s.name,
-        stage: s.stage,
-        stageRun: currentRun(plugin, s),
-        eligibility: await storyEligibility(plugin, s),
-      })),
-    ),
-  };
+  const rows = await Promise.all(
+    stories.map(async (s) => ({
+      key: s.key,
+      name: s.name,
+      stage: s.stage,
+      stageRun: currentRun(plugin, s),
+      runMetadata: metadataOutput(await readRunMetadata(plugin, s)),
+      eligibility: await storyEligibility(plugin, s),
+    })),
+  );
+  return { board, stages, stories: rows, digest: digestOf({ stages, stories: rows }) };
+}
+
+/**
+ * A short hash of what `runs` lists, so a supervisor can wait until it changes. It tells states
+ * apart and nothing more (a Plugin imports no Node built-in): two 32-bit lanes of a multiply-xor
+ * hash over the JSON text.
+ */
+function digestOf(state: Pick<RunsOverview, 'stages' | 'stories'>): string {
+  const text = JSON.stringify(state);
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+}
+
+export interface WaitResult extends RunsOverview {
+  /** Whether `digest` differs from the one waited on; `false` when the wait timed out. */
+  changed: boolean;
+}
+
+/**
+ * Waits until the Board's `runs` differ from the digest `since`, or from the first read without it:
+ * a Story entering or leaving a Stage whose Stage Prompt is on, a Stage Prompt turned on or off, or a
+ * Stage Run started, ended or cleared. Rechecks on every change to the Data Root, so a change to
+ * another Board that alters what `runs` lists counts too. `signal` ends the wait unchanged.
+ */
+export async function waitForRuns(
+  plugin: PluginContext,
+  board: string,
+  waitFor: PluginCommandEnv<unknown>['waitFor'],
+  opts: { since?: string; signal?: AbortSignal },
+): Promise<WaitResult> {
+  let since = opts.since;
+  const read = () => runsOverview(plugin, board);
+  const next = await waitFor(
+    async () => {
+      const overview = await read();
+      since ??= overview.digest;
+      return overview.digest === since ? undefined : overview;
+    },
+    { signal: opts.signal },
+  );
+  const overview = next ?? (await read());
+  return { changed: overview.digest !== (since ?? overview.digest), ...overview };
 }
 
 /** A Stage Run in one line, for `stories show`, the TUI Story screen and the `runs` table. */

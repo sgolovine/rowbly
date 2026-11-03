@@ -281,10 +281,13 @@ included), off by default, set globally or per Board; a Board's entry for a Stag
 rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
 rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
-rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null, eligibility}]}
+rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null, runMetadata, eligibility}], digest}
+rowbly software-factory wait --board web --since <digest> [--timeout <s>] --json --no-prompt   # blocks until runs differ; runs + changed
 rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-prompt   # {key, stageRun}; exit 4 if one exists
+rowbly software-factory run attach WEB-42 --stage <stage> --attempt <n> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<receipt>" --json --no-prompt
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
+rowbly software-factory apply WEB-42 --file block.md [--dry-run] --json --no-prompt   # {key, stageRun, dryRun, commands: [{line, text, argv, decision: apply|hold|drop|reject, reason?, exitCode?, output?}]}
 rowbly software-factory brief WEB-42 [--instructions-file <path|->] [--retry-file <path|->] [--allow-incomplete] --json --no-prompt   # {key, board, stage, attempt, complete, incomplete, sections, markdown}; exit 4 when incomplete
 ```
 
@@ -292,6 +295,12 @@ Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path insid
 file exists). `SOFTWARE_FACTORY_MISSING_PROMPT` (doctor warning) is one that is on without its file.
 A Stage Run (`{stage, status: running|finished|failed, attempt, worker, by, startedAt, finishedAt?,
 reason?}`) is one agent's work on a Story's current visit to a Stage; a Stage change removes it.
+`apply` checks a worker's reported `rowbly` block for that Story only, without a shell: any
+rejected line (another Story, `--blocked-by`, shell syntax, `software-factory`, `--data-root`,
+`--yes`, `--*-file`, `--finished-run`) refuses the whole block with exit 2. A move runs only after
+`run finish` (held while running, dropped after `run fail`), as `stories move … --finished-run
+<stage>/<attempt>/<startedAt>`, which exits 4 if that Run was cleared or replaced meanwhile. Each
+allowed line runs as its own command; the first failure stops the block.
 
 Factory `eligibility` is `{eligible, reasons:[{code,message,blockers?}]}`, separate from Stage Runs.
 With Story Linking on, unfinished blockers give `BLOCKED` and `blockers:[{key,name,stage}]`.
@@ -368,3 +377,13 @@ New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift
 TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared.
 
 TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (default first, others in registered order, New last). `enter`/click opens, `n` opens setup; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
+
+Factory `runMetadata` is `{status:absent|valid|invalid|unsupported,current,...}`; current valid output
+includes `version:1,run:{stage,attempt,startedAt},identity?,selection?,heartbeat?`. Identity is
+`{worker,machine,harness,threadId,verification:{source,verifiedAt,by}}`, attested by the supervisor,
+not verified by Rowbly contacting the harness. Attach requires the current running Run; identical
+repeats write nothing, replacement exits4. Metadata file is per-Story
+`plugins/software-factory/run-metadata.json`; start/retry reset recognized v1, clear/Stage changes
+remove it, finish/fail keep it. Opaque bytes stay unchanged/unavailable; owning writes exit6;
+doctor warns `SOFTWARE_FACTORY_RUN_METADATA_INVALID` or `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION`.
+Stale data never supplies current identity; recover via its recorded machine/harness, not a title.

@@ -26,7 +26,8 @@ they take precedence over the Stage Prompt and over any skill it names.
    ```
 
    Each line is one `rowbly` command about this Story only, without `--data-root`. The supervisor
-   applies them; it applies a move only after your final message.
+   applies them; it applies a move only after your final message. No shell runs them, and a line with
+   shell syntax is refused: quote every text argument, in single quotes when it holds `$` or `` ` ``.
 2. **Questions.** If you cannot go on without a decision, end your message with the questions under a
    line `FACTORY-QUESTIONS <KEY>` and wait for the answers.
 3. **Assigned worker.** If the Stage Prompt names `rowbly-dev`, run it in its Assigned worker mode: do

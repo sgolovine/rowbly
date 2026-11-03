@@ -1,4 +1,5 @@
 import type { PluginDoctor, PluginFinding } from '../../plugin-api';
+import { RUN_METADATA_FILE, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, readPrompt, resolvePath, Settings } from './stagePrompts';
 
 /**
@@ -40,6 +41,16 @@ export const doctor: PluginDoctor<Settings> = {
           details: { stage, ...(board ? { board } : {}), promptPath: entry.path ?? null },
         });
       }
+    }
+    for (const story of data.stories) {
+      const state = await readRunMetadata(plugin, story);
+      if (state.status !== 'invalid' && state.status !== 'unsupported') continue;
+      findings.push({
+        code: state.status === 'unsupported' ? 'RUN_METADATA_UNSUPPORTED_VERSION' : 'RUN_METADATA_INVALID',
+        severity: 'warning',
+        path: `boards/${story.boardId}/stories/${story.key}/plugins/software-factory/${RUN_METADATA_FILE}`,
+        message: `${story.key}: ${state.message}; kept unchanged`,
+      });
     }
     return findings;
   },

@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-02T23:48:23.717Z",
+  "updatedAt": "2026-11-03T01:56:53.945Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -30,6 +30,13 @@
     "comments": {
       "comments": [
         {
+          "id": "BumPpY4P",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/140. Adds a read-only Story Context (ADR-0044): each Built-in Plugin (Tasks, Specs, Comments, Epics, Story Linking, Attachments, Assignees) gives a section, and PluginContext.storyContext reads them all, listing every Plugin that failed to load or whose section failed or is partial in 'incomplete'. 'rowbly software-factory brief <KEY>' prints the context part of a worker's brief (Story with all sections, Stage Prompt, Stages, instructions and retry context). It is deterministic and exits 4 with details.incomplete unless --allow-incomplete is given. The factory skill uses it, and the worker-brief template (with the ROW-63 and ROW-66 rules) stays as the rules block and fallback. Not done yet: reading ROWBLY.md waits for the user's approval of a read-only exception; the brief leaves a placeholder for the supervisor. Checks: typecheck, lint, test:unit (78) and test:cli (20) pass.",
+          "createdAt": "2026-11-03T00:06:05.510Z",
+          "updatedAt": "2026-11-03T00:06:05.510Z"
+        },
+        {
           "id": "NrXfQbOh",
           "author": "sunny",
           "body": "Supervisor plan review: Do not implement the proposed ADR/API changes yet. I asked the user to approve a narrow exception permitting ROWBLY.md to be read as inert text; AGENTS.md requires user approval to reverse accepted ADR guidance. While waiting, refine the smallest read-only context design and inventory existing pipeline fixtures; no user-dependent changes. Reserve ADR-0044 provisionally (ROW-59 has proposed 0043), recheck before publishing. Do NOT delete references/worker-brief.md: ROW-63 and ROW-66 are completing changes to it. Generated briefs must preserve their retry and assigned-worker rules; merge their landed changes before replacing skill steps, and retain template as human fallback unless separately agreed. --retry-file passing captured context is acceptable in principle; coordinate with ROW-63's actual text. A new cross-Plugin contribution hook and failing-contributor behavior touches Plugin loading/pipeline: extend an existing fixture test for failure isolation and preserved Plugin Data; 'no new test' isn't sufficient. Need plan for disabled/missing contributors and an explicit incomplete result rather than silently launching an incomplete brief. ROW-58 needs blocker reads without interpreting another Plugin's private bag, so report a narrow shared read interface proposal for that as well.",
@@ -42,6 +49,13 @@
           "body": "Supervisor decision: No user decision has arrived; keep only the ROWBLY.md reader and ADR amendment to the no-read rule on hold. Other design answers: emit context sections only, keep single rules source/template with ROW-63/66 changes; no --rules-file needed. CONFLICT with explicit details.incomplete is appropriate; --allow-incomplete must be opt-in and visibly include all gaps. No waitsFor/relationship API; ROW-58 legal public filter/owning guard is already accepted and implementing. PR132 has merged; PR133 review is active. You may implement the independent read-only storyContext contribution/reader, Plugin contributors, tests and context-only brief without reading ROWBLY.md now, provided this does not amend/reverse any accepted ADR. Use a clear placeholder and supervisor supplementation for guide text until user answers; don't claim this completes the full Story yet. Keep ADR0044 for the contribution API, add ROWBLY exception only if explicitly approved. Merge landed132/133 before modifying skill/template, no stack. If an independent portion also reverses another ADR, stop only that dependent portion and report the exact section.",
           "createdAt": "2026-11-02T23:48:23.716Z",
           "updatedAt": "2026-11-02T23:48:23.716Z"
+        },
+        {
+          "id": "n8aEyGwc",
+          "author": "sunny",
+          "body": "USER DECISION: approved the narrow read-only ROWBLY.md exception, with a new ADR amending ADR-0039 and keeping the file as inert text that Rowbly neither executes nor enforces. Supervisor accepts your previously described approval-path plan. Continue SAME PR140/branch factory/row-53 in the existing bound worktree /home/sgolovine/.t3/worktrees/rowbly/factory-row-53 under the SAME running In Progress Stage Run. Prior partial handoff did not finish the Stage; its held move is obsolete and will be replaced by your full final handoff. First fetch/merge current origin/main, preserve all landed factory changes and existing draft work, no rebase/force/reset/duplicatePR. Add only a dedicated read-only reader of the resolved Data Root own fixed ROWBLY.md file, no arbitrary file-read API, no execute/parse/enforce behavior, and use the normal safe path policy. Missing guide is None; unreadable/unsafe guide must be an explicit incomplete gap under the existing brief policy, not silently invented contents. Brief embeds the original text deterministically under How people work with this Board, without treating it as Rowbly configuration. ADR0047 is reserved for this user-approved exception;0048 reserved heartbeat/0049 updater, recheck before publishing. Record new ADR in docs/agents/adr with index and ADR0039 Status update; amend actual data-model no-read rule and matching API/docs/compiled fixtures/operating skills/reference copies as applicable, preserving narrow inert-text boundary. Keep ADR0044 Story Context contributor contract and template rules/fallback/retry context. Extend the existing read-only Plugin test only as needed for new contract and byte preservation; keep suite<=100. Run all four checks, relevant complete/incomplete/missing/unsafe manual brief scenarios and required agentic-tui screenshots with HTTP200 evidence. Propose any ROWBLY.md workflow edits to supervisor only. PR140 remains draft; never merge in InProgress. Return corrected full ownStory Comment+moveInPR block and FACTORY-DONE ROW-53 once all acceptance criteria are satisfied. Proceed.",
+          "createdAt": "2026-11-03T01:56:53.944Z",
+          "updatedAt": "2026-11-03T01:56:53.944Z"
         }
       ]
     }

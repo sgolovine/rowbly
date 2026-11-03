@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-02T23:27:46.264Z",
+  "updatedAt": "2026-11-03T00:34:15.085Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:1b11e132-88d7-4a07-97af-f91e2eb6ef45",
+        "by": "sunny",
+        "startedAt": "2026-11-03T00:09:48.315Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "pqncR2ap",
+          "author": "sunny",
+          "body": "Supervisor accepted coordinated plan: Plan ACCEPTED with refinements: use shared approved v1 heartbeat {worker,at,source,by}, by=plugin.me; REMOVE caller --by. Missing/mismatched identity or Run=>CONFLICT with no write; invalid/future metadata=>DATA_INTEGRITY. Use source attestation, not a self-reported health proof. 15-minute configurable stale threshold accepted; no automatic clear/fail/retry from age. Being merely alive is not enough to touch after restart: require verified worker activity/harness evidence; waiting-user/ambiguous state stays explicit without invented progress. Stable digest excludes derived ageSeconds and any clock-formatted strings but retains stable fields and semantic stale transition. Verify repeated reads/fallback before/after threshold: no repeated wakeups, one actual transition; keep other sections unchanged. Sequence: prepare independent ADR/docs/liveness work now; wait for ROW49 helpers and PR138/142 to land before integrating dependent code, NO stack/duplicate writer. ADR0048 reserved. ROW64 tab has existing 30s timer; reuse it. Extend existing race/refusal/preservation checks and keep suite<=100. All four checks and screenshots. ROW56 is LOCAL thread d92d9b9f...; I will relay digest note.",
+          "createdAt": "2026-11-03T00:34:15.084Z",
+          "updatedAt": "2026-11-03T00:34:15.084Z"
+        }
+      ]
     }
   }
 }

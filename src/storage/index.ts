@@ -1,5 +1,6 @@
 // Storage & Configuration Layer (contracts §9). The only layer allowed to touch `node:fs`.
 export { cascade, resolveCascade, resolveGlobal } from './cascade';
+export * from './childCommand';
 export {
   assertNoRootEnv,
   canonicalDataRootPath,
@@ -41,4 +42,10 @@ export {
 } from './skills';
 export { editTextInEditor, pathExists, readTextFile, writeFileAtomic, writeTextFile } from './system';
 export * from './transaction';
-export { isWatchedPath, type WatchDataRootOptions, watchDataRoot } from './watch';
+export {
+  isWatchedPath,
+  type WaitForDataRootOptions,
+  type WatchDataRootOptions,
+  waitForDataRoot,
+  watchDataRoot,
+} from './watch';

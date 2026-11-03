@@ -92,6 +92,7 @@ export {
   updateSkill,
 } from './skills';
 export type * from './types';
+export { newerRelease } from './updateCheck';
 
 /**
  * All services over one context. Repositories (and their caches) are shared for its lifetime. Every

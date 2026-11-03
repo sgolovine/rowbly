@@ -95,6 +95,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
 | `software-factory.start` | `{ key, worker, retry? }` | `{ key, stageRun }` |
+| `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
 | `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
 | `software-factory.fail` | `{ key, reason? }` | `{ key, stageRun }` |
 | `software-factory.clear` | `{ key }` | `{ cleared }` (the Story Key) |
@@ -140,6 +141,13 @@ else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set 
 `updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
 the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
 
+`rowbly software-factory apply` runs no operation of its own: it holds no lock and runs each
+command of a worker's block that it allows as a separate `rowbly` process, so each runs its own
+operation, under its own lock, as that command always does
+([ADR-0045](../agents/adr/0045-reported-board-commands-are-checked-and-applied-by-rowbly.md)).
+Its move carries the Stage Run it decided on as the Plugin's `stories.move` input, so the move's
+own guard checks that Run again under that lock.
+
 ## Plugin input of core operations
 
 A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin's `inputs` schema for the operation before anything runs. The built-ins take this input:
@@ -155,6 +163,7 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | Tasks | `stories.update` | `{ tasks: [{ number?, name, description?, stage? }], baseline?: [StoredTask] }`; replaces the list, keeps existing numbers, creation dates and unknown Task/bag fields, allocates new numbers without reuse; missing or duplicate existing numbers reject the operation |
 | Story Linking | `stories.update` | `{ blocks?: [Story Key], blockedBy?: [Story Key], baseline?: { blocks?, blockedBy? } }`; replaces each given direction, including incoming blockers in the same Change Set; existing stale outgoing links may be kept or removed |
 | Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
+| Software Factory | `stories.move` | `{ finishedRun: { stage, attempt, startedAt } }`; its guard refuses the move (`CONFLICT`) unless that is still the finished Stage Run of the Story's current visit, read as stored under the move's lock |
 
 A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Story Linking takes `{ blocks: Story Key }`, returning Stories whose outgoing links include that key;
 its strict query schema rejects malformed queries, and invalid stored linking bags fail explicitly.
@@ -163,3 +172,10 @@ Callers may combine it with `open: true` to find unfinished blockers. Specs take
 `stories.create` collects these bags, Story Spec files and existing blockers’ bags in one Change Set and one journaled commit. Invalid input saves nothing. Story Spec titles use the supplied title, first `#` heading or slug.
 
 The Story editor supplies baselines only for changed Plugin drafts or fields. Tasks compare the loaded stored Task fields (including timestamps); Story Specs compare every slug and its full text/title; Links compare each replaced direction, including incoming links derived from current Board Stories; Board Spec links compare their loaded slugs. Comparisons run in transforms under the Data Root lock. A mismatch raises an attributed `CONFLICT` and saves none of the operation. Unknown Task/bag fields remain preserved and baseline fields never write provenance or identity. These optional baseline inputs opt into conflict detection; direct callers that omit them intentionally replace the current values. Unchanged tabs supply no input and cannot conflict with unrelated edits.
+
+`software-factory.attach` atomically updates the legacy worker string and the current Run's
+`run-metadata.json` identity. Its expected `{stage, attempt, startedAt}` is checked under the lock
+and again against pending state after transforms. A conflicting identity is refused; identical
+attestations write nothing. Every start resets recognized metadata to an empty envelope even when
+timestamps repeat. Clear/Stage changes remove recognized metadata, finish/fail retain it, and
+opaque metadata is preserved and reported. See [ADR-0046](../agents/adr/0046-verified-workers-use-current-run-metadata.md).

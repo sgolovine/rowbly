@@ -304,7 +304,7 @@ rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--priority <P> | --no-priority]
                     [--label <l>… | --add-label <l>… | --remove-label <l>…]
                     [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
-rowbly stories move <KEY> <stage> [--top]
+rowbly stories move <KEY> <stage> [--top] [--finished-run <stage>/<attempt>/<startedAt>]
 rowbly stories rank <KEY> (--before <KEY>|--after <KEY>|--top|--bottom)
 rowbly stories delete <KEY>                          # confirms; pass --yes when not interactive
 ```
@@ -447,10 +447,13 @@ rowbly software-factory prompt disable <stage> [--board <id>] [--level board|glo
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-run]   # check a worker's reported block, then run what it allows
 rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-file <path|->] [--allow-incomplete]
 ```
 
@@ -472,7 +475,34 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`.
+- `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>` moves the Story only
+  while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
+  Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
+  changes nothing.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`.
+  `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
+- `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
+  ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
+  `reject`. A line may only edit or move the Story given, or change its Comments, Tasks, Story
+  Specs or the links it blocks (`story-linking add|remove <KEY> --blocks`); it is split with shell
+  quoting but never run by a shell. Shell syntax (`;`, `|`, `$(…)`, …), another Story, a line that
+  writes another Story (`--blocked-by`), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--edit`, `--*-file` or `--finished-run` are rejected, and then nothing
+  runs (exit 2, every line's decision in `details.commands`). A `stories move` runs last and only
+  once the Story's Stage Run is finished; it is held while the Stage Run runs or when there is none,
+  and dropped after a failed one. `apply` runs it with `--finished-run`, so it exits 4 (`CONFLICT`)
+  and moves nothing when the Stage Run was cleared or replaced while the earlier lines ran. Each allowed line runs as its own `rowbly` command on the same Data Root with
+  `--json --no-prompt`; the first that fails stops the block, the lines before it stay applied, and
+  `apply` exits with that command's code. `--dry-run` only shows the decisions.
+  `--json` returns `{ key, stageRun, dryRun, commands: [{ line, text, argv, decision, reason?, exitCode?, output? }] }`.
+- `wait` blocks until `runs` differs from `--since <digest>` (without it, from `runs` when the wait
+  starts), then prints `runs` with `changed: true`. That happens when a Story enters or leaves a
+  Stage whose Stage Prompt is on, a Stage Prompt is turned on or off, or a Stage Run starts, ends or
+  is cleared, or eligibility changes (for example, a blocker reaches Done); Comments do not count.
+  It watches the Data Root for changes by any process, and checks once at the start, so a change
+  made before it began is not missed. With
+  `--timeout`, it stops after that many seconds and prints `runs` with `changed: false`; exit 0 either
+  way. `ctrl+c` (or `SIGTERM`) stops it with nothing changed (exit 130 or 143).
 - `brief` prints what an agent needs to work the Story in its Stage, as Markdown: the Story with
   everything each Plugin that is on keeps about it (Specs, Tasks, Comments, Epic, Story links,
   Attachments, Assignees), the Stage Prompt, the Board's Stages, and the text of
@@ -482,7 +512,46 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   `--retry-file`, with each gap in `details.incomplete`; `--allow-incomplete` prints it anyway, with
   the gaps listed at the top. `--json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
-  the Story screen shows the Story's **Stage Run**.
+  the Story screen shows the Story's **Stage Run**. A Story whose Stage Run for its current Stage is
+  running or failed has a badge on its board card and list line, `▶ running` or `✕ failed`, with
+  `#2` after the first attempt. The Story's **Stage Run** tab shows it in full: outcome,
+  attempt, worker, who started it, when it started and ended (with how long ago), how long it ran,
+  and the failure reason.
+
+`run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
+Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual
+worker ID, machine, harness, thread ID and verification source. Me and the operation clock supply
+`verification.by` and `verifiedAt`. Attachment updates `stageRun.worker` atomically with the file.
+A changed Run or conflicting identity is `CONFLICT` (exit 4). Repeating identical inputs writes
+nothing, including no timestamp change. Attach requires a running Run; it can initialize absent or
+recognized stale v1 metadata. Invalid or unsupported metadata refuses attachment with
+`DATA_INTEGRITY` (exit 6) and remains unchanged.
+
+`runs` includes `runMetadata: { status, current, ... }`. Status is `absent`, `valid`, `invalid` or
+`unsupported`. A matching valid file includes `version`, `run` and its optional `identity`,
+`selection` and `heartbeat`; a stale valid file has `current: false` and exposes none of those
+sections. Invalid/unsupported output includes a diagnostic message. The table shows the verified
+machine/harness/thread or says not recorded/unavailable. Human `stories show` and the TUI Story
+Details show an attached worker identity; `stories show --json` remains the stored Story, and
+`runs --json` is the structured metadata reader. Attachment changes the `runs` digest and wakes
+`wait`.
+
+The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
+bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
+optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
+sections' JSON values. Selection and heartbeat mutations are separate planned additions. Every
+start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
+Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
+returning when timestamps repeat. Unknown fields, future versions and unreadable files remain
+unavailable and unchanged, including through clear/Stage changes; a new start refuses them until
+explicit repair. Older releases preserve the file but do not maintain this lifecycle.
+
+For launch and restart recovery: keep the launched worker waiting for GO, verify the actual
+identity, attach it, publish the Board, then send GO. Resolve a recovered thread on its recorded
+machine through its recorded harness. A legacy worker string or a title is only an unverified hint.
+A confirmed failed launch uses `run fail --reason`; an uncertain launch, unreachable worker or
+failed attachment/publication needs reconciliation before GO or another launch. Preserve the
+previous attempt's metadata in retry context before replacing it.
 
 `eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
 Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
@@ -533,6 +602,8 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
+| `SOFTWARE_FACTORY_RUN_METADATA_INVALID` | warning | Run metadata is unreadable or fails the strict v1 shape, including unknown fields or an inconsistent heartbeat | — (preserved; repair explicitly) |
+| `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION` | warning | Run metadata declares a version other than 1 | — (preserved; use a compatible Rowbly or repair explicitly) |
 | `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing or cannot be read (a symbolic link is not followed) | — (create the file with `prompt edit`, or turn it off) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |
@@ -614,7 +685,8 @@ and grants no implementation permission. Install with
 one Stage Prompt that is on and written (not the template), and an agent harness that can start
 threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
-`rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
+`rowbly` commands their Stage Prompt asks for, and it checks and applies them with
+`rowbly software-factory apply`. A failed Stage Run is retried
 once unless `ROWBLY.md` or the Stage Prompt says otherwise. Before starting the retry, the supervisor
 captures the previous Run and recovers existing work from the Story, Comments and identified worker's
 messages: outcome, failure reason, branch, worktree/machine and PR when known, with sources and
@@ -827,6 +899,8 @@ the default scope asks you to select one. The preference is off by default and s
 while a form or modal is open, preserving its text and keys.
 
 The header does not show the Board name (the Boards sidebar marks the open Board); it shows the Board's state, such as its filter, after the Data Root button. It keeps its controls on one line; quiet controls disappear on narrow terminals while their keys stay available in Help. Each Story on the board has three rows in a rounded frame. The list view groups single-line Stories by Stage name, with foldable headings and `No Stories` for empty Stages. The footer shows screen keys on the left, with help, quit and the Rowbly version on the right; framed messages appear at bottom-right. The new Story (`n`), view switch (`v`) and Sync (`S`) hints are omitted from the footer; their keys, header controls and Help entries remain available.
+
+When the TUI starts, Rowbly asks npm for its latest release in the background; commands never do. If a newer release is out, a row above the footer says so, for example `Rowbly 0.12.0 is available, update with npm i -g rowbly` (`Rowbly 0.12.0: npm i -g rowbly` on a narrow terminal), until you quit. Run that command to update. Startup and quitting never wait for the check: offline, a registry error or no answer within 3 seconds shows nothing. When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`, with `HTTPS_PROXY`), Rowbly skips the check, because Node cannot cancel a request waiting on that proxy. Set `ROWBLY_NO_UPDATE_CHECK=1` to turn the check off.
 
 `n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
 

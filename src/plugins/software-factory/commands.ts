@@ -1,5 +1,6 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
 import { workerBrief } from './brief';
+import { applyBlock, applyTable } from './reportedCommands';
 import {
   boardOverview,
   type Level,
@@ -12,7 +13,18 @@ import {
   setStagePrompt,
   showStagePrompt,
 } from './stagePrompts';
-import { clearRun, endRun, type RunsOverview, runsOverview, runText, type StageRunResult, startRun } from './stageRuns';
+import {
+  clearRun,
+  endRun,
+  type RunsOverview,
+  runsOverview,
+  runText,
+  type StageRunResult,
+  startRun,
+  type WaitResult,
+  waitForRuns,
+} from './stageRuns';
+import { type AttachWorker, attachWorker } from './workerIdentity';
 
 interface PromptOptions {
   board?: string;
@@ -33,17 +45,39 @@ function runLine(result: StageRunResult): string {
 }
 
 function runsTable(overview: RunsOverview): string {
-  if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}`;
-  return renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Eligibility', 'Name'],
+  const digest = `Digest: ${overview.digest}`;
+  if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
+  const table = renderTable(
+    ['Story', 'Stage', 'Stage Run', 'Verified worker', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
       s.stage,
       runText(s.stageRun),
+      s.runMetadata.identity
+        ? `${s.runMetadata.identity.machine} / ${s.runMetadata.identity.harness} / ${s.runMetadata.identity.threadId}`
+        : s.runMetadata.status === 'invalid' || s.runMetadata.status === 'unsupported'
+          ? 'unavailable'
+          : 'not recorded',
       s.eligibility.reasons.map((r) => r.message).join('; ') || 'Eligible',
       s.name,
     ]),
   );
+  return `${table}\n${digest}`;
+}
+
+function waitText(result: WaitResult): string {
+  return `${result.changed ? 'Changed' : 'No change before the timeout'}\n${runsTable(result)}`;
+}
+
+/** The longest `--timeout`: a longer timer would fire at once. */
+const MAX_TIMEOUT_SECONDS = 2_147_483;
+
+function parseTimeout(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const seconds = Number(value);
+  if (!/^\d+(\.\d+)?$/.test(value.trim()) || seconds > MAX_TIMEOUT_SECONDS)
+    throw new UsageError(`--timeout takes a number of seconds from 0 to ${MAX_TIMEOUT_SECONDS}`);
+  return seconds;
 }
 
 function promptLine(stage: string, prompt: StagePrompt): string {
@@ -157,7 +191,24 @@ export const commands: PluginCommands = (group, cli) => {
       }),
     );
 
-  const run = group.command('run').description("Start, finish, fail or clear a Story's Stage Run");
+  group
+    .command('wait')
+    .description(
+      'Wait until the Stories in Stages whose Stage Prompt is on, or their Stage Runs, change; then list them as runs does',
+    )
+    .option('--board <id>', 'the Board')
+    .option('--since <digest>', 'the digest of the runs last read; without it, the runs when the wait starts')
+    .option('--timeout <seconds>', 'stop waiting after this many seconds, with nothing changed')
+    .action((opts: { board?: string; since?: string; timeout?: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print, resolveBoard, waitFor }) => {
+        const timeout = parseTimeout(opts.timeout);
+        const board = await resolveBoard(opts.board);
+        const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout * 1000);
+        print(await waitForRuns(plugin, board, waitFor, { since: opts.since?.trim() || undefined, signal }), waitText);
+      }),
+    );
+
+  const run = group.command('run').description("Start, attach a worker to, finish, fail or clear a Story's Stage Run");
   run
     .command('start <story>')
     .description("Start a Stage Run on the Story's current Stage, whose Stage Prompt must be on")
@@ -166,6 +217,26 @@ export const commands: PluginCommands = (group, cli) => {
     .action((key: string, opts: { worker: string; retry?: boolean }, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await startRun(plugin, key, { worker: opts.worker, retry: opts.retry }), runLine);
+      }),
+    );
+  run
+    .command('attach <story>')
+    .description('Attach the actual worker identity with supervisor attestation of launch verification')
+    .requiredOption('--stage <stage>', 'expected Stage Run Stage')
+    .requiredOption('--attempt <number>', 'expected Stage Run attempt', Number)
+    .requiredOption('--started-at <timestamp>', 'expected Stage Run start time')
+    .requiredOption('--worker <id>', 'actual worker identifier')
+    .requiredOption('--machine <name>', 'machine on which the worker can be found')
+    .requiredOption('--harness <name>', 'harness that owns the worker thread')
+    .requiredOption('--thread-id <id>', 'actual harness thread identifier')
+    .requiredOption('--source <text>', 'source of the supervisor verification, such as a launch receipt')
+    .action((key: string, opts: AttachWorker, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await attachWorker(plugin, key, opts),
+          (r) =>
+            `${runLine(r)}\nVerified worker: ${r.identity.machine} / ${r.identity.harness} / ${r.identity.threadId}`,
+        );
       }),
     );
   run
@@ -191,6 +262,20 @@ export const commands: PluginCommands = (group, cli) => {
     .action((key: string, _opts: unknown, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await clearRun(plugin, key), (r) => `Cleared the Stage Run of ${r.cleared}`);
+      }),
+    );
+
+  group
+    .command('apply <story>')
+    .description("Check a worker's reported rowbly block for its Story, then run the commands it allows")
+    .option('--text <block>', 'the block, or the message holding it')
+    .option('--file <path|->', 'read the block from a file or stdin')
+    .option('--dry-run', 'only check the block and show what each line would do')
+    .action((key: string, opts: { text?: string; file?: string; dryRun?: boolean }, cmd) =>
+      cli.run(cmd, async (env) => {
+        const text = await env.readText({ text: opts.text, file: opts.file }, { name: 'text' });
+        if (text === undefined) throw new UsageError('Give the block with --text or --file');
+        env.print(await applyBlock(env, key, text, !!opts.dryRun), applyTable);
       }),
     );
 };
