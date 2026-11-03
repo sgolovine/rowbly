@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-71",
+  "boardId": "rowbly",
+  "name": "Make linked stories a fuzzy searchable field.",
+  "description": "When creating or editing a story, linked stories should be fuzzy searchable, just like story search",
+  "stage": "in-progress",
+  "rank": "aA",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T02:06:33.528Z",
+  "updatedAt": "2026-11-03T02:06:38.160Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "ahwITyVSg",
+          "name": "image-20261103-0205.png",
+          "type": "image/png",
+          "size": 74325,
+          "createdAt": "2026-11-03T02:06:33.530Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}

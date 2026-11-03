@@ -1,6 +1,7 @@
 import { definePlugin } from '../../plugin-api';
 import { commands } from './commands';
 import { doctor } from './doctor';
+import { holdText, readHold } from './holds';
 import { metadataOutput, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
 import {
@@ -46,6 +47,7 @@ export const softwareFactory = definePlugin({
   },
   async storyRows(story, plugin) {
     const run = currentRun(plugin, story);
+    const hold = await readHold(plugin, story.key);
     const metadata = metadataOutput(await readRunMetadata(plugin, story));
     const rows = run ? [{ label: 'Stage Run', value: runText(run) }] : [];
     if (metadata.status === 'invalid' || metadata.status === 'unsupported')
@@ -58,6 +60,7 @@ export const softwareFactory = definePlugin({
       });
     }
     if (metadata.selection) rows.push({ label: 'Model Selection', value: selectionText(metadata.selection) });
+    if (hold.kind !== 'none') rows.push({ label: 'Hold', value: holdText(hold) });
     return rows;
   },
   doctor,

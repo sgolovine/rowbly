@@ -41,6 +41,10 @@ rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-pro
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --retry --json --no-prompt   # a failed one, next attempt
 rowbly software-factory run clear WEB-42 --json --no-prompt          # work the Stage again
 
+# Holds: a person keeps a Story out of Stage Runs, and gives it back
+rowbly software-factory hold WEB-42 --reason "pairing on it by hand" --json --no-prompt   # {key, hold}
+rowbly software-factory release WEB-42 --json --no-prompt            # {key, released}
+
 # A worker's reported block (supervisor only): check it, then run what it allows
 rowbly software-factory apply WEB-42 --file block.md --dry-run --json --no-prompt
 rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
@@ -127,12 +131,18 @@ is off or missing (a missing file starts with a template). `tab` or `e` switches
 Board's own Stage Prompt, preserving its on/off setting; an inherited prompt becomes a Board
 entry with the global entry's setting. Use Stage Prompts in Settings to change that setting.
 
+A **hold** (`{ version: 1, reason, by, heldAt }`) stays through Stage changes and never changes the
+Stage Run, so `release` gives the Story back with its attempt. A held Story's `eligibility` has a
+`HELD` reason, and `run start` exits 4 (`CONFLICT`) for it, `--retry` included. `hold` exits 4 for a
+Story already held; `release` exits 3 for one that is not.
+
 ## Data
 
 - Global: `"plugins": { "software-factory": { "enabled": true, "stagePrompts": { "todo": { "enabled": true, "path": "plugins/software-factory/stage-prompts/todo.md" } } } }` in `rowbly.config.json`.
 - Board: `"plugins": { "software-factory": { "stagePrompts": { … } } }` in `boards/<board>/board.config.json`,
   with files in `boards/<board>/plugins/software-factory/stage-prompts/<key>.md`.
 - `path` is relative to `.rowbly/`.
+- Hold: `boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`, a file of its own, not in the Story's bag.
 
 ## Model Selection
 
@@ -183,12 +193,20 @@ outside the Plugin's folder, or its file is missing or cannot be read (Rowbly do
 symbolic link). Nothing is fixed; create the file with
 `prompt edit`, or turn the Stage Prompt off, when the user asks.
 
+`SOFTWARE_FACTORY_UNREADABLE_HOLD` (warning): a Story's
+`boards/<board>/stories/<KEY>/plugins/software-factory/hold.json` is not JSON, is invalid, has a
+`version` or fields this Rowbly does not support, or cannot be read (a symbolic link is not followed). The Story counts as held, and `hold` and `release` exit 6
+(`DATA_INTEGRITY`) without changing it. Nothing is fixed; ask the user to repair or delete the file.
+
 `SOFTWARE_FACTORY_RUN_METADATA_INVALID` and `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION`
 (warnings): unreadable/malformed/unknown-field metadata or a version other than 1. A heartbeat
 without matching identity is invalid. No automatic fix; bytes are preserved for explicit repair.
 
 ## Common mistakes
 
+- **HIGH: starting work on a held Story, or releasing someone else's hold to start it.** A person
+  holds a Story to work it by hand (`software-factory hold`); its eligibility has a `HELD` reason
+  that says who and why. Skip it and report the reason. Only the person, or the user, releases it.
 - **HIGH: starting work on a Story whose `stageRun` is not `null`.** Another agent works it, or has
   finished, in this visit. Run `run start` first and act only when it succeeds; exit 4 means leave it.
 
