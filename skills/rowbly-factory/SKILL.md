@@ -20,7 +20,7 @@ All optional, given when the user starts the skill:
 
 - **Board**: a Board id. Without one, use the current Board (`rowbly use`), else the only Board.
 - **Worker limit**: how many workers run at once. Default 4.
-- **Worker model**: default your own model.
+- **Worker model**: chosen as [Model Selection](#model-selection) says; default your own model.
 - **Other instructions**, such as where workers run and how to start them. These take precedence
   over `ROWBLY.md`, which takes precedence over this file.
 
@@ -101,7 +101,9 @@ tell the user what is missing and how to fix it, and stop.
 6. **Stage Runs already running.** In `rowbly software-factory runs --board <id>`, a Story whose
    `stageRun.status` is `running` was started by an earlier supervisor. Look for its worker (by
    `stageRun.worker`) and take it over if you find it. Otherwise ask the user whether to clear the
-   Stage Run and start again (`run clear`, then [start the Story](#start-a-story)).
+   Stage Run and start again (`run clear`, then [start the Story](#start-a-story)). Check each
+   running Stage Run's recorded `selection` against the model policy, as
+   [Model Selection](#model-selection) says, and report any that is missing or does not comply.
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -140,16 +142,42 @@ Report each start, retry, finish, failure, question and Board change to the user
 
 ## Start a Story
 
-1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
-   worker you are about to start (its thread title or id). Start a worker only when this succeeds.
-   Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off, or unresolved blocking Stories remain: report the returned reason and skip it.
-   Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
-2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
+1. Choose the worker's provider, model and options as [Model Selection](#model-selection) says.
+2. Run `rowbly software-factory run start <KEY> --worker "<name>" --provider <id> --model <id>
+   --rule "<rule>" [--option <id>=<value>]… [--fallback "<why>"] [--usage <source>]`, where
+   `<name>` identifies the worker you are about to start (its thread title or id). Start a worker
+   only when this succeeds. Exit 4 means another agent already works the Story in this visit, or its
+   Stage Prompt was turned off, or unresolved blocking Stories remain: report the returned reason
+   and skip it. Re-read eligibility after Board changes; never launch from a stale overview or
+   after a refused start.
+3. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
    Comments, Epic and Story links.
-3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
-   worker model, where and how `ROWBLY.md` or the user says.
-4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
+4. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
+   recorded selection, where and how `ROWBLY.md` or the user says.
+5. Check what the launch reports against the selection: the same provider, model and options. Send
+   the worker its go-ahead only when they match. When they differ, or the worker cannot be started,
+   run `run fail <KEY> --reason "<why>"`, naming what launched. Never change the selection to match
+   what launched; a retry records its own.
+
+## Model Selection
+
+The selection that `run start` records is what you chose, before the launch: the provider instance,
+model and options as your harness names them, the policy rule you applied, and why you did not use
+that rule's model when you did not.
+
+- **Policy.** Follow the user's instructions, then `ROWBLY.md`'s model policy. Without either, use
+  your own model and record `--rule "supervisor default"`. A model the user names for a Story or a
+  run is `--rule "user named"`.
+- **Usage is unknown unless you can see it.** Rowbly has no usage source. Count remaining usage
+  only when your harness reports it for that provider; never estimate it, never infer it from
+  signing in or a successful launch, and never record a number you did not read. `--usage` is
+  `unknown` (the default), `observed-limit` (a launch or turn failed with a usage or rate limit) or
+  `user-stated` (the user said usage is low).
+- **Fallback.** Use another model than the rule's only for a reason you can name: an observed
+  limit, the user's word, or a model that cannot be started. Record it with `--fallback "<why>"`.
+- **Audit.** `runs` and `stories show` show each Stage Run's selection, so the selection and the
+  reason for a fallback stay readable after a restart. A Stage Run with no selection was started
+  without one.
 
 ## Retry context
 
@@ -158,8 +186,8 @@ its worker, timestamps and reason. A retry starts another worker; it does not by
 discarding earlier work.
 
 1. **Capture the previous attempt.** Read `stories show <KEY>` and the current `runs` result. Keep
-   the failed Stage Run's attempt, worker, status, reason (or "not recorded"), and start/finish
-   times. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
+   the failed Stage Run's attempt, worker, status, reason (or "not recorded"), start/finish
+   times and selection (or "not recorded"); the retry replaces the selection. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
    its recorded identifier resolves. Summarize what it completed, validation and publication
    outcomes, and what remains; distinguish a failed worker or launch from failed implementation.
 2. **Recover existing work.** Include the prior branch, worktree path, machine and PR URL whenever
@@ -180,7 +208,8 @@ discarding earlier work.
    [the worker brief](references/worker-brief.md). If Comments are on, save the captured context,
    evidence sources and continuation/restart decision as a Comment before replacing the Run, so
    another supervisor can recover it. Otherwise retain it in the supervisor's messages and brief.
-   Only then run `run start <KEY> --worker <name> --retry`; launch only on success, using the
+   Only then run `run start <KEY> --worker <name> --retry` with the new attempt's selection, as in
+   [Start a Story](#start-a-story); launch only on success, using the
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
 
