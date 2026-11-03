@@ -124,8 +124,8 @@ symbolic link). Nothing is fixed; create the file with
 `prompt edit`, or turn the Stage Prompt off, when the user asks.
 
 `SOFTWARE_FACTORY_UNREADABLE_HOLD` (warning): a Story's
-`boards/<board>/stories/<KEY>/plugins/software-factory/hold.json` is not JSON, is invalid, or has a
-`version` this Rowbly does not support. The Story counts as held, and `hold` and `release` exit 6
+`boards/<board>/stories/<KEY>/plugins/software-factory/hold.json` is not JSON, is invalid, has a
+`version` or fields this Rowbly does not support, or cannot be read (a symbolic link is not followed). The Story counts as held, and `hold` and `release` exit 6
 (`DATA_INTEGRITY`) without changing it. Nothing is fixed; ask the user to repair or delete the file.
 
 ## Common mistakes

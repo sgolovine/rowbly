@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { lstat, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { type RunCliResult, runCli, tempRoot } from '../helpers';
@@ -232,11 +232,34 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     // A hold file this Rowbly cannot read counts as held, is left unchanged and is reported.
     const holdPath = `${tmp.dir}/.rowbly/boards/web/stories/${worked.key}/plugins/software-factory/hold.json`;
     const valid = await readFile(holdPath, 'utf8');
+    const refusesUnreadable = async (bytes: string) => {
+      expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility.eligible).toBe(false);
+      for (const change of [
+        ['hold', worked.key, '--reason', 'Again'],
+        ['release', worked.key],
+      ]) {
+        const refused = await rowbly('software-factory', ...change, '--json');
+        expect(refused.exitCode).toBe(6);
+        expect(jsonError(refused).code).toBe('DATA_INTEGRITY');
+      }
+      expect(await readFile(holdPath, 'utf8')).toBe(bytes);
+      expect((await json('doctor')).findings).toMatchObject([{ code: 'SOFTWARE_FACTORY_UNREADABLE_HOLD' }]);
+    };
+    // A future version, and a v1 file with fields this Rowbly does not know.
     await writeFile(holdPath, '{"version":2,"reason":"later"}');
-    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility.eligible).toBe(false);
-    expect(jsonError(await rowbly('software-factory', 'release', worked.key, '--json')).code).toBe('DATA_INTEGRITY');
-    expect(await readFile(holdPath, 'utf8')).toBe('{"version":2,"reason":"later"}');
-    expect((await json('doctor')).findings).toMatchObject([{ code: 'SOFTWARE_FACTORY_UNREADABLE_HOLD' }]);
+    await refusesUnreadable('{"version":2,"reason":"later"}');
+    const unknown = JSON.stringify({ ...JSON.parse(valid), futureState: { mustKeep: true } });
+    await writeFile(holdPath, unknown);
+    await refusesUnreadable(unknown);
+    // A symbolic link is never followed: the link and the file it points to stay as they are.
+    const outside = `${tmp.dir}/outside-hold.json`;
+    await writeFile(outside, valid);
+    await rm(holdPath);
+    await symlink(outside, holdPath);
+    await refusesUnreadable(valid);
+    expect((await lstat(holdPath)).isSymbolicLink()).toBe(true);
+    expect(await readFile(outside, 'utf8')).toBe(valid);
+    await rm(holdPath);
     await writeFile(holdPath, valid);
     await json('software-factory', 'release', worked.key);
     expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([

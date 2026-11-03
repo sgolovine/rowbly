@@ -33,8 +33,9 @@ supervisor would start it.
   names who held it and why. `software-factory.start` refuses it (`CONFLICT`), `--retry` included. A
   Stage Run that is already running when the Story is held keeps running; the person stops its
   worker.
-- A hold file this Rowbly cannot read (not JSON, invalid, or a `version` other than 1) counts as
-  held. `hold` and `release` refuse it with `DATA_INTEGRITY` and leave it unchanged, and doctor
+- A hold file this Rowbly cannot read (not JSON, invalid, a `version` other than 1, fields version 1
+  does not have, or a path it cannot read safely, such as a symbolic link, which is never followed)
+  counts as held. `hold` and `release` refuse it with `DATA_INTEGRITY` and leave it unchanged, and doctor
   reports it as `SOFTWARE_FACTORY_UNREADABLE_HOLD`.
 - A Rowbly release without holds never reads, writes or deletes the file, and keeps it when it moves
   or renumbers the Story's folder. It does not know holds, so a supervisor that runs it starts held

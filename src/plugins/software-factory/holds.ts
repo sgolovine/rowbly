@@ -16,12 +16,14 @@ import {
  * Story-scope Plugin file, not part of the Stage Run bag, so a Rowbly release that does not know holds
  * keeps it unchanged instead of dropping it.
  */
-export const Hold = z.object({
-  version: z.literal(1),
-  reason: z.string().trim().min(1),
-  by: SlugSchema.nullable(),
-  heldAt: TimestampSchema,
-});
+export const Hold = z
+  .object({
+    version: z.literal(1),
+    reason: z.string().trim().min(1),
+    by: SlugSchema.nullable(),
+    heldAt: TimestampSchema,
+  })
+  .strict();
 export type Hold = z.infer<typeof Hold>;
 
 export const HOLD_FILE = 'hold.json';
@@ -29,7 +31,10 @@ export const HOLD_FILE = 'hold.json';
 /** A Story's hold: none, a valid one, or a file this Rowbly cannot read, which counts as held. */
 export type HoldState = { kind: 'none' } | { kind: 'held'; hold: Hold } | { kind: 'unreadable'; message: string };
 
-/** Reads the hold file text. A file that does not parse or has another `version` is unreadable. */
+/**
+ * Reads the hold file text. A file that does not parse, has another `version` or has fields this
+ * Rowbly does not know is unreadable, so they are kept rather than dropped (compatibility.md §3.4).
+ */
 export function parseHold(text: string | null): HoldState {
   if (text === null) return { kind: 'none' };
   let raw: unknown;
@@ -45,18 +50,33 @@ export function parseHold(text: string | null): HoldState {
       message: `its hold file has version ${JSON.stringify(version ?? null)}, which this Rowbly does not support`,
     };
   const parsed = Hold.safeParse(raw);
-  return parsed.success
-    ? { kind: 'held', hold: parsed.data }
-    : { kind: 'unreadable', message: 'its hold file is invalid' };
+  if (parsed.success) return { kind: 'held', hold: parsed.data };
+  const unknown = parsed.error.issues.flatMap((issue) => (issue.code === 'unrecognized_keys' ? issue.keys : []));
+  return {
+    kind: 'unreadable',
+    message: unknown.length
+      ? `its hold file has fields this Rowbly does not know: ${unknown.join(', ')}`
+      : 'its hold file is invalid',
+  };
 }
 
-/** The Story's hold as stored. A file that cannot be read at all (a symbolic link, say) is unreadable. */
-export async function readHold(plugin: PluginReadContext, key: string): Promise<HoldState> {
+/**
+ * The hold as stored, through `read`. A file that exists but cannot be read (a symbolic link, which is
+ * never followed, or one without permission) is unreadable; a missing file is no hold.
+ */
+async function storedHold(read: () => Promise<string | null>): Promise<HoldState> {
+  let text: string | null;
   try {
-    return parseHold(await plugin.files.read({ story: key }, HOLD_FILE));
+    text = await read();
   } catch {
     return { kind: 'unreadable', message: 'its hold file cannot be read' };
   }
+  return parseHold(text);
+}
+
+/** The Story's hold as stored. */
+export function readHold(plugin: PluginReadContext, key: string): Promise<HoldState> {
+  return storedHold(() => plugin.files.read({ story: key }, HOLD_FILE));
 }
 
 /** A hold in one line, for `stories show`, the TUI Story screen and the `runs` table. */
@@ -91,7 +111,7 @@ export async function holdStory(
   if (!reason) throw new UsageError('A hold needs a reason');
   const stored = await plugin.services.stories.get(key);
   return plugin.operation('hold', { key: stored.key, reason }, async (changes) => {
-    const state = parseHold(await changes.readFile({ story: stored.key }, HOLD_FILE));
+    const state = await storedHold(() => changes.readFile({ story: stored.key }, HOLD_FILE));
     refuseUnreadable(stored, state);
     if (state.kind === 'held')
       throw new ConflictError(`${stored.key} is already ${holdText(state)}`, {
@@ -107,7 +127,7 @@ export async function holdStory(
 export async function releaseStory(plugin: PluginContext, key: string): Promise<{ key: string; released: Hold }> {
   const stored = await plugin.services.stories.get(key);
   return plugin.operation('release', { key: stored.key }, async (changes) => {
-    const state = parseHold(await changes.readFile({ story: stored.key }, HOLD_FILE));
+    const state = await storedHold(() => changes.readFile({ story: stored.key }, HOLD_FILE));
     refuseUnreadable(stored, state);
     if (state.kind !== 'held') throw new NotFoundError(`${stored.key} is not held`);
     await changes.deleteFile({ story: stored.key }, HOLD_FILE);

@@ -61,7 +61,7 @@ These are requirements for the release that first loads code that does not ship 
 | Tasks | Story bag `{ "nextNumber": n, "tasks": [ … ] }` | legacy v1 (no `version` key) |
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
 | Software Factory | Story bag `{ "stageRun": { … } }` | legacy v1 (no `version` key) |
-| Software Factory | Story file `plugins/software-factory/hold.json` | explicit `version: 1`; kept in a file, not the bag, so a release without holds never drops it ([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). A file that does not parse or has another `version` counts as held, is never rewritten, and doctor reports it |
+| Software Factory | Story file `plugins/software-factory/hold.json` | explicit `version: 1`; kept in a file, not the bag, so a release without holds never drops it ([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). A file that does not parse, has another `version` or unknown fields, or is a symbolic link counts as held, is never rewritten, and doctor reports it |
 | Story Linking | Story bag `{ "blocks": ["<Story Key>", …] }` on the blocking Story; incoming links are derived | v1 (no `version` key); strict schema refuses unknown fields |
 
 **Existing unversioned built-in bags are legacy v1.** A future reader treats a bag without a `version` key as version 1. Rowbly adds no universal bag version: a bag gets a `version` key only when its Plugin introduces an incompatible shape (§3.4).

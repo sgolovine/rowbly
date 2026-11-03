@@ -507,7 +507,8 @@ TUI, started before the first read, with a recheck every minute in case a change
   refuses it (`CONFLICT`, exit 4), `--retry` included. The hold stays through Stage changes, and
   neither command changes the Stage Run, so a released Story keeps its attempt. `hold` refuses a
   held Story (`CONFLICT`), `release` one that is not held (`NOT_FOUND`, exit 3). A hold file that
-  is not JSON, invalid, or of another `version` counts as held; both commands refuse it
+  is not JSON, invalid, of another `version`, has fields version 1 does not have, or cannot be read
+  (a symbolic link is not followed) counts as held; both commands refuse it
   (`DATA_INTEGRITY`, exit 6) and leave it unchanged, and doctor reports it.
 
 `eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
@@ -548,5 +549,5 @@ record of later activity. A Story with none in this visit shows `—`; earlier v
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
 is no fix: create the file with `prompt edit`, or turn it off. `SOFTWARE_FACTORY_UNREADABLE_HOLD`
-(warning): a Story's hold file is not JSON, is invalid, or has a `version` this Rowbly does not
-support; the Story counts as held. There is no fix: repair the file, or delete it to release the Story.
+(warning): a Story's hold file is not JSON, is invalid, has a `version` or fields this Rowbly does
+not support, or cannot be read (a symbolic link is not followed); the Story counts as held. There is no fix: repair the file, or delete it to release the Story.

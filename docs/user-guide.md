@@ -506,7 +506,8 @@ gets a `HELD` reason with your name and `--reason`, and `run start` refuses it (
 included. The hold stays when the Story changes Stage, and neither `hold` nor `release` changes its
 Stage Run; `release` makes it eligible again. `hold` exits 4 for a held Story and `release` exits 3
 for one that is not. The hold is `.rowbly/boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`;
-a hold file this Rowbly cannot read counts as held, and both commands exit 6 without changing it
+a hold file this Rowbly cannot read (one with fields it does not know, or a symbolic link, which is
+never followed) counts as held, and both commands exit 6 without changing it
 (doctor: `SOFTWARE_FACTORY_UNREADABLE_HOLD`). The Story screen shows a **Hold** row while it is held.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
@@ -548,7 +549,7 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
-| `SOFTWARE_FACTORY_UNREADABLE_HOLD` | warning | A Story's hold file is not valid JSON, is invalid, or has a `version` this Rowbly does not support. The Story counts as held, and `hold` and `release` refuse to change the file | — (repair the file, or delete it to release the Story) |
+| `SOFTWARE_FACTORY_UNREADABLE_HOLD` | warning | A Story's hold file is not valid JSON, is invalid, has a `version` or fields this Rowbly does not support, or cannot be read (a symbolic link is not followed). The Story counts as held, and `hold` and `release` refuse to change the file | — (repair the file, or delete it to release the Story) |
 | `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing or cannot be read (a symbolic link is not followed) | — (create the file with `prompt edit`, or turn it off) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |

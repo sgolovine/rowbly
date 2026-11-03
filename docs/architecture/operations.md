@@ -147,7 +147,8 @@ Software Factory's `hold` writes the Story-scope Plugin file `hold.json`,
 ([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). Neither changes the
 Story or its Stage Run, and the hold stays through Stage changes. `hold` refuses a held Story
 (`CONFLICT`), `release` one that is not held (`NOT_FOUND`), and both refuse a hold file they cannot
-read (`DATA_INTEGRITY`), leaving it unchanged. A held Story, or one whose hold file cannot be read,
+read (`DATA_INTEGRITY`), leaving it unchanged: one with unknown fields or another `version`, or a
+symbolic link, which is never followed. A held Story, or one whose hold file cannot be read,
 has the eligibility reason `HELD`, so `start` refuses it (`CONFLICT`), `retry` included.
 
 ## Plugin input of core operations
