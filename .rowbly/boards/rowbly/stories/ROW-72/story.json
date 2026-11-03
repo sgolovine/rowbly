@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T07:37:41.434Z",
+  "updatedAt": "2026-11-03T07:37:42.685Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:3422e09e-b862-45e6-9094-0d98e61263cb",
+        "by": "sunny",
+        "startedAt": "2026-11-03T07:32:05.272Z",
+        "finishedAt": "2026-11-03T07:37:41.433Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -92,19 +103,15 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/153 at 472ec7bcb51a310cee6f9ee6422696edbb2013a8 by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] Preserve elapsed phase timing when acquisition fails (src/services/coordination.ts:160-170; src/storage/lock.ts:141-146). Phase durations are assigned only after successful awaits. A publication timeout never calls published(), a queue timeout never records queuedMs, and a lock-file timeout never records waitedMs; recovery failures similarly omit their duration. In an isolated Git fixture, a real publication-gate timeout took 10003.7 ms but emitted wait=publication:0.0,queue:0.0,lock:0.0,recovery:0.0 and held 0.0 ms. This erases the diagnostic evidence for the slowest failed openings. Finalize the active phase on rejection as well as success, preserve the original error and privacy restrictions, and extend the existing telemetry regression to cover a failed acquisition without brittle timing thresholds. 2. [P2] Isolate search-loader inputs from the core index (src/tui/shell/storySearch.ts:29-35). Every loader receives the same mutable array and Story objects that core subsequently indexes. The readonly array type does not make Story fields immutable. A loader that assigns stories[0].name and then throws leaves that modified name in the index, so the original core name no longer matches; a JavaScript loader that splices the array and throws removes Stories entirely. Both were reproduced against this head. The failure catch cannot restore the inventory, contrary to the accepted detached-input and failure-isolation requirement. Give loaders isolated snapshots, keep the core inventory private, and protect the returned per-Story mapper boundary too. Extend an existing Plugin contract check to prove a failing/mutating contributor cannot alter core results or another contributor's inputs. Reviewed all 34 changed files against the Story Spec and accepted revisions, including ordered batch results, whole-call integrity failures, lock release between batches, core-first loading, navigation, Built-in Plugin migrations, ADR-0052 and compiled documentation fixtures. Verified independent provenance: reviewer mcp:efac57e0-4f3d-46d4-bc04-e03cb861fe20; the sole recorded implementer used claudeAgent/claude-opus-5-5. The PR head remained unchanged at review completion. Independent validation passed under the shared lease after a clean local merge of origin/main 8b226c99: pnpm typecheck, pnpm lint, pnpm test:unit (79), pnpm test:cli (21). No product edits or test retries. All six GitHub checks were SUCCESS on the reviewed head at initial inspection. All 15 screenshot URLs returned 200 and were visually inspected. The retained 71/501-Story profile supports the reported improvements; its node:fs/promises counts are not a complete syscall census and it does not attribute the original incident. Reproduction script/output and validation evidence are retained at /home/sgolovine/row-72-review-astra-evidence/{reproduce.mts,reproduce.log,checks.log}. No merge performed.",
           "createdAt": "2026-11-03T07:07:56.625Z",
           "updatedAt": "2026-11-03T07:07:56.625Z"
+        },
+        {
+          "id": "HiUmqh4b",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/153 at ab83538b74744918cb2b7ff745f41381506eeb7e by codex/gpt-6-astra: APPROVED. Reviewed all 34 changed files against the Story Spec, accepted plan revisions, AGENTS.md and relevant architecture/API/TUI documentation. Both prior findings are resolved: failed publication, queue, lock-file and recovery phases retain their elapsed timing, with deterministic attribution, original-error and trace-off checks; loaders, returned mappers and legacy search callbacks receive independent deep inputs, with mutation/failure isolation coverage. Bounded file batches preserve ordered results, per-entry versus whole-call error classification, recovery and inter-batch lock release. Core Story/config loading precedes optional callbacks, stale enrichment is discarded, same-Board selection avoids Local State writes, and cross-Board navigation and Built-in Plugin behavior remain intact. No merge-blocking findings. Independent validation passed once under the shared bounded lease: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed). Validation used an isolated checkout of the reviewed head with a clean local merge of origin/main de071256; local commit d388a7d61977ae0787114e06d86604342ea0be75 differs only in supervisor Run data. All 18 linked PNGs returned HTTP 200 and were visually inspected. The retained 71/501-Story profiles support the reported reductions; filesystem counts cover node:fs/promises, synthetic delays ran on a shared machine, and the original incident remains unattributed. All 12 GitHub checks are completed SUCCESS, with clean mergeability and no formal change requests. Fresh reviewer: mcp:3422e09e-b862-45e6-9094-0d98e61263cb, codex/gpt-6-astra, reasoningEffort high, serviceTier default, verified receipt 5c5ea101425e44976561126137273f92. Every branch commit is accounted for by the original claudeAgent/claude-opus-5-5 worker and correction codex/gpt-6.1-sol worker; this reviewer is neither author and used neither implementing model. No product edits, test retries or Board writes. Review evidence and validation log: /home/sgolovine/row-72-review-astra-2-evidence/. Review checkout and all earlier resources retained; no TUI, daemon or watcher started.",
+          "createdAt": "2026-11-03T07:37:42.684Z",
+          "updatedAt": "2026-11-03T07:37:42.684Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:3422e09e-b862-45e6-9094-0d98e61263cb",
-        "by": "sunny",
-        "startedAt": "2026-11-03T07:32:05.272Z",
-        "finishedAt": "2026-11-03T07:37:41.433Z"
-      }
     }
   }
 }
