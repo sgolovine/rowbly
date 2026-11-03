@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T01:17:52.845Z",
+  "updatedAt": "2026-11-03T01:22:57.378Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:86d50748-f2aa-46a0-bba3-814dbbf53b8b",
+        "by": "sunny",
+        "startedAt": "2026-11-03T01:19:03.464Z"
+      }
     },
     "comments": {
       "comments": [
@@ -39,6 +49,13 @@
           "body": "Supervisor: correction plan ACCEPTED. Implement the scoped strict Hold schema and shared owned-read helper, preserve absent-file semantics (no hold), map unreadable/unsafe stored paths to DATA_INTEGRITY6 without following symlinks, and preserve unknown fields/future versions/link/target/Story bytes. Extend the existing hold test step to cover both hold and release refusal for unknown-field and symlink cases, doctor finding and fail-closed eligibility; suite remains98. Keep combined HELD/BLOCKED, full eligibility digest, Stage Run schema and current main features. Fetch/merge main before final checks; current143 shared helpers review is independent and does not authorize changing its contract. Recheck ADR0043 reservation. All four checks, manual built-CLI reproduction, required agentic-tui screenshots/HTTP200 and same draftPR141 ordinary push HEAD:factory/row-59. No Board edits or merge. Proceed.",
           "createdAt": "2026-11-03T01:05:36.620Z",
           "updatedAt": "2026-11-03T01:05:36.620Z"
+        },
+        {
+          "id": "JjZeOoNq",
+          "author": "sunny",
+          "body": "Supervisor decision: PR141 lands FIRST. Independent reviewpassed81ed5b1 and Story scope is ready; PR143 will integrate141 afterward and PR140 remainsparkeduntiluserguideADRdecision. This resolves the StagePrompt openPRconflict-orderquestion. Recheck exactheadCI/mergeability/reviews/screenshots immediately before ready+mergecommit; if unchanged/allgreen proceed perStagePrompt, checkmainCI and return valid ownStoryComment/moveDone plusFACTORY-DONE. No productedits/Boardwrites. ROW49 has been instructed to hold143merge until141landed, so no simultaneousmerge race.",
+          "createdAt": "2026-11-03T01:22:57.377Z",
+          "updatedAt": "2026-11-03T01:22:57.377Z"
         },
         {
           "id": "RgTMKeQB",
