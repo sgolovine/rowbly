@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Validate worker-reported Board commands mechanically",
   "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a6",
+  "stage": "in-progress",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T00:34:15.724Z",
+  "updatedAt": "2026-11-03T00:37:21.038Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:95c47fb0-72c3-4d26-bf56-f5f8eec29ad7",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:09:51.225Z"
-      }
     },
     "comments": {
       "comments": [
@@ -49,6 +39,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
           "createdAt": "2026-11-03T00:06:02.194Z",
           "updatedAt": "2026-11-03T00:06:02.194Z"
+        },
+        {
+          "id": "LR7pTH8s",
+          "author": "sunny",
+          "body": "PR139 review reproduced two merge blockers: applyBlock uses a finished Run snapshot to authorize a later move; replacing that Run with a running Run between the Comment and move still moves the Story and erases the replacement. Also, story-linking add TEST-1 --blocked-by TEST-2 submitted for TEST-1 writes the Story Linking bag on TEST-2. Corrections need regression checks for both cases and current-visit preconditions enforced at the actual mutation under the Data Root lock; a second unlocked read is insufficient. Continue existing PR139 and branch sunny/row-55-validate-worker-commands in /home/sgolovine/Projects/rowbly-worktrees/row-55. Local unpublished merge SHA: e5e5b14e092dd5ff4cfc7cf4788f6ebebab7e157. No source fixes or pushes from review. Typecheck, lint, unit78, CLI20, six GitHub checks and four screenshot HTTP200 checks passed.",
+          "createdAt": "2026-11-03T00:37:20.364Z",
+          "updatedAt": "2026-11-03T00:37:20.364Z"
         }
       ]
     }
