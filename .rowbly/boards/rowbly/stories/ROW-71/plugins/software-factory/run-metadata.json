@@ -2,18 +2,7 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:29:09.220Z"
-  },
-  "identity": {
-    "worker": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
-    "machine": "rook",
-    "harness": "t3",
-    "threadId": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
-    "verification": {
-      "source": "/home/sgolovine/.rowbly-factory/receipts/8a465e4621ed3087a79b13ec6b725fb9.json verified launch/read/configuration Opus5.5 high full-access root reservation",
-      "verifiedAt": "2026-11-03T02:29:10.099Z",
-      "by": "sunny"
-    }
+    "attempt": 2,
+    "startedAt": "2026-11-03T03:03:09.200Z"
   }
 }

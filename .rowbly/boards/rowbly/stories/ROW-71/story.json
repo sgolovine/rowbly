@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T03:01:15.086Z",
+  "updatedAt": "2026-11-03T03:03:09.201Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,18 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "failed",
-        "attempt": 1,
-        "worker": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:29:09.220Z",
-        "finishedAt": "2026-11-03T02:36:01.274Z",
-        "reason": "Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry."
-      }
     },
     "comments": {
       "comments": [
@@ -55,6 +43,16 @@
           "updatedAt": "2026-11-03T03:01:15.085Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:03:09.200Z"
+      }
     }
   }
 }
