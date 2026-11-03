@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T04:00:36.191Z",
+  "updatedAt": "2026-11-03T04:00:37.449Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:25:31.829Z",
+        "finishedAt": "2026-11-03T04:00:36.190Z"
+      }
     },
     "comments": {
       "comments": [
@@ -60,19 +71,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/150 . Completed A2 deletion-intent correction, ADR-0050 retention policy and coherent supervisor-event sync batching while preserving publication barriers and frequency change. A1 remains held. Typecheck, lint, 78 unit tests, 20 CLI tests and build passed; uploaded CLI screenshot verified HTTP 200. All existing evidence and pr-assets preserved. Supervisor-owned ROWBLY.md patch is in PR comment https://github.com/sgolovine/rowbly/pull/150#issuecomment-6594504587 for application on main. Branch factory/row-65 pushed at 96e6bc5e7c365a183a3134115423ef762cc61e86; CI queued.",
           "createdAt": "2026-11-03T03:22:55.460Z",
           "updatedAt": "2026-11-03T03:22:55.460Z"
+        },
+        {
+          "id": "cCrbrX2l",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/150 at 346f21eaf590cabf11c101fc7b7e62f4167dd323. Independent Astra review approved exact head 96e6bc5e7c365a183a3134115423ef762cc61e86; no actionable findings. Typecheck, lint, unit 78 and CLI 20 passed; negative control failed as expected; screenshot HTTP 200. Review and exact supervisor policy patch: https://github.com/sgolovine/rowbly/pull/150#pullrequestreview-5746923795 . Supervisor must apply the policy patch. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41572668314 . A1 remains held; evidence and pr-assets preserved.",
+          "createdAt": "2026-11-03T04:00:37.448Z",
+          "updatedAt": "2026-11-03T04:00:37.448Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:25:31.829Z",
-        "finishedAt": "2026-11-03T04:00:36.190Z"
-      }
     }
   }
 }
