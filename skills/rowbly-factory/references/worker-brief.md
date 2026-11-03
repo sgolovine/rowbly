@@ -49,6 +49,12 @@ they take precedence over the Stage Prompt and over any skill it names.
    daemon. Close your own sessions and stop that scoped daemon before returning. Report leftovers
    with exact identity; never adopt or stop existing/shared daemons or delete worktrees, branches
    or evidence at completion.
+6. **Pull request checks.** Never poll CI with repeated `gh pr view` or `gh pr checks` calls.
+   Independent diff review may start and finish while checks are still running. Complete work
+   that does not depend on CI, then, if remaining work needs the checks, report the PR URL, the
+   exact head SHA and each pending check's name, end your turn and wait for the supervisor. Do
+   not start a timer, a watch or a poller yourself. "No checks reported yet" and a timeout are
+   waiting, not a failed check.
 
 ## Story
 

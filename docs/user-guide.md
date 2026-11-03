@@ -713,7 +713,13 @@ Story moves on. It then starts the review with a new worker whose model differs 
 one (the same provider is allowed; changing effort or options does not qualify), and asks you
 when it cannot tell who wrote the work. An approval holds only for the commit it
 names. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
-until you release it. It runs until you stop it.
+until you release it. Workers may start and finish independent diff review while CI is pending.
+They do not poll a pull request's checks: when remaining work depends on CI, they report the head
+commit and pending checks and yield. The supervisor waits with the harness's pull request watch,
+or with one bounded `gh pr checks --watch`. A wake or watch exit code only prompts inspection of all
+current-head check conclusions; it does not prove every check passed. Cancelled, skipped, neutral
+or unknown terminal results need an explicit policy or decision. Checks not yet registered and a
+timed-out wait count as waiting, not as a failed check. It runs until you stop it.
 
 After a verified PR merge and worker completion, the supervisor follows the factory skill's
 completion workflow on the resource-owning machine. Its cleanup helper defaults to dry run and
