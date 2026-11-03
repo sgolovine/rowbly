@@ -456,7 +456,7 @@ The rest of the definition:
 };
 ```
 
-- `plugin.files.read(scope, name)` and `files.list(scope)` read **stored** files; `scope` is `'dataRoot'`, `{ board }` or `{ story }`. Writes go through a Change Set: `changes.writeFile` and `deleteFile`, and `changes.readFile` reads the **pending** version.
+- `plugin.files.read(scope, name)` and `files.list(scope)` read **stored** files; `scope` is `'dataRoot'`, `{ board }` or `{ story }`. To read many, such as a file of every Story, use `files.readMany` and `files.listMany`, which read them in a few batches ([Batched file reads](api.md#batched-file-reads)). Writes go through a Change Set: `changes.writeFile` and `deleteFile`, and `changes.readFile` reads the **pending** version.
 - `plugin.operation(name, input, body)` runs one of the Plugin's own operations, `<id>.<name>`, through the whole pipeline, so other Plugins can hook it. `name` is one lower-kebab-case word.
 - Deleting a Story or Board deletes its folder with every Plugin's files. Doctor's renumbering moves the whole Story folder, files included.
 

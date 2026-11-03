@@ -9,7 +9,7 @@ import { gitText } from './gitProcess';
 import { assertGitWorker, type GitRepository, repositoryFor, repositoryPath, withGitWorker } from './gitRepository';
 import { type GitDataFiles, readGitDataFiles } from './gitSyncFiles';
 import { entryExists, errorCode, io } from './io';
-import { acquireLock, type LockHandle } from './lock';
+import { acquireLock, type LockHandle, type LockTiming } from './lock';
 import { writeFileAtomic } from './system';
 import { prepareTransaction, recoverTransactions, type Transaction, type TransactionManifest } from './transaction';
 
@@ -190,12 +190,15 @@ async function cleanupReservation(repo: GitRepository) {
   await io.rm(ownerPath(repo));
 }
 
-/** Gate admission recovers locally before a root lock/read, including while scheduling is Off. */
-export async function enterPublication(root: DataRoot): Promise<PublicationHold | null> {
+/**
+ * Gate admission recovers locally before a root lock/read, including while scheduling is Off.
+ * `timing`, for the trace, learns how long the gate's own acquisition waited and for whom.
+ */
+export async function enterPublication(root: DataRoot, timing?: LockTiming): Promise<PublicationHold | null> {
   const repo = await repositoryFor(root);
   if (!repo) return null;
   await io.mkdir(repo.gate);
-  let gate = await acquireLock(repo.gate, { operation: 'git.publication', subject: 'Git publication' });
+  let gate = await acquireLock(repo.gate, { operation: 'git.publication', subject: 'Git publication', timing });
   if (!(await entryExists(repo.journal)) && !(await entryExists(ownerPath(repo)))) return { repo, gate };
   await gate.release(); // Never wait for worker while holding the gate.
   return withGitWorker(repo, async () => {

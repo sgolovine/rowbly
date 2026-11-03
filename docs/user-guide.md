@@ -691,7 +691,7 @@ rowbly plugins disable <id>    # keeps its settings and data
 - A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
 - A Plugin that fails to load (its settings are invalid, it throws while it starts, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning, and `plugins list` and `doctor` report it. Its data is kept.
 - A Plugin can refuse a change (exit 4). An expected error from a Plugin keeps its own code, such as `VALIDATION` (exit 2) for bad input. If a Plugin fails unexpectedly while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, these errors carry `details.plugin` and `details.stage`.
-- `ROWBLY_DEBUG=trace` prints each operation and Plugin step, with its time and outcome, to stderr.
+- `ROWBLY_DEBUG=trace` prints each operation and Plugin step, with its time and outcome, to stderr, and each wait for the Data Root lock, with how long it waited and for which operation. The TUI prints its last 1,000 lines when it exits, so run `ROWBLY_DEBUG=trace rowbly` to see what a slow screen waited for.
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 
@@ -970,7 +970,9 @@ labels, Custom Fields and dates, plus related Comments, Tasks, Story Specs, link
 Epics, Assignee handles, outgoing Story Links and attachment names from enabled Plugins. Search is
 case-insensitive: exact and contiguous matches rank before fuzzy subsequence matches (for example,
 `kbd` matches `Keyboard`). Space-separated terms may match different fields. Use `↑`/`↓` then
-`enter`, or click a result, to close the finder and open its Story. `esc` closes without navigating.
+`enter`, or click a result, to close the finder and open its Story. A Story on the current Board
+opens over the board as you left it, with its filter and highlighted card; one on another Board
+selects that Board first. `esc` closes without navigating.
 Use the mouse wheel over the results to move through longer lists. The finder loads current data
 each time it opens; unavailable Plugin content is skipped.
 
@@ -1076,7 +1078,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen (the Story shows, and takes its keys, before its Plugin rows and badges have loaded), badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
 <!-- END tui -->
 
 ## Exit codes

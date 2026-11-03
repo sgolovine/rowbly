@@ -807,7 +807,7 @@ function deepFreeze(value: unknown): unknown {
 }
 
 /** The stored record folder of a scope, as an absolute path. */
-async function scopeFolder(root: DataRoot, repos: Repositories, scope: FileScope): Promise<string> {
+export async function scopeFolder(root: DataRoot, repos: Repositories, scope: FileScope): Promise<string> {
   if (scope === 'dataRoot') return root.path;
   if ('board' in scope) return join(root.path, 'boards', (await repos.boards.get(scope.board)).id);
   const story = await repos.stories.findByKey(parseStoryKey(scope.story).key);
@@ -860,7 +860,7 @@ function fileValue(value: string | Uint8Array | null, binary: boolean): FileChan
   return { kind: 'binary', size: value.byteLength, sha256: createHash('sha256').update(value).digest('hex') };
 }
 
-function checkName(name: string): string {
+export function checkName(name: string): string {
   if (FILE_NAME_RE.test(name)) return name;
   throw new ValidationError(`invalid Plugin file name "${name}"`, {
     hint: 'use a relative path of letters, digits, ".", "_" and "-", without "." or ".." segments',

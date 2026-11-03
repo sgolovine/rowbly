@@ -25,6 +25,15 @@ export async function readLinks(plugin: PluginContext, target: string): Promise<
   return viewOf(plugin, story, await plugin.services.stories.list(story.boardId, {}));
 }
 
+/**
+ * `readLinks` of a Story the caller has read already: one listing of its Board, whose copy of the
+ * Story is the one used, so it is as fresh as the Stories that link to it.
+ */
+export async function readLinksOf(plugin: PluginContext, story: Story): Promise<LinkView> {
+  const stories = await plugin.services.stories.list(story.boardId, {});
+  return viewOf(plugin, story, stories);
+}
+
 /** CLI inspection fails explicitly if any same-Board bag could conceal relationships. */
 export async function listLinks(plugin: PluginContext, target: string): Promise<StoryLink[]> {
   const story = await plugin.services.stories.get(target);

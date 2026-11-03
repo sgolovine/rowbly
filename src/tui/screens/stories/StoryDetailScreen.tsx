@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
-import { pluginStoryRows } from '../../../services';
+import { pluginStoryRows, type RowblyContext } from '../../../services';
+import { storyWithConfig } from '../../../services/stories';
 import {
   ConfirmDialog,
   type DetailRow,
@@ -55,14 +56,29 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const key = String(params.key ?? '');
   const [tab, setTab] = useState(0);
   const [mode, setMode] = useState<Mode>('view');
-  const data = useAsync(async () => {
-    const story = await services.stories.get(key);
-    const config = await services.config.effective(story.boardId);
-    const extraRows = ctx ? await pluginStoryRows(ctx, services, story) : [];
-    const badges = await loadStoryBadges(plugins, services);
-    return { story, config, extraRows, badges: badges(story) };
-  }, [services, ctx, key, plugins]);
+  // The Story and its Stages first, so that it shows and takes its keys at once (ADR-0052 §3).
+  const data = useAsync(
+    async () =>
+      ctx
+        ? storyWithConfig(ctx, services, key)
+        : services.stories
+            .get(key)
+            .then(async (story) => ({ story, config: await services.config.effective(story.boardId) })),
+    [services, ctx, key],
+  );
   useReloadOnReturn(data.reload);
+  // Then what Plugins add, outside the Data Root lock: every reload of the Story loads it again, and a
+  // load for an earlier Story is dropped when it settles. Until it comes, the last one shows.
+  const loaded = data.data?.story;
+  const enrichment = useAsync(async () => {
+    if (!loaded) return null;
+    const [extraRows, badges] = await Promise.all([
+      ctx ? pluginStoryRows(ctx, services, loaded) : [],
+      loadStoryBadges(plugins, services),
+    ]);
+    return { extraRows, badges: badges(loaded) };
+  }, [services, ctx, loaded, plugins]);
+  const rowsPending = enrichment.loading && !enrichment.data && pluginRowsExpected(ctx);
   useActionFocus({ story: data.data?.story });
   const paste = useStoryPaste({
     boardId: data.data?.story.boardId,
@@ -110,7 +126,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
 
   if (!data.data)
     return data.loading ? <Loading label={`Loading ${key}…`} /> : <Text color={theme.danger}>No Story.</Text>;
-  const { story, config, extraRows, badges } = data.data;
+  const { story, config } = data.data;
+  const extraRows = enrichment.data?.extraRows ?? [];
+  const badges = enrichment.data?.badges ?? [];
 
   const move = async (stage: string) => {
     try {
@@ -140,7 +158,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
     { label: 'Priority', value: story.priority ?? none },
     { label: 'Labels', value: story.labels.join(', ') || none },
     { label: 'Due', value: story.dueDate ?? none },
-    ...extraRows,
+    ...(rowsPending ? [{ label: 'Plugins', value: <Loading /> }] : extraRows),
     ...Object.entries(story.customFields).map(([field, value]) => ({
       label: config.customFields.find((f) => f.key === field)?.name ?? field,
       value: Array.isArray(value) ? value.join(', ') : String(value),
@@ -223,4 +241,9 @@ export function StoryDetailScreen({ params }: ScreenProps) {
       )}
     </Box>
   );
+}
+
+/** Whether a Plugin that is on adds rows, so that the Story shows they are on their way. */
+function pluginRowsExpected(ctx: RowblyContext | null): boolean {
+  return (ctx?.plugins?.active() ?? []).some(({ definition }) => definition.storyRows !== undefined);
 }

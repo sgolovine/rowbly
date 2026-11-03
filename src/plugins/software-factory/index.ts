@@ -1,9 +1,9 @@
-import { definePlugin } from '../../plugin-api';
+import { definePlugin, type PluginFileRead } from '../../plugin-api';
 import { commands } from './commands';
 import { doctor } from './doctor';
 import { guardTouchedRun } from './heartbeat';
-import { holdText, readHold } from './holds';
-import { metadataOutput, readRunMetadata } from './runMetadata';
+import { HOLD_FILE, holdText, readHold } from './holds';
+import { metadataOutput, RUN_METADATA_FILE, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
 import {
   currentRun,
@@ -49,8 +49,14 @@ export const softwareFactory = definePlugin({
   },
   async storyRows(story, plugin) {
     const run = currentRun(plugin, story);
-    const hold = await readHold(plugin, story.key);
-    const metadata = metadataOutput(await readRunMetadata(plugin, story));
+    // Both files in one read scope (ADR-0052); each still reads as unreadable on its own.
+    const scope = { story: story.key };
+    const [holdFile, metadataFile] = await plugin.files.readMany([
+      { scope, name: HOLD_FILE },
+      { scope, name: RUN_METADATA_FILE },
+    ]);
+    const hold = await readHold(plugin, story.key, () => storedText(holdFile));
+    const metadata = metadataOutput(await readRunMetadata(plugin, story, () => storedText(metadataFile)));
     const rows = run ? [{ label: 'Stage Run', value: runText(run) }] : [];
     if (metadata.status === 'invalid' || metadata.status === 'unsupported')
       rows.push({ label: 'Run details', value: 'unavailable; run rowbly doctor' });
@@ -68,3 +74,10 @@ export const softwareFactory = definePlugin({
   doctor,
   tui: () => import('./tui').then((m) => m.tui),
 });
+
+/** A file of `readMany` as a single read gives it: its text, `null`, or the error it could not be read with. */
+async function storedText(file: PluginFileRead | undefined): Promise<string | null> {
+  if (file?.status === 'found') return file.text;
+  if (file?.status === 'failed') throw new Error(file.message);
+  return null;
+}

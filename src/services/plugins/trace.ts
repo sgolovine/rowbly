@@ -28,6 +28,27 @@ export interface TraceEvent {
   failedAt?: { plugin: string | null; stage: string };
   /** For a commit: how many changes of each type it saved, such as `{ story: 2, file: 1 }`. */
   changes?: Record<string, number>;
+  /**
+   * For a Data Root lock acquisition (stage `coordination`, `ms` is how long it was held): how long
+   * it waited at each step, and the operations it waited for. Names and durations only.
+   */
+  coordination?: CoordinationTiming;
+}
+
+/** The steps of one acquisition (ADR-0019 §1, §2), in milliseconds. */
+export interface CoordinationTiming {
+  /** For the Git publication gate, including its own queue and any publication recovery. */
+  publication: number;
+  /** Behind earlier callers in this process, for the Data Root lock. */
+  queue: number;
+  /** For the Data Root lock file another process or caller held. */
+  lock: number;
+  /** Finishing interrupted commits once the lock was taken. */
+  recovery: number;
+  /** The operation that held the publication gate while this one waited. */
+  publicationHolder?: string;
+  /** The operation that held the Data Root lock while this one waited. */
+  lockHolder?: string;
 }
 
 export type TraceSink = (event: TraceEvent) => void;
@@ -94,6 +115,21 @@ export function formatTrace(event: TraceEvent): string {
   if (event.changes) {
     const counts = Object.entries(event.changes).map(([type, n]) => `${type}:${n}`);
     parts.push(`changes=${counts.join(',') || 'none'}`);
+  }
+  if (event.coordination) {
+    const c = event.coordination;
+    const waits = { publication: c.publication, queue: c.queue, lock: c.lock, recovery: c.recovery };
+    parts.push(
+      `wait=${Object.entries(waits)
+        .map(([step, ms]) => `${step}:${ms.toFixed(1)}`)
+        .join(',')}`,
+    );
+    const holders = [
+      ...(c.publicationHolder ? [`publication:${c.publicationHolder}`] : []),
+      ...(c.lockHolder ? [`lock:${c.lockHolder}`] : []),
+    ];
+    if (holders.length) parts.push(`holder=${holders.join(',')}`);
+    parts.push('held');
   }
   parts.push(`${event.ms.toFixed(1)} ms`);
   return parts.join(' ');

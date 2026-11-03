@@ -3,9 +3,9 @@ import { constants } from 'node:fs';
 import { access, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
+import { createRepositories, prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
 import { deferred, FIXED_NOW, fixedClock, tempRoot } from '../helpers';
-import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree } from './engineHelpers';
+import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree, startScript } from './engineHelpers';
 
 let publicationRun: Promise<void> | undefined;
 
@@ -253,6 +253,7 @@ describe('Git local publication', () => {
       '../../src/storage/gitSyncJournal'
     );
     const { coordinated } = await import('../../src/services/coordination');
+    const { readPluginFiles } = await import('../../src/services/plugins/fileBatches');
     const { lstat, rm } = await import('node:fs/promises');
     // The fault matrix exercises real syscalls, including fsync, but models failures through
     // injection rather than power loss. Linux tmpfs avoids paying disk flush latency 130 times;
@@ -454,6 +455,10 @@ describe('Git local publication', () => {
         }),
       ).rejects.toMatchObject(refuse);
       expect(read).toBe(false);
+      // A batch of Plugin reads fails as a whole, with the same error, and reads nothing (ADR-0052).
+      await expect(
+        readPluginFiles(t.root, createRepositories(t.root), 'unknown', [{ scope: 'dataRoot', name: 'blob.bin' }]),
+      ).rejects.toMatchObject(refuse);
       expect(await readFile(f.repo.journal, 'utf8')).toContain(f.plan.candidate);
       if (scenario === 'foreign-lock') {
         expect((await stat(`${f.repo.index}.lock`)).ino).toBe(foreignInode);
@@ -592,6 +597,9 @@ describe('Git local publication', () => {
   it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
+    const { setTraceSink } = await import('../../src/services/plugins/trace');
+    const { readPluginFiles } = await import('../../src/services/plugins/fileBatches');
+    const { io } = await import('../../src/storage/io');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
     const { requireRepository } = await import('../../src/storage/gitRepository');
     for (const target of [
@@ -645,6 +653,174 @@ describe('Git local publication', () => {
       expect((await readdir(join(f.repo.gitDir, 'rowbly'))).filter((name) => name.startsWith('index-token-'))).toEqual(
         [],
       );
+      if (target !== 'complete') continue;
+      // A batch of Plugin reads waits behind a publication gate another process holds, and the trace
+      // shows for how long and for whom (ADR-0019 §1, ADR-0052).
+      const events: unknown[] = [];
+      const gateLock = join(f.repo.gate, '.lock');
+      await mkdir(join(t.path, 'plugins/probe'), { recursive: true });
+      await writeFile(join(t.path, 'plugins/probe/x.txt'), 'probe');
+      const holder = startScript(fixtureScript('holdLock.ts'), ['hold', f.repo.gate]);
+      await holder.printed('locked');
+      const waiting = deferred();
+      const original = io.readFile;
+      const spy = vi.spyOn(io, 'readFile').mockImplementation((path) => {
+        if (path === gateLock) waiting.resolve(); // The reader found the gate held.
+        return original(path);
+      });
+      setTraceSink((event) => events.push(event));
+      try {
+        let settled = false;
+        const reading = readPluginFiles(t.root, createRepositories(t.root), 'probe', [
+          { scope: 'dataRoot', name: 'x.txt' },
+          { scope: 'dataRoot', name: 'none.txt' },
+        ]).finally(() => {
+          settled = true;
+        });
+        await waiting.promise;
+        expect(settled).toBe(false);
+        holder.child.stdin.end();
+        expect(await reading).toEqual([{ status: 'found', text: 'probe' }, { status: 'missing' }]);
+      } finally {
+        setTraceSink(undefined);
+        spy.mockRestore();
+        holder.child.stdin.end();
+        await holder.exited;
+      }
+      expect(events).toContainEqual({
+        operationId: expect.stringMatching(/^lock-\d+$/),
+        operation: 'probe.files.readMany',
+        plugin: null,
+        stage: 'coordination',
+        ms: expect.any(Number),
+        outcome: 'ok',
+        coordination: {
+          publication: expect.any(Number),
+          queue: expect.any(Number),
+          lock: expect.any(Number),
+          recovery: expect.any(Number),
+          publicationHolder: 'hold',
+        },
+      });
+      // Attribute failures to the active phase with a controlled clock. Cleanup advances that
+      // clock separately, so it cannot silently become publication/lock/recovery wait time.
+      let now = 0;
+      const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+      const { acquireLock } = await import('../../src/storage/lock');
+      const { ConflictError } = await import('../../src/core');
+      try {
+        for (const phase of ['publication', 'lock', 'recovery'] as const) {
+          now = 0;
+          events.length = 0;
+          const error = new ConflictError('private diagnostic failure');
+          const originalMkdir = io.mkdir;
+          const originalWrite = io.writeFile;
+          const originalList = io.readdir;
+          const originalRead = io.readFile;
+          const mkdirSpy = vi.spyOn(io, 'mkdir').mockImplementation((path) => {
+            if (phase === 'publication' && path === f.repo.gate) {
+              now = 11;
+              throw error;
+            }
+            return originalMkdir(path);
+          });
+          const writeSpy = vi.spyOn(io, 'writeFile').mockImplementation((path, ...args) => {
+            if (phase === 'lock' && path.startsWith(join(t.path, '.lock.'))) {
+              now = 23;
+              throw error;
+            }
+            return originalWrite(path, ...args);
+          });
+          const listSpy = vi.spyOn(io, 'readdir').mockImplementation((path) => {
+            if (phase === 'recovery' && path === join(t.path, '.txn')) {
+              now = 37;
+              throw error;
+            }
+            return originalList(path);
+          });
+          const readSpy = vi.spyOn(io, 'readFile').mockImplementation((path) => {
+            if (now > 0) now += 100; // Lock release after failure.
+            return originalRead(path);
+          });
+          setTraceSink((event) => events.push(event));
+          try {
+            await expect(coordinated(t.root, 'failed read', async () => expect.fail('must not enter'))).rejects.toBe(
+              error,
+            );
+            expect(events).toEqual([
+              {
+                operationId: expect.stringMatching(/^lock-\d+$/),
+                operation: 'failed read',
+                plugin: null,
+                stage: 'coordination',
+                ms: 0,
+                outcome: 'failed',
+                code: 'CONFLICT',
+                coordination: {
+                  publication: phase === 'publication' ? 11 : 0,
+                  queue: 0,
+                  lock: phase === 'lock' ? 23 : 0,
+                  recovery: phase === 'recovery' ? 37 : 0,
+                },
+              },
+            ]);
+          } finally {
+            setTraceSink(undefined);
+            mkdirSpy.mockRestore();
+            writeSpy.mockRestore();
+            listSpy.mockRestore();
+            readSpy.mockRestore();
+          }
+        }
+        // A queued acquisition times out before it reaches the file lock. Advance only its
+        // deadline timer after it is installed; no wall-clock waiting or timing threshold.
+        const held = await acquireLock(t.path, { operation: 'queued holder' });
+        const armed = deferred();
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        const timer = setTimeout;
+        let timers = 0;
+        const timerSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation((...args) => {
+          const handle = timer(...args);
+          // The free publication gate's queue comes first; wait for the Root queue.
+          if (++timers === 2) armed.resolve();
+          return handle;
+        });
+        now = 0;
+        events.length = 0;
+        setTraceSink((event) => events.push(event));
+        const outcome = coordinated(t.root, 'queued read', async () => expect.fail('must not enter')).catch(
+          (error: unknown) => error,
+        );
+        try {
+          await armed.promise;
+          now = 19;
+          await vi.advanceTimersToNextTimerAsync();
+          expect(await outcome).toMatchObject({ code: 'CONFLICT' });
+          expect(events).toEqual([
+            {
+              operationId: expect.stringMatching(/^lock-\d+$/),
+              operation: 'queued read',
+              plugin: null,
+              stage: 'coordination',
+              ms: 0,
+              outcome: 'failed',
+              code: 'CONFLICT',
+              coordination: { publication: 0, queue: 19, lock: 0, recovery: 0, lockHolder: 'queued holder' },
+            },
+          ]);
+        } finally {
+          setTraceSink(undefined);
+          timerSpy.mockRestore();
+          vi.useRealTimers();
+          await held.release();
+        }
+        // Opting out also opts out of reading the duration clock.
+        clock.mockClear();
+        await coordinated(t.root, 'untraced read', async () => undefined);
+        expect(clock).not.toHaveBeenCalled();
+      } finally {
+        clock.mockRestore();
+      }
     }
   });
 });

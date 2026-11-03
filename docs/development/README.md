@@ -108,7 +108,7 @@ the scoped capture setup.
 
 ## Debugging
 
-- `ROWBLY_DEBUG=trace` prints every operation, commit and Plugin callback with its stage, time and outcome to stderr ([Tracing](../plugins/api.md#tracing)). It never records inputs, data or messages.
+- `ROWBLY_DEBUG=trace` prints every operation, commit and Plugin callback with its stage, time and outcome to stderr, and every Data Root lock acquisition with how long it waited for the Git publication gate, the in-process queue, the lock and recovery, which operation held it meanwhile, and how long it was held ([Tracing](../plugins/api.md#tracing)). It never records inputs, data, messages, paths or processes.
 - `rowbly doctor` reports anything in a Data Root that Rowbly would not write ([Integrity and doctor](../architecture/data-model.md#integrity-and-doctor)).
 
 ## Continuous integration and releases

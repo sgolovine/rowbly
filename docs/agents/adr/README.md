@@ -45,6 +45,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0028](0028-plugin-badges-can-load-from-files.md) | Plugin badges can load what they show from the Plugin's files | Accepted |
 | [0029](0029-plugin-sidebars-filter-the-board.md) | A Plugin can add a Plugin Sidebar that filters the board | Accepted |
 | [0044](0044-plugins-give-story-context-sections.md) | Plugins give Story Context sections that a Plugin command can read | Accepted |
+| [0052](0052-plugins-read-many-files-in-bounded-read-scopes.md) | Plugins read many files in bounded read scopes, and Plugin code never runs under the lock | Accepted |
 
 ### Built-in Plugins
 
