@@ -1136,6 +1136,7 @@ async function externalReadBoundary() {
   const refuseRetained = async ({ plugin }: { plugin: PluginHookContext }) => {
     expect('externalRead' in plugin).toBe(false);
     await expect(retained.externalRead('gh-pr-view', parameters)).rejects.toBeInstanceOf(PluginError);
+    return undefined;
   };
   const reader = definePlugin({
     id: 'reader',
