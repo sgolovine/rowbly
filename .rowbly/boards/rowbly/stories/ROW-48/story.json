@@ -12,22 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T02:42:27.091Z",
+  "updatedAt": "2026-11-03T02:50:17.512Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "failed",
-        "attempt": 1,
-        "worker": "mcp:d13c413e-fc31-4298-9676-f38cab436b47",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:32:06.743Z",
-        "finishedAt": "2026-11-03T02:42:25.162Z",
-        "reason": "Independent review validation: transaction recovery test timed out at 20000ms; no skill-text defect; investigate before any rerun."
-      }
     },
     "comments": {
       "comments": [
@@ -67,6 +55,16 @@
           "updatedAt": "2026-11-03T02:19:43.052Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:50:17.511Z"
+      }
     }
   }
 }

@@ -2,18 +2,7 @@
   "version": 1,
   "run": {
     "stage": "in-pr",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:32:06.743Z"
-  },
-  "identity": {
-    "worker": "mcp:d13c413e-fc31-4298-9676-f38cab436b47",
-    "machine": "rook",
-    "harness": "t3",
-    "threadId": "mcp:d13c413e-fc31-4298-9676-f38cab436b47",
-    "verification": {
-      "source": "SSH direct T3 start/show verified independent Sol provider defaults no options requested, full-access, explicit bound factory-review-row-48, RESERVED; /tmp/rowbly-factory-session/ROW-48-review-verified.json",
-      "verifiedAt": "2026-11-03T02:32:07.557Z",
-      "by": "sunny"
-    }
+    "attempt": 2,
+    "startedAt": "2026-11-03T02:50:17.511Z"
   }
 }
