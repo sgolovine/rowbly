@@ -702,6 +702,108 @@ describe('Git local publication', () => {
           publicationHolder: 'hold',
         },
       });
+      // Attribute failures to the active phase with a controlled clock. Cleanup advances that
+      // clock separately, so it cannot silently become publication/lock/recovery wait time.
+      let now = 0;
+      const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+      const { acquireLock } = await import('../../src/storage/lock');
+      const { ConflictError } = await import('../../src/core');
+      try {
+        for (const phase of ['publication', 'lock', 'recovery'] as const) {
+          now = 0;
+          events.length = 0;
+          const error = new ConflictError('private diagnostic failure');
+          const originalMkdir = io.mkdir;
+          const originalWrite = io.writeFile;
+          const originalList = io.readdir;
+          const originalRead = io.readFile;
+          const mkdirSpy = vi.spyOn(io, 'mkdir').mockImplementation((path) => {
+            if (phase === 'publication' && path === f.repo.gate) {
+              now = 11;
+              throw error;
+            }
+            return originalMkdir(path);
+          });
+          const writeSpy = vi.spyOn(io, 'writeFile').mockImplementation((path, ...args) => {
+            if (phase === 'lock' && path.startsWith(join(t.path, '.lock.'))) {
+              now = 23;
+              throw error;
+            }
+            return originalWrite(path, ...args);
+          });
+          const listSpy = vi.spyOn(io, 'readdir').mockImplementation((path) => {
+            if (phase === 'recovery' && path === join(t.path, '.txn')) {
+              now = 37;
+              throw error;
+            }
+            return originalList(path);
+          });
+          const readSpy = vi.spyOn(io, 'readFile').mockImplementation((path) => {
+            if (now > 0) now += 100; // Lock release after failure.
+            return originalRead(path);
+          });
+          setTraceSink((event) => events.push(event));
+          try {
+            await expect(coordinated(t.root, 'failed read', async () => expect.fail('must not enter'))).rejects.toBe(
+              error,
+            );
+            expect(events).toEqual([
+              {
+                operationId: expect.stringMatching(/^lock-\d+$/),
+                operation: 'failed read',
+                plugin: null,
+                stage: 'coordination',
+                ms: 0,
+                outcome: 'failed',
+                code: 'CONFLICT',
+                coordination: {
+                  publication: phase === 'publication' ? 11 : 0,
+                  queue: 0,
+                  lock: phase === 'lock' ? 23 : 0,
+                  recovery: phase === 'recovery' ? 37 : 0,
+                },
+              },
+            ]);
+          } finally {
+            setTraceSink(undefined);
+            mkdirSpy.mockRestore();
+            writeSpy.mockRestore();
+            listSpy.mockRestore();
+            readSpy.mockRestore();
+          }
+        }
+        // A queued acquisition times out before it reaches the file lock. Advance only its
+        // deadline timer after it is installed; no wall-clock waiting or timing threshold.
+        const held = await acquireLock(t.path, { operation: 'queued holder' });
+        const armed = deferred();
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        const timer = setTimeout;
+        const timerSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation((...args) => {
+          const handle = timer(...args);
+          armed.resolve();
+          return handle;
+        });
+        now = 0;
+        const timing = { queuedMs: 0, waitedMs: 0 };
+        const outcome = acquireLock(t.path, { timing }).catch((error: unknown) => error);
+        try {
+          await armed.promise;
+          now = 19;
+          await vi.advanceTimersToNextTimerAsync();
+          expect(await outcome).toMatchObject({ code: 'CONFLICT' });
+          expect(timing).toEqual({ queuedMs: 19, waitedMs: 0, holder: 'queued holder' });
+        } finally {
+          timerSpy.mockRestore();
+          vi.useRealTimers();
+          await held.release();
+        }
+        // Opting out also opts out of reading the duration clock.
+        clock.mockClear();
+        await coordinated(t.root, 'untraced read', async () => undefined);
+        expect(clock).not.toHaveBeenCalled();
+      } finally {
+        clock.mockRestore();
+      }
     }
   });
 });

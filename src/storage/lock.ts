@@ -139,11 +139,17 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
   if (timing && owner) timing.holder = owner.operation;
   try {
     const queued = timing ? performance.now() : 0;
-    if (!(await settlesBefore(previous, deadline))) throw busy(subject, path, (await readLock(path))?.holder);
+    try {
+      if (!(await settlesBefore(previous, deadline))) throw busy(subject, path, (await readLock(path))?.holder);
+    } finally {
+      if (timing) timing.queuedMs = performance.now() - queued;
+    }
     const created = timing ? performance.now() : 0;
-    if (timing) timing.queuedMs = created - queued;
-    await createLock(path, holder, deadline, subject, timing);
-    if (timing) timing.waitedMs = performance.now() - created;
+    try {
+      await createLock(path, holder, deadline, subject, timing);
+    } finally {
+      if (timing) timing.waitedMs = performance.now() - created;
+    }
   } catch (err) {
     leave();
     throw err;

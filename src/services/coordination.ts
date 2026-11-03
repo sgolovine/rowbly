@@ -70,24 +70,32 @@ async function lockAndRecover(path: string, operation: string, recover = true): 
 }
 
 async function acquire(path: string, operation: string, recover: boolean, clock?: AcquisitionClock) {
-  const publication = await enterPublication({ path, kind: 'local' }, clock?.gate);
-  clock?.published();
+  let publication: Awaited<ReturnType<typeof enterPublication>>;
+  try {
+    publication = await enterPublication({ path, kind: 'local' }, clock?.gate);
+  } finally {
+    clock?.published();
+  }
   let lock: LockHandle;
   try {
     lock = await acquireLock(path, { operation, timing: clock?.root });
   } catch (error) {
-    await publication?.gate.release();
+    // Cleanup must not replace the acquisition error.
+    await publication?.gate.release().catch(() => undefined);
     throw error;
   }
   clock?.locked();
   try {
-    if (recover) await recoverTransactions(path);
+    try {
+      if (recover) await recoverTransactions(path);
+    } finally {
+      clock?.recovered();
+    }
   } catch (err) {
-    await lock.release();
-    await publication?.gate.release();
+    await lock.release().catch(() => undefined);
+    await publication?.gate.release().catch(() => undefined);
     throw err;
   }
-  clock?.recovered();
   if (!publication) return lock;
   return wrapRelease(lock, async () => {
     try {
