@@ -1,4 +1,4 @@
-import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadProgram, reservedNames } from '../../src/main';
@@ -249,6 +249,7 @@ describe('loading Plugins (ADR-0010)', () => {
 
     // A Story Context keeps the sections it could read and lists every gap: a Plugin that did not
     // load and one whose section throws. An off Plugin is no gap. It saves nothing (ADR-0044, ADR-0011).
+    // `ROWBLY.md` is read as stored text, or `null` without one; a linked one is refused (ADR-0047).
     const lens: AnyPluginDefinition = {
       id: 'lens',
       name: 'Lens',
@@ -263,6 +264,7 @@ describe('loading Plugins (ADR-0010)', () => {
       boardId: 'web',
       plugins: { notes: { note: 'read me' }, later: { kept: 1 } },
     });
+    await writeFile(join(read.path, 'ROWBLY.md'), '# How we work\n\nAsk before moving to Done.\n');
     const files = async () => {
       const names = (await readdir(read.path, { recursive: true, withFileTypes: true }))
         .filter((entry) => entry.isFile())
@@ -272,7 +274,9 @@ describe('loading Plugins (ADR-0010)', () => {
     };
     const before = await files();
     const reader = await withPlugins(read, [notes, lens, boom]);
-    const context = await reader.services.plugins.context('notes').storyContext('WEB-1');
+    const notesContext = reader.services.plugins.context('notes');
+    const context = await notesContext.storyContext('WEB-1');
+    expect(await notesContext.readRowblyMd()).toBe('# How we work\n\nAsk before moving to Done.\n');
     expect(context.plugins).toEqual(['notes', 'lens']);
     expect(context.sections).toEqual([{ plugin: 'notes', title: 'Note', text: 'read me', data: { note: 'read me' } }]);
     expect(context.incomplete).toEqual([
@@ -280,5 +284,9 @@ describe('loading Plugins (ADR-0010)', () => {
       { plugin: 'lens', reason: 'lens failed' },
     ]);
     expect(await files()).toEqual(before);
+    await rm(join(read.path, 'ROWBLY.md'));
+    expect(await notesContext.readRowblyMd()).toBeNull();
+    await symlink(join(read.path, 'rowbly.config.json'), join(read.path, 'ROWBLY.md'));
+    await expect(notesContext.readRowblyMd()).rejects.toMatchObject({ code: 'VALIDATION' });
   });
 });

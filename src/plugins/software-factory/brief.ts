@@ -12,7 +12,7 @@ export interface WorkerBrief {
   stage: string;
   /** The attempt of the Story's Stage Run for this visit, or `null` before one starts. */
   attempt: number | null;
-  /** `false` when a Plugin's part, or a retry's context, is missing or partial. */
+  /** `false` when a Plugin's part, `ROWBLY.md` or a retry's context is missing or partial. */
   complete: boolean;
   incomplete: StoryContext['incomplete'];
   sections: StoryContext['sections'];
@@ -28,9 +28,18 @@ export interface BriefInput {
   allowIncomplete?: boolean;
 }
 
-/** What the brief says where `ROWBLY.md` goes: this command does not read it. */
-const GUIDE_PLACEHOLDER =
-  '<ROWBLY.md, or "None." when the Data Root has none: the supervisor adds it here; `software-factory brief` does not read it>';
+/**
+ * The Data Root's `ROWBLY.md` as the brief embeds it (ADR-0047): its text as stored, without trailing
+ * whitespace, or "None." when it has none. A file that cannot be read is a gap, never invented text.
+ */
+async function guideText(plugin: PluginContext): Promise<{ text: string } | { gap: string }> {
+  try {
+    const text = (await plugin.readRowblyMd())?.replace(/\s+$/, '');
+    return { text: text || 'None.' };
+  } catch (err) {
+    return { gap: `ROWBLY.md cannot be read: ${err instanceof Error ? err.message : String(err)}` };
+  }
+}
 
 /**
  * The context part of the brief of the Worker for Story `key` in its current Stage, whose Stage
@@ -50,7 +59,9 @@ export async function workerBrief(plugin: PluginContext, key: string, input: Bri
   const run = currentRun(plugin, story);
   const attempt = run?.attempt ?? null;
   const retry = input.retry?.trim() || undefined;
+  const guide = await guideText(plugin);
   const incomplete = [...context.incomplete];
+  if ('gap' in guide) incomplete.push({ plugin: 'software-factory', reason: guide.gap });
   if (attempt !== null && attempt > 1 && !retry)
     incomplete.push({
       plugin: 'software-factory',
@@ -78,7 +89,11 @@ export async function workerBrief(plugin: PluginContext, key: string, input: Bri
     );
   parts.push(`Plugins on: ${context.plugins.join(', ') || 'none'}. Stages of the Board, in order: ${stages}.`);
   parts.push(`## Stage Prompt: ${stage.name}`, stage.prompt.text.trim());
-  parts.push('## How people work with this Board', GUIDE_PLACEHOLDER);
+  // Inert text for the worker to read: Rowbly does not parse or follow it (ADR-0047).
+  parts.push(
+    '## How people work with this Board',
+    'text' in guide ? guide.text : 'Not included: ROWBLY.md cannot be read (see Incomplete context).',
+  );
   parts.push('## Other instructions', input.instructions?.trim() || 'None.');
   if (retry) parts.push('## Retry', retry);
 

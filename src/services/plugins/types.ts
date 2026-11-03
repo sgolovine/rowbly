@@ -550,6 +550,12 @@ export interface PluginContext<S = unknown> extends PluginReadContext<S> {
    * a row.
    */
   storyContext(key: string): Promise<StoryContext>;
+  /**
+   * The text of the Data Root's `ROWBLY.md`, or `null` when it has none (ADR-0047). Inert text to
+   * hand to an agent: Rowbly does not parse, run or enforce it. A symbolic link, or anything but a
+   * regular file, throws `ValidationError`. No other file outside the Plugin's scope can be read.
+   */
+  readRowblyMd(): Promise<string | null>;
   /** Shown after the command, or as a toast in the TUI. */
   warn(message: string): void;
 }
