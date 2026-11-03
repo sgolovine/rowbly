@@ -94,6 +94,18 @@ node skills/rowbly-factory/scripts/launch-worker.mjs launch \
   on thinkpad; never edit or delete them. Archive a worker only when done with it: its request then
   reports `conflict` and starts nothing, and a new worker needs a new title.
 
+Keep each launched worker reserved and waiting for GO. After `run start`, retain its returned
+`stage`, `attempt` and `startedAt`, then attach the verified launch receipt through
+`rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at <startedAt>
+--worker <threadId> --machine rook --harness t3 --thread-id <threadId> --source "<receipt>"`.
+For local workers use machine `thinkpad`; never resolve a rook thread through thinkpad's tools.
+The CLI records the supervisor's attestation; it does not contact T3. Publish the attachment before
+sending the full brief and GO. If attachment or publication fails, keep the worker reserved and
+reconcile rather than launching another. A definite failed launch ends the Stage Run with its
+reason; an uncertain launch requires checking the durable receipt and remote harness first.
+On supervisor restart use `runs --json` current `runMetadata.identity` to find the machine, harness
+and thread. Legacy titles are unverified hints; an unreachable machine does not prove absence.
+
 ### Rules for workers on rook
 
 Give these to every worker with its brief:
