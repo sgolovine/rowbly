@@ -1,6 +1,6 @@
 import { Command, Option } from 'commander';
 import { errorMessage as messageOf } from '../../core';
-import { printResult } from '../../output';
+import { printResult, printWarnings } from '../../output';
 import {
   type AnyPluginDefinition,
   invokePlugin,
@@ -9,7 +9,7 @@ import {
   type PluginHost,
   pluginServices,
 } from '../../services';
-import { editTextInEditor } from '../../storage';
+import { editTextInEditor, waitForDataRoot } from '../../storage';
 import {
   type AttachedPluginOptions,
   boardFlag,
@@ -165,7 +165,7 @@ function findCommand(program: Command, path: string): Command | undefined {
 function pluginCli(id: string): PluginCli<unknown> {
   return {
     run: (cmd, action) =>
-      withContext(cmd, ({ services, globals }) =>
+      withContext(cmd, ({ ctx, services, globals }) =>
         // The action is Plugin code: attributed, with expected errors keeping their codes (D7).
         invokePlugin({ plugin: id, stage: 'command' }, () =>
           action({
@@ -178,6 +178,13 @@ function pluginCli(id: string): PluginCli<unknown> {
             readText: (flags, opts) => readLongText(flags, opts),
             editText: (initial) => editTextInEditor(initial),
             resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
+            waitFor: (check, opts) =>
+              waitForDataRoot(ctx.root, check, {
+                signal: opts?.signal,
+                // Shown at once: a wait can last long after the watcher failed.
+                onError: (err) =>
+                  printWarnings([`Not watching the Data Root for changes: ${messageOf(err)}`], { json: globals.json }),
+              }),
           }),
         ),
       ),

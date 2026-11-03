@@ -82,12 +82,17 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
 | `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration (`config.effective(boardId)` for a Board, `config.global()` for the global level with the stored `rowbly.config.json`) and Board resolution only), `warn` |
 | `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
-| `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard` |
+| `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard`, `waitFor` |
 
 - `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
 - `config.updateRootConfig({ onboardingComplete })` saves the shared onboarding flag as a core Operation. Hook services remain read-only.
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
+- `waitFor(check, { signal? })` blocks a command until the Data Root reaches a state. It runs `check`
+  at once, again after each change to the Data Root by any process and every minute, and resolves
+  with the first result that is not `undefined`, or with `undefined` once `signal` aborts. It starts
+  watching before the first check, never runs two checks at once, and checks again after one during
+  which a change arrived. A `check` that throws rejects it. Command mode only.
 - `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
 - `warn` shows a warning after the command, or a toast in the TUI.
 
