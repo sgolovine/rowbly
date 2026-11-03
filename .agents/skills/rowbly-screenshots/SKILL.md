@@ -89,4 +89,4 @@ git worktree remove "$out/assets"
 
 Keep the `pr-assets/<pr-branch>` branch after the PR merges or closes: its comments link these files
 by branch name. Delete it only with the user's approval, after every linked image is hosted elsewhere
-and the links are updated (ADR-0050 §3).
+and the links are updated (ADR-0050 §2.3).

@@ -555,7 +555,7 @@ describe('Git data reconciliation', () => {
     }
     expect(mergeData(nextBase, nextRight, nextLeft, builtInPlugins)).toEqual(successive);
     // A Story with descendants added on one side is no decision; deleting it while the other side
-    // edits a descendant is deletion intent and keeps its evidence (ADR-0050 §1).
+    // edits a descendant is deletion intent and keeps its evidence (ADR-0050 §2.1).
     const note = `boards/web/stories/${story.key}/plugins/future/note.md`;
     const text = (body: string) => ({ data: Buffer.from(body).toString('base64'), mode: '100644' as const });
     const added = { id: 'added', files: { ...base.files, [note]: text('note\n') } };

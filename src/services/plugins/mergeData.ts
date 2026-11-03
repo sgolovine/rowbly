@@ -197,7 +197,7 @@ function mergeOnce(
       r = right[path];
     if (CORE.test(path)) {
       // Parent identity remains when any descendant was edited or added on either retained side.
-      // Only a parent in BASE can carry deletion intent; a one-sided addition is no decision (ADR-0050 §1).
+      // Only a parent in BASE can carry deletion intent; a one-sided addition is no decision (ADR-0050 §2.1).
       const prefix = path.replace(/\/(story.json|board.config.json)$/, '');
       const descendantEdit = (side: MergeFiles) =>
         Object.keys(side).some((p) => p.startsWith(`${prefix}/`) && !isDeepStrictEqual(side[p], base[p]));

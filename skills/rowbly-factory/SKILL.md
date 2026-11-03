@@ -79,7 +79,8 @@ Git Plugin is off.
   applied block, a finish or fail with its block), then sync once, before the GO or reply that relies
   on them. A change nothing waits for, such as a Comment recording an answer you already sent, goes
   out with the next sync. Sync once more when you stop. Never hold back a sync that a GO, a reply or
-  another machine's start relies on.
+  another machine's start relies on. Keep any earlier publication barrier required by `ROWBLY.md`
+  or the user.
 - Batching sync reduces publication attempts, not the per-change Automatic Commits. Keep Automatic
   Commits frequency `change` when required by policy, and keep every force-change check.
 - **Evidence or a conflict.** When `git sync` reports evidence paths or a Rowbly conflict, keep every

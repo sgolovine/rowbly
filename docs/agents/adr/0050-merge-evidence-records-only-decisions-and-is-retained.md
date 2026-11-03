@@ -6,8 +6,8 @@
 
 ADR-0034 §2 retains the base, both alternatives, provenance, deletion intent and repairs of each
 synchronization in committed, content-addressed Merge Evidence. At the preserved ROW-65 baseline
-(`7ee3b17`), all seven files under `plugins/git/merge-evidence/` (about 21 MB) contained only decisions with the reason `parent retained
-for edited descendants`. Each concerned a Story absent from BASE and present on one side only: a
+(`7ee3b17`), all seven files under `plugins/git/merge-evidence/` (about 21 MB) contained only decisions
+with the reason `parent retained for edited descendants`. Each concerned a Story absent from BASE and present on one side only: a
 plain addition, with nothing deleted and nothing chosen. Each record also embeds every Data Root
 file of all three sources, so one spurious decision costs a few megabytes and turns an otherwise
 fast-forward synchronization into a merge commit.
@@ -37,8 +37,8 @@ real alternatives, deletion intent and repairs.
 - A file may be removed only with explicit user approval and an ordinary commit on the upstream
   branch, never by rewriting history, and only after the adding merge commit is upstream and its
   decisions have been reviewed: each chosen value was checked, or the record was confirmed spurious.
-  Before removing it, record the path, the commit that added it (`git log --diff-filter=A -- <path>`), the review
-  outcome and the approval in the removal commit message; the file stays readable with
+  Before removing it, record the path, the commit that added it (`git log --diff-filter=A -- <path>`),
+  the review outcome and the approval in the removal commit message; the file stays readable with
   `git show <commit>:<path>`.
 - Evidence or a Rowbly conflict does not by itself say who wrote the sources. Check their provenance
   (the commits and what merged them) and report a conflict nobody has resolved, keeping every side.
