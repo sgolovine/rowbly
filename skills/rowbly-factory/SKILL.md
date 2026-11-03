@@ -68,11 +68,35 @@ Git Plugin is off.
   fails. Only the TUI's **Sync** (`S`) works with it Off, and you work in the CLI. If it is Off,
   turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
   --automatic-merge-resolution on`); otherwise ask the user before you start.
+- **Why you sync.** You are the Board's only writer: workers report commands and never commit
+  `.rowbly/`. `rowbly git sync` publishes your Board changes, so a worker sees them when it merges
+  the upstream, and brings in what merged upstream meanwhile, such as pull requests.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
   after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
   fails, retry it once; then tell the user and send nothing that relies on the change.
+- **One sync per event.** Make every Board change of one event first (a start and its attach, one
+  applied block, a finish or fail with its block), then sync once, before the GO or reply that relies
+  on them. A change nothing waits for, such as a Comment recording an answer you already sent, goes
+  out with the next sync. Sync once more when you stop. Never hold back a sync that a GO, a reply or
+  another machine's start relies on. Keep any earlier publication barrier required by `ROWBLY.md`
+  or the user.
+- Batching sync reduces publication attempts, not the per-change Automatic Commits. Keep Automatic
+  Commits frequency `change` when required by policy, and keep every force-change check.
+- **Evidence or a conflict.** When `git sync` reports evidence paths or a Rowbly conflict, keep every
+  side and every evidence file. Find the commits involved and what wrote them (a merged pull request,
+  older data or another writer), and tell the user about any conflict nobody has resolved.
 - Never run `git rebase`, `git reset` or a force push yourself.
+
+## Evidence retention
+
+Merge evidence (`plugins/git/merge-evidence/` in the Data Root) and the screenshots or other files a
+pull request links are audit evidence. Keep them after the Story is Done, and leave them out of any
+cleanup. Never edit, prune or delete them yourself: removing one is the user's decision, after its
+merge commit is upstream and its decisions or links were reviewed, and linked images must be hosted
+elsewhere first. For merge evidence, record its path, adding commit, review and approval in the
+ordinary upstream removal commit; preserve history. For linked images, update and verify every link
+before an approved removal. `ROWBLY.md` says where this repository keeps its screenshots.
 
 ## Before you start
 
@@ -155,11 +179,15 @@ Report each start, retry, finish, failure, question and Board change to the user
    or after a refused start.
 2. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
    for workers and the other Stories workers are on, and on a retry `--retry-file` with the
-   [retry context](#retry-context). Its `markdown` is every section of
+   [retry context](#retry-context). Its `markdown` supplies the generated context of
    [the worker brief](references/worker-brief.md) after the rules: the Story in full, the Stage
    Prompt and `ROWBLY.md`. The brief is the template's rules, with `<KEY>` filled in, followed by
-   `markdown`. Exit 4 with `details.incomplete` means part of the Story or `ROWBLY.md` cannot be
-   read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
+   `markdown`. For an independent review, follow [Independent review](#independent-review):
+   append one filled Implementation records section after the generated markdown, containing all
+   verified authoring records and the selected reviewer identity. Do not substitute the manual
+   template or rely on its unfilled placeholders. Finalize that section from the verified launch
+   before sending GO in step 5. Exit 4 with `details.incomplete` means part of the Story or
+   `ROWBLY.md` cannot be read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
    `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
    template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
 3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
@@ -170,7 +198,10 @@ Report each start, retry, finish, failure, question and Board change to the user
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
    attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
    identity is refused. Preserve another section's values when adding current-Run metadata.
-5. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+5. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
+   [resource record](references/cleanup.md) outside the checkout. Add private daemon directories
+   as workers report them; complete the merged PR/head/base fields before cleanup.
+   Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
    and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
 6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
    reconcile the receipt and actual harness state first; do not retry, clear or start another worker
@@ -213,6 +244,58 @@ discarding earlier work.
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
 
+## Returned work
+
+A worker in a later Stage may move a Story back to an earlier one, for example to repair a pull
+request. That is a new visit, not a retry: finish the later Stage Run before the move, and start a
+new worker for the earlier Stage as for any Story. When the Story's Comments record the branch and
+PR to repair, check that the PR is still open and its branch and head commit match the record, and
+put them in the brief's other instructions with the failure to fix: "Continue" when the Stage
+Prompt or `ROWBLY.md` says returned work is continued, otherwise as a question for the user. On a
+mismatch, report it and ask; never start again or discard the recorded work.
+
+## Independent review
+
+Follow this when a Stage Prompt asks for an independent review before a merge. The reviewer must be
+a new worker using a model different from every model that implemented the Story. Its approval
+holds only for the commit it reviewed.
+
+1. **Record each implementation.** A Run is an implementation when its worker can change the
+   Story's code (for example, its Stage Prompt names `rowbly-dev`), finished or failed. Before you
+   apply its block, whose move ends the Run and removes its metadata, add a Comment yourself:
+
+   ```text
+   Implementation record: <Stage name> attempt <n>, <finished|failed>.
+   Worker: <worker> (thread <threadId>, harness <harness>, machine <machine>).
+   Model: <provider instance>/<model>, options <id=value, …>. Source: <launch receipt or result>.
+   Branch: <branch or unknown>. PR: <URL or unknown>. Head: <commit SHA or unknown>.
+   ```
+
+   Take the worker and model from the launch you verified, not from the worker's own message; take
+   the head from `gh pr view <n> --json headRefOid` or the branch. Record a failed attempt too: it
+   may have pushed commits.
+2. **Check provenance before a review.** Read every implementation record in the Comments. When the
+   branch has commits that no record accounts for (work from before this rule, a person, an
+   unverified worker or an unknown model), you may add a record from verified evidence, such as a
+   launch receipt or the harness's thread, citing it. Otherwise ask the user which workers and
+   models wrote them. Never guess a model.
+3. **Choose the reviewer.** Start a new worker: never send the brief to a thread named in a record.
+   Its model must differ from every implementing model in the records. The same provider is
+   allowed; changing only effort or options does not make it another model. When `ROWBLY.md`
+   and the user leave no such model available, ask the user rather than reuse one. Append one
+   filled Implementation records section to the actual generated review brief after its markdown.
+   Include ALL verified authoring records, their evidence sources, and the selected
+   reviewer's verified worker ID, thread ID, provider instance and model. Check the assembled
+   message before GO; missing or unknown provenance requires asking the user, never guessing.
+4. **Approval holds for one commit.** A review Comment approves only the head SHA it names. A commit
+   pushed after it, including a merge of the base branch, needs another review. Changes requested
+   send the Story back to be built; that Run gets its own record, and the next reviewer must differ
+   from it as well.
+5. **Check before Done.** Before you apply a move to a Stage of category `done` from a reviewing
+   Stage, check that a review Comment, on the Board or earlier in the same block, approves the PR's
+   final head (`gh pr view <n> --json headRefOid,state`) from a reviewer that meets step 3. If none
+   does, do not apply the move; tell the user.
+
 ## Worker messages
 
 Workers end messages with these markers, as the brief asks:
@@ -221,13 +304,19 @@ Workers end messages with these markers, as the brief asks:
 | --- | --- |
 | a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
 | `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block with any move held earlier added at its end. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block; Rowbly drops its move. |
+| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end. |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move. |
 
 A worker that stops with no final marker, or has written nothing for a long time, needs a look:
 ask it for its state. If it is gone, run `run fail` with what you know.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
+
+After a PR is verified merged and its worker is finished, follow
+[completion cleanup](references/cleanup.md) on the owning machine. This is a supervisor completion
+step, not a new Stage Prompt or a sweep of historical Stories. Retain explicit resource ownership
+at launch; cleanup defaults to dry run, requires fresh harness inactivity and an exclusive resource
+lease, and retains remote refs and all evidence branches. Unknown or active resources stay.
 
 ## Waiting for pull request checks
 

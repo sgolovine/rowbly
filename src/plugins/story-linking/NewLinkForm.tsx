@@ -37,9 +37,11 @@ export function NewLinkForm({ params, plugin, ui }: PluginScreenProps) {
           {
             name: 'story',
             label: 'Story',
+            searchable: true,
             kind: 'select',
             required: true,
             options: choices.map((candidate) => candidate.key),
+            optionSearchText: Object.fromEntries(choices.map((candidate) => [candidate.key, [candidate.name]])),
             optionLabels: Object.fromEntries(
               choices.map((candidate) => [candidate.key, `${candidate.key} · ${candidate.name}`]),
             ),

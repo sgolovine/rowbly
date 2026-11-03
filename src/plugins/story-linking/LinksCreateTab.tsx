@@ -54,9 +54,11 @@ export function LinksCreateTab({ draft, onChange, boardId, story, active, plugin
             {
               name: 'key',
               label: 'Story',
+              searchable: true,
               kind: 'select',
               options: data.data.map((s) => s.key),
               optionLabels: Object.fromEntries(data.data.map((s) => [s.key, `${s.key} · ${s.name}`])),
+              optionSearchText: Object.fromEntries(data.data.map((s) => [s.key, [s.name]])),
               required: true,
             },
           ]}

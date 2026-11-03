@@ -73,6 +73,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | --- | --- | --- |
 | [0027](0027-tests-guard-only-what-review-cannot-check.md) | Tests guard only what review cannot check | Accepted |
 
-| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted; amended by 0035 |
+| [0034](0034-git-synchronization-publishes-recoverably.md) | Git synchronization prepares isolated merges and publishes recoverably | Accepted; amended by 0035 and 0050 |
 | [0037](0037-clipboard-reads-use-an-isolated-native-child.md) | Clipboard images are read by an isolated optional native child | Accepted |
 | [0038](0038-story-image-paste-is-an-exclusive-plugin-contribution.md) | Story image paste is an exclusive Plugin contribution | Accepted |
+| [0050](0050-merge-evidence-records-only-decisions-and-is-retained.md) | Merge Evidence records only real decisions and is kept as audit history | Accepted; amends 0034 |

@@ -89,6 +89,23 @@ the text in one colour, without Stage colours or styling.
 `node-pty` is pinned to a 1.2 beta in `pnpm-workspace.yaml`, because 1.1.0 ships no Linux x64
 binary; its build script stays off, since the binaries it ships load without it.
 
+## Factory completion resources
+
+After a verified merge and worker completion, the factory supervisor can run the explicit-resource,
+dry-run-first cleanup helper in `skills/rowbly-factory/scripts/clean-up-task.mjs`. Its record and
+harness adapter contract are documented in
+[`cleanup.md`](../../skills/rowbly-factory/references/cleanup.md). It operates on the owning machine,
+requires exact merged PR/resource ownership and a fresh exclusive harness lease, and refuses active
+or uncertain resources. It removes only verified local task worktrees/branches and stops only the
+recorded private task daemon through its authenticated API. There is no historical Done dispatch.
+
+Remote refs and all `pr-assets` branches stay. Linked evidence is retained indefinitely pending
+ROW-65's retention policy; deletion requires approved durable archival and verified replacement
+links. Repository automatic branch deletion on merge remains a supervisor proposal requiring approval;
+the helper does not change repository settings. Create a separate private agentic-tui state directory
+per task and record it before use; never stop shared/existing daemons. See the screenshot skill for
+the scoped capture setup.
+
 ## Debugging
 
 - `ROWBLY_DEBUG=trace` prints every operation, commit and Plugin callback with its stage, time and outcome to stderr ([Tracing](../plugins/api.md#tracing)). It never records inputs, data or messages.

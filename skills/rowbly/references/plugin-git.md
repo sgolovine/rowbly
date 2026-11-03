@@ -90,7 +90,12 @@ rowbly git configure --automatic-merge-resolution off --json --no-prompt
   including edited descendants. Distinct concurrent additions retain both complete records/scoped
   files with source-qualified key remapping; identical additions coalesce. Configuration Cascade
   levels stay separate; referenced definitions may be restored, incompatible field types split and
-  constraints relaxed to retain valid data, with original values and repairs in evidence.
+  constraints relaxed to retain valid data, with original values and repairs in evidence. Evidence is
+  written only for a decision; a Board or Story new on one side is an addition, with no evidence.
+- Evidence files are audit history: never edit, prune or force-push them away. Remove one only when
+  the person asks, in an ordinary commit, after its merge commit is on the upstream and its decisions
+  were reviewed. Record the path, adding commit (`git log --diff-filter=A -- <path>`), review and
+  approval in the removal commit message.
 - Supported format handlers reconcile only their own Plugin Data/files, including when their Plugin
   is Off. Unknown, invalid or future data stays opaque; unsafe reconciliation stops with alternatives
   preserved. Do not rewrite unfamiliar bags or apply blanket doctor fixes to make a merge succeed.

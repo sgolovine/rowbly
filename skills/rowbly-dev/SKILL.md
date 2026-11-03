@@ -48,7 +48,7 @@ In standalone mode, the supervisor does this before it scores complexity. Assign
 2. **Run every `rowbly` command against the control checkout's Data Root, never from the linked worktree.** The Board shows progress there. If the Git Plugin is on, it commits each Rowbly change in the checkout where the command runs, and those commits must not land on the task branch. Do not commit `.rowbly/` changes on the task branch unless the Story's change is to Rowbly data itself.
 3. **Resolve the Story Key.** For a bare number, read the Board's `keyPrefix` (`rowbly use`, then `rowbly boards list`) and form `<PREFIX>-<number>`. If several Boards could match and none is current, ask which one to use.
 4. **Read the request.** Run `rowbly stories show <KEY>` and `rowbly plugins list`. Then, for each Plugin that is on, read the Story's Tasks (`tasks list`), Specs (`specs list --story <KEY>`), Comments (`comments list`) and Epic (`epics show <id>`), plus any Board Specs that the Story links. The Story's name, description, Specs and Comments together are the change request.
-5. **Check that the Story can start.** If it is in a Stage of category `done`, stop and ask. If its Comments name an open draft PR or a task branch for it, report that work and ask whether to continue it or start again. If the request is materially ambiguous, ask the smallest set of blocking questions before you touch files. If the Comments Plugin is on, record the answers as a Comment.
+5. **Check that the Story can start.** If it is in a Stage of category `done`, stop and ask. If its Comments name an open draft PR or a task branch for it, report that work and ask whether to continue it or start again, unless the brief or Stage Prompt says to continue it: then continue that branch and PR as [Baseline](#baseline) says, without opening another PR. If the request is materially ambiguous, ask the smallest set of blocking questions before you touch files. If the Comments Plugin is on, record the answers as a Comment.
 6. **Read the Stages** of the Story's Board with `rowbly config show --board <id>`. Do not assume their keys.
 7. **Read the Data Root's `ROWBLY.md`** if it has one (reference §4). Where its rituals name other Stages, required Comments, or someone else who moves the Story, follow them over the [Story updates](#story-updates) below, and give them to workers with the Story.
 
@@ -61,7 +61,7 @@ Keep the Story current without being asked. The supervisor makes each update whe
 | The plan is accepted, before the first code change | Move the Story to the in-progress Stage (reference §5). If the Comments Plugin is on, add a Comment with the complexity score, branch and a short plan. |
 | A planned Task finishes | Move the Task to `done`. |
 | A blocker or a decision that changes the scope | Add a Comment. |
-| The draft PR is open | Add a Comment with the PR URL and the validation summary. Move the Story to a review Stage (key or name contains `review`) if the Board has one; otherwise leave it in the in-progress Stage. |
+| The draft PR is open | Add a Comment with the PR URL, its head commit SHA and the validation summary. When the Comments hold review findings for this work, answer each by its number in that Comment: fixed in `<commit SHA>`, or why it was not changed. Never record the work as approved yourself. Move the Story to a review Stage (key or name contains `review`) if the Board has one; otherwise leave it in the in-progress Stage. |
 
 Do not move the Story to `done`: the work is complete only when the PR merges, and that is outside this skill. Do not turn Plugins on, edit Story fields the request does not need, or delete records. If the Comments Plugin is off, put the same notes in the PR body and in the final report.
 
@@ -101,6 +101,8 @@ Assigned worker:
    - the selected parent ref as the start point,
    - `<harness>/<story-key-lowercase>-<short-kebab-summary>` (for example `claude/row-18-skills-create`) as the unique local branch unless the user requests another name,
    - a unique sibling path such as `../<repo>-worktrees/<story-key-lowercase>-<short-kebab-summary>`.
+
+   To continue an existing PR, first check that it is still open and that its branch and head commit (`gh pr view <n> --json state,headRefName,headRefOid`) match what the brief or Comments record; on a mismatch, ask and discard nothing. Use `origin/<PR branch>` at that head as the start point with a new unique local branch, merge the PR's base into it (never rebase), and push with `git push -u origin HEAD:<PR branch>` (worktree contract steps 2, 8 and 9). The fixes update that PR; never force-push or open another.
 6. Never develop directly on `main`, `master`, or `develop`. Perform all remaining repository work from the linked worktree and leave it in place for review or follow-up unless the user explicitly requests cleanup. The `rowbly` commands in [Rowbly Story](#rowbly-story) are the one exception: they run against the control checkout's Data Root.
 7. Install dependencies in the linked worktree before the first check if the repository needs them (for example `pnpm install --frozen-lockfile`).
 

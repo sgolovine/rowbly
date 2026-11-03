@@ -7,7 +7,7 @@ import { FORM_KEYS, formKeys, type KeyHint } from '../keymap';
 import { theme } from '../theme';
 import { FieldRow } from './FieldRow';
 import { FormNavigationContext } from './formNavigation';
-import { FormKeysContext } from './modalLayer';
+import { FormKeysContext, useCovered } from './modalLayer';
 
 /** Defined once with the Plugin API's form fields, so the two cannot drift apart (CQ-18, ARCH-19). */
 export type FieldKind = PluginFieldKind;
@@ -22,6 +22,10 @@ export interface FormField {
   options?: readonly string[];
   /** What a choice shows instead of its value, e.g. a Stage's name for its key. */
   optionLabels?: Readonly<Record<string, string>>;
+  /** A select opens a fuzzy picker over option values and labels instead of cycling. */
+  searchable?: boolean;
+  /** Separate search fields when a display label combines several values. Defaults to the label. */
+  optionSearchText?: Readonly<Record<string, readonly string[]>>;
   /**
    * Fills this text field from another field's text when focus leaves that field, e.g. a key from a
    * name: `{ field: 'name', format: slugFromName }`. A value typed here is never replaced.
@@ -168,7 +172,8 @@ export function Form({
   submitRequest = 0,
   onInvalid,
 }: FormProps) {
-  const active = useIsActive() && isActive;
+  const covered = useCovered();
+  const active = useIsActive() && isActive && !covered;
   const navigation = useContext(FormNavigationContext);
   const hints = extraHints ?? navigation?.extraHints ?? NO_EXTRA_HINTS;
   const formId = useId();
@@ -193,6 +198,7 @@ export function Form({
 
   // `focus === fields.length` accepts Enter to submit without a separate button.
   const field = fields[focus];
+  const searchable = field?.kind === 'select' && field.searchable === true;
   useEffect(() => navigation?.register(formId, active && field !== undefined), [navigation, formId, active, field]);
   const keys = useMemo(
     () =>
@@ -200,12 +206,20 @@ export function Form({
         ? [
             { key: 'ctrl+s', description: 'save Story' },
             { key: 'shift+tab', description: 'next tab' },
-            { key: 'tab/↑/↓/enter', description: 'field' },
+            ...(searchable ? [{ key: 'enter', description: 'search' }] : []),
+            { key: searchable ? 'tab/↑/↓' : 'tab/↑/↓/enter', description: 'field' },
           ]
-        : submitLabel === 'save'
-          ? FORM_KEYS
-          : formKeys(submitLabel),
-    [navigation, submitLabel],
+        : searchable
+          ? [
+              { key: 'ctrl+s', description: submitLabel },
+              { key: 'enter', description: 'search' },
+              { key: 'tab/↑/↓', description: 'field' },
+              { key: 'shift+tab', description: 'previous field' },
+            ]
+          : submitLabel === 'save'
+            ? FORM_KEYS
+            : formKeys(submitLabel),
+    [navigation, submitLabel, searchable],
   );
   useFormKeys(
     active,
@@ -299,6 +313,8 @@ export function Form({
       }
       // The TextArea handles its own `enter` and `↑/↓`, and calls back when they leave it.
       if (field.kind === 'multiline') return;
+      // The picker owns Enter and text; only Tab and vertical arrows leave this field.
+      if (searchable && !key.upArrow && !key.downArrow) return;
       const raw = values[field.name] ?? null;
       const typed = TYPED_KINDS.includes(field.kind);
       if (key.return || key.downArrow || (!typed && input === 'j')) {
@@ -338,7 +354,7 @@ export function Form({
   return (
     <Box flexDirection="column" gap={roomy ? 1 : 0} flexShrink={0}>
       <Text color={theme.inkFaint} wrap="truncate-end">
-        {busy ? 'Saving…' : field ? FIELD_HELP[field.kind] : 'ctrl+s save'}
+        {busy ? 'Saving…' : searchable ? 'type or enter to search' : field ? FIELD_HELP[field.kind] : 'ctrl+s save'}
       </Text>
       {fields.map((f, i) => (
         <FieldRow

@@ -554,6 +554,23 @@ describe('Git data reconciliation', () => {
       expect(source.evidence).toEqual([{ path: result.evidence[0], digest: expect.any(String) }]);
     }
     expect(mergeData(nextBase, nextRight, nextLeft, builtInPlugins)).toEqual(successive);
+    // A Story with descendants added on one side is no decision; deleting it while the other side
+    // edits a descendant is deletion intent and keeps its evidence (ADR-0050 §2.1).
+    const note = `boards/web/stories/${story.key}/plugins/future/note.md`;
+    const text = (body: string) => ({ data: Buffer.from(body).toString('base64'), mode: '100644' as const });
+    const added = { id: 'added', files: { ...base.files, [note]: text('note\n') } };
+    const withoutStory = { id: 'without', files: { ...base.files } };
+    delete withoutStory.files[core];
+    const addition = mergeData(withoutStory, withoutStory, added, builtInPlugins);
+    expect(addition.evidence).toEqual([]);
+    expect(addition.files).toEqual(added.files);
+    const edited = { id: 'edited', files: { ...added.files, [note]: text('edited\n') } };
+    const deletion = mergeData(added, withoutStory, edited, builtInPlugins);
+    expect(deletion.files[core]).toEqual(added.files[core]);
+    expect(deletion.decisions).toMatchObject([
+      { path: core, reason: 'deletion intent retained; edited complete subtree survives' },
+    ]);
+    expect(deletion.evidence).toHaveLength(1);
     const decisions: import('../../src/services/plugins/reconciliation').MergeDecision[] = [];
     const h = createMergeHelpers(decisions);
     expect(h.value({ v: 1 }, {}, { v: null }, 'opaque')).toEqual({ v: null });
