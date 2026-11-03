@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T00:43:05.867Z",
+  "updatedAt": "2026-11-03T00:52:20.285Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:c3adf1a3-db76-48d7-8154-cb63e8b86809",
+        "by": "sunny",
+        "startedAt": "2026-11-03T00:43:05.866Z"
+      }
     },
     "comments": {
       "comments": [
@@ -46,18 +56,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
           "createdAt": "2026-11-03T00:06:02.194Z",
           "updatedAt": "2026-11-03T00:06:02.194Z"
+        },
+        {
+          "id": "FsAthvhq",
+          "author": "sunny",
+          "body": "Correction plan accepted with one refinement: keep the native Plugin option + stories.move guard approach (no core Plugin-specific concept), but bind the precondition to the planned full Run reference: stage, attempt and startedAt, not timestamp alone. Use a compact validated representation for the Plugin-owned flag/input; ordinary moves without it stay unchanged. Require current-visit finished Run under the move lock, and reject stale/replaced Runs; do not let later transforms invalidate the condition unnoticed. Deny worker-supplied precondition flags. Reject incoming --blocked-by add/remove forms, including equals syntax; allow only physical writes to the worker's Story. Reproduce and preserve the original two failures in deterministic existing regression checks, including the full apply path interleaving (not only the direct guarded move) and byte-identical replacement Run/other Story after refusal. Same-clock/different-attempt or Stage reference must not authorize a new Run. Merge main preserving waitFor/runCommand/launcher additions and all existing blocker tests; keep ADR0045 and docs/ref copies coherent. Current suite98, do not exceed100. Run all four checks and updated agentic-tui scenarios, push existing PR139 only. Proceed.",
+          "createdAt": "2026-11-03T00:52:20.285Z",
+          "updatedAt": "2026-11-03T00:52:20.285Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c3adf1a3-db76-48d7-8154-cb63e8b86809",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:43:05.866Z"
-      }
     }
   }
 }
