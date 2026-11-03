@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:49:00.009Z",
+  "updatedAt": "2026-11-03T17:49:00.635Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -89,6 +89,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/157 at 6260eaca0548025fe2801752d110d3303e6b644b by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] src/plugins/github/stats.ts:120-144: a pagination identity/head/count mismatch clears only that candidate, retaining its earlier identity/head/count. Another completed alias with those earlier values can then make the whole PR contribution complete. A deterministic mocked-source reproduction returned commits={status:complete,value:2} after a later page explicitly reported a changed head and totalCount=1. Preserve observed inconsistency at PR identity/group level and exclude that PR from commit contributions through every alias; return partial/unavailable with the reason. Extend the existing collector contract check for this alias-plus-pagination race. 2. [P2] src/services/boardStats.ts:90-96: collection iterates the raw registry and calls stats.metrics.map even for declarations rejected by loading. With boardStats.metrics=null, loadPlugins correctly marks the Plugin failed, but boards.stats throws TypeError instead of returning core and healthy Plugin metrics. Validate or sanitize metric declarations before rendering, including Off/failed Plugins, and extend the existing loading/collection check to prove malformed declarations cannot crash Stats. Reviewed the full diff, accepted current-record scope, bounded reads, frozen snapshots, capability boundaries, CLI/TUI wiring, docs/ADR0054 and preserved ROW73 integration. Independent validation on the clean local merge of current main: typecheck PASS; lint PASS; unit 79 PASS; CLI 21 PASS. All six current-head CI checks passed, none pending. Reproduction scripts: /tmp/row-70-review-astra-1-repro.mts and /tmp/row-70-review-astra-1-repro-changed-count.mts. No product changes made.",
           "createdAt": "2026-11-03T17:49:00.008Z",
           "updatedAt": "2026-11-03T17:49:00.008Z"
+        },
+        {
+          "id": "1PMg14bI",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-70, PR https://github.com/sgolovine/rowbly/pull/157, head 6260eaca0548025fe2801752d110d3303e6b644b. Independent review requests changes: 1. Preserve pagination inconsistency across linked aliases so changed PRs cannot contribute exact commit counts. 2. Isolate malformed Stats declarations so failed or Off Plugins cannot crash core and healthy Plugin statistics. Both reproduced; review https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611303603. All four local checks and all six CI checks passed.",
+          "createdAt": "2026-11-03T17:49:00.634Z",
+          "updatedAt": "2026-11-03T17:49:00.634Z"
         }
       ]
     }
