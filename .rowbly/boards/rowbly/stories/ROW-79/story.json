@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-79",
+  "boardId": "rowbly",
+  "name": "When installing agent skills, indicate which one has already been installed",
+  "description": "Currently no way to tell if a skill has been installed after installing it",
+  "stage": "todo",
+  "rank": "a5",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:08:20.956Z",
+  "updatedAt": "2026-11-03T22:08:20.974Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "a71tEFe05",
+          "name": "image-20261103-2208.png",
+          "type": "image/png",
+          "size": 151171,
+          "createdAt": "2026-11-03T22:08:20.974Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
