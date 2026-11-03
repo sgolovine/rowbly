@@ -431,6 +431,38 @@ rowbly attachments open <KEY> <id>
 <!-- END attachments -->
 
 <!-- BEGIN software-factory -->
+### GitHub PR
+
+Enable the `github` Plugin to link one GitHub PR per Story. The URL may use GitHub.com or an
+Enterprise host; it must be HTTPS with `/owner/repository/pull/<positive integer>`. Credentials,
+ports, query/fragment, dot segments, encoded separators and extra path parts are refused.
+
+```text
+rowbly plugins enable github
+rowbly stories create --board web --name "Sign in" --github-pr https://github.com/octo/app/pull/123
+rowbly stories edit WEB-1 --github-pr https://github.com/octo/app/pull/123
+rowbly stories edit WEB-1 --github-pr ''
+rowbly github status WEB-1 --json --no-prompt
+```
+
+The Story form's **GitHub PR** field sets the same link; clearing it removes a supported value.
+Details and `stories show` display the stored URL without a network read. The **GitHub PR** Story
+tab fetches immediately, every 60 seconds while active, and on `r`. It shows PR/draft, checks,
+review and merge information plus fetch time; failed refreshes keep and label the last result.
+Leaving the tab or active screen, disabling/reloading the Plugin, or switching Data Roots cancels
+its work. Nothing polls in CLI hooks or saves live status.
+
+`github status` fetches once using an installed, authenticated `gh` (`gh auth login`); it never
+starts login itself. Missing links exit 3. Missing tools, access/authentication failures, output
+limits (1 MiB stdout, 64 KiB stderr), unreadable responses and a 10-second timeout report errors.
+`--json` returns PR details and `checks: { total, passed, failed, pending, other }`, plus `fetchedAt`;
+empty or unknown check results never mean passed. See [GitHub Plugin](plugins/built-in.md#github)
+for the full JSON fields and resource limits.
+
+An invalid or future bag is unavailable, preserved by unrelated edits and refused by explicit
+replacement/clearing (exit 6). Doctor warns `PLUGIN_DATA_INVALID` without fixing it. Repair it by
+hand. The Plugin has no settings, background CLI polling or saved status cache.
+
 ### Software Factory
 
 Software Factory is a Built-in Plugin: run `rowbly plugins enable software-factory` first. It gives

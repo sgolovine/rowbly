@@ -18,6 +18,7 @@ Rowbly has several safeguards around Plugin code. Each one protects against *acc
 | Capabilities (`PluginServices`, `PluginReadServices`, `files`, `editText`, `git`) | Give each stage only the services it is meant to use. | Stop code from reaching the file system, network, environment or child processes by other means. |
 | Frozen snapshots and stage-bound writers (ADR-0020 §1) | Stop a hook from changing the plan except through validated writer methods, and stop a writer from being used after its stage. | Protect against code that is written to get around them. |
 | Plugin file scopes and the symlink policy (ADR-0019 §10) | Keep `files` reads and writes inside `plugins/<id>/` and reject symlinks there. | Make the check race-proof, or stop code that uses `node:fs` directly. |
+| Fixed external reads (ADR-0051) | Admit only declared host templates from live commands or leased screens, refuse hook/read callbacks, and bound/cancel child work. | Confine in-process code, approve executables on PATH, or establish a permission boundary. |
 | Cooperative timeouts (the reaction deadline, ADR-0020 §4) | Let Rowbly stop *waiting* for a slow reaction and carry on. | Interrupt a synchronous loop or stop detached work. A promise timeout cannot do that. |
 
 In-process JavaScript code can do anything the Rowbly process can do: read and write any file the person can, use the network, read environment variables and run programs. Rowbly never describes a Plugin as sandboxed, confined or isolated.

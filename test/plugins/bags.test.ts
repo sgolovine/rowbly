@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { github } from '../../src/plugins/github';
 import { createRepositories } from '../../src/storage';
 import { makeBoard, makeStory } from '../helpers';
 import { notes } from './fixtures';
@@ -8,6 +9,7 @@ import { pluginRoot, readJsonFile, storyFile, withPlugins } from './helpers';
 
 /** The bag of a Plugin that this Rowbly version does not know. */
 const GHOST = { ghost: { deep: { list: [1, 2] }, flag: true } };
+const OPAQUE_PR = { pr: 'https://github.com/owner/name/pull/1', version: 999, opaque: { list: [1, null] } };
 
 /** Every kind of record, each with a ghost bag; Notes is off. */
 async function bagged() {
@@ -15,7 +17,11 @@ async function bagged() {
     {},
     {
       customFields: [{ key: 'size', name: 'Size', type: 'text', required: false }],
-      plugins: { ghost: { enabled: false, setting: 1 }, notes: { enabled: false, marker: 'm' } },
+      plugins: {
+        ghost: { enabled: false, setting: 1 },
+        notes: { enabled: false, marker: 'm' },
+        github: { enabled: false },
+      },
     },
   );
   await makeBoard(t.path, { id: 'web', name: 'Website', keyPrefix: 'WEB', plugins: GHOST });
@@ -24,7 +30,7 @@ async function bagged() {
     boardId: 'web',
     key: 'WEB-1',
     customFields: { size: 's' },
-    plugins: { ...GHOST, notes: { note: 'kept while off' } },
+    plugins: { ...GHOST, notes: { note: 'kept while off' }, github: OPAQUE_PR },
   });
   await makeStory(t.path, { boardId: 'web', key: 'WEB-2', rank: 'a1' });
   return t;
@@ -35,7 +41,7 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     const t = await bagged();
     // Local State as a run reads it from local.json.
     const local = await createRepositories(t.root).localState.get();
-    const { services } = await withPlugins(t, [notes], { local });
+    const { services } = await withPlugins(t, [notes, github], { local });
     await services.stories.update('WEB-1', { name: 'Renamed', labels: ['x'] });
     await services.stories.move('WEB-1', 'todo');
     await services.stories.rank('WEB-1', 'bottom');
@@ -50,11 +56,15 @@ describe('Plugin Data is kept unchanged by core (ADR-0011)', () => {
     expect(story).toMatchObject({
       name: 'Renamed',
       stage: 'todo',
-      plugins: { ...GHOST, notes: { note: 'kept while off' } },
+      plugins: { ...GHOST, notes: { note: 'kept while off' }, github: OPAQUE_PR },
     });
 
     const root = await readJsonFile(t, 'rowbly.config.json');
-    expect(root.plugins).toEqual({ ghost: { enabled: false, setting: 1 }, notes: { enabled: false, marker: 'm' } });
+    expect(root.plugins).toEqual({
+      ghost: { enabled: false, setting: 1 },
+      notes: { enabled: false, marker: 'm' },
+      github: { enabled: false },
+    });
     expect((await readJsonFile(t, 'boards/web/board.config.json')).plugins).toEqual(GHOST);
     expect(await readJsonFile(t, 'local.json')).toEqual({ version: 1, board: 'web', me: 'alice', plugins: GHOST });
   });

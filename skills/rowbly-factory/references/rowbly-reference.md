@@ -401,3 +401,9 @@ model chosen before launch (intent; compare the launch receipt), written by `run
 polling or status) as `heartbeat:{worker,at,source,by}`; it needs the running Run and attached
 worker, else exit4. `liveness` is `{lastSeenAt|null,heartbeat:reported|none|unavailable,ageSeconds,stale}`;
 stale (default 15 min) means check the worker, never clear/fail/retry by age. The digest omits the age.
+
+GitHub (`github`): `stories create … --github-pr <HTTPS PR URL>`; `stories edit <KEY> --github-pr <url>`
+(empty string clears supported data); `github status <KEY>` fetches once with installed/authenticated gh.
+Story bag: `plugins.github: {pr:url}`. JSON inspection: `{pr,number,title,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision?,checks:{total,passed,failed,pending,other},fetchedAt}`.
+No link exits3; opaque bags exit6 on owner writes and remain unchanged; doctor warns `PLUGIN_DATA_INVALID`.
+Active TUI Story tab refreshes every60s/on r in memory; empty/unknown checks never establish success.

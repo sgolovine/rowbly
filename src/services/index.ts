@@ -118,8 +118,8 @@ export function createServices(ctx: RowblyContext): Services {
     stories: each('stories', createStoriesService(ctx, repos, ops)),
     // Doctor takes the lock itself, so that it can report a transaction recovery cannot finish.
     doctor: createDoctorService(ctx, repos, ops),
-    // `context(id)` only builds the Plugin's context; its reads and operations coordinate themselves.
-    plugins: each('plugins', createPluginsService(ctx, repos, ops), ['context']),
+    // Context factories only build capabilities; their reads and operations coordinate themselves.
+    plugins: each('plugins', createPluginsService(ctx, repos, ops), ['context', 'screenContext']),
   };
   return services;
 }

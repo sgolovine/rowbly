@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadProgram, reservedNames } from '../../src/main';
 import type { AnyPluginDefinition } from '../../src/services';
-import { failureWarning, loadPlugins, onOff } from '../../src/services';
+import { failureWarning, loadPlugins, onOff, validatePluginDefinition } from '../../src/services';
 import { coordinated } from '../../src/services/coordination';
 import { withGitWorker } from '../../src/storage/gitRepository';
 import { publishPublication, withPublication } from '../../src/storage/gitSyncJournal';
@@ -157,6 +157,17 @@ describe('loading Plugins (ADR-0010)', () => {
   });
 
   it('skips a Plugin that throws while it starts, whose settings are invalid, or that it does not have', async () => {
+    expect(validatePluginDefinition({ ...notes, externalReads: ['gh-pr-view'] }, reservedNames())).toEqual([]);
+    for (const reads of [['arbitrary-executable'], ['gh-pr-view', 'gh-pr-view']]) {
+      const definition = { ...notes, externalReads: reads } as unknown as AnyPluginDefinition;
+      expect(validatePluginDefinition(definition, reservedNames())).toContainEqual(
+        expect.objectContaining({ path: 'externalReads' }),
+      );
+      const invalid = await pluginRoot({ notes: true });
+      const setup = await withPlugins(invalid, [definition]);
+      expect(setup.host.active()).toEqual([]);
+      expect(setup.host.failures()[0]?.reason).toContain('externalReads');
+    }
     const t = await pluginRoot(
       {},
       {

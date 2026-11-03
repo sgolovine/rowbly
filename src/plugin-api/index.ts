@@ -69,6 +69,8 @@ export type {
   DeepReadonly,
   DoctorData,
   DoctorSeverity,
+  ExternalReadName,
+  ExternalReadResult,
   FileChange,
   FileScope,
   GitCommitOptions,

@@ -14,6 +14,7 @@ import { epics } from '../../src/plugins/epics';
 import { createEpic, deleteEpic, editEpic, setEpicClosed } from '../../src/plugins/epics/service';
 import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
+import { github } from '../../src/plugins/github';
 import { softwareFactory } from '../../src/plugins/software-factory';
 import { touchRun } from '../../src/plugins/software-factory/heartbeat';
 import { holdStory, releaseStory } from '../../src/plugins/software-factory/holds';
@@ -56,6 +57,25 @@ describe('the operation inventory (ARCH-02)', () => {
   });
 
   it('matches the names and inputs every built-in mutation emits', async () => {
+    const inputSection = (await readFile(INVENTORY, 'utf8')).split('## Plugin input of core operations\n')[1] ?? '';
+    const inputRows = inputSection.split('\n').filter((line) => line.startsWith('|'));
+    for (const definition of [
+      assignees,
+      tasks,
+      epics,
+      specs,
+      comments,
+      attachments,
+      storyLinking,
+      git,
+      softwareFactory,
+      github,
+    ])
+      for (const operation of Object.keys(definition.inputs ?? {}))
+        expect(
+          inputRows.some((row) => row.startsWith(`| ${definition.name} |`) && row.includes(`\`${operation}\``)),
+          `${definition.name}: ${operation}`,
+        ).toBe(true);
     const listed = await inventory('Built-in Plugin operations');
     const seen: { name: string; keys: string[] }[] = [];
     const record = {

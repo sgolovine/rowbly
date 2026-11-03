@@ -30,6 +30,7 @@ Follow the rules on this page for every `rowbly` call, then read the reference f
 | PNG images on a Story (`rowbly attachments`) | [Attachments Plugin](references/plugin-attachments.md) |
 | Notes on a Story (`rowbly comments`) | [Comments Plugin](references/plugin-comments.md) |
 | Blocking relationships between Stories (`rowbly story-linking`) | [Story Linking Plugin](references/plugin-story-linking.md) |
+| Link a GitHub PR to a Story or fetch its live status (`--github-pr`, `github status`) | [GitHub Plugin](references/plugin-github.md) |
 | Commit Rowbly changes to git automatically (`rowbly git`) | [Git Plugin](references/plugin-git.md) |
 | Instructions for an agent in each Stage (`rowbly software-factory stages`) | [Software Factory Plugin](references/plugin-software-factory.md) |
 | After a git merge, pull or rebase that touched `.rowbly/`, an exit 6, or a hand edit | [Check and repair a Data Root](references/doctor.md) |
