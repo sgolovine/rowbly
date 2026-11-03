@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T15:24:32.415Z",
+  "updatedAt": "2026-11-03T15:24:33.790Z",
   "plugins": {
     "story-linking": {
       "blocks": [
@@ -58,6 +58,13 @@
           "body": "Retry 2 research complete; revised plan awaiting acceptance. Complexity 6. Continue factory/row-69 in the preserved rook worktree, clean at 8b4b5907faf85b6c155790fd4297498520b8965b after merging origin/main. Plan: github Plugin with GitHub PR field and create/edit flags; strict opaque-bag preservation; fixed host-owned gh-pr-view template with command/screen leases, bounded process resources and cancellation; one-shot CLI status and active Story-tab refresh in memory; extend existing tests without exceeding 100; update docs, ADR-0051 and skills; all four checks and owned agentic-tui screenshots before one draft PR. No implementation started.",
           "createdAt": "2026-11-03T15:24:32.415Z",
           "updatedAt": "2026-11-03T15:24:32.415Z"
+        },
+        {
+          "id": "KT8vbPyb",
+          "author": "sunny",
+          "body": "Supervisor accepts retry 2 revised plan: github Plugin with GitHub PR field and create/edit flags; strict preservation and refusal to overwrite opaque bags; fixed host-owned gh-pr-view template with no arbitrary program or argv; live command/screen leases and read/operation-hook refusal, bounded resources and complete cancellation/disposal; one-shot CLI status and active Story-tab in-memory refresh; existing test extensions within 100 tests, docs/ADR-0051/skills and all four checks plus owned screenshots. Core remains free of Plugin-specific concepts; keep template execution and registry at the host/storage boundary. No Board badges or persisted polling data. Continue preserved work in the verified rook worktree and submit one draft PR. No worker edits to .rowbly; proposed policy changes require separate supervisor review.",
+          "createdAt": "2026-11-03T15:24:33.789Z",
+          "updatedAt": "2026-11-03T15:24:33.789Z"
         }
       ]
     }
