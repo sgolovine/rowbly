@@ -243,7 +243,39 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     const fingerprintHelper = join(process.cwd(), 'skills/rowbly-factory/scripts/readiness-fingerprint.mjs');
     const fingerprint = (...command: string[]) =>
       runCli([worked.key, tmp.path, '--', ...command], { cli: fingerprintHelper, cwd: tmp.dir });
-    const beforeReview = await fingerprint(process.execPath, CLI_PATH);
+    // Success cases use a fixed reviewed catalog; the real catalog includes unreviewed inputs.
+    const unknownPlugin = await fingerprint(process.execPath, CLI_PATH);
+    expect(unknownPlugin).toMatchObject({ exitCode: 1, stdout: expect.stringMatching(/^gap=plugins: [^\n]+\n$/) });
+    expect(unknownPlugin.stdout).not.toContain('overall=');
+    const fixtureRoot = await tempRoot();
+    const commandFixture = join(fixtureRoot.dir, 'readiness-command.cjs');
+    await writeFile(
+      commandFixture,
+      `const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+const [mode, ...args] = process.argv.slice(2);
+const result = spawnSync(process.execPath, [${JSON.stringify(CLI_PATH)}, ...args], { encoding: 'utf8' });
+if (result.error) throw result.error;
+if (result.status !== 0) { process.stderr.write(result.stderr); process.exit(result.status ?? 1); }
+let value = JSON.parse(result.stdout);
+if (args[0] === 'plugins') {
+  const known = ['assignees', 'tasks', 'epics', 'specs', 'comments', 'attachments', 'story-linking', 'git', 'software-factory'];
+  value = known.map(id => value.find(plugin => plugin.id === id));
+}
+if (mode === 'edit-story' && args[0] === 'config') {
+  const file = path.join(args[args.indexOf('--data-root') + 1], 'boards/web/stories', ${JSON.stringify(worked.key)}, 'story.json');
+  const story = JSON.parse(fs.readFileSync(file));
+  if (story.description !== 'New requirement while collecting inputs') {
+    story.description = 'New requirement while collecting inputs';
+    fs.writeFileSync(file, JSON.stringify(story));
+  }
+}
+process.stdout.write(JSON.stringify(value));
+`,
+    );
+    const knownFingerprint = (mode = 'known') => fingerprint(process.execPath, commandFixture, mode);
+    const beforeReview = await knownFingerprint();
     expect(beforeReview.exitCode, beforeReview.stdout).toBe(0);
     expect(beforeReview.stdout).toContain('comparison=unknown\n');
     const record = beforeReview.stdout
@@ -259,7 +291,7 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       `Readiness review 2026-11-03. | Reviewed input (method 2): ${record} | Advisory only.`,
     );
     await json('software-factory', 'run', 'finish', worked.key);
-    const afterReview = await fingerprint(process.execPath, CLI_PATH);
+    const afterReview = await knownFingerprint();
     expect(afterReview.exitCode, afterReview.stdout).toBe(0);
     expect(afterReview.stdout).toBe(beforeReview.stdout.replace('comparison=unknown', 'comparison=equal'));
     // The CLI intentionally hides unsafe Spec files; that filtered list cannot prove completeness.
@@ -269,12 +301,33 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     await symlink(join(tmp.dir, 'review-input.txt'), unsafeSpec);
     try {
       expect(await json('specs', 'list', '--story', worked.key)).toEqual([]);
-      const omittedSpec = await fingerprint(process.execPath, CLI_PATH);
+      const omittedSpec = await knownFingerprint();
       expect(omittedSpec).toMatchObject({ exitCode: 1, stdout: expect.stringMatching(/^gap=specs: [^\n]+\n$/) });
       expect(omittedSpec.stdout).not.toContain('overall=');
       expect(omittedSpec.stdout).not.toContain('comparison=equal');
     } finally {
       await rm(unsafeSpec);
+    }
+    // Mutate after the initial Story read but before the physical link inventory starts.
+    // The same check must work when Story Linking is off and there is no inventory at all.
+    const workedPath = join(tmp.path, 'boards/web/stories', worked.key, 'story.json');
+    const originalStory = await readFile(workedPath, 'utf8');
+    for (const linking of [false, true]) {
+      if (linking) await json('plugins', 'enable', 'story-linking');
+      try {
+        const changedDuringRead = await knownFingerprint('edit-story');
+        expect(changedDuringRead).toMatchObject({
+          exitCode: 1,
+          stdout: expect.stringMatching(/^gap=story: input changed during collection\n$/),
+        });
+        expect(changedDuringRead.stdout).not.toContain('overall=');
+        expect(JSON.parse(await readFile(workedPath, 'utf8')).description).toBe(
+          'New requirement while collecting inputs',
+        );
+      } finally {
+        await writeFile(workedPath, originalStory);
+        if (linking) await json('plugins', 'disable', 'story-linking');
+      }
     }
     // Multiple JSON values are a failed read, never an empty or complete fingerprint.
     const incompleteReview = await fingerprint(process.execPath, '-e', 'process.stdout.write("[]\\n[]")', '--');

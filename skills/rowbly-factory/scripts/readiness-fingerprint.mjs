@@ -89,7 +89,7 @@ function run(program, args) {
   });
 }
 /** Exactly one JSON value and a checked result shape; empty/multiple JSON values fail. */
-function rb(args, shape) {
+function readCommand(args, shape) {
   const value = JSON.parse(
     run(command[0], [...command.slice(1), ...args, '--data-root', root, '--json', '--no-prompt']),
   );
@@ -211,72 +211,9 @@ function storyInventory(path, boardId) {
   });
 }
 
-/** One complete collection; all parts stay buffered until every input succeeds. */
-function collect() {
-  const result = { method: METHOD };
-  const rechecks = [];
-  function watch(name, read) {
-    const before = read();
-    rechecks.push(() => {
-      input = name;
-      requireValue(canonical(read()) === canonical(before), 'input changed during collection');
-    });
-    return before;
-  }
-  function part(name, read) {
-    input = name;
-    result[name] = hash(canonical(read()));
-  }
-  noLinks(root);
-  requireValue(lstatSync(root).isDirectory(), 'Data Root is not a directory');
-  part('helper', () => hash(ownFile(fileURLToPath(import.meta.url))));
-  // Cover the repository read by the worker without churn from supervisor-owned .rowbly commits.
-  part('repository', () => {
-    requireValue(
-      run('git', ['status', '--porcelain', '--untracked-files=normal', '--', '.', ':!.rowbly']).trim() === '',
-      'repository has uncommitted review inputs',
-    );
-    requireValue(run('git', ['rev-parse', '--show-prefix']).trim() === '', 'run from repository root');
-    const tree = run('git', ['ls-tree', '-r', '-z', '--full-tree', 'HEAD']);
-    requireValue(tree.endsWith('\0') && tree.length > 1, 'empty or truncated repository tree');
-    return tree.split('\0').filter((row) => {
-      if (!row) return false;
-      requireValue(/^[0-7]{6} (blob|tree|commit) [a-f0-9]{40,64}\t[^\0]+$/.test(row), 'malformed repository tree');
-      const path = row.slice(row.indexOf('\t') + 1);
-      return row && path !== '.rowbly' && !path.startsWith('.rowbly/');
-    });
-  });
-  input = 'plugins';
-  const plugins = rb(
-    ['plugins', 'list'],
-    (v) =>
-      Array.isArray(v) &&
-      v.length > 0 &&
-      v.every((p) => textFields(p, ['id']) && typeof p.enabled === 'boolean' && typeof p.loaded === 'boolean'),
-  );
-  requireValue(new Set(plugins.map((p) => p.id)).size === plugins.length, 'duplicate Plugin entries');
-  requireValue(
-    KNOWN.every((id) => plugins.some((p) => p.id === id)),
-    'missing known Plugin entry',
-  );
-  requireValue(
-    plugins.every((p) => KNOWN.includes(p.id) && p.enabled === p.loaded),
-    'unknown or enabled unloaded Plugin',
-  );
-  const on = (id) => plugins.find((p) => p.id === id).enabled;
-  requireValue(on('comments') && on('software-factory'), 'Comments and Software Factory must be on');
-  part('plugins', () =>
-    plugins.map(({ id, enabled, loaded }) => ({ id, enabled, loaded })).sort((a, b) => a.id.localeCompare(b.id)),
-  );
-  input = 'story';
-  const story = rb(
-    ['stories', 'show', key],
-    (v) =>
-      textFields(v, ['key', 'boardId', 'stage', 'name', 'description']) &&
-      v.version === 1 &&
-      v.key === key &&
-      (v.plugins === undefined || object(v.plugins)),
-  );
+/** Normalize every reviewed Story field identically at the first and final read. */
+function reviewedStory(story, on) {
+  story = structuredClone(story);
   story.plugins ??= {};
   requireValue(/^[a-z0-9][a-z0-9-]*$/.test(story.boardId), 'unsafe Board id');
   for (const [id, bag] of Object.entries(story.plugins)) {
@@ -324,16 +261,107 @@ function collect() {
       );
     delete fields.plugins['software-factory'];
   }
+  return fields;
+}
+
+/** One complete collection; all parts stay buffered until every input succeeds. */
+function collect() {
+  const result = { method: METHOD };
+  const rechecks = [];
+  const commandRechecks = [];
+  let recheckStory;
+  function watch(name, read) {
+    const before = read();
+    rechecks.push(() => {
+      input = name;
+      requireValue(canonical(read()) === canonical(before), 'input changed during collection');
+    });
+    return before;
+  }
+  function part(name, read, stable = false) {
+    input = name;
+    result[name] = hash(canonical(stable ? watch(name, read) : read()));
+  }
+  // Recheck command results at their original read boundary, not at a later inventory snapshot.
+  function rb(args, shape, normalize = (value) => value) {
+    const name = input;
+    const value = readCommand(args, shape);
+    const before = canonical(normalize(value));
+    const recheck = () => {
+      input = name;
+      requireValue(canonical(normalize(readCommand(args, shape))) === before, 'input changed during collection');
+    };
+    if (args[0] === 'stories' && args[2] === key) recheckStory = recheck;
+    else commandRechecks.push(recheck);
+    return value;
+  }
+  noLinks(root);
+  requireValue(lstatSync(root).isDirectory(), 'Data Root is not a directory');
+  part('helper', () => hash(ownFile(fileURLToPath(import.meta.url))), true);
+  // Cover the repository read by the worker without churn from supervisor-owned .rowbly commits.
+  part(
+    'repository',
+    () => {
+      requireValue(
+        run('git', ['status', '--porcelain', '--untracked-files=normal', '--', '.', ':!.rowbly']).trim() === '',
+        'repository has uncommitted review inputs',
+      );
+      requireValue(run('git', ['rev-parse', '--show-prefix']).trim() === '', 'run from repository root');
+      const tree = run('git', ['ls-tree', '-r', '-z', '--full-tree', 'HEAD']);
+      requireValue(tree.endsWith('\0') && tree.length > 1, 'empty or truncated repository tree');
+      return tree.split('\0').filter((row) => {
+        if (!row) return false;
+        requireValue(/^[0-7]{6} (blob|tree|commit) [a-f0-9]{40,64}\t[^\0]+$/.test(row), 'malformed repository tree');
+        const path = row.slice(row.indexOf('\t') + 1);
+        return row && path !== '.rowbly' && !path.startsWith('.rowbly/');
+      });
+    },
+    true,
+  );
+  input = 'plugins';
+  const plugins = rb(
+    ['plugins', 'list'],
+    (v) =>
+      Array.isArray(v) &&
+      v.length > 0 &&
+      v.every((p) => textFields(p, ['id']) && typeof p.enabled === 'boolean' && typeof p.loaded === 'boolean'),
+  );
+  requireValue(new Set(plugins.map((p) => p.id)).size === plugins.length, 'duplicate Plugin entries');
+  requireValue(
+    KNOWN.every((id) => plugins.some((p) => p.id === id)),
+    'missing known Plugin entry',
+  );
+  requireValue(
+    plugins.every((p) => KNOWN.includes(p.id) && p.enabled === p.loaded),
+    'unknown or enabled unloaded Plugin',
+  );
+  const on = (id) => plugins.find((p) => p.id === id).enabled;
+  requireValue(on('comments') && on('software-factory'), 'Comments and Software Factory must be on');
+  part('plugins', () =>
+    plugins.map(({ id, enabled, loaded }) => ({ id, enabled, loaded })).sort((a, b) => a.id.localeCompare(b.id)),
+  );
+  input = 'story';
+  const story = rb(
+    ['stories', 'show', key],
+    (v) =>
+      textFields(v, ['key', 'boardId', 'stage', 'name', 'description']) &&
+      v.version === 1 &&
+      v.key === key &&
+      (v.plugins === undefined || object(v.plugins)),
+    (value) => reviewedStory(value, on),
+  );
+  const fields = reviewedStory(story, on);
   // Keep every other Story field and every known bag field in the Story hash.
   part('story', () => fields);
   part('comments', () => {
     const comments = rb(
       ['comments', 'list', key],
       (v) => Array.isArray(v) && v.every((c) => textFields(c, ['id', 'body', 'createdAt', 'updatedAt'])),
+      (values) => values.filter((c) => !c.body.startsWith('Readiness review ')).sort(commentOrder),
     );
     requireValue(
       canonical([...comments].sort(commentOrder)) ===
-        canonical([...(story.plugins.comments?.comments ?? [])].sort(commentOrder)),
+        canonical([...(story.plugins?.comments?.comments ?? [])].sort(commentOrder)),
       'Comments changed between reads',
     );
     requireValue(new Set(comments.map((c) => c.id)).size === comments.length, 'duplicate Comment ids');
@@ -377,7 +405,7 @@ function collect() {
         ),
       'Story Spec listing omits or differs from stored inputs',
     );
-    const slugs = story.plugins.specs === undefined ? [] : story.plugins.specs.specs;
+    const slugs = story.plugins?.specs === undefined ? [] : story.plugins.specs.specs;
     requireValue(strings(slugs) && slugs.every(slug), 'invalid Board Spec links');
     const boardSpecs = [...new Set(slugs)].sort().map((slug) => {
       const stored = watch('specs', () =>
@@ -445,8 +473,8 @@ function collect() {
   });
   part('epic', () => {
     if (!on('epics')) return 'off';
-    const id = story.plugins.epics?.epic;
-    if (id === undefined && story.plugins.epics === undefined) return 'none';
+    const id = story.plugins?.epics?.epic;
+    if (id === undefined && story.plugins?.epics === undefined) return 'none';
     requireValue(typeof id === 'string' && id.length > 0, 'invalid Epic id');
     const epic = rb(
       ['epics', 'show', id],
@@ -469,11 +497,14 @@ function collect() {
         ),
     );
     return attachments.map((a) => {
-      const bytes = ownFile(
-        join(root, 'boards', story.boardId, 'stories', key, 'plugins', 'attachments', `${a.id}.png`),
-      );
-      requireValue(bytes.length === a.size, `Attachment ${a.id} size mismatch`);
-      return { ...a, content: hash(bytes) };
+      const content = watch('attachments', () => {
+        const bytes = ownFile(
+          join(root, 'boards', story.boardId, 'stories', key, 'plugins', 'attachments', `${a.id}.png`),
+        );
+        requireValue(bytes.length === a.size, `Attachment ${a.id} size mismatch`);
+        return hash(bytes);
+      });
+      return { ...a, content };
     });
   });
   part('assignees', () =>
@@ -489,16 +520,23 @@ function collect() {
         (v) => object(v) && object(v.prompt) && typeof v.prompt.text === 'string' && v.prompt.enabled === true,
       ).prompt,
   );
-  part('guide', () => {
-    const bytes = ownFile(join(root, 'ROWBLY.md'), true);
-    return bytes === null ? { absent: true } : { sha256: hash(bytes) };
-  });
+  part(
+    'guide',
+    () => {
+      const bytes = ownFile(join(root, 'ROWBLY.md'), true);
+      return bytes === null ? { absent: true } : { sha256: hash(bytes) };
+    },
+    true,
+  );
   requireValue(
     METHOD_INPUTS.every((name) => /^[0-9a-f]{64}$/.test(result[name])) &&
       Object.keys(result).length === METHOD_INPUTS.length + 1,
     'incomplete fingerprint input set',
   );
-  for (const recheck of rechecks) recheck();
+  // Commands can observe or expose changes before their final result; verify safe files afterwards.
+  for (const recheck of [...commandRechecks, ...rechecks]) recheck();
+  // Always reconcile with the first normalized Story, even when Story Linking is off.
+  recheckStory();
   input = 'overall';
   return { ...result, overall: hash(canonical(result)) };
 }
