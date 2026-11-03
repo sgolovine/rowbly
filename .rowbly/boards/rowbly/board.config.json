@@ -10,6 +10,10 @@
       "name": "TODO"
     },
     {
+      "key": "in-refinement",
+      "name": "In Refinement"
+    },
+    {
       "key": "in-progress",
       "name": "In Progress"
     },
@@ -19,7 +23,7 @@
     }
   ],
   "createdAt": "2026-10-13T02:54:33.820Z",
-  "updatedAt": "2026-10-25T16:53:38.207Z",
+  "updatedAt": "2026-11-03T23:49:11.997Z",
   "plugins": {
     "software-factory": {
       "stagePrompts": {
@@ -38,6 +42,10 @@
         "in-pr": {
           "enabled": true,
           "path": "boards/rowbly/plugins/software-factory/stage-prompts/in-pr.md"
+        },
+        "in-refinement": {
+          "enabled": false,
+          "path": "boards/rowbly/plugins/software-factory/stage-prompts/in-refinement.md"
         }
       }
     }
