@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Default stage prompts",
   "description": "We want to make it really easy for people to standup a software factory. Using the stage prompts Rowbly uses for internal development (located within .rowbly), create a series of default stage prompts for the default columns.\n\nWhen setting up rowbly as a software factory. We should have the following stages\n\n- Backlog\n- TODO\n- In Progress\n- In Review\n- Done\n\nFor non-factory setups, use the following columns\n\n\n- Backlog\n- TODO\n- In Progress\n- Done\n\n\nAdd default stage prompts when using software factory. Use defaults from internal development, make sure to modify them to remove anything custom to the project. Stages assume that a user has/will install the accompanying skills",
-  "stage": "in-progress",
-  "rank": "aA",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T17:19:30.833Z",
+  "updatedAt": "2026-11-03T17:19:31.482Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:44:55.274Z",
-        "finishedAt": "2026-11-03T17:19:29.606Z"
-      }
-    },
     "comments": {
       "comments": [
         {
