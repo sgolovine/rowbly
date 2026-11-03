@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-03T16:18:16.040Z"
+    "startedAt": "2026-11-03T17:50:10.502Z"
   },
   "identity": {
-    "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
+    "worker": "mcp:ec878799-d692-4573-96ef-0de312856c10",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
+    "threadId": "mcp:ec878799-d692-4573-96ef-0de312856c10",
     "verification": {
-      "source": "/home/sgolovine/.rowbly-factory/receipts/4438b4011c40d9eed9b4fa750b075ac2.json",
-      "verifiedAt": "2026-11-03T16:18:16.792Z",
+      "source": "/home/sgolovine/.rowbly-factory/receipts/fb16809589f2249deba8c73dbe38f60a.json",
+      "verifiedAt": "2026-11-03T17:50:11.257Z",
       "by": "sunny"
     }
   },
@@ -29,16 +29,10 @@
         "value": "default"
       }
     ],
-    "rule": "coding: latest Claude Opus default",
-    "fallback": "Repeated verified Claude session-limit failures during current factory; using available Sol for research and coding",
-    "usage": "observed-limit",
+    "rule": "bug hunting: GPT Sol default",
+    "fallback": null,
+    "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-03T16:18:16.040Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
-    "at": "2026-11-03T17:35:18.976Z",
-    "source": "Verified rook/T3 assistant messages from mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4; snapshot /tmp/rowbly-factory-session/ROW-70-poll.json; SHA256 253817dfefc3510be4a8ef129e54c7206fdaebc25d7b8fa48b6d316ef21f7db0",
-    "by": "sunny"
+    "selectedAt": "2026-11-03T17:50:10.502Z"
   }
 }

@@ -5,27 +5,31 @@
   "name": "Rowbly Stats",
   "description": "Add a stats page per board. This page should show the following:\n\n- Cards created\n- Cards moved to done\n- PR's created\n- Commits created.",
   "stage": "in-progress",
-  "rank": "a9",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:32:05.357Z",
+  "updatedAt": "2026-11-03T17:50:11.258Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:18:16.040Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "1PMg14bI",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-70, PR https://github.com/sgolovine/rowbly/pull/157, head 6260eaca0548025fe2801752d110d3303e6b644b. Independent review requests changes: 1. Preserve pagination inconsistency across linked aliases so changed PRs cannot contribute exact commit counts. 2. Isolate malformed Stats declarations so failed or Off Plugins cannot crash core and healthy Plugin statistics. Both reproduced; review https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611303603. All four local checks and all six CI checks passed.",
+          "createdAt": "2026-11-03T17:49:00.634Z",
+          "updatedAt": "2026-11-03T17:49:00.634Z"
+        },
+        {
+          "id": "8K3eJkKd",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/157 at 6260eaca0548025fe2801752d110d3303e6b644b by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] src/plugins/github/stats.ts:120-144: a pagination identity/head/count mismatch clears only that candidate, retaining its earlier identity/head/count. Another completed alias with those earlier values can then make the whole PR contribution complete. A deterministic mocked-source reproduction returned commits={status:complete,value:2} after a later page explicitly reported a changed head and totalCount=1. Preserve observed inconsistency at PR identity/group level and exclude that PR from commit contributions through every alias; return partial/unavailable with the reason. Extend the existing collector contract check for this alias-plus-pagination race. 2. [P2] src/services/boardStats.ts:90-96: collection iterates the raw registry and calls stats.metrics.map even for declarations rejected by loading. With boardStats.metrics=null, loadPlugins correctly marks the Plugin failed, but boards.stats throws TypeError instead of returning core and healthy Plugin metrics. Validate or sanitize metric declarations before rendering, including Off/failed Plugins, and extend the existing loading/collection check to prove malformed declarations cannot crash Stats. Reviewed the full diff, accepted current-record scope, bounded reads, frozen snapshots, capability boundaries, CLI/TUI wiring, docs/ADR0054 and preserved ROW73 integration. Independent validation on the clean local merge of current main: typecheck PASS; lint PASS; unit 79 PASS; CLI 21 PASS. All six current-head CI checks passed, none pending. Reproduction scripts: /tmp/row-70-review-astra-1-repro.mts and /tmp/row-70-review-astra-1-repro-changed-count.mts. No product changes made.",
+          "createdAt": "2026-11-03T17:49:00.008Z",
+          "updatedAt": "2026-11-03T17:49:00.008Z"
+        },
         {
           "id": "D8RBs1Ze",
           "author": "sunny",
@@ -41,11 +45,25 @@
           "updatedAt": "2026-11-03T16:59:01.164Z"
         },
         {
+          "id": "Qy3pQymB",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/157 at c483974a6a271a109d3bd126a3ad87a57dc83969 implements the accepted current-record all-time Board Stats page and CLI with bounded Plugin-owned GitHub reads and truthful deduplicated counts. Merged main including ROW-73 and preserved both reference sections. Typecheck and lint passed. Unit tests 79 and CLI tests 21 passed under the shared validation lease. All six current-head CI checks passed with none pending. Seven screenshot URLs returned 200 at https://github.com/sgolovine/rowbly/pull/157#issuecomment-6610987383. Branch factory/row-70 and worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story are retained. Both private daemons are stopped. Ready for supervisor independent review.",
+          "createdAt": "2026-11-03T17:40:12.236Z",
+          "updatedAt": "2026-11-03T17:40:12.236Z"
+        },
+        {
           "id": "TZLaJ7wR",
           "author": "sunny",
           "body": "Research and proposed plan awaiting supervisor acceptance. Isolated worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story on factory/row-70 from origin/main d44db09e72b243757264a6504c5e5360a97ad571. Story records contain creation timestamps and current Stage but no Done-transition history. GitHub Plugin stores one current PR URL per Story and its fixed live read has no creation date or commits. Git has no Board-to-code-commit association. Proposed scope is a shared read-only Board Stats page and CLI aggregation with Plugin-owned contributions, explicit unavailable sources, matching documentation, existing-test extensions, screenshots and all four checks. No product implementation until metric semantics and plan are explicitly accepted.",
           "createdAt": "2026-11-03T16:23:06.547Z",
           "updatedAt": "2026-11-03T16:23:06.547Z"
+        },
+        {
+          "id": "W9sm6yXh",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4\",\"threadId\":\"mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4\",\"machine\":\"rook\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/4438b4011c40d9eed9b4fa750b075ac2.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-story\",\"branch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"c483974a6a271a109d3bd126a3ad87a57dc83969\",\"scope\":\"Sole Stats product author, including main integration conflict resolution; no correction workers\"}",
+          "createdAt": "2026-11-03T17:40:14.176Z",
+          "updatedAt": "2026-11-03T17:40:14.176Z"
         },
         {
           "id": "ct2MKbXp",
@@ -60,8 +78,25 @@
           "body": "PR watch event: GitHub reports PR157 at head 3bccb6f0b651735444c20e0c94a4263f0dfe3813 conflicts with main (DIRTY/CONFLICTING); rollup currently empty, which is not check failure. Story remains In Progress with its current verified implementation worker. Continue in the existing isolated worktree: fetch and merge current origin/main, resolve integration conflicts preserving ROW73 setup/ADR0053 and ROW70 Stats/ADR0054 intent, validate the changed integration under the shared lease, and push the existing branch without rebase or force push. Report exact resolved files/head/check results before final handoff; ask only if a semantic conflict cannot be settled by Story/accepted plans. No supervisor product edits.",
           "createdAt": "2026-11-03T17:32:05.356Z",
           "updatedAt": "2026-11-03T17:32:05.356Z"
+        },
+        {
+          "id": "uXJxxEi6",
+          "author": "sunny",
+          "body": "Implementation record amendment: verified original author codex/gpt-6.1-sol high/default worker mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4 continued a queued integration notice after initial handoff. New PR157 head6260eaca0548025fe2801752d110d3303e6b644b is a clean merge with parents c483974a6a271a109d3bd126a3ad87a57dc83969 and main1caa4a14647e0230ed3d9e51a4ebad83bde96950. GitHub commit diff changes only own Story Run metadata .rowbly/boards/rowbly/stories/ROW-70/plugins/software-factory/run-metadata.json; no product/source/test/doc changes. SSH original worker confirms authorship/push and all four checks passed on6260eaca (unit79,CLI21). Existing sole product author remains Sol; fresh Astra reviewer remains eligible. Review6260eaca after verifying currenthead, no further author integration/validation requested. Final resources/evidence retained.",
+          "createdAt": "2026-11-03T17:43:23.617Z",
+          "updatedAt": "2026-11-03T17:43:23.617Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:ec878799-d692-4573-96ef-0de312856c10",
+        "by": "sunny",
+        "startedAt": "2026-11-03T17:50:10.502Z"
+      }
     }
   }
 }
