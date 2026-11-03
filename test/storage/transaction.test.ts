@@ -778,21 +778,38 @@ describe('Git local publication', () => {
         const armed = deferred();
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         const timer = setTimeout;
+        let timers = 0;
         const timerSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation((...args) => {
           const handle = timer(...args);
-          armed.resolve();
+          // The free publication gate's queue comes first; wait for the Root queue.
+          if (++timers === 2) armed.resolve();
           return handle;
         });
         now = 0;
-        const timing = { queuedMs: 0, waitedMs: 0 };
-        const outcome = acquireLock(t.path, { timing }).catch((error: unknown) => error);
+        events.length = 0;
+        setTraceSink((event) => events.push(event));
+        const outcome = coordinated(t.root, 'queued read', async () => expect.fail('must not enter')).catch(
+          (error: unknown) => error,
+        );
         try {
           await armed.promise;
           now = 19;
           await vi.advanceTimersToNextTimerAsync();
           expect(await outcome).toMatchObject({ code: 'CONFLICT' });
-          expect(timing).toEqual({ queuedMs: 19, waitedMs: 0, holder: 'queued holder' });
+          expect(events).toEqual([
+            {
+              operationId: expect.stringMatching(/^lock-\d+$/),
+              operation: 'queued read',
+              plugin: null,
+              stage: 'coordination',
+              ms: 0,
+              outcome: 'failed',
+              code: 'CONFLICT',
+              coordination: { publication: 0, queue: 19, lock: 0, recovery: 0, lockHolder: 'queued holder' },
+            },
+          ]);
         } finally {
+          setTraceSink(undefined);
           timerSpy.mockRestore();
           vi.useRealTimers();
           await held.release();
