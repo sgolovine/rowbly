@@ -30,6 +30,13 @@
     "comments": {
       "comments": [
         {
+          "id": "DrZCOq4r",
+          "author": "sunny",
+          "body": "Independent Astra review requests changes at PR145 head e3e2b691a624119696f925c5ef02dfbafb1a700c. Original corrections verified; two remaining launcher uncertainty-classification cases reproduced. Main integration conflicts in skills/rowbly-factory/SKILL.md, unresolved. All six CI checks pass; four screenshot URLs HTTP200 and inspected. Local four-check group did not start because CPU admission returned capacity-waiting75. No implementation or Board edits, push, ready or merge. Full findings, policy amendment and retained evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595466903",
+          "createdAt": "2026-11-03T04:29:26.288Z",
+          "updatedAt": "2026-11-03T04:29:26.288Z"
+        },
+        {
           "id": "L4uotwPp",
           "author": "sunny",
           "body": "PR143 is merged as bb120a6 and main CI passed; ROW49 is Done. Resume the SAME In Progress Run/branch factory/row-60: fetch and merge current origin/main, use merged shared run-details helpers for selection and no stack/temporary writer. Existing accepted plan and exact schema remain in force; selected identity is planned before launch, actual receipt compared without rewriting intent, reserved worker -> actual id/run start with planned selection -> receipt compare -> verified identity attach -> publish -> GO. Preserve ROW55 locked move guard and existing identity/heartbeat sections. Selection uses ADR0046 (not0047);0047 user-approved ROW53 guide exception,0048 heartbeat,0049 updater. All four checks/manual selection/retry/proxy-independent launch verification/docs/agentic-tui evidence before draft PR. No Board writes.",
@@ -63,6 +70,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/145 records each Stage Run's Model Selection. run start takes --provider, --model and --rule (optional --option, --fallback, --usage) and saves the selection in run-metadata.json (ADR-0046) in the same operation. runs shows a Model column; stories show and TUI Details show a Model Selection row; runs --json has runMetadata.selection, so compliance can be checked after a restart. The factory skill records the selection before launch, compares the launch receipt and runs run fail on a mismatch without rewriting it; no quota is recorded. Typecheck and lint pass; 78 unit and 20 CLI tests pass; agentic-tui screenshots are linked in the PR.",
           "createdAt": "2026-11-03T02:26:11.607Z",
           "updatedAt": "2026-11-03T02:26:11.607Z"
+        },
+        {
+          "id": "aToiWMGD",
+          "author": "sunny",
+          "body": "Supervisor accepts independent findings3-4 in review6595466903: first discovery of existing worker with unreadable details stays unknown with identity/intendedselection preserved; missing/malformed CLI identity/configuration remains unverified, complete well-formed differing evidence remains conflict. Extend existing deterministic fakeT3 fixture, no realstart/GO. Return to InProgress for fresh correction worker continuing SAME PR145 factory/row-60 head e3e2b691a624119696f925c5ef02dfbafb1a700c; present plan and wait acceptance. Scoped additive integration must retain supervisor resource ownership and complete selection/verification/publication ordering; integration waits until149/147/146 land to avoid churn. No restart/newPR/forcepush/.rowbly edits. Reviewer sends ONLY moveInProgress with actual FACTORY-DONE; supervisor finishes currentRun before move. Configuration proposal retained for supervisor-only application with reviewer different from ALL actual implementation models, including correction workers. Capacity admission75 is no test failure.",
+          "createdAt": "2026-11-03T04:29:27.114Z",
+          "updatedAt": "2026-11-03T04:29:27.114Z"
         },
         {
           "id": "fUB1qJOd",
@@ -119,20 +133,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "DrZCOq4r",
-          "author": "sunny",
-          "body": "Independent Astra review requests changes at PR145 head e3e2b691a624119696f925c5ef02dfbafb1a700c. Original corrections verified; two remaining launcher uncertainty-classification cases reproduced. Main integration conflicts in skills/rowbly-factory/SKILL.md, unresolved. All six CI checks pass; four screenshot URLs HTTP200 and inspected. Local four-check group did not start because CPU admission returned capacity-waiting75. No implementation or Board edits, push, ready or merge. Full findings, policy amendment and retained evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595466903",
-          "createdAt": "2026-11-03T04:29:26.288Z",
-          "updatedAt": "2026-11-03T04:29:26.288Z"
-        },
-        {
-          "id": "aToiWMGD",
-          "author": "sunny",
-          "body": "Supervisor accepts independent findings3-4 in review6595466903: first discovery of existing worker with unreadable details stays unknown with identity/intendedselection preserved; missing/malformed CLI identity/configuration remains unverified, complete well-formed differing evidence remains conflict. Extend existing deterministic fakeT3 fixture, no realstart/GO. Return to InProgress for fresh correction worker continuing SAME PR145 factory/row-60 head e3e2b691a624119696f925c5ef02dfbafb1a700c; present plan and wait acceptance. Scoped additive integration must retain supervisor resource ownership and complete selection/verification/publication ordering; integration waits until149/147/146 land to avoid churn. No restart/newPR/forcepush/.rowbly edits. Reviewer sends ONLY moveInProgress with actual FACTORY-DONE; supervisor finishes currentRun before move. Configuration proposal retained for supervisor-only application with reviewer different from ALL actual implementation models, including correction workers. Capacity admission75 is no test failure.",
-          "createdAt": "2026-11-03T04:29:27.114Z",
-          "updatedAt": "2026-11-03T04:29:27.114Z"
         }
       ]
     }
