@@ -2,18 +2,7 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:13:11.585Z"
-  },
-  "identity": {
-    "worker": "mcp:ec258031-f91b-455d-a30b-d7d3b238985d",
-    "machine": "thinkpad",
-    "harness": "t3",
-    "threadId": "mcp:ec258031-f91b-455d-a30b-d7d3b238985d",
-    "verification": {
-      "source": "Local T3 launch/read/configuration verified ec258031 Opus5.5 high/full-access/bound factory-row-65 reservation",
-      "verifiedAt": "2026-11-03T02:13:12.380Z",
-      "by": "sunny"
-    }
+    "attempt": 2,
+    "startedAt": "2026-11-03T03:05:33.830Z"
   }
 }

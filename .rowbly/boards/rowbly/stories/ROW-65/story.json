@@ -12,22 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T03:01:13.882Z",
+  "updatedAt": "2026-11-03T03:05:33.831Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "failed",
-        "attempt": 1,
-        "worker": "mcp:ec258031-f91b-455d-a30b-d7d3b238985d",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:13:11.585Z",
-        "finishedAt": "2026-11-03T02:36:00.540Z",
-        "reason": "Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry."
-      }
     },
     "comments": {
       "comments": [
@@ -60,6 +48,16 @@
           "updatedAt": "2026-11-03T03:01:13.881Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:818848ba-51cb-4499-9dd5-601669d045be",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:05:33.830Z"
+      }
     }
   }
 }
