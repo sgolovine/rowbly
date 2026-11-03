@@ -8,7 +8,7 @@ import {
   UsageError,
   ValidationError,
 } from '../../plugin-api';
-import { currentRun, type StageRun } from './stageRuns';
+import { currentRun, formatRunRef, type StageRun } from './stageRuns';
 
 /**
  * What `software-factory apply` does with one line of a worker's reported block (ADR-0045):
@@ -108,8 +108,11 @@ export function tokenize(line: string): string[] {
 /** Where a command names its Story: its first argument, a Task id's prefix, or `--story`. */
 type KeyAt = 'first' | 'task' | 'story-option';
 
-/** The commands a worker may report, each about its own Story only (ADR-0045 §1). */
-const ALLOWED: Record<string, { keyAt: KeyAt; move?: true }> = {
+/**
+ * The commands a worker may report, each writing its own Story only (ADR-0045 §1). `refuse` lists
+ * options that would write another Story: Story Linking stores a link on the blocking Story.
+ */
+const ALLOWED: Record<string, { keyAt: KeyAt; move?: true; refuse?: string[] }> = {
   'stories edit': { keyAt: 'first' },
   'stories move': { keyAt: 'first', move: true },
   'comments add': { keyAt: 'first' },
@@ -119,8 +122,8 @@ const ALLOWED: Record<string, { keyAt: KeyAt; move?: true }> = {
   'tasks move': { keyAt: 'task' },
   'specs create': { keyAt: 'story-option' },
   'specs edit': { keyAt: 'story-option' },
-  'story-linking add': { keyAt: 'first' },
-  'story-linking remove': { keyAt: 'first' },
+  'story-linking add': { keyAt: 'first', refuse: ['--blocked-by'] },
+  'story-linking remove': { keyAt: 'first', refuse: ['--blocked-by'] },
 };
 
 /** Options the supervisor sets itself, or that read files or open an editor on its computer. */
@@ -134,6 +137,7 @@ const REFUSED_OPTIONS = new Set([
   '--version',
   '--story-spec',
   '--from-clipboard',
+  '--finished-run',
 ]);
 /** Options added to every command anyway, dropped when a worker gives them. */
 const PINNED_OPTIONS = new Set(['--json', '--no-prompt']);
@@ -157,6 +161,7 @@ export function checkCommand(argv: string[], key: string): { args: string[]; mov
       return { reason: `option "${arg}" is not allowed; use long options` };
     if (REFUSED_OPTIONS.has(name) || name.endsWith('-file'))
       return { reason: `option "${name}" is not allowed in a reported command` };
+    if (rule.refuse?.includes(name)) return { reason: `option "${name}" writes the other Story, not ${key}` };
     if (rule.keyAt === 'story-option' && name === '--story') {
       if (story !== undefined) return { reason: '"--story" is given twice' };
       story = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : argv[i + 1];
@@ -184,7 +189,8 @@ export function checkCommand(argv: string[], key: string): { args: string[]; mov
 /**
  * Decides every line of a reported block for Story `key`, whose current Stage Run is `run`. A move
  * runs only once the Stage Run is finished: it is held while it runs or is absent, and dropped
- * after it failed (ADR-0045 §2). Moves run last; a block holds at most one.
+ * after it failed (ADR-0045 §2). An applied move names that Stage Run with `--finished-run`, so its
+ * own operation refuses it when the Run changed since. Moves run last; a block holds at most one.
  */
 export function planBlock(text: string, key: string, run: StageRun | null): ReportedCommand[] {
   const planned: ReportedCommand[] = [];
@@ -221,7 +227,8 @@ export function planBlock(text: string, key: string, run: StageRun | null): Repo
           : decision === 'drop'
             ? 'the Stage Run failed, so the Story stays in its Stage'
             : `held until the Stage Run is finished (${status ? 'it is running' : 'there is none'})`;
-      planned.push({ line, text: lineText, argv: checked.args, decision, ...(reason ? { reason } : {}) });
+      const argv = run && decision === 'apply' ? [...checked.args, '--finished-run', formatRunRef(run)] : checked.args;
+      planned.push({ line, text: lineText, argv, decision, ...(reason ? { reason } : {}) });
     } else {
       planned.push({ line, text: lineText, argv: checked.args, decision: 'apply' });
     }

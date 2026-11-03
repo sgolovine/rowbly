@@ -32,7 +32,8 @@ _Avoid_: runner, bot
 **Reported block**:
 The fenced `rowbly` block in which a Worker reports the Board changes it wants. The Supervisor
 checks and applies it with `software-factory apply`, which refuses it whole when any line is not an
-allowed command about the Worker's Story, and holds a move until the Stage Run is finished.
+allowed command that writes only the Worker's Story, and holds a move until the Stage Run is
+finished; the move it runs names that Stage Run, and is refused when it is no longer the visit's.
 _Avoid_: patch, script
 
 ## Stage Prompts and ROWBLY.md

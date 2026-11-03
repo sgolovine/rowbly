@@ -304,7 +304,7 @@ rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--priority <P> | --no-priority]
                     [--label <l>… | --add-label <l>… | --remove-label <l>…]
                     [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
-rowbly stories move <KEY> <stage> [--top]
+rowbly stories move <KEY> <stage> [--top] [--finished-run <stage>/<attempt>/<startedAt>]
 rowbly stories rank <KEY> (--before <KEY>|--after <KEY>|--top|--bottom)
 rowbly stories delete <KEY>                          # confirms; pass --yes when not interactive
 ```
@@ -473,17 +473,23 @@ rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-ru
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
+- `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>` moves the Story only
+  while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
+  Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
+  changes nothing.
 - `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`.
   `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
 - `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
   ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
   `reject`. A line may only edit or move the Story given, or change its Comments, Tasks, Story
-  Specs or Story links; it is split with shell quoting but never run by a shell. Shell syntax
-  (`;`, `|`, `$(…)`, …), another Story, `software-factory` commands and options such as
-  `--data-root`, `--yes`, `--edit` or `--*-file` are rejected, and then nothing runs (exit 2, every
-  line's decision in `details.commands`). A `stories move` runs last and only once the Story's
-  Stage Run is finished; it is held while the Stage Run runs or when there is none, and dropped
-  after a failed one. Each allowed line runs as its own `rowbly` command on the same Data Root with
+  Specs or the links it blocks (`story-linking add|remove <KEY> --blocks`); it is split with shell
+  quoting but never run by a shell. Shell syntax (`;`, `|`, `$(…)`, …), another Story, a line that
+  writes another Story (`--blocked-by`), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--edit`, `--*-file` or `--finished-run` are rejected, and then nothing
+  runs (exit 2, every line's decision in `details.commands`). A `stories move` runs last and only
+  once the Story's Stage Run is finished; it is held while the Stage Run runs or when there is none,
+  and dropped after a failed one. `apply` runs it with `--finished-run`, so it exits 4 (`CONFLICT`)
+  and moves nothing when the Stage Run was cleared or replaced while the earlier lines ran. Each allowed line runs as its own `rowbly` command on the same Data Root with
   `--json --no-prompt`; the first that fails stops the block, the lines before it stay applied, and
   `apply` exits with that command's code. `--dry-run` only shows the decisions.
   `--json` returns `{ key, stageRun, dryRun, commands: [{ line, text, argv, decision, reason?, exitCode?, output? }] }`.

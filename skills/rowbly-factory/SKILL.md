@@ -214,15 +214,18 @@ rowbly software-factory apply <KEY> --file <block.md> --json --no-prompt
 
 - Each line gets a `decision`: `apply`, `hold`, `drop` or `reject`, with a `reason`. Only the
   worker's own Story may be changed, with `stories edit|move`, `comments add|edit`, `tasks
-  create|edit|move`, `specs create|edit --story` and `story-linking add|remove`; shell syntax,
-  `software-factory` commands and options such as `--data-root`, `--yes` or `--*-file` are rejected.
+  create|edit|move`, `specs create|edit --story` and `story-linking add|remove --blocks`; shell
+  syntax, `--blocked-by` (it writes the other Story), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--*-file` or `--finished-run` are rejected.
 - **Rejected (exit 2).** Nothing ran. Tell the worker and ask the user about each rejected line. To
   run the allowed lines, write a new block with only those lines and apply it.
 - **Held.** A `stories move` waits until the Stage Run is `finished`. Keep every held line; after
   `run finish`, add it to the end of the worker's last block. A move after `run fail` is dropped.
 - **Failed at a line.** The lines before it stay applied (`exitCode` 0 in `details.commands`); the
   failed line and those after it did not run. Tell the worker and the user, and do not apply the
-  lines that ran again.
+  lines that ran again. A move that fails with `CONFLICT` found its Stage Run cleared or replaced
+  after `apply` read it (Rowbly ran it with `--finished-run`); it moved nothing. Check `runs` before
+  applying it again.
 
 Then push as [Board persistence](#board-persistence) says.
 

@@ -294,9 +294,11 @@ file exists). `SOFTWARE_FACTORY_MISSING_PROMPT` (doctor warning) is one that is 
 A Stage Run (`{stage, status: running|finished|failed, attempt, worker, by, startedAt, finishedAt?,
 reason?}`) is one agent's work on a Story's current visit to a Stage; a Stage change removes it.
 `apply` checks a worker's reported `rowbly` block for that Story only, without a shell: any
-rejected line (another Story, shell syntax, `software-factory`, `--data-root`, `--yes`, `--*-file`)
-refuses the whole block with exit 2. A move runs only after `run finish` (held while running, dropped
-after `run fail`). Each allowed line runs as its own command; the first failure stops the block.
+rejected line (another Story, `--blocked-by`, shell syntax, `software-factory`, `--data-root`,
+`--yes`, `--*-file`, `--finished-run`) refuses the whole block with exit 2. A move runs only after
+`run finish` (held while running, dropped after `run fail`), as `stories move … --finished-run
+<stage>/<attempt>/<startedAt>`, which exits 4 if that Run was cleared or replaced meanwhile. Each
+allowed line runs as its own command; the first failure stops the block.
 
 Factory `eligibility` is `{eligible, reasons:[{code,message,blockers?}]}`, separate from Stage Runs.
 With Story Linking on, unfinished blockers give `BLOCKED` and `blockers:[{key,name,stage}]`.

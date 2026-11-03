@@ -88,14 +88,20 @@ ran. A refused block or a failed line exits non-zero with the same object in `er
   none.
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
 - `apply` allows only `stories edit|move`, `comments add|edit`, `tasks create|edit|move`,
-  `specs create|edit --story` and `story-linking add|remove`, each about the given Story as its first
-  argument (or `--story`). It splits lines with shell quoting but runs no shell: shell syntax, `$` or
-  a backtick in double quotes, another Story, `software-factory` commands, short options and
-  `--data-root`, `--board`, `--yes`, `--prompt`, `--edit`, `--*-file`, `--story-spec`,
-  `--from-clipboard` reject the line, and one rejected line refuses the block (exit 2, nothing ran).
+  `specs create|edit --story` and `story-linking add|remove --blocks`, each about the given Story as
+  its first argument (or `--story`) and writing only it. It splits lines with shell quoting but runs
+  no shell: shell syntax, `$` or a backtick in double quotes, another Story, `--blocked-by` (Story
+  Linking stores a link on the blocker, so it writes the other Story), `software-factory` commands,
+  short options and `--data-root`, `--board`, `--yes`, `--prompt`, `--edit`, `--*-file`,
+  `--story-spec`, `--from-clipboard`, `--finished-run` reject the line, and one rejected line refuses
+  the block (exit 2, nothing ran).
 - `apply` runs `stories move` last and only when the Stage Run is `finished`: it is `hold` while the
   Stage Run runs or when there is none, and `drop` after `failed`. Re-submit a held move after
   `run finish`. One move per block.
+- `apply` runs the move as `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>`
+  of the Run it read. That move's own guard checks the Run again under the Data Root lock: when it
+  was cleared or replaced meanwhile (another attempt, Stage or start), the move exits 4
+  (`CONFLICT`) and changes nothing. The option works on any `stories move`.
 - Each allowed line runs as its own `rowbly … --json --no-prompt` on the same Data Root. The first
   that fails stops the block with that command's exit code; earlier lines stay applied.
 - To wait for work, pass `wait` the `digest` of the `runs` you last acted on, never a fresh one: a
