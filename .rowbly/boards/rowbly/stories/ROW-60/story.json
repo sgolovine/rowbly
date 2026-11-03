@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:23:11.799Z",
+  "updatedAt": "2026-11-03T05:25:00.683Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:23:11.036Z"
+      }
     },
     "comments": {
       "comments": [
@@ -186,18 +196,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "o0Ie9Y5t",
+          "author": "sunny",
+          "body": "Finding5 correction plan ACCEPTED for current fresh Sol worker1db6f174, SAMEPR145 factory/row-60 da843d1. Match CONFIG nonempty trimmed threadId/provider/model/runtime validation to CLI gate before comparison, preserve original values/intendedselection/receipts and proven-difference conflict. Extend existing deterministic fakeT3 fixture with ONE representative empty CONFIG model; retain prior12scenarios/no realcreation/GO, manually verify whitespace/otherfields/complete differences. Clarify matching remote-launch guidance. Private deps, refetch/mainmerge, allfourchecks once under boundedlease with no actualfailure retry; changed CONFIG screenshot via private agentic-tui ownership reported beforestartup, retainedrawassets200, normalpushsamePR/finding5response/headsummary/freshindependentreview. No broadrefactor/.rowbly edits/newPR.",
+          "createdAt": "2026-11-03T05:25:00.682Z",
+          "updatedAt": "2026-11-03T05:25:00.682Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:23:11.036Z"
-      }
     }
   }
 }
