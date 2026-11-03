@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:25:00.582Z",
+  "updatedAt": "2026-11-03T16:25:01.850Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -154,6 +154,13 @@
           "body": "Correction round2 investigation confirmed both review findings on PR154. Complexity 3 plan: isolate known-input success fixtures and assert unknown Plugin gaps; recheck the original normalized Story with Story Linking on and off; audit adjacent collection reads; extend the kept deterministic regression while preserving unsafe Spec checks and the 100-test ceiling; update guidance and rollout hashes; run all four leased checks and fresh owned screenshot evidence. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-62-correction-sol-2, branch factory/row-62-correction-sol-2, integrated HEAD 1f0adc23b8ed1af6500e3a1f269c543ef4135f48. No product edits or Board writes. TODO activation remains pending supervisor application after merge.",
           "createdAt": "2026-11-03T16:25:00.581Z",
           "updatedAt": "2026-11-03T16:25:00.581Z"
+        },
+        {
+          "id": "omPrD96S",
+          "author": "sunny",
+          "body": "Supervisor accepts correction round2 complexity3 plan for same PR154: use controlled known-Plugin success fixture and explicit real-catalog unknown-Plugin gap, re-read and compare original normalized Story before overall with Story Linking on and off, preserve Stage Run/readiness-output exclusions, and final comparisons for independently read configuration/Plugin availability/Epic/prompt/roster/guide/attachments alongside existing physical Spec/link checks. Keep helper scope and core APIs unchanged; deterministic existing workflow regressions cover both reported failures without exceeding100 tests. Update matching guidance and full rollout/hash manifest, keep GitHub as conservative input-contract gap, run all four leased final checks plus fresh owned screenshot evidence and numbered responses to findings1and2. No .rowbly edits/activation by worker; supervisor reviews final rollout after corrected code merge.",
+          "createdAt": "2026-11-03T16:25:01.850Z",
+          "updatedAt": "2026-11-03T16:25:01.850Z"
         }
       ]
     }
