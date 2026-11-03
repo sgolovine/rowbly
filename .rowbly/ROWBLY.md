@@ -57,8 +57,8 @@ Resolution On).
 - The supervisor chooses each worker's model from the Stage being run and the target harness's live
   catalog. Record its exact provider instance/model IDs, complete typed options, policy rule and any
   fallback with `run start --provider --model --rule` (see the `rowbly-factory` skill).
-- Coding uses Claude Opus (latest version) by default.
-- Bug hunting uses GPT Sol (latest version).
+- Coding uses Claude Opus on Medium (latest version) by default.
+- Bug hunting uses GPT Sol on Medium or High (latest version, choose effort depending on complexity).
 - Refinement and PR writing use Claude Opus.
 - Review (In PR) uses a new worker whose model differs from every implementing model in the
   verified implementation records, including correction workers. The same provider is allowed;
