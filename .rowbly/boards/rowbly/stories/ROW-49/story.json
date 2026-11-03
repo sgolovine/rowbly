@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Record verified worker identities on Stage Runs",
   "description": "Factory review recommendation 3 of 20.\n\n## Context\n\nStage Runs are claimed before worker launch and can contain guessed titles rather than real worker identities; ROW-45 exposed a recovery failure.\n\n## Acceptance criteria\n\n- Provide a supported way to attach the actual worker identity after a successful launch.\n- Record enough identity information to find the worker after supervisor restart, including machine and harness thread identity.\n- Reconcile launch failures and document the lifecycle; amend ADR-0040 through a new repository ADR if required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
+  "stage": "in-pr",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,20 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.194Z",
-  "updatedAt": "2026-11-03T00:34:13.816Z",
+  "updatedAt": "2026-11-03T01:04:26.542Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:57:59.376Z"
-      }
     },
     "comments": {
       "comments": [
@@ -37,6 +27,13 @@
           "updatedAt": "2026-11-03T00:34:13.815Z"
         },
         {
+          "id": "BkKQNHTY",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/143 adds verified worker attachment, shared current-Run metadata, lifecycle guards, doctor findings and recovery guidance. Typecheck and lint passed; 78 unit tests and 20 CLI tests passed. Screenshots uploaded and verified. Head 3309e61. CI pending.",
+          "createdAt": "2026-11-03T01:03:04.393Z",
+          "updatedAt": "2026-11-03T01:03:04.393Z"
+        },
+        {
           "id": "x5XiPkgY",
           "author": "sunny",
           "body": "Supervisor review: Sidecar/attach approach approved in principle; before implementation, coordinate exact common schema with ROW60 and return it for one final interface acceptance. Use run-metadata.json bound to stage/attempt/startedAt and keep legacy bag shape intact except updating worker string through attach. Identity and selection must be independently optional sections so selection can be recorded for a failed launch without an attached worker; same-Run writes preserve the other owner's section. Common file reader/writer belongs to49, selection mutations/policy to60. v1 must not strip unknown/future data; reject unsupported versions and preserve unreadable bytes, report via doctor. Stale metadata must never identify a later Run. Attach expected-Run guard under operation lock, refuse conflicting identity replacement, identical repeats no changes; guard against transforms invalidating the final Run/ref. CLI records supervisor attestation of verification (source/identity), not a claim that Rowbly contacted T3 by itself. Reserve0046. Existing failure/preservation tests; no new test file or >100 total. I am relaying the same boundary to60 now; do not independently design two files/schemas.",
@@ -44,6 +41,16 @@
           "updatedAt": "2026-11-03T00:06:06.837Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:34851387-1197-4e96-bc14-b2c6fc9dd6b5",
+        "by": "sunny",
+        "startedAt": "2026-11-03T01:04:26.541Z"
+      }
     }
   }
 }

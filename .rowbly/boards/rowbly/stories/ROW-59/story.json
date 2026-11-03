@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T01:01:37.424Z",
+  "updatedAt": "2026-11-03T01:05:36.621Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:f87fcc42-635b-4fa9-9681-87e52bd3c4b2",
+        "by": "sunny",
+        "startedAt": "2026-11-03T01:01:37.423Z"
+      }
     },
     "comments": {
       "comments": [
@@ -25,6 +35,13 @@
           "body": "Supervisor decision: Revised plan accepted with separate per-Story hold.json and no Stage Run bag format change/migration. Canonical row field is eligibility and startRun rechecks it under the operation lock; ROW-58 owns eligibility.ts. Its implementation branch factory/row-58 is now pushed/being finalized: inspect it for interface reference, but base your task on main (no stack/merge companion branch without approval). Own holds.ts and hold/release registrations; minimally integrate heldReason with canonical eligibility once compatible. If ROW-58 lands first merge main; do not independently redesign its interfaces. Valid held and unreadable/future hold both fail closed; hold/release refuse unknown/invalid file bytes unchanged. Include doctor reporting for unreadable/unsupported hold via existing Plugin doctor mechanism, because compatibility policy requires unknown data be reported, and document any finding in guide/operating refs. Extend existing checks for hold surviving move and unchanged Stage Run, invalid/future bytes preserved, and a failing hook writing no partial hold. New v1 file has no migration so do not invent migration machinery. Required tests remain in existing homes and suite<=100. Read rowbly-tui-design for Story row. ADR0043 reserved; recheck. All four checks/manual scenarios and screenshots required. Proceed.",
           "createdAt": "2026-11-02T23:48:23.067Z",
           "updatedAt": "2026-11-02T23:48:23.067Z"
+        },
+        {
+          "id": "FEkuDjkl",
+          "author": "sunny",
+          "body": "Supervisor: correction plan ACCEPTED. Implement the scoped strict Hold schema and shared owned-read helper, preserve absent-file semantics (no hold), map unreadable/unsafe stored paths to DATA_INTEGRITY6 without following symlinks, and preserve unknown fields/future versions/link/target/Story bytes. Extend the existing hold test step to cover both hold and release refusal for unknown-field and symlink cases, doctor finding and fail-closed eligibility; suite remains98. Keep combined HELD/BLOCKED, full eligibility digest, Stage Run schema and current main features. Fetch/merge main before final checks; current143 shared helpers review is independent and does not authorize changing its contract. Recheck ADR0043 reservation. All four checks, manual built-CLI reproduction, required agentic-tui screenshots/HTTP200 and same draftPR141 ordinary push HEAD:factory/row-59. No Board edits or merge. Proceed.",
+          "createdAt": "2026-11-03T01:05:36.620Z",
+          "updatedAt": "2026-11-03T01:05:36.620Z"
         },
         {
           "id": "VN09vVeh",
@@ -48,16 +65,6 @@
           "updatedAt": "2026-11-03T00:34:10.501Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:f87fcc42-635b-4fa9-9681-87e52bd3c4b2",
-        "by": "sunny",
-        "startedAt": "2026-11-03T01:01:37.423Z"
-      }
     }
   }
 }
