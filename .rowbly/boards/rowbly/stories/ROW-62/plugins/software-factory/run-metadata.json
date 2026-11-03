@@ -34,5 +34,11 @@
     "usage": "observed-limit",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-03T15:16:16.471Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
+    "at": "2026-11-03T15:18:54.725Z",
+    "source": "Verified thinkpad/T3 assistant messages from mcp:3803ae1e-36e4-4d2e-82f9-32764d071044; snapshot /tmp/rowbly-factory-session/ROW-62-local-poll.json; SHA256 be39b5226e5f6fb1113da329bdea30c21fdffbc76bc7be3fcb16a9e186fd8491,5ed87e4cfb42b978c943866ea40d0fec7dc560e00d4efb7cfa46fbdee783306b",
+    "by": "sunny"
   }
 }
