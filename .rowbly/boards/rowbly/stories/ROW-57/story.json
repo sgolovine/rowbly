@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T02:54:40.099Z",
+  "updatedAt": "2026-11-03T02:56:00.238Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -46,6 +46,13 @@
           "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
           "createdAt": "2026-11-03T02:19:43.746Z",
           "updatedAt": "2026-11-03T02:19:43.746Z"
+        },
+        {
+          "id": "6QKHSbDi",
+          "author": "sunny",
+          "body": "Returned-work continuation: current In PR Stage Prompt directs requested changes back to In Progress so the factory builds them again. Continue existing PR147 branch factory/row-57 verified OPEN at7cf0c151d46f8273759b58d0414d3603639990cd; no restart/newPR. Fresh Sol correction worker must plan then await acceptance, fix numbered independent findings6594163668 (pendingCI permits independentreview; watch exit0 requires exact current-head conclusion inspection), preserve main generated brief and complementary skills/config sections. No .rowbly writes by worker. Existing implementation was Sonnet5.5; current reviewer was independent Sol. No product edits yet for this new visit.",
+          "createdAt": "2026-11-03T02:56:00.237Z",
+          "updatedAt": "2026-11-03T02:56:00.237Z"
         }
       ]
     }
