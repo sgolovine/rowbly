@@ -30,18 +30,18 @@
     "comments": {
       "comments": [
         {
-          "id": "slQ6P8Yg",
-          "author": "sunny",
-          "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
-          "createdAt": "2026-11-03T02:19:44.435Z",
-          "updatedAt": "2026-11-03T02:19:44.435Z"
-        },
-        {
           "id": "JtjwWzQ1",
           "author": "sunny",
           "body": "REVISED PLAN ACCEPTED with final constraints. Implement dry-run-by-default explicit-owned-resource cleanup and per-task daemon isolation, no real repository resources/settings cleanup now. Never delete remote refs or pr-assets. Report those criteria as conditional/deferred, not already deleted/satisfied. Coordinate ROW65 indefinite linked-evidence retention. Local compare-and-delete must recheck branch not checked out in any other worktree immediately before action; protect main/default/base/control branches. Daemon stopping requires the EXACT task-owned nondefault state directory recorded for this Story, not merely any nondefault env value and CWD match; otherwise retain/report. Prefer stopping via that daemon's own scoped API, recheck PID identity before any signal, never shared/unknown process. Supervisor harness inactivity/ownership checks mandatory even when no CWD process. No archive of threads. A1/A2 ROW65 Git changes separate. Four checks and meaningful temporary-repo failure/race checks as planned; use existing regression test home if a race-fix contract requires it under AGENTS. No ADR for guidance alone. All .rowbly and delete_branch_on_merge settings remain proposals, not execution.",
           "createdAt": "2026-11-03T02:26:06.777Z",
           "updatedAt": "2026-11-03T02:26:06.777Z"
+        },
+        {
+          "id": "slQ6P8Yg",
+          "author": "sunny",
+          "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
+          "createdAt": "2026-11-03T02:19:44.435Z",
+          "updatedAt": "2026-11-03T02:19:44.435Z"
         }
       ]
     }

@@ -20,11 +20,11 @@
     "comments": {
       "comments": [
         {
-          "id": "ofyMW533",
+          "id": "cm2hGoNl",
           "author": "sunny",
-          "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
-          "createdAt": "2026-11-03T02:19:43.746Z",
-          "updatedAt": "2026-11-03T02:19:43.746Z"
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/147. Adds a \"Waiting for pull request checks\" section to the rowbly-factory skill (event-driven watch first, one bounded gh pr checks --watch as fallback, never model-turn polling), a worker-brief rule that workers return head SHA and pending checks instead of polling, and a user-guide note. No checks registered and timeouts count as waiting, not as a failed check. Proposed In PR step 2 and ROWBLY.md changes are in /tmp/row-57-proposals.md for supervisor review.",
+          "createdAt": "2026-11-03T02:26:19.611Z",
+          "updatedAt": "2026-11-03T02:26:19.611Z"
         },
         {
           "id": "jAFcNufp",
@@ -34,11 +34,11 @@
           "updatedAt": "2026-11-03T02:26:17.083Z"
         },
         {
-          "id": "cm2hGoNl",
+          "id": "ofyMW533",
           "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/147. Adds a \"Waiting for pull request checks\" section to the rowbly-factory skill (event-driven watch first, one bounded gh pr checks --watch as fallback, never model-turn polling), a worker-brief rule that workers return head SHA and pending checks instead of polling, and a user-guide note. No checks registered and timeouts count as waiting, not as a failed check. Proposed In PR step 2 and ROWBLY.md changes are in /tmp/row-57-proposals.md for supervisor review.",
-          "createdAt": "2026-11-03T02:26:19.611Z",
-          "updatedAt": "2026-11-03T02:26:19.611Z"
+          "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
+          "createdAt": "2026-11-03T02:19:43.746Z",
+          "updatedAt": "2026-11-03T02:19:43.746Z"
         }
       ]
     }

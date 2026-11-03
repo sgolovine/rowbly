@@ -20,11 +20,11 @@
     "comments": {
       "comments": [
         {
-          "id": "bAfjEdIv",
+          "id": "ANAvc64n",
           "author": "sunny",
-          "body": "PLAN ACCEPTED with coordination. Own In PR return/failure step 5 and Returned work in In Progress, plus rowbly-dev step 5 continuation exception and baseline continuation mechanics. ROW-47 owns independent review/approval steps 3-4, implementation records and head-SHA handoff; ROW-57 owns step 2 CI waiting. Use the same Returned to In Progress Comment format for review requests, failed checks and main conflicts; include review findings or concrete logs/conflict paths. Changes requested can return immediately; pending checks alone never return or fail. Continue only after verifying PR is still open and recorded branch/head match; mismatch asks, never discards work. Fresh Stage worker, finish Run before move. No screenshots required for text-only skill changes; no ADR. Exact .rowbly proposals outside Data Root only, supervisor applies after review; combine with companion sections before final config proposal. Do not add an overlapping returned-work section to rowbly-dev beyond your owned lines. Four checks required.",
-          "createdAt": "2026-11-03T02:19:43.052Z",
-          "updatedAt": "2026-11-03T02:19:43.052Z"
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/148 (branch claude/row-48-return-failures-to-implementation, head ed7e555). rowbly-factory gains a Returned work section: a Story moved back to an earlier Stage is a new visit; the supervisor finishes the later Stage Run before the move, starts a fresh worker, checks that the recorded PR is open and that its branch and head match, and hands it on as Continue (asking on a mismatch). rowbly-dev continues an existing branch and PR when the brief or Stage Prompt says so: a new local branch from origin/<PR branch>, merge the base, push HEAD:<PR branch>, no second PR and no force-push. The proposed In PR, In Progress and ROWBLY.md changes (one Returned to In Progress Comment format for requested changes, failed checks and conflicts with main; questions for stack layers and other open PRs; pending checks never return) are with the supervisor to combine with ROW-47 and ROW-57. typecheck, lint, test:unit (78) and test:cli (20) pass; no tests, screenshots or ADR added.",
+          "createdAt": "2026-11-03T02:26:15.665Z",
+          "updatedAt": "2026-11-03T02:26:15.665Z"
         },
         {
           "id": "Ax9D7NtQ",
@@ -34,11 +34,11 @@
           "updatedAt": "2026-11-03T02:26:13.009Z"
         },
         {
-          "id": "ANAvc64n",
+          "id": "bAfjEdIv",
           "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/148 (branch claude/row-48-return-failures-to-implementation, head ed7e555). rowbly-factory gains a Returned work section: a Story moved back to an earlier Stage is a new visit; the supervisor finishes the later Stage Run before the move, starts a fresh worker, checks that the recorded PR is open and that its branch and head match, and hands it on as Continue (asking on a mismatch). rowbly-dev continues an existing branch and PR when the brief or Stage Prompt says so: a new local branch from origin/<PR branch>, merge the base, push HEAD:<PR branch>, no second PR and no force-push. The proposed In PR, In Progress and ROWBLY.md changes (one Returned to In Progress Comment format for requested changes, failed checks and conflicts with main; questions for stack layers and other open PRs; pending checks never return) are with the supervisor to combine with ROW-47 and ROW-57. typecheck, lint, test:unit (78) and test:cli (20) pass; no tests, screenshots or ADR added.",
-          "createdAt": "2026-11-03T02:26:15.665Z",
-          "updatedAt": "2026-11-03T02:26:15.665Z"
+          "body": "PLAN ACCEPTED with coordination. Own In PR return/failure step 5 and Returned work in In Progress, plus rowbly-dev step 5 continuation exception and baseline continuation mechanics. ROW-47 owns independent review/approval steps 3-4, implementation records and head-SHA handoff; ROW-57 owns step 2 CI waiting. Use the same Returned to In Progress Comment format for review requests, failed checks and main conflicts; include review findings or concrete logs/conflict paths. Changes requested can return immediately; pending checks alone never return or fail. Continue only after verifying PR is still open and recorded branch/head match; mismatch asks, never discards work. Fresh Stage worker, finish Run before move. No screenshots required for text-only skill changes; no ADR. Exact .rowbly proposals outside Data Root only, supervisor applies after review; combine with companion sections before final config proposal. Do not add an overlapping returned-work section to rowbly-dev beyond your owned lines. Four checks required.",
+          "createdAt": "2026-11-03T02:19:43.052Z",
+          "updatedAt": "2026-11-03T02:19:43.052Z"
         }
       ]
     }
