@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.194Z",
-  "updatedAt": "2026-11-03T01:14:25.857Z",
+  "updatedAt": "2026-11-03T01:22:58.071Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -56,6 +56,13 @@
           "body": "Supervisor review: Sidecar/attach approach approved in principle; before implementation, coordinate exact common schema with ROW60 and return it for one final interface acceptance. Use run-metadata.json bound to stage/attempt/startedAt and keep legacy bag shape intact except updating worker string through attach. Identity and selection must be independently optional sections so selection can be recorded for a failed launch without an attached worker; same-Run writes preserve the other owner's section. Common file reader/writer belongs to49, selection mutations/policy to60. v1 must not strip unknown/future data; reject unsupported versions and preserve unreadable bytes, report via doctor. Stale metadata must never identify a later Run. Attach expected-Run guard under operation lock, refuse conflicting identity replacement, identical repeats no changes; guard against transforms invalidating the final Run/ref. CLI records supervisor attestation of verification (source/identity), not a claim that Rowbly contacted T3 by itself. Reserve0046. Existing failure/preservation tests; no new test file or >100 total. I am relaying the same boundary to60 now; do not independently design two files/schemas.",
           "createdAt": "2026-11-03T00:06:06.837Z",
           "updatedAt": "2026-11-03T00:06:06.837Z"
+        },
+        {
+          "id": "yUS0U7cB",
+          "author": "sunny",
+          "body": "Coordination decision: HOLD readiness/merge of PR143 until PR141 lands. Independent PR141 review passed81ed5b1, allfourchecks78+20/sixCI/7PNGs200, and reviewer found141/143 overlappingconflicts doctor/index/pipeline/docs. Supervisor authorizes141 FIRST, then143 integrates currentmain with same previouslyaccepted scoped integration, preserves holds and strict currentRun metadata plus139lockedmoveguard, rerunsrelevantchecks/exactheadCI. Continue research/checkpointing if useful but do not merge143 ahead of141. No Boardwrites. Supervisor will notify141merged; reportwaitingstate instead of poller if readyfirst. PR140 remainsparkedawaitinguserADRdecision, not a prerequisite.",
+          "createdAt": "2026-11-03T01:22:58.070Z",
+          "updatedAt": "2026-11-03T01:22:58.070Z"
         }
       ]
     }
