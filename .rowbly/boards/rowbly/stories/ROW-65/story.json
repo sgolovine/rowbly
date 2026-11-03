@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T02:19:46.024Z",
+  "updatedAt": "2026-11-03T02:26:07.582Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -35,6 +35,13 @@
           "body": "Coordination: ROW-61 owns completion cleanup script, worktree/merged-branch ownership and per-task agentic-tui daemon isolation. You own evidence retention (merge-evidence and linked pr-assets) and coherent supervisor-event batching. Keep all existing evidence until a reviewed policy defines audit preservation and safe archival/cleanup; no actual pruning/deletion/settings changes during research. ROW-61 has been told keep pr-assets pending your retention decision and to avoid mass historical Done dispatch. Keep your shared skill edits in retention/batching sections, separate from cleanup mechanics and ROW-47/48/57 review/repair/wait sections.",
           "createdAt": "2026-11-03T02:19:46.023Z",
           "updatedAt": "2026-11-03T02:19:46.023Z"
+        },
+        {
+          "id": "8lxZPsxM",
+          "author": "sunny",
+          "body": "PARTIAL PLAN ACCEPTANCE: implement A2 as correction of spurious deletion-intent evidence on one-sided additions, plus retention/docs and event-batching guidance within your owned sections. Keep every existing evidence file and pr-assets branch. Evidence-format slimming deferred. Reserve ADR0050 for this correction/retention clarification; preserve0034 accepted concurrency and deterministic reconciliation semantics. A1 skipping reconciliation on ancestor-only merges changes ADR0034 section2 explicit rule, so HOLD A1 pending user decision; do not implement it yet. Keep Automatic Commits frequency change: supervisor verified live interval5000 mismatch and restored change per explicit user/ROWBLY policy. Do not weaken force-change or claim batching reduces per-change commits; batch sync once per coherent event while retaining every GO/publication barrier and replies workers await. A conflict/evidence does not prove second writer (main product merges/legacy data can explain it); investigate provenance, preserve data and report unresolved conflicts rather than categorical false claim. Add required existing reconciliation regression assertion for base-absent addition/no evidence and real deletion intent/evidence retained, plus all four checks. ROW61 owns cleanup mechanics/task daemon and screenshot skill daemon changes; you own one retention line there. Send revised A1-independent plan/ADR wording before coding if separation is unclear.",
+          "createdAt": "2026-11-03T02:26:07.581Z",
+          "updatedAt": "2026-11-03T02:26:07.581Z"
         }
       ]
     }
