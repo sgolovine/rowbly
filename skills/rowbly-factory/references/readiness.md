@@ -49,7 +49,9 @@ Disabled Plugins without stored Story data contribute a hashed `off` marker. No 
 contributes a hashed `none` marker. Comments and Software Factory must be on. An unknown Plugin,
 Story bag or field in a known bag is a gap until its input contract is reviewed. A disabled Plugin
 with a stored Story bag is also a gap: preserving its data does not prove that its external inputs
-were reviewed. Never turn it on merely to make a fingerprint succeed.
+were reviewed. Never turn it on merely to make a fingerprint succeed. The GitHub Plugin is currently
+an unknown input contract, including when it is disabled in the catalog; this helper reports a gap until
+that contract is separately reviewed. Do not hide catalog entries in an actual readiness pass.
 
 Every command must exit successfully and return exactly one JSON value of the expected shape.
 Missing tools, failed commands, malformed JSON, nonfinite values and unreadable inputs produce
@@ -62,8 +64,12 @@ than trusting a CLI list that can omit unsafe entries; unrecognized entries are 
 compares listed Spec names and text with safe file reads. With Story Linking on, it checks every
 same-Board Story candidate and its own `story.json` for incoming links; an omitted folder, missing
 record or unsafe entry is a gap. Linked Board Specs are read directly and checked against CLI text.
-These inventories and file identities/bytes are rechecked after all inputs are collected; changes
-produce a gap, with no overall. These checks do not change the CLI listing or symlink policy.
+Command results are compared again against their original reads, followed by safe file/inventory
+checks and a final re-read of the original normalized Story. This Story check runs even when Story
+Linking is off; a later inventory snapshot never replaces the reviewed Story baseline. Repository,
+guide and Attachment bytes are also checked again. A change produces a gap with no overall. These
+boundary checks do not hold a Data Root lock across collection; run the helper again after research
+as described below. These checks do not change the CLI listing or symlink policy.
 Only an absent guide is accepted as absent; a symlink, directory, unreadable file or changed file
 identity is a gap. A present empty guide differs from an absent one.
 
