@@ -152,7 +152,8 @@ Report each start, retry, finish, failure, question and Board change to the user
 2. Read the Story in full: `stories show`, and for each enabled Plugin its Specs, Tasks, Comments,
    Epic and Story links. Write the brief from [the worker brief](references/worker-brief.md).
 3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
-   actual machine, harness, worker ID and thread ID from the launch receipt/harness result.
+   actual machine, harness, worker ID and thread ID from the launch receipt/harness result. For a
+   remote T3 CLI use [remote launches](references/remote-launch.md), including its durable receipt.
 4. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
    <startedAt> --worker <actual-id> --machine <machine> --harness <harness> --thread-id <thread-id>
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
@@ -174,7 +175,8 @@ discarding earlier work.
 1. **Capture the previous attempt.** Read `stories show <KEY>` and the current `runs` result. Keep
    the failed Stage Run's attempt, worker, status, reason (or "not recorded"), and start/finish
    times, plus current identity/selection/heartbeat from `runMetadata` when available. A retry resets
-   recognized metadata even if timestamps repeat, so retain this evidence first. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
+   recognized metadata even if timestamps repeat, so retain this evidence first. Read the Story's
+   Comments when that Plugin is on, and the prior worker's messages when
    its recorded identifier resolves. Summarize what it completed, validation and publication
    outcomes, and what remains; distinguish a failed worker or launch from failed implementation.
 2. **Recover existing work.** Include the prior branch, worktree path, machine and PR URL whenever
