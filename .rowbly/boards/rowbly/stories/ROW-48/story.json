@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T02:50:18.279Z",
+  "updatedAt": "2026-11-03T03:11:36.461Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:50:17.511Z"
+      }
     },
     "comments": {
       "comments": [
@@ -53,18 +63,15 @@
           "body": "PLAN ACCEPTED with coordination. Own In PR return/failure step 5 and Returned work in In Progress, plus rowbly-dev step 5 continuation exception and baseline continuation mechanics. ROW-47 owns independent review/approval steps 3-4, implementation records and head-SHA handoff; ROW-57 owns step 2 CI waiting. Use the same Returned to In Progress Comment format for review requests, failed checks and main conflicts; include review findings or concrete logs/conflict paths. Changes requested can return immediately; pending checks alone never return or fail. Continue only after verifying PR is still open and recorded branch/head match; mismatch asks, never discards work. Fresh Stage worker, finish Run before move. No screenshots required for text-only skill changes; no ADR. Exact .rowbly proposals outside Data Root only, supervisor applies after review; combine with companion sections before final config proposal. Do not add an overlapping returned-work section to rowbly-dev beyond your owned lines. Four checks required.",
           "createdAt": "2026-11-03T02:19:43.052Z",
           "updatedAt": "2026-11-03T02:19:43.052Z"
+        },
+        {
+          "id": "ou4AqDd9",
+          "author": "sunny",
+          "body": "Focused diagnostic scope ACCEPTED within this same In PR attempt2. Use temporary instrumented copies outside the repository to identify the active fault-sweep boundary, operation and wait during the timeout; instrument bounded operation durations/progress and workload/concurrency context. Reproduce the suspected window with a controlled barrier, keeping original 20s criterion; no retries, timeout increase, or repeated suite-to-green. Compare exact reviewed head/current clean integration provenance and original log /tmp/row-48-review-test-unit.log. No repository/source/test edits or product fix yet. If evidence establishes a storage/test bug, return concrete deterministic reproduction and proposed minimal fix/scope for supervisor review before edits or required-check repeat. If it establishes externally controlled resource contention, provide measured causal evidence and controlled scenario; the 6.63s isolated pass alone does not clear the gate. Keep CHANGES REQUESTED until justified validation resolves it. Preserve PR148 and all prior evidence; not a new Run/retry. Do not watch/poll or mutate .rowbly.",
+          "createdAt": "2026-11-03T03:11:36.460Z",
+          "updatedAt": "2026-11-03T03:11:36.460Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:50:17.511Z"
-      }
     }
   }
 }

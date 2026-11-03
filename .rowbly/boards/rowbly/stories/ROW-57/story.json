@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T03:00:01.467Z",
+  "updatedAt": "2026-11-03T03:11:04.154Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:00:00.590Z"
+      }
     },
     "comments": {
       "comments": [
@@ -53,18 +63,15 @@
           "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
           "createdAt": "2026-11-03T02:19:43.746Z",
           "updatedAt": "2026-11-03T02:19:43.746Z"
+        },
+        {
+          "id": "vzHOKNpa",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Implement the two correction findings exactly: independent diff review may start/finish while CI pending, yield only CI-dependent work; watch exit codes only wake, inspect all current-head actual conclusions before any merge. Keep failure/pending/no-registration/timeout/unreadable distinctions and cancelled/skipped/neutral/unknown terminal results require policy/decision. Preserve generated brief and complementary ROW47 review / ROW48 return ownership. Update only your outside-DataRoot config proposals. No screenshots/newtests/ADR for these text corrections. Four checks, normal push to SAME PR147, exact head, answer findings. Do not merge or write .rowbly.",
+          "createdAt": "2026-11-03T03:11:04.153Z",
+          "updatedAt": "2026-11-03T03:11:04.153Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:00:00.590Z"
-      }
     }
   }
 }
