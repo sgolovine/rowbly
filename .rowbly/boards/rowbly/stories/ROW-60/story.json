@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T03:13:37.616Z",
+  "updatedAt": "2026-11-03T03:22:49.979Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:13:36.374Z"
+      }
     },
     "comments": {
       "comments": [
@@ -74,18 +84,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "hQBS1THq",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Required JSON-scalar option notation is an appropriate unambiguous correction to the unmerged draft CLI: strings retain quotes, numbers/booleans their types; no released CLI/data migration. Update help, every skill/launcher/CLI example and four identical references consistently; malformed/null/compound/nonfinite refusals are part of the contract. Exact complete option-set comparison must be order-independent and type-sensitive, reject extra/missing/duplicate IDs rather than just checking an expected subset, and never rewrite intended selection after a mismatch. Extend existing StageRun contract and launcher deterministic-fixture checks (no real worker launches) for representative numeric-looking string/number, boolean/string, option-order and extra/missing mismatch; no mirrored unnecessary cases/new testfile. Keep unknown/unverified outcome distinct from proven mismatch; no GO until resolved. Integrate currentmain preserving generatedbrief/retry/hold/sharedmetadata and other ownership; retain ADR0046. Policy proposal minimal and preserves modelvariety/independentreview. Allfourchecks, CLI screenshot evidence, update SAME PR145 normally. Do not write .rowbly or merge.",
+          "createdAt": "2026-11-03T03:22:49.978Z",
+          "updatedAt": "2026-11-03T03:22:49.978Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:13:36.374Z"
-      }
     }
   }
 }
