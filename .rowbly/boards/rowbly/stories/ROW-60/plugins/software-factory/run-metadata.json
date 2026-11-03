@@ -15,5 +15,11 @@
       "verifiedAt": "2026-11-03T05:14:32.376Z",
       "by": "sunny"
     }
+  },
+  "heartbeat": {
+    "worker": "mcp:aca87554-adff-422e-b9fd-6b52df9686c3",
+    "at": "2026-11-03T05:16:13.924Z",
+    "source": "Verified SSH T3 independentreview messages mcp:aca87554-adff-422e-b9fd-6b52df9686c3: provenance/exactheadCI6pass/currentmainclean/setupfailurebeforeTypeScript; /tmp/rowbly-factory-session/ROW-60-poll.json SHA256 8e1ddef5b5541e3d035cc7b80eb0555ab9e951d9fb76fe8eeefc3bddeb8174ca,4d698e070b376fc513531c90145f5ad19cf53a6e0907789ce523536edc6f02a1,bec6f31229d32cc68bb2bcd2d14de07e1c9f8bd2f6ed0a6e6e48b74e3490383d",
+    "by": "sunny"
   }
 }
