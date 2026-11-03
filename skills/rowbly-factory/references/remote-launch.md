@@ -43,7 +43,9 @@ and, once known, its thread. In order, the script:
 3. Looks for this request's thread: in the thread list by title, and in the answers to every earlier
    `LAUNCH` request for the title in the launchers' messages. The list leaves out archived threads;
    the answers do not. If it finds a thread, it verifies it (step 7) and starts nothing. If an earlier
-   request has no answer, it stops (`unknown`).
+   request has no answer, it stops (`unknown`). A discovered thread's ID and intended selection
+   are saved in the receipt before verification; if the thread cannot be read, the result remains
+   `unknown`, including on the first call without a prior receipt.
 4. Checks free memory when `--min-free-gb` is given.
 5. Copies the brief to `<brief-dir>/<KEY>-<hash>.md` on the server (default
    `~/.rowbly-factory/briefs`) and reads it back to compare.
@@ -55,7 +57,8 @@ and, once known, its thread. In order, the script:
    its first message. Then the script asks the launcher for the thread's `t3_thread_configuration`
    (`CONFIG`), because the CLI does not show options, and compares the complete typed option set
    independent of order, refusing extra, missing or duplicate IDs and different types/values. The
-   receipt records the thread.
+   receipt records the thread. Missing or malformed CLI provider, model or runtime evidence is
+   `unverified`; only complete, well-formed differing values establish a mismatch.
 
 Neither the title alone nor the launcher's own answer counts as verification. The launcher's turns
 take up a slot on the server, as the worker threads do.
@@ -72,15 +75,16 @@ oddly but the checks passed.
 | `launched` | 0 | Started and verified, options included | Use `threadId`. |
 | `existing` | 0 | This request's thread was already there and passes every check | Use it; it is the one an earlier call started. |
 | `failed`, `error` | 1 | Nothing was started | Fix the `reason`, then run the same command again. |
-| `unknown` | 2 | A request may have started a thread that cannot be found or confirmed | Wait, then run the **same** command again. If it stays `unknown`, see Restarting. |
+| `unknown` | 2 | A requested or discovered thread cannot be found or confirmed | Wait, then run the **same** command again. If it stays `unknown`, see Restarting. |
 | `conflict` | 2 | Several threads for the request, a thread that differs from it, an archived thread, or a title used for another request | Start nothing for the Story; look at the threads (`t3 thread show`) and tell the user. |
-| `unverified` | 2 | The thread passes the CLI checks, but the launcher could not confirm its options | Do not count it as verified; run the same command again later, or tell the user. |
+| `unverified` | 2 | CLI identity/configuration evidence is missing or malformed, or the launcher could not confirm options | Do not count it as verified; run the same command again later, or tell the user. |
 
 ## Retrying, archiving and restarting
 
 - **Retry** with the same command. The title is the request's identity: a second call finds the
   request's thread, from the receipt, the list or the launcher's answers, and never starts another.
-  It fails closed: when a request was sent and its outcome cannot be established, it says `unknown`.
+  It fails closed: when a request was sent or a worker discovered and its outcome cannot be
+  established, it says `unknown`.
 - **Archive** a worker only when you are done with it. A later run of its request reports the
   archived thread as a `conflict` and starts nothing.
 - **Restart** only with a new request: a new title, for a new Stage visit or attempt (see Titles).
