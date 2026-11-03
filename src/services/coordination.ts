@@ -2,6 +2,7 @@
 // every acquisition first finishes or removes interrupted commits. An operation holds the lock from
 // before its first read through the save, and gives it up before its reactions.
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { PluginError } from '../core';
 import type { DataRoot } from '../schemas';
 import {
   acquireLock,
@@ -183,6 +184,11 @@ async function currentHold(root: DataRoot): Promise<{ path: string; hold: Hold |
   const path = await canonical(root);
   const hold = holds.getStore()?.get(path);
   return { path, hold: hold?.open ? hold : undefined };
+}
+
+/** Network-backed Board Stats must begin outside any caller-owned read scope. */
+export async function assertOutsideCoordination(root: DataRoot): Promise<void> {
+  if ((await currentHold(root)).hold) throw new PluginError('Board Stats cannot run inside a Data Root read or change');
 }
 
 /** Makes sure `hold` has the lock again, after an operation gave it up for its reactions. */

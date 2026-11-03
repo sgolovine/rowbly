@@ -157,7 +157,24 @@ describe('loading Plugins (ADR-0010)', () => {
   });
 
   it('skips a Plugin that throws while it starts, whose settings are invalid, or that it does not have', async () => {
-    expect(validatePluginDefinition({ ...notes, externalReads: ['gh-pr-view'] }, reservedNames())).toEqual([]);
+    expect(
+      validatePluginDefinition({ ...notes, externalReads: ['gh-pr-view', 'gh-pr-commits'] }, reservedNames()),
+    ).toEqual([]);
+    expect(
+      validatePluginDefinition(
+        {
+          ...notes,
+          boardStats: {
+            metrics: [
+              { key: 'count', label: 'Count' },
+              { key: 'count', label: 'Duplicate' },
+            ],
+            collect: async () => ({}),
+          },
+        },
+        reservedNames(),
+      ),
+    ).toContainEqual(expect.objectContaining({ path: 'boardStats' }));
     for (const reads of [['arbitrary-executable'], ['gh-pr-view', 'gh-pr-view']]) {
       const definition = { ...notes, externalReads: reads } as unknown as AnyPluginDefinition;
       expect(validatePluginDefinition(definition, reservedNames())).toContainEqual(

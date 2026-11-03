@@ -330,6 +330,26 @@ function checkNames(
   if (!Array.isArray(reads) || reads.some((name) => !isExternalReadName(name)) || new Set(reads).size !== reads.length)
     problem('externalReads', 'externalReads must list distinct host template names');
 
+  const stats = definition.boardStats;
+  if (
+    stats !== undefined &&
+    (!stats ||
+      typeof stats.collect !== 'function' ||
+      !Array.isArray(stats.metrics) ||
+      stats.metrics.length === 0 ||
+      stats.metrics.length > 16 ||
+      stats.metrics.some(
+        (metric) =>
+          !metric ||
+          !isSlug(metric.key) ||
+          typeof metric.label !== 'string' ||
+          !metric.label.trim() ||
+          metric.label.length > 100,
+      ) ||
+      new Set(stats.metrics.map((metric) => metric.key)).size !== stats.metrics.length)
+  )
+    problem('boardStats', 'boardStats requires a collector and 1–16 distinct named metrics');
+
   const options: [string, string[]][] = [];
   for (const [command, spec] of Object.entries(definition.options ?? {})) {
     const at = `options["${command}"]`;

@@ -1120,6 +1120,30 @@ export interface PluginBagSchemas {
   local?: ZodType;
 }
 
+/** One declared Board statistic, rendered even when its Plugin is unavailable. */
+export interface BoardStatDefinition {
+  key: string;
+  label: string;
+}
+
+/** Partial values are known lower bounds, never estimated totals. */
+export type BoardStatValue =
+  | { status: 'complete'; value: number; reason?: string }
+  | { status: 'partial'; value: number; reason: string }
+  | { status: 'unavailable'; value: null; reason: string };
+
+/** Only these capabilities exist on the collector context at run time (ADR-0054). */
+export type PluginBoardStatsContext = Pick<PluginContext, 'inspectBag' | 'externalRead' | 'externalReadSignal'>;
+
+export interface PluginBoardStats {
+  metrics: readonly BoardStatDefinition[];
+  collect(args: {
+    board: DeepReadonly<BoardConfig>;
+    stories: readonly DeepReadonly<Story>[];
+    plugin: PluginBoardStatsContext;
+  }): Promise<Record<string, BoardStatValue>>;
+}
+
 /**
  * A Plugin: everything it adds, declared up front. Only `id`, `name` and `description` are required.
  * `S` is its settings type, `In` its `inputs` schemas and `FS` its `storyFilterSchema`; `definePlugin`
@@ -1175,6 +1199,7 @@ export interface PluginDefinition<
   /** Whether `story` matches this Plugin's filter, parsed by `storyFilterSchema` when declared. */
   filterStories?(story: Story, filter: z.output<FS>, plugin: PluginContext<S>): boolean;
   /** Rows for `stories show` and the TUI Story screen. */
+  boardStats?: PluginBoardStats;
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
   /**
    * This Plugin's section of the Story's context (`PluginContext.storyContext`), or `null` when it
