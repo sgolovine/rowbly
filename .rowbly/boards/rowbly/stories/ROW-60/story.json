@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:14:32.377Z",
+  "updatedAt": "2026-11-03T05:16:14.677Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:aca87554-adff-422e-b9fd-6b52df9686c3",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:14:31.599Z"
+      }
     },
     "comments": {
       "comments": [
@@ -158,18 +168,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "dzVSq8l8",
+          "author": "sunny",
+          "body": "Independent review dependency setup stopped before TypeScript/check scripts: ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY for ownreviewcheckout dependency symlink. Narrow environment recovery AUTHORIZED: verify own isolated checkout and node_modules symlink/target, remove only its symlink (never target/shared dependencies), install own dependencies with pnpm install --frozen-lockfile and noninteractive setup as needed. Preserve original log. Then run required four-check group ONCE under bounded lease, original timeouts; this is first actual check execution, not rerunning a failed test. Stop and report actual check failures without retries. Continue read-only source/evidence review; no product/.rowbly edits or source commits/pushes.",
+          "createdAt": "2026-11-03T05:16:14.676Z",
+          "updatedAt": "2026-11-03T05:16:14.676Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:aca87554-adff-422e-b9fd-6b52df9686c3",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:14:31.599Z"
-      }
     }
   }
 }
