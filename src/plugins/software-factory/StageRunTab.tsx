@@ -11,6 +11,7 @@ import {
   useKeyHints,
   useState,
 } from '../../plugin-api/tui';
+import { DEFAULT_STALE_AFTER_MINUTES, liveness } from './liveness';
 import { currentRun, StageRunBag } from './stageRuns';
 
 /** How often a running Stage Run's ages refresh while the tab shows it. */
@@ -53,6 +54,7 @@ export function StageRunTab({ story, active, plugin }: PluginStoryTabProps) {
       </Box>
     );
   const at = (timestamp: string) => `${formatDate(timestamp)} · ${relativeDate(timestamp, now)}`;
+  const seen = running ? liveness(run, null, now, DEFAULT_STALE_AFTER_MINUTES) : null;
   return (
     <DetailView
       rows={[
@@ -71,6 +73,14 @@ export function StageRunTab({ story, active, plugin }: PluginStoryTabProps) {
           label: running ? 'Running for' : 'Took',
           value: elapsedText(run.startedAt, run.finishedAt ? new Date(run.finishedAt) : now),
         },
+        ...(seen
+          ? [
+              {
+                label: 'Last seen',
+                value: `${seen.lastSeenAt ? at(seen.lastSeenAt) : 'not reported'}${seen.stale ? ' · stale: check the worker' : ''}`,
+              },
+            ]
+          : []),
         ...(run.reason ? [{ label: 'Reason', value: <Text wrap="wrap">{run.reason}</Text> }] : []),
       ]}
     />
