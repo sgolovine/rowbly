@@ -4,27 +4,27 @@
   "boardId": "rowbly",
   "name": "Wait efficiently for PR checks in the In PR Stage",
   "description": "Factory review recommendation 11 of 20.\n\n## Context\n\nIn PR workers repeatedly inspect check and merge state while CI is still running.\n\n## Acceptance criteria\n\n- Use gh pr checks --watch or defer launching In PR work until required checks finish.\n- Resume merge/review processing when checks settle and route failed checks to the repair workflow.\n- Document timeout, cancellation and pending-check handling without repeated model polling.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "aB",
+  "stage": "in-pr",
+  "rank": "a4",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T03:11:04.154Z",
+  "updatedAt": "2026-11-03T04:00:49.280Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
     },
     "software-factory": {
       "stageRun": {
-        "stage": "in-progress",
+        "stage": "in-pr",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
+        "worker": "mcp:b5702986-bb4b-404f-acc8-561262c4c845",
         "by": "sunny",
-        "startedAt": "2026-11-03T03:00:00.590Z"
+        "startedAt": "2026-11-03T03:41:25.604Z"
       }
     },
     "comments": {
@@ -35,6 +35,20 @@
           "body": "Returned-work continuation: current In PR Stage Prompt directs requested changes back to In Progress so the factory builds them again. Continue existing PR147 branch factory/row-57 verified OPEN at7cf0c151d46f8273759b58d0414d3603639990cd; no restart/newPR. Fresh Sol correction worker must plan then await acceptance, fix numbered independent findings6594163668 (pendingCI permits independentreview; watch exit0 requires exact current-head conclusion inspection), preserve main generated brief and complementary skills/config sections. No .rowbly writes by worker. Existing implementation was Sonnet5.5; current reviewer was independent Sol. No product edits yet for this new visit.",
           "createdAt": "2026-11-03T02:56:00.237Z",
           "updatedAt": "2026-11-03T02:56:00.237Z"
+        },
+        {
+          "id": "SmdleixJ",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history original Sonnet5.5 worker241441f8 plus Sol correction4fdf3897. Current implementing worker mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847 on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/147. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ROW57 prior terminal cursor was seen but unapplied; current exact running Run verified, own terminal Comment absent, applying once now.",
+          "createdAt": "2026-11-03T03:35:07.501Z",
+          "updatedAt": "2026-11-03T03:35:07.501Z"
+        },
+        {
+          "id": "cKFu0Hrk",
+          "author": "sunny",
+          "body": "Independent review APPROVED at d5054f35b9237774e7fc682d7e74f9e7284b57d6: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6594885399. Typecheck, lint, unit 78 and CLI 20 passed; all six GitHub checks succeeded. Latest mergeability and merge state UNKNOWN, so awaiting supervisor resume; PR remains draft and unmerged. Configuration proposal remains at /tmp/row-57-proposals.md. Reviewer accidentally fast-forwarded the shared checkout from 55fca2d1e349c9a2c1e7dba64aff9697011f2fb8 to 36eb9b710a88ccc61bbc126a49372422d51dde47; checkout was clean afterward.",
+          "createdAt": "2026-11-03T04:00:45.994Z",
+          "updatedAt": "2026-11-03T04:00:45.994Z"
         },
         {
           "id": "cm2hGoNl",
@@ -58,6 +72,13 @@
           "updatedAt": "2026-11-03T02:54:39.440Z"
         },
         {
+          "id": "n9f1DdwH",
+          "author": "sunny",
+          "body": "Readiness checked once in response to your new handoff: current exact head remains d5054f35b9237774e7fc682d7e74f9e7284b57d6, but GitHub now reports CONFLICTING/DIRTY (all6checks success), not merely unknown. Do NOT merge or resolve integration. Shared factory-skill merge order is PR149 first, then147, then146, then145. Keep this Run open and await explicit supervisor coordination after149 lands; no model-turn polling or repeated checks. Your approved Comment was recorded. The shared-checkout fast-forward is verified clean at36eb9b710a88ccc61bbc126a49372422d51dde47 on main; leave it in place, no undo/pull/edits there again. Use only your isolated review worktree for all Git commands going forward. No Code changes or Board writes. Supervisor tracks this policy violation and merge hold.",
+          "createdAt": "2026-11-03T04:00:49.279Z",
+          "updatedAt": "2026-11-03T04:00:49.279Z"
+        },
+        {
           "id": "ofyMW533",
           "author": "sunny",
           "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
@@ -70,6 +91,13 @@
           "body": "PLAN ACCEPTED. Implement the two correction findings exactly: independent diff review may start/finish while CI pending, yield only CI-dependent work; watch exit codes only wake, inspect all current-head actual conclusions before any merge. Keep failure/pending/no-registration/timeout/unreadable distinctions and cancelled/skipped/neutral/unknown terminal results require policy/decision. Preserve generated brief and complementary ROW47 review / ROW48 return ownership. Update only your outside-DataRoot config proposals. No screenshots/newtests/ADR for these text corrections. Four checks, normal push to SAME PR147, exact head, answer findings. Do not merge or write .rowbly.",
           "createdAt": "2026-11-03T03:11:04.153Z",
           "updatedAt": "2026-11-03T03:11:04.153Z"
+        },
+        {
+          "id": "yL8A52YE",
+          "author": "sunny",
+          "body": "Corrected existing draft PR https://github.com/sgolovine/rowbly/pull/147 at head d5054f35b9237774e7fc682d7e74f9e7284b57d6. Finding 1: worker brief, skill, user guide and outside-DataRoot proposals explicitly permit independent diff review to start and finish during pending CI; yield only remaining CI-dependent work. Finding 2: every watch exit is only a wake signal; inspect all actual current-head conclusions before merging. Cancelled, skipped, neutral and unknown terminal results require explicit policy or decision. Actual failures, pending checks, absent registration, timeouts and unreadable PRs remain distinct. Preserved generated-brief guidance and ROW47 review/approval and ROW48 failure/return ownership. Proposals updated only in /tmp/row-57-proposals.md, not applied. Typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS. CI pending at handoff: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest). No merge or authored Data Root changes.",
+          "createdAt": "2026-11-03T03:35:10.144Z",
+          "updatedAt": "2026-11-03T03:35:10.144Z"
         }
       ]
     }

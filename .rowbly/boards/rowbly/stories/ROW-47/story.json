@@ -5,14 +5,14 @@
   "name": "Require an independent review before factory merges",
   "description": "Factory review recommendation 1 of 20.\n\n## Context\n\nThe In PR Stage Prompt permits merging on green CI without requiring an independent review.\n\n## Acceptance criteria\n\n- Add an explicit review gate before merge using a different worker/model from the implementer.\n- Review the diff against the Story and record approval or actionable findings in a Comment.\n- Return changes requiring fixes to implementation and prevent merge until approval and required checks pass.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
   "stage": "in-progress",
-  "rank": "aE",
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T03:22:51.470Z",
+  "updatedAt": "2026-11-03T04:26:05.637Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -22,19 +22,33 @@
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+        "worker": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
         "by": "sunny",
-        "startedAt": "2026-11-03T03:16:45.182Z"
+        "startedAt": "2026-11-03T04:22:40.198Z"
       }
     },
     "comments": {
       "comments": [
+        {
+          "id": "1ukQOcBU",
+          "author": "sunny",
+          "body": "Return to In Progress is AUTHORIZED for scoped main integration, preserving BOTH Independent review and Returned work plus retention/cleanup/generated-brief rules; main has already landed, no cross-PR intent ambiguity. Supervisor-owned proposal correction is accepted: fresh reviewer model differs from EVERY actual implementing model, SAMEprovider allowed; choose eligible model from livecatalog, ask only unknownprovenance/noeligiblemodel, never old fixed Opus/Sol-pair restriction. No worker .rowbly edits. Your reported review Comment has been applied, so do not repeat it. Send a fenced block containing ONLY rowbly stories move ROW-47 in-progress plus FACTORY-DONE ROW-47; supervisor finishes Run before move and starts fresh correction worker continuing SAMEPR149/originalbranch/head801ae8ffc1c2356e315bed70bb2e565de49d8c4f. Operational merge order149->147->146->145; do not integrate in this review Run. No polling or new implementation here.",
+          "createdAt": "2026-11-03T04:00:50.049Z",
+          "updatedAt": "2026-11-03T04:00:50.049Z"
+        },
         {
           "id": "7VBf9Lyt",
           "author": "sunny",
           "body": "Returned to In Progress: branch row-47-independent-review-gate, PR https://github.com/sgolovine/rowbly/pull/149, head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Independent review by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. In skills/rowbly-factory/SKILL.md:156-159 and references/worker-brief.md:3-5, preserve the current-main generated brief command and explicitly include all Implementation records and reviewer identity; verify the resulting review brief. Resolve the conflicts in those files while preserving complementary skills. 2. In skills/rowbly-factory/SKILL.md:235-238, clarify that the reviewer must be a new worker using a model different from every implementing model; the same provider is allowed, and different effort/options do not count as another model. Typecheck passed, lint passed, unit 78 passed, CLI 20 passed. Six GitHub checks passed and four screenshot URLs returned 200. Integration merge was aborted without resolving conflicts; integrated-tree validation remains required. Full review: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6594217880. A fresh correction worker must continue this PR and original branch, open no duplicate PR, answer numbered findings, and obtain fresh checks and independent review. Configuration proposals remain supervisor-only and must be combined only after corrections and review.",
           "createdAt": "2026-11-03T03:09:28.256Z",
           "updatedAt": "2026-11-03T03:09:28.256Z"
+        },
+        {
+          "id": "7vMjVgsY",
+          "author": "sunny",
+          "body": "Correction pushed to existing PR https://github.com/sgolovine/rowbly/pull/149 at 801ae8ffc1c2356e315bed70bb2e565de49d8c4f by codex/gpt-6.1-sol. Both numbered findings answered: generated brief context preserved with explicit complete implementation records and reviewer identity; fresh reviewer must use a model different from every implementer, same provider allowed. Typecheck and lint passed, unit 78 and CLI 20 passed. Actual assembled brief verified on throwaway Data Root; screenshot and full responses: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6594680451. Configuration proposals remain supervisor-only on rook. CI pending; fresh independent review required. Include original Opus implementation and this Sol correction in provenance.",
+          "createdAt": "2026-11-03T03:35:18.435Z",
+          "updatedAt": "2026-11-03T03:35:18.435Z"
         },
         {
           "id": "CZVUGm6q",
@@ -51,6 +65,20 @@
           "updatedAt": "2026-11-03T02:19:42.361Z"
         },
         {
+          "id": "KpYEvuFh",
+          "author": "sunny",
+          "body": "Returned-work continuation under current InPR requested-changes flow: Continue SAME PR149 branch row-47-independent-review-gate head801ae8ffc1c2356e315bed70bb2e565de49d8c4f. Only remaining product correction is additive integration with landed main retaining Independent review plus Returned work and complementary retention/cleanup/generatedbrief rules; both earlier semantic findings are fixed. Supervisor-owned proposal model wording corrected to any eligible live-catalog model different from all authors, same provider allowed. Fresh Opus correction worker must present plan before changes, update samePRnormally, allfourleasedchecks, then fresh independentreview. Merge order149->147->146->145 stays; no other factoryPR merge before clearance.",
+          "createdAt": "2026-11-03T04:18:19.448Z",
+          "updatedAt": "2026-11-03T04:18:19.448Z"
+        },
+        {
+          "id": "NncAzCQc",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/149 at 801ae8ffc1c2356e315bed70bb2e565de49d8c4f by codex/gpt-6-astra: CHANGES REQUESTED. Reviewer mcp:0b367672-4758-4903-bb58-8f17c7c04fc7 is a fresh worker, independent of the verified original claude-opus-5-5 implementer b396dc5c and gpt-6.1-sol correction implementer 3fa520ee. Both previous findings are fixed in the published skills: generated context retains instructions/retry and appends one filled provenance section, and same-provider reviewers are allowed while effort/options do not change model identity. 1. Integration blocker at skills/rowbly-factory/SKILL.md:219-259: merging current main ceee1a727427d1525177449945237cfcb6ea4f1c conflicts between Independent review and the already-landed Returned work section. Integrate the same PR branch, retaining BOTH sections and complementary persistence/retention/brief/identity/hold rules, then run all four checks and obtain fresh exact-head independent review. I aborted the local merge without resolving it; integrated-tree validation is not claimed. 2. Supervisor-only configuration proposal at /tmp/row-47/proposed/ROWBLY.md:48-50 still requires asking whenever records name both Opus and Sol, despite another eligible model being available. Replace that bullet with: Review (In PR) uses a new worker whose model differs from every implementing model in the verified implementation records. The same provider is allowed; changing effort or options does not qualify. Choose an available eligible model from the live catalog; ask when provenance is unknown or no eligible model is available. Do not apply the older provider-pair restriction. This proposal correction belongs to the supervisor; workers must not edit .rowbly. Validation at the published head under the bounded shared lease: typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS, unchanged timeouts and no retries. Read-only CLI re-generation and assembly on the existing synthetic demo passed: all three Plugin sections, guide, instructions and Retry retained, exactly one filled provenance section appended. Synthetic identities are fixtures, not real attestations. The actual Story brief was complete with all six Plugin sections. All six GitHub checks are COMPLETED/SUCCESS; no formal review requests changes. All five PNG URLs returned HTTP 200 via curl, and review/merge/assembled-brief images were inspected. GitHub reports CONFLICTING/DIRTY. Review evidence: /tmp/row-47-astra-review on rook. No product or Board edits, commits, pushes, ready transition or merge. Preserve PR149 and row-47-independent-review-gate; configuration remains supervisor-only, retaining ROW57 step 2 and ROW48 step 5 and using /tmp/row-47-correction-evidence/proposed-in-pr-steps-3-4.md for ROW47 steps 3-4.",
+          "createdAt": "2026-11-03T04:00:47.853Z",
+          "updatedAt": "2026-11-03T04:00:47.853Z"
+        },
+        {
           "id": "Po5B7rT0",
           "author": "sunny",
           "body": "PLAN ACCEPTED. Preserve software-factory brief --instructions-file and --retry-file generated context; append one explicit filled Implementation records section with ALL verified authoring records and selected reviewer worker/thread/provider/model, rather than relying on unused template placeholders. Verify the actual assembled review brief on a throwaway DataRoot; missing/unknown provenance remains an escalation, not assumed. New worker and model different from EVERY implementing model, same provider allowed; option/effort differences do not count. Preserve records beforeStagechange, head-pinned approval invalidation and --match-head-commit. Integrate own existingPR with currentmain without dropping complementary wait/return/metadata/hold/brief rules. Configuration proposals outside .rowbly only, ownedreviewsteps3-4/47 vswait2/57 vsreturn5/48. Allfourchecks/relevant evidence, normal push to SAME PR149, answer findings. No branchprotection changes or merge.",
@@ -63,6 +91,20 @@
           "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/149 original branch row-47-independent-review-gate verified OPEN at 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
           "createdAt": "2026-11-03T03:11:45.181Z",
           "updatedAt": "2026-11-03T03:11:45.181Z"
+        },
+        {
+          "id": "ZISWaS2X",
+          "author": "sunny",
+          "body": "Plan ACCEPTED for scoped additive main integration of SAME PR149 branch row-47-independent-review-gate at verified 801ae8ffc1c2356e315bed70bb2e565de49d8c4f. Keep Returned work followed by Independent review, each once, preserving all complementary main rules and earlier fixes. Use isolated worktree, normal fast-forward push, all four checks once under bounded lease, actual generated brief assembly on throwaway Data Root; retain prior evidence and numbered responses. No product expansion or .rowbly edits. The selectedReviewer section appended to this In Progress brief was supervisor assembly error: 37cf3370 is this correction worker, not an independent reviewer. Ignore that section for this Run; omit it outside independent review. A fresh reviewer after this correction must use a model different from every actual implementer (Opus and Sol); same provider allowed, options do not count as model difference. Later factory PRs stay held behind149. Supervisor-owned proposal changes remain outside worker scope.",
+          "createdAt": "2026-11-03T04:26:05.636Z",
+          "updatedAt": "2026-11-03T04:26:05.636Z"
+        },
+        {
+          "id": "bZVOcSfp",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history original Opus workerb396dc5c plus Sol correction3fa520ee. Current implementing worker mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/149. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
+          "createdAt": "2026-11-03T03:35:15.718Z",
+          "updatedAt": "2026-11-03T03:35:15.718Z"
         },
         {
           "id": "jlUWqpZ9",

@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Make linked stories a fuzzy searchable field.",
   "description": "When creating or editing a story, linked stories should be fuzzy searchable, just like story search",
-  "stage": "in-progress",
-  "rank": "aA",
+  "stage": "done",
+  "rank": "b0A",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T03:11:14.841Z",
+  "updatedAt": "2026-11-03T04:16:05.526Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,24 +26,42 @@
         }
       ]
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:03:09.200Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "47L1lbri",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history actual implementation Sol worker25903f5a; prior Opus only created clean worktree, no product edits. Current implementing worker mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/152. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
+          "createdAt": "2026-11-03T03:35:11.631Z",
+          "updatedAt": "2026-11-03T03:35:11.631Z"
+        },
+        {
+          "id": "6qtmOOGM",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/152 adds fuzzy linked Story search by Key and name across create, edit and add-link forms, preserving finder ranking, draft edits and relationship restrictions. Manual keyboard and persisted relationship checks passed. Typecheck, lint, unit tests (78) and CLI tests (20) passed. Six screenshots uploaded and verified. Head d4861bedded72511f07823ddf4d0338e0418c3b8; CI running and supervisor review pending.",
+          "createdAt": "2026-11-03T03:35:14.224Z",
+          "updatedAt": "2026-11-03T03:35:14.224Z"
+        },
+        {
+          "id": "GT0NxtPn",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/152",
+          "createdAt": "2026-11-03T04:16:04.835Z",
+          "updatedAt": "2026-11-03T04:16:04.835Z"
+        },
         {
           "id": "XJfqHnPE",
           "author": "sunny",
           "body": "PLAN ACCEPTED. Search linked Story choices by Key and name, preserving existing finder ranking and ordinary select behavior. Shared fuzzy helper plus opt-in generic searchable field is appropriate; keep selected Story Key separate from query and preserve draft edits. Cover create/edit and separate add-link form with same Board/self-link restrictions. Ensure Enter chooses the candidate without accidentally submitting the whole form; Escape restores/cancels query appropriately, clear/no-results states intentional, key capture/footer agree. Follow TUI design tokens/one-component-per-file/barrels. New/changed Plugin API docs examples must update compiled fixture regions in same change; no new tests by default, extend required existing doc/architecture contracts only. Manual fuzzy/no-results/selection/draft/persistedrelationship checks, agentic-tui screenshots, allfourchecks, draft PR/normal push, no .rowbly changes. Keep scope to linked Story search, not unrelated Form redesign.",
           "createdAt": "2026-11-03T03:11:14.841Z",
           "updatedAt": "2026-11-03T03:11:14.841Z"
+        },
+        {
+          "id": "ecFk6c0K",
+          "author": "sunny",
+          "body": "Independent In PR review (Opus 5.5 high; different model from GPT Sol implementer 25903f5a): APPROVED exact head d4861bedded72511f07823ddf4d0338e0418c3b8 (https://github.com/sgolovine/rowbly/pull/152#issuecomment-6595010584). On that head merged locally with current main: typecheck, lint, unit 78/78 and CLI 20/20 passed. GitHub run 41572203164 on the same head: all six checks passed; mergeable and clean; no reviews requested changes; six screenshot URLs returned 200. Manually checked the built TUI: fuzzy search by Key and name, no results, Ctrl+L clear, Enter chooses without saving the form, Escape keeps the prior choice and draft, current Story left out, same-Board choices, and links saved from create, edit and add-link. Four suggestions, none blocking: counter clipped at 80x20, enter hint shown with no matches, placement of the api.md note, and the picker hides the Story window instead of stacking on it.",
+          "createdAt": "2026-11-03T04:16:04.165Z",
+          "updatedAt": "2026-11-03T04:16:04.165Z"
         },
         {
           "id": "ix5ItIFN",

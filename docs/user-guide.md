@@ -715,6 +715,13 @@ when it cannot tell who wrote the work. An approval holds only for the commit it
 names. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
 until you release it. It runs until you stop it.
 
+After a verified PR merge and worker completion, the supervisor follows the factory skill's
+completion workflow on the resource-owning machine. Its cleanup helper defaults to dry run and
+requires exact PR/resource ownership, fresh harness inactivity and an exclusive resource lease.
+It retains uncertain resources, remote refs and every evidence branch. Repository automatic branch
+deletion remains a proposal requiring approval; no setting changes happen automatically. See
+[factory completion resources](development/README.md#factory-completion-resources).
+
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
 `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.
@@ -820,9 +827,17 @@ the Data Root. Edit wins over delete, including edited descendants. Distinct con
 retain both records and their scoped files with source-qualified key remapping; exact identical
 additions coalesce. Configuration Cascade levels stay separate. Referenced definitions can be
 restored, incompatible field types split and constraints relaxed to retain valid data; original
-values and repair decisions remain in the evidence. Supported Plugin formats reconcile their own
-references and files, including while the Plugin is Off. Unknown, invalid or unsupported data is
-kept opaque; an unsafe result stops the attempt rather than discarding it.
+values and repair decisions remain in the evidence. Evidence is written only for such a decision: a
+Board or Story that is new on one side merges as an addition, without evidence. Supported Plugin
+formats reconcile their own references and files, including while the Plugin is Off. Unknown,
+invalid or unsupported data is kept opaque; an unsafe result stops the attempt rather than
+discarding it.
+
+Evidence files are audit history. Rowbly never edits, expires or prunes them. To remove one, first
+check that the merge commit that added it is on the upstream, review its decisions and obtain the
+user's explicit approval. Record the path, adding commit (`git log --diff-filter=A -- <path>`), review
+and approval in the ordinary upstream commit that removes the file. Never rewrite history to
+remove it; `git show <commit>:<path>` still reads it afterwards.
 
 Repeated Task numbers or Comment ids within a recognized current-format Story bag stop synchronization
 before local publication or push (`CONFLICT`, exit 4), even in BASE, while the owner is Off, or beside
@@ -921,9 +936,11 @@ The header does not show the Board name (the Boards sidebar marks the open Board
 
 When the TUI starts, Rowbly asks npm for its latest release in the background; commands never do. If a newer release is out, a row above the footer says so, for example `Rowbly 0.12.0 is available, update with npm i -g rowbly` (`Rowbly 0.12.0: npm i -g rowbly` on a narrow terminal), until you quit. Run that command to update. Startup and quitting never wait for the check: offline, a registry error or no answer within 3 seconds shows nothing. When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`, with `HTTPS_PROXY`), Rowbly skips the check, because Node cannot cancel a request waiting on that proxy. Set `ROWBLY_NO_UPDATE_CHECK=1` to turn the check off.
 
-`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
+`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board.
 
-`tab` moves to the next field in the current form; `shift+tab` switches to the next tab (wrapping to Details after the last tab). `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing uses the same window and navigation, with existing Tasks, Story Specs, linked Board Specs and Links loaded as drafts. Changes across Details and all tabs save together in one operation; cancellation saves none. Unchanged or unavailable Plugin Data stays unchanged. Existing Tasks keep their numbers and creation dates; new Tasks receive new numbers. If another Rowbly operation changes Tasks, Story Spec text or files, Board Spec links or Links after they loaded, saving a changed draft for that data rejects the whole edit and retains all drafts with a conflict error. Close and reopen the editor to load the latest values before applying those edits again. Unchanged tabs do not block unrelated edits.
+In New Story and Edit Story, focus the Story field and type or press Enter to search by Story Key or name with the same fuzzy ranking as Find Stories. Use ↑/↓ and Enter to choose; this does not save the Story or finish the draft. Escape cancels the search and keeps the prior choice; Ctrl+L clears the query and shows all eligible Stories. No matches change nothing. The current Story is excluded when editing. The separate new-link form uses the same search. Comments are added after creation.
+
+`tab` moves to the next field in the current form; `shift+tab` switches to the next tab (wrapping to Details after the last tab). `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields, except Enter opens search on a linked Story field. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. After choosing a linked Story, Tab leaves its field; Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing uses the same window and navigation, with existing Tasks, Story Specs, linked Board Specs and Links loaded as drafts. Changes across Details and all tabs save together in one operation; cancellation saves none. Unchanged or unavailable Plugin Data stays unchanged. Existing Tasks keep their numbers and creation dates; new Tasks receive new numbers. If another Rowbly operation changes Tasks, Story Spec text or files, Board Spec links or Links after they loaded, saving a changed draft for that data rejects the whole edit and retains all drafts with a conflict error. Close and reopen the editor to load the latest values before applying those edits again. Unchanged tabs do not block unrelated edits.
 
 After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
 

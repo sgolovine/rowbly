@@ -1,18 +1,18 @@
 {
   "version": 1,
   "run": {
-    "stage": "in-progress",
+    "stage": "in-pr",
     "attempt": 1,
-    "startedAt": "2026-11-03T03:15:47.160Z"
+    "startedAt": "2026-11-03T04:08:46.321Z"
   },
   "identity": {
-    "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
+    "worker": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
+    "threadId": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
     "verification": {
-      "source": "/home/sgolovine/.rowbly-factory/receipts/9465b3903c415ecb604602a52092b148.json",
-      "verifiedAt": "2026-11-03T03:15:47.974Z",
+      "source": "SSH T3 start/show verified explicit new bound review worktree, catalog model provider defaults no options requested, full-access reservation; /tmp/rowbly-factory-session/ROW-50-verified-new.json",
+      "verifiedAt": "2026-11-03T04:08:47.086Z",
       "by": "sunny"
     }
   }

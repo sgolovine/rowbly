@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Add Stage Run heartbeats and stale-worker visibility",
   "description": "Factory review recommendation 4 of 20.\n\n## Context\n\nStage Runs have no last-seen time, so the supervisor hashes worktrees to infer activity.\n\n## Acceptance criteria\n\n- Provide a supported heartbeat/touch operation and expose last-seen time and age in Stage Run output.\n- Have the supervisor refresh liveness from verified worker activity and identify stale Runs.\n- Define restart and stale-worker handling while preserving ADR-0040’s lifecycle intent.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "aD",
+  "stage": "in-pr",
+  "rank": "a8",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T03:22:50.711Z",
+  "updatedAt": "2026-11-03T04:08:47.087Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:15:47.160Z"
-      }
     },
     "comments": {
       "comments": [
@@ -35,6 +25,13 @@
           "body": "Terminal handoff received; PR146 registered in supervisor thread. Your fenced block omits the required rowbly prefix on both lines. Please resend the same own-Story Comment+move with full rowbly prefixes and FACTORY-DONE ROW-50; no implementation changes needed. Keep current Run/branch/PR and do not start another worker. Proposed guide change held until independent review/merge.",
           "createdAt": "2026-11-03T02:26:08.358Z",
           "updatedAt": "2026-11-03T02:26:08.358Z"
+        },
+        {
+          "id": "Bh6z1bmR",
+          "author": "sunny",
+          "body": "Implementation record: Sol correction worker mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad rook gpt-6.1-sol, SAME branch factory/row-50 PR146 head2d47c9084c0a04b32339f4eae76eff59573149f0. Original author Opus5.5; both actualmodels must be excluded for new reviewer. Allfour localchecks unit78 CLI20 pass and fullidentity regression/bytes preserved; newexact-head review required.",
+          "createdAt": "2026-11-03T04:00:38.898Z",
+          "updatedAt": "2026-11-03T04:00:38.898Z"
         },
         {
           "id": "OSpg5ra9",
@@ -86,6 +83,13 @@
           "updatedAt": "2026-11-03T03:09:24.813Z"
         },
         {
+          "id": "wQqYskAU",
+          "author": "sunny",
+          "body": "PR146 correction complete: https://github.com/sgolovine/rowbly/pull/146 at 2d47c9084c0a04b32339f4eae76eff59573149f0. Complete identity preservation fixed with byte-preservation regression; current main integrated additively. Typecheck, lint, unit78 and CLI20 pass; suite remains98; all six CI checks pass. Both findings answered with fresh screenshots and evidence: https://github.com/sgolovine/rowbly/pull/146#issuecomment-6594799983. Awaiting independent review; guide proposal remains outside the Data Root.",
+          "createdAt": "2026-11-03T04:00:41.545Z",
+          "updatedAt": "2026-11-03T04:00:41.545Z"
+        },
+        {
           "id": "y1ko8HYh",
           "author": "sunny",
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/146. Adds 'rowbly software-factory run touch', which records verified worker activity (a worker message or harness event, never polling or status) as the current Stage Run's heartbeat in the shared Run details. It refuses with CONFLICT on a changed Run, a missing or mismatched attached worker, or a Run that is not running, and with DATA_INTEGRITY on unreadable details. runs and wait gain liveness (last seen, age, stale) and --stale-after (default 15 minutes). The digest leaves out the age, so it changes once when a Run becomes stale and never just because time passes. The Stage Run tab gains a Last seen row. ADR-0048 (amends ADR-0040) says staleness only asks the supervisor to check the worker. Docs, the factory skill and the reference copies are updated. typecheck, lint, test:unit (78) and test:cli (20) pass; the suite stays at 98 tests; agentic-tui screenshots are linked from the PR.",
@@ -93,6 +97,16 @@
           "updatedAt": "2026-11-03T02:36:05.070Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
+        "by": "sunny",
+        "startedAt": "2026-11-03T04:08:46.321Z"
+      }
     }
   }
 }

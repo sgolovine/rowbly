@@ -68,11 +68,35 @@ Git Plugin is off.
   fails. Only the TUI's **Sync** (`S`) works with it Off, and you work in the CLI. If it is Off,
   turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
   --automatic-merge-resolution on`); otherwise ask the user before you start.
+- **Why you sync.** You are the Board's only writer: workers report commands and never commit
+  `.rowbly/`. `rowbly git sync` publishes your Board changes, so a worker sees them when it merges
+  the upstream, and brings in what merged upstream meanwhile, such as pull requests.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
   after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
   fails, retry it once; then tell the user and send nothing that relies on the change.
+- **One sync per event.** Make every Board change of one event first (a start and its attach, one
+  applied block, a finish or fail with its block), then sync once, before the GO or reply that relies
+  on them. A change nothing waits for, such as a Comment recording an answer you already sent, goes
+  out with the next sync. Sync once more when you stop. Never hold back a sync that a GO, a reply or
+  another machine's start relies on. Keep any earlier publication barrier required by `ROWBLY.md`
+  or the user.
+- Batching sync reduces publication attempts, not the per-change Automatic Commits. Keep Automatic
+  Commits frequency `change` when required by policy, and keep every force-change check.
+- **Evidence or a conflict.** When `git sync` reports evidence paths or a Rowbly conflict, keep every
+  side and every evidence file. Find the commits involved and what wrote them (a merged pull request,
+  older data or another writer), and tell the user about any conflict nobody has resolved.
 - Never run `git rebase`, `git reset` or a force push yourself.
+
+## Evidence retention
+
+Merge evidence (`plugins/git/merge-evidence/` in the Data Root) and the screenshots or other files a
+pull request links are audit evidence. Keep them after the Story is Done, and leave them out of any
+cleanup. Never edit, prune or delete them yourself: removing one is the user's decision, after its
+merge commit is upstream and its decisions or links were reviewed, and linked images must be hosted
+elsewhere first. For merge evidence, record its path, adding commit, review and approval in the
+ordinary upstream removal commit; preserve history. For linked images, update and verify every link
+before an approved removal. `ROWBLY.md` says where this repository keeps its screenshots.
 
 ## Before you start
 
@@ -174,7 +198,10 @@ Report each start, retry, finish, failure, question and Board change to the user
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
    attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
    identity is refused. Preserve another section's values when adding current-Run metadata.
-5. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+5. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
+   [resource record](references/cleanup.md) outside the checkout. Add private daemon directories
+   as workers report them; complete the merged PR/head/base fields before cleanup.
+   Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
    and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
 6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
    reconcile the receipt and actual harness state first; do not retry, clear or start another worker
@@ -216,6 +243,16 @@ discarding earlier work.
    Only then run `run start <KEY> --worker <name> --retry`; launch only on success, using the
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
+
+## Returned work
+
+A worker in a later Stage may move a Story back to an earlier one, for example to repair a pull
+request. That is a new visit, not a retry: finish the later Stage Run before the move, and start a
+new worker for the earlier Stage as for any Story. When the Story's Comments record the branch and
+PR to repair, check that the PR is still open and its branch and head commit match the record, and
+put them in the brief's other instructions with the failure to fix: "Continue" when the Stage
+Prompt or `ROWBLY.md` says returned work is continued, otherwise as a question for the user. On a
+mismatch, report it and ask; never start again or discard the recorded work.
 
 ## Independent review
 
@@ -274,6 +311,12 @@ A worker that stops with no final marker, or has written nothing for a long time
 ask it for its state. If it is gone, run `run fail` with what you know.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
+
+After a PR is verified merged and its worker is finished, follow
+[completion cleanup](references/cleanup.md) on the owning machine. This is a supervisor completion
+step, not a new Stage Prompt or a sweep of historical Stories. Retain explicit resource ownership
+at launch; cleanup defaults to dry run, requires fresh harness inactivity and an exclusive resource
+lease, and retains remote refs and all evidence branches. Unknown or active resources stay.
 
 ## Apply a worker's commands
 

@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-03T03:16:45.182Z"
+    "startedAt": "2026-11-03T04:22:40.198Z"
   },
   "identity": {
-    "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+    "worker": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+    "threadId": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
     "verification": {
-      "source": "SSH T3 start/show verified explicit new bound review worktree, Sol provider defaults no options requested, full-access reservation; /tmp/rowbly-factory-session/ROW-47-verified-new.json",
-      "verifiedAt": "2026-11-03T03:16:45.959Z",
+      "source": "/home/sgolovine/.rowbly-factory/receipts/814e8a3e9df689b296a15a9e7a8e3de0.json",
+      "verifiedAt": "2026-11-03T04:22:40.958Z",
       "by": "sunny"
     }
   }

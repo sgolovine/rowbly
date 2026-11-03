@@ -4,21 +4,28 @@
   "boardId": "rowbly",
   "name": "Reduce factory Git noise and define evidence retention",
   "description": "Factory review recommendation 19 of 20.\n\n## Context\n\nThe review found 181 Rowbly data commits in the last 300 commits and 4.8 MB of tracked merge-evidence JSON.\n\n## Acceptance criteria\n\n- Define retention and cleanup rules for merge evidence while preserving evidence needed to audit outcomes.\n- Batch coherent supervisor-event changes where practical without delaying synchronization required by workers.\n- Document the role of Data Root synchronization in the single-writer setup and remove unnecessary churn.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "b09",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T03:25:32.599Z",
+  "updatedAt": "2026-11-03T04:06:30.443Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
     },
     "comments": {
       "comments": [
+        {
+          "id": "603n0LB0",
+          "author": "sunny",
+          "body": "Supervisor applied the exact Astra-reviewed /tmp/row65-reviewed-supervisor.patch to .rowbly/ROWBLY.md: coherent-event sync barriers, publish-before-GO/dependent-reply, frequency change retained, conflict provenance investigation, and explicit evidence/pr-assets retention. A1 remains held and no evidence/settings/resources removed. Doctor clean; root typecheck, lint, unit and CLI checks all passed on the guide change. This is the authorized supervisor-only policy application after PR150 merge.",
+          "createdAt": "2026-11-03T04:06:30.442Z",
+          "updatedAt": "2026-11-03T04:06:30.442Z"
+        },
         {
           "id": "8lxZPsxM",
           "author": "sunny",
@@ -48,6 +55,13 @@
           "updatedAt": "2026-11-03T02:19:46.023Z"
         },
         {
+          "id": "cCrbrX2l",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/150 at 346f21eaf590cabf11c101fc7b7e62f4167dd323. Independent Astra review approved exact head 96e6bc5e7c365a183a3134115423ef762cc61e86; no actionable findings. Typecheck, lint, unit 78 and CLI 20 passed; negative control failed as expected; screenshot HTTP 200. Review and exact supervisor policy patch: https://github.com/sgolovine/rowbly/pull/150#pullrequestreview-5746923795 . Supervisor must apply the policy patch. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41572668314 . A1 remains held; evidence and pr-assets preserved.",
+          "createdAt": "2026-11-03T04:00:37.448Z",
+          "updatedAt": "2026-11-03T04:00:37.448Z"
+        },
+        {
           "id": "ehcatK42",
           "author": "sunny",
           "body": "User explicitly authorized Continue existing work for retry2 on fresh Sol (Claude session limit). Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-65 (thinkpad), branch factory/row-65, HEAD7ee3b17, modified A2/test/docs/ADR0050/skill files preserved; regression failed without fix and passed with it, full checks not yet run; A1 remains unauthorized. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-65-failed-attempt1-context.json. Prior failed Run: {\"stage\": \"in-progress\", \"status\": \"failed\", \"attempt\": 1, \"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"by\": \"sunny\", \"startedAt\": \"2026-11-03T02:13:11.585Z\", \"finishedAt\": \"2026-11-03T02:36:00.540Z\", \"reason\": \"Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry.\"}. Prior Run metadata preserved: {\"version\": 1, \"run\": {\"stage\": \"in-progress\", \"attempt\": 1, \"startedAt\": \"2026-11-03T02:13:11.585Z\"}, \"identity\": {\"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"machine\": \"thinkpad\", \"harness\": \"t3\", \"threadId\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"verification\": {\"source\": \"Local T3 launch/read/configuration verified ec258031 Opus5.5 high/full-access/bound factory-row-65 reservation\", \"verifiedAt\": \"2026-11-03T02:13:12.380Z\", \"by\": \"sunny\"}}}. Exact head branch factory/row-65 verified: no PR. Continue this work, not restart; preserve partial files. Authority: user selected Continue existing work (Recommended) in supervisor thread. ROW65 A1 ADR change remains held; this answer only authorizes continuation.",
@@ -62,16 +76,6 @@
           "updatedAt": "2026-11-03T03:22:55.460Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:25:31.829Z"
-      }
     }
   }
 }

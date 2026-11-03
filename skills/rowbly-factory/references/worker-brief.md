@@ -43,6 +43,13 @@ they take precedence over the Stage Prompt and over any skill it names.
    `FACTORY-FAILED <KEY> <one-line reason>` when you cannot do it. Put the last Board changes, such as
    the move the Stage Prompt asks for, in a block just above it.
 
+5. **Task resources.** Use a fresh private `AGENTIC_TUI_STATE_DIR` outside the checkout for new
+   agentic-tui work. Report its exact canonical path to the supervisor before starting it, so the
+   supervisor can record exclusive task ownership. A session namespace alone does not isolate the
+   daemon. Close your own sessions and stop that scoped daemon before returning. Report leftovers
+   with exact identity; never adopt or stop existing/shared daemons or delete worktrees, branches
+   or evidence at completion.
+
 ## Story
 
 <Story Key, name, Stage, Board, description; every Story Spec; Tasks; relevant Comments; Epic; Story links>
