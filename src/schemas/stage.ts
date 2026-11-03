@@ -35,7 +35,7 @@ export const StageListSchema = z
 
 /** Used when no Configuration Cascade level defines `stages`; also written by `init`. */
 export const DEFAULT_STAGES: readonly StageConfig[] = Object.freeze([
-  { key: 'todo', name: 'Todo' },
+  { key: 'todo', name: 'TODO' },
   { key: 'in-progress', name: 'In Progress' },
 ]);
 

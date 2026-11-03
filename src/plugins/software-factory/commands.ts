@@ -5,6 +5,7 @@ import { holdStory, holdText, releaseStory } from './holds';
 import { livenessText, parseStaleAfter } from './liveness';
 import { applyBlock, applyTable } from './reportedCommands';
 import { ModelSelection } from './runMetadata';
+import { type SetupResult, setupFactory } from './setup';
 import {
   boardOverview,
   type Level,
@@ -156,6 +157,24 @@ function promptLine(stage: string, prompt: StagePrompt): string {
   return `Stage Prompt ${stage}: ${prompt.enabled ? 'on' : prompt.configured ? 'on, but its file is missing' : 'off'}${prompt.path ? ` (${prompt.path})` : ''}`;
 }
 
+function setupText(result: SetupResult): string {
+  const stages = renderTable(
+    ['Stage', 'Name', 'Setup'],
+    result.stages.map((s) => [s.key, s.name, s.outcome === 'custom' ? 'present, its name kept' : s.outcome]),
+  );
+  const prompts = renderTable(
+    ['Stage', 'Stage Prompt', 'Setup', 'Source', 'Path'],
+    result.prompts.map((p) => [
+      p.key,
+      p.enabled ? 'on' : 'off',
+      p.reason ? `skipped: ${p.reason}` : p.outcome,
+      p.source ?? '—',
+      p.path ?? '—',
+    ]),
+  );
+  return `Software factory setup of Board ${result.board}\n\n${stages}\n\n${prompts}`;
+}
+
 export const commands: PluginCommands = (group, cli) => {
   group
     .command('stages')
@@ -172,6 +191,18 @@ export const commands: PluginCommands = (group, cli) => {
               ? await levelOverview(plugin, 'board', await resolveBoard(opts.board))
               : await boardOverview(plugin, await resolveBoard(opts.board));
         print(overview, table);
+      }),
+    );
+
+  group
+    .command('setup')
+    .description(
+      'Give a Board the factory Stages (TODO, In Progress, In Review) and default Stage Prompts it does not have',
+    )
+    .option('--board <id>', 'the Board')
+    .action((opts: { board?: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
+        print(await setupFactory(plugin, await resolveBoard(opts.board)), setupText);
       }),
     );
 
