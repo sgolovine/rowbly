@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Reduce factory Git noise and define evidence retention",
   "description": "Factory review recommendation 19 of 20.\n\n## Context\n\nThe review found 181 Rowbly data commits in the last 300 commits and 4.8 MB of tracked merge-evidence JSON.\n\n## Acceptance criteria\n\n- Define retention and cleanup rules for merge evidence while preserving evidence needed to audit outcomes.\n- Batch coherent supervisor-event changes where practical without delaying synchronization required by workers.\n- Document the role of Data Root synchronization in the single-writer setup and remove unnecessary churn.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "b09",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T04:00:37.449Z",
+  "updatedAt": "2026-11-03T04:00:38.139Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:25:31.829Z",
-        "finishedAt": "2026-11-03T04:00:36.190Z"
-      }
     },
     "comments": {
       "comments": [
