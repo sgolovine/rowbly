@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T03:09:30.840Z",
+  "updatedAt": "2026-11-03T03:35:19.979Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -63,6 +63,13 @@
           "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
           "createdAt": "2026-11-03T02:19:44.435Z",
           "updatedAt": "2026-11-03T02:19:44.435Z"
+        },
+        {
+          "id": "vFqBfIYu",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history initial Opus partial script71348b9f plus Sol continuationc4d7a92b. Current implementing worker mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d on thinkpad model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/151. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
+          "createdAt": "2026-11-03T03:35:19.978Z",
+          "updatedAt": "2026-11-03T03:35:19.978Z"
         }
       ]
     }
