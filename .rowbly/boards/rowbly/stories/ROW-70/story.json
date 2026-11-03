@@ -27,18 +27,18 @@
     "comments": {
       "comments": [
         {
-          "id": "TZLaJ7wR",
-          "author": "sunny",
-          "body": "Research and proposed plan awaiting supervisor acceptance. Isolated worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story on factory/row-70 from origin/main d44db09e72b243757264a6504c5e5360a97ad571. Story records contain creation timestamps and current Stage but no Done-transition history. GitHub Plugin stores one current PR URL per Story and its fixed live read has no creation date or commits. Git has no Board-to-code-commit association. Proposed scope is a shared read-only Board Stats page and CLI aggregation with Plugin-owned contributions, explicit unavailable sources, matching documentation, existing-test extensions, screenshots and all four checks. No product implementation until metric semantics and plan are explicitly accepted.",
-          "createdAt": "2026-11-03T16:23:06.547Z",
-          "updatedAt": "2026-11-03T16:23:06.547Z"
-        },
-        {
           "id": "D8RBs1Ze",
           "author": "sunny",
           "body": "User metric definitions resolved explicitly: current records only, existing Stories and Stories currently in Stage Category done; all-time window; unique PRs currently linked to this Board Stories; unique commits in those linked PRs. Exclude deleted Story history, historical Done transitions, unlinked historical PRs and tracker/repository-wide commit counts. Unknown or unavailable sources must remain distinct from zero. Worker must refine the read-only Board Stats page/CLI and Plugin-owned contribution plan around these definitions, then await supervisor implementation acceptance. No implementation authorized by these metric answers alone.",
           "createdAt": "2026-11-03T16:47:41.123Z",
           "updatedAt": "2026-11-03T16:47:41.123Z"
+        },
+        {
+          "id": "TZLaJ7wR",
+          "author": "sunny",
+          "body": "Research and proposed plan awaiting supervisor acceptance. Isolated worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story on factory/row-70 from origin/main d44db09e72b243757264a6504c5e5360a97ad571. Story records contain creation timestamps and current Stage but no Done-transition history. GitHub Plugin stores one current PR URL per Story and its fixed live read has no creation date or commits. Git has no Board-to-code-commit association. Proposed scope is a shared read-only Board Stats page and CLI aggregation with Plugin-owned contributions, explicit unavailable sources, matching documentation, existing-test extensions, screenshots and all four checks. No product implementation until metric semantics and plan are explicitly accepted.",
+          "createdAt": "2026-11-03T16:23:06.547Z",
+          "updatedAt": "2026-11-03T16:23:06.547Z"
         }
       ]
     }
