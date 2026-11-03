@@ -27,6 +27,13 @@
           "updatedAt": "2026-11-03T02:37:46.328Z"
         },
         {
+          "id": "3IrpaqVJ",
+          "author": "sunny",
+          "body": "Supervisor rollout complete after PR154 merge a79ebee52aa923178444f34675305381811d5d06: final posted manifest and helper/reference/prompt/guide proposal hashes verified against reviewed artifacts. Applied reviewed TODO Stage Prompt at Board level, replaced only the combined Backlog/TODO Stages bullet in ROWBLY.md, enabled TODO and published all configuration at 6cacc3aafe32a50a8c71ca17a7f25aed856faf2d. Fresh effective prompt and upstream files verified, normalized text exactly matches reviewed prompt; stored prompt SHA256 ea6969626adeacc03748616e233763392529db086e400bac268085e7a415c308 (CLI trailing-newline normalization). No existing TODO Stories were waiting; no additional worker starts required. Advisory lifecycle keeps Stories in TODO, never authorizes implementation and leaves finished Runs alone. GitHub remains an explicit unknown input-contract gap even when off; readiness must report incomplete and cannot skip on that gap. All acceptance work is now complete; resources and linked evidence retained.",
+          "createdAt": "2026-11-03T16:51:59.448Z",
+          "updatedAt": "2026-11-03T16:51:59.448Z"
+        },
+        {
           "id": "4Lfx5sbH",
           "author": "sunny",
           "body": "Returned to In Progress: branch factory/row-62, PR https://github.com/sgolovine/rowbly/pull/154, head 0c5f219cd71d4a6638833ff0df394d4b46a276ac. Finding 1: reconcile the kept workflow regression with the current Plugin catalog while preserving unknown-input gaps. Finding 2: prevent a Story edit during collection from producing false equality by checking the original reviewed input and adding a deterministic regression. Review: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609320682. Continue the existing PR; TODO activation remains pending.",
@@ -125,6 +132,13 @@
           "updatedAt": "2026-11-03T15:55:58.195Z"
         },
         {
+          "id": "arO93UKH",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/154 at 8a364c93e60130f73b0ef26c70ac2f53a0833262. Merge commit a79ebee52aa923178444f34675305381811d5d06 at 2026-11-03T16:47:52Z. Exact-head independent approval, clean mergeability and all six successful checks verified before merging. Typecheck, lint, 79 unit and 21 CLI tests passed previously; no reruns. Single main CI snapshot did not yet list the merge commit; preceding head 5306485d CI was running and three earlier runs succeeded. Final rollout artifacts and hashes verified at https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609698759. TODO activation remains supervisor-owned and must be published before Story completion; GitHub remains an unknown readiness input contract. Review worktree and evidence retained; no task daemon, watcher or sessions remain.",
+          "createdAt": "2026-11-03T16:51:57.522Z",
+          "updatedAt": "2026-11-03T16:51:57.522Z"
+        },
+        {
           "id": "dzICUJh4",
           "author": "sunny",
           "body": "Retry 2 revised plan submitted for acceptance. Continued factory/row-62 through origin/main c20c2528187b7941c6214b3b0d9a489572dd9106. Complete plan, TODO prompt, ROWBLY.md proposal and executable method-2 Node fingerprint candidate are preserved under /tmp/row62/retry2. Candidate passed 140 throwaway research scenarios; real ROW-62 collection, syntax check and doctor passed. Comparison requires complete known inputs and a verified digest; gaps never produce overall. No product edits or worker Board changes. Implementation and supervisor-owned post-merge TODO activation remain unaccepted.",
@@ -172,20 +186,6 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
-        },
-        {
-          "id": "arO93UKH",
-          "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/154 at 8a364c93e60130f73b0ef26c70ac2f53a0833262. Merge commit a79ebee52aa923178444f34675305381811d5d06 at 2026-11-03T16:47:52Z. Exact-head independent approval, clean mergeability and all six successful checks verified before merging. Typecheck, lint, 79 unit and 21 CLI tests passed previously; no reruns. Single main CI snapshot did not yet list the merge commit; preceding head 5306485d CI was running and three earlier runs succeeded. Final rollout artifacts and hashes verified at https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609698759. TODO activation remains supervisor-owned and must be published before Story completion; GitHub remains an unknown readiness input contract. Review worktree and evidence retained; no task daemon, watcher or sessions remain.",
-          "createdAt": "2026-11-03T16:51:57.522Z",
-          "updatedAt": "2026-11-03T16:51:57.522Z"
-        },
-        {
-          "id": "3IrpaqVJ",
-          "author": "sunny",
-          "body": "Supervisor rollout complete after PR154 merge a79ebee52aa923178444f34675305381811d5d06: final posted manifest and helper/reference/prompt/guide proposal hashes verified against reviewed artifacts. Applied reviewed TODO Stage Prompt at Board level, replaced only the combined Backlog/TODO Stages bullet in ROWBLY.md, enabled TODO and published all configuration at 6cacc3aafe32a50a8c71ca17a7f25aed856faf2d. Fresh effective prompt and upstream files verified, normalized text exactly matches reviewed prompt; stored prompt SHA256 ea6969626adeacc03748616e233763392529db086e400bac268085e7a415c308 (CLI trailing-newline normalization). No existing TODO Stories were waiting; no additional worker starts required. Advisory lifecycle keeps Stories in TODO, never authorizes implementation and leaves finished Runs alone. GitHub remains an explicit unknown input-contract gap even when off; readiness must report incomplete and cannot skip on that gap. All acceptance work is now complete; resources and linked evidence retained.",
-          "createdAt": "2026-11-03T16:51:59.448Z",
-          "updatedAt": "2026-11-03T16:51:59.448Z"
         }
       ]
     }
