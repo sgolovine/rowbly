@@ -27,6 +27,13 @@
           "updatedAt": "2026-11-03T02:56:00.237Z"
         },
         {
+          "id": "SmdleixJ",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history original Sonnet5.5 worker241441f8 plus Sol correction4fdf3897. Current implementing worker mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847 on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/147. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ROW57 prior terminal cursor was seen but unapplied; current exact running Run verified, own terminal Comment absent, applying once now.",
+          "createdAt": "2026-11-03T03:35:07.501Z",
+          "updatedAt": "2026-11-03T03:35:07.501Z"
+        },
+        {
           "id": "cm2hGoNl",
           "author": "sunny",
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/147. Adds a \"Waiting for pull request checks\" section to the rowbly-factory skill (event-driven watch first, one bounded gh pr checks --watch as fallback, never model-turn polling), a worker-brief rule that workers return head SHA and pending checks instead of polling, and a user-guide note. No checks registered and timeouts count as waiting, not as a failed check. Proposed In PR step 2 and ROWBLY.md changes are in /tmp/row-57-proposals.md for supervisor review.",
@@ -60,13 +67,6 @@
           "body": "PLAN ACCEPTED. Implement the two correction findings exactly: independent diff review may start/finish while CI pending, yield only CI-dependent work; watch exit codes only wake, inspect all current-head actual conclusions before any merge. Keep failure/pending/no-registration/timeout/unreadable distinctions and cancelled/skipped/neutral/unknown terminal results require policy/decision. Preserve generated brief and complementary ROW47 review / ROW48 return ownership. Update only your outside-DataRoot config proposals. No screenshots/newtests/ADR for these text corrections. Four checks, normal push to SAME PR147, exact head, answer findings. Do not merge or write .rowbly.",
           "createdAt": "2026-11-03T03:11:04.153Z",
           "updatedAt": "2026-11-03T03:11:04.153Z"
-        },
-        {
-          "id": "SmdleixJ",
-          "author": "sunny",
-          "body": "Implementation record before Stage change: verified authoring history original Sonnet5.5 worker241441f8 plus Sol correction4fdf3897. Current implementing worker mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847 on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/147. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ROW57 prior terminal cursor was seen but unapplied; current exact running Run verified, own terminal Comment absent, applying once now.",
-          "createdAt": "2026-11-03T03:35:07.501Z",
-          "updatedAt": "2026-11-03T03:35:07.501Z"
         },
         {
           "id": "yL8A52YE",
