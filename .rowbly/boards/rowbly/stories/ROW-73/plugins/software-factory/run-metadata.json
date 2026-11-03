@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-03T16:44:55.274Z"
   },
+  "identity": {
+    "worker": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
+    "verification": {
+      "source": "/home/sgolovine/.rowbly-factory/receipts/3d1b46742fdd3385207209102686e5e5.json",
+      "verifiedAt": "2026-11-03T16:44:56.092Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "claudeAgent",
     "model": "claude-opus-5-5",
