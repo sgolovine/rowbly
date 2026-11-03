@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:51:56.134Z",
+  "updatedAt": "2026-11-03T16:51:57.523Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:45106024-da79-4b81-8623-0eeb89f35368",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:39:26.080Z",
+        "finishedAt": "2026-11-03T16:51:56.133Z"
+      }
     },
     "comments": {
       "comments": [
@@ -172,19 +183,15 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
+        },
+        {
+          "id": "arO93UKH",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/154 at 8a364c93e60130f73b0ef26c70ac2f53a0833262. Merge commit a79ebee52aa923178444f34675305381811d5d06 at 2026-11-03T16:47:52Z. Exact-head independent approval, clean mergeability and all six successful checks verified before merging. Typecheck, lint, 79 unit and 21 CLI tests passed previously; no reruns. Single main CI snapshot did not yet list the merge commit; preceding head 5306485d CI was running and three earlier runs succeeded. Final rollout artifacts and hashes verified at https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609698759. TODO activation remains supervisor-owned and must be published before Story completion; GitHub remains an unknown readiness input contract. Review worktree and evidence retained; no task daemon, watcher or sessions remain.",
+          "createdAt": "2026-11-03T16:51:57.522Z",
+          "updatedAt": "2026-11-03T16:51:57.522Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:45106024-da79-4b81-8623-0eeb89f35368",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:39:26.080Z",
-        "finishedAt": "2026-11-03T16:51:56.133Z"
-      }
     }
   }
 }
