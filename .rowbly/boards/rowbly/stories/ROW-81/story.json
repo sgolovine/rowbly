@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Fuzzy search when choosing a data root",
   "description": "Allow type to fuzzy find when selectng a data root",
-  "stage": "todo",
-  "rank": "a7",
+  "stage": "in-progress",
+  "rank": "a8",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:03:09.119Z",
-  "updatedAt": "2026-11-03T23:03:09.121Z",
+  "updatedAt": "2026-11-03T23:41:50.802Z",
   "plugins": {
     "attachments": {
       "attachments": [

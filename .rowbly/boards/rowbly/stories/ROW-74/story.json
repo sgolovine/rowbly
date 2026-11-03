@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Remove board label during setup",
   "description": "This is redundant and is the same thing as Board Name\n",
-  "stage": "todo",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:01:20.421Z",
-  "updatedAt": "2026-11-03T22:01:20.426Z",
+  "updatedAt": "2026-11-03T23:41:32.685Z",
   "plugins": {
     "attachments": {
       "attachments": [

@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Add bottom close button to info modals",
   "description": "Modals like the one attached have no way for the user to exit unless they press \"ESC\". Add a button to these so that the user can edit by clicking a \"Close\" button",
-  "stage": "todo",
-  "rank": "a2",
+  "stage": "in-progress",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:05:03.135Z",
-  "updatedAt": "2026-11-03T22:05:03.137Z",
+  "updatedAt": "2026-11-03T23:41:36.665Z",
   "plugins": {
     "attachments": {
       "attachments": [
