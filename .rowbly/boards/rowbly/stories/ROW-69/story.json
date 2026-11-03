@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T16:06:58.540Z",
+  "updatedAt": "2026-11-03T16:09:45.500Z",
   "plugins": {
     "story-linking": {
       "blocks": [
@@ -71,6 +71,16 @@
           "updatedAt": "2026-11-03T16:06:56.564Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:71762c53-6293-4b5d-8352-61d3b58aa5b2",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:09:45.499Z"
+      }
     }
   }
 }
