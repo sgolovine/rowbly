@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T02:32:07.558Z",
+  "updatedAt": "2026-11-03T02:42:25.163Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -45,11 +45,13 @@
     "software-factory": {
       "stageRun": {
         "stage": "in-pr",
-        "status": "running",
+        "status": "failed",
         "attempt": 1,
         "worker": "mcp:d13c413e-fc31-4298-9676-f38cab436b47",
         "by": "sunny",
-        "startedAt": "2026-11-03T02:32:06.743Z"
+        "startedAt": "2026-11-03T02:32:06.743Z",
+        "finishedAt": "2026-11-03T02:42:25.162Z",
+        "reason": "Independent review validation: transaction recovery test timed out at 20000ms; no skill-text defect; investigate before any rerun."
       }
     }
   }
