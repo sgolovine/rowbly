@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T16:58:59.910Z",
+  "updatedAt": "2026-11-03T16:59:01.165Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -46,6 +46,13 @@
           "body": "Revised plan awaiting acceptance after merging origin/main 550d6017161826ed47d73144e2a926d397fee644. Current-record all-time Stats will share one Board snapshot between CLI and TUI. Core owns existing Story and current Done counts. A narrow read-only boardStats Plugin contribution keeps GitHub metrics and bag interpretation in the GitHub Plugin. Proposed additional fixed host read gh-pr-commits uses a constant paginated GraphQL query returning PR identity, head, commit SHAs and completeness information. Deduplicate PR identities and commit SHAs. Proposed refresh limits are two concurrent requests, 100 candidate PRs, 10 pages per PR, 200 pages overall and 30 seconds, retaining existing process limits. Failed, capped or inconsistent sources remain partial or unavailable. Extend existing contract tests without increasing the 100-test total, update API fixtures and documentation, record the capability ADR, capture screenshots and run all four checks before one draft PR. No product implementation yet.",
           "createdAt": "2026-11-03T16:58:59.909Z",
           "updatedAt": "2026-11-03T16:58:59.909Z"
+        },
+        {
+          "id": "Fxr2Xeez",
+          "author": "sunny",
+          "body": "Supervisor accepts the revised ROW-70 plan: all-time current Story records/current Done, unique currently linked PR identities and unique commits in linked PRs. Implement one shared read-only Board snapshot and narrow Plugin contribution, fixed bounded GraphQL read, explicit complete/partial/unavailable states, deduplication and cancellation as proposed. Preserve core/Plugin boundaries; no network under the Data Root lock, arbitrary external arguments, historical storage or background polling. Retain resource caps. Use a known lower bound only where deduplication and validated source evidence establish it; unresolved identity is never an exact count. Frozen collector inputs must not mutate persisted bags. Extend existing required contract tests without adding redundant cases or increasing the 100-test total. Coordinate ADR allocation with ROW-73 before writing it. Merge latest main in the isolated worktree first; no .rowbly edits. Proceed through validation, screenshots and one draft PR, reporting exact head and CI snapshot.",
+          "createdAt": "2026-11-03T16:59:01.164Z",
+          "updatedAt": "2026-11-03T16:59:01.164Z"
         }
       ]
     }
