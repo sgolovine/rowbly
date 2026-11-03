@@ -61,7 +61,7 @@ describe('rowbly skill: SKILL.md', () => {
 
 describe('rowbly skill: references/setup.md', () => {
   it('edits Stages at the level asked for, and a Board-level edit stops inheriting global changes', async () => {
-    const { json } = await project();
+    const { tmp, rowbly, json } = await project();
     await json('boards', 'create', 'api', '--name', 'API', '--prefix', 'API');
     const stageKeys = async (board: string) =>
       (await json('config', 'show', '--board', board)).stages.map((s: { key: string }) => s.key);
@@ -86,6 +86,35 @@ describe('rowbly skill: references/setup.md', () => {
     expect(global.affectedBoards).toEqual(['api']);
     expect(await stageKeys('api')).toContain('blocked');
     expect(await stageKeys('web')).not.toContain('blocked');
+
+    // plugin-software-factory.md: setup adds only what is missing and keeps every Stage, entry and file.
+    await json('plugins', 'enable', 'software-factory');
+    await json('software-factory', 'prompt', 'edit', 'in-progress', '--level', 'global', '--text', '# Ours');
+    await json('stages', 'edit', 'review', '--name', 'In review', '--board', 'web');
+    const webBefore = await readFile(join(tmp.dir, '.rowbly/boards/web/board.config.json'), 'utf8');
+    expect(jsonError(await rowbly('software-factory', 'setup', '--board', 'web', '--json')).code).toBe('CONFLICT');
+    expect(await readFile(join(tmp.dir, '.rowbly/boards/web/board.config.json'), 'utf8')).toBe(webBefore);
+
+    const folder = join(tmp.dir, '.rowbly/boards/api/plugins/software-factory/stage-prompts');
+    await mkdir(folder, { recursive: true });
+    await writeFile(join(folder, 'in-review.md'), '# Mine\n');
+    const setup = await json('software-factory', 'setup', '--board', 'api');
+    expect(await stageKeys('api')).toEqual(['backlog', 'todo', 'in-progress', 'in-review', 'blocked', 'done']);
+    expect(setup.prompts.map((p: { key: string; outcome: string }) => [p.key, p.outcome])).toEqual([
+      ['todo', 'added'],
+      ['in-progress', 'kept'],
+      ['in-review', 'skipped'],
+    ]);
+    expect(await readFile(join(folder, 'in-review.md'), 'utf8')).toBe('# Mine\n');
+    expect((await json('software-factory', 'prompt', 'show', 'in-progress', '--board', 'api')).prompt).toMatchObject({
+      source: 'global',
+      text: '# Ours',
+    });
+    expect((await json('software-factory', 'prompt', 'show', 'todo', '--board', 'api')).prompt.enabled).toBe(false);
+    expect(await stageKeys('web')).toEqual(['backlog', 'todo', 'in-progress', 'review', 'done']);
+    const again = await json('software-factory', 'setup', '--board', 'api');
+    expect(again.stages.every((s: { outcome: string }) => s.outcome === 'present')).toBe(true);
+    expect(again.prompts.map((p: { outcome: string }) => p.outcome)).toEqual(['kept', 'kept', 'skipped']);
   });
 
   it('refuses a second Data Root and a clashing key prefix', async () => {

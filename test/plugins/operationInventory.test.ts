@@ -19,6 +19,7 @@ import { softwareFactory } from '../../src/plugins/software-factory';
 import { touchRun } from '../../src/plugins/software-factory/heartbeat';
 import { holdStory, releaseStory } from '../../src/plugins/software-factory/holds';
 import { runRef } from '../../src/plugins/software-factory/runMetadata';
+import { setupFactory } from '../../src/plugins/software-factory/setup';
 import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
 import { attachWorker } from '../../src/plugins/software-factory/workerIdentity';
@@ -160,6 +161,7 @@ describe('the operation inventory (ARCH-02)', () => {
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'done' }, { text: '# Done' });
     await removeStagePrompt(factory, { level: 'global', stage: 'backlog' });
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'backlog' }, { enabled: true });
+    await setupFactory(factory, 'web');
     const firstRun = await startRun(factory, 'WEB-1', { worker: 'w1' });
     await attachWorker(factory, 'WEB-1', {
       stage: firstRun.stageRun.stage,
