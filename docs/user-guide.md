@@ -824,8 +824,8 @@ discarding it.
 Evidence files are audit history. Rowbly never edits, expires or prunes them. To remove one, first
 check that the merge commit that added it is on the upstream, review its decisions and obtain the
 user's explicit approval. Record the path, adding commit (`git log --diff-filter=A -- <path>`), review
-and approval in the ordinary upstream commit that removes the file. Never
-rewrite history to remove it; `git show <commit>:<path>` still reads it afterwards.
+and approval in the ordinary upstream commit that removes the file. Never rewrite history to
+remove it; `git show <commit>:<path>` still reads it afterwards.
 
 Repeated Task numbers or Comment ids within a recognized current-format Story bag stop synchronization
 before local publication or push (`CONFLICT`, exit 4), even in BASE, while the owner is Off, or beside

@@ -390,8 +390,8 @@ The deterministic rules are defined in [ADR-0034](../agents/adr/0034-git-synchro
 - Merge Evidence is append-only audit history. Rowbly never edits, expires or prunes it. A person
   removes a file only with explicit user approval and an ordinary commit on the upstream branch,
   after the adding merge commit is upstream and its decisions were reviewed. Record the path, adding
-  commit, review and approval in the removal commit message; history is
-  never rewritten, so `git show <commit>:<path>` still reads it.
+  commit, review and approval in the removal commit message; history is never rewritten, so
+  `git show <commit>:<path>` still reads it.
 - Keep edits over deletions, including edited descendants. Distinct concurrent additions keep both
   complete record/file subtrees with source-qualified Board/Story remapping; identical additions coalesce.
 - Keep Configuration Cascade levels separate. Restore referenced definitions, split incompatible
