@@ -20,6 +20,13 @@
     "comments": {
       "comments": [
         {
+          "id": "7VBf9Lyt",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch row-47-independent-review-gate, PR https://github.com/sgolovine/rowbly/pull/149, head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Independent review by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. In skills/rowbly-factory/SKILL.md:156-159 and references/worker-brief.md:3-5, preserve the current-main generated brief command and explicitly include all Implementation records and reviewer identity; verify the resulting review brief. Resolve the conflicts in those files while preserving complementary skills. 2. In skills/rowbly-factory/SKILL.md:235-238, clarify that the reviewer must be a new worker using a model different from every implementing model; the same provider is allowed, and different effort/options do not count as another model. Typecheck passed, lint passed, unit 78 passed, CLI 20 passed. Six GitHub checks passed and four screenshot URLs returned 200. Integration merge was aborted without resolving conflicts; integrated-tree validation remains required. Full review: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6594217880. A fresh correction worker must continue this PR and original branch, open no duplicate PR, answer numbered findings, and obtain fresh checks and independent review. Configuration proposals remain supervisor-only and must be combined only after corrections and review.",
+          "createdAt": "2026-11-03T03:09:28.256Z",
+          "updatedAt": "2026-11-03T03:09:28.256Z"
+        },
+        {
           "id": "CZVUGm6q",
           "author": "sunny",
           "body": "Implementation record: In Progress attempt1; verified worker mcp:b396dc5c-a690-4ced-95df-da2e334d35b8; machine rook; provider claudeAgent; model claude-opus-5-5; branch row-47-independent-review-gate; PR149 head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Four checks passed unit78 CLI20. Source remote attached identity and full final handoff; ROW47 handoff location thinkpad is a typo, proposals are on rook.",
@@ -34,6 +41,13 @@
           "updatedAt": "2026-11-03T02:19:42.361Z"
         },
         {
+          "id": "WXFrlk3n",
+          "author": "sunny",
+          "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/149 original branch row-47-independent-review-gate verified OPEN at 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
+          "createdAt": "2026-11-03T03:11:45.181Z",
+          "updatedAt": "2026-11-03T03:11:45.181Z"
+        },
+        {
           "id": "jlUWqpZ9",
           "author": "sunny",
           "body": "The generated-brief Implementation records omission is within ROW47 intended integration and must be corrected before merge. Finish review with concrete finding and expected behavior, all validation/evidence, then report ownStory Comment plus move in-progress and FACTORY-DONE ROW-47 if requesting changes. Do not implement/integrate in this review Run. Preserve PR149 and original branch, currentmain brief command and all complementary skills; no duplicate PR. Configuration proposals are supervisor-only and combined only after corrections/review. Supervisor finishes Run before moving then assigns fresh correction worker. Reviewer model rule means different model, not necessarily a provider unavailable across all implementers; flag unclear wording if needed.",
@@ -46,20 +60,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
-        },
-        {
-          "id": "7VBf9Lyt",
-          "author": "sunny",
-          "body": "Returned to In Progress: branch row-47-independent-review-gate, PR https://github.com/sgolovine/rowbly/pull/149, head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Independent review by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. In skills/rowbly-factory/SKILL.md:156-159 and references/worker-brief.md:3-5, preserve the current-main generated brief command and explicitly include all Implementation records and reviewer identity; verify the resulting review brief. Resolve the conflicts in those files while preserving complementary skills. 2. In skills/rowbly-factory/SKILL.md:235-238, clarify that the reviewer must be a new worker using a model different from every implementing model; the same provider is allowed, and different effort/options do not count as another model. Typecheck passed, lint passed, unit 78 passed, CLI 20 passed. Six GitHub checks passed and four screenshot URLs returned 200. Integration merge was aborted without resolving conflicts; integrated-tree validation remains required. Full review: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6594217880. A fresh correction worker must continue this PR and original branch, open no duplicate PR, answer numbered findings, and obtain fresh checks and independent review. Configuration proposals remain supervisor-only and must be combined only after corrections and review.",
-          "createdAt": "2026-11-03T03:09:28.256Z",
-          "updatedAt": "2026-11-03T03:09:28.256Z"
-        },
-        {
-          "id": "WXFrlk3n",
-          "author": "sunny",
-          "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/149 original branch row-47-independent-review-gate verified OPEN at 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
-          "createdAt": "2026-11-03T03:11:45.181Z",
-          "updatedAt": "2026-11-03T03:11:45.181Z"
         }
       ]
     }

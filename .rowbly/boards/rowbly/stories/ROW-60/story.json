@@ -55,6 +55,13 @@
           "updatedAt": "2026-11-03T00:34:14.459Z"
         },
         {
+          "id": "rz5Xrc62",
+          "author": "sunny",
+          "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/145 original branch factory/row-60 verified OPEN at d6d9c1e45d7b4a884c899a80a3b7776bc81f372d. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
+          "createdAt": "2026-11-03T03:11:43.759Z",
+          "updatedAt": "2026-11-03T03:11:43.759Z"
+        },
+        {
           "id": "sIXlQntd",
           "author": "sunny",
           "body": "Supervisor review: ROW49 plan is approved in principle: shared Plugin-owned per-Story run-metadata.json bound to stage/attempt/startedAt, legacy StageRun bag stays compatible. ROW49 owns common file reader/writer and actual-worker attach; you own selection section and model policy/mutations. Coordinate the exact v1 schema with49 BEFORE editing, then send one proposed interface to supervisor. Identity and selection sections independently optional, so selected provider/model/fallback reason can be recorded for failed launch without identity; same-Run edits preserve the other section. Unsupported/future/unreadable data must never be overwritten; don't create a second audit file or put silently-losable fields into legacy bag. Record actual provider instance/model ids with selection/fallback reason; quota unknown is explicit, no fabricated live-usage source. ADR0047 only if truly separate decision;0046 identity can describe common record. ROW49 rook thread id mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74; communicate through supervisor if T3 tools cannot message it. Return exact minimal schema/commands and policy plan for acceptance.",
@@ -67,13 +74,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "rz5Xrc62",
-          "author": "sunny",
-          "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/145 original branch factory/row-60 verified OPEN at d6d9c1e45d7b4a884c899a80a3b7776bc81f372d. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
-          "createdAt": "2026-11-03T03:11:43.759Z",
-          "updatedAt": "2026-11-03T03:11:43.759Z"
         }
       ]
     }
