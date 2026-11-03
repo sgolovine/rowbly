@@ -94,6 +94,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
+| `software-factory.setup` | `{ board }` | `{ board, stages, prompts }` |
 | `software-factory.start` | `{ key, worker, retry?, selection? }` | `{ key, stageRun, selection? }` |
 | `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
 | `software-factory.touch` | `{ key, stage, attempt, startedAt, worker, source }` | `{ key, stageRun, heartbeat }` |
@@ -132,6 +133,20 @@ the entry and its file at that level only. A `StagePrompt` result is
 `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off setting,
 `enabled` is true only when it is on, `path` (relative to the Data Root) resolves inside the
 Plugin's folder for the level, and the file exists.
+
+Software Factory's `setup` gives one Board the factory Stages and default Stage Prompts it lacks
+([ADR-0053](../agents/adr/0053-software-factory-setup-gives-default-stages-and-stage-prompts.md)), in one
+Change Set. A factory Stage (`todo` TODO, `in-progress` In Progress, `in-review` In Review) is
+present when the Board's effective Stages have its key, whatever its name; a missing one is added
+to the Board's own Stage list (copied from the inherited list first), after `todo` and
+`in-progress` where they are, and no Stage is renamed, moved or removed. When nothing is missing,
+no list is written. Another Stage that already has a factory Stage's name, ignoring case, refuses
+the operation (`CONFLICT`) and nothing is saved. For `todo`, `in-progress` and `in-review` it
+writes a Board entry and file with the default text only when neither level has an entry for that
+Stage and no file is at the default path: In Progress and In Review on, TODO off. `stages` is
+`[{ key, name, outcome }]` (`added`, `present`, or `custom` when the key has another name, which is
+kept); `prompts` is `[{ key, outcome, source, enabled, path, reason? }]` (`added`, `kept` with the
+entry's level, or `skipped` with why).
 
 Software Factory's `start`, `finish`, `fail` and `clear` change a Story's Stage Run, the
 `stageRun` in its bag: `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`

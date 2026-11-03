@@ -14,9 +14,10 @@ then Data Root onboarding when the same flag in `rowbly.config.json` is absent o
 flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
 existing Data Roots only. Data Root onboarding chooses Kanban/Factory/Both, a Board, optional Plugins,
-AI skills and factory guidance with Stage Prompt editing. Official skill installs choose a destination
-folder and harness and never overwrite; custom skill commands are explained. No starter Stage Prompts
-are added. An explicit missing `--data-root` still fails. Without a Data Root, setup can create one. Once
+AI skills and factory guidance with Stage Prompt editing and Factory setup (also in a Board's
+settings), which adds the factory Stages and default Stage Prompts only when chosen. Official skill
+installs choose a destination folder and harness and never overwrite; custom skill commands are
+explained. An explicit missing `--data-root` still fails. Without a Data Root, setup can create one. Once
 onboarding is complete, a Board in context opens its Kanban board; otherwise the home menu. It reads the same files as command mode and watches the
 Data Root, so changes made with commands show on their own a moment later, without losing the user's
 place or what they typed in a form.

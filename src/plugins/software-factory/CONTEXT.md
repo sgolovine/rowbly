@@ -56,6 +56,12 @@ allowed command that writes only the Worker's Story, and holds a move until the 
 finished; the move it runs names that Stage Run, and is refused when it is no longer the visit's.
 _Avoid_: patch, script
 
+## Factory setup
+
+`rowbly software-factory setup` gives one Board the factory Stages (TODO, In Progress, In Review)
+and default Stage Prompts that it lacks, keeping every Stage, name and order and every Stage Prompt
+entry and file at either level (ADR-0053). The defaults name only published skills, `git` and `gh`.
+
 ## Stage Prompts and ROWBLY.md
 
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not

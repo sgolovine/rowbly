@@ -4,18 +4,25 @@
   "boardId": "rowbly",
   "name": "Default stage prompts",
   "description": "We want to make it really easy for people to standup a software factory. Using the stage prompts Rowbly uses for internal development (located within .rowbly), create a series of default stage prompts for the default columns.\n\nWhen setting up rowbly as a software factory. We should have the following stages\n\n- Backlog\n- TODO\n- In Progress\n- In Review\n- Done\n\nFor non-factory setups, use the following columns\n\n\n- Backlog\n- TODO\n- In Progress\n- Done\n\n\nAdd default stage prompts when using software factory. Use defaults from internal development, make sure to modify them to remove anything custom to the project. Stages assume that a user has/will install the accompanying skills",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0J",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T17:20:52.654Z",
+  "updatedAt": "2026-11-03T17:24:45.427Z",
   "plugins": {
     "comments": {
       "comments": [
+        {
+          "id": "2MCjg8W3",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa. Merge commit e582f92e118b33b0f4c4106912f3d3d2375fc34d. All six PR checks passed before merge; post-merge main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41683835712.",
+          "createdAt": "2026-11-03T17:24:44.780Z",
+          "updatedAt": "2026-11-03T17:24:44.780Z"
+        },
         {
           "id": "COM1gxzk",
           "author": "sunny",
@@ -29,6 +36,13 @@
           "body": "Supervisor accepts revised ROW-73 plan and ADR0053 allocation. Implement explicit atomic Board-scoped setup and onboarding action, built-in TODO display-name default without migrating stored configuration, preserving existing Stage labels/order and every effective global or Board prompt entry/file. Portable TODO prompt may ship off by default with prerequisites and conservative INCOMPLETE behavior documented; In Progress and In Review defaults enabled only through explicit setup. Keep internal .rowbly and in-pr configuration untouched. Generic In Review must retain exact-head independent approval, complete check classification, conflict/return policy, and a successful merge handoff ending with own-Story Done move plus FACTORY-DONE for supervisor processing. Preserve once-per-visit advisory lifecycle and no implementation from TODO. Extend the existing preservation contract test as proposed, keep100 tests, update required docs/ADR Status/index and identical skill references. Merge latest main before implementation and validation; coordinate small shared documentation sections with ROW70 ADR0054. Run all four checks under shared lease, capture required screenshots with reported private daemon, open one draft PR and report exact head.",
           "createdAt": "2026-11-03T17:00:56.643Z",
           "updatedAt": "2026-11-03T17:00:56.643Z"
+        },
+        {
+          "id": "HgVhqiQW",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa by codex/gpt-6-astra: APPROVED. Reviewed the complete diff against ROW-73 and the accepted plan, including Board-scoped atomic setup, collision refusal and idempotence, preservation of effective global/Board Stages and prompt entries/files, explicit onboarding and settings navigation, Plugin/core boundaries, portable TODO advisory lifecycle and independent-review/merge/return gates, ADR-0053 and its amendments, documentation, and existing preservation assertions. Verified implementer/reviewer provenance and no internal .rowbly prompt changes. Independently merged current main f5047d80 into the isolated review branch (only published Board records differed) and ran the unchanged checks under the shared validation lease: typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), 100 tests total. All four skill reference copies are byte-identical. All 11 screenshot URLs and the validation log returned HTTP 200; all screenshots were inspected and the changed screens are readable. No required changes found.",
+          "createdAt": "2026-11-03T17:24:44.167Z",
+          "updatedAt": "2026-11-03T17:24:44.167Z"
         },
         {
           "id": "LfQsKRET",
@@ -59,16 +73,6 @@
           "updatedAt": "2026-11-03T16:51:03.983Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:4cfde944-87dc-465f-a7cf-0ccb901a7a54",
-        "by": "sunny",
-        "startedAt": "2026-11-03T17:20:51.905Z"
-      }
     }
   }
 }

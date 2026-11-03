@@ -87,7 +87,7 @@ Stages and Custom Fields are configuration, defined at one of two levels (the Co
 
 A Board uses the most specific level that has a list. The lists are **not merged**. Every Board
 starts with the fixed Stage `backlog` and ends with the fixed Stage `done`; a `stages` list holds only
-the Stages between them. With no list anywhere, those are `todo` and `in-progress`, and there are no
+the Stages between them. With no list anywhere, those are `todo` (TODO) and `in-progress` (In Progress), and there are no
 Custom Fields. See where each list comes from before you change it:
 
 ```sh
@@ -219,8 +219,8 @@ means incomplete. The latter flag is committed and suppresses onboarding for eve
 Settings › Onboarding reopens either flow without clearing completion. Registration never creates a
 Data Root; setup still creates missing Data Roots. Named missing paths still fail. Plain Kanban turns
 Software Factory off; Factory/Both turn it on. Skill installs choose a folder and harness and never
-overwrite existing skills. Onboarding adds no Stage Prompt templates.
-
+overwrite existing skills. Factory guidance can open Factory setup (`software-factory setup` for the
+Board); nothing is added unless it is chosen.
 
 ## Board Stats
 

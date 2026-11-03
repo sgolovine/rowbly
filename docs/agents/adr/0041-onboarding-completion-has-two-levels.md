@@ -1,6 +1,6 @@
 # ADR-0041: Onboarding completion is per person and shared per Data Root
 
-**Status:** Accepted; startup ordering amended by [ADR-0042](0042-tui-startup-asks-for-a-data-root.md).
+**Status:** Accepted; startup ordering amended by [ADR-0042](0042-tui-startup-asks-for-a-data-root.md); §2's Stage Prompt templates amended by [ADR-0053](0053-software-factory-setup-gives-default-stages-and-stage-prompts.md), which lets onboarding offer factory setup.
 
 ## 1. Context
 

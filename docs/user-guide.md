@@ -104,7 +104,7 @@ Stages and Custom Fields are configuration, not data. Each list can be defined a
 1. `rowbly.config.json` (global),
 2. `board.config.json` (Board).
 
-A Board uses the most specific level that defines the list; the lists are not merged. With no list anywhere, a Board has the built-in Stages `todo` (Todo) and `in-progress` (In Progress) between Backlog and Done, and no Custom Fields. A `stages` list holds only the Stages between Backlog and Done, as `{ "key", "name" }`; it never names `backlog` or `done`.
+A Board uses the most specific level that defines the list; the lists are not merged. With no list anywhere, a Board has the built-in Stages `todo` (TODO) and `in-progress` (In Progress) between Backlog and Done, and no Custom Fields. A `stages` list holds only the Stages between Backlog and Done, as `{ "key", "name" }`; it never names `backlog` or `done`.
 
 `stages` and `fields` commands take `--level board|global` (default: `board` when a Board is in context, else `global`). Changing a level that has no list of its own first copies the list it inherits to that level, then applies the change. A change at `global` level applies to every Board that inherits from it. `rowbly config show` prints a Board's effective lists and the level each one comes from.
 
@@ -498,6 +498,7 @@ watches the Board knows what is already being worked.
 
 ```text
 rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
+rowbly software-factory setup [--board <id>]   # add the factory Stages and default Stage Prompts the Board lacks
 rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
@@ -520,6 +521,23 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
   (`board.config.json`). A Board's entry for a Stage replaces the global entry for that Stage; the
   other Stages keep the global one. Writes go to the Board level unless `--level global`.
+- `setup` gets a Board ready for a software factory: Backlog, TODO, In Progress, In Review, Done
+  (a Board without a factory keeps Backlog, TODO, In Progress, Done). It adds the Stages `todo`
+  (TODO), `in-progress` (In Progress) and `in-review` (In Review) that the Board does not have,
+  after `todo` and `in-progress`, and writes a default Stage Prompt on the Board for each of those
+  Stages that has no Stage Prompt at either level and no file yet. In Progress (build the Story to a
+  draft PR with the `rowbly-dev` skill) and In Review (an independent review, then merge, or return
+  to In Progress) are turned on. TODO (an advisory readiness review) stays off: it needs the
+  Comments Plugin, Git, Node 22 or later and the `rowbly-factory` skill's fingerprint helper, and it
+  reports an incomplete review for any input the helper does not know, so turn it on with
+  `prompt enable todo` once those are in place. Setup never renames, moves or removes a Stage (a
+  Stage with a factory key keeps its own name), and never replaces a Stage Prompt entry, on or
+  off, at the Board or the global level, or a file: it lists what it `added`, `kept` or `skipped`.
+  When nothing is missing it writes nothing, so it can run again. It exits 4 (`CONFLICT`) and saves
+  nothing when another Stage already has a missing factory Stage's name. The defaults name only
+  published skills, `git` and `gh`; edit them for your repository's branch, merge method and
+  screenshots, or say those in `ROWBLY.md`.
+  `--json` returns `{ board, stages: [{ key, name, outcome }], prompts: [{ key, outcome, source, enabled, path, reason? }] }`.
 - Files are `.rowbly/plugins/software-factory/stage-prompts/<key>.md` (global) and
   `.rowbly/boards/<board>/plugins/software-factory/stage-prompts/<key>.md`; the setting records the
   path relative to the Data Root.
@@ -583,7 +601,8 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   load, invalid Plugin Data), `ROWBLY.md` cannot be read (a symbolic link, not a file) or a retry has
   no `--retry-file`, with each gap in `details.incomplete`; `--allow-incomplete` prints it anyway, with
   the gaps listed at the top. `--json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
-- In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
+- In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts,
+  **Factory setup** in a Board's settings runs `setup` for that Board and lists the result, and
   the Story screen shows the Story's **Stage Run**. A Story whose Stage Run for its current Stage is
   running or failed has a badge on its board card and list line, `▶ running` or `✕ failed`, with
   `#2` after the first attempt. The Story's **Stage Run** tab shows it in full: outcome,
@@ -1214,8 +1233,10 @@ to factory guidance. Unchecked Plugins are turned off with their Plugin Data kep
 The separate AI usage question offers official agent skills. Choose a skill, destination folder and
 harness to install it through the same service as `rowbly skills install`; existing folders are never
 overwritten. The screen also explains creating and installing custom skills. Factory guidance opens
-Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Onboarding adds no
-starter Stage Prompts; use the editor to write and enable the instructions you want.
+Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
+Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
+for the Board when you confirm; nothing is added unless you choose it. Use the editor to change and
+enable the instructions you want.
 
 Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for
 global onboarding, or in the Data Root's committed `rowbly.config.json` for Data Root onboarding.

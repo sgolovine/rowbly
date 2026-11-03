@@ -489,6 +489,13 @@ its current visit to a Stage whose Stage Prompt is on, so a supervisor that watc
 `rowbly-factory` skill) does not start the same work twice and starts it again when the Story comes
 back ([ADR-0040](../agents/adr/0040-stage-runs-record-the-current-visit.md)).
 
+`rowbly software-factory setup` gives one Board the factory Stages TODO, In Progress and In Review
+and default Stage Prompts that it does not have: In Progress and In Review on, an advisory TODO
+readiness review off. It keeps every Stage, name and order, and every Stage Prompt entry and file at
+either level, and onboarding's Software Factory and Both modes offer it
+([ADR-0053](../agents/adr/0053-software-factory-setup-gives-default-stages-and-stage-prompts.md)). The
+default texts live in `src/plugins/software-factory/defaultPrompts.ts`.
+
 **Data**
 
 - Settings are keyed by Stage key under `stagePrompts`: global ones in `rowbly.config.json`
@@ -507,6 +514,7 @@ back ([ADR-0040](../agents/adr/0040-stage-runs-record-the-current-visit.md)).
 
 ```text
 rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
+rowbly software-factory setup [--board <id>]   # add the factory Stages and default Stage Prompts the Board lacks
 rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
