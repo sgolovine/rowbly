@@ -61,7 +61,14 @@ type Pane = 'main' | 'boards' | 'plugin';
  * beside it, if any, and the main area. The root screen fills the main area; every screen opened on
  * top of it, and the shell's own overlays, show in a modal over it.
  */
-export function Shell({ screens }: { screens: ScreenRegistry }) {
+export function Shell({
+  screens,
+  newerVersion,
+}: {
+  screens: ScreenRegistry;
+  /** Resolves to a newer Rowbly release, which the footer then offers. */
+  newerVersion?: Promise<string | null>;
+}) {
   const router = useRouter();
   const shell = useContext(ShellContext);
   const { ctx, services } = useContext(ServicesContext);
@@ -70,6 +77,17 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const { columns, rows } = useWindowSize();
   // Fill the terminal only on a real one, so test frames stay compact.
   const fullscreen = (useStdout().stdout as NodeJS.WriteStream).isTTY === true;
+  const [newer, setNewer] = useState<string | null>(null);
+  useEffect(() => {
+    // A check that resolves after the shell is gone changes nothing.
+    let mounted = true;
+    void newerVersion?.then((version) => {
+      if (mounted) setNewer(version);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [newerVersion]);
 
   const [overlay, setOverlay] = useState<Overlay | null>(null);
   const mainOverlay = useMemo<MainOverlay>(
@@ -305,7 +323,7 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
   const pluginShownWidth = services && pluginShown ? fitWidth(pluginWidth, room - boardsShownWidth) : 0;
   // The main panel's border takes a column on each side.
   const mainWidth = Math.max(20, columns - boardsShownWidth - pluginShownWidth - 4 - gaps);
-  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT) : undefined;
+  const mainHeight = fullscreen ? Math.max(7, rows - HEADER_HEIGHT - FOOTER_HEIGHT - (newer ? 1 : 0)) : undefined;
   const innerHeight = mainHeight === undefined ? undefined : mainHeight - 2;
   const screenHidden = overlay?.kind === 'main';
   const top = router.stack[depth];
@@ -515,7 +533,11 @@ export function Shell({ screens }: { screens: ScreenRegistry }) {
                   </Panel>
                 </Box>
                 <ToastArea />
-                <Footer hints={overlay?.kind === 'menu' ? MENU_HINTS : atRoot ? hints : []} atRoot={atRoot} />
+                <Footer
+                  hints={overlay?.kind === 'menu' ? MENU_HINTS : atRoot ? hints : []}
+                  atRoot={atRoot}
+                  newerVersion={newer}
+                />
                 {overlay?.kind === 'main' && (
                   // Over the whole terminal rather than the main area; the Modal keeps its margin to the edges.
                   <LayoutContext.Provider value={{ width: columns, height: fullscreen ? rows : undefined }}>

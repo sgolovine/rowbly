@@ -28,6 +28,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
 | [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042 |
 | [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted |
+| [0049](0049-the-tui-checks-npm-for-a-newer-release.md) | The TUI checks npm for a newer Rowbly release when it starts | Accepted |
 
 ### Plugins
 
@@ -59,7 +60,9 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
 | [0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) | Manual Sync rebases in isolation and never force-pushes | Accepted |
 | [0039](0039-software-factory-stage-prompts.md) | Stage Prompts are per-Stage settings with Markdown files in the Plugin's folder | Accepted |
-| [0040](0040-stage-runs-record-the-current-visit.md) | A Stage Run records one agent's work on a Story's current visit to a Stage | Accepted; amended by 0048 |
+| [0040](0040-stage-runs-record-the-current-visit.md) | A Stage Run records one agent's work on a Story's current visit to a Stage | Accepted; amended by 0045, 0046 and 0048 |
+| [0045](0045-reported-board-commands-are-checked-and-applied-by-rowbly.md) | Rowbly checks a worker's reported Board commands and applies them through the CLI | Accepted |
+| [0046](0046-verified-workers-use-current-run-metadata.md) | Verified workers use metadata bound to the current Stage Run | Accepted; amends 0040 |
 | [0048](0048-stage-run-heartbeats-are-attested-evidence.md) | A Stage Run heartbeat records attested worker activity, and staleness only asks for a check | Accepted |
 
 ### Development

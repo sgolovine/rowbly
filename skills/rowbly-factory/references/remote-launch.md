@@ -94,21 +94,28 @@ and report it as `existing` or `conflict`.
 
 ## The Stage Run comes first
 
-Record the Stage Run before a worker starts on the Story. There are two ways:
+Record the Stage Run and verified identity before a worker starts on the Story. Use **Park, then
+GO**: launch with a short reservation as the brief ("You are reserved for <KEY>. Do nothing. Reply
+RESERVED <KEY> and wait for GO."). Use the script's verified result and durable receipt, then:
 
-- **Park, then GO**, when the Stage Run's `--worker` must be the thread id. Launch with a short
-  reservation as the brief ("You are reserved for <KEY>. Do nothing. Reply RESERVED <KEY> and wait for
-  GO."). Then run `run start <KEY> --worker <threadId>`, and only when it succeeds, send the full brief
-  with GO:
+1. Run `run start <KEY> --worker <threadId>` and keep its returned Stage, attempt and startedAt.
+   Alternatively, when `ROWBLY.md` permits it, start with a unique launch title first, then launch
+   the reservation. A title is an unverified hint, never sufficient recovery identity.
+2. Attach the verified actual worker using `run attach <KEY> --stage <stage> --attempt <attempt>
+   --started-at <startedAt> --worker <threadId> --machine <machine> --harness t3 --thread-id <threadId>
+   --source "<durable launch receipt>"`. Rowbly records the supervisor's attestation; it does not
+   contact T3. Use the receipt's machine and actual returned identity, never a guessed title.
+3. Publish the Board, then send the full brief and GO:
 
-  ```bash
-  node scripts/launch-worker.mjs send --thread <threadId> --title "<title>" --message <file> \
-    --project <dir> --ssh <host> --t3 <path to t3>
-  ```
+   ```bash
+   node scripts/launch-worker.mjs send --thread <threadId> --title "<title>" --message <file> \
+     --project <dir> --ssh <host> --t3 <path to t3>
+   ```
 
-  `send` checks the thread's title, sends nothing when the same message is already in the thread
-  (`existing`), and otherwise reports `sent` once the message shows in the thread. If
-  `run start` fails, tell the parked worker it is not needed, and start no work in it.
-- **The title as the worker**, when `ROWBLY.md` allows it. Run `run start <KEY> --worker "<title>"`
-  first, then launch with the full brief. This is safe only when the title is unique to the launch
-  (see Titles), because the title is then the only link between the Stage Run and the thread.
+`send` checks the title, sends nothing when the same message is already present (`existing`), and
+otherwise reports `sent` once it shows in the thread. If start, attach or publication fails, do
+not send GO. Keep the worker parked or cancel it and verify cancellation before another launch.
+A definite failed launch uses `run fail --reason`; `unknown` requires receipt/harness reconciliation,
+not a duplicate launch. On restart, resolve `runMetadata.identity.threadId` through its harness on
+its recorded machine. Local tools do not resolve remote IDs. Preserve metadata and receipt evidence
+before a retry replaces the current Run.

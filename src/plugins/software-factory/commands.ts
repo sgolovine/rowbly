@@ -1,5 +1,7 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
+import { type TouchRun, touchRun } from './heartbeat';
 import { livenessText, parseStaleAfter } from './liveness';
+import { applyBlock, applyTable } from './reportedCommands';
 import {
   boardOverview,
   type Level,
@@ -23,6 +25,7 @@ import {
   type WaitResult,
   waitForRuns,
 } from './stageRuns';
+import { type AttachWorker, attachWorker } from './workerIdentity';
 
 interface PromptOptions {
   board?: string;
@@ -46,12 +49,17 @@ function runsTable(overview: RunsOverview): string {
   const digest = `Digest: ${overview.digest}`;
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
   const table = renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Last seen', 'Eligibility', 'Name'],
+    ['Story', 'Stage', 'Stage Run', 'Last seen', 'Verified worker', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
       s.stage,
       runText(s.stageRun),
       livenessText(s.liveness),
+      s.runMetadata.identity
+        ? `${s.runMetadata.identity.machine} / ${s.runMetadata.identity.harness} / ${s.runMetadata.identity.threadId}`
+        : s.runMetadata.status === 'invalid' || s.runMetadata.status === 'unsupported'
+          ? 'unavailable'
+          : 'not recorded',
       s.eligibility.reasons.map((r) => r.message).join('; ') || 'Eligible',
       s.name,
     ]),
@@ -188,7 +196,9 @@ export const commands: PluginCommands = (group, cli) => {
       }),
     );
 
-  const run = group.command('run').description("Start, finish, fail or clear a Story's Stage Run");
+  const run = group
+    .command('run')
+    .description("Start, attach a worker to, touch, finish, fail or clear a Story's Stage Run");
   run
     .command('start <story>')
     .description("Start a Stage Run on the Story's current Stage, whose Stage Prompt must be on")
@@ -197,6 +207,42 @@ export const commands: PluginCommands = (group, cli) => {
     .action((key: string, opts: { worker: string; retry?: boolean }, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await startRun(plugin, key, { worker: opts.worker, retry: opts.retry }), runLine);
+      }),
+    );
+  run
+    .command('attach <story>')
+    .description('Attach the actual worker identity with supervisor attestation of launch verification')
+    .requiredOption('--stage <stage>', 'expected Stage Run Stage')
+    .requiredOption('--attempt <number>', 'expected Stage Run attempt', Number)
+    .requiredOption('--started-at <timestamp>', 'expected Stage Run start time')
+    .requiredOption('--worker <id>', 'actual worker identifier')
+    .requiredOption('--machine <name>', 'machine on which the worker can be found')
+    .requiredOption('--harness <name>', 'harness that owns the worker thread')
+    .requiredOption('--thread-id <id>', 'actual harness thread identifier')
+    .requiredOption('--source <text>', 'source of the supervisor verification, such as a launch receipt')
+    .action((key: string, opts: AttachWorker, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await attachWorker(plugin, key, opts),
+          (r) =>
+            `${runLine(r)}\nVerified worker: ${r.identity.machine} / ${r.identity.harness} / ${r.identity.threadId}`,
+        );
+      }),
+    );
+  run
+    .command('touch <story>')
+    .description("Record verified activity of the running Stage Run's attached worker, as its heartbeat")
+    .requiredOption('--stage <stage>', 'expected Stage Run Stage')
+    .requiredOption('--attempt <number>', 'expected Stage Run attempt', Number)
+    .requiredOption('--started-at <timestamp>', 'expected Stage Run start time')
+    .requiredOption('--worker <id>', 'the attached worker')
+    .requiredOption('--source <text>', "the activity you verified, such as the worker's message or a harness event")
+    .action((key: string, opts: TouchRun, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await touchRun(plugin, key, opts),
+          (r) => `${runLine(r)}\nLast seen: ${r.heartbeat.at} (${r.heartbeat.source})`,
+        );
       }),
     );
   run
@@ -222,6 +268,20 @@ export const commands: PluginCommands = (group, cli) => {
     .action((key: string, _opts: unknown, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await clearRun(plugin, key), (r) => `Cleared the Stage Run of ${r.cleared}`);
+      }),
+    );
+
+  group
+    .command('apply <story>')
+    .description("Check a worker's reported rowbly block for its Story, then run the commands it allows")
+    .option('--text <block>', 'the block, or the message holding it')
+    .option('--file <path|->', 'read the block from a file or stdin')
+    .option('--dry-run', 'only check the block and show what each line would do')
+    .action((key: string, opts: { text?: string; file?: string; dryRun?: boolean }, cmd) =>
+      cli.run(cmd, async (env) => {
+        const text = await env.readText({ text: opts.text, file: opts.file }, { name: 'text' });
+        if (text === undefined) throw new UsageError('Give the block with --text or --file');
+        env.print(await applyBlock(env, key, text, !!opts.dryRun), applyTable);
       }),
     );
 };

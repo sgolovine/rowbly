@@ -4,31 +4,28 @@
   "boardId": "rowbly",
   "name": "Validate worker-reported Board commands mechanically",
   "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a2",
+  "stage": "done",
+  "rank": "b03",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T00:52:20.285Z",
+  "updatedAt": "2026-11-03T01:10:48.618Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c3adf1a3-db76-48d7-8154-cb63e8b86809",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:43:05.866Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "FN3xpBnb",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/139 at a97e8c7f. Independent correction review passed: typecheck, lint, unit 78, CLI 20; both blocker regressions verified; six PR checks passed; seven screenshot URLs HTTP 200. Merge CI queued: https://github.com/sgolovine/rowbly/actions/runs/41557898865",
+          "createdAt": "2026-11-03T01:10:47.903Z",
+          "updatedAt": "2026-11-03T01:10:47.903Z"
+        },
         {
           "id": "FsAthvhq",
           "author": "sunny",
@@ -49,6 +46,13 @@
           "body": "Supervisor accepted plan: Plan accepted with refinements. Reject the whole block before any mutation when any line is invalid; return every line's decision so supervisor can explicitly resubmit allowed lines. Keep bounded own-Story allowlist and never pass through a shell. Host runCommand must pin the opened Data Root and noninteractive JSON flags and reject caller-supplied root/global/interactive overrides, rather than relying only on the Software Factory parser; avoid arbitrary shell capability or recursion. Keep execution outside an enclosing mutation/lock so child commands don't deadlock; each child operation owns its lock. Document partial success on later runtime failure. Guard move using current-visit finished Stage Run; hold while running/absent, drop failed; do not silently lose returned held commands. Read-only dry-run changes nothing. Reserve ADR-0045 (0043 hold,0044 brief reserved) and recheck. Extend an existing test in test/plugins or agentWorkflows instead of new file; keep total suite <=100 (currently97), one representative failure contract. No worker-brief changes yet: ROW-63/66 template updates are opening PRs, so merge them first; add only necessary quoting note. Parent remains main; no stack without approval. Run/report all four checks and screenshot scenarios. Proceed.",
           "createdAt": "2026-11-02T23:43:24.679Z",
           "updatedAt": "2026-11-02T23:43:24.679Z"
+        },
+        {
+          "id": "SwNc01wj",
+          "author": "sunny",
+          "body": "Corrected PR139 review blockers: https://github.com/sgolovine/rowbly/pull/139 (head 35342c3, still draft). apply now runs a move as stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>, a Software Factory option on stories move with a strict schema; its stories.move guard reads the Story as stored under the move Data Root lock, after all transforms, and refuses with CONFLICT, saving nothing, unless that same Run is still the visit finished Stage Run. Workers may not give --finished-run. story-linking add/remove --blocked-by, with a space or =, is refused because it writes the other Story; only --blocks is allowed. Regression assertions in the existing agentWorkflows step: real applyBlock with the Run replaced between Comment and move keeps the replacement story.json byte-identical; a same-start Run of another attempt or Stage does not authorize a move; the other Story stays byte-identical after a refused --blocked-by= line. Each fails without its fix. Merged origin/main, keeping waitFor and runCommand. ADR-0045, docs, skills and reference copies updated. typecheck, lint, unit 78 and CLI 20 pass; three new screenshots return HTTP 200. GitHub checks were pending at handoff except Verify, which passed.",
+          "createdAt": "2026-11-03T01:05:35.938Z",
+          "updatedAt": "2026-11-03T01:05:35.938Z"
         },
         {
           "id": "XNbkGCbl",

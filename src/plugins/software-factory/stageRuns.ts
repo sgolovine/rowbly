@@ -1,20 +1,27 @@
 import {
   type Bagged,
+  type ChangeSetView,
   ConflictError,
+  type DeepReadonly,
+  type GuardResult,
   NotFoundError,
   type PluginChangeSet,
   type PluginCommandEnv,
   type PluginContext,
+  type PluginHookContext,
   type PluginReadContext,
   SlugSchema,
   type Story,
   TimestampSchema,
   toTimestamp,
   UsageError,
+  ValidationError,
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
-import { DEFAULT_STALE_AFTER_MINUTES, type Liveness, liveness, stableLiveness } from './liveness';
+import { currentHeartbeat, DEFAULT_STALE_AFTER_MINUTES, type Liveness, liveness, stableLiveness } from './liveness';
+import { endRunMetadata, freshRunMetadata, metadataOutput, readRunMetadata } from './runMetadata';
+import { RunRef } from './runRef';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -50,8 +57,48 @@ export async function endVisit(changes: PluginChangeSet, key: string, plugin: Pl
   const change = changes.story(key);
   if (!change?.before || !change.after || change.before.stage === change.after.stage) return;
   // An invalid bag is left for doctor to report rather than dropped (ADR-0011).
-  if (plugin.inspectBag(change.after, StageRunBag).kind !== 'valid') return;
-  await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  if (plugin.inspectBag(change.after, StageRunBag).kind === 'valid')
+    await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  await endRunMetadata(changes, key);
+}
+
+/** This Plugin's input of `stories.move`: move only while `finishedRun` is the visit's finished Stage Run. */
+export const MoveInput = z.strictObject({ finishedRun: RunRef });
+
+/** A Stage Run reference as `--finished-run` takes it: `<stage>/<attempt>/<startedAt>`. */
+export function formatRunRef(run: RunRef): string {
+  return `${run.stage}/${run.attempt}/${run.startedAt}`;
+}
+
+export function parseRunRef(text: string): RunRef {
+  const match = /^([^/]+)\/(\d+)\/([^/]+)$/.exec(text);
+  const parsed = match && RunRef.safeParse({ stage: match[1], attempt: Number(match[2]), startedAt: match[3] });
+  if (!parsed?.success)
+    throw new ValidationError(`--finished-run "${text}" is not <stage>/<attempt>/<startedAt> of a Stage Run`);
+  return parsed.data;
+}
+
+/**
+ * The `stories.move` guard for `--finished-run` (ADR-0045 §2). It runs after every transform and
+ * reads the Story as stored when the move took the Data Root lock, so a Stage Run cleared, replaced or
+ * started again since `apply` planned the move refuses it, and nothing is saved.
+ */
+export async function guardFinishedRun(
+  changes: ChangeSetView,
+  key: string,
+  input: DeepReadonly<{ finishedRun: RunRef }> | undefined,
+  plugin: PluginHookContext,
+): Promise<GuardResult> {
+  if (!input) return undefined;
+  const stored = changes.story(key)?.before ?? (await plugin.services.stories.get(key));
+  const run = currentRun(plugin, stored);
+  const want = input.finishedRun;
+  if (run?.status === 'finished' && formatRunRef(run) === formatRunRef(want)) return undefined;
+  return {
+    reject: `${stored.key} was not moved: its Stage Run ${formatRunRef(want)} is not this visit's finished Stage Run (now ${
+      run ? `${formatRunRef(run)}, ${run.status}` : 'none'
+    })`,
+  };
 }
 
 /** The latest Story `key`: as this operation left it, else as stored. */
@@ -117,6 +164,7 @@ export async function startRun(
         startedAt: toTimestamp(plugin.now()),
       };
       await saveRun(changes, plugin, story.key, run);
+      await freshRunMetadata(changes, story, run);
       return { key: story.key, stageRun: run };
     },
   );
@@ -162,6 +210,7 @@ export async function clearRun(plugin: PluginContext, key: string): Promise<{ cl
       ...plugin.writeBag(s, undefined),
       updatedAt: toTimestamp(plugin.now()),
     }));
+    await endRunMetadata(changes, story.key);
     return { cleared: story.key };
   });
 }
@@ -179,6 +228,7 @@ export interface RunsOverview {
     stageRun: StageRun | null;
     /** When a running Stage Run's worker was last seen; `null` for any other. */
     liveness: Liveness | null;
+    runMetadata: ReturnType<typeof metadataOutput>;
     eligibility: Eligibility;
   }[];
   /**
@@ -205,7 +255,7 @@ export async function runsOverview(
       key: s.key,
       name: s.name,
       stage: s.stage,
-      ...runWithLiveness(currentRun(plugin, s), now, staleAfterMinutes),
+      ...(await runDetails(plugin, s, now, staleAfterMinutes)),
       eligibility: await storyEligibility(plugin, s),
     })),
   );
@@ -219,10 +269,15 @@ export async function runsOverview(
   };
 }
 
-function runWithLiveness(stageRun: StageRun | null, now: Date, staleAfterMinutes: number) {
+/** The Story's Stage Run, its Run details, and when its worker was last seen if it runs (ADR-0048 §2). */
+async function runDetails(plugin: PluginContext, story: Story, now: Date, staleAfterMinutes: number) {
+  const stageRun = currentRun(plugin, story);
+  const state = await readRunMetadata(plugin, story);
+  const heartbeat = currentHeartbeat(state);
   return {
     stageRun,
-    liveness: stageRun?.status === 'running' ? liveness(stageRun, null, now, staleAfterMinutes) : null,
+    liveness: stageRun?.status === 'running' ? liveness(stageRun, heartbeat, now, staleAfterMinutes) : null,
+    runMetadata: metadataOutput(state),
   };
 }
 

@@ -4,21 +4,28 @@
   "boardId": "rowbly",
   "name": "Show Stage Run activity in the Board TUI",
   "description": "Factory review recommendation 18 of 20.\n\n## Context\n\nThe Software Factory Plugin does not provide a card badge even though the Plugin API supports one.\n\n## Acceptance criteria\n\n- Add Board badges for running and failed Stage Runs, including attempt where useful.\n- Provide an inspectable Stage Run view with worker identity, outcome and activity age.\n- Follow the TUI design system and verify the screens with agentic-tui captures.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a9",
+  "stage": "done",
+  "rank": "b02",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:55.313Z",
-  "updatedAt": "2026-11-03T00:42:58.744Z",
+  "updatedAt": "2026-11-03T01:03:02.989Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
     },
     "comments": {
       "comments": [
+        {
+          "id": "V1ikuKeP",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/142 (merge commit e44b0d61). Merged origin/main into the branch first (head 4ef3ac8) because PR138 had landed after the earlier CI run. Locally on the merged result: typecheck and lint pass, unit 78 and CLI 20 pass. All six GitHub checks pass on the exact head; mergeable and clean; no change requests; all 7 screenshot URLs return 200. Main CI was queued at handoff.",
+          "createdAt": "2026-11-03T01:03:02.329Z",
+          "updatedAt": "2026-11-03T01:03:02.329Z"
+        },
         {
           "id": "wLGAnjsR",
           "author": "sunny",
@@ -34,16 +41,6 @@
           "updatedAt": "2026-11-03T00:34:12.461Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:69d83fde-4f76-4110-9119-d50e01a8093e",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:42:58.743Z"
-      }
     }
   }
 }

@@ -457,19 +457,31 @@ rowbly software-factory prompt remove <stage> [--board <id>] [--level board|glob
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
 rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-run]   # check a worker's reported block, then run what it allows
 ```
 
 Writes default to the Board level (`--board`, then the current Board). `stages` and `prompt show`
 show the effective Stage Prompts without `--level`, and one level alone with it.
 
+`apply` checks a worker's reported `rowbly` block against an allowlist of commands that write only
+the given Story, refuses the whole block when any line fails, holds a `stories move` until the
+Story's Stage Run is finished (drops it after a failed one), and runs each allowed line as its own
+`rowbly` command through `runCommand`, stopping at the first failure
+([ADR-0045](../agents/adr/0045-reported-board-commands-are-checked-and-applied-by-rowbly.md)). It
+runs the move with `--finished-run <stage>/<attempt>/<startedAt>`: the Plugin's option on
+`stories move` (its `stories.move` input `{ finishedRun: { stage, attempt, startedAt } }`), whose
+guard refuses the move (`CONFLICT`) unless that Run is still the visit's finished Stage Run when the
+move is saved, under the Data Root lock.
+
 `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt }] }`, where
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`: `stages`
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`: `stages`
 are the Board's Stages whose Stage Prompt is on, `stories` every Story in them, `stageRun` the
 Story's Stage Run for its current visit or `null`, and `digest` a short hash of `stages` and
 `stories` (all their fields, so ones added to a row count too). `wait` returns the same object with
@@ -477,6 +489,41 @@ Story's Stage Run for its current visit or `null`, and `digest` a short hash of 
 `changed: false` after `--timeout`. It uses the command host's `waitFor`: the Data Root watch of the
 TUI, started before the first read, with a recheck every minute in case a change went unseen.
 `run start`, `finish` and `fail` return `{ key, stageRun }`; `run clear` returns `{ cleared }`.
+
+`run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
+Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual
+worker ID, machine, harness, thread ID and verification source. Me and the operation clock supply
+`verification.by` and `verifiedAt`. Attachment updates `stageRun.worker` atomically with the file.
+A changed Run or conflicting identity is `CONFLICT` (exit 4). Repeating identical inputs writes
+nothing, including no timestamp change. Attach requires a running Run; it can initialize absent or
+recognized stale v1 metadata. Invalid or unsupported metadata refuses attachment with
+`DATA_INTEGRITY` (exit 6) and remains unchanged.
+
+`runs` includes `runMetadata: { status, current, ... }`. Status is `absent`, `valid`, `invalid` or
+`unsupported`. A matching valid file includes `version`, `run` and its optional `identity`,
+`selection` and `heartbeat`; a stale valid file has `current: false` and exposes none of those
+sections. Invalid/unsupported output includes a diagnostic message. The table shows the verified
+machine/harness/thread or says not recorded/unavailable. Human `stories show` and the TUI Story
+Details show an attached worker identity; `stories show --json` remains the stored Story, and
+`runs --json` is the structured metadata reader. Attachment changes the `runs` digest and wakes
+`wait`.
+
+The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
+bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
+optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
+sections' JSON values. Selection and heartbeat mutations are separate planned additions. Every
+start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
+Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
+returning when timestamps repeat. Unknown fields, future versions and unreadable files remain
+unavailable and unchanged, including through clear/Stage changes; a new start refuses them until
+explicit repair. Older releases preserve the file but do not maintain this lifecycle.
+
+For launch and restart recovery: keep the launched worker waiting for GO, verify the actual
+identity, attach it, publish the Board, then send GO. Resolve a recovered thread on its recorded
+machine through its recorded harness. A legacy worker string or a title is only an unverified hint.
+A confirmed failed launch uses `run fail --reason`; an uncertain launch, unreachable worker or
+failed attachment/publication needs reconciliation before GO or another launch. Preserve the
+previous attempt's metadata in retry context before replacing it.
 
 **Rules**
 
@@ -536,3 +583,7 @@ record of later activity. A Story with none in this visit shows `—`; earlier v
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
 is no fix: create the file with `prompt edit`, or turn it off.
+
+Software Factory also reports `SOFTWARE_FACTORY_RUN_METADATA_INVALID` and
+`SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION` (warnings). Opaque metadata is kept unchanged;
+there is no automatic fix. See [ADR-0046](../agents/adr/0046-verified-workers-use-current-run-metadata.md).

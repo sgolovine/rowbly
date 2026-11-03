@@ -1,4 +1,5 @@
 import { UsageError } from '../../plugin-api';
+import type { Heartbeat, MetadataState } from './runMetadata';
 
 /** How long a running Stage Run may go without reported activity before it is stale (ADR-0048 §2). */
 export const DEFAULT_STALE_AFTER_MINUTES = 15;
@@ -13,6 +14,15 @@ export interface Liveness {
   heartbeat: 'reported' | 'none' | 'unavailable';
   ageSeconds: number;
   stale: boolean;
+}
+
+/**
+ * The heartbeat that counts for the current Run: none from details left by another Run, and
+ * `unavailable` when the details cannot be read, so a hidden heartbeat is never shown as missing.
+ */
+export function currentHeartbeat(state: MetadataState): Heartbeat | null | 'unavailable' {
+  if (state.status === 'invalid' || state.status === 'unsupported') return 'unavailable';
+  return state.status === 'valid' && state.current ? (state.metadata.heartbeat ?? null) : null;
 }
 
 export function liveness(

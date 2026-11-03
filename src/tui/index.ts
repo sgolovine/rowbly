@@ -91,6 +91,8 @@ export interface StartTuiOptions {
   root?: string;
   /** Loads the Plugins that a Data Root turns on; without it no Plugin runs. */
   loadPlugins?: PluginLoader;
+  /** Resolves to a newer Rowbly release, which the footer then offers; without it none is checked. */
+  newerVersion?: Promise<string | null>;
 }
 
 /**
@@ -120,6 +122,7 @@ export async function startTui(ctx?: RowblyContext | null, options: StartTuiOpti
       plugins,
       loadPlugins: options.loadPlugins,
       watch: true,
+      newerVersion: options.newerVersion,
     }),
     {
       stdin: (stdin ?? io.stdin) as NodeJS.ReadStream,
