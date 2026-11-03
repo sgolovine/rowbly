@@ -15,7 +15,7 @@ import { commands } from './commands';
 import { type EpicFileProblem, epicFileName, isUnavailable, readEpicFiles } from './epicFile';
 import { EpicBag, EpicFilter, EpicInput } from './model';
 import { reconcile } from './reconcile';
-import { storyEpic } from './service';
+import { getEpic, storyEpic } from './service';
 
 /** Epic input, already parsed by `inputs`: `{ epic: id }` links, `{ epic: null }` unlinks. */
 type EpicLink = z.output<typeof EpicInput>;
@@ -115,6 +115,18 @@ export const epics = definePlugin({
   filterStories: (story, filter, plugin) => (storyEpic(plugin, story) ?? false) === filter,
   async storyRows(story, plugin) {
     return [{ label: 'Epic', value: storyEpic(plugin, story) ?? 'none' }];
+  },
+  async storyContext(story, plugin) {
+    // An invalid link or Epic file throws, so the Story Context lists the Epic as incomplete.
+    const id = plugin.requireBag(story, EpicBag)?.epic;
+    if (!id) return { title: 'Epic', text: 'None.', data: null };
+    const epic = await getEpic(plugin, id);
+    const head = `${epic.name} (\`${epic.id}\`${epic.closed ? ', closed' : ''})`;
+    return {
+      title: 'Epic',
+      text: epic.description.trim() ? `${head}\n\n${epic.description.trim()}` : head,
+      data: epic,
+    };
   },
   doctor: {
     async check({ data, plugin }) {

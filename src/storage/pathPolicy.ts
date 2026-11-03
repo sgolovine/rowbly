@@ -71,6 +71,34 @@ export async function readPluginBinaryFile(folder: string, plugin: string, name:
   }
 }
 
+/**
+ * The text of the Data Root's own `ROWBLY.md` in `folder`, or `null` when there is none
+ * (ADR-0047). It is the only Data Root file outside a Plugin scope that a Plugin can read, and only
+ * as text: a symbolic link, or anything but a regular file, throws `ValidationError`, as a linked
+ * Plugin file does (ADR-0019 §10).
+ */
+export async function readRowblyMd(folder: string): Promise<string | null> {
+  const path = join(folder, 'ROWBLY.md');
+  let info: Awaited<ReturnType<typeof io.lstat>>;
+  try {
+    info = await io.lstat(path);
+  } catch (err) {
+    if (errorCode(err) === 'ENOENT') return null;
+    throw err;
+  }
+  if (info.isSymbolicLink())
+    throw new ValidationError('ROWBLY.md is a symbolic link, which Rowbly does not follow', {
+      details: { path: 'ROWBLY.md' },
+    });
+  if (!info.isFile()) throw new ValidationError('ROWBLY.md is not a file', { details: { path: 'ROWBLY.md' } });
+  try {
+    return await io.readFile(path);
+  } catch (err) {
+    if (errorCode(err) === 'ENOENT') return null;
+    throw err;
+  }
+}
+
 function checkedId(plugin: string): string {
   if (isSlug(plugin)) return plugin;
   throw new ValidationError(`invalid Plugin id "${plugin}"`, { details: { plugin } });

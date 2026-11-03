@@ -170,7 +170,8 @@ instead of moving the Story yourself. Otherwise make the move and verify it with
 
 People record how they use their Boards (what a Stage means, when a Story moves, which Labels and
 Comments they expect) in `ROWBLY.md`, an optional Markdown file at the top of the Data Root
-(`.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`). Rowbly does not read or enforce it.
+(`.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`). Rowbly does not parse or enforce
+it; only `software-factory brief` copies it, as text, into a worker's brief.
 
 - Before the first command that changes data, look for it and read it. Without it, use these defaults.
 - Follow it over the defaults of this skill and its references. The user's request comes first, then

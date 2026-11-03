@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-03T02:11:04.043Z"
+    "startedAt": "2026-11-03T03:00:00.590Z"
   },
   "identity": {
-    "worker": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+    "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+    "threadId": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
     "verification": {
-      "source": "SSH CLI verified reserved thread241441f8 actual Sonnet5.5/full-access/bound factory-row-57; provider default options (none requested)",
-      "verifiedAt": "2026-11-03T02:11:04.828Z",
+      "source": "/home/sgolovine/.rowbly-factory/receipts/086606d906e0e55ca69fb5a00bd77c59.json",
+      "verifiedAt": "2026-11-03T03:00:01.466Z",
       "by": "sunny"
     }
   }

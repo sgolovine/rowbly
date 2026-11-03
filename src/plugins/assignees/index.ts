@@ -89,6 +89,11 @@ export const assignees = definePlugin({
   async storyRows(story, plugin) {
     return [{ label: 'Assignees', value: assigneesText(plugin, story) }];
   },
+  async storyContext(story, plugin) {
+    // An invalid bag throws, so the Story Context lists Assignees as incomplete rather than as none.
+    const handles = plugin.requireBag(story, AssigneesBag)?.assignees ?? [];
+    return { title: 'Assignees', text: handles.join(', ') || 'None.', data: handles };
+  },
   doctor: {
     async check({ data, plugin }) {
       const text = await plugin.files.read('dataRoot', ROSTER_FILE);
