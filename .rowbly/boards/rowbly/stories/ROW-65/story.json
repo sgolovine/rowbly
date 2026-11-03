@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T03:25:32.599Z",
+  "updatedAt": "2026-11-03T04:00:36.191Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -66,11 +66,12 @@
     "software-factory": {
       "stageRun": {
         "stage": "in-pr",
-        "status": "running",
+        "status": "finished",
         "attempt": 1,
         "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
         "by": "sunny",
-        "startedAt": "2026-11-03T03:25:31.829Z"
+        "startedAt": "2026-11-03T03:25:31.829Z",
+        "finishedAt": "2026-11-03T04:00:36.190Z"
       }
     }
   }
