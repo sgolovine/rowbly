@@ -39,18 +39,18 @@
           "updatedAt": "2026-11-03T02:37:46.328Z"
         },
         {
-          "id": "xNYuVPaY",
-          "author": "sunny",
-          "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
-          "createdAt": "2026-11-03T02:19:45.211Z",
-          "updatedAt": "2026-11-03T02:19:45.211Z"
-        },
-        {
           "id": "eOYR8dfJ",
           "author": "sunny",
           "body": "Verified Claude session-limit failure before implementation acceptance; research/plan and existing worktree preserved, one retry awaits explicit continuation choice. Prior worker mcp:e241b183-309f-40b0-9372-d0ce552c97a2 on thinkpad. Prior Run/metadata captured in supervisor state. Preserve current branch/worktree and revisions; no restart authorized.",
           "createdAt": "2026-11-03T02:54:33.430Z",
           "updatedAt": "2026-11-03T02:54:33.430Z"
+        },
+        {
+          "id": "xNYuVPaY",
+          "author": "sunny",
+          "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
+          "createdAt": "2026-11-03T02:19:45.211Z",
+          "updatedAt": "2026-11-03T02:19:45.211Z"
         }
       ]
     }
