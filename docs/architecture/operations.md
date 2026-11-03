@@ -164,3 +164,10 @@ Callers may combine it with `open: true` to find unfinished blockers. Specs take
 `stories.create` collects these bags, Story Spec files and existing blockers’ bags in one Change Set and one journaled commit. Invalid input saves nothing. Story Spec titles use the supplied title, first `#` heading or slug.
 
 The Story editor supplies baselines only for changed Plugin drafts or fields. Tasks compare the loaded stored Task fields (including timestamps); Story Specs compare every slug and its full text/title; Links compare each replaced direction, including incoming links derived from current Board Stories; Board Spec links compare their loaded slugs. Comparisons run in transforms under the Data Root lock. A mismatch raises an attributed `CONFLICT` and saves none of the operation. Unknown Task/bag fields remain preserved and baseline fields never write provenance or identity. These optional baseline inputs opt into conflict detection; direct callers that omit them intentionally replace the current values. Unchanged tabs supply no input and cannot conflict with unrelated edits.
+
+`software-factory.attach` atomically updates the legacy worker string and the current Run's
+`run-metadata.json` identity. Its expected `{stage, attempt, startedAt}` is checked under the lock
+and again against pending state after transforms. A conflicting identity is refused; identical
+attestations write nothing. Every start resets recognized metadata to an empty envelope even when
+timestamps repeat. Clear/Stage changes remove recognized metadata, finish/fail retain it, and
+opaque metadata is preserved and reported. See [ADR-0046](../agents/adr/0046-verified-workers-use-current-run-metadata.md).

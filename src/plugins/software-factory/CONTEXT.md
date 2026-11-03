@@ -41,3 +41,12 @@ read. A Stage Prompt is one Stage's instructions, turned on or off per Stage and
 blocking Stories prevent starts and retries until they reach Stage category `done`. Software Factory
 uses Story Linking's public Story filter; Story Linking checks its own links again in the final start
 guard. Refusal leaves the stored Run and attempt unchanged. Disabled link data stays preserved.
+
+## Worker identity and recovery
+
+A Stage Run's worker string is a launch hint until `run attach` records the supervisor's verified
+machine, harness and thread identity in `run-metadata.json`. Rowbly records that attestation; it
+does not contact the harness. Metadata belongs only to the current Run and is explicitly reset
+on every start, including retry. Clear/Stage changes remove recognized metadata, while finish/fail
+keep it. Unknown data remains unavailable and unchanged. Resolve remote identities on their
+recorded machine before deciding whether work is gone; publish attachment before GO.

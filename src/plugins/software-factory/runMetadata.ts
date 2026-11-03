@@ -76,13 +76,13 @@ async function readMetadata(read: () => Promise<string | null>): Promise<Metadat
       return {
         status: 'unsupported',
         current: false,
-        message: 'Run metadata version is unsupported; this Rowbly reads version 1',
+        message: 'Run details version is unsupported; this Rowbly reads version 1',
       };
     const parsed = RunMetadata.safeParse(raw);
     if (!parsed.success) return { status: 'invalid', current: false, message: parsed.error.message };
     return { status: 'valid', current: false, metadata: parsed.data };
   } catch (error) {
-    return { status: 'invalid', current: false, message: `Run metadata cannot be read: ${(error as Error).message}` };
+    return { status: 'invalid', current: false, message: `Run details cannot be read: ${(error as Error).message}` };
   }
 }
 
@@ -102,7 +102,7 @@ export async function readRunMetadata(plugin: PluginReadContext, story: RunStory
 
 function requireReadable(state: MetadataState): void {
   if (state.status === 'invalid' || state.status === 'unsupported')
-    throw new DataIntegrityError(`Run metadata is unavailable: ${state.message}`, {
+    throw new DataIntegrityError(`Run details are unavailable: ${state.message}`, {
       hint: 'run `rowbly doctor`; repair the file explicitly; its bytes are kept unchanged',
     });
 }
@@ -160,7 +160,11 @@ export async function endRunMetadata(changes: PluginChangeSet, key: string): Pro
 }
 
 /** Stable output exposes no stale worker or selection as current evidence. */
-export function metadataOutput(state: MetadataState): Omit<MetadataState, 'metadata'> & Partial<RunMetadata> {
+export function metadataOutput(state: MetadataState): {
+  status: 'absent' | 'valid' | 'invalid' | 'unsupported';
+  current: boolean;
+  message?: string;
+} & Partial<RunMetadata> {
   if (state.status !== 'valid') return state;
   return state.current ? { status: 'valid', current: true, ...state.metadata } : { status: 'valid', current: false };
 }

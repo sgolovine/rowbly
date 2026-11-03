@@ -24,7 +24,7 @@ export const softwareFactory = definePlugin({
     const metadata = metadataOutput(await readRunMetadata(plugin, story));
     const rows = run ? [{ label: 'Stage Run', value: runText(run) }] : [];
     if (metadata.status === 'invalid' || metadata.status === 'unsupported')
-      rows.push({ label: 'Run metadata', value: 'unavailable; run rowbly doctor' });
+      rows.push({ label: 'Run details', value: 'unavailable; run rowbly doctor' });
     else if (metadata.identity) {
       const i = metadata.identity;
       rows.push({

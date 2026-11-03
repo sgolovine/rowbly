@@ -69,7 +69,7 @@ Git Plugin is off.
   turn it on only when `ROWBLY.md` or the user says to (`rowbly git configure
   --automatic-merge-resolution on`); otherwise ask the user before you start.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
-  after `run start` and before you send the brief, after each worker block you apply, and after
+  after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
   fails, retry it once; then tell the user and send nothing that relies on the change.
 - Never run `git rebase`, `git reset` or a force push yourself.
@@ -98,10 +98,14 @@ tell the user what is missing and how to fix it, and stop.
    Root has one. List every skill, tool, command, server, credential and permission they name, and
    check that you or the workers you start will have each. Name each one that is missing and the
    Stage that needs it.
-6. **Stage Runs already running.** In `rowbly software-factory runs --board <id>`, a Story whose
-   `stageRun.status` is `running` was started by an earlier supervisor. Look for its worker (by
-   `stageRun.worker`) and take it over if you find it. Otherwise ask the user whether to clear the
-   Stage Run and start again (`run clear`, then [start the Story](#start-a-story)).
+6. **Stage Runs already running.** Read `runMetadata` in `runs`. For a current verified identity,
+   resolve its `threadId` through its `harness` on its recorded `machine`, then take over the
+   verified worker. Never resolve remote IDs through local tools by assumption. An unavailable
+   machine does not prove the worker is gone. Missing identity, legacy worker strings and titles
+   require independent verification from a launch receipt or harness result, followed by
+   `run attach` for this exact Run and Board publication. Opaque metadata needs explicit repair.
+   Reconcile unknown/conflicting launch state before clearing or retrying; ask the user when it
+   cannot be resolved. Do not start a duplicate or infer failure from age alone.
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -140,16 +144,26 @@ Report each start, retry, finish, failure, question and Board change to the user
 
 ## Start a Story
 
-1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
-   worker you are about to start (its thread title or id). Start a worker only when this succeeds.
-   Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off, or unresolved blocking Stories remain: report the returned reason and skip it.
-   Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
-2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
-   Comments, Epic and Story links.
-3. Write the brief from [the worker brief](references/worker-brief.md) and start the worker with the
-   worker model, where and how `ROWBLY.md` or the user says.
-4. If the worker cannot be started, run `run fail <KEY> --reason "<why>"`.
+1. Run `rowbly software-factory run start <KEY> --worker "<launch identifier>"`. Keep its returned
+   `stage`, `attempt` and `startedAt` as the expected Run reference. The worker string alone is a
+   launch hint, not verified identity. If the harness can reserve a real thread waiting for GO,
+   use its actual ID. Start work only after this succeeds. Exit 4 means a Run already exists, its
+   Stage Prompt is off or eligibility changed: report the returned reason and skip it.
+2. Read the Story in full: `stories show`, and for each enabled Plugin its Specs, Tasks, Comments,
+   Epic and Story links. Write the brief from [the worker brief](references/worker-brief.md).
+3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
+   actual machine, harness, worker ID and thread ID from the launch receipt/harness result.
+4. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
+   <startedAt> --worker <actual-id> --machine <machine> --harness <harness> --thread-id <thread-id>
+   --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
+   attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
+   identity is refused. Preserve another section's values when adding current-Run metadata.
+5. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+   and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
+6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
+   reconcile the receipt and actual harness state first; do not retry, clear or start another worker
+   merely because a response was lost. If a worker exists but start/attach failed, keep it waiting
+   or cancel it through its harness, and verify that outcome before another launch.
 
 ## Retry context
 
@@ -159,7 +173,8 @@ discarding earlier work.
 
 1. **Capture the previous attempt.** Read `stories show <KEY>` and the current `runs` result. Keep
    the failed Stage Run's attempt, worker, status, reason (or "not recorded"), and start/finish
-   times. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
+   times, plus current identity/selection/heartbeat from `runMetadata` when available. A retry resets
+   recognized metadata even if timestamps repeat, so retain this evidence first. Read the Story's Comments when that Plugin is on, and the prior worker's messages when
    its recorded identifier resolves. Summarize what it completed, validation and publication
    outcomes, and what remains; distinguish a failed worker or launch from failed implementation.
 2. **Recover existing work.** Include the prior branch, worktree path, machine and PR URL whenever

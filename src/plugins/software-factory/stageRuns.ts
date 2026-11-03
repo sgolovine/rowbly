@@ -50,8 +50,8 @@ export async function endVisit(changes: PluginChangeSet, key: string, plugin: Pl
   const change = changes.story(key);
   if (!change?.before || !change.after || change.before.stage === change.after.stage) return;
   // An invalid bag is left for doctor to report rather than dropped (ADR-0011).
-  if (plugin.inspectBag(change.after, StageRunBag).kind !== 'valid') return;
-  await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  if (plugin.inspectBag(change.after, StageRunBag).kind === 'valid')
+    await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
   await endRunMetadata(changes, key);
 }
 

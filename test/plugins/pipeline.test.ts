@@ -476,6 +476,25 @@ describe('guard', () => {
       // Restore only the legacy Run to test the next opaque-file refusal.
       await writeFile(file, before);
     }
+    const opaqueTarget = join(t.path, 'unreadable-run-details.json');
+    await writeFile(opaqueTarget, JSON.stringify(enriched));
+    const beforeUnreadable = await readFile(file);
+    await rm(metadataFile);
+    await symlink(opaqueTarget, metadataFile);
+    expect(await readRunMetadata(factory, await services.stories.get('WEB-2'))).toMatchObject({ status: 'invalid' });
+    expect((await services.doctor.check()).findings).toContainEqual(
+      expect.objectContaining({ code: 'SOFTWARE_FACTORY_RUN_METADATA_INVALID' }),
+    );
+    await expect(attachWorker(factory, 'WEB-2', { ...attachment, ...runRef(returned.stageRun) })).rejects.toMatchObject(
+      { code: 'DATA_INTEGRITY' },
+    );
+    await clearRun(factory, 'WEB-2');
+    await expect(startRun(factory, 'WEB-2', { worker: 'new-launch' })).rejects.toMatchObject({
+      code: 'DATA_INTEGRITY',
+    });
+    expect(await readFile(opaqueTarget, 'utf8')).toBe(JSON.stringify(enriched));
+    await rm(metadataFile);
+    await writeFile(file, beforeUnreadable);
     await writeFile(metadataFile, JSON.stringify({ version: 1, run: runRef(returned.stageRun) }));
     await endRun(factory, 'WEB-2', { status: 'failed', reason: 'retry later' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { 'story-linking': { blocks: 'future shape' } } });
