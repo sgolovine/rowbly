@@ -4,5 +4,16 @@
     "stage": "in-pr",
     "attempt": 1,
     "startedAt": "2026-11-03T04:08:46.321Z"
+  },
+  "identity": {
+    "worker": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
+    "verification": {
+      "source": "SSH T3 start/show verified explicit new bound review worktree, catalog model provider defaults no options requested, full-access reservation; /tmp/rowbly-factory-session/ROW-50-verified-new.json",
+      "verifiedAt": "2026-11-03T04:08:47.086Z",
+      "by": "sunny"
+    }
   }
 }
