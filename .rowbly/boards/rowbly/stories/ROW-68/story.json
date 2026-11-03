@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-68",
+  "boardId": "rowbly",
+  "name": "Rowbly Updater",
+  "description": "We want to tell users when their is a new version of rowbly available.\n\n- When starting up rowbly, run an async check to see if there is a new version available\n- Check npm: https://www.npmjs.com/package/rowbly\n- If a new version is available, inform the user that they can update by running `npm i -g rowbly`\n",
+  "stage": "in-progress",
+  "rank": "a4",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T01:11:48.683Z",
+  "updatedAt": "2026-11-03T01:11:51.325Z"
+}
