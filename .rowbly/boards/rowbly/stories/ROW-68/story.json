@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T01:11:48.683Z",
-  "updatedAt": "2026-11-03T01:13:19.691Z",
+  "updatedAt": "2026-11-03T01:17:51.914Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-11-03T01:13:19.690Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SPcdFL5P",
+          "author": "sunny",
+          "body": "Supervisor: ROW68 plan ACCEPTED with refinements. Bare rowbly starts the TUI, so TUI-only startup check satisfies this Story; commands/JSON/no-prompt/agents make no request and gain no output. Latest stable npm manifest only, no updater/installation feature, failures silent and startup nonblocking. Confirm aborting on exit also clears all timeout/request handles so no rejection or delayed exit; handle stale/unmounted promise resolution safely. ROWBLY_NO_UPDATE_CHECK=1 and demo skip accepted. No need cache/preferences machinery. Preserve readable update text and npm i -g rowbly at normal80-column width; do not accept an unreadable notice merely as a known risk. Use width-aware existing footer conventions, shorten/replace current-version area or a small existing-layout message as needed while retaining usable key hints; show80 and narrow screenshots. Avoid unsolicited new TUI context abstraction if simple existing wiring suffices. ADR0047 is RESERVED for ROW53 guide exception if user approves and0048 reservedROW50heartbeat; use0049 provisionally for ROW68 firstnetworkcall decision, recheck allmain/openPR reservations. Keep ADR concise/current behavior, no reversal of existing decisions. Manual controlled network success/failure/hang/abort scenarios plus exactTUI startup/quit and optout, commandJSON unchanged; fourchecks required. Extend a kept test only if AGENTS required contract/race rules genuinely apply, no mirror tests. All screenshot evidence withagenticTUI, temporary versionoverride outside taskbranch allowed, rawPNGs200. Fetch/merge currentmain before implementation/finalchecks, keep plan scope, noBoardwrites. Proceed.",
+          "createdAt": "2026-11-03T01:17:51.913Z",
+          "updatedAt": "2026-11-03T01:17:51.913Z"
+        }
+      ]
     }
   }
 }
