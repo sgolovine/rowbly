@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T04:16:11.737Z",
+  "updatedAt": "2026-11-03T04:18:19.450Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -95,6 +95,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
+        },
+        {
+          "id": "KpYEvuFh",
+          "author": "sunny",
+          "body": "Returned-work continuation under current InPR requested-changes flow: Continue SAME PR149 branch row-47-independent-review-gate head801ae8ffc1c2356e315bed70bb2e565de49d8c4f. Only remaining product correction is additive integration with landed main retaining Independent review plus Returned work and complementary retention/cleanup/generatedbrief rules; both earlier semantic findings are fixed. Supervisor-owned proposal model wording corrected to any eligible live-catalog model different from all authors, same provider allowed. Fresh Opus correction worker must present plan before changes, update samePRnormally, allfourleasedchecks, then fresh independentreview. Merge order149->147->146->145 stays; no other factoryPR merge before clearance.",
+          "createdAt": "2026-11-03T04:18:19.448Z",
+          "updatedAt": "2026-11-03T04:18:19.448Z"
         }
       ]
     }
