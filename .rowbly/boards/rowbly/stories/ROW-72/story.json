@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T07:37:42.685Z",
+  "updatedAt": "2026-11-03T07:37:43.370Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -110,6 +110,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/153 at ab83538b74744918cb2b7ff745f41381506eeb7e by codex/gpt-6-astra: APPROVED. Reviewed all 34 changed files against the Story Spec, accepted plan revisions, AGENTS.md and relevant architecture/API/TUI documentation. Both prior findings are resolved: failed publication, queue, lock-file and recovery phases retain their elapsed timing, with deterministic attribution, original-error and trace-off checks; loaders, returned mappers and legacy search callbacks receive independent deep inputs, with mutation/failure isolation coverage. Bounded file batches preserve ordered results, per-entry versus whole-call error classification, recovery and inter-batch lock release. Core Story/config loading precedes optional callbacks, stale enrichment is discarded, same-Board selection avoids Local State writes, and cross-Board navigation and Built-in Plugin behavior remain intact. No merge-blocking findings. Independent validation passed once under the shared bounded lease: pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), pnpm test:cli (21 passed). Validation used an isolated checkout of the reviewed head with a clean local merge of origin/main de071256; local commit d388a7d61977ae0787114e06d86604342ea0be75 differs only in supervisor Run data. All 18 linked PNGs returned HTTP 200 and were visually inspected. The retained 71/501-Story profiles support the reported reductions; filesystem counts cover node:fs/promises, synthetic delays ran on a shared machine, and the original incident remains unattributed. All 12 GitHub checks are completed SUCCESS, with clean mergeability and no formal change requests. Fresh reviewer: mcp:3422e09e-b862-45e6-9094-0d98e61263cb, codex/gpt-6-astra, reasoningEffort high, serviceTier default, verified receipt 5c5ea101425e44976561126137273f92. Every branch commit is accounted for by the original claudeAgent/claude-opus-5-5 worker and correction codex/gpt-6.1-sol worker; this reviewer is neither author and used neither implementing model. No product edits, test retries or Board writes. Review evidence and validation log: /home/sgolovine/row-72-review-astra-2-evidence/. Review checkout and all earlier resources retained; no TUI, daemon or watcher started.",
           "createdAt": "2026-11-03T07:37:42.684Z",
           "updatedAt": "2026-11-03T07:37:42.684Z"
+        },
+        {
+          "id": "RCFZ4MJg",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/153 at ab83538b74744918cb2b7ff745f41381506eeb7e. Merge commit 5670b32b2a2996d00579438dbfeea08bc0e98314. Exact-head approval: https://github.com/sgolovine/rowbly/pull/153#issuecomment-6598043271. All merge gates passed; merged with --merge --match-head-commit, without branch deletion. One post-merge main CI snapshot did not yet list the merge commit; supervisor owns follow-up. No worker watch or poller. All resources retained, no owned processes running.",
+          "createdAt": "2026-11-03T07:37:43.370Z",
+          "updatedAt": "2026-11-03T07:37:43.370Z"
         }
       ]
     }
