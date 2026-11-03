@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Make factory model selection explicit and auditable",
   "description": "Factory review recommendation 14 of 20.\n\n## Context\n\nROWBLY.md’s model and provider-usage policy differs from observed worker choices, and Stage Runs do not explain the selection.\n\n## Acceptance criteria\n\n- Define a feasible model-selection policy and specify the supported usage source, or remove unverifiable usage requirements.\n- Record the selected provider/model and relevant fallback reason with each Stage Run.\n- Make policy compliance inspectable after supervisor restart.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "aA",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:13:05.672Z",
+  "updatedAt": "2026-11-03T05:13:06.362Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:34:35.728Z",
-        "finishedAt": "2026-11-03T05:13:03.659Z"
-      }
     },
     "comments": {
       "comments": [
