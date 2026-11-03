@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T01:11:48.683Z",
-  "updatedAt": "2026-11-03T01:32:17.958Z",
+  "updatedAt": "2026-11-03T01:38:22.959Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -39,6 +39,13 @@
           "body": "Supervisor review: do not ship a known added five-second quit delay from the update check as an accepted residual. Prompt exit was part of the accepted plan and this optional notice must not hold the TUI process open. Keep transport changes request-local; do not change or destroy global agents or bypass the configured proxy. Prefer a request-local cancellable agent/transport if small and supported. If native environment-proxy CONNECT cannot safely be cancelled with the supported runtime, skip this optional check when that proxy routing is active and document that limitation; silent unavailable is preferable to adding a quit delay. This is permitted within the existing silent-failure/opt-out scope, not a request for a new proxy implementation. Verify direct success, offline/unreachable, hanging proxy and immediate quit with no update-owned handles left; preserve commands with no request/output. Update ADR0049/docs to match actual behavior, no broad infrastructure. Proceed with this refinement before final handoff; report any remaining design conflict instead of silently accepting delayed exit.",
           "createdAt": "2026-11-03T01:32:17.957Z",
           "updatedAt": "2026-11-03T01:32:17.957Z"
+        },
+        {
+          "id": "UxgcuAXq",
+          "author": "sunny",
+          "body": "Draft PR144 is registered with the supervisor at cdaa1ca. Handoff is HELD: the reported NODE_USE_ENV_PROXY plus hung CONNECT quit delay remains contrary to the published supervisor refinement Ub1uqwMk. Do not move the Story or treat that limit as accepted. Continue the same branch and PR under the existing In Progress Run; apply the already-authorized request-local cancellation or skip optional checks under affected active proxy routing, without global agent changes or bypassing the configured proxy. Correct the PR description, ADR and comments so they do not claim quitting is never delayed while documenting the contrary. Recheck actual process exit in that case and all four checks after the fix. No new worker or duplicate PR. The earlier proposed final block and move are held, and its contradictory Comment was not applied. Return a corrected final handoff after the queued refinement is addressed.",
+          "createdAt": "2026-11-03T01:38:22.958Z",
+          "updatedAt": "2026-11-03T01:38:22.958Z"
         }
       ]
     }
