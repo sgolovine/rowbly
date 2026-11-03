@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T03:22:54.218Z",
+  "updatedAt": "2026-11-03T03:22:55.461Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 2,
+        "worker": "mcp:818848ba-51cb-4499-9dd5-601669d045be",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:05:33.830Z",
+        "finishedAt": "2026-11-03T03:22:54.218Z"
+      }
     },
     "comments": {
       "comments": [
@@ -53,19 +64,15 @@
           "body": "Implementation record: InProgress retry2 worker mcp:818848ba-51cb-4499-9dd5-601669d045be machine thinkpad provider codex model gpt-6.1-sol, branch factory/row-65, PR150 head96e6bc5e7c365a183a3134115423ef762cc61e86. Preserved previous partial implementation from verified Opus5.5 worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad. Both models authored this work; independent reviewer must differ from both. Scope A2-only correction/retention/ADR0050; A1 remains held. Allfourchecks pass unit78 CLI20, screenshot200; original evidence/PRassets untouched.",
           "createdAt": "2026-11-03T03:22:52.918Z",
           "updatedAt": "2026-11-03T03:22:52.918Z"
+        },
+        {
+          "id": "iGsbj9fG",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/150 . Completed A2 deletion-intent correction, ADR-0050 retention policy and coherent supervisor-event sync batching while preserving publication barriers and frequency change. A1 remains held. Typecheck, lint, 78 unit tests, 20 CLI tests and build passed; uploaded CLI screenshot verified HTTP 200. All existing evidence and pr-assets preserved. Supervisor-owned ROWBLY.md patch is in PR comment https://github.com/sgolovine/rowbly/pull/150#issuecomment-6594504587 for application on main. Branch factory/row-65 pushed at 96e6bc5e7c365a183a3134115423ef762cc61e86; CI queued.",
+          "createdAt": "2026-11-03T03:22:55.460Z",
+          "updatedAt": "2026-11-03T03:22:55.460Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 2,
-        "worker": "mcp:818848ba-51cb-4499-9dd5-601669d045be",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:05:33.830Z",
-        "finishedAt": "2026-11-03T03:22:54.218Z"
-      }
     }
   }
 }
