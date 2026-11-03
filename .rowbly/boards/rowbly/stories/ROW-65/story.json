@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T01:56:42.412Z",
+  "updatedAt": "2026-11-03T02:13:12.381Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:ec258031-f91b-455d-a30b-d7d3b238985d",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:13:11.585Z"
+      }
     }
   }
 }
