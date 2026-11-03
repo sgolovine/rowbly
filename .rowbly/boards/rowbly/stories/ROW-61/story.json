@@ -4,31 +4,28 @@
   "boardId": "rowbly",
   "name": "Clean up factory resources after merge",
   "description": "Factory review recommendation 15 of 20.\n\n## Context\n\nThe review found 82 worktrees, many pr-assets branches and a long-lived agentic-tui daemon on rook.\n\n## Acceptance criteria\n\n- Add a Done Stage Prompt or equivalent completion workflow for resource cleanup.\n- Remove merged task branches, associated pr-assets branches and worktrees on the machine that owns them, after verifying they contain no unmerged work.\n- Stop task-owned daemons and enable repository branch deletion on merge where appropriate.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a5",
+  "stage": "done",
+  "rank": "b0B",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T03:09:30.840Z",
+  "updatedAt": "2026-11-03T04:16:09.035Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:04:34.806Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "07fJCe3r",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/151 opened at 79ab63d8b6c1b9cc56fdcb30a22c4caf3c612dde. Implements dry-run-first owned local cleanup, mandatory harness inactivity and exclusive lease checks, protected refs, guarded branch deletion, exact task daemon shutdown and completion guidance. Typecheck, lint, 78 unit tests and 21 CLI tests passed; temporary-repository race/refusal and daemon checks passed. Screenshot uploaded and verified HTTP 200. Successful worktree removal remains unverified because unreadable process information correctly caused retention. Remote refs, all pr-assets and delete_branch_on_merge remain conditional/deferred; no existing repository resources deleted or settings changed. Coordinate ROW-65 retention/shared docs. CI Verify passed; remaining checks pending at handoff.",
+          "createdAt": "2026-11-03T03:35:22.630Z",
+          "updatedAt": "2026-11-03T03:35:22.630Z"
+        },
         {
           "id": "EVUVthgu",
           "author": "sunny",
@@ -42,6 +39,13 @@
           "body": "REVISED PLAN ACCEPTED with final constraints. Implement dry-run-by-default explicit-owned-resource cleanup and per-task daemon isolation, no real repository resources/settings cleanup now. Never delete remote refs or pr-assets. Report those criteria as conditional/deferred, not already deleted/satisfied. Coordinate ROW65 indefinite linked-evidence retention. Local compare-and-delete must recheck branch not checked out in any other worktree immediately before action; protect main/default/base/control branches. Daemon stopping requires the EXACT task-owned nondefault state directory recorded for this Story, not merely any nondefault env value and CWD match; otherwise retain/report. Prefer stopping via that daemon's own scoped API, recheck PID identity before any signal, never shared/unknown process. Supervisor harness inactivity/ownership checks mandatory even when no CWD process. No archive of threads. A1/A2 ROW65 Git changes separate. Four checks and meaningful temporary-repo failure/race checks as planned; use existing regression test home if a race-fix contract requires it under AGENTS. No ADR for guidance alone. All .rowbly and delete_branch_on_merge settings remain proposals, not execution.",
           "createdAt": "2026-11-03T02:26:06.777Z",
           "updatedAt": "2026-11-03T02:26:06.777Z"
+        },
+        {
+          "id": "Ka28SCJs",
+          "author": "sunny",
+          "body": "APPROVED exact head 79ab63d8b6c1b9cc56fdcb30a22c4caf3c612dde. Independent review: https://github.com/sgolovine/rowbly/pull/151#issuecomment-6594964986. Typecheck and lint passed; unit 78 and CLI 21 passed. Controlled throwaway worktree removal and fail-closed cases passed; screenshot HTTP 200. Merged https://github.com/sgolovine/rowbly/pull/151 as 029b726707f7e21e0864346069d11ef325cfd6ae. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41574506079. Production adapter/lease remains required; remote refs, evidence cleanup and automatic branch deletion remain deferred. No actual resources or settings changed.",
+          "createdAt": "2026-11-03T04:16:08.189Z",
+          "updatedAt": "2026-11-03T04:16:08.189Z"
         },
         {
           "id": "KxmOCKHu",
@@ -63,6 +67,13 @@
           "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
           "createdAt": "2026-11-03T02:19:44.435Z",
           "updatedAt": "2026-11-03T02:19:44.435Z"
+        },
+        {
+          "id": "vFqBfIYu",
+          "author": "sunny",
+          "body": "Implementation record before Stage change: verified authoring history initial Opus partial script71348b9f plus Sol continuationc4d7a92b. Current implementing worker mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d on thinkpad model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/151. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
+          "createdAt": "2026-11-03T03:35:19.978Z",
+          "updatedAt": "2026-11-03T03:35:19.978Z"
         }
       ]
     }

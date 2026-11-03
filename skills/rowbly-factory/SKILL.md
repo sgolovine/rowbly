@@ -132,6 +132,8 @@ tell the user what is missing and how to fix it, and stop.
    cannot be resolved. Do not start a duplicate or infer failure from age alone. Check each
    running Run's `runMetadata.selection` against the model policy, as
    [Model Selection](#model-selection) says, and report any that is missing or does not comply.
+   Finding the worker is not activity: touch only on what it has done since
+   (see [Stale Runs](#stale-runs)).
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -146,8 +148,8 @@ Run until the user stops you. Do not wait for the user between events.
    background, with the harness's way to run a command and resume when it exits. It returns as soon
    as `runs` differs from that digest (a Story entered a Stage whose Stage Prompt is on, or a Stage
    Run or eligibility changed), at once if it already does, or with `changed: false` after the
-   timeout. Act on what it returns as on `runs`. Worker messages do not reach it: resume on them
-   as well, and keep the timeout as long as your check on quiet workers allows. Stop the wait (a signal) when you stop.
+   timeout, or once when a running Stage Run becomes stale. Act on what it returns as on `runs`.
+   Worker messages do not reach it: resume on them as well. Stop the wait (a signal) when you stop.
    Never wait on a digest newer than the `runs` you acted on. Re-read `software-factory stages`
    before each start, so a Stage Prompt the user changed or turned off takes effect.
 2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
@@ -167,6 +169,8 @@ Run until the user stops you. Do not wait for the user between events.
    was. If eligibility cannot be read, report the error and start nothing from
    that result. Existing running workers are still supervised normally.
 6. **Act on each worker message**, as in [Worker messages](#worker-messages).
+7. **Stale Runs.** Check each running Stage Run whose `liveness.stale` is true, as in
+   [Stale Runs](#stale-runs).
 
 Report each start, retry, finish, failure, question and Board change to the user in one short line.
 
@@ -183,11 +187,15 @@ Report each start, retry, finish, failure, question and Board change to the user
    launch from a stale overview or after a refused start.
 3. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
    for workers and the other Stories workers are on, and on a retry `--retry-file` with the
-   [retry context](#retry-context). Its `markdown` is every section of
+   [retry context](#retry-context). Its `markdown` supplies the generated context of
    [the worker brief](references/worker-brief.md) after the rules: the Story in full, the Stage
    Prompt and `ROWBLY.md`. The brief is the template's rules, with `<KEY>` filled in, followed by
-   `markdown`. Exit 4 with `details.incomplete` means part of the Story or `ROWBLY.md` cannot be
-   read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
+   `markdown`. For an independent review, follow [Independent review](#independent-review):
+   append one filled Implementation records section after the generated markdown, containing all
+   verified authoring records and the selected reviewer identity. Do not substitute the manual
+   template or rely on its unfilled placeholders. Finalize that section from the verified launch
+   before sending GO in step 6. Exit 4 with `details.incomplete` means part of the Story or
+   `ROWBLY.md` cannot be read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
    `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
    template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
 4. Launch or use the reserved worker with the recorded selection, as `ROWBLY.md` says, keeping it
@@ -203,7 +211,10 @@ Report each start, retry, finish, failure, question and Board change to the user
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
    attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
    identity is refused. Preserve another section's values when adding current-Run metadata.
-6. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+6. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
+   [resource record](references/cleanup.md) outside the checkout. Add private daemon directories
+   as workers report them; complete the merged PR/head/base fields before cleanup.
+   Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
    and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
 7. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
    reconcile the receipt and actual harness state first; do not retry, clear or start another worker
@@ -284,6 +295,48 @@ put them in the brief's other instructions with the failure to fix: "Continue" w
 Prompt or `ROWBLY.md` says returned work is continued, otherwise as a question for the user. On a
 mismatch, report it and ask; never start again or discard the recorded work.
 
+## Independent review
+
+Follow this when a Stage Prompt asks for an independent review before a merge. The reviewer must be
+a new worker using a model different from every model that implemented the Story. Its approval
+holds only for the commit it reviewed.
+
+1. **Record each implementation.** A Run is an implementation when its worker can change the
+   Story's code (for example, its Stage Prompt names `rowbly-dev`), finished or failed. Before you
+   apply its block, whose move ends the Run and removes its metadata, add a Comment yourself:
+
+   ```text
+   Implementation record: <Stage name> attempt <n>, <finished|failed>.
+   Worker: <worker> (thread <threadId>, harness <harness>, machine <machine>).
+   Model: <provider instance>/<model>, options <id=value, …>. Source: <launch receipt or result>.
+   Branch: <branch or unknown>. PR: <URL or unknown>. Head: <commit SHA or unknown>.
+   ```
+
+   Take the worker and model from the launch you verified, not from the worker's own message; take
+   the head from `gh pr view <n> --json headRefOid` or the branch. Record a failed attempt too: it
+   may have pushed commits.
+2. **Check provenance before a review.** Read every implementation record in the Comments. When the
+   branch has commits that no record accounts for (work from before this rule, a person, an
+   unverified worker or an unknown model), you may add a record from verified evidence, such as a
+   launch receipt or the harness's thread, citing it. Otherwise ask the user which workers and
+   models wrote them. Never guess a model.
+3. **Choose the reviewer.** Start a new worker: never send the brief to a thread named in a record.
+   Its model must differ from every implementing model in the records. The same provider is
+   allowed; changing only effort or options does not make it another model. When `ROWBLY.md`
+   and the user leave no such model available, ask the user rather than reuse one. Append one
+   filled Implementation records section to the actual generated review brief after its markdown.
+   Include ALL verified authoring records, their evidence sources, and the selected
+   reviewer's verified worker ID, thread ID, provider instance and model. Check the assembled
+   message before GO; missing or unknown provenance requires asking the user, never guessing.
+4. **Approval holds for one commit.** A review Comment approves only the head SHA it names. A commit
+   pushed after it, including a merge of the base branch, needs another review. Changes requested
+   send the Story back to be built; that Run gets its own record, and the next reviewer must differ
+   from it as well.
+5. **Check before Done.** Before you apply a move to a Stage of category `done` from a reviewing
+   Stage, check that a review Comment, on the Board or earlier in the same block, approves the PR's
+   final head (`gh pr view <n> --json headRefOid,state`) from a reviewer that meets step 3. If none
+   does, do not apply the move; tell the user.
+
 ## Worker messages
 
 Workers end messages with these markers, as the brief asks:
@@ -292,13 +345,87 @@ Workers end messages with these markers, as the brief asks:
 | --- | --- |
 | a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
 | `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block with any move held earlier added at its end. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block; Rowbly drops its move. |
+| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end. |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move. |
 
-A worker that stops with no final marker, or has written nothing for a long time, needs a look:
-ask it for its state. If it is gone, run `run fail` with what you know.
+Each message from a worker, and each event its harness reports for it (a turn starting or ending,
+a commit pushed), is verified activity: record it as the Stage Run's heartbeat.
+
+```sh
+rowbly software-factory run touch <KEY> --stage <stage> --attempt <attempt> --started-at <startedAt> \
+  --worker <worker> --source "<what you saw, such as: worker message, PLAN>" --json --no-prompt
+```
+
+Copy the Run and worker from `runs`. Touch only on activity you saw: not on polling, on the thread
+being reachable, or on a status such as `completed` or `running`. Exit 4 means the Run changed or
+has no attached worker: read `runs` again and do not attach just to touch. Exit 6: report it.
+
+## Stale Runs
+
+`runs` marks a running Stage Run `stale` when its worker has not been seen (its heartbeat, else its
+start) for 15 minutes, or `--stale-after <minutes>` given to both `runs` and `wait`. Stale asks you
+to check; it never permits clearing, failing, retrying or starting another worker by itself.
+
+1. Find the worker through its attached identity and read its thread.
+2. New activity since `lastSeenAt` (a message, a turn, a commit): touch with that as `--source`.
+3. Waiting for a person, or for an answer you owe it: leave the Run as it is and tell the user once.
+   Do not touch for waiting.
+4. Verifiably gone (the harness reports the thread missing or ended with no final marker, and asking
+   it for its state gets no reply): `run fail <KEY> --reason "<what you checked>"`; the usual retry
+   rule then applies.
+5. You cannot tell (the machine is unreachable, the evidence conflicts): report it to the user and
+   leave the Run alone.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
+
+After a PR is verified merged and its worker is finished, follow
+[completion cleanup](references/cleanup.md) on the owning machine. This is a supervisor completion
+step, not a new Stage Prompt or a sweep of historical Stories. Retain explicit resource ownership
+at launch; cleanup defaults to dry run, requires fresh harness inactivity and an exclusive resource
+lease, and retains remote refs and all evidence branches. Unknown or active resources stay.
+
+## Waiting for pull request checks
+
+A Stage whose work depends on a pull request's checks (merging, say) must not spend model turns
+watching CI. Waiting is the supervisor's job, and a worker never loops on `gh pr view` or `gh pr
+checks`.
+
+- **Prefer an event.** If the harness can watch a pull request and wake you when its checks finish,
+  a review arrives or the branch conflicts, use it, end your turn and act on the wake. The
+  supervisor owns that watch; a worker does not start one. `ROWBLY.md` names the harness's tool.
+- **A worker returns state instead of waiting.** Independent diff review may start and finish
+  while checks are still running. Complete work that does not depend on CI first. If remaining
+  work needs the checks, report the PR URL, the exact head SHA and each pending check's name,
+  end the turn and let the supervisor resume it.
+- **Fallback: one bounded watch.** Where there is no event, the supervisor starts a single command in
+  the background, with the harness's way to resume when it exits, and never a loop of model turns:
+
+  ```sh
+  timeout 30m gh pr checks <number> --watch --fail-fast --interval 30
+  ```
+
+  Watch all checks; `--required` reports nothing on a branch without protection rules.
+- **Inspect conclusions after every wake.** An event or any watch exit code is only a wake
+  signal; exit 0 does not prove every check passed. Read once with
+  `gh pr view <number> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup`.
+  Confirm the head SHA still matches the head being processed and inspect the full rollup for
+  that current head before any merge. If it changed, discard the old result and process the new
+  head. Classify actual check conclusions, not the watch exit code:
+
+  | Outcome | Sign | Do |
+  | --- | --- | --- |
+  | Settled, all passed | nonempty current-head rollup: every CheckRun is `COMPLETED` with conclusion `SUCCESS`, and every StatusContext has state `SUCCESS` | continue the Stage's work, subject to its other gates |
+  | A check failed | a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED`, or a StatusContext state of `FAILURE` or `ERROR` | route it as the Stage Prompt says for failed checks; name the check and its link |
+  | No checks yet | empty current-head rollup soon after a push (the watch may say "no checks reported") | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
+  | Still pending or wait timed out | unfinished checks or pending StatusContexts, including after the watch's timeout (exit 124) | not a failed check: report **waiting** with the head SHA and the pending names, or ask; do not repeat a timed-out watch |
+  | Terminal result needs a decision | `CANCELLED`, `SKIPPED`, `NEUTRAL`, or any unrecognized terminal conclusion or state | does not establish all passed: follow an explicit policy or ask; never infer success from exit 0 |
+
+  A pull request that cannot be read or used (no access, wrong repository, closed) is separate:
+  report the error and ask. `mergeable` reads `UNKNOWN` for a while after a push to the base
+  branch; that is pending too.
+- **Cancel and restart.** A push gives the pull request a new head and new checks, so cancel the
+  watch for the old head (send the process a signal) and start one for the new head. Stopping the
+  factory, finishing the Stage Run or moving the Story away cancels it too. Leave no watch running.
 
 ## Apply a worker's commands
 

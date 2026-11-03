@@ -1,6 +1,7 @@
 import { definePlugin } from '../../plugin-api';
 import { commands } from './commands';
 import { doctor } from './doctor';
+import { guardTouchedRun } from './heartbeat';
 import { holdText, readHold } from './holds';
 import { metadataOutput, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
@@ -39,6 +40,7 @@ export const softwareFactory = definePlugin({
   hooks: {
     'software-factory.start': { guard: ({ plugin, changes, result }) => guardStartedRun(plugin, changes, result) },
     'software-factory.attach': { guard: ({ plugin, changes, result }) => guardAttachedWorker(plugin, changes, result) },
+    'software-factory.touch': { guard: ({ plugin, changes, result }) => guardTouchedRun(plugin, changes, result) },
     'stories.move': {
       transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin),
       guard: ({ changes, result, pluginInput, plugin }) => guardFinishedRun(changes, result.key, pluginInput, plugin),

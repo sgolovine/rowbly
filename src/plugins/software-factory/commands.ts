@@ -1,6 +1,8 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
 import { workerBrief } from './brief';
+import { type TouchRun, touchRun } from './heartbeat';
 import { holdStory, holdText, releaseStory } from './holds';
+import { livenessText, parseStaleAfter } from './liveness';
 import { applyBlock, applyTable } from './reportedCommands';
 import { ModelSelection } from './runMetadata';
 import {
@@ -110,11 +112,12 @@ function runsTable(overview: RunsOverview): string {
   const digest = `Digest: ${overview.digest}`;
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
   const table = renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Verified worker', 'Model', 'Eligibility', 'Name'],
+    ['Story', 'Stage', 'Stage Run', 'Last seen', 'Verified worker', 'Model', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
       s.stage,
       runText(s.stageRun),
+      livenessText(s.liveness),
       s.runMetadata.identity
         ? `${s.runMetadata.identity.machine} / ${s.runMetadata.identity.harness} / ${s.runMetadata.identity.threadId}`
         : s.runMetadata.status === 'invalid' || s.runMetadata.status === 'unsupported'
@@ -135,6 +138,8 @@ function runsTable(overview: RunsOverview): string {
 function waitText(result: WaitResult): string {
   return `${result.changed ? 'Changed' : 'No change before the timeout'}\n${runsTable(result)}`;
 }
+
+const STALE_AFTER = 'minutes without a sign of its worker before a running Stage Run is stale (default 15)';
 
 /** The longest `--timeout`: a longer timer would fire at once. */
 const MAX_TIMEOUT_SECONDS = 2_147_483;
@@ -231,9 +236,11 @@ export const commands: PluginCommands = (group, cli) => {
     .command('runs')
     .description('List the Stories in Stages whose Stage Prompt is on, with their Stage Runs')
     .option('--board <id>', 'the Board')
-    .action((opts: { board?: string }, cmd) =>
+    .option('--stale-after <minutes>', STALE_AFTER)
+    .action((opts: { board?: string; staleAfter?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
-        print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+        const staleAfterMinutes = parseStaleAfter(opts.staleAfter);
+        print(await runsOverview(plugin, await resolveBoard(opts.board), { staleAfterMinutes }), runsTable);
       }),
     );
 
@@ -287,16 +294,21 @@ export const commands: PluginCommands = (group, cli) => {
     .option('--board <id>', 'the Board')
     .option('--since <digest>', 'the digest of the runs last read; without it, the runs when the wait starts')
     .option('--timeout <seconds>', 'stop waiting after this many seconds, with nothing changed')
-    .action((opts: { board?: string; since?: string; timeout?: string }, cmd) =>
+    .option('--stale-after <minutes>', `${STALE_AFTER}; give the same as to runs`)
+    .action((opts: { board?: string; since?: string; timeout?: string; staleAfter?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard, waitFor }) => {
         const timeout = parseTimeout(opts.timeout);
+        const staleAfterMinutes = parseStaleAfter(opts.staleAfter);
         const board = await resolveBoard(opts.board);
         const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout * 1000);
-        print(await waitForRuns(plugin, board, waitFor, { since: opts.since?.trim() || undefined, signal }), waitText);
+        const since = opts.since?.trim() || undefined;
+        print(await waitForRuns(plugin, board, waitFor, { since, signal, staleAfterMinutes }), waitText);
       }),
     );
 
-  const run = group.command('run').description("Start, attach a worker to, finish, fail or clear a Story's Stage Run");
+  const run = group
+    .command('run')
+    .description("Start, attach a worker to, touch, finish, fail or clear a Story's Stage Run");
   run
     .command('start <story>')
     .description("Start a Stage Run on the Story's current Stage, whose Stage Prompt must be on")
@@ -336,6 +348,22 @@ export const commands: PluginCommands = (group, cli) => {
           await attachWorker(plugin, key, opts),
           (r) =>
             `${runLine(r)}\nVerified worker: ${r.identity.machine} / ${r.identity.harness} / ${r.identity.threadId}`,
+        );
+      }),
+    );
+  run
+    .command('touch <story>')
+    .description("Record verified activity of the running Stage Run's attached worker, as its heartbeat")
+    .requiredOption('--stage <stage>', 'expected Stage Run Stage')
+    .requiredOption('--attempt <number>', 'expected Stage Run attempt', Number)
+    .requiredOption('--started-at <timestamp>', 'expected Stage Run start time')
+    .requiredOption('--worker <id>', 'the attached worker')
+    .requiredOption('--source <text>', "the activity you verified, such as the worker's message or a harness event")
+    .action((key: string, opts: TouchRun, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await touchRun(plugin, key, opts),
+          (r) => `${runLine(r)}\nLast seen: ${r.heartbeat.at} (${r.heartbeat.source})`,
         );
       }),
     );

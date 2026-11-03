@@ -70,6 +70,10 @@ The Plugin cannot infer which Story an old key meant; inspect and correct links 
 Open a Story's **Links** tab. Each row says **Blocks KEY** or **Blocked by KEY** and shows the linked
 Story's name. `↑`/`↓` selects, `enter` or a click opens that Story, and `esc` returns. `/` filters the
 rows. `n` opens a new-link form with a relationship direction and Stories on this Board; `ctrl+s`
-adds it. `d` removes the selected relationship after confirmation (`y` confirms, `n` cancels).
+adds it. The Story field in this form and the New Story / Edit Story Links tab opens a fuzzy
+picker when you type or press Enter. Search by Story Key or name, use ↑/↓ and Enter to choose
+without submitting, Escape to cancel the query and retain the prior choice, or Ctrl+L to clear the
+query and show all choices. No matches leave the choice unchanged. Choices stay on this Board and
+exclude the current Story. `d` removes the selected relationship after confirmation (`y` confirms, `n` cancels).
 
 Story creation accepts repeatable `stories create --blocks <KEY>` and `--blocked-by <KEY>`. Targets must exist on the same Board; missing or cross-Board targets are `VALIDATION` (exit 2) and save nothing. The Links create tab collects both directions with `n`. Existing blockers' bags update atomically with the new Story, Tasks and Spec files.

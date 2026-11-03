@@ -38,15 +38,16 @@ export const ModelSelection = z.strictObject({
   selectedAt: TimestampSchema,
 });
 export type ModelSelection = z.infer<typeof ModelSelection>;
+/** Supervisor-attested worker activity for the current Run (ADR-0048 §2). */
+export const Heartbeat = z.strictObject({ worker: Text, at: TimestampSchema, source: Text, by: SlugSchema.nullable() });
+export type Heartbeat = z.infer<typeof Heartbeat>;
 export const RunMetadata = z
   .strictObject({
     version: z.literal(1),
     run: RunRef,
     identity: WorkerIdentity.optional(),
     selection: ModelSelection.optional(),
-    heartbeat: z
-      .strictObject({ worker: Text, at: TimestampSchema, source: Text, by: SlugSchema.nullable() })
-      .optional(),
+    heartbeat: Heartbeat.optional(),
   })
   .refine((m) => !m.heartbeat || m.heartbeat.worker === m.identity?.worker, {
     message: 'Heartbeat needs the same verified worker identity',

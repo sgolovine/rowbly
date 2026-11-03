@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Return failed checks and merge conflicts to implementation",
   "description": "Factory review recommendation 2 of 20.\n\n## Context\n\nIn PR failures currently exhaust a retry by checking the same unresolved PR, then wait for the user.\n\n## Acceptance criteria\n\n- For failed checks or conflicts with main, record the concrete failure and move the Story back to In Progress.\n- Include the existing branch and PR so the worker repairs the current work.\n- Escalate ambiguous conflicts with other open PRs or stack layers rather than choosing their intent.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a2",
+  "stage": "done",
+  "rank": "b08",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T03:22:52.197Z",
+  "updatedAt": "2026-11-03T04:39:34.552Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:50:17.511Z"
-      }
     },
     "comments": {
       "comments": [
@@ -77,6 +67,20 @@
           "body": "Focused diagnostic scope ACCEPTED within this same In PR attempt2. Use temporary instrumented copies outside the repository to identify the active fault-sweep boundary, operation and wait during the timeout; instrument bounded operation durations/progress and workload/concurrency context. Reproduce the suspected window with a controlled barrier, keeping original 20s criterion; no retries, timeout increase, or repeated suite-to-green. Compare exact reviewed head/current clean integration provenance and original log /tmp/row-48-review-test-unit.log. No repository/source/test edits or product fix yet. If evidence establishes a storage/test bug, return concrete deterministic reproduction and proposed minimal fix/scope for supervisor review before edits or required-check repeat. If it establishes externally controlled resource contention, provide measured causal evidence and controlled scenario; the 6.63s isolated pass alone does not clear the gate. Keep CHANGES REQUESTED until justified validation resolves it. Preserve PR148 and all prior evidence; not a new Run/retry. Do not watch/poll or mutate .rowbly.",
           "createdAt": "2026-11-03T03:11:36.460Z",
           "updatedAt": "2026-11-03T03:11:36.460Z"
+        },
+        {
+          "id": "pqb6nnce",
+          "author": "sunny",
+          "body": "Supervisor applied reviewed coordinated ROW47/48 configuration: InPR independent review and exact-head merge gate plus returned-work/failure routing; InProgress verified samePR continuation and handoff with head SHA, validation, numbered finding responses and implementation records before move. ROWBLY guide stage summary and live-catalog reviewer model rule updated; same provider allowed, all actual author models excluded. Preserved current step2 pending ROW57 separate wait-policy application; no overwrite from stale full proposals. Guide commit dcbcd196. Supervisor typecheck PASS, lint PASS, unit78 PASS, CLI21 PASS; doctor clean. No product edits or cleanup/evidence removal.",
+          "createdAt": "2026-11-03T04:39:34.551Z",
+          "updatedAt": "2026-11-03T04:39:34.551Z"
+        },
+        {
+          "id": "z73YqKeY",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/148 at d9c9e6fb6e6e5bdd2c61f52eb3b59f1b540c2421. Exact-head independent approval resolved the validation gate after controlled diagnostics and one authorized unmodified sequential pass: typecheck PASS, lint PASS, unit78 PASS, CLI20 PASS. Historical timeout preserved; original CPU-contention attribution remains unproven. Post-merge CI41572341113 queued; supervisor owns monitoring and coordinated configuration proposals.",
+          "createdAt": "2026-11-03T03:35:06.087Z",
+          "updatedAt": "2026-11-03T03:35:06.087Z"
         }
       ]
     }

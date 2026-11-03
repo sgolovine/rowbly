@@ -461,11 +461,12 @@ rowbly software-factory prompt enable <stage> [--board <id>] [--level board|glob
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
-rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
-rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
+rowbly software-factory runs [--board <id>] [--stale-after <minutes>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>] [--stale-after <minutes>]   # blocks until runs change
 rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-file <path|->] [--allow-incomplete]
 rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<json>]... [--fallback <why>] [--usage <source>]]
 rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
+rowbly software-factory run touch <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
@@ -491,10 +492,10 @@ move is saved, under the Data Root lock.
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`: `stages`
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, liveness, runMetadata, eligibility }], staleAfterMinutes, digest }`: `stages`
 are the Board's Stages whose Stage Prompt is on, `stories` every Story in them, `stageRun` the
 Story's Stage Run for its current visit or `null`, and `digest` a short hash of `stages` and
-`stories` (all their fields, so ones added to a row count too). `wait` returns the same object with
+`stories` (all their fields but each Run's `liveness.ageSeconds`, so ones added to a row count too). `wait` returns the same object with
 `changed` first, once `digest` differs from `--since` (or from the first read), or with
 `changed: false` after `--timeout`. It uses the command host's `waitFor`: the Data Root watch of the
 TUI, started before the first read, with a recheck every minute in case a change went unseen.
@@ -538,10 +539,32 @@ Details show an attached worker identity; `stories show --json` remains the stor
 `runs --json` is the structured metadata reader. Attachment changes the `runs` digest and wakes
 `wait`.
 
+`run touch` records a heartbeat: the supervisor's attestation that it verified the attached
+worker's activity, such as a message from it or an event from its harness, described by
+`--source`. Polling, a reachable worker or a harness status is not activity. Copy `stage`,
+`attempt` and `startedAt` from the Run and give the attached worker; Me and the clock supply `by`
+and `at`. Touch requires the current running Run with an attached identity for that worker,
+otherwise `CONFLICT` (exit 4) with nothing written; it never attaches a worker. Invalid or
+unsupported Run details refuse it with `DATA_INTEGRITY` (exit 6) and stay unchanged. A touch
+replaces the heartbeat and keeps the identity and selection. `--json` returns
+`{ key, stageRun, heartbeat: { worker, at, source, by } }`.
+
+Each running row of `runs` has `liveness: { lastSeenAt, heartbeat, ageSeconds, stale }`;
+other rows have `null`. `lastSeenAt` is the current Run's heartbeat time, or `null` with
+`heartbeat: "none"` when none was reported, and the age then counts from `startedAt`.
+`heartbeat: "unavailable"` means the Run details cannot be read. A Run is `stale` once its age
+reaches `--stale-after <minutes>` (default 15), which `runs` and `wait` take; give both the same.
+The table's **Last seen** column shows it, for example `4m ago` or `not reported, started 20m ago,
+stale`, and the TUI's **Stage Run** tab shows a **Last seen** row. Staleness only tells the
+supervisor to check the worker: Rowbly never clears, fails or retries a Run because of its age
+([ADR-0048](../agents/adr/0048-stage-run-heartbeats-are-attested-evidence.md)). The `digest`
+leaves out `ageSeconds`, so reading again does not change it; a saved heartbeat does, and a Run
+becoming stale does once (`wait` notices it at its next check, within a minute).
+
 The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
 bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
 optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
-sections' JSON values. Heartbeat mutations are a separate planned addition. Every
+sections' JSON values. `run start` writes selection; `run touch` writes the heartbeat. Every
 start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
 Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
 returning when timestamps repeat. Unknown fields, future versions and unreadable files remain

@@ -25,6 +25,16 @@ with the model policy rule it applied, why it fell back from that rule's model, 
 knowledge of usage came from. It records intent; the launch receipt confirms it.
 _Avoid_: model choice, routing
 
+**Heartbeat**:
+The last time the Supervisor verified that a running Stage Run's worker was active (a message from
+it or an event from its harness), with where that evidence came from. It belongs to one Stage Run.
+_Avoid_: ping, keepalive
+
+**Stale**:
+Said of a running Stage Run whose worker has not been seen, by Heartbeat or since its start, for the
+stale threshold. It asks the Supervisor to check the worker; it never ends or restarts the Stage Run.
+_Avoid_: dead, expired
+
 **Supervisor**:
 The one agent that watches a Board, starts a Stage Run and a worker for each Story that arrives in a
 Stage whose Stage Prompt is on, and makes every change to the Board that its workers report.

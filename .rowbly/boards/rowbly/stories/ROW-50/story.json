@@ -4,37 +4,41 @@
   "boardId": "rowbly",
   "name": "Add Stage Run heartbeats and stale-worker visibility",
   "description": "Factory review recommendation 4 of 20.\n\n## Context\n\nStage Runs have no last-seen time, so the supervisor hashes worktrees to infer activity.\n\n## Acceptance criteria\n\n- Provide a supported heartbeat/touch operation and expose last-seen time and age in Stage Run output.\n- Have the supervisor refresh liveness from verified worker activity and identify stale Runs.\n- Define restart and stale-worker handling while preserving ADR-0040’s lifecycle intent.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "aD",
+  "stage": "done",
+  "rank": "b0E",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T03:22:50.711Z",
+  "updatedAt": "2026-11-03T05:03:11.150Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:15:47.160Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "1KCPafa9",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/146 as 1a8a63e403354b1c98050bf6ea034be60ad1b9d4 with approved-head guard. Current-main integration validation passed once: typecheck, lint, unit78, CLI21. Final readiness was MERGEABLE/CLEAN with all six checks successful; six screenshot URLs returned HTTP200. Post-merge main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41581440638.",
+          "createdAt": "2026-11-03T05:03:10.468Z",
+          "updatedAt": "2026-11-03T05:03:10.468Z"
+        },
         {
           "id": "6FJvzxiW",
           "author": "sunny",
           "body": "Terminal handoff received; PR146 registered in supervisor thread. Your fenced block omits the required rowbly prefix on both lines. Please resend the same own-Story Comment+move with full rowbly prefixes and FACTORY-DONE ROW-50; no implementation changes needed. Keep current Run/branch/PR and do not start another worker. Proposed guide change held until independent review/merge.",
           "createdAt": "2026-11-03T02:26:08.358Z",
           "updatedAt": "2026-11-03T02:26:08.358Z"
+        },
+        {
+          "id": "Bh6z1bmR",
+          "author": "sunny",
+          "body": "Implementation record: Sol correction worker mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad rook gpt-6.1-sol, SAME branch factory/row-50 PR146 head2d47c9084c0a04b32339f4eae76eff59573149f0. Original author Opus5.5; both actualmodels must be excluded for new reviewer. Allfour localchecks unit78 CLI20 pass and fullidentity regression/bytes preserved; newexact-head review required.",
+          "createdAt": "2026-11-03T04:00:38.898Z",
+          "updatedAt": "2026-11-03T04:00:38.898Z"
         },
         {
           "id": "OSpg5ra9",
@@ -84,6 +88,13 @@
           "body": "Independent review CHANGES REQUESTED for PR146 at a2828753b02fb6465ecd6e992470332a02870e3c. Reproduction: attach verified-worker on rook with threadId verified-thread, then have a touch transform replace identity.machine and identity.threadId while retaining identity.worker. touchRun succeeds and persists the replacement identity. Expected fix: retain the complete identity observed under the lock and compare it in the final post-transform guard. Extend the existing pipeline regression to require CONFLICT and unchanged Story and metadata bytes for same-worker identity replacement. Reproduction script on rook: /tmp/row50-review.mts. Evidence: https://github.com/sgolovine/rowbly/pull/146#issuecomment-6594219804. Actual checks passed: pnpm typecheck, pnpm lint, pnpm test:unit 78, pnpm test:cli 20. Initial pnpm attempts stopped before check execution during dependency setup. No failed check was rerun. Manual refusal, opaque-byte preservation, clock/Me, ordinary identity/selection preservation and deterministic stale-digest checks passed. All three screenshot URLs returned HTTP 200. Current main conflicts in commands.ts, built-in.md and the ADR index. Trial merge aborted without resolution. Correction must preserve PR140 brief behavior, ADR0047, ADR0048 and strict Run metadata. PR146 and factory/row-50 preserved. No product or Board changes performed.",
           "createdAt": "2026-11-03T03:09:24.813Z",
           "updatedAt": "2026-11-03T03:09:24.813Z"
+        },
+        {
+          "id": "wQqYskAU",
+          "author": "sunny",
+          "body": "PR146 correction complete: https://github.com/sgolovine/rowbly/pull/146 at 2d47c9084c0a04b32339f4eae76eff59573149f0. Complete identity preservation fixed with byte-preservation regression; current main integrated additively. Typecheck, lint, unit78 and CLI20 pass; suite remains98; all six CI checks pass. Both findings answered with fresh screenshots and evidence: https://github.com/sgolovine/rowbly/pull/146#issuecomment-6594799983. Awaiting independent review; guide proposal remains outside the Data Root.",
+          "createdAt": "2026-11-03T04:00:41.545Z",
+          "updatedAt": "2026-11-03T04:00:41.545Z"
         },
         {
           "id": "y1ko8HYh",

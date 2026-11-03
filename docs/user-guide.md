@@ -446,10 +446,11 @@ rowbly software-factory prompt enable <stage> [--board <id>] [--level board|glob
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
-rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
-rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
+rowbly software-factory runs [--board <id>] [--stale-after <minutes>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>] [--stale-after <minutes>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<json>]... [--fallback <why>] [--usage <source>]]
 rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
+rowbly software-factory run touch <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
@@ -481,8 +482,9 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
   Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
   changes nothing.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`.
-  `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, liveness, runMetadata, eligibility }], staleAfterMinutes, digest }`.
+  `digest` is a short hash of `stages`, `staleAfterMinutes` and `stories` without each Run's age:
+  it changes whenever they do, but not as time passes.
 - `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
   ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
   `reject`. A line may only edit or move the Story given, or change its Comments, Tasks, Story
@@ -519,7 +521,7 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   running or failed has a badge on its board card and list line, `▶ running` or `✕ failed`, with
   `#2` after the first attempt. The Story's **Stage Run** tab shows it in full: outcome,
   attempt, worker, who started it, when it started and ended (with how long ago), how long it ran,
-  and the failure reason.
+  when its worker was last seen while it runs, and the failure reason.
 
 **Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
 the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)
@@ -558,10 +560,32 @@ Details show an attached worker identity; `stories show --json` remains the stor
 `runs --json` is the structured metadata reader. Attachment changes the `runs` digest and wakes
 `wait`.
 
+`run touch` records a heartbeat: the supervisor's attestation that it verified the attached
+worker's activity, such as a message from it or an event from its harness, described by
+`--source`. Polling, a reachable worker or a harness status is not activity. Copy `stage`,
+`attempt` and `startedAt` from the Run and give the attached worker; Me and the clock supply `by`
+and `at`. Touch requires the current running Run with an attached identity for that worker,
+otherwise `CONFLICT` (exit 4) with nothing written; it never attaches a worker. Invalid or
+unsupported Run details refuse it with `DATA_INTEGRITY` (exit 6) and stay unchanged. A touch
+replaces the heartbeat and keeps the identity and selection. `--json` returns
+`{ key, stageRun, heartbeat: { worker, at, source, by } }`.
+
+Each running row of `runs` has `liveness: { lastSeenAt, heartbeat, ageSeconds, stale }`;
+other rows have `null`. `lastSeenAt` is the current Run's heartbeat time, or `null` with
+`heartbeat: "none"` when none was reported, and the age then counts from `startedAt`.
+`heartbeat: "unavailable"` means the Run details cannot be read. A Run is `stale` once its age
+reaches `--stale-after <minutes>` (default 15), which `runs` and `wait` take; give both the same.
+The table's **Last seen** column shows it, for example `4m ago` or `not reported, started 20m ago,
+stale`, and the TUI's **Stage Run** tab shows a **Last seen** row. Staleness only tells the
+supervisor to check the worker: Rowbly never clears, fails or retries a Run because of its age
+([ADR-0048](agents/adr/0048-stage-run-heartbeats-are-attested-evidence.md)). The `digest`
+leaves out `ageSeconds`, so reading again does not change it; a saved heartbeat does, and a Run
+becoming stale does once (`wait` notices it at its next check, within a minute).
+
 The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
 bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
 optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
-sections' JSON values. Heartbeat mutations are a separate planned addition. Every
+sections' JSON values. `run start` writes selection; `run touch` writes the heartbeat. Every
 start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
 Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
 returning when timestamps repeat. Unknown fields, future versions and unreadable files remain
@@ -726,8 +750,26 @@ verification limits. It saves that context as a Comment when Comments are on (ot
 messages and brief), before the retry replaces the failed Run. The retry brief explicitly says
 whether to continue the existing work or start again, identifies the instruction authorizing that
 choice, and explains any deliberate restart. Missing context stays unknown; unresolved choices go
-to the user. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
-until you release it. It runs until you stop it.
+to the user. When a Stage Prompt asks for an independent review before a merge, the supervisor
+records each implementing Run's worker and model in an implementation record Comment before the
+Story moves on. It then starts the review with a new worker whose model differs from every recorded
+one (the same provider is allowed; changing effort or options does not qualify), and asks you
+when it cannot tell who wrote the work. An approval holds only for the commit it
+names. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
+until you release it. Workers may start and finish independent diff review while CI is pending.
+They do not poll a pull request's checks: when remaining work depends on CI, they report the head
+commit and pending checks and yield. The supervisor waits with the harness's pull request watch,
+or with one bounded `gh pr checks --watch`. A wake or watch exit code only prompts inspection of all
+current-head check conclusions; it does not prove every check passed. Cancelled, skipped, neutral
+or unknown terminal results need an explicit policy or decision. Checks not yet registered and a
+timed-out wait count as waiting, not as a failed check. It runs until you stop it.
+
+After a verified PR merge and worker completion, the supervisor follows the factory skill's
+completion workflow on the resource-owning machine. Its cleanup helper defaults to dry run and
+requires exact PR/resource ownership, fresh harness inactivity and an exclusive resource lease.
+It retains uncertain resources, remote refs and every evidence branch. Repository automatic branch
+deletion remains a proposal requiring approval; no setting changes happen automatically. See
+[factory completion resources](development/README.md#factory-completion-resources).
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
@@ -943,9 +985,11 @@ The header does not show the Board name (the Boards sidebar marks the open Board
 
 When the TUI starts, Rowbly asks npm for its latest release in the background; commands never do. If a newer release is out, a row above the footer says so, for example `Rowbly 0.12.0 is available, update with npm i -g rowbly` (`Rowbly 0.12.0: npm i -g rowbly` on a narrow terminal), until you quit. Run that command to update. Startup and quitting never wait for the check: offline, a registry error or no answer within 3 seconds shows nothing. When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`, with `HTTPS_PROXY`), Rowbly skips the check, because Node cannot cancel a request waiting on that proxy. Set `ROWBLY_NO_UPDATE_CHECK=1` to turn the check off.
 
-`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board. Comments are added after creation.
+`n` on the board, in the list view or in the Stories list opens New Story with **Details**, then the create tabs of enabled Plugins in registry order: **Tasks**, **Specs**, **Links**. Details has core fields, Custom Fields and the fields of Plugins without create tabs (such as Assignees and Epic). Specs holds linked Board Specs and multiple Story Spec drafts. Tasks drafts have Name, Description and Stage; Stage defaults to the first effective Stage. Links drafts choose Blocks or Blocked by and an existing Story on the same Board.
 
-`tab` moves to the next field in the current form; `shift+tab` switches to the next tab (wrapping to Details after the last tab). `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing uses the same window and navigation, with existing Tasks, Story Specs, linked Board Specs and Links loaded as drafts. Changes across Details and all tabs save together in one operation; cancellation saves none. Unchanged or unavailable Plugin Data stays unchanged. Existing Tasks keep their numbers and creation dates; new Tasks receive new numbers. If another Rowbly operation changes Tasks, Story Spec text or files, Board Spec links or Links after they loaded, saving a changed draft for that data rejects the whole edit and retains all drafts with a conflict error. Close and reopen the editor to load the latest values before applying those edits again. Unchanged tabs do not block unrelated edits.
+In New Story and Edit Story, focus the Story field and type or press Enter to search by Story Key or name with the same fuzzy ranking as Find Stories. Use ↑/↓ and Enter to choose; this does not save the Story or finish the draft. Escape cancels the search and keeps the prior choice; Ctrl+L clears the query and shows all eligible Stories. No matches change nothing. The current Story is excluded when editing. The separate new-link form uses the same search. Comments are added after creation.
+
+`tab` moves to the next field in the current form; `shift+tab` switches to the next tab (wrapping to Details after the last tab). `←` / `→` switch tabs from a draft list or after the last field; while editing text or a choice they edit that field. `↑` / `↓` and `enter` move between fields, except Enter opens search on a linked Story field. In a Plugin tab with both fields and drafts, `ctrl+g` switches between them. In each draft list, `n` creates a draft, `enter` edits it and `d` removes it. After choosing a linked Story, Tab leaves its field; Enter after an editor's final field keeps the draft. `ctrl+s` (or `ctrl+enter`) saves all tabs from anywhere; Enter after the last Details field also saves. Duplicate Story Spec slugs or invalid links keep the form open, select the Plugin tab, keep its error visible above the scrolling editor and retain every draft. A failed Plugin tab shows its failure and adds no input; the Story can still save. `esc` asks before discarding changed fields or drafts and exits directly when untouched. Story editing uses the same window and navigation, with existing Tasks, Story Specs, linked Board Specs and Links loaded as drafts. Changes across Details and all tabs save together in one operation; cancellation saves none. Unchanged or unavailable Plugin Data stays unchanged. Existing Tasks keep their numbers and creation dates; new Tasks receive new numbers. If another Rowbly operation changes Tasks, Story Spec text or files, Board Spec links or Links after they loaded, saving a changed draft for that data rejects the whole edit and retains all drafts with a conflict error. Close and reopen the editor to load the latest values before applying those edits again. Unchanged tabs do not block unrelated edits.
 
 After you save it, you go back to the Board or list you started from, which reloads and shows the new Story. To open each new Story instead, turn on **Open Story after creation** in the **Preferences** section of the settings (`,`; `enter` turns it on or off). It is off by default, including when you have never set it, and is kept as `openStoryAfterCreation` in `~/.rowblyrc.json`, so it lasts across restarts and applies in every Data Root.
 

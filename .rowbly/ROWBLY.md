@@ -6,7 +6,9 @@
 - **In Progress**: a person moves a Story here when it is ready to build. The factory takes it to a
   draft PR with `rowbly-dev` (its Stage Prompt), then moves it to In PR.
 - **In PR**: the factory merges the PR when it is ready and moves the Story to Done, or sends it back
-  to In Progress when a review requests changes (its Stage Prompt).
+  to In Progress, with its branch and PR, when a review requests changes, a check fails or it
+  conflicts with `main` (its Stage Prompt). It asks when a conflict involves another open PR or a
+  stack layer.
 - **Done**: merged.
 
 Rowbly data is committed on `main` and pushed; the Git Plugin commits each change (Automatic
@@ -16,9 +18,16 @@ Resolution On).
 ## The factory (`rowbly-factory`)
 
 - **Supervisor**: runs on the main computer, in the main checkout on `main`, with
-  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It runs `rowbly git sync` after each
-  `run start` (before the brief), each worker block it applies and each `run finish` or `run fail`,
-  so workers get Board changes by merging `origin/main`.
+  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It is the Board's only writer:
+  workers report commands and merge `origin/main` to receive published Board changes. Run
+  `rowbly git sync` once after all changes of one coherent event: `run start` plus its verified
+  `run attach`, an applied worker block, or `run finish`/`run fail` plus its reported block.
+  Publish before GO and before every reply or machine start that relies on the changes. Retain
+  any earlier publication barrier required by that event; never defer a reply a worker awaits.
+  Changes nobody waits for can share the next sync; flush when stopping. This reduces sync
+  attempts, not per-change Automatic Commits: keep frequency `change` and force-change checks.
+  Sync also brings in merged product changes; evidence or conflicts alone do not prove a second
+  Board writer. Investigate the source commits, preserve all sides and report unresolved conflicts.
 - **Workers run on the supervisor's computer (`thinkpad`) or the server `rook`**
   (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
   ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
@@ -44,6 +53,10 @@ Resolution On).
 - Coding uses Claude Opus (latest version) by default.
 - Bug hunting uses GPT Sol (latest version).
 - Refinement and PR writing use Claude Opus.
+- Review (In PR) uses a new worker whose model differs from every implementing model in the
+  verified implementation records. The same provider is allowed; changing effort or options does
+  not qualify. Choose an available eligible model from the live catalog; ask when provenance is
+  unknown or no eligible model is available.
 - The supervisor checks how much usage is left in the current period for each provider. When Claude
   usage is running low, it starts new threads on GPT, and vice versa.
 
@@ -131,3 +144,60 @@ Give these to every worker with its brief:
   options is passed as one word, so use a shell function.
 - **`gh … -q` output** with empty fields shifts whitespace-split fields; join them with `|` and read
   them with `IFS='|'`.
+
+### Waiting for checks
+
+Workers and the supervisor never poll CI with model turns.
+
+- **Supervisor first choice: T3's PR watch.** After a PR is opened (or when an In PR Stage Run
+  starts), the supervisor registers its nonblocking `watch_pull_request`. Process actionable Board
+  work and register all pending PR watches before yielding; T3 wakes it when checks finish,
+  someone comments, or the branch conflicts. Independent diff review may start and
+  finish while CI is pending. Defer only CI-dependent merge processing. Every wake requires a fresh
+  inspection of all current-head conclusions; a comment or conflict wake does not mean checks
+  settled. `unwatch_pull_request` when the PR merges, closes or is handed back.
+- **Delegated review workers do not watch or poll PRs.** They return the head SHA and pending-check
+  state to the supervisor after completing independent diff review and any other work that does
+  not depend on CI; yield only remaining CI-dependent work.
+- **Fallback (no PR watch in the harness): one bounded blocking command**, in the background with the
+  harness's resume-on-exit, never a loop:
+
+  ```bash
+  timeout 30m gh pr checks <n> --watch --fail-fast --interval 30
+  ```
+
+  Every exit code, including 0, is only a wake signal. Read once with
+  `gh pr view <n> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision`.
+  Confirm the exact current head matches the head being processed; discard stale results and
+  process the new head if it changed. Inspect the full rollup before any merge:
+  - All passed requires a nonempty rollup with every CheckRun `COMPLETED` and concluded `SUCCESS`,
+    and every StatusContext in state `SUCCESS`; other review and merge gates still apply.
+  - Actual `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED` conclusions, or StatusContext `FAILURE` or
+    `ERROR`, route to the Stage Prompt's failure/return policy, with the check's name and link.
+    `--fail-fast` may wake before other checks finish; classify actual results, not its exit code.
+  - An empty rollup soon after a push (including "no checks reported") means checks are not yet
+    registered: waiting, not failure. Wait one grace period of about 2 minutes and watch once more,
+    then report waiting or ask.
+  - Unfinished checks or pending StatusContexts, including after exit 124 (the 30-minute timeout),
+    mean waiting: report the head SHA and pending names, never repair solely for a wait timeout and
+    do not repeat a timed-out watch.
+  - `CANCELLED`, `SKIPPED`, `NEUTRAL` and any unrecognized terminal conclusion or state cannot
+    establish all passed. Follow explicit policy or ask for a decision; never infer success from
+    exit 0. An unreadable or unusable PR is separate: report the error and ask.
+- **Do not use `--required`**: `main` has no branch protection, so GitHub reports no required checks.
+  Watch all checks.
+- **Cancellation.** Stopping the factory or moving the Story out of In PR sends the watch a signal
+  (`SIGINT`/`SIGTERM`); leave nothing running. A new push restarts checks: the watch for the old head
+  is stale, so cancel it and start one for the new head.
+- **Timeout.** 30 minutes by default (CI takes about 2 minutes today). A timeout is not a failure:
+  report the head SHA and pending checks and ask rather than watching again.
+
+### Evidence retention
+
+Keep all existing `plugins/git/merge-evidence/` files and linked `pr-assets/<branch>` branches,
+including after a Story is Done. No automated expiry or completion cleanup removes them.
+Merge Evidence removal requires explicit user approval after the adding merge commit is upstream
+and each decision is reviewed (or confirmed spurious). Use an ordinary upstream commit whose
+message records the path, adding commit, review and approval; never rewrite history. Linked
+screenshots remain indefinitely until every image is rehosted, every comment link updated and
+verified to load, and the user explicitly approves removal. See ADR-0050 for the audit policy.

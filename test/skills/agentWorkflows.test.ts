@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
-import { lstat, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { lstat, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { hostname } from 'node:os';
+import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { builtInPlugins } from '../../src/plugins';
@@ -273,6 +274,7 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
         name: 'Signup',
         stage: 'todo',
         stageRun: null,
+        liveness: null,
         runMetadata: { status: 'absent', current: false },
         eligibility: { eligible: true, reasons: [] },
       },
@@ -571,5 +573,123 @@ describe('rowbly skill: references/doctor.md', () => {
       (s: { key: string; name: string }) => `${s.key} ${s.name}`,
     );
     expect(names.sort()).toEqual(['WEB-1 Base', 'WEB-2 From feature', 'WEB-3 From main']);
+  });
+});
+
+describe('rowbly-factory completion cleanup', () => {
+  it('requires inactive ownership and preserves checked-out or concurrently advanced branches', async () => {
+    const tmp = await tempRoot();
+    const repo = join(tmp.dir, 'repo');
+    const remote = join(tmp.dir, 'remote.git');
+    const bin = join(tmp.dir, 'bin');
+    await mkdir(repo);
+    await mkdir(bin);
+    const exec = promisify(execFile);
+    const realGit = (await exec('which', ['git'])).stdout.trim();
+    const git = async (...args: string[]) =>
+      (
+        await exec(realGit, ['-C', repo, ...args], {
+          env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' },
+        })
+      ).stdout.trim();
+    await git('init', '-q', '-b', 'main');
+    await git('config', 'user.name', 'Test');
+    await git('config', 'user.email', 'test@example.com');
+    await writeFile(join(repo, 'base'), 'base');
+    await git('add', '.');
+    await git('commit', '-qm', 'base');
+    const base = await git('rev-parse', 'HEAD');
+    await git('checkout', '-qb', 'factory/web-42');
+    await writeFile(join(repo, 'task'), 'task');
+    await git('add', '.');
+    await git('commit', '-qm', 'task');
+    const head = await git('rev-parse', 'HEAD');
+    await git('checkout', '-q', 'main');
+    await git('merge', '--ff-only', 'factory/web-42');
+    await exec(realGit, ['init', '--bare', '-q', remote]);
+    await git('remote', 'add', 'fixture', remote);
+    await git('branch', 'pr-assets/factory/web-42', base);
+    await git('push', '-q', 'fixture', 'main', 'factory/web-42', 'pr-assets/factory/web-42');
+    await git('remote', 'add', 'origin', 'https://github.com/example/fixture.git');
+    const gh = join(bin, 'gh');
+    await writeFile(
+      gh,
+      `#!/usr/bin/env node
+console.log(JSON.stringify(process.argv[2] === 'repo' ? {defaultBranchRef:{name:'main'}} :
+  {state:'MERGED',isCrossRepository:false,headRefName:'factory/web-42',headRefOid:${JSON.stringify(head)},
+   baseRefName:'main',mergeCommit:{oid:${JSON.stringify(head)}}}));`,
+      { mode: 0o755 },
+    );
+    const adapter = join(bin, 'harness');
+    await writeFile(
+      adapter,
+      `#!/usr/bin/env node
+let input=''; for await (const c of process.stdin) input+=c;
+console.log(JSON.stringify({inactive:process.env.FIXTURE_ACTIVE !== '1',exclusive:true,record:JSON.parse(input)}));`,
+      { mode: 0o755 },
+    );
+    const other = join(tmp.dir, 'other');
+    // Deterministic barriers at the two final Git checks, not timing-based races.
+    await writeFile(
+      join(bin, 'git'),
+      `#!/usr/bin/env node
+const {spawnSync}=require('node:child_process'); const args=process.argv.slice(2);
+const git=${JSON.stringify(realGit)}, repo=${JSON.stringify(repo)};
+if(args.includes('ls-remote')) args[args.indexOf('origin')]='fixture';
+if(args.includes('update-ref') && process.env.FIXTURE_RACE==='1')
+  spawnSync(git,['-C',repo,'update-ref','refs/heads/factory/web-42',${JSON.stringify(base)}]);
+if(args.includes('list') && args.includes('worktree') && process.env.FIXTURE_CHECKOUT==='1')
+  spawnSync(git,['-C',repo,'worktree','add','-q',${JSON.stringify(other)},'factory/web-42']);
+const r=spawnSync(git,args,{stdio:'inherit'});process.exit(r.status??1);`,
+      { mode: 0o755 },
+    );
+    const record = join(tmp.dir, 'task.json');
+    await writeFile(
+      record,
+      JSON.stringify({
+        story: 'WEB-42',
+        machine: hostname(),
+        repo,
+        repository: 'example/fixture',
+        pr: 42,
+        branch: 'factory/web-42',
+        base: 'main',
+        prHead: head,
+        worktrees: [],
+        daemonStates: [],
+        threads: ['fixture-thread'],
+        protectedBranches: [],
+        lease: 'fixture-exclusive-lease',
+        harnessCheck: [adapter],
+      }),
+    );
+    const cleanup = async (extra: Record<string, string> = {}, apply = true) => {
+      const args = [
+        resolve('skills/rowbly-factory/scripts/clean-up-task.mjs'),
+        '--record',
+        record,
+        ...(apply ? ['--apply'] : []),
+      ];
+      const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, ...extra };
+      const result = await exec(process.execPath, args, { env }).catch((e) => e);
+      return JSON.parse(result.stdout);
+    };
+    expect((await cleanup({}, false)).status).toBe('planned');
+    expect(await git('rev-parse', 'factory/web-42')).toBe(head);
+    expect((await cleanup({ FIXTURE_ACTIVE: '1' })).reason).toContain('harness');
+    expect(await git('rev-parse', 'factory/web-42')).toBe(head);
+    expect((await cleanup({ FIXTURE_RACE: '1' })).status).toBe('kept');
+    expect(await git('rev-parse', 'factory/web-42')).toBe(base);
+    await git('update-ref', 'refs/heads/factory/web-42', head);
+    expect((await cleanup({ FIXTURE_CHECKOUT: '1' })).resources).toContainEqual(
+      expect.objectContaining({ kind: 'branch', decision: 'keep', reason: expect.stringContaining(other) }),
+    );
+    expect(await git('rev-parse', 'factory/web-42')).toBe(head);
+    await git('worktree', 'remove', other);
+    const cleaned = await cleanup();
+    expect(cleaned.status).toBe('cleaned');
+    expect(cleaned.resources).toContainEqual(expect.objectContaining({ kind: 'pr-assets', decision: 'retain' }));
+    expect(await git('ls-remote', 'fixture', 'refs/heads/factory/web-42')).toContain(head);
+    expect(await git('rev-parse', 'pr-assets/factory/web-42')).toBe(base);
   });
 });

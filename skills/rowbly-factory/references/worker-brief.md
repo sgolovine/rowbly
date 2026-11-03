@@ -1,7 +1,13 @@
 # Worker brief
 
 `rowbly software-factory brief <KEY>` prints every section after the rules, filled in, `ROWBLY.md`
-included; send the rules below with `<KEY>` filled in, then its output. Fill in the whole template by
+included; send the rules below with `<KEY>` filled in, then its `markdown` output.
+Keep `--instructions-file` and, on retries, `--retry-file`. For independent review, append exactly
+one filled Implementation records section AFTER the generated markdown: ALL verified authoring
+records with evidence sources, plus the selected reviewer worker ID, thread ID, provider instance
+and model verified from its launch. Check the actual assembled message before GO; unused template
+placeholders do not carry this information. Missing or unknown provenance requires asking the user.
+Omit this appended section outside independent review. Fill in the whole template by
 hand only without that command: fill in each `<…>` and send the block as the worker's first
 message. Give the Story in full, so the worker does not need to read the Board. Leave out the retry section unless this is a retry. Capture
 the previous attempt before `run start --retry` replaces it. Fill its context from recorded Story,
@@ -37,6 +43,19 @@ they take precedence over the Stage Prompt and over any skill it names.
    `FACTORY-FAILED <KEY> <one-line reason>` when you cannot do it. Put the last Board changes, such as
    the move the Stage Prompt asks for, in a block just above it.
 
+5. **Task resources.** Use a fresh private `AGENTIC_TUI_STATE_DIR` outside the checkout for new
+   agentic-tui work. Report its exact canonical path to the supervisor before starting it, so the
+   supervisor can record exclusive task ownership. A session namespace alone does not isolate the
+   daemon. Close your own sessions and stop that scoped daemon before returning. Report leftovers
+   with exact identity; never adopt or stop existing/shared daemons or delete worktrees, branches
+   or evidence at completion.
+6. **Pull request checks.** Never poll CI with repeated `gh pr view` or `gh pr checks` calls.
+   Independent diff review may start and finish while checks are still running. Complete work
+   that does not depend on CI, then, if remaining work needs the checks, report the PR URL, the
+   exact head SHA and each pending check's name, end your turn and wait for the supervisor. Do
+   not start a timer, a watch or a poller yourself. "No checks reported yet" and a timeout are
+   waiting, not a failed check.
+
 ## Story
 
 <Story Key, name, Stage, Board, description; every Story Spec; Tasks; relevant Comments; Epic; Story links>
@@ -54,6 +73,16 @@ Plugins on: <list>. Stages of the Board, in order: <key (Name), …>.
 ## Other instructions
 
 <the user's instructions for workers, the other Stories that workers are on now, or "None.">
+
+## Implementation records
+
+Selected reviewer: <verified worker ID, thread ID, provider instance and model; launch source>.
+
+You review this work; you are not one of these workers and your model is not one of these models.
+If that is not true, or the branch has commits that no record accounts for, report
+FACTORY-QUESTIONS <KEY> and wait.
+
+<each implementation record Comment in full, oldest first, with its Comment id>
 
 ## Retry
 

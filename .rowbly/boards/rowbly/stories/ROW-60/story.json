@@ -5,14 +5,14 @@
   "name": "Make factory model selection explicit and auditable",
   "description": "Factory review recommendation 14 of 20.\n\n## Context\n\nROWBLY.md’s model and provider-usage policy differs from observed worker choices, and Stage Runs do not explain the selection.\n\n## Acceptance criteria\n\n- Define a feasible model-selection policy and specify the supported usage source, or remove unverifiable usage requirements.\n- Record the selected provider/model and relevant fallback reason with each Stage Run.\n- Make policy compliance inspectable after supervisor restart.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
   "stage": "in-progress",
-  "rank": "aC",
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T03:22:49.979Z",
+  "updatedAt": "2026-11-03T04:37:32.234Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -22,13 +22,34 @@
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+        "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
         "by": "sunny",
-        "startedAt": "2026-11-03T03:13:36.374Z"
+        "startedAt": "2026-11-03T04:34:35.728Z"
       }
     },
     "comments": {
       "comments": [
+        {
+          "id": "2klsedBr",
+          "author": "sunny",
+          "body": "Independent Astra exact-head verdict remains CHANGES REQUESTED on PR145 head e3e2b691a624119696f925c5ef02dfbafb1a700c for launcher findings3-4. Exact-head typecheck, lint, unit78 and CLI20 all PASS once sequentially under shared lease. Current-main integration and CLI21 validation remain separately blocked by the unresolved skill conflict. No edits, pushes or merge. Hold149->147->146->145 retained; supervisor owns fresh correction routing and subsequent independent review. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595495134",
+          "createdAt": "2026-11-03T04:31:44.986Z",
+          "updatedAt": "2026-11-03T04:31:44.986Z"
+        },
+        {
+          "id": "5VzayKnt",
+          "author": "sunny",
+          "body": "Correction plan ACCEPTED for findings3-4 only: discovered existing-worker unreadability is unknown with ID/intendedselection preserved; missing/empty/malformed provider/model/runtime evidence is unverified, wellformed differing evidence stays conflict. Extend the existing deterministic fakeT3 fixtures for first recovery with no receipt and malformed CLI evidence, retain typedoption/CONFIG checks and no realstart/GO; update remote-launch guidance. Work isolated at row-60-pr145-correction-2, samePR145/head e3e2b69. Main integration and publication remain HELD until149->147->146 land and supervisor explicitly clears; afterclearance additive integration preserves all resource/selection/verification/publication rules, allfourchecks once under boundedlease and screenshotworkflow for changedCLIoutput. No unrelatedfixes, newPR, .rowbly edits or receiptdeletion.",
+          "createdAt": "2026-11-03T04:37:32.233Z",
+          "updatedAt": "2026-11-03T04:37:32.233Z"
+        },
+        {
+          "id": "DrZCOq4r",
+          "author": "sunny",
+          "body": "Independent Astra review requests changes at PR145 head e3e2b691a624119696f925c5ef02dfbafb1a700c. Original corrections verified; two remaining launcher uncertainty-classification cases reproduced. Main integration conflicts in skills/rowbly-factory/SKILL.md, unresolved. All six CI checks pass; four screenshot URLs HTTP200 and inspected. Local four-check group did not start because CPU admission returned capacity-waiting75. No implementation or Board edits, push, ready or merge. Full findings, policy amendment and retained evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595466903",
+          "createdAt": "2026-11-03T04:29:26.288Z",
+          "updatedAt": "2026-11-03T04:29:26.288Z"
+        },
         {
           "id": "L4uotwPp",
           "author": "sunny",
@@ -37,11 +58,46 @@
           "updatedAt": "2026-11-03T02:03:07.459Z"
         },
         {
+          "id": "NRcpDT2D",
+          "author": "sunny",
+          "body": "Implementation record before return to In PR: verified Sol correction worker mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b rook, branch factory/row-60 PR145 heade3e2b691a624119696f925c5ef02dfbafb1a700c, original Opus and Sol authored work. New controlled local validation allfour PASS unit78 CLI20 with exacthead unchanged, original failure preserved. Fresh reviewer must differ from both authors; shared merge hold149->147->146->145 persists.",
+          "createdAt": "2026-11-03T04:15:58.069Z",
+          "updatedAt": "2026-11-03T04:15:58.069Z"
+        },
+        {
+          "id": "TSI6LsBH",
+          "author": "sunny",
+          "body": "Authorized controlled local validation PASS at unchanged head e3e2b691a624119696f925c5ef02dfbafb1a700c. Typecheck, lint, unit78/78 and CLI20/20 ran once sequentially under the bounded shared lease after measured CPU-headroom admission, with original timeout and external telemetry. No source/test/dependency changes or retries. Original timeout evidence preserved; no historical cause inferred. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595244682. PR remains draft and unmerged.",
+          "createdAt": "2026-11-03T04:16:00.803Z",
+          "updatedAt": "2026-11-03T04:16:00.803Z"
+        },
+        {
+          "id": "V5tVZQ0I",
+          "author": "sunny",
+          "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
+          "createdAt": "2026-11-03T04:00:48.567Z",
+          "updatedAt": "2026-11-03T04:00:48.567Z"
+        },
+        {
           "id": "Z1KBQs1d",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/145 records each Stage Run's Model Selection. run start takes --provider, --model and --rule (optional --option, --fallback, --usage) and saves the selection in run-metadata.json (ADR-0046) in the same operation. runs shows a Model column; stories show and TUI Details show a Model Selection row; runs --json has runMetadata.selection, so compliance can be checked after a restart. The factory skill records the selection before launch, compares the launch receipt and runs run fail on a mismatch without rewriting it; no quota is recorded. Typecheck and lint pass; 78 unit and 20 CLI tests pass; agentic-tui screenshots are linked in the PR.",
           "createdAt": "2026-11-03T02:26:11.607Z",
           "updatedAt": "2026-11-03T02:26:11.607Z"
+        },
+        {
+          "id": "aToiWMGD",
+          "author": "sunny",
+          "body": "Supervisor accepts independent findings3-4 in review6595466903: first discovery of existing worker with unreadable details stays unknown with identity/intendedselection preserved; missing/malformed CLI identity/configuration remains unverified, complete well-formed differing evidence remains conflict. Extend existing deterministic fakeT3 fixture, no realstart/GO. Return to InProgress for fresh correction worker continuing SAME PR145 factory/row-60 head e3e2b691a624119696f925c5ef02dfbafb1a700c; present plan and wait acceptance. Scoped additive integration must retain supervisor resource ownership and complete selection/verification/publication ordering; integration waits until149/147/146 land to avoid churn. No restart/newPR/forcepush/.rowbly edits. Reviewer sends ONLY moveInProgress with actual FACTORY-DONE; supervisor finishes currentRun before move. Configuration proposal retained for supervisor-only application with reviewer different from ALL actual implementation models, including correction workers. Capacity admission75 is no test failure.",
+          "createdAt": "2026-11-03T04:29:27.114Z",
+          "updatedAt": "2026-11-03T04:29:27.114Z"
+        },
+        {
+          "id": "fUB1qJOd",
+          "author": "sunny",
+          "body": "PR145 correction pushed to factory/row-60 at e3e2b691a624119696f925c5ef02dfbafb1a700c. Both review findings addressed; current main integrated; fresh CLI screenshots and policy proposal posted. Typecheck, lint and CLI20 pass locally. Local unit77/78 has the storage timeout assigned to ROW48; no rerun or timeout increase. All six exact-head CI checks pass, including unit78. Draft remains unmerged; independent review required.",
+          "createdAt": "2026-11-03T04:00:44.105Z",
+          "updatedAt": "2026-11-03T04:00:44.105Z"
         },
         {
           "id": "hQBS1THq",
