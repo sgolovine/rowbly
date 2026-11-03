@@ -373,7 +373,8 @@ const answerFile = path.join(__dirname, 'answer.json');
 const args = process.argv.slice(2);
 const launcher = { threadId: 'launcher', title: 'Launcher: workers', status: 'completed' };
 const worker = { threadId: 'worker', title: 'Fixture worker', status: 'completed',
-  providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access' };
+  providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access', ...config.worker };
+if (config.omitModel) delete worker.model;
 if (args[0] !== 'thread') throw Error('Unexpected command');
 if (args[1] === 'list') console.log(JSON.stringify([launcher, worker]));
 else if (args[1] === 'show') {
@@ -425,7 +426,13 @@ else if (args[1] === 'show') {
       expect(output.status, output.reason).toBe(expectedStatus);
       return output;
     };
+    // First discovery must stay uncertain even without any receipt from an earlier invocation.
+    await expect(lstat(join(tmp.dir, 'receipts'))).rejects.toMatchObject({ code: 'ENOENT' });
+    const recovered = await checkLaunch({ unreachable: true }, 'unknown');
+    const recoveredReceipt = JSON.parse(await readFile(recovered.receipt, 'utf8'));
+    expect(recoveredReceipt).toMatchObject({ threadId: 'worker', request: { modelSelection: planned } });
     const verified = await checkLaunch({ actual }, 'existing');
+    expect(verified.receipt).toBe(recovered.receipt);
     expect(verified.options).toEqual(actual.modelSelection.options);
     const receipt = JSON.parse(await readFile(verified.receipt, 'utf8'));
     for (const options of [
@@ -439,7 +446,14 @@ else if (args[1] === 'show') {
       expect(JSON.parse(await readFile(verified.receipt, 'utf8')).request).toEqual(receipt.request);
     }
     await checkLaunch({ actual: { ...actual, modelSelection: { ...planned, options: null } } }, 'unverified');
+    await checkLaunch({ omitModel: true }, 'unverified');
+    await checkLaunch({ worker: { providerInstanceId: 123, runtimeMode: '' } }, 'unverified');
+    await checkLaunch({ worker: { model: 'different-model' } }, 'conflict');
     await checkLaunch({ unreachable: true }, 'unknown');
+    expect(JSON.parse(await readFile(verified.receipt, 'utf8'))).toMatchObject({
+      threadId: 'worker',
+      request: receipt.request,
+    });
     await checkLaunch({ actual }, 'error', { ...planned, options: [...planned.options, planned.options[0]] });
 
     // A worker's reported block: a line that writes another Story refuses all of it; a move waits for `run finish`.

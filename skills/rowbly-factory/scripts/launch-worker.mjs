@@ -42,7 +42,7 @@ let home;
 let project;
 let t3Bin;
 let receiptPath;
-// Set once a request that can start a thread has been sent: from then on, an error is `unknown`.
+// Set once a request can have started a thread, or an existing worker is found: errors are `unknown`.
 let requested = false;
 
 main();
@@ -136,14 +136,22 @@ async function settle(receipt, threadIds, expected, status, reply) {
   const base = { key, title, briefSha256, ...(briefPath && { briefPath }) };
   if (threadIds.length > 1) stop('conflict', { ...base, threadIds, reason: 'several threads for this request' });
   const [threadId] = threadIds;
+  requested = true;
   receipt.save({ threadId });
   const { thread, messages } = await show(threadId, 100000);
-  if (thread.archived) {
+  if (thread?.archived) {
     stop('conflict', {
       ...base,
       threadId,
       reason: 'the thread for this request is archived; a new launch needs a new title',
     });
+  }
+  if (
+    [thread?.providerInstanceId, thread?.model, thread?.runtimeMode].some(
+      (value) => typeof value !== 'string' || !value.trim(),
+    )
+  ) {
+    stop('unverified', { ...base, threadId, reason: 'CLI identity not verified: missing or malformed configuration' });
   }
   const mismatches = [];
   if (thread.title !== title) mismatches.push(`title ${thread.title}`);
