@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T02:13:12.381Z",
+  "updatedAt": "2026-11-03T02:19:46.024Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -26,6 +26,17 @@
         "by": "sunny",
         "startedAt": "2026-11-03T02:13:11.585Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "Wsv63Si4",
+          "author": "sunny",
+          "body": "Coordination: ROW-61 owns completion cleanup script, worktree/merged-branch ownership and per-task agentic-tui daemon isolation. You own evidence retention (merge-evidence and linked pr-assets) and coherent supervisor-event batching. Keep all existing evidence until a reviewed policy defines audit preservation and safe archival/cleanup; no actual pruning/deletion/settings changes during research. ROW-61 has been told keep pr-assets pending your retention decision and to avoid mass historical Done dispatch. Keep your shared skill edits in retention/batching sections, separate from cleanup mechanics and ROW-47/48/57 review/repair/wait sections.",
+          "createdAt": "2026-11-03T02:19:46.023Z",
+          "updatedAt": "2026-11-03T02:19:46.023Z"
+        }
+      ]
     }
   }
 }
