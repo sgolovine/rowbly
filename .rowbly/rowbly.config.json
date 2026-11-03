@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "onboardingComplete": true,
   "stages": [
     {
       "key": "todo",
@@ -35,6 +36,5 @@
     "software-factory": {
       "enabled": true
     }
-  },
-  "onboardingComplete": true
+  }
 }
