@@ -51,6 +51,13 @@
           "updatedAt": "2026-11-03T02:55:58.818Z"
         },
         {
+          "id": "e7FiPqSX",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Integrate currentmain additively in isolated correction branch/worktree, preserving generated brief/API, all ADR0040 amendments including0047/0048, strict shared metadata/selection/hold semantics. Capture complete current attached identity under lock and require exact full identity equality after transforms, not just workerID. Extend existing pipeline regression to reproduce same-worker machine/thread replacement and assert CONFLICT plus unchanged complete Story/metadata bytes; no newtestfile or count increase. Keep result shape, RunRef, clock/Me and ordinarytouch behavior unchanged. Manual opaque/unsafe/refusal/preservation/staledigest checks, allfourchecks and relevant fresh evidence; normal push to SAME PR146 and answer both findings. No .rowbly changes or merge.",
+          "createdAt": "2026-11-03T03:22:50.710Z",
+          "updatedAt": "2026-11-03T03:22:50.710Z"
+        },
+        {
           "id": "iMYNKqAN",
           "author": "sunny",
           "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/146 original branch factory/row-50 verified OPEN at a2828753b02fb6465ecd6e992470332a02870e3c. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
@@ -84,13 +91,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/146. Adds 'rowbly software-factory run touch', which records verified worker activity (a worker message or harness event, never polling or status) as the current Stage Run's heartbeat in the shared Run details. It refuses with CONFLICT on a changed Run, a missing or mismatched attached worker, or a Run that is not running, and with DATA_INTEGRITY on unreadable details. runs and wait gain liveness (last seen, age, stale) and --stale-after (default 15 minutes). The digest leaves out the age, so it changes once when a Run becomes stale and never just because time passes. The Stage Run tab gains a Last seen row. ADR-0048 (amends ADR-0040) says staleness only asks the supervisor to check the worker. Docs, the factory skill and the reference copies are updated. typecheck, lint, test:unit (78) and test:cli (20) pass; the suite stays at 98 tests; agentic-tui screenshots are linked from the PR.",
           "createdAt": "2026-11-03T02:36:05.070Z",
           "updatedAt": "2026-11-03T02:36:05.070Z"
-        },
-        {
-          "id": "e7FiPqSX",
-          "author": "sunny",
-          "body": "PLAN ACCEPTED. Integrate currentmain additively in isolated correction branch/worktree, preserving generated brief/API, all ADR0040 amendments including0047/0048, strict shared metadata/selection/hold semantics. Capture complete current attached identity under lock and require exact full identity equality after transforms, not just workerID. Extend existing pipeline regression to reproduce same-worker machine/thread replacement and assert CONFLICT plus unchanged complete Story/metadata bytes; no newtestfile or count increase. Keep result shape, RunRef, clock/Me and ordinarytouch behavior unchanged. Manual opaque/unsafe/refusal/preservation/staledigest checks, allfourchecks and relevant fresh evidence; normal push to SAME PR146 and answer both findings. No .rowbly changes or merge.",
-          "createdAt": "2026-11-03T03:22:50.710Z",
-          "updatedAt": "2026-11-03T03:22:50.710Z"
         }
       ]
     }
