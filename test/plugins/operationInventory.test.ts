@@ -18,6 +18,7 @@ import { softwareFactory } from '../../src/plugins/software-factory';
 import { holdStory, releaseStory } from '../../src/plugins/software-factory/holds';
 import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
+import { attachWorker } from '../../src/plugins/software-factory/workerIdentity';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -137,7 +138,17 @@ describe('the operation inventory (ARCH-02)', () => {
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'done' }, { text: '# Done' });
     await removeStagePrompt(factory, { level: 'global', stage: 'backlog' });
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'backlog' }, { enabled: true });
-    await startRun(factory, 'WEB-1', { worker: 'w1' });
+    const firstRun = await startRun(factory, 'WEB-1', { worker: 'w1' });
+    await attachWorker(factory, 'WEB-1', {
+      stage: firstRun.stageRun.stage,
+      attempt: firstRun.stageRun.attempt,
+      startedAt: firstRun.stageRun.startedAt,
+      worker: 'mcp:verified',
+      machine: 'rook',
+      harness: 't3',
+      threadId: 'mcp:verified',
+      source: 'launch receipt',
+    });
     await endRun(factory, 'WEB-1', { status: 'failed', reason: 'checks failed' });
     await startRun(factory, 'WEB-1', { worker: 'w2', retry: true });
     await endRun(factory, 'WEB-1', { status: 'finished' });

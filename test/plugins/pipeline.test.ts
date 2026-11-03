@@ -1,4 +1,4 @@
-import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
@@ -9,8 +9,10 @@ import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
 import { softwareFactory } from '../../src/plugins/software-factory';
 import { holdStory } from '../../src/plugins/software-factory/holds';
+import { readRunMetadata, runRef } from '../../src/plugins/software-factory/runMetadata';
 import { setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
-import { endRun, runsOverview, startRun } from '../../src/plugins/software-factory/stageRuns';
+import { clearRun, endRun, runsOverview, StageRunBag, startRun } from '../../src/plugins/software-factory/stageRuns';
+import { attachWorker } from '../../src/plugins/software-factory/workerIdentity';
 import { specs } from '../../src/plugins/specs';
 import { createSpec, deleteSpec, editSpec, listStorySpecs } from '../../src/plugins/specs/specs';
 import { storyLinking } from '../../src/plugins/story-linking';
@@ -258,6 +260,27 @@ describe('transform (ADR-0012)', () => {
 describe('guard', () => {
   it('refuses factory starts and retries after concurrent or pending blocker changes without saving the Run', async () => {
     let pendingBlocker = false;
+    let invalidateAttachment: 'worker' | 'ref' | null = null;
+    const factoryPlugin = definePlugin({
+      ...softwareFactory,
+      hooks: {
+        ...softwareFactory.hooks,
+        'software-factory.attach': {
+          ...softwareFactory.hooks?.['software-factory.attach'],
+          async transform({ changes, plugin, result }) {
+            if (invalidateAttachment)
+              await changes.updateStory((result as { key: string }).key, (s) => ({
+                ...plugin.writeBag(s, {
+                  stageRun: {
+                    ...StageRunBag.parse(s.plugins?.['software-factory']).stageRun,
+                    ...(invalidateAttachment === 'worker' ? { worker: 'another-worker' } : { attempt: 99 }),
+                  },
+                }),
+              }));
+          },
+        },
+      },
+    });
     const linking = definePlugin({
       ...storyLinking,
       hooks: {
@@ -277,7 +300,7 @@ describe('guard', () => {
     const t = await pluginRoot({ 'story-linking': true, 'software-factory': true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1', stage: 'done' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-2', stage: 'todo' });
-    const { services } = await withPlugins(t, [linking, softwareFactory]);
+    const { services } = await withPlugins(t, [linking, factoryPlugin]);
     const factory = services.plugins.context('software-factory');
     const links = services.plugins.context('story-linking');
     await setStagePrompt(factory, { level: 'board', board: 'web', stage: 'todo' }, { enabled: true });
@@ -338,6 +361,147 @@ describe('guard', () => {
     expect((await services.stories.get('WEB-2')).plugins?.['software-factory']).toMatchObject({
       stageRun: { status: 'running', attempt: 2 },
     });
+    // The fixture clock is frozen: clear/new-start and leave/return can repeat the entire RunRef.
+    const metadataFile = join(t.path, 'boards/web/stories/WEB-2/plugins/software-factory/run-metadata.json');
+    const story = await services.stories.get('WEB-2');
+    const ref = runRef(StageRunBag.parse(story.plugins?.['software-factory']).stageRun);
+    const attachment = {
+      ...ref,
+      worker: 'mcp:actual',
+      machine: 'rook',
+      harness: 't3',
+      threadId: 'mcp:actual',
+      source: 'receipt ROW-49',
+    };
+    const beforeAttachStory = await readFile(file);
+    const beforeAttachMetadata = await readFile(metadataFile);
+    for (const invalidation of ['worker', 'ref'] as const) {
+      invalidateAttachment = invalidation;
+      try {
+        await expect(attachWorker(factory, 'WEB-2', attachment)).rejects.toMatchObject({
+          code: 'CONFLICT',
+          details: { stage: 'guard' },
+        });
+      } finally {
+        invalidateAttachment = null;
+      }
+      expect(await readFile(file)).toEqual(beforeAttachStory);
+      expect(await readFile(metadataFile)).toEqual(beforeAttachMetadata);
+    }
+    const selected = JSON.parse(await readFile(metadataFile, 'utf8'));
+    selected.selection = {
+      provider: 'codex',
+      model: 'gpt-6.1-sol',
+      options: [],
+      rule: 'user named',
+      fallback: null,
+      usage: 'unknown',
+      selectedBy: null,
+      selectedAt: ref.startedAt,
+    };
+    await writeFile(metadataFile, JSON.stringify(selected));
+    const attached = await attachWorker(factory, 'WEB-2', attachment);
+    expect(JSON.parse(await readFile(metadataFile, 'utf8')).selection).toEqual(selected.selection);
+    const enriched = JSON.parse(await readFile(metadataFile, 'utf8'));
+    enriched.heartbeat = { worker: attached.identity.worker, at: ref.startedAt, source: 'worker message', by: null };
+    await writeFile(metadataFile, JSON.stringify(enriched));
+    const unchangedMetadata = await readFile(metadataFile);
+    const unchangedStory = await readFile(file);
+    await attachWorker(factory, 'WEB-2', attachment);
+    expect(await readFile(metadataFile)).toEqual(unchangedMetadata);
+    expect(await readFile(file)).toEqual(unchangedStory);
+    await expect(attachWorker(factory, 'WEB-2', { ...attachment, machine: 'thinkpad' })).rejects.toMatchObject({
+      code: 'CONFLICT',
+    });
+    invalidateAttachment = 'worker';
+    try {
+      await expect(attachWorker(factory, 'WEB-2', attachment)).rejects.toMatchObject({
+        code: 'CONFLICT',
+        details: { stage: 'guard' },
+      });
+    } finally {
+      invalidateAttachment = null;
+    }
+    expect(await readFile(metadataFile)).toEqual(unchangedMetadata);
+    expect(await readFile(file)).toEqual(unchangedStory);
+    await endRun(factory, 'WEB-2', { status: 'failed', reason: 'launch lost' });
+    expect(await readFile(metadataFile)).toEqual(unchangedMetadata);
+    const retried = await startRun(factory, 'WEB-2', { worker: 'new-launch', retry: true });
+    expect(JSON.parse(await readFile(metadataFile, 'utf8'))).toEqual({ version: 1, run: runRef(retried.stageRun) });
+    await expect(attachWorker(factory, 'WEB-2', attachment)).rejects.toMatchObject({ code: 'CONFLICT' });
+    await clearRun(factory, 'WEB-2');
+    expect(await pathExists(metadataFile)).toBe(false);
+    const firstVisit = await startRun(factory, 'WEB-2', { worker: 'new-launch' });
+    const firstIdentity = { ...attachment, ...runRef(firstVisit.stageRun) };
+    await rm(metadataFile); // A legacy Run has no metadata yet: attach can initialize it.
+    await attachWorker(factory, 'WEB-2', firstIdentity);
+    await clearRun(factory, 'WEB-2');
+    const sameRef = await startRun(factory, 'WEB-2', { worker: 'new-launch' });
+    expect(runRef(sameRef.stageRun)).toEqual(runRef(firstVisit.stageRun));
+    expect(JSON.parse(await readFile(metadataFile, 'utf8'))).toEqual({ version: 1, run: runRef(sameRef.stageRun) });
+    await attachWorker(factory, 'WEB-2', firstIdentity);
+    await services.stories.move('WEB-2', 'in-progress');
+    expect(await pathExists(metadataFile)).toBe(false);
+    await services.stories.move('WEB-2', 'todo');
+    const returned = await startRun(factory, 'WEB-2', { worker: 'new-launch' });
+    expect(runRef(returned.stageRun)).toEqual(runRef(firstVisit.stageRun));
+    expect(await readRunMetadata(factory, await services.stories.get('WEB-2'))).toMatchObject({
+      status: 'valid',
+      current: true,
+      metadata: { run: runRef(returned.stageRun) },
+    });
+    expect(JSON.parse(await readFile(metadataFile, 'utf8')).identity).toBeUndefined();
+    // An earlier release may leave a recognized file behind; attach initializes only for this Run.
+    await writeFile(metadataFile, JSON.stringify(enriched));
+    expect(await readRunMetadata(factory, await services.stories.get('WEB-2'))).toMatchObject({
+      status: 'valid',
+      current: false,
+    });
+    await attachWorker(factory, 'WEB-2', { ...attachment, ...runRef(returned.stageRun) });
+    expect(JSON.parse(await readFile(metadataFile, 'utf8')).selection).toBeUndefined();
+    for (const opaque of ['{"version":2,"future":"kept"}', '{"version":1,"extra":"kept"}', 'broken JSON']) {
+      await writeFile(metadataFile, opaque);
+      expect((await services.doctor.check()).findings).toContainEqual(
+        expect.objectContaining({
+          code: opaque.includes('"version":2')
+            ? 'SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION'
+            : 'SOFTWARE_FACTORY_RUN_METADATA_INVALID',
+        }),
+      );
+      const before = await readFile(file);
+      await expect(
+        attachWorker(factory, 'WEB-2', { ...attachment, ...runRef(returned.stageRun) }),
+      ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+      expect(await readFile(file)).toEqual(before);
+      await clearRun(factory, 'WEB-2');
+      expect(await readFile(metadataFile, 'utf8')).toBe(opaque);
+      await expect(startRun(factory, 'WEB-2', { worker: 'new-launch' })).rejects.toMatchObject({
+        code: 'DATA_INTEGRITY',
+      });
+      expect(await readFile(metadataFile, 'utf8')).toBe(opaque);
+      // Restore only the legacy Run to test the next opaque-file refusal.
+      await writeFile(file, before);
+    }
+    const opaqueTarget = join(t.path, 'unreadable-run-details.json');
+    await writeFile(opaqueTarget, JSON.stringify(enriched));
+    const beforeUnreadable = await readFile(file);
+    await rm(metadataFile);
+    await symlink(opaqueTarget, metadataFile);
+    expect(await readRunMetadata(factory, await services.stories.get('WEB-2'))).toMatchObject({ status: 'invalid' });
+    expect((await services.doctor.check()).findings).toContainEqual(
+      expect.objectContaining({ code: 'SOFTWARE_FACTORY_RUN_METADATA_INVALID' }),
+    );
+    await expect(attachWorker(factory, 'WEB-2', { ...attachment, ...runRef(returned.stageRun) })).rejects.toMatchObject(
+      { code: 'DATA_INTEGRITY' },
+    );
+    await clearRun(factory, 'WEB-2');
+    await expect(startRun(factory, 'WEB-2', { worker: 'new-launch' })).rejects.toMatchObject({
+      code: 'DATA_INTEGRITY',
+    });
+    expect(await readFile(opaqueTarget, 'utf8')).toBe(JSON.stringify(enriched));
+    await rm(metadataFile);
+    await writeFile(file, beforeUnreadable);
+    await writeFile(metadataFile, JSON.stringify({ version: 1, run: runRef(returned.stageRun) }));
     await endRun(factory, 'WEB-2', { status: 'failed', reason: 'retry later' });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1', plugins: { 'story-linking': { blocks: 'future shape' } } });
     const saved = await readFile(file);
@@ -369,7 +533,7 @@ describe('guard', () => {
           retry: true,
         })
       ).stageRun.attempt,
-    ).toBe(3);
+    ).toBe(2);
   });
   it('Story Linking and Attachments mutations and repairs are atomic and preserve other Plugin Data', async () => {
     let refuse = true;

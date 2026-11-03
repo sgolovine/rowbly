@@ -1,6 +1,6 @@
 # ADR-0040: A Stage Run records one agent's work on a Story's current visit to a Stage
 
-**Status:** Accepted; amended by [ADR-0043](0043-a-hold-keeps-a-story-out-of-stage-runs.md) (a held Story is refused) and ADR-0045 (reported Board commands)
+**Status:** Accepted; amended by [ADR-0043](0043-a-hold-keeps-a-story-out-of-stage-runs.md) (a held Story is refused), ADR-0045 (reported Board commands) and [ADR-0046](0046-verified-workers-use-current-run-metadata.md)
 
 ## 1. Context
 

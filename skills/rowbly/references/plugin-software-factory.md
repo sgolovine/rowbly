@@ -35,6 +35,7 @@ rowbly software-factory prompt remove todo --board web --yes --json --no-prompt 
 rowbly software-factory runs --board web --json --no-prompt          # Stories in Stages whose Stage Prompt is on
 rowbly software-factory wait --board web --since <digest> --timeout 600 --json --no-prompt   # blocks until runs change
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --json --no-prompt
+rowbly software-factory run attach WEB-42 --stage todo --attempt 1 --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<launch receipt>" --json --no-prompt
 rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --retry --json --no-prompt   # a failed one, next attempt
@@ -61,7 +62,7 @@ rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`, where
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`, where
 `stages` are the Stages whose Stage Prompt is on, `stageRun` is `null` for a Story nobody works in
 this visit, and `digest` changes whenever `stages` or `stories` do. `wait` blocks until `runs`
 differs from `--since <digest>` (without it, from when it starts) and returns `runs` with
@@ -142,6 +143,37 @@ Story already held; `release` exits 3 for one that is not.
 - `path` is relative to `.rowbly/`.
 - Hold: `boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`, a file of its own, not in the Story's bag.
 
+## Verified worker identity
+
+Start records a launch hint; only `run attach` records a supervisor-attested actual identity.
+Keep the worker waiting for GO until launch verification, attachment and Board publication succeed.
+Use the exact Stage/attempt/start time returned by start, actual worker/machine/harness/thread ID,
+and the verification source. Me and the operation clock supply `by` and `verifiedAt`; Rowbly does
+not contact the harness. Conflicting identity or a changed/non-running Run exits 4 (`CONFLICT`).
+Identical inputs write nothing and keep the original verification time. A legacy Run without a
+file can be attached; opaque metadata exits 6 (`DATA_INTEGRITY`) without changing it.
+
+`runs --json` rows include `runMetadata: {status,current,...}`. Status is `absent`, `valid`, `invalid`
+or `unsupported`. A current valid file exposes `version:1`, `run:{stage,attempt,startedAt}` and its
+optional `identity`, `selection` and `heartbeat`. Stale valid data has `current:false` and exposes
+none of those sections. Invalid/unsupported data includes `message`. Human `stories show` and TUI
+Story Details show identity; `stories show --json` remains the stored Story. Use `runs --json` for
+structured metadata. Changes to it affect `digest`, so `wait` resumes after attachment.
+
+The file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`, strict v1.
+Unknown fields/versions and unreadable bytes are kept unchanged and unavailable. Same-Run writes
+preserve other sections' JSON values. Every new start/retry resets recognized metadata even when
+timestamps repeat; clear and Stage changes remove recognized metadata, finish/fail keep it. A
+start refuses opaque metadata until explicit repair. Older releases keep the file but cannot
+maintain its verified lifecycle. Selection and heartbeat mutation commands are planned separately.
+
+After restart, resolve `identity.threadId` through `identity.harness` on `identity.machine`.
+A title or legacy worker string is only a hint; do not assume a remote ID is local, or that an
+unreachable worker is absent. A confirmed launch failure ends the Run with `run fail --reason`.
+Uncertain launch, attachment or publication needs reconciliation before GO, clearing or retrying.
+Capture the old metadata in retry context before a retry replaces it. No age implies permission to
+clear, retry or end a Run.
+
 ## Doctor
 
 `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on but its path is not set, points
@@ -153,6 +185,10 @@ symbolic link). Nothing is fixed; create the file with
 `boards/<board>/stories/<KEY>/plugins/software-factory/hold.json` is not JSON, is invalid, has a
 `version` or fields this Rowbly does not support, or cannot be read (a symbolic link is not followed). The Story counts as held, and `hold` and `release` exit 6
 (`DATA_INTEGRITY`) without changing it. Nothing is fixed; ask the user to repair or delete the file.
+
+`SOFTWARE_FACTORY_RUN_METADATA_INVALID` and `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION`
+(warnings): unreadable/malformed/unknown-field metadata or a version other than 1. A heartbeat
+without matching identity is invalid. No automatic fix; bytes are preserved for explicit repair.
 
 ## Common mistakes
 

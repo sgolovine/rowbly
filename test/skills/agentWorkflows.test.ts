@@ -268,7 +268,14 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     await writeFile(holdPath, valid);
     await json('software-factory', 'release', worked.key);
     expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([
-      { key: worked.key, name: 'Signup', stage: 'todo', stageRun: null, eligibility: { eligible: true, reasons: [] } },
+      {
+        key: worked.key,
+        name: 'Signup',
+        stage: 'todo',
+        stageRun: null,
+        runMetadata: { status: 'absent', current: false },
+        eligibility: { eligible: true, reasons: [] },
+      },
     ]);
 
     // A new incoming link invalidates launch eligibility without creating a Stage Run.

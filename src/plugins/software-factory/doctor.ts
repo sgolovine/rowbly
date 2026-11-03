@@ -1,5 +1,6 @@
 import type { PluginDoctor, PluginFinding } from '../../plugin-api';
 import { HOLD_FILE, readHold } from './holds';
+import { RUN_METADATA_FILE, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, readPrompt, resolvePath, Settings } from './stagePrompts';
 
 /**
@@ -47,13 +48,21 @@ export const doctor: PluginDoctor<Settings> = {
     }
     for (const story of data.stories) {
       const hold = await readHold(plugin, story.key);
-      if (hold.kind !== 'unreadable') continue;
+      if (hold.kind === 'unreadable')
+        findings.push({
+          code: 'UNREADABLE_HOLD',
+          severity: 'warning',
+          path: `boards/${story.boardId}/stories/${story.key}/plugins/${PLUGIN_ID}/${HOLD_FILE}`,
+          message: `${story.key} counts as held, but ${hold.message}`,
+          details: { key: story.key },
+        });
+      const state = await readRunMetadata(plugin, story);
+      if (state.status !== 'invalid' && state.status !== 'unsupported') continue;
       findings.push({
-        code: 'UNREADABLE_HOLD',
+        code: state.status === 'unsupported' ? 'RUN_METADATA_UNSUPPORTED_VERSION' : 'RUN_METADATA_INVALID',
         severity: 'warning',
-        path: `boards/${story.boardId}/stories/${story.key}/plugins/${PLUGIN_ID}/${HOLD_FILE}`,
-        message: `${story.key} counts as held, but ${hold.message}`,
-        details: { key: story.key },
+        path: `boards/${story.boardId}/stories/${story.key}/plugins/software-factory/${RUN_METADATA_FILE}`,
+        message: `${story.key}: ${state.message}; kept unchanged`,
       });
     }
     return findings;

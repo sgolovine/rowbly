@@ -2,8 +2,10 @@ import { definePlugin } from '../../plugin-api';
 import { commands } from './commands';
 import { doctor } from './doctor';
 import { holdText, readHold } from './holds';
+import { metadataOutput, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
 import { currentRun, endVisit, guardFinishedRun, MoveInput, parseRunRef, runText, StageRunBag } from './stageRuns';
+import { guardAttachedWorker, guardStartedRun } from './workerIdentity';
 
 export const softwareFactory = definePlugin({
   id: PLUGIN_ID,
@@ -26,6 +28,8 @@ export const softwareFactory = definePlugin({
     },
   },
   hooks: {
+    'software-factory.start': { guard: ({ plugin, changes, result }) => guardStartedRun(plugin, changes, result) },
+    'software-factory.attach': { guard: ({ plugin, changes, result }) => guardAttachedWorker(plugin, changes, result) },
     'stories.move': {
       transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin),
       guard: ({ changes, result, pluginInput, plugin }) => guardFinishedRun(changes, result.key, pluginInput, plugin),
@@ -35,10 +39,19 @@ export const softwareFactory = definePlugin({
   async storyRows(story, plugin) {
     const run = currentRun(plugin, story);
     const hold = await readHold(plugin, story.key);
-    return [
-      ...(run ? [{ label: 'Stage Run', value: runText(run) }] : []),
-      ...(hold.kind !== 'none' ? [{ label: 'Hold', value: holdText(hold) }] : []),
-    ];
+    const metadata = metadataOutput(await readRunMetadata(plugin, story));
+    const rows = run ? [{ label: 'Stage Run', value: runText(run) }] : [];
+    if (metadata.status === 'invalid' || metadata.status === 'unsupported')
+      rows.push({ label: 'Run details', value: 'unavailable; run rowbly doctor' });
+    else if (metadata.identity) {
+      const i = metadata.identity;
+      rows.push({
+        label: 'Worker identity',
+        value: `${i.machine} / ${i.harness} / ${i.threadId} (attested: ${i.verification.source})`,
+      });
+    }
+    if (hold.kind !== 'none') rows.push({ label: 'Hold', value: holdText(hold) });
+    return rows;
   },
   doctor,
   tui: () => import('./tui').then((m) => m.tui),

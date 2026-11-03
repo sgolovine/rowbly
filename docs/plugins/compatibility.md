@@ -62,6 +62,7 @@ These are requirements for the release that first loads code that does not ship 
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
 | Software Factory | Story bag `{ "stageRun": { … } }` | legacy v1 (no `version` key) |
 | Software Factory | Story file `plugins/software-factory/hold.json` | explicit `version: 1`; kept in a file, not the bag, so a release without holds never drops it ([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). A file that does not parse, has another `version` or unknown fields, or is a symbolic link counts as held, is never rewritten, and doctor reports it |
+| Software Factory | Story file `plugins/software-factory/run-metadata.json`; independent optional identity, selection, heartbeat bound to `{stage, attempt, startedAt}` | explicit `version: 1`; strict nested schemas; unknown fields refused |
 | Story Linking | Story bag `{ "blocks": ["<Story Key>", …] }` on the blocking Story; incoming links are derived | v1 (no `version` key); strict schema refuses unknown fields |
 
 **Existing unversioned built-in bags are legacy v1.** A future reader treats a bag without a `version` key as version 1. Rowbly adds no universal bag version: a bag gets a `version` key only when its Plugin introduces an incompatible shape (§3.4).
@@ -211,3 +212,11 @@ Interoperation goes through the Plugin API (filters, operations and hooks). A Pl
 - No API version field, version check or semver-range engine (until §2.2 is scheduled).
 - No dependency declarations or dependency graph (until §4 is scheduled).
 - No automatic or silent migration, at startup or by doctor.
+
+Software Factory keeps verified Run metadata in a separate per-Story file (ADR-0046), leaving the
+legacy Run bag unchanged. Older owning writers do not rewrite the file. Current readers refuse
+unknown fields/versions without stripping them and report unreadable or unsupported data through
+doctor; reads never initialize it. Start initializes or resets only absent/recognized v1 data;
+clear and Stage changes remove recognized data but preserve opaque bytes. No migration is needed.
+This preserves evidence across older bag rewrites, but older lifecycle commands cannot maintain
+verified metadata and must not be used for verified recovery.

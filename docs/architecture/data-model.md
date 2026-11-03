@@ -149,3 +149,11 @@ for everyone sharing that configuration. The Home Config flag is independent and
 `config.updateRootConfig` saves the Data Root flag through the normal Operation pipeline;
 `updateHomeConfig` saves the global flag. Reopening either flow in Settings keeps the flags set.
 See [ADR-0041](../agents/adr/0041-onboarding-completion-has-two-levels.md).
+
+## Software Factory Run metadata
+
+Software Factory owns each Story's `plugins/software-factory/run-metadata.json` (strict v1).
+It binds optional verified identity, selection and heartbeat sections to the current Stage Run's
+`{stage, attempt, startedAt}`. Core does not interpret it. Start resets recognized data in the same
+Change Set as the new Run, clear/Stage changes remove it, and finish/fail keep it. Opaque data is
+preserved and reported by doctor. See [ADR-0046](../agents/adr/0046-verified-workers-use-current-run-metadata.md).

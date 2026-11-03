@@ -39,6 +39,8 @@ export interface AppProps {
   watch?: boolean;
   /** Enable first-run routing when activating another Data Root. */
   onboarding?: boolean;
+  /** Resolves to a newer Rowbly release, which the footer then offers. */
+  newerVersion?: Promise<string | null>;
 }
 
 /** The whole TUI: providers around the shell. */
@@ -53,6 +55,7 @@ export function App({
   loadPlugins,
   watch = false,
   onboarding = false,
+  newerVersion,
 }: AppProps) {
   const toastStore = useMemo(() => toasts ?? createToastStore(), [toasts]);
   const shell = useMemo(createShellRegistry, []);
@@ -72,7 +75,7 @@ export function App({
               <MouseContext.Provider value={mouseRegistry}>
                 {/* Keyed by the Data Root: switching to another one drops the previous one's screens and picks. */}
                 <RouterProvider key={session.key} initial={session.initial}>
-                  <Shell screens={screens} />
+                  <Shell screens={screens} newerVersion={newerVersion} />
                 </RouterProvider>
               </MouseContext.Provider>
             </ShellContext.Provider>

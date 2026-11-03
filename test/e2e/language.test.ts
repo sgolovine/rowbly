@@ -13,6 +13,16 @@ const AVOID =
 
 /** Legitimate uses, removed from the text before matching. */
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
+  {
+    file: /^plugins\/software-factory\/runMetadata\.ts$/,
+    text: /^run-metadata\.json$/,
+    why: 'Plugin-owned file name, ADR-0046',
+  },
+  {
+    file: /^plugins\/software-factory\/runMetadata\.ts$/,
+    text: /^user-stated$/,
+    why: 'Persisted usage evidence enum, ADR-0046',
+  },
   { file: /^(tui|plugins)\//, text: /^column$/, why: 'Ink layout: flexDirection="column"' },
   { file: /^main\.ts$/, text: /^user$/, why: "commander: parseAsync(argv, { from: 'user' })" },
   { text: /\buser\.(email|name)\b/g, why: 'the git config key' },
