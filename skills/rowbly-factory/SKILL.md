@@ -122,11 +122,13 @@ Run until the user stops you. Do not wait for the user between events.
    `ROWBLY.md` or the Stage Prompt may set another retry limit; follow it.
 4. Leave `finished` Stage Runs alone. The Story is worked again only after it moves to another Stage
    and comes back, or the user clears the Stage Run.
-5. **Blocked Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
+5. **Blocked and held Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
    skip both starts and retries. A `BLOCKED` reason lists unfinished blocking Stories in `blockers`.
    Reconsider on the next Board change or `runs` result: a blocker reaching a Stage of category
    `done` removes that restriction automatically. Do not clear a failed Run or move a Story to
-   bypass its blockers. If eligibility cannot be read, report the error and start nothing from
+   bypass its blockers. A `HELD` reason means a person holds the Story to work it by hand: never
+   release it yourself; it becomes eligible again when they release it, with its Stage Run as it
+   was. If eligibility cannot be read, report the error and start nothing from
    that result. Existing running workers are still supervised normally.
 6. **Act on each worker message**, as in [Worker messages](#worker-messages).
 
@@ -137,7 +139,8 @@ Report each start, retry, finish, failure, question and Board change to the user
 1. Run `rowbly software-factory run start <KEY> --worker "<name>"`, where `<name>` identifies the
    worker you are about to start (its thread title or id). Start a worker only when this succeeds.
    Exit 4 means another agent already works the Story in this visit, or its Stage Prompt was turned
-   off, or unresolved blocking Stories remain: report the returned reason and skip it.
+   off, or unresolved blocking Stories remain, or a person holds it: report the returned reason and
+   skip it.
    Re-read eligibility after Board changes; never launch from a stale overview or after a refused start.
 2. Read the Story in full: `stories show`, and for each Plugin that is on, its Specs, Tasks,
    Comments, Epic and Story links.
