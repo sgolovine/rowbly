@@ -14,6 +14,17 @@ const AVOID =
 /** Legitimate uses, removed from the text before matching. */
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   {
+    file: /^plugins\/github\/commands\.ts$/,
+    text: /^status <key>$/,
+    why: 'GitHub PR inspection command, not a Story Stage',
+  },
+  { file: /^plugins\/github\/status\.ts$/, text: /\bgh auth status\b/g, why: 'GitHub CLI authentication command' },
+  {
+    file: /^storage\/externalRead\.ts$/,
+    text: /^number,title,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup$/,
+    why: 'Fixed GitHub CLI JSON field selection, ADR-0051',
+  },
+  {
     file: /^plugins\/software-factory\/runMetadata\.ts$/,
     text: /^run-metadata\.json$/,
     why: 'Plugin-owned file name, ADR-0046',

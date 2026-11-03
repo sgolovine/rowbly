@@ -340,6 +340,14 @@ holds only for the commit it reviewed.
    final head (`gh pr view <n> --json headRefOid,state`) from a reviewer that meets step 3. If none
    does, do not apply the move; tell the user.
 
+## Story PR links
+
+When the GitHub Plugin is on and a worker opens a PR for a Story, save its reported URL with
+`stories edit <KEY> --github-pr <url>`. Use that Story's GitHub PR field as the first PR candidate
+when recovering work; without a link, use recorded Comments/branches and the hosting service.
+Always verify the PR's repository, state, branch and current head; a saved URL proves no review,
+check result or worker identity. Refused opaque data is a blocker, never permission to replace it.
+
 ## Worker messages
 
 Workers end messages with these markers, as the brief asks:

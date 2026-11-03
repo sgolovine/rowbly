@@ -1,6 +1,13 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { Story } from '../../schemas';
-import type { PluginAction, PluginTui, PluginUi, Services } from '../../services';
+import {
+  invokePlugin,
+  invokePluginSync,
+  type PluginAction,
+  type PluginTui,
+  type PluginUi,
+  type Services,
+} from '../../services';
 import { type Router, useRouter } from '../router';
 import { type ToastStore, useToast } from './toasts';
 
@@ -75,10 +82,13 @@ export async function loadStoryBadges(plugins: readonly TuiPlugin[], services: S
       // One context per Plugin, not per Story.
       const plugin = services.plugins.context(id);
       const { storyBadges, loadStoryBadges } = tui;
-      const badgers: StoryBadges[] = storyBadges ? [(story) => storyBadges({ story, plugin })] : [];
+      const badgers: StoryBadges[] = storyBadges
+        ? [(story) => invokePluginSync({ plugin: id, stage: 'row' }, () => storyBadges({ story, plugin }))]
+        : [];
       if (loadStoryBadges) {
         try {
-          badgers.push(await loadStoryBadges({ plugin }));
+          const loaded = await invokePlugin({ plugin: id, stage: 'row' }, () => loadStoryBadges({ plugin }));
+          badgers.push((story) => invokePluginSync({ plugin: id, stage: 'row' }, () => loaded(story)));
         } catch {}
       }
       return badgers;

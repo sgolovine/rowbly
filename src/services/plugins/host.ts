@@ -1,6 +1,7 @@
 import { isSlug } from '../../core';
 import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from '../../schemas';
 import { createRepositories } from '../../storage';
+import { createExternalReads, type ExternalReads, isExternalReadName } from '../../storage/externalRead';
 import { coordinated } from '../coordination';
 import { createPluginGit, disposeGitOwner } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
@@ -50,6 +51,8 @@ export interface PluginHost {
   /** Private Git scheduling leases, shared by start and runtime capabilities. */
   gitOwner?(id: string): object;
   dispose?(): void;
+  /** Per-load owners, cancelled on failure, disable or disposal. */
+  externalReads?(id: string): ExternalReads;
   /** Route deferred host effects to the active surface. */
   setWarningSink?(warn: (message: string) => void): void;
   /** Built-in Plugins in registry order, then the other Plugins `rowbly.config.json` names. A copy. */
@@ -88,6 +91,16 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
   let warningSink = (message: string) => {
     process.stderr.write(`${message}\n`);
   };
+  const readOwners = new Map<string, ExternalReads>();
+  const externalReads = (id: string) => {
+    let owner = readOwners.get(id);
+    if (!owner) {
+      owner = createExternalReads(root?.path ?? process.cwd());
+      readOwners.set(id, owner);
+    }
+    return owner;
+  };
+  let disposed = false;
   const gitOwners = new Map<string, object>();
   const gitOwner = (id: string) => {
     let owner = gitOwners.get(id);
@@ -178,7 +191,14 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
   return {
     registry,
     gitOwner,
+    externalReads(id) {
+      const owner = externalReads(id);
+      if (disposed) owner.dispose();
+      return owner;
+    },
     dispose() {
+      disposed = true;
+      for (const owner of readOwners.values()) owner.dispose();
       for (const owner of gitOwners.values()) disposeGitOwner(owner);
     },
     setWarningSink(warn) {
@@ -191,6 +211,7 @@ export async function loadPlugins({ root, registry, reserved, stage }: LoadPlugi
       const status = statuses.find((s) => s.id === id);
       const index = active.findIndex((p) => p.definition.id === id);
       if (!status?.loaded || index < 0) return;
+      readOwners.get(id)?.dispose();
       disposeGitOwner(gitOwner(id));
       status.loaded = false;
       status.reason = reason;
@@ -304,6 +325,10 @@ function checkNames(
   const { id } = definition;
   if (!isSlug(id)) problem('id', `its id "${id}" is not a lower-kebab-case slug`);
   else if (claims.commands.has(id)) problem('id', `"rowbly ${id}" is already a command`);
+
+  const reads = definition.externalReads ?? [];
+  if (!Array.isArray(reads) || reads.some((name) => !isExternalReadName(name)) || new Set(reads).size !== reads.length)
+    problem('externalReads', 'externalReads must list distinct host template names');
 
   const options: [string, string[]][] = [];
   for (const [command, spec] of Object.entries(definition.options ?? {})) {

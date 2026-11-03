@@ -1,6 +1,6 @@
 import { fuzzySearch } from '../../core';
 import type { Story } from '../../schemas';
-import { type EffectiveBoardConfig, invokePlugin, type Services } from '../../services';
+import { type EffectiveBoardConfig, invokePlugin, invokePluginSync, type Services } from '../../services';
 import type { TuiPlugin } from '../hooks';
 
 export interface StorySearchEntry {
@@ -31,7 +31,7 @@ export async function loadStorySearch(
       const load = tui.loadStorySearchText;
       if (!load) return undefined;
       try {
-        return await invokePlugin({ plugin: id, stage: 'screen' }, () =>
+        return await invokePlugin({ plugin: id, stage: 'row' }, () =>
           load({ stories: structuredClone(stories), plugin: services.plugins.context(id) }),
         );
       } catch {
@@ -56,7 +56,7 @@ export async function loadStorySearch(
       const text = loaded[at];
       if (text) {
         try {
-          fields.push(...text(structuredClone(story)));
+          fields.push(...invokePluginSync({ plugin: id, stage: 'row' }, () => text(structuredClone(story))));
         } catch {
           // Its text is left out for this Story only.
         }
@@ -65,7 +65,7 @@ export async function loadStorySearch(
       try {
         fields.push(
           ...(await invokePlugin(
-            { plugin: id, stage: 'screen' },
+            { plugin: id, stage: 'row' },
             () => tui.storySearchText?.({ story: structuredClone(story), plugin: services.plugins.context(id) }) ?? [],
           )),
         );

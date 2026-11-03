@@ -180,6 +180,7 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | Tasks | `stories.update` | `{ tasks: [{ number?, name, description?, stage? }], baseline?: [StoredTask] }`; replaces the list, keeps existing numbers, creation dates and unknown Task/bag fields, allocates new numbers without reuse; missing or duplicate existing numbers reject the operation |
 | Story Linking | `stories.update` | `{ blocks?: [Story Key], blockedBy?: [Story Key], baseline?: { blocks?, blockedBy? } }`; replaces each given direction, including incoming blockers in the same Change Set; existing stale outgoing links may be kept or removed |
 | Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
+| GitHub | `stories.create`, `stories.update` | `{ pr: url \| null }`; HTTPS PR URL, normalized host and trailing slash; null clears only a supported bag, opaque bags refuse any owning write |
 | Software Factory | `stories.move` | `{ finishedRun: { stage, attempt, startedAt } }`; its guard refuses the move (`CONFLICT`) unless that is still the finished Stage Run of the Story's current visit, read as stored under the move's lock |
 
 A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Story Linking takes `{ blocks: Story Key }`, returning Stories whose outgoing links include that key;
@@ -206,3 +207,6 @@ transforms and guards, including machine, harness, thread and verification. Repl
 while keeping the same worker still refuses the whole operation without writing Story or metadata.
 It never creates an identity, and opaque Run details refuse it with `DATA_INTEGRITY`. It does not
 change the Story's `updatedAt`. See [ADR-0048](../agents/adr/0048-stage-run-heartbeats-are-attested-evidence.md).
+
+GitHub adds no mutation operation of its own: its flags and form supply the input above.
+`github status` is an external read, never an operation; it saves no PR status.

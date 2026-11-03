@@ -1,6 +1,6 @@
 # Built-in Plugins
 
-Rowbly ships nine Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
+Rowbly ships ten Built-in Plugins. Each is off until a Data Root turns it on with `rowbly plugins enable <id>` ([Turning Plugins on and off](README.md#turning-plugins-on-and-off)). Their operations, inputs and results are in [Operations](../architecture/operations.md#built-in-plugin-operations).
 
 | Plugin | Adds | Glossary | Decision |
 | --- | --- | --- | --- |
@@ -12,9 +12,50 @@ Rowbly ships nine Built-in Plugins. Each is off until a Data Root turns it on wi
 | [Story Linking](#story-linking) | Blocking relationships between Stories on the same Board | [`story-linking/CONTEXT.md`](../../src/plugins/story-linking/CONTEXT.md) | [Plugin Data, ADR-0011](../agents/adr/0011-plugin-data-is-a-bag-per-plugin.md) |
 | [Attachments](#attachments) | PNG images on Stories | [`attachments/CONTEXT.md`](../../src/plugins/attachments/CONTEXT.md) | Binary journal: [ADR-0036](../agents/adr/0036-binary-plugin-files-use-the-commit-journal.md) |
 | [Git](#git) | Automatic Commits and upstream synchronization | [`git/CONTEXT.md`](../../src/plugins/git/CONTEXT.md) | [ADR-0026](../agents/adr/0026-git-automatic-commits.md) |
+| [GitHub](#github) | One GitHub PR per Story, with live CLI and TUI inspection | [`github/CONTEXT.md`](../../src/plugins/github/CONTEXT.md) | [ADR-0051](../agents/adr/0051-plugins-use-fixed-host-external-reads.md) |
 | [Software Factory](#software-factory) | A Markdown Stage Prompt for each Stage, for agents | [`software-factory/CONTEXT.md`](../../src/plugins/software-factory/CONTEXT.md) | [ADR-0039](../agents/adr/0039-software-factory-stage-prompts.md) |
 
 Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) and `--edit` (opens `$VISUAL` or `$EDITOR`).
+
+## GitHub
+
+The `github` Plugin links one **GitHub PR** to each Story. It is off by default, has no settings and
+needs no Git repository for the Data Root. Enable it with `rowbly plugins enable github`.
+
+```text
+rowbly stories create --board web --name "Sign in" --github-pr https://github.com/octo/app/pull/123
+rowbly stories edit WEB-1 --github-pr https://github.com/octo/app/pull/123
+rowbly stories edit WEB-1 --github-pr ''
+rowbly github status WEB-1 --json --no-prompt
+```
+
+`--github-pr` sets or replaces the URL; an empty value clears a supported bag. Accepted URLs are
+HTTPS, with exactly `/owner/repository/pull/<positive integer>` and an optional trailing slash.
+Credentials, ports, query, fragments, encoded separators, dot segments and extra parts are rejected.
+The host is normalized to lowercase and the trailing slash removed. Enterprise hosts are accepted;
+`gh` must already have access to that host.
+
+`stories show`, the Story Details tab and Story Context show the stored link without contacting
+GitHub. The Story form has a **GitHub PR** text field. The **GitHub PR** Story tab fetches when active,
+every 60 seconds while active, and on `r`. It shows the title, open/closed/merged and draft values,
+checks, review decision, mergeability and fetch time. Refresh failures keep the last result visibly
+marked as stale. Closing/covering the screen, switching tabs or Data Roots, or disabling/reloading
+the Plugin cancels reads and refresh scheduling. No Board badges or background CLI polling are built.
+
+`github status` runs one fixed `gh pr view` read. Install GitHub CLI and authenticate with `gh auth login`.
+It never installs tools or starts login. Missing `gh`, authentication/access failure, invalid responses,
+output overflow or timeout fail clearly; a missing link is `NOT_FOUND` (exit 3), and an unreadable bag
+is `DATA_INTEGRITY` (exit 6). JSON contains `pr`, `number`, `title`, `url`, `state`, `isDraft`,
+`mergeable`, `mergeStateStatus`, optional `reviewDecision`, `checks` and `fetchedAt`. `checks` is
+`{ total, passed, failed, pending, other }`: an empty rollup is not reported, and cancelled, skipped,
+neutral or unknown conclusions never count as passed. Output is capped at 1 MiB stdout and 64 KiB
+stderr, with a 10-second deadline and cancellation ([ADR-0051](../agents/adr/0051-plugins-use-fixed-host-external-reads.md)).
+
+Only `{ "pr": "<url>" }` is saved in the Story's `github` bag (unversioned v1). Live results stay in
+memory; reads create no Git commits. Unknown keys, future versions and malformed values remain
+unchanged on unrelated core edits, while explicit replacement or clearing refuses them. Doctor
+reports `PLUGIN_DATA_INVALID` without a fix; repair the value by hand. No migration or automatic
+repair is built. Disabling the Plugin preserves its data.
 
 ## Assignees
 

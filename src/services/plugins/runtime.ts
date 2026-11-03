@@ -25,7 +25,14 @@ import {
   readPluginBinaryFile,
   readPluginFile,
 } from './changeSet';
-import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
+import {
+  assertExternalRead,
+  assertMayStart,
+  currentScope,
+  type ExecutionScope,
+  inScope,
+  newOperationId,
+} from './executionScope';
 import { listPluginFilesMany, readPluginFiles } from './fileBatches';
 import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
@@ -80,6 +87,8 @@ export interface OperationRunner {
   ): Promise<R>;
   /** The context of a Plugin that is on, for its commands, screens, fields, filters, rows and Actions. */
   context(id: string): PluginContext;
+  /** Host-only screen context, cancelled with the supplied screen lease. */
+  screenContext(id: string, signal: AbortSignal): PluginContext;
   /** The context of a Plugin that is on, for its hooks and doctor checks: read services only. */
   hookContext(id: string): PluginHookContext;
 }
@@ -383,7 +392,12 @@ export function createOperationRunner(
     }
   }
 
-  const runner: OperationRunner = { context, hookContext, run: run as OperationRunner['run'] };
+  const runner: OperationRunner = {
+    context,
+    screenContext: (id, signal) => pluginContext(ctx, repos, activePlugin(id), services, runner, signal),
+    hookContext,
+    run: run as OperationRunner['run'],
+  };
   return runner;
 }
 
@@ -575,8 +589,11 @@ function pluginContext(
   plugin: ActivePlugin,
   services: () => Services,
   runner: OperationRunner,
+  screenSignal?: AbortSignal,
 ): PluginContext {
   const { id } = plugin.definition;
+  const owner = ctx.plugins?.externalReads?.(id);
+  const lifetime = AbortSignal.any([...(owner ? [owner.signal] : []), ...(screenSignal ? [screenSignal] : [])]);
   let projected: PluginContext['services'] | undefined;
   function operation<I extends object, R>(
     name: string,
@@ -602,6 +619,14 @@ function pluginContext(
     return runner.run(full, input, (changes) => body(changes.forPlugin(id, bodyScope())), latest);
   }
   return withGetters(readContext(ctx, repos, plugin), {
+    externalReadSignal: lifetime,
+    externalRead: async (...[name, parameters, options]: Parameters<PluginContext['externalRead']>) => {
+      assertExternalRead(id, screenSignal !== undefined);
+      lifetime.throwIfAborted();
+      if (!plugin.definition.externalReads?.includes(name) || !owner)
+        throw new PluginError(`Plugin "${id}" did not declare external read "${name}"`);
+      return owner.run(name, parameters, AbortSignal.any([lifetime, ...(options?.signal ? [options.signal] : [])]));
+    },
     get services() {
       projected ??= pluginServices(services());
       return projected;

@@ -15,6 +15,7 @@ import {
   type RequiredStory,
   readBinaryInput,
   type Story,
+  UsageError,
   z,
 } from '../../../src/plugin-api';
 
@@ -154,4 +155,22 @@ export const searchableNotes: PluginTui = {
     };
   },
 };
+// #endregion
+
+// #region external-reads
+export const externalReader = definePlugin({
+  id: 'external-reader',
+  name: 'External reader',
+  description: 'Inspect a pull request through a fixed host template',
+  externalReads: ['gh-pr-view'],
+  commands(group, cli) {
+    group.command('read <url>').action((url: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        const result = await plugin.externalRead('gh-pr-view', { url });
+        if (result.exitCode !== 0) throw new UsageError('External read failed', { hint: result.stderr });
+        print(result, (value) => value.stdout);
+      }),
+    );
+  },
+});
 // #endregion

@@ -318,6 +318,8 @@ export interface PluginsService {
   disable(id: string, opts?: OperationOptions): Promise<{ id: string; enabled: boolean }>;
   /** The context a Plugin that is on gets in its commands, screens and Actions. */
   context(id: string): PluginContext;
+  /** Host-only screen context, revoked when signal aborts. */
+  screenContext(id: string, signal: AbortSignal): PluginContext;
 }
 
 export interface FeatureFlagDefinition {

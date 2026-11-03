@@ -61,7 +61,7 @@ Keep the Story current without being asked. The supervisor makes each update whe
 | The plan is accepted, before the first code change | Move the Story to the in-progress Stage (reference §5). If the Comments Plugin is on, add a Comment with the complexity score, branch and a short plan. |
 | A planned Task finishes | Move the Task to `done`. |
 | A blocker or a decision that changes the scope | Add a Comment. |
-| The draft PR is open | Add a Comment with the PR URL, its head commit SHA and the validation summary. When the Comments hold review findings for this work, answer each by its number in that Comment: fixed in `<commit SHA>`, or why it was not changed. Never record the work as approved yourself. Move the Story to a review Stage (key or name contains `review`) if the Board has one; otherwise leave it in the in-progress Stage. |
+| The draft PR is open | When the GitHub Plugin is on, set `stories edit <KEY> --github-pr <url>` (assigned workers report it). Add a Comment with the PR URL, its head commit SHA and the validation summary. When the Comments hold review findings for this work, answer each by its number in that Comment: fixed in `<commit SHA>`, or why it was not changed. Never record the work as approved yourself. Move the Story to a review Stage (key or name contains `review`) if the Board has one; otherwise leave it in the in-progress Stage. |
 
 Do not move the Story to `done`: the work is complete only when the PR merges, and that is outside this skill. Do not turn Plugins on, edit Story fields the request does not need, or delete records. If the Comments Plugin is off, put the same notes in the PR body and in the final report.
 

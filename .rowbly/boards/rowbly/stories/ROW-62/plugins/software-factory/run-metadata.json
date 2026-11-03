@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-03T15:57:26.671Z"
+    "startedAt": "2026-11-03T16:20:59.857Z"
   },
   "identity": {
-    "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+    "worker": "mcp:4638c180-871e-43c3-b4fd-c683fc3ec0b0",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+    "threadId": "mcp:4638c180-871e-43c3-b4fd-c683fc3ec0b0",
     "verification": {
-      "source": "/home/sgolovine/.rowbly-factory/receipts/df2d3070059c31fbc6821fa086190a2d.json",
-      "verifiedAt": "2026-11-03T15:57:27.513Z",
+      "source": "/home/sgolovine/.rowbly-factory/receipts/6bff8c4df63dd30053bbbf0ac52b2ea9.json",
+      "verifiedAt": "2026-11-03T16:21:00.605Z",
       "by": "sunny"
     }
   },
@@ -33,12 +33,6 @@
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-03T15:57:26.671Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
-    "at": "2026-11-03T16:06:54.462Z",
-    "source": "Verified rook/T3 assistant messages from mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801; snapshot /tmp/rowbly-factory-session/ROW-62-poll.json; SHA256 5408bf4e39838c1a93edc702b6c3363c7b98f652fcb7599e319f840c175a76cb",
-    "by": "sunny"
+    "selectedAt": "2026-11-03T16:20:59.857Z"
   }
 }

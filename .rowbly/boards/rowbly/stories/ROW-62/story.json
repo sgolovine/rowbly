@@ -12,20 +12,10 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:00:05.700Z",
+  "updatedAt": "2026-11-03T16:21:00.605Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:57:26.671Z"
-      }
     },
     "comments": {
       "comments": [
@@ -35,6 +25,13 @@
           "body": "Revised direction is good, but fingerprint script is NOT accepted yet. Please fix fail-closed reads before implementation: missing jq/sha256sum/plugins-list, failed specs list/show, blocker reads and pipeline stages must yield a gap with no overall (current no pipefail and grouped commands can mask failures as empty JSON). Check every subcommand exit, do not infer Plugin off from unreadable list, and validate expected JSON types. Read guide only as own regular non-symlink file; distinguish absent from unreadable/unsafe rather than omit it. Align claimed off-Plugin behavior with story bag contents. Add throwaway fault scenarios for each read class, not just happy-path input changes, and include actual full script in proposed prompt, no placeholder. jq and sha256sum verified /usr/bin on rook. Keep .rowbly proposals outside Data Root; no actual enable yet. No repository edits until revised acceptance. Use dedicated script/reference instead of embedding large shell in prompt if simpler, but maintain self-contained published skill. Method/version explicit. No need ask user for these routine correctness fixes.",
           "createdAt": "2026-11-03T02:37:46.328Z",
           "updatedAt": "2026-11-03T02:37:46.328Z"
+        },
+        {
+          "id": "4Lfx5sbH",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-62, PR https://github.com/sgolovine/rowbly/pull/154, head 0c5f219cd71d4a6638833ff0df394d4b46a276ac. Finding 1: reconcile the kept workflow regression with the current Plugin catalog while preserving unknown-input gaps. Finding 2: prevent a Story edit during collection from producing false equality by checking the original reviewed input and adding a deterministic regression. Review: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609320682. Continue the existing PR; TODO activation remains pending.",
+          "createdAt": "2026-11-03T16:19:39.079Z",
+          "updatedAt": "2026-11-03T16:19:39.079Z"
         },
         {
           "id": "6nxQM8c1",
@@ -49,6 +46,13 @@
           "body": "Supervisor accepts retry 2 revised implementation plan and method-2 candidate reviewed at /tmp/row62/retry2: self-contained Node helper with checked command results and shapes, complete known-input hashes, safe own-file reads, no overall on any gap, strict previous-record digest validation, generated readiness output excluded, and conservative unknown/off-Plugin handling. Publish helper/reference, exactly the agreed factory loop step4 sentence, three relevant documentation updates and one extension to the kept workflow check within 100 tests. Follow all four checks and owned agentic-tui evidence before one draft PR. Proposed TODO prompt and Stages bullet are accepted rollout direction only: supervisor revalidates final artifacts and applies/enables configuration after code merge; worker never edits .rowbly and must not claim activation complete. Coordinate the loop sentence with ROW69 skill changes and retain conservative gaps for newly added Plugins until their input contract is reviewed. Continue preserved factory/row-62 work.",
           "createdAt": "2026-11-03T15:34:20.590Z",
           "updatedAt": "2026-11-03T15:34:20.590Z"
+        },
+        {
+          "id": "BzYTA3lV",
+          "author": "sunny",
+          "body": "Implementation record: ROW-62 correction PR https://github.com/sgolovine/rowbly/pull/154 head 0c5f219cd71d4a6638833ff0df394d4b46a276ac, correction commit05430c5f2ad2c9c088480638d8fc3f8fc4863cdd authored by mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801 on rook provider codex model gpt-6.1-sol reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/df2d3070059c31fbc6821fa086190a2d.json. Fresh correction worker continued remote factory/row-62 in isolated local factory/row-62-correction-sol-1 worktree, fixed finding1, added existing regression and docs updates. Prior original product implementer mcp:3803ae1e-36e4-4d2e-82f9-32764d071044 also codex/gpt-6.1-sol; first Astra reviewer wrote no product code. All four local checks79unit21CLI and30 disposable faults passed. Complete corrected evidence/rollout manifest https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609071374. Requires NEW worker exact-head independent review different from both implementing workers and Sol model; no inheritance of old-head review approval. TODO activation remains supervisor-owned after merge.",
+          "createdAt": "2026-11-03T16:12:11.377Z",
+          "updatedAt": "2026-11-03T16:12:11.377Z"
         },
         {
           "id": "K5iux99S",
@@ -77,6 +81,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/154 opened at head 30c4d8960266c9e6e189d36f71ff211de278919b. Typecheck, lint, unit 79 and CLI 21 passed; total 100 tests. Five CI checks passed; Clipboard smoke (windows-latest) is pending and mergeability was UNKNOWN. Screenshots and complete rollout proposals: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608312095. Exact rollout files and hashes are under /tmp/row62/retry2/rollout. Supervisor must revalidate and apply/enable TODO after code merge; activation is not done. Worktree clean; owned daemon and sessions stopped.",
           "createdAt": "2026-11-03T15:48:37.380Z",
           "updatedAt": "2026-11-03T15:48:37.380Z"
+        },
+        {
+          "id": "WhrFKuVI",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/154 at 0c5f219cd71d4a6638833ff0df394d4b46a276ac by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] test/skills/agentWorkflows.test.ts:245-246: The new success-path assertion fails after a clean merge with current main (48dc512a219d43026e71a2f3b77639101a53e8e5). The CLI now lists the GitHub Plugin, so the helper correctly returns exit 1 and gap=plugins: unknown or enabled unloaded Plugin instead of the expected exit 0. Preserve the explicitly approved conservative unknown-Plugin policy and reconcile the kept regression with the current catalog, using a controlled known-input fixture for success cases and checking the unknown-input gap; do not silently declare GitHub inputs complete just to pass. 2. [P2] skills/rowbly-factory/scripts/readiness-fingerprint.mjs:403-408: The Story inventory snapshot starts after the Story and Comments were read and is never reconciled with that earlier Story. A description edit between those reads and the inventory snapshot is therefore accepted by every final recheck, while the fingerprint still hashes the old description. A deterministic disposable command fixture changed the actual story.json description during config show: the helper emitted overall and comparison=equal against the saved old review, exit 0. This allows the TODO prompt to skip new requirements. Recheck the reviewed Story against its original normalized input before emitting overall, including when Story Linking is off, and extend the kept regression with this deterministic ordering case. Prior finding 1 is fixed: the unsafe Spec fixture now emits gap=specs with no overall. Reviewed all seven changed files, verified both Sol implementation records and fresh reviewer identity, checked the complete corrected rollout and matching manifest hashes, and inspected all seven hosted PNGs (HTTP 200). Independent unchanged checks ran once under the shared lease on local integration d8223c589d09b24abeebd6cdf05d8543e33e767f: typecheck PASS; lint PASS; unit 79 PASS; CLI 20 PASS and 1 FAIL as finding 1. The assigned-head six GitHub checks were SUCCESS; those do not supersede the local integration failure. Evidence on rook: /tmp/row-62-review-astra-2/validation.log and /tmp/row-62-review-astra-2/probe.py with probe/ outputs. No product fixes, Board writes or PR-branch pushes. TODO activation remains pending supervisor revalidation and application after a corrected code merge.",
+          "createdAt": "2026-11-03T16:19:38.467Z",
+          "updatedAt": "2026-11-03T16:19:38.467Z"
         },
         {
           "id": "XNdMxIoJ",
@@ -114,6 +125,13 @@
           "updatedAt": "2026-11-03T02:54:33.430Z"
         },
         {
+          "id": "iEe0UYoe",
+          "author": "sunny",
+          "body": "Returned PR154 corrected at head 0c5f219cd71d4a6638833ff0df394d4b46a276ac: https://github.com/sgolovine/rowbly/pull/154. Finding 1 fixed in 05430c5f2ad2c9c088480638d8fc3f8fc4863cdd with safe physical Spec inventory, linked Board Spec and off-Plugin checks, incoming-link inventory guards and final rechecks; incomplete inputs yield a gap without overall. Typecheck, lint, 79 unit and 21 CLI tests passed; 30 disposable fault scenarios passed; doctor zero findings. Five current-head CI checks succeeded; Clipboard smoke (windows-latest) remains pending. Fresh screenshots, complete rollout proposals and hashes: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609071374. Worktree clean and retained; owned sessions removed and daemon stopped. TODO activation remains pending supervisor review and application after merge.",
+          "createdAt": "2026-11-03T16:12:12.636Z",
+          "updatedAt": "2026-11-03T16:12:12.636Z"
+        },
+        {
           "id": "xNYuVPaY",
           "author": "sunny",
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
@@ -121,6 +139,16 @@
           "updatedAt": "2026-11-03T02:19:45.211Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4638c180-871e-43c3-b4fd-c683fc3ec0b0",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:20:59.857Z"
+      }
     }
   }
 }
