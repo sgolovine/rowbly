@@ -29,7 +29,11 @@ modelSelection: <JSON>
    separated by spaces.
 2. Run `sha256sum <brief>`. If the hash differs from `sha256`, answer
    `LAUNCH-FAILED <id> brief hash mismatch`.
-3. Read the brief with `cat`, and call `t3_thread_launch` once, in this project, with:
+3. Read the target provider/model's live catalog and option descriptors with
+   `orchestrator_capabilities`. Check the supplied IDs, typed option values and inherited options;
+   never coerce strings to numbers/booleans, guess unsupported types or silently add defaults.
+   If the exact selection cannot be used, answer `LAUNCH-FAILED <id> <reason>` without launching.
+   Read the brief with `cat`, and call `t3_thread_launch` once, in this project, with:
    - `title`: the title, exactly;
    - `message`: the brief file's contents, exactly, with nothing added or removed;
    - `modelSelection`: the JSON, exactly;

@@ -20,7 +20,7 @@ All optional, given when the user starts the skill:
 
 - **Board**: a Board id. Without one, use the current Board (`rowbly use`), else the only Board.
 - **Worker limit**: how many workers run at once. Default 4.
-- **Worker model**: default your own model.
+- **Worker model**: chosen as [Model Selection](#model-selection) says; default your own model.
 - **Other instructions**, such as where workers run and how to start them. These take precedence
   over `ROWBLY.md`, which takes precedence over this file.
 
@@ -129,8 +129,11 @@ tell the user what is missing and how to fix it, and stop.
    require independent verification from a launch receipt or harness result, followed by
    `run attach` for this exact Run and Board publication. Opaque metadata needs explicit repair.
    Reconcile unknown/conflicting launch state before clearing or retrying; ask the user when it
-   cannot be resolved. Do not start a duplicate or infer failure from age alone. Finding the worker
-   is not activity: touch only on what it has done since (see [Stale Runs](#stale-runs)).
+   cannot be resolved. Do not start a duplicate or infer failure from age alone. Check each
+   running Run's `runMetadata.selection` against the model policy, as
+   [Model Selection](#model-selection) says, and report any that is missing or does not comply.
+   Finding the worker is not activity: touch only on what it has done since
+   (see [Stale Runs](#stale-runs)).
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -173,14 +176,16 @@ Report each start, retry, finish, failure, question and Board change to the user
 
 ## Start a Story
 
-1. Run `rowbly software-factory run start <KEY> --worker "<launch identifier>"`. Keep its returned
-   `stage`, `attempt` and `startedAt` as the expected Run reference. The worker string alone is a
-   launch hint, not verified identity. If the harness can reserve a real thread waiting for GO,
-   use its actual ID. Start work only after this succeeds. Exit 4 means a Run already exists, its
-   Stage Prompt is off, unresolved blocking Stories remain or a person holds it: report the returned
-   reason and skip it. Re-read eligibility after Board changes; never launch from a stale overview
-   or after a refused start.
-2. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
+1. Choose the worker's provider, model and options as [Model Selection](#model-selection) says.
+2. Run `rowbly software-factory run start <KEY> --worker "<launch identifier>" --provider <id>
+   --model <id> --rule "<rule>" [--option <id>=<json>]… [--fallback "<why>"] [--usage <source>]`.
+   Keep its returned `stage`, `attempt` and `startedAt` as the expected Run reference. The worker
+   string alone is a launch hint, not verified identity. If the harness can reserve a real thread
+   waiting for GO, use its actual ID. Start work only after this succeeds. Exit 4 means a Run
+   already exists, its Stage Prompt is off, unresolved blocking Stories remain or a person holds
+   it: report the returned reason and skip it. Re-read eligibility after Board changes; never
+   launch from a stale overview or after a refused start.
+3. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
    for workers and the other Stories workers are on, and on a retry `--retry-file` with the
    [retry context](#retry-context). Its `markdown` supplies the generated context of
    [the worker brief](references/worker-brief.md) after the rules: the Story in full, the Stage
@@ -189,27 +194,59 @@ Report each start, retry, finish, failure, question and Board change to the user
    append one filled Implementation records section after the generated markdown, containing all
    verified authoring records and the selected reviewer identity. Do not substitute the manual
    template or rely on its unfilled placeholders. Finalize that section from the verified launch
-   before sending GO in step 5. Exit 4 with `details.incomplete` means part of the Story or
+   before sending GO in step 6. Exit 4 with `details.incomplete` means part of the Story or
    `ROWBLY.md` cannot be read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
    `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
    template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
-3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
-   actual machine, harness, worker ID and thread ID from the launch receipt/harness result. For a
-   remote T3 CLI use [remote launches](references/remote-launch.md), including its durable receipt.
-4. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
+4. Launch or use the reserved worker with the recorded selection, as `ROWBLY.md` says, keeping it
+   waiting for GO. Verify the actual machine, harness, worker ID and thread ID from the launch
+   receipt/harness result. For a remote T3 CLI use [remote launches](references/remote-launch.md),
+   including its durable receipt. Compare actual provider instance/model IDs and the complete
+   typed option set with the recorded selection, ignoring option order. Extra, missing or duplicate
+   IDs and different types or values are mismatches: send no GO and fail the Run as step 7 says,
+   naming what launched. Unknown or unverified evidence needs reconciliation first. Never change
+   the selection to match the launch; a retry records its own.
+5. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
    <startedAt> --worker <actual-id> --machine <machine> --harness <harness> --thread-id <thread-id>
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
    attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
    identity is refused. Preserve another section's values when adding current-Run metadata.
-5. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
+6. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
    [resource record](references/cleanup.md) outside the checkout. Add private daemon directories
    as workers report them; complete the merged PR/head/base fields before cleanup.
    Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
    and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
-6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
+7. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
    reconcile the receipt and actual harness state first; do not retry, clear or start another worker
    merely because a response was lost. If a worker exists but start/attach failed, keep it waiting
    or cancel it through its harness, and verify that outcome before another launch.
+
+## Model Selection
+
+The selection that `run start` records is what you chose before the launch: the provider instance,
+model and options as your harness names them, the policy rule you applied, and why you did not use
+that rule's model when you did not. It is your intent, not proof of what launched; the launch
+receipt confirms it.
+
+- **Policy.** Follow the user's instructions, then `ROWBLY.md`'s model policy. Without either, use
+  your own model and record `--rule "supervisor default"`. A model the user names for a Story or a
+  run is `--rule "user named"`.
+- **Exact options.** Read the target harness's live model catalog and supported option descriptors.
+  Resolve any inherited options before recording the full intended selection; never guess types
+  or silently substitute values. `--option <id>=<json>` takes a JSON string, finite number or
+  boolean, with unique IDs: `--option 'reasoningEffort="high"'` or `--option 'fastMode=true'`.
+  String `"123"` and number `123`, or string `"true"` and boolean `true`, remain different.
+  Malformed JSON, null, compound/nonfinite values and duplicate IDs exit 2. These new flags need
+  no released CLI or stored-data migration; starts without selection still work.
+- **Usage is unknown unless you can see it.** Rowbly has no usage source. Count remaining usage
+  only when your harness reports it for that provider; never estimate it, never infer it from
+  signing in or a successful launch, and never record a number you did not read. `--usage` is
+  `unknown` (the default), `observed-limit` (a launch or turn failed with a usage or rate limit) or
+  `user-stated` (the user said usage is low).
+- **Fallback.** Use another model than the rule's only for a reason you can name: an observed
+  limit, the user's word, or a model that cannot be started. Record it with `--fallback "<why>"`.
+- **Audit.** `runs` shows each current Run's `runMetadata.selection`, so the selection and any
+  fallback reason stay readable after a restart. A Run with no selection was started without one.
 
 ## Retry context
 
@@ -243,7 +280,8 @@ discarding earlier work.
    are on, save the captured context, evidence sources and continuation/restart decision as a
    Comment before replacing the Run, so another supervisor can recover it. Otherwise retain it in
    the supervisor's messages and brief.
-   Only then run `run start <KEY> --worker <name> --retry`; launch only on success, using the
+   Only then run `run start <KEY> --worker <name> --retry` with the new attempt's selection, as in
+   [Start a Story](#start-a-story); launch only on success, using the
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
 

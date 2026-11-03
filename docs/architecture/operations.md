@@ -94,7 +94,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `story-linking.remove` | `{ blocker, blocked }` | `{ blocker, blocked }` (canonical Story Keys) |
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
-| `software-factory.start` | `{ key, worker, retry? }` | `{ key, stageRun }` |
+| `software-factory.start` | `{ key, worker, retry?, selection? }` | `{ key, stageRun, selection? }` |
 | `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
 | `software-factory.touch` | `{ key, stage, attempt, startedAt, worker, source }` | `{ key, stageRun, heartbeat }` |
 | `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
@@ -117,6 +117,11 @@ an outgoing link whose target no longer exists. Only the blocker's bag and `upda
 the reciprocal view is derived. Its `stories.remove` transform removes incoming references in the
 deletion's Change Set, refusing the entire operation if an invalid linking bag on the Board prevents
 safe cleanup. Its `doctor.fix` repairs only invalid targets in valid bags and keeps other Plugin Data.
+
+A start's optional `selection.options` holds exact string, finite number or boolean values with
+unique option IDs. CLI `--option <id>=<json>` requires a JSON scalar (including JSON quotes for
+strings); malformed, null, compound and nonfinite values or duplicate IDs refuse with `USAGE`
+before the operation. No model catalog types are inferred. The stored ADR-0046 schema is unchanged.
 
 Software Factory's `level` is `global` (the entry in `rowbly.config.json`) or `board` (the bag in
 `boards/<board>/board.config.json`, with `board`); `stage` is a Stage key that `set` checks against

@@ -8,7 +8,14 @@ import {
   UsageError,
   z,
 } from '../../plugin-api';
-import { requireRunMetadata, requireRunRef, runRef, WorkerIdentity, writeRunMetadata } from './runMetadata';
+import {
+  ModelSelection,
+  requireRunMetadata,
+  requireRunRef,
+  runRef,
+  WorkerIdentity,
+  writeRunMetadata,
+} from './runMetadata';
 import { RunRef } from './runRef';
 import { type StageRun, StageRunBag } from './stageRuns';
 
@@ -87,11 +94,19 @@ export async function guardStartedRun(
   changes: PluginChangeSetView,
   result: unknown,
 ): Promise<undefined> {
-  const expected = z.object({ key: StoryKeySchema, stageRun: StageRunBag.shape.stageRun }).parse(result);
+  const expected = z
+    .object({ key: StoryKeySchema, stageRun: StageRunBag.shape.stageRun, selection: ModelSelection.optional() })
+    .parse(result);
   const change = changes.story(expected.key);
   if (!change?.after) throw new ConflictError(`${expected.key}: new Stage Run was removed`);
   const run = requireRunRef(change.after, expected.stageRun);
   const metadata = await requireRunMetadata(changes, change.after, expected.stageRun);
-  if (run.status !== 'running' || run.worker !== expected.stageRun.worker || metadata.identity || metadata.heartbeat)
+  if (
+    run.status !== 'running' ||
+    run.worker !== expected.stageRun.worker ||
+    metadata.identity ||
+    metadata.heartbeat ||
+    JSON.stringify(metadata.selection) !== JSON.stringify(expected.selection)
+  )
     throw new ConflictError(`${expected.key}: new Stage Run changed during start`);
 }
