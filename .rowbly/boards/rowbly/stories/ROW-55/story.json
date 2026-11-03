@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Validate worker-reported Board commands mechanically",
   "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "b03",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T01:06:53.993Z",
+  "updatedAt": "2026-11-03T01:10:48.618Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -60,18 +60,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
           "createdAt": "2026-11-03T00:06:02.194Z",
           "updatedAt": "2026-11-03T00:06:02.194Z"
+        },
+        {
+          "id": "FN3xpBnb",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/139 at a97e8c7f. Independent correction review passed: typecheck, lint, unit 78, CLI 20; both blocker regressions verified; six PR checks passed; seven screenshot URLs HTTP 200. Merge CI queued: https://github.com/sgolovine/rowbly/actions/runs/41557898865",
+          "createdAt": "2026-11-03T01:10:47.903Z",
+          "updatedAt": "2026-11-03T01:10:47.903Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:ec3996b1-02fb-4b7b-b5eb-9a0d2e1c5833",
-        "by": "sunny",
-        "startedAt": "2026-11-03T01:06:53.992Z"
-      }
     }
   }
 }
