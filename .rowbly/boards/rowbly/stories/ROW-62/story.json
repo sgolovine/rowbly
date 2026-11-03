@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:55:57.450Z",
+  "updatedAt": "2026-11-03T15:55:58.195Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -99,6 +99,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/154 at 30c4d8960266c9e6e189d36f71ff211de278919b by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] skills/rowbly-factory/scripts/readiness-fingerprint.mjs:285: Do not treat a successful Story Spec listing as proof of complete inputs. The underlying listPluginFiles deliberately omits symbolic links and other non-regular entries, so adding plugins/specs/new-requirements.md as a symlink after a saved readiness review leaves specs list returning [] and makes this helper emit an overall and comparison=equal with exit 0. Reproduced with the real CLI against disposable data, with no product or Board changes. This violates the accepted unsafe-input gap contract and lets the proposed TODO prompt skip an incomplete review. Validate the relevant Story Spec inventory and safe files before accepting the list, or use a read contract that exposes omitted unsafe entries; emit gap=specs with no overall in this case, preserve the existing CLI symlink policy, and extend the kept workflow check without increasing the 100-test count. Reviewed all seven changed files, CLI read behavior, provenance, the complete posted rollout proposals and four screenshot URLs (all HTTP 200). Required local checks passed unchanged under the shared lease: typecheck, lint, 79 unit tests and 21 CLI tests. All six current-head GitHub checks were successful. Evidence: /tmp/row-62-review-astra-1/reproduce-spec-gap-v2.py, baseline.txt, spec-list.txt and unsafe-spec.txt on rook. TODO activation remains pending supervisor revalidation and application after a corrected code PR merges.",
           "createdAt": "2026-11-03T15:55:57.449Z",
           "updatedAt": "2026-11-03T15:55:57.449Z"
+        },
+        {
+          "id": "a9tCn5xN",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-62, PR https://github.com/sgolovine/rowbly/pull/154, head 30c4d8960266c9e6e189d36f71ff211de278919b. Independent review finding 1: the readiness helper accepts a Story Spec listing that silently omits unsafe entries and can falsely return comparison=equal. Detect incomplete Spec inventory, report a gap without overall, and extend the kept regression check. Review: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608600113. Continue the existing branch and PR; activation remains pending.",
+          "createdAt": "2026-11-03T15:55:58.195Z",
+          "updatedAt": "2026-11-03T15:55:58.195Z"
         }
       ]
     }
