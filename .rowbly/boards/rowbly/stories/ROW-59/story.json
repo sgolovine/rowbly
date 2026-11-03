@@ -34,18 +34,18 @@
           "updatedAt": "2026-11-02T23:41:13.205Z"
         },
         {
-          "id": "tuDIKQR5",
-          "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
-          "createdAt": "2026-11-03T00:34:10.501Z",
-          "updatedAt": "2026-11-03T00:34:10.501Z"
-        },
-        {
           "id": "nGgg0QmV",
           "author": "sunny",
           "body": "PR141 verification at clean head 3c71a546cc53d5f130edf2b30510f1da52c8e176 found merge blockers. Current main conflicts in src/plugins/software-factory/commands.ts and docs/plugins/built-in.md. Reproduction: add futureState to an otherwise valid v1 hold.json; doctor reports nothing and release exits 0 deleting unknown bytes. Symlink hold.json to a valid external file; hold and release exit 2 VALIDATION instead of documented DATA_INTEGRITY exit 6, while eligibility remains held and bytes remain unchanged. Fresh correction worker must continue PR141: integrate main preserving combined HELD/BLOCKED behavior; strictly refuse unknown v1 fields; return DATA_INTEGRITY exit 6 for unreadable or unsafe stored hold paths without following symlinks; retain doctor reporting and add byte-preservation regressions. Preserve StageRun schema and Run context. Verification passed typecheck, lint, unit78, CLI20, six GitHub checks and four screenshot HTTP200 checks. No product edits, pushes or merge from verification.",
           "createdAt": "2026-11-03T00:59:57.018Z",
           "updatedAt": "2026-11-03T00:59:57.018Z"
+        },
+        {
+          "id": "tuDIKQR5",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
+          "createdAt": "2026-11-03T00:34:10.501Z",
+          "updatedAt": "2026-11-03T00:34:10.501Z"
         }
       ]
     }
