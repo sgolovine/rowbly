@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:41:29.964Z",
+  "updatedAt": "2026-11-03T17:43:23.617Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:29f26699-6597-47f4-86f7-0fa354d7de72",
+        "by": "sunny",
+        "startedAt": "2026-11-03T17:41:29.238Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -64,18 +74,15 @@
           "body": "PR watch event: GitHub reports PR157 at head 3bccb6f0b651735444c20e0c94a4263f0dfe3813 conflicts with main (DIRTY/CONFLICTING); rollup currently empty, which is not check failure. Story remains In Progress with its current verified implementation worker. Continue in the existing isolated worktree: fetch and merge current origin/main, resolve integration conflicts preserving ROW73 setup/ADR0053 and ROW70 Stats/ADR0054 intent, validate the changed integration under the shared lease, and push the existing branch without rebase or force push. Report exact resolved files/head/check results before final handoff; ask only if a semantic conflict cannot be settled by Story/accepted plans. No supervisor product edits.",
           "createdAt": "2026-11-03T17:32:05.356Z",
           "updatedAt": "2026-11-03T17:32:05.356Z"
+        },
+        {
+          "id": "uXJxxEi6",
+          "author": "sunny",
+          "body": "Implementation record amendment: verified original author codex/gpt-6.1-sol high/default worker mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4 continued a queued integration notice after initial handoff. New PR157 head6260eaca0548025fe2801752d110d3303e6b644b is a clean merge with parents c483974a6a271a109d3bd126a3ad87a57dc83969 and main1caa4a14647e0230ed3d9e51a4ebad83bde96950. GitHub commit diff changes only own Story Run metadata .rowbly/boards/rowbly/stories/ROW-70/plugins/software-factory/run-metadata.json; no product/source/test/doc changes. SSH original worker confirms authorship/push and all four checks passed on6260eaca (unit79,CLI21). Existing sole product author remains Sol; fresh Astra reviewer remains eligible. Review6260eaca after verifying currenthead, no further author integration/validation requested. Final resources/evidence retained.",
+          "createdAt": "2026-11-03T17:43:23.617Z",
+          "updatedAt": "2026-11-03T17:43:23.617Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:29f26699-6597-47f4-86f7-0fa354d7de72",
-        "by": "sunny",
-        "startedAt": "2026-11-03T17:41:29.238Z"
-      }
     }
   }
 }
