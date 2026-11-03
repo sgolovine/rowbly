@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T06:53:39.238Z",
+  "updatedAt": "2026-11-03T06:53:39.984Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:4e1fd55c-decf-4696-b1d2-19bedddf736a",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:54:19.539Z",
+        "finishedAt": "2026-11-03T06:53:39.238Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -43,19 +54,15 @@
           "body": "ROW-72 round 2: PARTIAL PLAN ACCEPTANCE.\n\nYou may implement the independent portion now in the existing worktree: opt-in coordination telemetry (operation names and durations only), same-context-Board selection without context.use/version changes with route reset decided separately, core Story/config loading before optional enrichment, freshness guards and usable keys/hints, and the one deterministic TUI barrier regression you proposed. Keep optional Plugin callbacks outside the Data Root lock. Update the corresponding docs and measure these phases. The existing publication/recovery test can cover telemetry now; extend it for batch reads only after the API contract is accepted. The total remains at most 100 tests. Your private agentic-tui state directory ownership is recorded; you may use it for this accepted scope under the existing screenshot/check rules.\n\nThe new files.readMany/listMany, loadStorySearchText, associated Plugin migrations and Finder inventory batching are NOT accepted for implementation yet. Before coding that portion, send a short typed interface/semantics addendum:\n1. Exact input/result types, ordered association to requested entries/scopes, missing-file behavior, duplicate handling, validation, and error semantics across multiple batches. \"An I/O error rejects only its own batch\" does not yet define the caller's observable result. Distinguish tolerant per-file display errors from publication/lock/recovery/data-integrity failures. A generic catch-and-retry-every-file fallback must not swallow or repeatedly retry coordination/integrity failures.\n2. Remove the proposed single outer scope across boards.list + stories.list + every Board config: that can cover the whole Data Root and contradicts the stated bound. Explain the bounded inventory approach while retaining the existing service consistency guarantees. Distinguish 32 requested entries/scopes from 32 filesystem operations or bounded time: recursive list and stories.list may each read arbitrarily many files. Do not claim the latter bounds without evidence or change existing atomic service semantics silently.\n3. Confirm the search loader's failure handling, freshness/invalidation and compatibility with existing storySearchText callbacks; no callbacks under the lock and no unbounded whole-Board/Root wrapper.\n\nThis is an interface/implementation clarification within the existing Story, not a request to expand scope or reverse ADR-0019. A new ADR must use docs/agents/adr and the index; ROW-69 has a pending reservation for 0051, so coordinate a different free number. Your before/after measurement plan and conditional cache deferral are accepted as evidence requirements, not promised performance results. Keep reporting mechanisms separately from the unproved original incident cause.\n\nCanonical Model Selection absence remains audited by Comment SmCEMgSY and the verified receipt; do not backfill it, restart or duplicate this worker. Report progress and the API addendum here; await separate acceptance before that API portion.",
           "createdAt": "2026-11-03T06:16:03.349Z",
           "updatedAt": "2026-11-03T06:16:03.349Z"
+        },
+        {
+          "id": "OfRbryjy",
+          "author": "sunny",
+          "body": "Implementation record — ROW-72 In Progress attempt 1.\nWorker: mcp:4e1fd55c-decf-4696-b1d2-19bedddf736a (thread mcp:4e1fd55c-decf-4696-b1d2-19bedddf736a, harness t3, machine rook).\nModel: claudeAgent/claude-opus-5-5, options effort=high. Source: verified launch receipt /home/sgolovine/.rowbly-factory/receipts/afa543a259170ea4d2d011169e74994f.json. Canonical selection absent per audited supervisor omission Comment SmCEMgSY; no backfill.\nBranch: factory/row-72. PR: https://github.com/sgolovine/rowbly/pull/153. Head: 472ec7bcb51a310cee6f9ee6422696edbb2013a8 (fresh gh pr view). Product work in this visit by this verified worker; handoff /tmp/rowbly-factory-session/ROW-72-terminal-implementation.md.",
+          "createdAt": "2026-11-03T06:53:39.983Z",
+          "updatedAt": "2026-11-03T06:53:39.983Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:4e1fd55c-decf-4696-b1d2-19bedddf736a",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:54:19.539Z",
-        "finishedAt": "2026-11-03T06:53:39.238Z"
-      }
     }
   }
 }
