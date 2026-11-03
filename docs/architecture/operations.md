@@ -95,6 +95,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `software-factory.set` | `{ level, board?, stage, enabled?, text? }` | `StagePrompt` |
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
 | `software-factory.start` | `{ key, worker, retry? }` | `{ key, stageRun }` |
+| `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
 | `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
 | `software-factory.fail` | `{ key, reason? }` | `{ key, stageRun }` |
 | `software-factory.clear` | `{ key }` | `{ cleared }` (the Story Key) |
