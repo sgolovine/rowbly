@@ -502,6 +502,11 @@ TUI, started before the first read, with a recheck every minute in case a change
 `run start`, `finish` and `fail` return `{ key, stageRun }`, and `run start` also `selection` when it
 recorded one; `run clear` returns `{ cleared }`.
 
+An advisory Stage Prompt may finish without moving the Story: Comments and edits leave its finished
+Run intact, and a person requests another pass after new input with `run clear`, which keeps the
+Story in place; the prompt, rather than the Plugin, skips duplicate reviews only from complete,
+known and unchanged review inputs.
+
 **Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
 the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)
 together, with `--option <id>=<json>` (repeatable; unique IDs, JSON string, finite number or boolean),

@@ -160,6 +160,9 @@ Run until the user stops you. Do not wait for the user between events.
    `ROWBLY.md` or the Stage Prompt may set another retry limit; follow it.
 4. Leave `finished` Stage Runs alone. The Story is worked again only after it moves to another Stage
    and comes back, or the user clears the Stage Run.
+   An [advisory Stage Prompt](references/readiness.md) finishes without moving the Story; only a
+   person requests another pass by clearing its Run, and the prompt skips duplicate output only
+   when complete known review inputs are unchanged.
 5. **Blocked and held Stories.** When `eligibility.eligible` is false, report its `reasons[].message` and
    skip both starts and retries. A `BLOCKED` reason lists unfinished blocking Stories in `blockers`.
    Reconsider on the next Board change or `runs` result: a blocker reaching a Stage of category

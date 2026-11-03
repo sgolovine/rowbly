@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { builtInPlugins } from '../../src/plugins';
 import { applyBlock } from '../../src/plugins/software-factory/reportedCommands';
 import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
-import { FIXED_NOW, type RunCliResult, runCli, tempRoot } from '../helpers';
+import { CLI_PATH, FIXED_NOW, type RunCliResult, runCli, tempRoot } from '../helpers';
 import { withPlugins } from '../plugins/helpers';
 
 /**
@@ -222,6 +222,53 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     expect(
       jsonError(await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json')).code,
     ).toBe('CONFLICT');
+
+    // An advisory pass compares complete inputs, excluding its own Comment and finished Stage Run.
+    const git = (...args: string[]) => promisify(execFile)('git', args, { cwd: tmp.dir });
+    await writeFile(join(tmp.dir, 'review-input.txt'), 'Repository inputs for this readiness pass.\n');
+    await git('init', '--quiet');
+    await git('add', 'review-input.txt');
+    await git(
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '-qm',
+      'Fixture',
+    );
+    const fingerprintHelper = join(process.cwd(), 'skills/rowbly-factory/scripts/readiness-fingerprint.mjs');
+    const fingerprint = (...command: string[]) =>
+      runCli([worked.key, tmp.path, '--', ...command], { cli: fingerprintHelper, cwd: tmp.dir });
+    const beforeReview = await fingerprint(process.execPath, CLI_PATH);
+    expect(beforeReview.exitCode, beforeReview.stdout).toBe(0);
+    expect(beforeReview.stdout).toContain('comparison=unknown\n');
+    const record = beforeReview.stdout
+      .trim()
+      .split('\n')
+      .filter((line) => !line.startsWith('comparison='))
+      .join(' ');
+    const review = await json(
+      'comments',
+      'add',
+      worked.key,
+      '--body',
+      `Readiness review 2026-11-03. | Reviewed input (method 2): ${record} | Advisory only.`,
+    );
+    await json('software-factory', 'run', 'finish', worked.key);
+    const afterReview = await fingerprint(process.execPath, CLI_PATH);
+    expect(afterReview.exitCode, afterReview.stdout).toBe(0);
+    expect(afterReview.stdout).toBe(beforeReview.stdout.replace('comparison=unknown', 'comparison=equal'));
+    // Multiple JSON values are a failed read, never an empty or complete fingerprint.
+    const incompleteReview = await fingerprint(process.execPath, '-e', 'process.stdout.write("[]\\n[]")', '--');
+    expect(incompleteReview).toMatchObject({ exitCode: 1, stdout: expect.stringMatching(/^gap=plugins: [^\n]+\n$/) });
+    expect(incompleteReview.stdout).not.toContain('overall=');
+    await json('comments', 'delete', worked.key, review.id, '--yes');
+    await json('software-factory', 'run', 'clear', worked.key);
+    await json('software-factory', 'run', 'start', worked.key, '--worker', 'w1');
+
     // A hold keeps the Stage Run, survives a move and refuses a start until it is released (ADR-0043).
     const bag = (await json('stories', 'show', worked.key)).plugins['software-factory'];
     expect((await json('software-factory', 'hold', worked.key, '--reason', 'By hand')).hold).toMatchObject({
