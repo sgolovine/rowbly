@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-84",
+  "boardId": "rowbly",
+  "name": "Selecting onboarding form settings should take you to original full-screen onboarding",
+  "description": "- Currently, selecting onboarding via settings opens a modal\n- Instead, we should take the user to the full screen onboarding\n- Remove modal onboarding.",
+  "stage": "todo",
+  "rank": "a9",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T23:22:43.663Z",
+  "updatedAt": "2026-11-03T23:22:43.663Z"
+}
