@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T03:35:04.759Z",
+  "updatedAt": "2026-11-03T03:35:06.088Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 2,
+        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:50:17.511Z",
+        "finishedAt": "2026-11-03T03:35:04.759Z"
+      }
     },
     "comments": {
       "comments": [
@@ -67,19 +78,15 @@
           "body": "Focused diagnostic scope ACCEPTED within this same In PR attempt2. Use temporary instrumented copies outside the repository to identify the active fault-sweep boundary, operation and wait during the timeout; instrument bounded operation durations/progress and workload/concurrency context. Reproduce the suspected window with a controlled barrier, keeping original 20s criterion; no retries, timeout increase, or repeated suite-to-green. Compare exact reviewed head/current clean integration provenance and original log /tmp/row-48-review-test-unit.log. No repository/source/test edits or product fix yet. If evidence establishes a storage/test bug, return concrete deterministic reproduction and proposed minimal fix/scope for supervisor review before edits or required-check repeat. If it establishes externally controlled resource contention, provide measured causal evidence and controlled scenario; the 6.63s isolated pass alone does not clear the gate. Keep CHANGES REQUESTED until justified validation resolves it. Preserve PR148 and all prior evidence; not a new Run/retry. Do not watch/poll or mutate .rowbly.",
           "createdAt": "2026-11-03T03:11:36.460Z",
           "updatedAt": "2026-11-03T03:11:36.460Z"
+        },
+        {
+          "id": "z73YqKeY",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/148 at d9c9e6fb6e6e5bdd2c61f52eb3b59f1b540c2421. Exact-head independent approval resolved the validation gate after controlled diagnostics and one authorized unmodified sequential pass: typecheck PASS, lint PASS, unit78 PASS, CLI20 PASS. Historical timeout preserved; original CPU-contention attribution remains unproven. Post-merge CI41572341113 queued; supervisor owns monitoring and coordinated configuration proposals.",
+          "createdAt": "2026-11-03T03:35:06.087Z",
+          "updatedAt": "2026-11-03T03:35:06.087Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 2,
-        "worker": "mcp:7290d0e9-c7f2-4db3-8680-5e3bbe9b9304",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:50:17.511Z",
-        "finishedAt": "2026-11-03T03:35:04.759Z"
-      }
     }
   }
 }
