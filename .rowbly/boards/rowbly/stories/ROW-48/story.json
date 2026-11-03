@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T03:11:36.461Z",
+  "updatedAt": "2026-11-03T03:22:52.197Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -70,6 +70,13 @@
           "body": "Focused diagnostic scope ACCEPTED within this same In PR attempt2. Use temporary instrumented copies outside the repository to identify the active fault-sweep boundary, operation and wait during the timeout; instrument bounded operation durations/progress and workload/concurrency context. Reproduce the suspected window with a controlled barrier, keeping original 20s criterion; no retries, timeout increase, or repeated suite-to-green. Compare exact reviewed head/current clean integration provenance and original log /tmp/row-48-review-test-unit.log. No repository/source/test edits or product fix yet. If evidence establishes a storage/test bug, return concrete deterministic reproduction and proposed minimal fix/scope for supervisor review before edits or required-check repeat. If it establishes externally controlled resource contention, provide measured causal evidence and controlled scenario; the 6.63s isolated pass alone does not clear the gate. Keep CHANGES REQUESTED until justified validation resolves it. Preserve PR148 and all prior evidence; not a new Run/retry. Do not watch/poll or mutate .rowbly.",
           "createdAt": "2026-11-03T03:11:36.460Z",
           "updatedAt": "2026-11-03T03:11:36.460Z"
+        },
+        {
+          "id": "iN9d0OCC",
+          "author": "sunny",
+          "body": "One unmodified validation pass AUTHORIZED based on the new controlled diagnostic evidence, not as repeated tests until green. Run all four checks ONCE sequentially on a clean current-main integration of exact PR148 head, retaining original20s limit and unchanged repository/test code. Admit only with demonstrably adequate CPU capacity; reserve/control only your own fresh processes and temporary fixtures, never stop/reconfigure other workers or shared resources. Capture external CPU-pressure/throttling/process/wait telemetry and exact integration/head/commands throughout. If capacity cannot be established, return waiting rather than start. Stop on ANY failure, preserve logs and do not repeat again without new causal evidence. A pass establishes this measured validation run, not proof that original failure was CPU contention; keep both historical failure and diagnostic distinction in finalreview/Comment. No code fix justified yet. Merge only if all required gates AND evidence-backed exact-head independent approval are satisfied; if ambiguity remains return specific diagnosis/question. No source/test edits, timeout increase, retries, polling or .rowbly writes.",
+          "createdAt": "2026-11-03T03:22:52.196Z",
+          "updatedAt": "2026-11-03T03:22:52.196Z"
         }
       ]
     }
