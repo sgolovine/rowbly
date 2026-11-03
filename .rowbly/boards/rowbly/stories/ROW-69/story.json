@@ -12,24 +12,12 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T15:15:24.741Z",
+  "updatedAt": "2026-11-03T15:17:00.378Z",
   "plugins": {
     "story-linking": {
       "blocks": [
         "ROW-70"
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "failed",
-        "attempt": 1,
-        "worker": "mcp:09ac5d3a-d3cb-4c2b-919c-78a11a0adb07",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:22:15.025Z",
-        "finishedAt": "2026-11-03T02:54:34.220Z",
-        "reason": "Verified Claude session-limit failure before implementation acceptance; research/plan and existing worktree preserved, one retry awaits explicit continuation choice."
-      }
     },
     "comments": {
       "comments": [
@@ -55,6 +43,16 @@
           "updatedAt": "2026-11-03T02:37:47.045Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:a5863cb0-fbe5-4242-ac5a-154659ec79cd",
+        "by": "sunny",
+        "startedAt": "2026-11-03T15:17:00.377Z"
+      }
     }
   }
 }

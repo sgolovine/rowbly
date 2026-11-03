@@ -2,18 +2,26 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:22:15.025Z"
+    "attempt": 2,
+    "startedAt": "2026-11-03T15:17:00.377Z"
   },
-  "identity": {
-    "worker": "mcp:09ac5d3a-d3cb-4c2b-919c-78a11a0adb07",
-    "machine": "rook",
-    "harness": "t3",
-    "threadId": "mcp:09ac5d3a-d3cb-4c2b-919c-78a11a0adb07",
-    "verification": {
-      "source": "SSH T3 thread start/show verified title, model, full-access, explicit worktree and RESERVED; /tmp/rowbly-factory-session/ROW-69-verified.json; provider defaults, no options requested",
-      "verifiedAt": "2026-11-03T02:22:15.811Z",
-      "by": "sunny"
-    }
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "high"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "user named: Sol retry continuing preserved research",
+    "fallback": "Verified Claude session limit during research; explicit user-directed Sol continuation",
+    "usage": "observed-limit",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-03T15:17:00.377Z"
   }
 }
