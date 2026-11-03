@@ -12,11 +12,41 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T02:05:51.273Z",
+  "updatedAt": "2026-11-03T02:54:35.015Z",
   "plugins": {
     "story-linking": {
       "blocks": [
         "ROW-70"
+      ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "failed",
+        "attempt": 1,
+        "worker": "mcp:09ac5d3a-d3cb-4c2b-919c-78a11a0adb07",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:22:15.025Z",
+        "finishedAt": "2026-11-03T02:54:34.220Z",
+        "reason": "Verified Claude session-limit failure before implementation acceptance; research/plan and existing worktree preserved, one retry awaits explicit continuation choice."
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "0OlW5fwE",
+          "author": "sunny",
+          "body": "Verified Claude session-limit failure before implementation acceptance; research/plan and existing worktree preserved, one retry awaits explicit continuation choice. Prior worker mcp:09ac5d3a-d3cb-4c2b-919c-78a11a0adb07 on rook. Prior Run/metadata captured in supervisor state. Preserve current branch/worktree and revisions; no restart authorized.",
+          "createdAt": "2026-11-03T02:54:35.014Z",
+          "updatedAt": "2026-11-03T02:54:35.014Z"
+        },
+        {
+          "id": "k3p078nt",
+          "author": "sunny",
+          "body": "Plan revision required before acceptance. github id and GitHub PR field accepted; Story-screen in-memory periodic gh refresh plus explicit status is enough; no saved polling data and no timers in hooks/CLI. Defer Board-card badge/cache fan-out unless needed for criteria. Avoid redundant link/unlink commands if stories create/edit flags already meet linking. Reserve ADR0051 only after revised API plan; 0050 is ROW65. Scope process capability to demonstrated read-only gh PR inspection; propose a narrow host-owned API or a constrained declared invocation rather than unrestricted executable/argv feature. Keep core free of Plugin terms and document this is trusted in-process capability, not permission/sandbox. Require argv arrays/no shell, bounded stdout/stderr/timeouts/concurrency/cancellation and no effect from read/operation hooks; all timers disposed on unmount/disable/root switch. Add/update REQUIRED tests in existing homes: runtime capability boundary outside/inside hooks, storage-format compatibility per new Built-in Plugin checklist, existing operation inventory/docs fixtures/language. No tests planned is not sufficient for new Plugin loading/API pipeline/storage contract. URL parsing must reject credentials/invalid path and preserve opaque/future data. Keep short distinct skill additions; merge main before final checks. Do not edit .rowbly and await accepted revised plan before implementation.",
+          "createdAt": "2026-11-03T02:37:47.045Z",
+          "updatedAt": "2026-11-03T02:37:47.045Z"
+        }
       ]
     }
   }

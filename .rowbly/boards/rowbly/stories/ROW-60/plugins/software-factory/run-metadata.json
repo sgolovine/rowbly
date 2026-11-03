@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-03T03:13:36.374Z"
+  },
+  "identity": {
+    "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+    "verification": {
+      "source": "/home/sgolovine/.rowbly-factory/receipts/3c2f6c5caaef72cbc732063ee3969fd8.json",
+      "verifiedAt": "2026-11-03T03:13:37.615Z",
+      "by": "sunny"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-72",
+  "boardId": "rowbly",
+  "name": "Reduce Story opening latency from Find Stories",
+  "description": "Opening a Story from Find Stories intermittently waits for seconds. Investigation found coordination overhead and optional Plugin content on the critical path; fuzzy matching itself took 2.66 ms for 70 Stories.\n\nMeasured details loading uses 11 separate coordinated acquisitions (22 fsynced lock temporary files). A controlled 2 s Git publication-gate hold made a Story read take 2.004 s. Injecting 50 ms per lock write made details take 1.207 s; the same reads in one coordinated snapshot took 123 ms. Quiet baseline details took 15–16 ms, so the original intermittent incident still needs lock-wait telemetry for conclusive attribution.\n\nFix: instrument lock wait versus held work; avoid same-Board context.use mutations and covered Board reloads; show core Story/config before optional rows/badges; batch bounded reads without weakening lock/recovery guarantees; reduce Story Linking full-Board scans and repeated Epic/Spec reads. Finder indexing is a related separate bottleneck: 102 acquisitions in this Data Root.\n\nSee Story Spec performance-report for the full diagnosis, measurements, source paths, fix plan and acceptance criteria. Scope is implementation of that plan with appropriate manual profiling and required regression checks. Keep same-Board/cross-Board navigation, freshness, invalid Plugin Data handling and ADR-0019 guarantees intact.",
+  "stage": "todo",
+  "rank": "a0",
+  "priority": "P2",
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T02:14:41.373Z",
+  "updatedAt": "2026-11-03T02:14:41.373Z"
+}

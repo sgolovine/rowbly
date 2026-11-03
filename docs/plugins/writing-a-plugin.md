@@ -580,6 +580,7 @@ export const trash = definePlugin({
 - [ ] Imports only from `../../plugin-api`, `../../plugin-api/tui` (TUI part only) and its own files (`test/architecture.test.ts`).
 - [ ] The TUI part is loaded lazily: `tui: () => import('./tui').then((m) => m.tui)`.
 - [ ] Every data change it offers works in both the CLI and the TUI; Actions only open or show something.
+- [ ] A `storyContext` section when it keeps data about a Story, so an agent's [Story Context](api.md#story-context) is complete.
 - [ ] Tests only where [`AGENTS.md`](../../AGENTS.md#tests) requires them, such as a hook that changes what the pipeline saves; check its commands and screens by running them.
 - [ ] Turned on in a Data Root with `rowbly plugins enable <id>`; `rowbly init` turns no Plugins on.
 - [ ] Its section in [`built-in.md`](built-in.md), its row in the [context map](../agents/CONTEXT-MAP.md), and its operations in [Operations](../architecture/operations.md).
