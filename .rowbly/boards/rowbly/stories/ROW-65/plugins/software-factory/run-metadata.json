@@ -4,5 +4,16 @@
     "stage": "in-pr",
     "attempt": 1,
     "startedAt": "2026-11-03T03:25:31.829Z"
+  },
+  "identity": {
+    "worker": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:cdf6f974-6378-4d08-936a-6800a20dd7ca",
+    "verification": {
+      "source": "Native T3 launch/read/config verified fresh Astra high independent of original Opus and Sol authors, full-access, explicit existing factory-row-65 binding; /tmp/rowbly-factory-session/ROW-65-Astra-verified.json",
+      "verifiedAt": "2026-11-03T03:25:32.598Z",
+      "by": "sunny"
+    }
   }
 }
