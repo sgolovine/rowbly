@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-03T02:12:18.396Z"
+  },
+  "identity": {
+    "worker": "mcp:e241b183-309f-40b0-9372-d0ce552c97a2",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:e241b183-309f-40b0-9372-d0ce552c97a2",
+    "verification": {
+      "source": "Local T3 launch/read/configuration verified e241b183 Sonnet5.5 high/full-access/bound factory-row-62 reservation",
+      "verifiedAt": "2026-11-03T02:12:19.380Z",
+      "by": "sunny"
+    }
+  }
+}

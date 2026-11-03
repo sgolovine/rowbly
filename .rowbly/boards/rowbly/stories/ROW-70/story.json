@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-70",
+  "boardId": "rowbly",
+  "name": "Rowbly Stats",
+  "description": "Add a stats page per board. This page should show the following:\n\n- Cards created\n- Cards moved to done\n- PR's created\n- Commits created.",
+  "stage": "in-progress",
+  "rank": "a9",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T02:05:51.263Z",
+  "updatedAt": "2026-11-03T02:06:36.162Z"
+}

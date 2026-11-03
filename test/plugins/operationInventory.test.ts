@@ -16,6 +16,7 @@ import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
 import { softwareFactory } from '../../src/plugins/software-factory';
 import { touchRun } from '../../src/plugins/software-factory/heartbeat';
+import { holdStory, releaseStory } from '../../src/plugins/software-factory/holds';
 import { runRef } from '../../src/plugins/software-factory/runMetadata';
 import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
@@ -159,6 +160,8 @@ describe('the operation inventory (ARCH-02)', () => {
     await startRun(factory, 'WEB-1', { worker: 'w2', retry: true });
     await endRun(factory, 'WEB-1', { status: 'finished' });
     await clearRun(factory, 'WEB-1');
+    await holdStory(factory, 'WEB-1', { reason: 'By hand' });
+    await releaseStory(factory, 'WEB-1');
 
     expect(new Set(seen.map((s) => s.name))).toEqual(new Set(listed.keys()));
     for (const { name, keys } of seen) {

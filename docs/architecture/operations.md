@@ -100,6 +100,8 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
 | `software-factory.fail` | `{ key, reason? }` | `{ key, stageRun }` |
 | `software-factory.clear` | `{ key }` | `{ cleared }` (the Story Key) |
+| `software-factory.hold` | `{ key, reason }` | `{ key, hold }` |
+| `software-factory.release` | `{ key }` | `{ key, released }` (the hold it removed) |
 
 A Spec has a `slug`; with `story` it is a Story Spec of that Story, without it a Board Spec. A `Spec` result is `{ slug, title, text }`. A Comments `target` is a Story key. A `Task` result has its Task Id as `id`, besides the stored fields. The Tasks Plugin also hooks `stages.remove`: it refuses a Stage its Tasks use without `moveTo`, and moves them with it.
 
@@ -141,6 +143,15 @@ when Story Linking is off, its preserved data contributes no restriction. `by` i
 else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set the Story's
 `updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
 the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
+
+Software Factory's `hold` writes the Story-scope Plugin file `hold.json`,
+`{ version: 1, reason, by, heldAt }`, and `release` deletes it
+([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). Neither changes the
+Story or its Stage Run, and the hold stays through Stage changes. `hold` refuses a held Story
+(`CONFLICT`), `release` one that is not held (`NOT_FOUND`), and both refuse a hold file they cannot
+read (`DATA_INTEGRITY`), leaving it unchanged: one with unknown fields or another `version`, or a
+symbolic link, which is never followed. A held Story, or one whose hold file cannot be read,
+has the eligibility reason `HELD`, so `start` refuses it (`CONFLICT`), `retry` included.
 
 `rowbly software-factory apply` runs no operation of its own: it holds no lock and runs each
 command of a worker's block that it allows as a separate `rowbly` process, so each runs its own

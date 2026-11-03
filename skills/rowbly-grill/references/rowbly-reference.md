@@ -288,6 +288,8 @@ rowbly software-factory run attach WEB-42 --stage <stage> --attempt <n> --starte
 rowbly software-factory run touch WEB-42 --stage <stage> --attempt <n> --started-at <timestamp> --worker <id> --source "<verified activity>" --json --no-prompt   # {key, stageRun, heartbeat}
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
+rowbly software-factory hold WEB-42 --reason "<why>" --json --no-prompt   # {key, hold}; exit 4 if held
+rowbly software-factory release WEB-42 --json --no-prompt   # {key, released}; exit 3 if not held
 rowbly software-factory apply WEB-42 --file block.md [--dry-run] --json --no-prompt   # {key, stageRun, dryRun, commands: [{line, text, argv, decision: apply|hold|drop|reject, reason?, exitCode?, output?}]}
 ```
 
@@ -307,6 +309,9 @@ With Story Linking on, unfinished blockers give `BLOCKED` and `blockers:[{key,na
 Skip starts/retries while ineligible; start rechecks under the lock and exits 4 with
 `details.eligibility`, preserving the saved Run. Recompute after blockers reach category `done`.
 Invalid links fail explicitly; off means preserved link data contributes no restriction.
+A person's hold gives `HELD`: skip the Story and never release it yourself. A hold stays through
+Stage changes and keeps the Stage Run. An unreadable `hold.json` counts as held
+(`SOFTWARE_FACTORY_UNREADABLE_HOLD`; hold/release exit 6).
 
 ## 9. Setup and repair
 

@@ -1,5 +1,6 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
 import { type TouchRun, touchRun } from './heartbeat';
+import { holdStory, holdText, releaseStory } from './holds';
 import { livenessText, parseStaleAfter } from './liveness';
 import { applyBlock, applyTable } from './reportedCommands';
 import {
@@ -173,6 +174,27 @@ export const commands: PluginCommands = (group, cli) => {
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
         const staleAfterMinutes = parseStaleAfter(opts.staleAfter);
         print(await runsOverview(plugin, await resolveBoard(opts.board), { staleAfterMinutes }), runsTable);
+      }),
+    );
+
+  group
+    .command('hold <story>')
+    .description('Hold a Story, so no Stage Run starts for it until it is released')
+    .requiredOption('--reason <text>', 'why it is held, shown wherever the hold is')
+    .action((key: string, opts: { reason: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(
+          await holdStory(plugin, key, { reason: opts.reason }),
+          (r) => `${r.key} is ${holdText({ kind: 'held', hold: r.hold })}`,
+        );
+      }),
+    );
+  group
+    .command('release <story>')
+    .description('Release a held Story, so Stage Runs start for it again; its Stage Run is kept')
+    .action((key: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        print(await releaseStory(plugin, key), (r) => `Released ${r.key}`);
       }),
     );
 

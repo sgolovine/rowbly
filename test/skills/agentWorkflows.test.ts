@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { lstat, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
@@ -221,8 +221,52 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     expect(
       jsonError(await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json')).code,
     ).toBe('CONFLICT');
+    // A hold keeps the Stage Run, survives a move and refuses a start until it is released (ADR-0043).
+    const bag = (await json('stories', 'show', worked.key)).plugins['software-factory'];
+    expect((await json('software-factory', 'hold', worked.key, '--reason', 'By hand')).hold).toMatchObject({
+      version: 1,
+      reason: 'By hand',
+    });
+    expect((await json('stories', 'show', worked.key)).plugins['software-factory']).toEqual(bag);
     await json('stories', 'move', worked.key, 'in-progress');
     await json('stories', 'move', worked.key, 'todo');
+    const held = { eligible: false, reasons: [{ code: 'HELD', message: 'Held: By hand' }] };
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility).toEqual(held);
+    const refusedHeld = await rowbly('software-factory', 'run', 'start', worked.key, '--worker', 'w2', '--json');
+    expect(jsonError(refusedHeld)).toMatchObject({ code: 'CONFLICT', details: { eligibility: held } });
+    // A hold file this Rowbly cannot read counts as held, is left unchanged and is reported.
+    const holdPath = `${tmp.dir}/.rowbly/boards/web/stories/${worked.key}/plugins/software-factory/hold.json`;
+    const valid = await readFile(holdPath, 'utf8');
+    const refusesUnreadable = async (bytes: string) => {
+      expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].eligibility.eligible).toBe(false);
+      for (const change of [
+        ['hold', worked.key, '--reason', 'Again'],
+        ['release', worked.key],
+      ]) {
+        const refused = await rowbly('software-factory', ...change, '--json');
+        expect(refused.exitCode).toBe(6);
+        expect(jsonError(refused).code).toBe('DATA_INTEGRITY');
+      }
+      expect(await readFile(holdPath, 'utf8')).toBe(bytes);
+      expect((await json('doctor')).findings).toMatchObject([{ code: 'SOFTWARE_FACTORY_UNREADABLE_HOLD' }]);
+    };
+    // A future version, and a v1 file with fields this Rowbly does not know.
+    await writeFile(holdPath, '{"version":2,"reason":"later"}');
+    await refusesUnreadable('{"version":2,"reason":"later"}');
+    const unknown = JSON.stringify({ ...JSON.parse(valid), futureState: { mustKeep: true } });
+    await writeFile(holdPath, unknown);
+    await refusesUnreadable(unknown);
+    // A symbolic link is never followed: the link and the file it points to stay as they are.
+    const outside = `${tmp.dir}/outside-hold.json`;
+    await writeFile(outside, valid);
+    await rm(holdPath);
+    await symlink(outside, holdPath);
+    await refusesUnreadable(valid);
+    expect((await lstat(holdPath)).isSymbolicLink()).toBe(true);
+    expect(await readFile(outside, 'utf8')).toBe(valid);
+    await rm(holdPath);
+    await writeFile(holdPath, valid);
+    await json('software-factory', 'release', worked.key);
     expect((await json('software-factory', 'runs', '--board', 'web')).stories).toEqual([
       {
         key: worked.key,
