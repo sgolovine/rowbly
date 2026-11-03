@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T01:22:57.378Z",
+  "updatedAt": "2026-11-03T02:03:05.854Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -84,6 +84,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
           "createdAt": "2026-11-03T00:34:10.501Z",
           "updatedAt": "2026-11-03T00:34:10.501Z"
+        },
+        {
+          "id": "kUemXgOI",
+          "author": "sunny",
+          "body": "Supervisor decision: KEEP PR143 merged. The queued hold was received after its authorized merge; no revert or restart is requested. PR143/bb120a6 and PR144/30254f3 are on main with passing main CI. The former 141-first plan is superseded by actual merged state. Keep your current In PR Stage Run and SAME PR141. You are explicitly authorized to perform only the scoped integration correction: fetch and merge current origin/main into factory/row-59-correction-rook, resolve the 11 additive conflicts by retaining hold/release/HELD reasons and doctor findings alongside strict run details/identity lifecycle, common runRef schema, start/attach guards, and ROW55 locked stories.move --finished-run/apply allowlist. Preserve all ADR0040 amendments0043/0045/0046 and index rows, docs/API/reference copies, full runs/wait digest and combined HELD/BLOCKED. No behavior redesign, new storage, history or cross-Story writes. Plain merge and normal push HEAD:factory/row-59, no rebase/force. Re-run typecheck, lint, unit and CLI plus relevant strict hold and run-detail unsafe-path/unknown-byte/guard-failing-hook preservation checks on the merged source. Build current dist before manual scenarios (CLI tests build in temp). Recheck exact-head CI/reviews/screenshots and readiness before ready+mergecommit under Stage Prompt, then main CI and full valid ownStoryComment/moveDone block plus FACTORY-DONE. If the integration raises actual scope/design ambiguity rather than additive conflicts, report questions. No Board writes, no duplicate PR or new worker. Proceed.",
+          "createdAt": "2026-11-03T02:03:05.853Z",
+          "updatedAt": "2026-11-03T02:03:05.853Z"
         }
       ]
     }

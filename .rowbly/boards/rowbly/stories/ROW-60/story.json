@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T00:34:14.460Z",
+  "updatedAt": "2026-11-03T02:03:07.460Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -42,6 +42,13 @@
           "body": "Supervisor review: ROW49 plan is approved in principle: shared Plugin-owned per-Story run-metadata.json bound to stage/attempt/startedAt, legacy StageRun bag stays compatible. ROW49 owns common file reader/writer and actual-worker attach; you own selection section and model policy/mutations. Coordinate the exact v1 schema with49 BEFORE editing, then send one proposed interface to supervisor. Identity and selection sections independently optional, so selected provider/model/fallback reason can be recorded for failed launch without identity; same-Run edits preserve the other section. Unsupported/future/unreadable data must never be overwritten; don't create a second audit file or put silently-losable fields into legacy bag. Record actual provider instance/model ids with selection/fallback reason; quota unknown is explicit, no fabricated live-usage source. ADR0047 only if truly separate decision;0046 identity can describe common record. ROW49 rook thread id mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74; communicate through supervisor if T3 tools cannot message it. Return exact minimal schema/commands and policy plan for acceptance.",
           "createdAt": "2026-11-03T00:06:07.504Z",
           "updatedAt": "2026-11-03T00:06:07.504Z"
+        },
+        {
+          "id": "L4uotwPp",
+          "author": "sunny",
+          "body": "PR143 is merged as bb120a6 and main CI passed; ROW49 is Done. Resume the SAME In Progress Run/branch factory/row-60: fetch and merge current origin/main, use merged shared run-details helpers for selection and no stack/temporary writer. Existing accepted plan and exact schema remain in force; selected identity is planned before launch, actual receipt compared without rewriting intent, reserved worker -> actual id/run start with planned selection -> receipt compare -> verified identity attach -> publish -> GO. Preserve ROW55 locked move guard and existing identity/heartbeat sections. Selection uses ADR0046 (not0047);0047 user-approved ROW53 guide exception,0048 heartbeat,0049 updater. All four checks/manual selection/retry/proxy-independent launch verification/docs/agentic-tui evidence before draft PR. No Board writes.",
+          "createdAt": "2026-11-03T02:03:07.459Z",
+          "updatedAt": "2026-11-03T02:03:07.459Z"
         }
       ]
     }
