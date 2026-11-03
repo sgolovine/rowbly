@@ -505,7 +505,8 @@ recorded one; `run clear` returns `{ cleared }`.
 An advisory Stage Prompt may finish without moving the Story: Comments and edits leave its finished
 Run intact, and a person requests another pass after new input with `run clear`, which keeps the
 Story in place; the prompt, rather than the Plugin, skips duplicate reviews only from complete,
-known and unchanged review inputs.
+known and unchanged review inputs. Filtered CLI lists can omit unsafe files; readiness guidance
+must check input completeness separately and treat omissions as gaps.
 
 **Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
 the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)

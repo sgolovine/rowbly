@@ -36,7 +36,7 @@ also an input, so a helper change requires another review.
 | `configuration` | The Board's complete effective `config show` result, including Stage Categories and Custom Fields. |
 | `story` | The Story and known Plugin bags, excluding rank, Story `updatedAt`, the recognized Stage Run and generated readiness Comments; an emptied Comments bag is removed. |
 | `comments` | All ordinary Comments in full, including edits to older Comments. |
-| `specs` | Full Story Specs and every linked Board Spec. |
+| `specs` | Full Story Specs and every linked Board Spec, including file byte hashes; checked against the physical Story Spec inventory. |
 | `tasks` | Full Task list. |
 | `links` | Both link directions, availability, and each blocker's current Stage and Stage Category. |
 | `epic` | The linked Epic's id, name, description and closed value; unrelated Epic progress and its Story lists are excluded. |
@@ -55,7 +55,15 @@ Every command must exit successfully and return exactly one JSON value of the ex
 Missing tools, failed commands, malformed JSON, nonfinite values and unreadable inputs produce
 exit 1 and only `gap=<input>: <reason>`; no partial hashes or `overall` are printed. Invalid
 arguments exit 2. If Node itself is unavailable, report that the helper could not run as a gap.
-`ROWBLY.md` and Attachment images must be own regular files with no symlink path components.
+Story Specs, linked Board Specs, `ROWBLY.md` and Attachment images must be own regular files
+with no symlink path components. Story Spec storage is inspected even when Specs is off: stored
+Specs are a gap, never an `off` marker. The helper checks the physical Story Spec inventory rather
+than trusting a CLI list that can omit unsafe entries; unrecognized entries are also gaps. It
+compares listed Spec names and text with safe file reads. With Story Linking on, it checks every
+same-Board Story candidate and its own `story.json` for incoming links; an omitted folder, missing
+record or unsafe entry is a gap. Linked Board Specs are read directly and checked against CLI text.
+These inventories and file identities/bytes are rechecked after all inputs are collected; changes
+produce a gap, with no overall. These checks do not change the CLI listing or symlink policy.
 Only an absent guide is accepted as absent; a symlink, directory, unreadable file or changed file
 identity is a gap. A present empty guide differs from an absent one.
 

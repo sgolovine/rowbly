@@ -20,7 +20,8 @@ the Story's card, and the Story's **Stage Run** tab shows all of its fields with
 An advisory Stage Prompt may finish without moving the Story; after new input, a person requests
 another pass with `run clear` (the Story stays in place), while the supervisor leaves finished Runs
 alone and the prompt skips duplicate output only from complete, known and unchanged review inputs.
-Adding a Comment or editing requirements does not restart a finished Run.
+Adding a Comment or editing requirements does not restart a finished Run. A filtered CLI list can
+omit unsafe files, so it cannot by itself prove complete review inputs; treat omissions as gaps.
 
 ## Commands
 

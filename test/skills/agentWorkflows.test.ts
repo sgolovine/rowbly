@@ -261,6 +261,20 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
     const afterReview = await fingerprint(process.execPath, CLI_PATH);
     expect(afterReview.exitCode, afterReview.stdout).toBe(0);
     expect(afterReview.stdout).toBe(beforeReview.stdout.replace('comparison=unknown', 'comparison=equal'));
+    // The CLI intentionally hides unsafe Spec files; that filtered list cannot prove completeness.
+    const specDir = join(tmp.path, 'boards/web/stories', worked.key, 'plugins/specs');
+    await mkdir(specDir, { recursive: true });
+    const unsafeSpec = join(specDir, 'new-requirements.md');
+    await symlink(join(tmp.dir, 'review-input.txt'), unsafeSpec);
+    try {
+      expect(await json('specs', 'list', '--story', worked.key)).toEqual([]);
+      const omittedSpec = await fingerprint(process.execPath, CLI_PATH);
+      expect(omittedSpec).toMatchObject({ exitCode: 1, stdout: expect.stringMatching(/^gap=specs: [^\n]+\n$/) });
+      expect(omittedSpec.stdout).not.toContain('overall=');
+      expect(omittedSpec.stdout).not.toContain('comparison=equal');
+    } finally {
+      await rm(unsafeSpec);
+    }
     // Multiple JSON values are a failed read, never an empty or complete fingerprint.
     const incompleteReview = await fingerprint(process.execPath, '-e', 'process.stdout.write("[]\\n[]")', '--');
     expect(incompleteReview).toMatchObject({ exitCode: 1, stdout: expect.stringMatching(/^gap=plugins: [^\n]+\n$/) });

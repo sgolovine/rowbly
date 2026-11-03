@@ -5,7 +5,7 @@
 // gap=<input>: <reason>, exits 1, and never emits an overall. Exit 2 means invalid usage.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from 'node:fs';
+import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, parse, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -141,9 +141,88 @@ function ownFile(path, optional = false) {
   }
 }
 
+/** Read every directory component ourselves; only a genuinely absent optional scope is empty. */
+function ownDirectory(path, optional = false) {
+  let current = parse(path).root;
+  for (const part of path.slice(current.length).split('/').filter(Boolean)) {
+    current = join(current, part);
+    let info;
+    try {
+      info = lstatSync(current);
+    } catch (error) {
+      if (optional && error.code === 'ENOENT') return null;
+      throw error;
+    }
+    requireValue(info.isDirectory() && !info.isSymbolicLink(), 'not an own non-symlink directory');
+  }
+  return readdirSync(path).sort();
+}
+const slug = (value) => typeof value === 'string' && value.length <= 40 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+const storyKey = (value) => /^[A-Z][A-Z0-9]{1,9}-[1-9][0-9]*$/.test(value);
+const identity = (info) => [info.dev, info.ino, info.size, info.mtimeNs, info.ctimeNs].map(String);
+
+/** Include file identity in the within-collection check, but never in a stable review hash. */
+function fileSnapshot(path) {
+  const before = identity(lstatSync(path, { bigint: true }));
+  const bytes = ownFile(path);
+  requireValue(
+    canonical(before) === canonical(identity(lstatSync(path, { bigint: true }))),
+    'file changed during collection',
+  );
+  return { identity: before, sha256: hash(bytes), text: bytes.toString('utf8') };
+}
+
+/** A CLI file listing can silently omit unsafe or unrecognized entries. Check the whole scope. */
+function specInventory(path) {
+  const names = ownDirectory(path, true);
+  if (names === null) return null;
+  return names.map((name) => {
+    requireValue(name.endsWith('.md') && slug(name.slice(0, -3)), 'unrecognized Story Spec entry');
+    return { slug: name.slice(0, -3), ...fileSnapshot(join(path, name)) };
+  });
+}
+
+/** Incoming links can be hidden by Story folders omitted from the CLI's directory listing. */
+function storyInventory(path, boardId) {
+  const names = ownDirectory(path);
+  return names.map((name) => {
+    requireValue(storyKey(name), 'unrecognized Story entry');
+    ownDirectory(join(path, name));
+    const snapshot = fileSnapshot(join(path, name, 'story.json'));
+    const record = JSON.parse(snapshot.text);
+    requireValue(
+      textFields(record, ['key', 'boardId', 'stage']) &&
+        record.version === 1 &&
+        record.key === name &&
+        record.boardId === boardId &&
+        (record.plugins === undefined || object(record.plugins)),
+      'invalid Story inventory record',
+    );
+    const bag = record.plugins?.['story-linking'];
+    requireValue(
+      bag === undefined ||
+        (object(bag) &&
+          Object.keys(bag).every((k) => k === 'blocks') &&
+          strings(bag.blocks) &&
+          bag.blocks.every(storyKey)),
+      'unknown or malformed incoming Story links',
+    );
+    return { key: name, ...snapshot };
+  });
+}
+
 /** One complete collection; all parts stay buffered until every input succeeds. */
 function collect() {
   const result = { method: METHOD };
+  const rechecks = [];
+  function watch(name, read) {
+    const before = read();
+    rechecks.push(() => {
+      input = name;
+      requireValue(canonical(read()) === canonical(before), 'input changed during collection');
+    });
+    return before;
+  }
   function part(name, read) {
     input = name;
     result[name] = hash(canonical(read()));
@@ -281,22 +360,37 @@ function collect() {
   );
   part('configuration', () => config);
   part('specs', () => {
-    if (!on('specs')) return 'off';
+    const storyPath = join(root, 'boards', story.boardId, 'stories', key, 'plugins', 'specs');
+    const inventory = watch('specs', () => specInventory(storyPath));
+    if (!on('specs')) {
+      requireValue(!inventory?.length, 'Specs is off with stored Story Specs; completeness is unknown');
+      return 'off';
+    }
     const storySpecs = rb(
       ['specs', 'list', '--story', key],
       (v) => Array.isArray(v) && v.every((s) => textFields(s, ['slug', 'title', 'text'])),
     );
-    const slugs = story.plugins.specs === undefined ? [] : story.plugins.specs.specs;
-    requireValue(strings(slugs), 'invalid Board Spec links');
-    const boardSpecs = [...new Set(slugs)]
-      .sort()
-      .map((slug) =>
-        rb(
-          ['specs', 'show', slug, '--board', story.boardId],
-          (v) => textFields(v, ['slug', 'title', 'text']) && v.slug === slug,
+    requireValue(
+      canonical(storySpecs.map(({ slug, text }) => ({ slug, text })).sort((a, b) => a.slug.localeCompare(b.slug))) ===
+        canonical(
+          (inventory ?? []).map(({ slug, text }) => ({ slug, text })).sort((a, b) => a.slug.localeCompare(b.slug)),
         ),
+      'Story Spec listing omits or differs from stored inputs',
+    );
+    const slugs = story.plugins.specs === undefined ? [] : story.plugins.specs.specs;
+    requireValue(strings(slugs) && slugs.every(slug), 'invalid Board Spec links');
+    const boardSpecs = [...new Set(slugs)].sort().map((slug) => {
+      const stored = watch('specs', () =>
+        fileSnapshot(join(root, 'boards', story.boardId, 'plugins', 'specs', `${slug}.md`)),
       );
-    return { storySpecs, boardSpecs };
+      const spec = rb(
+        ['specs', 'show', slug, '--board', story.boardId],
+        (v) => textFields(v, ['slug', 'title', 'text']) && v.slug === slug,
+      );
+      requireValue(spec.text === stored.text, 'Board Spec differs from stored input');
+      return { ...spec, sha256: stored.sha256 };
+    });
+    return { storySpecs, boardSpecs, files: (inventory ?? []).map(({ slug, sha256 }) => ({ slug, sha256 })) };
   });
   part('tasks', () =>
     !on('tasks')
@@ -308,6 +402,19 @@ function collect() {
   );
   part('links', () => {
     if (!on('story-linking')) return 'off';
+    const candidates = watch('links', () =>
+      storyInventory(join(root, 'boards', story.boardId, 'stories'), story.boardId),
+    );
+    const records = candidates.map(({ text }) => JSON.parse(text));
+    const expected = records.flatMap((record) =>
+      (record.plugins?.['story-linking']?.blocks ?? []).flatMap((blocked) =>
+        record.key === key
+          ? [{ relation: 'blocks', key: blocked }]
+          : blocked === key
+            ? [{ relation: 'blocked-by', key: record.key }]
+            : [],
+      ),
+    );
     const links = rb(
       ['story-linking', 'list', key],
       (v) =>
@@ -317,6 +424,11 @@ function collect() {
             textFields(l, ['key']) && ['blocks', 'blocked-by'].includes(l.relation) && typeof l.available === 'boolean',
         ),
     );
+    const relationships = (values) => [...new Set(values.map((v) => `${v.relation}:${v.key}`))].sort();
+    requireValue(
+      canonical(relationships(links)) === canonical(relationships(expected)),
+      'Story link listing omits or differs from stored inputs',
+    );
     return links.map((link) => {
       requireValue(link.available, `linked Story ${link.key} is unavailable`);
       if (link.relation !== 'blocked-by') return link;
@@ -324,6 +436,8 @@ function collect() {
         ['stories', 'show', link.key],
         (v) => textFields(v, ['key', 'boardId', 'stage']) && v.key === link.key && v.boardId === story.boardId,
       );
+      const stored = records.find((r) => r.key === blocker.key);
+      requireValue(stored && stored.stage === blocker.stage, 'blocker changed between reads');
       const stage = config.stages.find((s) => s.key === blocker.stage);
       requireValue(stage, `blocker ${link.key} has unknown Stage`);
       return { ...link, blockerStage: blocker.stage, blockerCategory: stage.category };
@@ -384,6 +498,7 @@ function collect() {
       Object.keys(result).length === METHOD_INPUTS.length + 1,
     'incomplete fingerprint input set',
   );
+  for (const recheck of rechecks) recheck();
   input = 'overall';
   return { ...result, overall: hash(canonical(result)) };
 }

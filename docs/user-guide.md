@@ -483,7 +483,9 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   person can request another pass with `rowbly software-factory run clear <KEY>`; clearing the Run
   leaves the Story in place. The supervisor leaves finished Runs alone. Duplicate review suppression
   belongs to the Stage Prompt: it needs complete, known and unchanged review inputs, not just the
-  same Comment count or latest timestamp. Rowbly does not compare readiness fingerprints itself.
+  same Comment count or latest timestamp. A filtered CLI list cannot establish completeness when
+  it omits unsafe files; an incomplete input must prevent skipping the review. Rowbly does not
+  compare readiness fingerprints itself.
 - `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>` moves the Story only
   while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
   Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
