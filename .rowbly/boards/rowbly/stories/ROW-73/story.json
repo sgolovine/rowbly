@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T17:24:42.878Z",
+  "updatedAt": "2026-11-03T17:24:44.168Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:4cfde944-87dc-465f-a7cf-0ccb901a7a54",
+        "by": "sunny",
+        "startedAt": "2026-11-03T17:20:51.905Z",
+        "finishedAt": "2026-11-03T17:24:42.878Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -57,19 +68,15 @@
           "body": "Plan (research done, awaiting acceptance; complexity 5; branch factory/row-73 from origin/main 324ac90b): ship portable default In Progress and In Review Stage Prompts in the Software Factory Plugin; add software-factory.setup (CLI software-factory setup) that adds only missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) at Board level and writes default prompts only where the Board has no entry, never overwriting, renaming or removing; offer it as an explicit choice in Software Factory/Both onboarding; ADR-0053 amends ADR-0041 section 2; update docs, the rowbly and rowbly-factory skills and the reference copies; no new tests; screenshots of CLI and onboarding. Open questions: TODO label, existing-Board behavior, TODO/Backlog prompts, surfaces, In Review key.",
           "createdAt": "2026-11-03T16:51:03.983Z",
           "updatedAt": "2026-11-03T16:51:03.983Z"
+        },
+        {
+          "id": "HgVhqiQW",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa by codex/gpt-6-astra: APPROVED. Reviewed the complete diff against ROW-73 and the accepted plan, including Board-scoped atomic setup, collision refusal and idempotence, preservation of effective global/Board Stages and prompt entries/files, explicit onboarding and settings navigation, Plugin/core boundaries, portable TODO advisory lifecycle and independent-review/merge/return gates, ADR-0053 and its amendments, documentation, and existing preservation assertions. Verified implementer/reviewer provenance and no internal .rowbly prompt changes. Independently merged current main f5047d80 into the isolated review branch (only published Board records differed) and ran the unchanged checks under the shared validation lease: typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), 100 tests total. All four skill reference copies are byte-identical. All 11 screenshot URLs and the validation log returned HTTP 200; all screenshots were inspected and the changed screens are readable. No required changes found.",
+          "createdAt": "2026-11-03T17:24:44.167Z",
+          "updatedAt": "2026-11-03T17:24:44.167Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:4cfde944-87dc-465f-a7cf-0ccb901a7a54",
-        "by": "sunny",
-        "startedAt": "2026-11-03T17:20:51.905Z",
-        "finishedAt": "2026-11-03T17:24:42.878Z"
-      }
     }
   }
 }
