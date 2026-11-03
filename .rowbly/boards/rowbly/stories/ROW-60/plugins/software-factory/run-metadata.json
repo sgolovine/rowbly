@@ -15,5 +15,11 @@
       "verifiedAt": "2026-11-03T04:34:36.569Z",
       "by": "sunny"
     }
+  },
+  "heartbeat": {
+    "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
+    "at": "2026-11-03T05:08:25.080Z",
+    "source": "Verified SSH T3 assistant message: additive integration guard preserved, screenshots captured, finalchecks next; /tmp/rowbly-factory-session/ROW-60-poll.json SHA256 afe85770a5c8a61476479a24b34334bb0466f94fbe2c9c314338ec093ce0a779",
+    "by": "sunny"
   }
 }
