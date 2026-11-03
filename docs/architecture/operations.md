@@ -131,7 +131,13 @@ Software Factory's `start`, `finish`, `fail` and `clear` change a Story's Stage 
 ([ADR-0040](../agents/adr/0040-stage-runs-record-the-current-visit.md)). `key` is a Story Key.
 `start` refuses (`CONFLICT`) a Story whose Stage has no Stage Prompt that is on, or that has a Stage
 Run for its current Stage, unless that one failed and `retry` is set, which starts it again with the
-next `attempt`. `by` is Me or `null`. `finish` and `fail` end a running Stage Run of the current Stage,
+next `attempt`. Starts and retries also refuse unresolved blocking Stories (`CONFLICT`),
+with `details.eligibility` describing the blockers; a refused retry keeps its saved Run and attempt.
+Software Factory queries Story Linking’s public `{ blocks: key }` Story filter inside the operation.
+Story Linking’s `software-factory.start` guard checks again after all transforms, overlaying pending
+Story additions, edits and deletions on the stored Board under the same Data Root lock. A blocker
+is resolved only in a Stage of category `done`. Invalid linking bags fail with `DATA_INTEGRITY`;
+when Story Linking is off, its preserved data contributes no restriction. `by` is Me or `null`. `finish` and `fail` end a running Stage Run of the current Stage,
 else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set the Story's
 `updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
 the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
@@ -160,7 +166,9 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | Story Linking | `stories.update` | `{ blocks?: [Story Key], blockedBy?: [Story Key], baseline?: { blocks?, blockedBy? } }`; replaces each given direction, including incoming blockers in the same Change Set; existing stale outgoing links may be kept or removed |
 | Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
 
-A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.
+A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Story Linking takes `{ blocks: Story Key }`, returning Stories whose outgoing links include that key;
+its strict query schema rejects malformed queries, and invalid stored linking bags fail explicitly.
+Callers may combine it with `open: true` to find unfinished blockers. Specs takes a list of Board Spec slugs and declares no schema, so a malformed filter matches nothing.
 
 `stories.create` collects these bags, Story Spec files and existing blockers’ bags in one Change Set and one journaled commit. Invalid input saves nothing. Story Spec titles use the supplied title, first `#` heading or slug.
 

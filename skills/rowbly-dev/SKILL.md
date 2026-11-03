@@ -20,17 +20,19 @@ Choose your role from the assignment before starting:
 
 In both modes, preserve worktree isolation, an explicit parent, planning before implementation, coherent commits and pushes, and repository checks.
 
-The supervisor owns the Story: it reads it, changes its Stage and adds its Comments. Workers report to the supervisor and do not run `rowbly` commands that change data.
+The supervisor owns the Story: it reads it, changes its Stage and adds its Comments. Workers report to the supervisor and do not run `rowbly` commands that change data. To **report** a Story update is to put its `rowbly` command in a fenced `rowbly` block in a message to the supervisor, as the brief says; the supervisor applies it.
 
 ### Assigned worker mode
 
 You are the executor, and the assigning thread remains the supervisor. Do not spawn subagents or start other worker threads. The complexity-based allocation and fresh-agent requirements below apply only to standalone supervisors.
 
+In a factory assignment the supervisor runs the Board. Where instructions differ, follow the brief's rules, then the Stage Prompt, then this skill; for example, a Stage Prompt that bases the Story on another layer's branch, or a brief that says how to upload screenshots, overrides the defaults below. Never wait for a Board change to appear before you carry on: the supervisor applies your reported blocks, and holds moves until your final message.
+
 - Use the Story, instructions, accepted plan and repository context supplied in your brief; read missing context as needed. Send blocking questions and decisions requiring supervisor acceptance to the assigning thread.
 - For an assignment to take a Story to a draft PR, perform research, baseline setup, planning, implementation, validation, screenshots, corrections, Git operations and PR creation yourself. Review your plan against the Story before implementation, and verify the final diff and checks before opening the PR. Report this as your own validation; any independent review or additional sign-off belongs to the assigning supervisor.
 - For a narrower assignment, perform only that role and return its handoff. A validation assignment does not authorize implementation fixes, and an implementation assignment does not authorize PR finalization unless included in its scope.
 - Follow the applicable execution sections below directly. You own screenshots, corrections and finalization when those belong to your assignment, regardless of complexity. Reuse the supplied worktree and branch when present; otherwise establish them under Baseline. Fix and recheck your own implementation without handing it to a fresh agent.
-- Report Story updates to the supervisor instead of applying them. In a factory assignment, use the brief's fenced `rowbly` blocks and final markers. Finish with the assigned deliverables, commit and PR details, validation evidence and blockers; the supervisor applies Board changes and decides acceptance.
+- Report Story updates to the supervisor instead of applying them. In a factory assignment, use the brief's fenced `rowbly` blocks and final markers. Finish with the assigned deliverables, commit and PR details, validation evidence and blockers; the supervisor applies Board changes and decides acceptance. When the brief asks for it, present your plan and wait for acceptance before you implement.
 
 ## Inputs
 
@@ -52,7 +54,7 @@ In standalone mode, the supervisor does this before it scores complexity. Assign
 
 ### Story updates
 
-Keep the Story current without being asked. The supervisor makes each update when the stage that causes it is accepted:
+Keep the Story current without being asked. The supervisor makes each update when the stage that causes it is accepted; an assigned worker reports it instead (a fenced `rowbly` block) and carries on. A Stage Prompt or brief that names a different move wins over the table. A Story that a factory started in the in-progress Stage is already there, so report no move for it.
 
 | When | Update |
 | --- | --- |
@@ -94,7 +96,7 @@ Assigned worker:
    - If none exists, stop and ask which supported parent branch to create or use. Do not base autonomous development on any other branch.
 3. Preserve unrelated local work. Do not overwrite, revert, stash, or commit pre-existing user changes. A dirty original checkout does not need to be cleaned.
 4. Fetch remotes with pruning. Choose `origin/<parent>` as the start point when available; otherwise use the local parent and note that push and PR steps may be blocked.
-5. Read [the shared linked worktree contract](references/worktrees.md), then apply it before planning or editing, even when the original checkout is clean. Use:
+5. Read [the shared linked worktree contract](references/worktrees.md), then apply it before planning or editing, even when the original checkout is clean. Create the task branch with tracking disabled, so it never tracks the parent. Use:
    - the original checkout as the control checkout,
    - the selected parent ref as the start point,
    - `<harness>/<story-key-lowercase>-<short-kebab-summary>` (for example `claude/row-18-skills-create`) as the unique local branch unless the user requests another name,
@@ -122,7 +124,7 @@ Before implementation, the planning owner prepares a concise plan for supervisor
 - screenshot scenarios and their owner for every task: affected screens, states, and viewports for UI changes, or visible output such as rendered documentation, CLI results, or API responses for non-UI work; plan before-and-after captures where they demonstrate the change,
 - risks, migrations, compatibility concerns, or rollout notes when relevant.
 
-If the plan reveals a material gap, the supervisor obtains the needed clarification before accepting it. Begin implementation only after the supervisor accepts the plan and makes the first [Story update](#story-updates).
+If the plan reveals a material gap, the supervisor obtains the needed clarification before accepting it. Begin implementation only after the supervisor accepts the plan and makes the first [Story update](#story-updates). An assigned worker presents the plan and waits for acceptance when its brief requires it, and does not wait for a Board change: the first Story update is reported, never a gate.
 
 ## Implementation
 
@@ -139,7 +141,7 @@ Assigned development worker:
    - Use a single commit only for very minor work that forms one small, coherent change, such as a typo fix or a narrowly scoped one-line correction. A task being atomic does not by itself justify one commit. Choose meaningful boundaries; do not create empty or artificial commits merely to increase the count.
    - Before each checkpoint, run the fastest relevant targeted check and inspect the staged diff. Keep each commit focused and leave the branch in a usable state when practical.
    - Follow the repository's documented or recent commit convention. If none is clear, use Conventional Commits 1.0.0 (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, and similar). Mention the Story Key in each commit message, for example `feat(cli): add skills create (ROW-18)`.
-   - Push immediately after the first commit with `git push -u origin <branch>`, then push again after every later commit. Do not wait until the end of a multi-milestone task to publish all progress.
+   - Push immediately after the first commit with `git push -u origin <branch>` and confirm that `git rev-parse --abbrev-ref '@{upstream}'` prints `origin/<branch>`, never the parent branch. Then push again after every later commit. Do not wait until the end of a multi-milestone task to publish all progress.
    - Do not use meaningless checkpoint messages such as `WIP`, and do not amend, squash, rebase, or force-push already published checkpoints unless the user explicitly asks.
    - Report each finished Task to the supervisor, which moves it to `done`.
 
@@ -177,7 +179,7 @@ Capture actual task-relevant output, including for non-UI changes: rendered docu
 Assigned workers whose scope includes finalization perform it in their own thread after completing validation and any acceptance required by their brief. In standalone mode, after validation sign-off, the supervisor finalizes scores 1–2 in the same thread; for scores 3–10, assign a fresh development worker to finalize the branch and PR. The screenshot owner supplies the images and evidence for upload. Any delegated follow-up capture remains with the designated role in a fresh assignment.
 
 1. Confirm task changes are committed and the branch still matches the signed-off commit. If final changes are needed, return through development, fresh validation, and supervisor sign-off before opening the PR. Stage only files that belong to the task and follow the checkpoint rules.
-2. Confirm every commit has been pushed and the local task branch is synchronized with its upstream.
+2. Confirm every commit has been pushed and the local task branch is synchronized with its own upstream, `origin/<branch>`, not the parent branch.
 3. Open a draft pull request by default with `gh pr create --draft --base <parent>`, where `<parent>` is the parent branch established earlier. Start the title with the Story Key or follow the commit convention with the Key, for example `feat(cli): add skills create (ROW-18)`. Use a ready-for-review PR only when the user explicitly requests it. If `gh` is unavailable or unauthenticated, leave the branch pushed and report the compare URL as the blocker instead of retrying other tooling.
 4. Write the PR body with:
    - the Story Key and name, and a summary of the user-facing or developer-facing change,
@@ -185,13 +187,13 @@ Assigned workers whose scope includes finalization perform it in their own threa
    - validation commands and outcomes,
    - known gaps, skipped checks, or follow-up work,
    - a link to the uploaded screenshot comment for every task, added after the upload below.
-5. Upload the screenshot evidence to the PR for every task. For UI changes, use the `github-pr-screenshots` skill when it is available, with the newly created PR URL, keeping capture responsibility with the screenshot owner above. For non-UI work, or when that skill is not available, upload the task-relevant images directly. Include the screenshots alongside validation results when available, or as standalone evidence when validation was not performed. Verify that the posted comment displays every image and link it from the PR body. Local screenshot paths or other artifact links do not satisfy the upload requirement. If capture or upload is blocked, preserve any captured images and report their paths and the exact blocker; do not claim the task is complete.
+5. Upload the screenshot evidence to the PR for every task. For UI changes, use the `github-pr-screenshots` skill when it is available, with the newly created PR URL, keeping capture responsibility with the screenshot owner above. For non-UI work, or when that skill is not available, upload the task-relevant images directly. Include the screenshots alongside validation results when available, or as standalone evidence when validation was not performed. Verify that the posted comment displays every image and link it from the PR body. Where the brief or the Data Root's `ROWBLY.md` says how to upload, follow that instead. Local screenshot paths or other artifact links do not satisfy the upload requirement. If capture or upload is blocked, preserve any captured images and report their paths and the exact blocker; do not claim the task is complete.
 6. Make the last [Story update](#story-updates).
 
 Do not merge the PR, mark it ready, request reviewers, or modify remote repository settings unless the user explicitly asks.
 
 ## Completion Criteria
 
-Assigned workers return the deliverables and evidence required by their brief, including proposed Story updates, and leave acceptance and Board verification to the assigning supervisor. They do not wait for those proposed updates to appear on the Board before reporting completion.
+Assigned workers return the deliverables and evidence required by their brief, including their reported Story updates, and leave acceptance and Board verification to the assigning supervisor. They do not wait for those reported updates to appear on the Board before reporting completion.
 
 The supervisor finishes only after reviewing the finalization result (its own work for scores 1–2 or the worker's handoff for scores 3–10), confirming that the PR contains the signed-off commit and the uploaded screenshots, confirming the Story's Stage and Comments with `rowbly stories show <KEY>`, and reporting the Story Key and its Stage, branch, linked worktree path, pushed commits, PR URL, validation performed, supervisor sign-off, and any skipped checks or unresolved risks. Leave the linked worktree in place for review or follow-up unless the user explicitly asks to remove it. If pushing, opening a PR, or uploading required screenshots is blocked, keep the branch and commits reviewable, add a Comment to the Story with the blocker if the Comments Plugin is on, and report the exact blocker.

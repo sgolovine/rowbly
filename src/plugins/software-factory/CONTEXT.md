@@ -38,3 +38,10 @@ can work it by hand. It stays through Stage changes and leaves the Story's Stage
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not
 read. A Stage Prompt is one Stage's instructions, turned on or off per Stage and Board, that
 `rowbly software-factory stages` hands to an agent with the Stages.
+
+## Launch eligibility
+
+`runs` includes eligibility independently of Stage Run state. With Story Linking on, unfinished
+blocking Stories prevent starts and retries until they reach Stage category `done`. Software Factory
+uses Story Linking's public Story filter; Story Linking checks its own links again in the final start
+guard. Refusal leaves the stored Run and attempt unchanged. Disabled link data stays preserved.

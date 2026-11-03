@@ -473,9 +473,27 @@ rowbly software-factory release <story>
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }] }`.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
+
+`hold` keeps a Story out of Stage Runs, for example while you work it by hand: its eligibility
+gets a `HELD` reason with your name and `--reason`, and `run start` refuses it (exit 4), `--retry`
+included. The hold stays when the Story changes Stage, and neither `hold` nor `release` changes its
+Stage Run; `release` makes it eligible again. `hold` exits 4 for a held Story and `release` exits 3
+for one that is not. The hold is `.rowbly/boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`;
+a hold file this Rowbly cannot read counts as held, and both commands exit 6 without changing it
+(doctor: `SOFTWARE_FACTORY_UNREADABLE_HOLD`). The Story screen shows a **Hold** row while it is held.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
@@ -599,8 +617,15 @@ one Stage Prompt that is on and written (not the template), and an agent harness
 threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
 `rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
-once unless `ROWBLY.md` or the Stage Prompt says otherwise. It skips a Story you hold
-(`rowbly software-factory hold <story> --reason <text>`) until you release it. It runs until you stop it.
+once unless `ROWBLY.md` or the Stage Prompt says otherwise. Before starting the retry, the supervisor
+captures the previous Run and recovers existing work from the Story, Comments and identified worker's
+messages: outcome, failure reason, branch, worktree/machine and PR when known, with sources and
+verification limits. It saves that context as a Comment when Comments are on (otherwise in its
+messages and brief), before the retry replaces the failed Run. The retry brief explicitly says
+whether to continue the existing work or start again, identifies the instruction authorizing that
+choice, and explains any deliberate restart. Missing context stays unknown; unresolved choices go
+to the user. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
+until you release it. It runs until you stop it.
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its

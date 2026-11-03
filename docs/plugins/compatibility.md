@@ -184,7 +184,7 @@ The first change that introduces a new storage version must ship with tests for 
 
 ## 4. Dependencies between Plugins: deferred
 
-Plugins cannot depend on one another today, and none needs to. Plugins run in registry order, and a Plugin that fails to load affects no other Plugin. This stays as it is until a Plugin requires another one. The design made then must decide:
+Plugins declare no dependencies today. Plugins run in registry order, and a Plugin that fails to load affects no other Plugin. This stays as it is until a Plugin requires another one. The design made then must decide:
 
 - **Required versus optional** dependencies, and how a Plugin declares each.
 - **Versions:** which API or package version of the dependency it needs (§2), checked before activation.
@@ -195,7 +195,13 @@ Plugins cannot depend on one another today, and none needs to. Plugins run in re
 - **Name clashes:** how dependency order interacts with the first-registered winner of command, flag, key and replacement clashes (ADR-0020 §8).
 - **Turning off:** what turning off a Plugin that others require does.
 
-Interoperation goes through the Plugin API (operations and hooks). A Plugin never imports another Plugin's folder. Typed cross-Plugin contracts are optional and need a real consumer.
+Software Factory optionally consumes Story Linking’s public `{ blocks: Story Key }` Story filter
+through `stories.list`; Story Linking also guards `software-factory.start`. The owner interprets
+its own data. When Story Linking is off, preserved links contribute no restriction. When configured
+on but unavailable, the query fails rather than treating unknown relationships as absent. This
+uses existing filters and hooks, without dependency declarations or automatic activation.
+
+Interoperation goes through the Plugin API (filters, operations and hooks). A Plugin never imports another Plugin's folder. Typed cross-Plugin contracts are optional and need a real consumer.
 
 **Tests when scheduled:** missing, off and incompatible required dependencies; an absent optional dependency; a cycle; unchanged order for independent Plugins; a dependency that fails late; a dependent when its dependency is turned off; errors that name the chain; configuration left unchanged.
 
