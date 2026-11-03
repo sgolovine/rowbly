@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-78",
+  "boardId": "rowbly",
+  "name": "Stage prompt editing should not open in a modal",
+  "description": "Currently this opens in a modal which is a wired UI, make it just open on the main screen",
+  "stage": "todo",
+  "rank": "a4",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:07:45.265Z",
+  "updatedAt": "2026-11-03T22:07:45.266Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "a6sJgXFJ3",
+          "name": "image-20261103-2207.png",
+          "type": "image/png",
+          "size": 238217,
+          "createdAt": "2026-11-03T22:07:45.266Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
