@@ -16,9 +16,16 @@ Resolution On).
 ## The factory (`rowbly-factory`)
 
 - **Supervisor**: runs on the main computer, in the main checkout on `main`, with
-  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It runs `rowbly git sync` after each
-  `run start` (before the brief), each worker block it applies and each `run finish` or `run fail`,
-  so workers get Board changes by merging `origin/main`.
+  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It is the Board's only writer:
+  workers report commands and merge `origin/main` to receive published Board changes. Run
+  `rowbly git sync` once after all changes of one coherent event: `run start` plus its verified
+  `run attach`, an applied worker block, or `run finish`/`run fail` plus its reported block.
+  Publish before GO and before every reply or machine start that relies on the changes. Retain
+  any earlier publication barrier required by that event; never defer a reply a worker awaits.
+  Changes nobody waits for can share the next sync; flush when stopping. This reduces sync
+  attempts, not per-change Automatic Commits: keep frequency `change` and force-change checks.
+  Sync also brings in merged product changes; evidence or conflicts alone do not prove a second
+  Board writer. Investigate the source commits, preserve all sides and report unresolved conflicts.
 - **Workers run on the supervisor's computer (`thinkpad`) or the server `rook`**
   (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
   ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
@@ -131,3 +138,13 @@ Give these to every worker with its brief:
   options is passed as one word, so use a shell function.
 - **`gh … -q` output** with empty fields shifts whitespace-split fields; join them with `|` and read
   them with `IFS='|'`.
+
+### Evidence retention
+
+Keep all existing `plugins/git/merge-evidence/` files and linked `pr-assets/<branch>` branches,
+including after a Story is Done. No automated expiry or completion cleanup removes them.
+Merge Evidence removal requires explicit user approval after the adding merge commit is upstream
+and each decision is reviewed (or confirmed spurious). Use an ordinary upstream commit whose
+message records the path, adding commit, review and approval; never rewrite history. Linked
+screenshots remain indefinitely until every image is rehosted, every comment link updated and
+verified to load, and the user explicitly approves removal. See ADR-0050 for the audit policy.
