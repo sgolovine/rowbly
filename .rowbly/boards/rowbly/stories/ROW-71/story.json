@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T03:35:13.001Z",
+  "updatedAt": "2026-11-03T03:35:14.225Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 2,
+        "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:03:09.200Z",
+        "finishedAt": "2026-11-03T03:35:13.000Z"
+      }
     },
     "comments": {
       "comments": [
@@ -55,19 +66,15 @@
           "body": "Implementation record before Stage change: verified authoring history actual implementation Sol worker25903f5a; prior Opus only created clean worktree, no product edits. Current implementing worker mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/152. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
           "createdAt": "2026-11-03T03:35:11.631Z",
           "updatedAt": "2026-11-03T03:35:11.631Z"
+        },
+        {
+          "id": "6qtmOOGM",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/152 adds fuzzy linked Story search by Key and name across create, edit and add-link forms, preserving finder ranking, draft edits and relationship restrictions. Manual keyboard and persisted relationship checks passed. Typecheck, lint, unit tests (78) and CLI tests (20) passed. Six screenshots uploaded and verified. Head d4861bedded72511f07823ddf4d0338e0418c3b8; CI running and supervisor review pending.",
+          "createdAt": "2026-11-03T03:35:14.224Z",
+          "updatedAt": "2026-11-03T03:35:14.224Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 2,
-        "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:03:09.200Z",
-        "finishedAt": "2026-11-03T03:35:13.000Z"
-      }
     }
   }
 }
