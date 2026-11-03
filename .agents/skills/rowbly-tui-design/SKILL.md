@@ -144,6 +144,7 @@ No icon font; Rowbly uses Unicode that every monospace font has.
 | `·` | separator inside one line | `ink-faint` |
 | `—` | no value | `ink-faint` |
 | `✓` `!` `✕` | Toast kinds info, warning, error | `accent`, `stage-board`, `danger` |
+| `▶` `✕` | Stage Run running / failed, in a Plugin card badge (plain text, no hue of its own) | the badge's ink |
 
 ## For Plugins
 
