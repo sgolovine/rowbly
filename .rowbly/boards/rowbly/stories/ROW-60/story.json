@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:21:01.164Z",
+  "updatedAt": "2026-11-03T05:21:01.847Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -190,6 +190,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/145 at da843d1ce5470ad6f0b842bc861f9e19a828144e by codex/gpt-6-astra: CHANGES REQUESTED. Reviewer: mcp:aca87554-adff-422e-b9fd-6b52df9686c3, rook, high effort; independent of every recorded Opus/Sol implementation worker. 5. P2 — skills/rowbly-factory/scripts/launch-worker.mjs:178-199: CONFIG validation checks only string types for threadId, provider, model and runtime. With otherwise valid CLI evidence, an empty CONFIG model, provider or runtime passes that gate and returns conflict (configuration mismatch), although it establishes no usable value. Independently reproduced all three using the actual script and the deterministic fake T3, which refuses creation and GO. Require nonempty trimmed identity/configuration strings before comparing, returning unverified for empty/whitespace evidence; retain conflict for complete differing values, immutable intended selection and the same receipt. Extend the existing fixture with a representative empty CONFIG field. Findings 1-4 otherwise verified: typed scalars, complete order-independent option comparison, remote ordering, first-discovery unknown recovery and malformed CLI unverified behavior; all twelve prior launcher scenarios passed. Current-main a0259b23372ccf73be5b12bf19aa0daf0ad10443 integrated cleanly in the isolated review checkout; only published Board data differs from the PR head. Shared identity/heartbeat finalizers, metadata lifecycle, holds, generated briefs/retry context, resource ordering, independent review, wait and retention rules remain preserved; four reference copies are byte-identical. All six exact-head GitHub checks are SUCCESS; none pending. Latest mergeability is UNKNOWN, not a proven conflict. All eight linked PNGs returned HTTP 200 and were inspected. Fresh local typecheck, lint, unit and CLI: NOT RUN. Initial pnpm setup refused the dependency symlink before any check; after explicit authorization, private frozen installation succeeded, but the single leased admission attempt exited 75 before checks (minimum idle 79.35% against 85%). Capacity waiting is not a failed check; no automatic retry or timeout change. Earlier timeout and authorized-pass evidence remains intact. Reviewed supervisor-only policy patch: /tmp/row60-review-aca87554/ROWBLY-policy-proposal.patch, based on a0259b23, apply-check passed, SHA256 e05bfd0bd5e19cd264eb7c1daae7629fb253d5d32ce8c3fb39613cd40ea59547; preserves defaults, variety and every-author review while recording catalog intent and explicit unknown usage. Evidence: /tmp/row60-review-aca87554. Worktree retained: /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-review-aca87554. No implementation edits, Board writes, pushes, ready/merge, real launches or GO; no own daemon, watcher or server remains.",
           "createdAt": "2026-11-03T05:21:01.163Z",
           "updatedAt": "2026-11-03T05:21:01.163Z"
+        },
+        {
+          "id": "XKR1qR5Q",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-60, PR https://github.com/sgolovine/rowbly/pull/145, head da843d1ce5470ad6f0b842bc861f9e19a828144e. Independent review requests correction of finding 5: empty CONFIG identity/configuration strings must remain unverified rather than conflict. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596096121. Findings 1-4 verified. Local validation remains capacity waiting, not failed; all six exact-head CI checks passed. Continue the same branch and PR; no implementation changes made by this reviewer.",
+          "createdAt": "2026-11-03T05:21:01.846Z",
+          "updatedAt": "2026-11-03T05:21:01.846Z"
         }
       ]
     }
