@@ -31,6 +31,13 @@
           "updatedAt": "2026-11-03T17:49:00.008Z"
         },
         {
+          "id": "D5tavg52",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"threadId\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"machine\":\"rook\",\"harness\":\"t3\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/fb16809589f2249deba8c73dbe38f60a.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-correction-sol-1\",\"branch\":\"factory/row-70-correction-sol-1\",\"remoteBranch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"d78c1c1021a1bf21e21523303483694d531f5d75\",\"scope\":\"Both P2 corrections, existing contract extensions, documentation, validation and evidence; no subagents\"}",
+          "createdAt": "2026-11-03T18:00:44.957Z",
+          "updatedAt": "2026-11-03T18:00:44.957Z"
+        },
+        {
           "id": "D8RBs1Ze",
           "author": "sunny",
           "body": "User metric definitions resolved explicitly: current records only, existing Stories and Stories currently in Stage Category done; all-time window; unique PRs currently linked to this Board Stories; unique commits in those linked PRs. Exclude deleted Story history, historical Done transitions, unlinked historical PRs and tracker/repository-wide commit counts. Unknown or unavailable sources must remain distinct from zero. Worker must refine the read-only Board Stats page/CLI and Plugin-owned contribution plan around these definitions, then await supervisor implementation acceptance. No implementation authorized by these metric answers alone.",
@@ -73,6 +80,13 @@
           "updatedAt": "2026-11-03T16:58:59.909Z"
         },
         {
+          "id": "lub693Ed",
+          "author": "sunny",
+          "body": "PR157 corrected at d78c1c1021a1bf21e21523303483694d531f5d75: https://github.com/sgolovine/rowbly/pull/157. 1. Pagination inconsistencies exclude tainted commit contributions across every alias; identity changes prevent exact PR counts. 2. Malformed declarations cannot crash Stats; valid labels remain unavailable while core and healthy metrics survive. Existing contracts extended; total stays 100. Typecheck PASS, lint PASS, unit 79 PASS, CLI 21 PASS. Final CI snapshot: all six checks SUCCESS, none pending; draft PR mergeable. Evidence: https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611552729. Worktree and assets retained; private daemon stopped.",
+          "createdAt": "2026-11-03T18:00:44.286Z",
+          "updatedAt": "2026-11-03T18:00:44.286Z"
+        },
+        {
           "id": "qExIDLpu",
           "author": "sunny",
           "body": "PR watch event: GitHub reports PR157 at head 3bccb6f0b651735444c20e0c94a4263f0dfe3813 conflicts with main (DIRTY/CONFLICTING); rollup currently empty, which is not check failure. Story remains In Progress with its current verified implementation worker. Continue in the existing isolated worktree: fetch and merge current origin/main, resolve integration conflicts preserving ROW73 setup/ADR0053 and ROW70 Stats/ADR0054 intent, validate the changed integration under the shared lease, and push the existing branch without rebase or force push. Report exact resolved files/head/check results before final handoff; ask only if a semantic conflict cannot be settled by Story/accepted plans. No supervisor product edits.",
@@ -92,20 +106,6 @@
           "body": "Supervisor accepts correction plan for PR157 findings6611303603 after both reproduced in fresh correction worktree. Track pagination inconsistency across ALL aliases at PR identity/group level, exclude every tainted identity from commit contributions and preserve explicit partial/unavailable reasons. Identity changes must not yield exact PR count. Extend existing collector contract with the alias/page race plus an independent healthy contribution. Validate/sanitize metric declarations safely even for failed or Off Plugins, retaining valid declared labels as unavailable while malformed entries cannot crash core or healthy metrics; extend existing loading/collection checks. Keep suite100 tests and current bounded external-read/cancellation/core-Plugin boundaries. No historical scope or unrelated redesign. Rerun both retained reproductions, update relevant docs, record private capture daemon before starting, capture correction evidence and run all four checks under shared lease. Push focused commits normally to existing factory/row-70 PR157; final exact-head handoff must address each finding with evidence and verified implementation provenance. Implementation now authorized, no .rowbly edits. Avoid extra posthandoff work after terminal unless explicitly routed.",
           "createdAt": "2026-11-03T17:52:55.070Z",
           "updatedAt": "2026-11-03T17:52:55.070Z"
-        },
-        {
-          "id": "lub693Ed",
-          "author": "sunny",
-          "body": "PR157 corrected at d78c1c1021a1bf21e21523303483694d531f5d75: https://github.com/sgolovine/rowbly/pull/157. 1. Pagination inconsistencies exclude tainted commit contributions across every alias; identity changes prevent exact PR counts. 2. Malformed declarations cannot crash Stats; valid labels remain unavailable while core and healthy metrics survive. Existing contracts extended; total stays 100. Typecheck PASS, lint PASS, unit 79 PASS, CLI 21 PASS. Final CI snapshot: all six checks SUCCESS, none pending; draft PR mergeable. Evidence: https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611552729. Worktree and assets retained; private daemon stopped.",
-          "createdAt": "2026-11-03T18:00:44.286Z",
-          "updatedAt": "2026-11-03T18:00:44.286Z"
-        },
-        {
-          "id": "D5tavg52",
-          "author": "sunny",
-          "body": "Implementation record: {\"worker\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"threadId\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"machine\":\"rook\",\"harness\":\"t3\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/fb16809589f2249deba8c73dbe38f60a.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-correction-sol-1\",\"branch\":\"factory/row-70-correction-sol-1\",\"remoteBranch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"d78c1c1021a1bf21e21523303483694d531f5d75\",\"scope\":\"Both P2 corrections, existing contract extensions, documentation, validation and evidence; no subagents\"}",
-          "createdAt": "2026-11-03T18:00:44.957Z",
-          "updatedAt": "2026-11-03T18:00:44.957Z"
         }
       ]
     }
