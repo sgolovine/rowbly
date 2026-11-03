@@ -37,11 +37,25 @@
           "updatedAt": "2026-11-03T02:03:07.459Z"
         },
         {
+          "id": "V5tVZQ0I",
+          "author": "sunny",
+          "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
+          "createdAt": "2026-11-03T04:00:48.567Z",
+          "updatedAt": "2026-11-03T04:00:48.567Z"
+        },
+        {
           "id": "Z1KBQs1d",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/145 records each Stage Run's Model Selection. run start takes --provider, --model and --rule (optional --option, --fallback, --usage) and saves the selection in run-metadata.json (ADR-0046) in the same operation. runs shows a Model column; stories show and TUI Details show a Model Selection row; runs --json has runMetadata.selection, so compliance can be checked after a restart. The factory skill records the selection before launch, compares the launch receipt and runs run fail on a mismatch without rewriting it; no quota is recorded. Typecheck and lint pass; 78 unit and 20 CLI tests pass; agentic-tui screenshots are linked in the PR.",
           "createdAt": "2026-11-03T02:26:11.607Z",
           "updatedAt": "2026-11-03T02:26:11.607Z"
+        },
+        {
+          "id": "fUB1qJOd",
+          "author": "sunny",
+          "body": "PR145 correction pushed to factory/row-60 at e3e2b691a624119696f925c5ef02dfbafb1a700c. Both review findings addressed; current main integrated; fresh CLI screenshots and policy proposal posted. Typecheck, lint and CLI20 pass locally. Local unit77/78 has the storage timeout assigned to ROW48; no rerun or timeout increase. All six exact-head CI checks pass, including unit78. Draft remains unmerged; independent review required.",
+          "createdAt": "2026-11-03T04:00:44.105Z",
+          "updatedAt": "2026-11-03T04:00:44.105Z"
         },
         {
           "id": "hQBS1THq",
@@ -91,20 +105,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "fUB1qJOd",
-          "author": "sunny",
-          "body": "PR145 correction pushed to factory/row-60 at e3e2b691a624119696f925c5ef02dfbafb1a700c. Both review findings addressed; current main integrated; fresh CLI screenshots and policy proposal posted. Typecheck, lint and CLI20 pass locally. Local unit77/78 has the storage timeout assigned to ROW48; no rerun or timeout increase. All six exact-head CI checks pass, including unit78. Draft remains unmerged; independent review required.",
-          "createdAt": "2026-11-03T04:00:44.105Z",
-          "updatedAt": "2026-11-03T04:00:44.105Z"
-        },
-        {
-          "id": "V5tVZQ0I",
-          "author": "sunny",
-          "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
-          "createdAt": "2026-11-03T04:00:48.567Z",
-          "updatedAt": "2026-11-03T04:00:48.567Z"
         }
       ]
     }
