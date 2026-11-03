@@ -2,7 +2,12 @@
 
 ## Stages
 
-- **Backlog** and **TODO**: people plan here. No Stage Prompt.
+- **Backlog**: people plan here. No Stage Prompt.
+- **TODO**: an advisory readiness pass records concrete questions or missing requirements once per
+  visit, keeps the Story in TODO and never authorizes implementation. After answering in an ordinary
+  Comment or updating the requirements, a person can request another pass with
+  `rowbly software-factory run clear <KEY>`; a complete unchanged review input fingerprint suppresses
+  a duplicate Comment. The supervisor leaves finished Runs alone.
 - **In Progress**: a person moves a Story here when it is ready to build. The factory takes it to a
   draft PR with `rowbly-dev` (its Stage Prompt), then moves it to In PR.
 - **In PR**: the factory merges the PR when it is ready and moves the Story to Done, or sends it back
