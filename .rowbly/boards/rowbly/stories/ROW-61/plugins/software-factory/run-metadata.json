@@ -2,18 +2,7 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:11:37.662Z"
-  },
-  "identity": {
-    "worker": "mcp:71348b9f-de59-4060-97e8-c806ec1f5588",
-    "machine": "thinkpad",
-    "harness": "t3",
-    "threadId": "mcp:71348b9f-de59-4060-97e8-c806ec1f5588",
-    "verification": {
-      "source": "Local T3 launch/read/configuration verified71348b9f full-access Opus5.5 high existing bound factory-row-61 reservation",
-      "verifiedAt": "2026-11-03T02:11:38.405Z",
-      "by": "sunny"
-    }
+    "attempt": 2,
+    "startedAt": "2026-11-03T03:04:34.806Z"
   }
 }
