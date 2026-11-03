@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:31:27.865Z",
+  "updatedAt": "2026-11-03T05:31:29.092Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -218,6 +218,13 @@
           "body": "Implementation record: Run in-progress/1/2026-11-03T05:23:11.036Z; worker/thread mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/3ddb796363eb7fa34af6cde3892b81d0.json. Actual finding5 correction25f69cdc author and main integration at PR145 head8c74acd6a22522bb292c7fb5b91cadfadb90d52a; worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-3 branchcodex/row-60-pr145-correction-3. Previous actual Opus/Sol authors retained, reviewer-only Astra excluded. Allactualauthor models Opus/Sol; freshreviewer model mustdifferfromeveryauthor. Finaltypecheck/lint/unit78CLI21pass once, twoPNG200, allprivateprocessesstopped.",
           "createdAt": "2026-11-03T05:31:27.864Z",
           "updatedAt": "2026-11-03T05:31:27.864Z"
+        },
+        {
+          "id": "pjiW90oi",
+          "author": "sunny",
+          "body": "PR145 updated at 8c74acd6a22522bb292c7fb5b91cadfadb90d52a. Finding 5 fixed: unusable CONFIG identity evidence remains unverified without changing original values, intended selection or receipts. Typecheck, lint, unit78 and CLI21 passed once under the validation lease. Two inspected screenshot URLs returned HTTP200. CI pending: Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest). Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596246143. Fresh independent review required.",
+          "createdAt": "2026-11-03T05:31:29.092Z",
+          "updatedAt": "2026-11-03T05:31:29.092Z"
         }
       ]
     }
