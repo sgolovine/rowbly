@@ -27,6 +27,13 @@
           "updatedAt": "2026-11-02T23:48:23.067Z"
         },
         {
+          "id": "Ccex9VRf",
+          "author": "sunny",
+          "body": "Correction pushed to draft PR https://github.com/sgolovine/rowbly/pull/141 (head 296a69d). hold.json is now strict: a v1 file with unknown fields counts as unreadable, so the Story stays held, doctor reports SOFTWARE_FACTORY_UNREADABLE_HOLD naming the fields, and hold and release exit 6 (DATA_INTEGRITY) leaving the bytes unchanged. hold and release now read the file through the same helper as eligibility and doctor, so a symbolic link or unreadable path gives DATA_INTEGRITY exit 6 instead of VALIDATION; the link is never followed and neither it nor its outside target changes. Merged current main, including ROW-55 apply (hold/release are not in its allowlist), keeping combined HELD/BLOCKED eligibility, the full digest, the Stage Run schema and Run context. The existing hold test step now covers future-version, unknown-field and symlink files for both commands. typecheck, lint, test:unit 78 and test:cli 20 pass; screenshots are in a PR comment.",
+          "createdAt": "2026-11-03T01:15:28.608Z",
+          "updatedAt": "2026-11-03T01:15:28.608Z"
+        },
+        {
           "id": "FEkuDjkl",
           "author": "sunny",
           "body": "Supervisor: correction plan ACCEPTED. Implement the scoped strict Hold schema and shared owned-read helper, preserve absent-file semantics (no hold), map unreadable/unsafe stored paths to DATA_INTEGRITY6 without following symlinks, and preserve unknown fields/future versions/link/target/Story bytes. Extend the existing hold test step to cover both hold and release refusal for unknown-field and symlink cases, doctor finding and fail-closed eligibility; suite remains98. Keep combined HELD/BLOCKED, full eligibility digest, Stage Run schema and current main features. Fetch/merge main before final checks; current143 shared helpers review is independent and does not authorize changing its contract. Recheck ADR0043 reservation. All four checks, manual built-CLI reproduction, required agentic-tui screenshots/HTTP200 and same draftPR141 ordinary push HEAD:factory/row-59. No Board edits or merge. Proceed.",
@@ -53,13 +60,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
           "createdAt": "2026-11-03T00:34:10.501Z",
           "updatedAt": "2026-11-03T00:34:10.501Z"
-        },
-        {
-          "id": "Ccex9VRf",
-          "author": "sunny",
-          "body": "Correction pushed to draft PR https://github.com/sgolovine/rowbly/pull/141 (head 296a69d). hold.json is now strict: a v1 file with unknown fields counts as unreadable, so the Story stays held, doctor reports SOFTWARE_FACTORY_UNREADABLE_HOLD naming the fields, and hold and release exit 6 (DATA_INTEGRITY) leaving the bytes unchanged. hold and release now read the file through the same helper as eligibility and doctor, so a symbolic link or unreadable path gives DATA_INTEGRITY exit 6 instead of VALIDATION; the link is never followed and neither it nor its outside target changes. Merged current main, including ROW-55 apply (hold/release are not in its allowlist), keeping combined HELD/BLOCKED eligibility, the full digest, the Stage Run schema and Run context. The existing hold test step now covers future-version, unknown-field and symlink files for both commands. typecheck, lint, test:unit 78 and test:cli 20 pass; screenshots are in a PR comment.",
-          "createdAt": "2026-11-03T01:15:28.608Z",
-          "updatedAt": "2026-11-03T01:15:28.608Z"
         }
       ]
     }
