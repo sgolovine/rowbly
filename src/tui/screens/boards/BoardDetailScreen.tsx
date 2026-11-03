@@ -44,6 +44,7 @@ export function BoardDetailScreen({ params }: ScreenProps) {
     { key: 'o', description: 'Stories' },
     { key: 's', description: 'stages' },
     { key: 'f', description: 'fields' },
+    { key: 't', description: 'stats' },
   ]);
   useInput(
     (input) => {
@@ -52,6 +53,7 @@ export function BoardDetailScreen({ params }: ScreenProps) {
       if (input === 'v') router.push('board', { boardId });
       else if (input === 'o') router.push('stories', { boardId, title: `${name} Stories` });
       else if (input === 's') router.push('stages', { boardId, title: `${name} Stages` });
+      else if (input === 't') router.push('board-stats', { boardId, title: `${name} Stats` });
       else if (input === 'f') router.push('fields', { boardId, title: `${name} Fields` });
     },
     { isActive: active },

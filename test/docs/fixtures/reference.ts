@@ -174,3 +174,17 @@ export const externalReader = definePlugin({
   },
 });
 // #endregion
+
+// #region board-stats
+export const statistics = definePlugin({
+  id: 'statistics',
+  name: 'Statistics',
+  description: 'Contribute one read-only Board statistic',
+  boardStats: {
+    metrics: [{ key: 'count', label: 'Existing Stories' }],
+    async collect({ stories }) {
+      return { count: { status: 'complete', value: stories.length } };
+    },
+  },
+});
+// #endregion

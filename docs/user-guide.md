@@ -238,6 +238,7 @@ rowbly stories edit … [--assignee <h|me>… | --add-assignee <h|me>… | --rem
 ```text
 rowbly boards list
 rowbly boards create <id> --name <n> --prefix <P> [--description <text>]
+rowbly boards stats [<id>]                            # all-time current-record Stats
 rowbly boards show [<id>]                             # effective Stages and Custom Fields, their source level, Stories per Stage
 rowbly boards edit <id> [--name <n>] [--description <text>]
 rowbly boards delete <id> [--force]                  # confirms; pass --yes when not interactive
@@ -247,6 +248,31 @@ rowbly boards delete <id> [--force]                  # confirms; pass --yes when
 - A new Board has no Stage or Custom Field lists of its own: it inherits them through the Configuration Cascade.
 - `delete` refuses a Board that has Stories (exit 4) unless `--force`. Deleting the current Board clears it from Local State.
 - In the TUI, **Boards** `enter` opens the Board detail (`boards show`): name, key prefix, description, Stories per Stage, and the effective Stages and Custom Fields with their source level. `v` opens a Board's board for viewing only, like `--board` on a read command: the current context and `local.json` do not change.
+
+**Board Stats.** `rowbly boards stats [id]` uses the named Board or the current Board. In the TUI,
+open **Settings → Board → Stats**, or press `t` in Board details. Press `r` to refresh; there is no
+background polling. A refresh keeps the previous results visible and cancels its old request.
+Leaving the page or replacing the Data Root cancels its requests.
+
+- **Stories** counts existing Stories. **Stories currently Done** counts those whose current Stage
+  Category is `done`. Both cover all time and exclude deleted Stories and historical transitions.
+- With GitHub on, **Linked PRs** counts unique PR identities currently linked to this Board's
+  Stories, including open, closed and merged PRs. **Commits in linked PRs** deduplicates their full
+  commit SHAs. PRs no longer linked to existing Stories are excluded.
+- GitHub needs `gh` installed and authenticated for the linked hosts. Equivalent URLs and returned
+  PR identities are deduplicated. A complete empty source is `0`; missing access, unreadable links,
+  failed reads and bounds show **unavailable** or **N known (partial)** with a reason. Off Plugins
+  show unavailable metrics without inspecting their preserved bags. Partial values are lower
+  bounds, never estimates of the total.
+- GitHub refreshes use at most two requests concurrently, 100 candidate PRs, 10 pages per PR,
+  200 pages overall and 30 seconds. Each page has at most 100 commits. A changed or incomplete PR
+  contributes no commit count through any linked alias. A changed PR identity also makes the
+  linked-PR count incomplete. Local records and live GitHub reads are not one atomic snapshot.
+- `--json` returns `{board: {id, name}, window: "all-time", metrics, plugins: [{id, name, metrics}]}`.
+  Metrics contain `key`, `label`, `status` (`complete`, `partial`, `unavailable`), `value` (a count,
+  or `null` when unavailable) and a `reason` for partial/unavailable results. Source failures are
+  represented in a successful result; an unreadable Board/Data Root remains a command error.
+
 <!-- END boards -->
 
 <!-- BEGIN stages -->

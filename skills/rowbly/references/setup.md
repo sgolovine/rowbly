@@ -41,6 +41,7 @@ Check: `ls .rowbly` shows `rowbly.config.json`, `.gitignore` and `boards/web/boa
 ```sh
 rowbly boards create api --name "API" --prefix API --description "Backend service"
 rowbly boards list --json --no-prompt
+rowbly boards stats api --json --no-prompt    # all-time current records and Plugin counts
 rowbly boards show api --json --no-prompt     # effective Stages and Custom Fields, their level, Stories per Stage
 rowbly boards edit api --name "Backend API"   # only --name and --description
 rowbly use api                                # make it the current Board (Local State, not committed)
@@ -220,3 +221,12 @@ Data Root; setup still creates missing Data Roots. Named missing paths still fai
 Software Factory off; Factory/Both turn it on. Skill installs choose a folder and harness and never
 overwrite existing skills. Factory guidance can open Factory setup (`software-factory setup` for the
 Board); nothing is added unless it is chosen.
+
+## Board Stats
+
+`rowbly boards stats [id] --json --no-prompt` returns
+`{board:{id,name},window:"all-time",metrics,plugins:[{id,name,metrics}]}`. Each metric has `key`,
+`label`, `status: complete|partial|unavailable`, `value` (count or null), and a reason for partial or
+unavailable output. Partial counts are known lower bounds. Core counts existing Stories and Stories
+currently in Stage Category done; deleted/historical activity is excluded. Plugin sources may be
+unavailable while the command succeeds. TUI: Settings → Board → Stats, or t in Board details; r refresh.

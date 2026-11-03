@@ -13,6 +13,7 @@ export type Stage =
   | 'doctor-fix'
   | 'command'
   | 'screen'
+  | 'board-stats'
   | 'field'
   | 'filter'
   | 'row'
@@ -147,10 +148,10 @@ export function assertExternalRead(plugin: string, screen: boolean): void {
     scope &&
     !scope.ended &&
     scope.plugin === plugin &&
-    (scope.stage === 'command' || (screen && scope.stage === 'screen'))
+    (scope.stage === 'command' || scope.stage === 'board-stats' || (screen && scope.stage === 'screen'))
   )
     return;
-  throw new PluginError(`Plugin "${plugin}" external reads require a live command or screen`, {
+  throw new PluginError(`Plugin "${plugin}" external reads require a live command, screen or Board Stats collector`, {
     details: { plugin, ...(scope ? { stage: scope.stage, operation: scope.operation } : {}) },
     hint: 'fetch external data from a command or an active screen, never from read or operation hooks',
   });

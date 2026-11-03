@@ -26,6 +26,7 @@ import { BoardDetailScreen } from './BoardDetailScreen';
 import { BoardEditForm } from './BoardEditForm';
 import { BoardFormScreen } from './BoardFormScreen';
 import { BoardRow } from './BoardRow';
+import { BoardStatsScreen } from './BoardStatsScreen';
 
 type Mode =
   | { kind: 'list' }
@@ -195,6 +196,7 @@ function BoardsScreen() {
 export const boardsScreens: ScreenRegistry = {
   boards: BoardsScreen,
   'board-detail': BoardDetailScreen,
+  'board-stats': BoardStatsScreen,
   'board-form': BoardFormScreen,
   'board-delete': BoardDeleteScreen,
 };

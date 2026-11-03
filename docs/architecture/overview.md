@@ -80,3 +80,11 @@ call. `set(key, enabled)` runs `feature-flags.set` through the coordinated Opera
 merges into the latest root config through `changes.updateRootConfig`, preserving other settings,
 unknown flag keys and Plugin Data. Definitions and defaults live only in
 `src/services/featureFlags.ts`; the registry starts empty. Unknown keys are `NotFoundError`.
+
+
+### Board Stats
+
+The shared `services/boardStats.ts` read feeds `boards stats [id]` and the Board Stats TUI page.
+It releases its coordinated local snapshot before running optional Plugin collectors. Core counts
+current Stories and Done Stories; Plugins own their metric meanings and source data. There is no
+new saved record or historical event collection ([ADR-0054](../agents/adr/0054-board-stats-use-bounded-plugin-reads.md)).

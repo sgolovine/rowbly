@@ -74,6 +74,7 @@ export function settingsGroups(board: BoardConfig | null, plugins: readonly TuiP
             { id: 'board-config', label: 'Config', screen: 'board-detail', params: { boardId, title: 'Config' } },
             { id: 'board-stages', label: 'Stages', screen: 'stages', params: { boardId } },
             { id: 'board-fields', label: 'Fields', screen: 'fields', params: { boardId } },
+            { id: 'board-stats', label: 'Stats', screen: 'board-stats', params: { boardId } },
             ...scopedSections('board'),
           ]
         : [],

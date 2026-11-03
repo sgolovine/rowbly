@@ -180,6 +180,25 @@ describe('end-to-end scenario', () => {
     await ok('stories', 'move', 'API-1', 'done');
     expect((await story('WEB-1')).stage).toBe('done');
     expect((await story('WEB-2')).stage).toBe('review');
+    expect(await json('boards', 'stats', 'web')).toMatchObject({
+      board: { id: 'web' },
+      window: 'all-time',
+      metrics: [
+        { key: 'stories', value: 3, status: 'complete' },
+        { key: 'stories-done', value: 1, status: 'complete' },
+      ],
+      plugins: [
+        {
+          id: 'github',
+          metrics: [
+            { status: 'unavailable', value: null },
+            { status: 'unavailable', value: null },
+          ],
+        },
+      ],
+    });
+    expect((await json('boards', 'stats', 'api')).metrics).toMatchObject([{ value: 2 }, { value: 1 }]);
+
     const open = (await json('stories', 'list', '--open')).map((s: Story) => s.key);
     expect(open).toEqual(['WEB-3', 'WEB-2']);
     const all = (await json('stories', 'list', '--all-boards', '--sort', 'priority')).map((s: Story) => s.key);

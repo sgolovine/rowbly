@@ -3,6 +3,7 @@ import { type DataRoot, formatIssues, type PluginEntry, type RowblyConfig } from
 import { createRepositories } from '../../storage';
 import { createExternalReads, type ExternalReads, isExternalReadName } from '../../storage/externalRead';
 import { coordinated } from '../coordination';
+import { boardStatDefinitions } from './boardStatDefinitions';
 import { createPluginGit, disposeGitOwner } from './git';
 import { type AnyPluginDefinition, CORE_OPERATION_NAMES, type PluginOptionCommand } from './types';
 
@@ -329,6 +330,18 @@ function checkNames(
   const reads = definition.externalReads ?? [];
   if (!Array.isArray(reads) || reads.some((name) => !isExternalReadName(name)) || new Set(reads).size !== reads.length)
     problem('externalReads', 'externalReads must list distinct host template names');
+
+  const stats = definition.boardStats;
+  if (
+    stats !== undefined &&
+    (!stats ||
+      typeof stats.collect !== 'function' ||
+      !Array.isArray(stats.metrics) ||
+      stats.metrics.length === 0 ||
+      stats.metrics.length > 16 ||
+      boardStatDefinitions(stats.metrics).length !== stats.metrics.length)
+  )
+    problem('boardStats', 'boardStats requires a collector and 1–16 distinct named metrics');
 
   const options: [string, string[]][] = [];
   for (const [command, spec] of Object.entries(definition.options ?? {})) {
