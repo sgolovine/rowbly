@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:40:12.922Z",
+  "updatedAt": "2026-11-03T17:40:14.177Z",
   "plugins": {
     "comments": {
       "comments": [
@@ -57,6 +57,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/157 at c483974a6a271a109d3bd126a3ad87a57dc83969 implements the accepted current-record all-time Board Stats page and CLI with bounded Plugin-owned GitHub reads and truthful deduplicated counts. Merged main including ROW-73 and preserved both reference sections. Typecheck and lint passed. Unit tests 79 and CLI tests 21 passed under the shared validation lease. All six current-head CI checks passed with none pending. Seven screenshot URLs returned 200 at https://github.com/sgolovine/rowbly/pull/157#issuecomment-6610987383. Branch factory/row-70 and worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story are retained. Both private daemons are stopped. Ready for supervisor independent review.",
           "createdAt": "2026-11-03T17:40:12.236Z",
           "updatedAt": "2026-11-03T17:40:12.236Z"
+        },
+        {
+          "id": "W9sm6yXh",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4\",\"threadId\":\"mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4\",\"machine\":\"rook\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/4438b4011c40d9eed9b4fa750b075ac2.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-story\",\"branch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"c483974a6a271a109d3bd126a3ad87a57dc83969\",\"scope\":\"Sole Stats product author, including main integration conflict resolution; no correction workers\"}",
+          "createdAt": "2026-11-03T17:40:14.176Z",
+          "updatedAt": "2026-11-03T17:40:14.176Z"
         }
       ]
     }
