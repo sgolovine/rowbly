@@ -199,10 +199,10 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
               void run(async () => {
                 if (item.value === 'prompts' || item.value === 'setup') {
                   await plugins.reload();
-                  const route = pluginRoute(
-                    'software-factory',
-                    item.value === 'setup' ? 'factory-setup' : 'stage-prompts',
-                  );
+                  const route =
+                    item.value === 'setup'
+                      ? pluginRoute('software-factory', 'factory-setup', { title: 'Factory setup' })
+                      : pluginRoute('software-factory', 'stage-prompts');
                   router.push(route.screen, route.params);
                 } else if (item.value === 'skills') setStep('skills');
                 else if (item.value === 'ai') setStep('ai');

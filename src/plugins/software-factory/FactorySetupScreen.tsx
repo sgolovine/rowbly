@@ -1,5 +1,15 @@
 import type { PluginScreenProps } from '../../plugin-api';
-import { Box, Loading, SelectList, Text, theme, useAsync, useIsActive, useState } from '../../plugin-api/tui';
+import {
+  Box,
+  Loading,
+  SelectList,
+  Text,
+  theme,
+  useAsync,
+  useIsActive,
+  useKeyHints,
+  useState,
+} from '../../plugin-api/tui';
 import { type SetupResult, setupFactory } from './setup';
 
 const STAGE_TEXT = { added: 'added', present: 'kept', custom: 'kept with its own name' } as const;
@@ -17,6 +27,7 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
     async () => (typeof params.boardId === 'string' ? params.boardId : await plugin.services.context.resolveBoard()),
     [plugin, params.boardId],
   );
+  useKeyHints(active && board.data && !busy && !result ? [{ key: 'enter', description: 'set up Board' }] : []);
   if (board.loading && !board.data) return <Loading />;
   if (!board.data) return <Text color={theme.danger}>Choose a Board first.</Text>;
   const id = board.data;
