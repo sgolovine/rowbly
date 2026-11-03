@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Add a TODO refinement Stage Prompt",
   "description": "Factory review recommendation 16 of 20.\n\n## Context\n\nScope questions raised during implementation could be surfaced earlier by a readiness pass.\n\n## Acceptance criteria\n\n- Enable a TODO Stage Prompt that reviews Story readiness and records concrete questions or missing requirements in a Comment.\n- Keep the Story in its current Stage and avoid authorizing implementation.\n- Ensure a completed readiness pass does not trigger repeated identical runs without new input.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "in-progress",
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:55:58.195Z",
+  "updatedAt": "2026-11-03T15:55:58.930Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:a4116a1c-66db-4bc1-b28b-ea0a655b68e8",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:50:09.193Z",
-        "finishedAt": "2026-11-03T15:55:56.153Z"
-      }
     },
     "comments": {
       "comments": [
