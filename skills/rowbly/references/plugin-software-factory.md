@@ -14,7 +14,8 @@ instructions. Read both before working a Story.
 A **Stage Run** records one agent's work on a Story during its current visit to a Stage whose Stage
 Prompt is on: `running`, `finished` or `failed`, with an `attempt` number and the `worker`'s name. A
 Story has at most one; moving the Story to another Stage removes it, so the Stage is worked again on
-the next visit.
+the next visit. In the TUI, a running or failed one shows as a `▶ running` / `✕ failed #2` badge on
+the Story's card, and the Story's **Stage Run** tab shows all of its fields with their ages.
 
 ## Commands
 
@@ -32,6 +33,7 @@ rowbly software-factory prompt remove todo --board web --yes --json --no-prompt 
 
 # Stage Runs
 rowbly software-factory runs --board web --json --no-prompt          # Stories in Stages whose Stage Prompt is on
+rowbly software-factory wait --board web --since <digest> --timeout 600 --json --no-prompt   # blocks until runs change
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --json --no-prompt
 rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
@@ -55,9 +57,14 @@ rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`, where `stages`
-are the Stages whose Stage Prompt is on and `stageRun` is `null` for a Story nobody works in this
-visit. `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`, where
+`stages` are the Stages whose Stage Prompt is on, `stageRun` is `null` for a Story nobody works in
+this visit, and `digest` changes whenever `stages` or `stories` do. `wait` blocks until `runs`
+differs from `--since <digest>` (without it, from when it starts) and returns `runs` with
+`changed: true`: a Story entered or left a Stage whose Stage Prompt is on, a Stage Prompt was turned
+on or off, a Stage Run started, ended or was cleared, or eligibility changed. A stale `--since`
+returns at once. After `--timeout <seconds>` it returns `changed: false`. Both exit 0; a signal
+stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
 `{ cleared }`.
 
@@ -91,6 +98,8 @@ ran. A refused block or a failed line exits non-zero with the same object in `er
   `run finish`. One move per block.
 - Each allowed line runs as its own `rowbly … --json --no-prompt` on the same Data Root. The first
   that fails stops the block with that command's exit code; earlier lines stay applied.
+- To wait for work, pass `wait` the `digest` of the `runs` you last acted on, never a fresh one: a
+  change between your read and the wait then returns at once instead of being missed.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
 
 `eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage

@@ -165,3 +165,76 @@ export function watchDataRoot(root: DataRoot, opts: WatchDataRootOptions): () =>
     closeAll();
   };
 }
+
+/** How often `waitForDataRoot` checks again when no change was reported, in case one went unseen. */
+export const WAIT_RECHECK_MS = 60_000;
+
+export interface WaitForDataRootOptions {
+  /** Stops the wait, which then resolves with `undefined`. */
+  signal?: AbortSignal;
+  /** The watcher failed; it starts again on its own, and the wait keeps checking every `recheckMs`. */
+  onError?(err: unknown): void;
+  recheckMs?: number;
+  debounceMs?: number;
+}
+
+/**
+ * Waits for the Data Root to reach a state: resolves with the first result of `check` that is not
+ * `undefined`, or with `undefined` once `signal` aborts. `check` runs once at the start, again after
+ * each change to the Data Root by any process, and every `recheckMs`. The watch starts before the
+ * first check, so a change made while a check reads is checked again. Checks never overlap: changes
+ * that arrive during one are checked once more after it. A check that throws rejects the wait. Every
+ * watcher, timer and listener is closed when it settles; until then a timer keeps the process alive.
+ */
+export function waitForDataRoot<T>(
+  root: DataRoot,
+  check: () => Promise<T | undefined>,
+  opts: WaitForDataRootOptions = {},
+): Promise<T | undefined> {
+  const { signal } = opts;
+  if (signal?.aborted) return Promise.resolve(undefined);
+  return new Promise<T | undefined>((resolve, reject) => {
+    let settled = false;
+    let checking = false;
+    let again = false;
+
+    const settle = (done: () => void) => {
+      if (settled) return;
+      settled = true;
+      stop();
+      clearInterval(recheck);
+      signal?.removeEventListener('abort', onAbort);
+      done();
+    };
+    const onAbort = () => settle(() => resolve(undefined));
+
+    const run = async () => {
+      if (settled) return;
+      if (checking) {
+        again = true;
+        return;
+      }
+      checking = true;
+      try {
+        do {
+          again = false;
+          const result = await check();
+          if (result !== undefined) return settle(() => resolve(result));
+        } while (again && !settled);
+      } catch (err) {
+        settle(() => reject(err));
+      } finally {
+        checking = false;
+      }
+    };
+
+    signal?.addEventListener('abort', onAbort, { once: true });
+    const stop = watchDataRoot(root, {
+      onChange: () => void run(),
+      onError: (err) => opts.onError?.(err),
+      debounceMs: opts.debounceMs,
+    });
+    const recheck = setInterval(() => void run(), opts.recheckMs ?? WAIT_RECHECK_MS);
+    void run();
+  });
+}

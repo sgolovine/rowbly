@@ -1,6 +1,6 @@
 import { Command, Option } from 'commander';
 import { errorMessage as messageOf } from '../../core';
-import { printResult } from '../../output';
+import { printResult, printWarnings } from '../../output';
 import {
   type AnyPluginDefinition,
   invokePlugin,
@@ -9,7 +9,7 @@ import {
   type PluginHost,
   pluginServices,
 } from '../../services';
-import { editTextInEditor, runChildCommand } from '../../storage';
+import { editTextInEditor, runChildCommand, waitForDataRoot } from '../../storage';
 import {
   type AttachedPluginOptions,
   boardFlag,
@@ -179,6 +179,13 @@ function pluginCli(id: string): PluginCli<unknown> {
             editText: (initial) => editTextInEditor(initial),
             resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
             runCommand: (argv) => runChildCommand(ctx.root.path, argv),
+            waitFor: (check, opts) =>
+              waitForDataRoot(ctx.root, check, {
+                signal: opts?.signal,
+                // Shown at once: a wait can last long after the watcher failed.
+                onError: (err) =>
+                  printWarnings([`Not watching the Data Root for changes: ${messageOf(err)}`], { json: globals.json }),
+              }),
           }),
         ),
       ),

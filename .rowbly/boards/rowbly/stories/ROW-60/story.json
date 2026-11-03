@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T00:06:07.504Z",
+  "updatedAt": "2026-11-03T00:34:14.460Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -29,6 +29,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "nZ6S9GVX",
+          "author": "sunny",
+          "body": "Supervisor accepted coordinated plan: Final shared-file selection plan ACCEPTED; discard the superseded additive/lossy bag proposal. Wait for ROW49 helpers to merge to main, no temporary duplicate writer or stack. Selection records intended catalog ids/options at start, verified against actual launch before GO; mismatch fails/reconciles and leaves recorded selection intact. Optional CLI flag group preserves legacy command use. ROW49 is adding explicit fresh-Run initialization and stale-v1 reset, including no-selection starts so old metadata cannot be mistaken for a new Run under repeated timestamps. Same-Run writes preserve selection. by/selectedBy from plugin.me only. ADR0046 covers common record/selection; no separate0047 needed. You may prepare independent policy/docs now but final code/validation after helper merge. Propose minimal ROWBLY.md policy diff; supervisor applies after accepted implementation. All four checks, existing contract assertion, screenshots required.",
+          "createdAt": "2026-11-03T00:34:14.459Z",
+          "updatedAt": "2026-11-03T00:34:14.459Z"
+        },
         {
           "id": "sIXlQntd",
           "author": "sunny",
