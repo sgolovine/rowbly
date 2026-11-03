@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T04:15:59.493Z",
+  "updatedAt": "2026-11-03T04:16:00.804Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:13:36.374Z",
+        "finishedAt": "2026-11-03T04:15:59.492Z"
+      }
     },
     "comments": {
       "comments": [
@@ -102,19 +113,15 @@
           "body": "Implementation record before return to In PR: verified Sol correction worker mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b rook, branch factory/row-60 PR145 heade3e2b691a624119696f925c5ef02dfbafb1a700c, original Opus and Sol authored work. New controlled local validation allfour PASS unit78 CLI20 with exacthead unchanged, original failure preserved. Fresh reviewer must differ from both authors; shared merge hold149->147->146->145 persists.",
           "createdAt": "2026-11-03T04:15:58.069Z",
           "updatedAt": "2026-11-03T04:15:58.069Z"
+        },
+        {
+          "id": "TSI6LsBH",
+          "author": "sunny",
+          "body": "Authorized controlled local validation PASS at unchanged head e3e2b691a624119696f925c5ef02dfbafb1a700c. Typecheck, lint, unit78/78 and CLI20/20 ran once sequentially under the bounded shared lease after measured CPU-headroom admission, with original timeout and external telemetry. No source/test/dependency changes or retries. Original timeout evidence preserved; no historical cause inferred. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595244682. PR remains draft and unmerged.",
+          "createdAt": "2026-11-03T04:16:00.803Z",
+          "updatedAt": "2026-11-03T04:16:00.803Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:13:36.374Z",
-        "finishedAt": "2026-11-03T04:15:59.492Z"
-      }
     }
   }
 }
