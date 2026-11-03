@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T03:13:37.616Z",
+  "updatedAt": "2026-11-03T03:22:49.979Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:13:36.374Z"
+      }
     },
     "comments": {
       "comments": [
@@ -32,6 +42,13 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/145 records each Stage Run's Model Selection. run start takes --provider, --model and --rule (optional --option, --fallback, --usage) and saves the selection in run-metadata.json (ADR-0046) in the same operation. runs shows a Model column; stories show and TUI Details show a Model Selection row; runs --json has runMetadata.selection, so compliance can be checked after a restart. The factory skill records the selection before launch, compares the launch receipt and runs run fail on a mismatch without rewriting it; no quota is recorded. Typecheck and lint pass; 78 unit and 20 CLI tests pass; agentic-tui screenshots are linked in the PR.",
           "createdAt": "2026-11-03T02:26:11.607Z",
           "updatedAt": "2026-11-03T02:26:11.607Z"
+        },
+        {
+          "id": "hQBS1THq",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Required JSON-scalar option notation is an appropriate unambiguous correction to the unmerged draft CLI: strings retain quotes, numbers/booleans their types; no released CLI/data migration. Update help, every skill/launcher/CLI example and four identical references consistently; malformed/null/compound/nonfinite refusals are part of the contract. Exact complete option-set comparison must be order-independent and type-sensitive, reject extra/missing/duplicate IDs rather than just checking an expected subset, and never rewrite intended selection after a mismatch. Extend existing StageRun contract and launcher deterministic-fixture checks (no real worker launches) for representative numeric-looking string/number, boolean/string, option-order and extra/missing mismatch; no mirrored unnecessary cases/new testfile. Keep unknown/unverified outcome distinct from proven mismatch; no GO until resolved. Integrate currentmain preserving generatedbrief/retry/hold/sharedmetadata and other ownership; retain ADR0046. Policy proposal minimal and preserves modelvariety/independentreview. Allfourchecks, CLI screenshot evidence, update SAME PR145 normally. Do not write .rowbly or merge.",
+          "createdAt": "2026-11-03T03:22:49.978Z",
+          "updatedAt": "2026-11-03T03:22:49.978Z"
         },
         {
           "id": "iHf4C3Yp",
@@ -76,16 +93,6 @@
           "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:13:36.374Z"
-      }
     }
   }
 }
