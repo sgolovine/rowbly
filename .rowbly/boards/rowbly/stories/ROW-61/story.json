@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Clean up factory resources after merge",
   "description": "Factory review recommendation 15 of 20.\n\n## Context\n\nThe review found 82 worktrees, many pr-assets branches and a long-lived agentic-tui daemon on rook.\n\n## Acceptance criteria\n\n- Add a Done Stage Prompt or equivalent completion workflow for resource cleanup.\n- Remove merged task branches, associated pr-assets branches and worktrees on the machine that owns them, after verifying they contain no unmerged work.\n- Stop task-owned daemons and enable repository branch deletion on merge where appropriate.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a5",
+  "stage": "in-pr",
+  "rank": "a7",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T03:35:22.631Z",
+  "updatedAt": "2026-11-03T03:35:23.286Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 2,
-        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:04:34.806Z",
-        "finishedAt": "2026-11-03T03:35:21.354Z"
-      }
     },
     "comments": {
       "comments": [
