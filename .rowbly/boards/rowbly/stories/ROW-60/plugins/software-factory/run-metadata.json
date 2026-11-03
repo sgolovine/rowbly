@@ -18,8 +18,8 @@
   },
   "heartbeat": {
     "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
-    "at": "2026-11-03T05:09:38.299Z",
-    "source": "Verified SSH T3 assistant message mcp:c10f649b-1065-41f0-a173-dbf23695fabf: 4screenshots inspected/private daemon stopped/finalchecks starting da843d1ce5470ad6f0b842bc861f9e19a828144e; /tmp/rowbly-factory-session/ROW-60-poll.json SHA256 8509026ea7ea1fd290c464bc33126aae3829f7b33c591c915d212df920f9e757",
+    "at": "2026-11-03T05:10:32.229Z",
+    "source": "Verified SSH T3 assistant messages mcp:c10f649b-1065-41f0-a173-dbf23695fabf: finaltypecheck/lint/unit78CLI21pass atda843d1, publishingdraftforreview; /tmp/rowbly-factory-session/ROW-60-poll.json SHA256 a03bab404a914f30a2b51371433871d10a3bef326899ec39a40132519323d562,b72744fcc5bb0dcfe297b48b71417e82c4c2d89434684308cc18064e43a7c699",
     "by": "sunny"
   }
 }
