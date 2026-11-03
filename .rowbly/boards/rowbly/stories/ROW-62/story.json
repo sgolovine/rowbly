@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:12:10.139Z",
+  "updatedAt": "2026-11-03T16:12:11.378Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+        "by": "sunny",
+        "startedAt": "2026-11-03T15:57:26.671Z",
+        "finishedAt": "2026-11-03T16:12:10.138Z"
+      }
     },
     "comments": {
       "comments": [
@@ -109,19 +120,15 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
+        },
+        {
+          "id": "BzYTA3lV",
+          "author": "sunny",
+          "body": "Implementation record: ROW-62 correction PR https://github.com/sgolovine/rowbly/pull/154 head 0c5f219cd71d4a6638833ff0df394d4b46a276ac, correction commit05430c5f2ad2c9c088480638d8fc3f8fc4863cdd authored by mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801 on rook provider codex model gpt-6.1-sol reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/df2d3070059c31fbc6821fa086190a2d.json. Fresh correction worker continued remote factory/row-62 in isolated local factory/row-62-correction-sol-1 worktree, fixed finding1, added existing regression and docs updates. Prior original product implementer mcp:3803ae1e-36e4-4d2e-82f9-32764d071044 also codex/gpt-6.1-sol; first Astra reviewer wrote no product code. All four local checks79unit21CLI and30 disposable faults passed. Complete corrected evidence/rollout manifest https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609071374. Requires NEW worker exact-head independent review different from both implementing workers and Sol model; no inheritance of old-head review approval. TODO activation remains supervisor-owned after merge.",
+          "createdAt": "2026-11-03T16:12:11.377Z",
+          "updatedAt": "2026-11-03T16:12:11.377Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:57:26.671Z",
-        "finishedAt": "2026-11-03T16:12:10.138Z"
-      }
     }
   }
 }
