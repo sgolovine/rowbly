@@ -56,7 +56,7 @@ export function StoryDetailScreen({ params }: ScreenProps) {
   const key = String(params.key ?? '');
   const [tab, setTab] = useState(0);
   const [mode, setMode] = useState<Mode>('view');
-  // The Story and its Stages first, so that it shows and takes its keys at once (ROW-72).
+  // The Story and its Stages first, so that it shows and takes its keys at once (ADR-0052 §3).
   const data = useAsync(
     async () =>
       ctx
