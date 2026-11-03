@@ -14,7 +14,8 @@ instructions. Read both before working a Story.
 A **Stage Run** records one agent's work on a Story during its current visit to a Stage whose Stage
 Prompt is on: `running`, `finished` or `failed`, with an `attempt` number and the `worker`'s name. A
 Story has at most one; moving the Story to another Stage removes it, so the Stage is worked again on
-the next visit.
+the next visit. In the TUI, a running or failed one shows as a `▶ running` / `✕ failed #2` badge on
+the Story's card, and the Story's **Stage Run** tab shows all of its fields with their ages.
 
 ## Commands
 

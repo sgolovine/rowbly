@@ -484,7 +484,11 @@ rowbly software-factory run clear <story>
   `--timeout`, it stops after that many seconds and prints `runs` with `changed: false`; exit 0 either
   way. `ctrl+c` (or `SIGTERM`) stops it with nothing changed (exit 130 or 143).
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
-  the Story screen shows the Story's **Stage Run**.
+  the Story screen shows the Story's **Stage Run**. A Story whose Stage Run for its current Stage is
+  running or failed has a badge on its board card and list line, `▶ running` or `✕ failed`, with
+  `#2` after the first attempt. The Story's **Stage Run** tab shows it in full: outcome,
+  attempt, worker, who started it, when it started and ended (with how long ago), how long it ran,
+  and the failure reason.
 
 `run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
 Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual
