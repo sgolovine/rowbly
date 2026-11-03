@@ -8,7 +8,14 @@ import {
   UsageError,
   z,
 } from '../../plugin-api';
-import { Heartbeat, requireRunMetadata, requireRunRef, runRef, writeRunMetadata } from './runMetadata';
+import {
+  Heartbeat,
+  requireRunMetadata,
+  requireRunRef,
+  runRef,
+  type WorkerIdentity,
+  writeRunMetadata,
+} from './runMetadata';
 import { RunRef } from './runRef';
 import { StageRunBag } from './stageRuns';
 
@@ -42,20 +49,37 @@ export async function touchRun(plugin: PluginContext, key: string, input: TouchR
   if (!parsed.success) throw new UsageError(`Invalid heartbeat: ${parsed.error.message}`);
   const value = parsed.data;
   const stored = await plugin.services.stories.get(key);
-  return plugin.operation('touch', { key: stored.key, ...value }, async (changes) => {
-    const story = changes.story(stored.key)?.after ?? (await plugin.services.stories.get(stored.key));
-    const run = requireRunRef(story, value);
-    const metadata = await requireRunMetadata(changes, story, value);
-    requireWorker(story.key, run, metadata.identity, value.worker);
-    const heartbeat: Heartbeat = {
-      worker: value.worker,
-      at: toTimestamp(plugin.now()),
-      source: value.source,
-      by: plugin.me,
-    };
-    await writeRunMetadata(changes, story, { ...metadata, heartbeat });
-    return { key: story.key, stageRun: run, heartbeat };
-  });
+  let identity: WorkerIdentity | undefined;
+  return plugin.operation(
+    'touch',
+    { key: stored.key, ...value },
+    async (changes) => {
+      const story = changes.story(stored.key)?.after ?? (await plugin.services.stories.get(stored.key));
+      const run = requireRunRef(story, value);
+      const metadata = await requireRunMetadata(changes, story, value);
+      requireWorker(story.key, run, metadata.identity, value.worker);
+      // Retain the complete attestation read under the lock, before transforms can replace it.
+      identity = metadata.identity;
+      const heartbeat: Heartbeat = {
+        worker: value.worker,
+        at: toTimestamp(plugin.now()),
+        source: value.source,
+        by: plugin.me,
+      };
+      await writeRunMetadata(changes, story, { ...metadata, heartbeat });
+      return { key: story.key, stageRun: run, heartbeat };
+    },
+    {
+      async result(changes, result) {
+        // Final validation still holds the lock and runs after every transform and guard.
+        const story = changes.story(result.key)?.after ?? (await plugin.services.stories.get(result.key));
+        const metadata = await requireRunMetadata(changes, story, value);
+        if (JSON.stringify(metadata.identity) !== JSON.stringify(identity))
+          throw new ConflictError(`${story.key}: the verified worker identity changed during the heartbeat`);
+        return result;
+      },
+    },
+  );
 }
 
 /** Final pending-state check after every transform, while the Data Root is still locked. */

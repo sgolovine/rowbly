@@ -196,5 +196,8 @@ opaque metadata is preserved and reported. See [ADR-0046](../agents/adr/0046-ver
 where `at` is the operation clock and `by` is Me, and keeps the other sections. It checks the
 expected `{stage, attempt, startedAt}`, a running Run and an attached identity for `worker` under the
 lock and again against pending state after transforms; otherwise `CONFLICT`, saving nothing. It
-never creates an identity, and opaque Run details refuse it with `DATA_INTEGRITY`. It does not
+also retains the complete attached identity observed under the lock and compares it after all
+transforms and guards, including machine, harness, thread and verification. Replacing that identity
+while keeping the same worker still refuses the whole operation without writing Story or metadata.
+It never creates an identity, and opaque Run details refuse it with `DATA_INTEGRITY`. It does not
 change the Story's `updatedAt`. See [ADR-0048](../agents/adr/0048-stage-run-heartbeats-are-attested-evidence.md).
