@@ -21,6 +21,7 @@ function invocation(name: ExternalReadName, parameters: Readonly<Record<string, 
     throw new ValidationError('Invalid external read or parameters');
   const url = parameters.url;
   if (
+    url !== url.trim() ||
     !/^https:\/\/[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\/[a-z0-9._][a-z0-9._-]*\/[a-z0-9._][a-z0-9._-]*\/pull\/[1-9][0-9]*\/?$/i.test(
       url,
     )

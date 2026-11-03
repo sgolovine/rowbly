@@ -6,6 +6,7 @@ import { attachments } from './attachments';
 import { comments } from './comments';
 import { epics } from './epics';
 import { git } from './git';
+import { github } from './github';
 import { softwareFactory } from './software-factory';
 import { specs } from './specs';
 import { storyLinking } from './story-linking';
@@ -21,4 +22,5 @@ export const builtInPlugins: readonly AnyPluginDefinition[] = [
   storyLinking,
   git,
   softwareFactory,
+  github,
 ];

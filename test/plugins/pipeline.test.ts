@@ -10,6 +10,7 @@ import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
+import { github } from '../../src/plugins/github';
 import { softwareFactory } from '../../src/plugins/software-factory';
 import { touchRun } from '../../src/plugins/software-factory/heartbeat';
 import { holdStory } from '../../src/plugins/software-factory/holds';
@@ -38,12 +39,13 @@ vi.mock('node:child_process', { spy: true });
 
 describe('transform (ADR-0012)', () => {
   it('creates Plugin bags, Story Spec files and incoming links atomically; rejected input saves nothing', async () => {
-    const t = await pluginRoot({ tasks: true, specs: true, 'story-linking': true });
+    const t = await pluginRoot({ tasks: true, specs: true, 'story-linking': true, github: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-10', plugins: { ghost: { kept: true } } });
-    const { services } = await withPlugins(t, [tasks, specs, storyLinking]);
+    const { services } = await withPlugins(t, [tasks, specs, storyLinking, github]);
     const input = {
       name: 'Atomic Story',
       plugins: {
+        github: { pr: 'https://GITHUB.com/owner/name/pull/123/' },
         tasks: { tasks: [{ name: 'First' }, { name: 'Second', stage: 'todo' }] },
         specs: {
           storySpecs: [
@@ -58,6 +60,7 @@ describe('transform (ADR-0012)', () => {
     const specPath = (key: string, slug: string) => join(t.path, `boards/web/stories/${key}/plugins/specs/${slug}.md`);
     expect(await readFile(specPath(created.key, 'design'), 'utf8')).toBe('# Design');
     expect(await readFile(specPath(created.key, 'checks'), 'utf8')).toBe('# checks\n\nChecks');
+    expect(created.plugins?.github).toEqual({ pr: 'https://github.com/owner/name/pull/123' });
     expect(created.plugins?.tasks).toMatchObject({
       nextNumber: 3,
       tasks: [
@@ -107,6 +110,7 @@ describe('transform (ADR-0012)', () => {
     const patch = {
       name: 'Edited together',
       plugins: {
+        github: { pr: 'https://github.com/owner/name/pull/124' },
         tasks: {
           baseline: savedTasks,
           tasks: [
@@ -139,6 +143,7 @@ describe('transform (ADR-0012)', () => {
     expect(await pathExists(specPath(created.key, 'new-spec'))).toBe(false);
     const edited = await services.stories.update(created.key, patch);
     expect(edited.name).toBe('Edited together');
+    expect(edited.plugins?.github).toEqual({ pr: 'https://github.com/owner/name/pull/124' });
     const editedTasks = await listTasks(services.plugins.context('tasks'), created.key);
     expect(editedTasks).toMatchObject([
       { number: 1, name: 'Renamed', createdAt: savedTasks[0]?.createdAt },
@@ -159,6 +164,17 @@ describe('transform (ADR-0012)', () => {
     expect(edited.plugins?.['story-linking']).toEqual({ blocks: ['WEB-10'] });
     const unchanged = await services.stories.update(created.key, { description: 'Only core' });
     expect(unchanged.plugins).toEqual(edited.plugins);
+    const invalidUrlBytes = await readFile(storyPath);
+    await expect(
+      services.stories.update(created.key, {
+        name: 'Must not save',
+        plugins: { github: { pr: 'https://user:password@github.com/owner/name/pull/1' } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(await readFile(storyPath)).toEqual(invalidUrlBytes);
+    const cleared = await services.stories.update(created.key, { plugins: { github: { pr: null } } });
+    expect(cleared.plugins?.github).toBeUndefined();
+    expect(cleared.plugins?.tasks).toEqual(edited.plugins?.tasks);
     const taskOnly = await services.stories.update(created.key, {
       plugins: { tasks: { tasks: editedTasks, baseline: editedTasks } },
     });
@@ -771,7 +787,7 @@ describe('guard', () => {
   });
 
   it('invalid owned bags reject mutations and deletion cleanup without saving staged changes', async () => {
-    const t = await pluginRoot({ 'story-linking': true, tasks: true, comments: true, attachments: true });
+    const t = await pluginRoot({ 'story-linking': true, tasks: true, comments: true, attachments: true, github: true });
     const timestamp = '2026-01-01T00:00:00.000Z';
     const task = {
       number: 1,
@@ -793,10 +809,11 @@ describe('guard', () => {
         tasks: { nextNumber: 2, tasks: [task, { ...task, name: 'Second' }] },
         comments: { comments: [comment, { ...comment, body: 'Second' }] },
         attachments: { attachments: 'unknown data' },
+        github: { pr: 'https://github.com/owner/name/pull/1', version: 999, opaque: ['keep'] },
       },
     });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-3', rank: 'a2' });
-    const { services } = await withPlugins(t, [storyLinking, tasks, comments, attachments]);
+    const { services } = await withPlugins(t, [storyLinking, tasks, comments, attachments, github]);
     const before = await services.stories.list('web', {});
     const file = join(t.path, 'boards/web/stories/WEB-2/story.json');
     const bytes = await readFile(file);
@@ -825,6 +842,10 @@ describe('guard', () => {
         plugins: { 'story-linking': { blocks: [], blockedBy: [] } },
       }),
     ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    for (const pr of [null, 'https://github.com/owner/name/pull/2'])
+      await expect(
+        services.stories.update('WEB-2', { name: 'Must not save', plugins: { github: { pr } } }),
+      ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
     const findings = (await services.doctor.check()).findings;
     await expect(
       addAttachment(services.plugins.context('attachments'), 'WEB-2', {
@@ -832,7 +853,7 @@ describe('guard', () => {
         bytes: new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
       }),
     ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
-    for (const id of ['tasks', 'comments', 'attachments'])
+    for (const id of ['tasks', 'comments', 'attachments', 'github'])
       expect(findings).toContainEqual(
         expect.objectContaining({
           code: 'PLUGIN_DATA_INVALID',

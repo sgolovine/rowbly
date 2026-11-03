@@ -2,7 +2,7 @@
 
 Every command below takes `--json --no-prompt`.
 
-Plugins add optional features. Rowbly ships nine Built-in Plugins, each with its own reference:
+Plugins add optional features. Rowbly ships ten Built-in Plugins, each with its own reference:
 
 | Plugin | Adds | Reference |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ Plugins add optional features. Rowbly ships nine Built-in Plugins, each with its
 | `attachments` | PNG images on Stories | [Attachments](plugin-attachments.md) |
 | `comments` | Comments on a Story | [Comments](plugin-comments.md) |
 | `story-linking` | Blocking relationships between Stories on the same Board | [Story Linking](plugin-story-linking.md) |
+| `github` | One GitHub PR per Story; live inspection with gh | [GitHub](plugin-github.md) |
 | `git` | Automatic Commits of Rowbly changes | [Git](plugin-git.md) |
 | `software-factory` | A Markdown Stage Prompt for each Stage, for agents | [Software Factory](plugin-software-factory.md) |
 
