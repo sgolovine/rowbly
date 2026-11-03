@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T01:11:48.683Z",
-  "updatedAt": "2026-11-03T01:17:51.914Z",
+  "updatedAt": "2026-11-03T01:32:17.958Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -32,6 +32,13 @@
           "body": "Supervisor: ROW68 plan ACCEPTED with refinements. Bare rowbly starts the TUI, so TUI-only startup check satisfies this Story; commands/JSON/no-prompt/agents make no request and gain no output. Latest stable npm manifest only, no updater/installation feature, failures silent and startup nonblocking. Confirm aborting on exit also clears all timeout/request handles so no rejection or delayed exit; handle stale/unmounted promise resolution safely. ROWBLY_NO_UPDATE_CHECK=1 and demo skip accepted. No need cache/preferences machinery. Preserve readable update text and npm i -g rowbly at normal80-column width; do not accept an unreadable notice merely as a known risk. Use width-aware existing footer conventions, shorten/replace current-version area or a small existing-layout message as needed while retaining usable key hints; show80 and narrow screenshots. Avoid unsolicited new TUI context abstraction if simple existing wiring suffices. ADR0047 is RESERVED for ROW53 guide exception if user approves and0048 reservedROW50heartbeat; use0049 provisionally for ROW68 firstnetworkcall decision, recheck allmain/openPR reservations. Keep ADR concise/current behavior, no reversal of existing decisions. Manual controlled network success/failure/hang/abort scenarios plus exactTUI startup/quit and optout, commandJSON unchanged; fourchecks required. Extend a kept test only if AGENTS required contract/race rules genuinely apply, no mirror tests. All screenshot evidence withagenticTUI, temporary versionoverride outside taskbranch allowed, rawPNGs200. Fetch/merge currentmain before implementation/finalchecks, keep plan scope, noBoardwrites. Proceed.",
           "createdAt": "2026-11-03T01:17:51.913Z",
           "updatedAt": "2026-11-03T01:17:51.913Z"
+        },
+        {
+          "id": "Ub1uqwMk",
+          "author": "sunny",
+          "body": "Supervisor review: do not ship a known added five-second quit delay from the update check as an accepted residual. Prompt exit was part of the accepted plan and this optional notice must not hold the TUI process open. Keep transport changes request-local; do not change or destroy global agents or bypass the configured proxy. Prefer a request-local cancellable agent/transport if small and supported. If native environment-proxy CONNECT cannot safely be cancelled with the supported runtime, skip this optional check when that proxy routing is active and document that limitation; silent unavailable is preferable to adding a quit delay. This is permitted within the existing silent-failure/opt-out scope, not a request for a new proxy implementation. Verify direct success, offline/unreachable, hanging proxy and immediate quit with no update-owned handles left; preserve commands with no request/output. Update ADR0049/docs to match actual behavior, no broad infrastructure. Proceed with this refinement before final handoff; report any remaining design conflict instead of silently accepting delayed exit.",
+          "createdAt": "2026-11-03T01:32:17.957Z",
+          "updatedAt": "2026-11-03T01:32:17.957Z"
         }
       ]
     }
