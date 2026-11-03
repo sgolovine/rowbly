@@ -238,9 +238,10 @@ checks`.
 - **Prefer an event.** If the harness can watch a pull request and wake you when its checks finish,
   a review arrives or the branch conflicts, use it, end your turn and act on the wake. The
   supervisor owns that watch; a worker does not start one. `ROWBLY.md` names the harness's tool.
-- **A worker returns state instead of waiting.** When checks are still running, it reports the PR
-  URL, the exact head SHA and each pending check's name, ends its turn and lets the supervisor
-  resume it. Independent work that needs only the diff, such as a review, does not wait for checks.
+- **A worker returns state instead of waiting.** Independent diff review may start and finish
+  while checks are still running. Complete work that does not depend on CI first. If remaining
+  work needs the checks, report the PR URL, the exact head SHA and each pending check's name,
+  end the turn and let the supervisor resume it.
 - **Fallback: one bounded watch.** Where there is no event, the supervisor starts a single command in
   the background, with the harness's way to resume when it exits, and never a loop of model turns:
 
@@ -248,19 +249,23 @@ checks`.
   timeout 30m gh pr checks <number> --watch --fail-fast --interval 30
   ```
 
-  Watch all checks; `--required` reports nothing on a branch without protection rules. Read the
-  result once, then `gh pr view <number> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup`
-  for the head SHA and the conclusions.
-- **Four different outcomes**, none of which is another:
+  Watch all checks; `--required` reports nothing on a branch without protection rules.
+- **Inspect conclusions after every wake.** An event or any watch exit code is only a wake
+  signal; exit 0 does not prove every check passed. Read once with
+  `gh pr view <number> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup`.
+  Confirm the head SHA still matches the head being processed and inspect the full rollup for
+  that current head before any merge. If it changed, discard the old result and process the new
+  head. Classify actual check conclusions, not the watch exit code:
 
   | Outcome | Sign | Do |
   | --- | --- | --- |
-  | Settled, all passed | exit 0 | continue the Stage's work |
-  | A check failed | exit 1 and a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED` in `statusCheckRollup` | route it as the Stage Prompt says for failed checks; name the check and its link |
-  | No checks yet | exit 1 and "no checks reported", or an empty `statusCheckRollup`, soon after a push | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
-  | Still pending | exit 124 (timeout), or a check with no conclusion | not a failure: report **waiting** with the head SHA and the pending names, or ask |
+  | Settled, all passed | nonempty current-head rollup: every CheckRun is `COMPLETED` with conclusion `SUCCESS`, and every StatusContext has state `SUCCESS` | continue the Stage's work, subject to its other gates |
+  | A check failed | a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED`, or a StatusContext state of `FAILURE` or `ERROR` | route it as the Stage Prompt says for failed checks; name the check and its link |
+  | No checks yet | empty current-head rollup soon after a push (the watch may say "no checks reported") | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
+  | Still pending or wait timed out | unfinished checks or pending StatusContexts, including after the watch's timeout (exit 124) | not a failed check: report **waiting** with the head SHA and the pending names, or ask; do not repeat a timed-out watch |
+  | Terminal result needs a decision | `CANCELLED`, `SKIPPED`, `NEUTRAL`, or any unrecognized terminal conclusion or state | does not establish all passed: follow an explicit policy or ask; never infer success from exit 0 |
 
-  A pull request that cannot be read (no access, wrong repository, closed) is a fourth thing:
+  A pull request that cannot be read or used (no access, wrong repository, closed) is separate:
   report the error and ask. `mergeable` reads `UNKNOWN` for a while after a push to the base
   branch; that is pending too.
 - **Cancel and restart.** A push gives the pull request a new head and new checks, so cancel the

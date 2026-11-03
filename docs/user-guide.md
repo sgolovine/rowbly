@@ -708,10 +708,13 @@ messages and brief), before the retry replaces the failed Run. The retry brief e
 whether to continue the existing work or start again, identifies the instruction authorizing that
 choice, and explains any deliberate restart. Missing context stays unknown; unresolved choices go
 to the user. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
-until you release it. Workers do not poll a pull request's checks: they report the head commit and
-the pending checks and wait, and the supervisor waits with the harness's pull request watch, or with
-one bounded `gh pr checks --watch`. Checks not yet registered and a timed-out wait count as waiting,
-not as a failed check. It runs until you stop it.
+until you release it. Workers may start and finish independent diff review while CI is pending.
+They do not poll a pull request's checks: when remaining work depends on CI, they report the head
+commit and pending checks and yield. The supervisor waits with the harness's pull request watch,
+or with one bounded `gh pr checks --watch`. A wake or watch exit code only prompts inspection of all
+current-head check conclusions; it does not prove every check passed. Cancelled, skipped, neutral
+or unknown terminal results need an explicit policy or decision. Checks not yet registered and a
+timed-out wait count as waiting, not as a failed check. It runs until you stop it.
 
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
