@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T02:26:18.391Z",
+  "updatedAt": "2026-11-03T02:26:19.612Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:11:04.043Z",
+        "finishedAt": "2026-11-03T02:26:18.390Z"
+      }
     },
     "comments": {
       "comments": [
@@ -32,19 +43,15 @@
           "body": "Implementation record: attempt 1; worker mcp:241441f8-f97a-454f-a22a-8f3e445d24ed; machine rook; provider claudeAgent; model claude-sonnet-5-5; PR https://github.com/sgolovine/rowbly/pull/147 branch factory/row-57. All four checks passed, unit78 CLI20. Source: verified remote thread terminal handoff; ignore ROW48 handoff typo saying thinkpad, attached identity is rook.",
           "createdAt": "2026-11-03T02:26:17.083Z",
           "updatedAt": "2026-11-03T02:26:17.083Z"
+        },
+        {
+          "id": "cm2hGoNl",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/147. Adds a \"Waiting for pull request checks\" section to the rowbly-factory skill (event-driven watch first, one bounded gh pr checks --watch as fallback, never model-turn polling), a worker-brief rule that workers return head SHA and pending checks instead of polling, and a user-guide note. No checks registered and timeouts count as waiting, not as a failed check. Proposed In PR step 2 and ROWBLY.md changes are in /tmp/row-57-proposals.md for supervisor review.",
+          "createdAt": "2026-11-03T02:26:19.611Z",
+          "updatedAt": "2026-11-03T02:26:19.611Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:11:04.043Z",
-        "finishedAt": "2026-11-03T02:26:18.390Z"
-      }
     }
   }
 }
