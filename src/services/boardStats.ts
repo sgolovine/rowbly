@@ -78,7 +78,7 @@ export async function boardStats(
             stats.collect({ board: frozenCopy(config.board), stories: frozenCopy(stories), plugin }),
           );
           validateValues(stats.metrics, collected);
-          return collected;
+          return frozenCopy(collected);
         });
       } catch (error) {
         reason = errorMessage(error);

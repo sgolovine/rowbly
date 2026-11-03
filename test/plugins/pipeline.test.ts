@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
 import {
   definePlugin,
+  type PluginBoardStatsContext,
   type PluginChangeSet,
   type PluginContext,
   type PluginHookContext,
@@ -1219,7 +1220,9 @@ async function externalReadBoundary() {
     await expect(
       screen.externalRead('gh-pr-view', { url: 'https://user:password@github.com/owner/name/pull/1' }),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
-    await expect(screen.externalRead('gh-pr-commits', { ...parameters, after: 'invalid cursor' })).rejects.toMatchObject({
+    await expect(
+      screen.externalRead('gh-pr-commits', { ...parameters, after: 'invalid cursor' }),
+    ).rejects.toMatchObject({
       code: 'VALIDATION',
     });
     await expect(screen.externalRead('gh-pr-commits', { ...parameters, query: 'arbitrary' })).rejects.toMatchObject({
@@ -1311,6 +1314,11 @@ async function externalReadBoundary() {
 async function boardStatsBoundary() {
   const t = await pluginRoot({ github: true, probe: true });
   let retained: PluginContext | undefined;
+  let retainedStats: PluginBoardStatsContext | undefined;
+  let invalidResult = false;
+  let pause = false;
+  const entered = deferred();
+  const release = deferred();
   const probe = definePlugin({
     id: 'probe',
     name: 'Probe',
@@ -1318,6 +1326,12 @@ async function boardStatsBoundary() {
     boardStats: {
       metrics: [{ key: 'count', label: 'Count' }],
       async collect({ board, stories, plugin }) {
+        retainedStats = plugin;
+        if (pause) {
+          entered.resolve();
+          await release.promise;
+          plugin.externalReadSignal.throwIfAborted();
+        }
         expect(Object.keys(plugin).sort()).toEqual(['externalRead', 'externalReadSignal', 'inspectBag']);
         expect(Object.isFrozen(board)).toBe(true);
         expect(Object.isFrozen(stories[0]?.plugins?.github)).toBe(true);
@@ -1326,7 +1340,7 @@ async function boardStatsBoundary() {
           PluginError,
         );
         await expect(boardStats(ctx, services, 'web')).rejects.toBeInstanceOf(PluginError);
-        return { count: { status: 'complete' as const, value: stories.length } };
+        return { count: { status: 'complete' as const, value: invalidResult ? -1 : stories.length } };
       },
     },
   });
@@ -1402,6 +1416,58 @@ async function boardStatsBoundary() {
     ]);
     expect(spawn.mock.calls.filter((call) => call[0] === 'gh')).toHaveLength(5);
     expect(await services.stories.list('web', {})).toEqual(saved);
+    await expect(
+      retainedStats?.externalRead('gh-pr-commits', { url: 'https://github.com/owner/name/pull/1' }),
+    ).rejects.toBeInstanceOf(PluginError);
+    const base = saved[0];
+    if (!base || !github.boardStats) throw new Error('missing Stats fixture');
+    let calls = 0;
+    const pages = new Map<string, number>();
+    const bounded = await github.boardStats.collect({
+      board: await services.boards.get('web'),
+      stories: Array.from({ length: 101 }, (_, n) => ({
+        ...base,
+        plugins: { github: { pr: `https://github.com/owner/name/pull/${n + 1}` } },
+      })),
+      plugin: {
+        inspectBag: services.plugins.context('github').inspectBag,
+        externalReadSignal: new AbortController().signal,
+        async externalRead(_name, parameters) {
+          calls++;
+          const page = (pages.get(parameters.url ?? '') ?? 0) + 1;
+          pages.set(parameters.url ?? '', page);
+          return {
+            exitCode: 0,
+            stderr: '',
+            stdout: JSON.stringify({
+              data: {
+                repository: {
+                  pullRequest: {
+                    id: parameters.url,
+                    url: parameters.url,
+                    headRefOid: shas[0],
+                    commits: {
+                      totalCount: 1000,
+                      nodes: Array.from({ length: 100 }, (_, n) => ({
+                        commit: { oid: ((page - 1) * 100 + n).toString(16).padStart(40, '0') },
+                      })),
+                      pageInfo: { endCursor: `page${page}`, hasNextPage: true },
+                    },
+                  },
+                },
+              },
+            }),
+          };
+        },
+      },
+    });
+    expect(calls).toBe(200);
+    expect(Math.max(...pages.values())).toBe(2);
+    expect(bounded).toMatchObject({
+      'linked-prs': { status: 'partial', value: 100 },
+      commits: { status: 'unavailable', value: null },
+    });
+
     fail = true;
     const partial = await boardStats(ctx, services, 'web');
     expect(partial.plugins[0]?.metrics).toMatchObject([
@@ -1414,7 +1480,25 @@ async function boardStatsBoundary() {
       { value: null, status: 'unavailable', reason: 'Plugin is off' },
       { value: null, status: 'unavailable' },
     ]);
+    invalidResult = true;
+    const malformed = await boardStats(ctx, services, 'web');
+    expect(malformed.plugins[1]?.metrics).toMatchObject([{ status: 'unavailable', value: null }]);
+    expect(malformed.metrics[0]?.value).toBe(saved.length);
+    pause = true;
+    const cancelled = new AbortController();
+    const stopped = expect(boardStats(ctx, services, 'web', cancelled.signal)).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    try {
+      await entered.promise;
+      cancelled.abort();
+      await stopped;
+      expect(retainedStats?.externalReadSignal.aborted).toBe(true);
+    } finally {
+      release.resolve();
+    }
   } finally {
+    release.resolve();
     host.dispose?.();
     spawn.mockRestore();
     await t.cleanup();

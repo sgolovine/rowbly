@@ -1,5 +1,6 @@
-import { colorByCategory, colors, describeSource, renderTable } from '../../output';
+import { boardStatText, colorByCategory, colors, describeSource, renderTable } from '../../output';
 import type { BoardConfig, CustomFieldDef, EffectiveBoardConfig } from '../../schemas';
+import type { BoardStats } from '../../services/boardStats';
 
 export function renderBoards(boards: BoardConfig[]): string {
   if (boards.length === 0) return colors.dim('No Boards yet. Create one with `rowbly boards create <id>`.');
@@ -62,4 +63,22 @@ export function renderBoardUpdated(board: BoardConfig): string {
 
 export function renderBoardDeleted(result: { deleted: string }): string {
   return `Deleted Board ${result.deleted}`;
+}
+
+export function renderBoardStats(data: BoardStats): string {
+  const lines = [
+    `${colors.bold(data.board.name)} · Stats`,
+    'All time · current records',
+    'Deleted Stories and historical transitions excluded',
+    '',
+    ...data.metrics.map((metric) => `${metric.label}: ${boardStatText(metric)}`),
+  ];
+  for (const plugin of data.plugins) {
+    lines.push(
+      '',
+      colors.bold(plugin.name),
+      ...plugin.metrics.map((metric) => `${metric.label}: ${boardStatText(metric)}`),
+    );
+  }
+  return lines.join('\n');
 }

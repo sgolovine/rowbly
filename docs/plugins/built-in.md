@@ -19,6 +19,16 @@ Long-text flags are `--<name> <text>`, `--<name>-file <path>` (`-` reads stdin) 
 
 ## GitHub
 
+Board Stats also shows **Linked PRs** (unique current linked PR identities) and **Commits in linked
+PRs** (unique full commit SHAs across them). It uses only existing Stories on that Board, across
+all time. A fixed paginated GraphQL read validates PR identity, head, count and cursor completeness.
+Equivalent links and returned aliases are deduplicated. Failed, invalid or capped sources show
+partial known lower bounds or unavailable values, never invented totals or zeros. The bounds are
+100 candidate PRs, 100 commits/page, 10 pages/PR, 200 pages/refresh, two requests concurrently and
+30 seconds, within the existing per-process limits. No results are saved. GitHub Off keeps its
+metrics visible as unavailable. See [Board Stats](../user-guide.md#boards) and
+[ADR-0054](../agents/adr/0054-board-stats-use-bounded-plugin-reads.md).
+
 The `github` Plugin links one **GitHub PR** to each Story. It is off by default, has no settings and
 needs no Git repository for the Data Root. Enable it with `rowbly plugins enable github`.
 

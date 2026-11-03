@@ -144,3 +144,11 @@ The current Board is the default scope, independent of Board filters. Settings �
 Preferences › **Find Stories in full Data Root** searches every Board and shows Board names;
 opening a result selects its Board. This off-by-default preference is `storyFinderAllBoards`
 in `~/.rowblyrc.json`. A form or modal keeps its keys and never opens the finder.
+
+
+## Board Stats
+
+Settings → Board → Stats, or t from Board details; r refreshes. Current-record all-time Story/Done
+counts and enabled Plugin metrics. Complete numbers are exact; partial numbers are known lower
+bounds with reasons; unavailable is never shown as zero. Previous results stay visible during a
+refresh. Leaving the page cancels requests; no background polling.

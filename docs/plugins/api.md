@@ -64,7 +64,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `reconcile` | Optional pure supported-format reconciliation during Git import, including while Off; see below. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
 | `start({ settings, git, localData })` | Runs each time the Plugin loads. Throwing fails the load. |
-| `externalReads` | Distinct fixed host template names; currently only `gh-pr-view` ([External reads](#external-reads)). |
+| `externalReads` | Distinct fixed host template names; `gh-pr-view` and `gh-pr-commits` ([External reads](#external-reads)). |
 | `requiresGit` | When true, enabling the Plugin requires a Git repository containing the Data Root. |
 | `react` | A reaction for every saved Operation, including other Plugins’ Operations, with the same event and deadline as a named reaction. Runs before the named reaction. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
@@ -72,6 +72,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `commands(group, cli)` | Verbs under `rowbly <id>`. |
 | `options` | Options on core commands. |
 | `filterStories(story, filter, plugin)` | Whether a Story matches the Plugin's filter. |
+| `boardStats` | Declared metric labels and a read-only collector for Board Stats ([Board Stats](#board-stats)). |
 | `storyRows` | Rows for `stories show` and the TUI Story screen. |
 | `storyContext(story, plugin)` | The Plugin's Story Context section, `{ title, text, data, unavailable? }`, or `null` ([Story Context](#story-context)). |
 | `doctor.check({ data, plugin })` | Findings about the Plugin's data. |
@@ -565,14 +566,60 @@ rowbly trace lock-9 stories.get coordination ok wait=publication:2001.3,queue:0.
 - For a TUI part, render one component with `ink-testing-library`, `host.context(id)` and a recording `PluginUi`, and wait for its loaded data before pressing keys (the recipe is in the module header).
 - `pnpm bench:plugins` runs the opt-in performance measurements ([`test/performance/README.md`](../../test/performance/README.md)).
 
+## Board Stats
+
+`PluginBoardStats` declares `metrics: [{key, label}]` and an asynchronous
+`collect({board, stories, plugin})`. Keys are unique lower-kebab-case names; declare 1–16 metrics
+with nonempty labels of at most 100 characters. Declared labels remain visible if the Plugin is Off,
+fails to load or cannot collect. The result is one `BoardStatValue` per declared key:
+
+- `{status: 'complete', value: number}` is an exact nonnegative safe integer.
+- `{status: 'partial', value: number, reason: string}` is a validated known lower bound.
+- `{status: 'unavailable', value: null, reason: string}` has no established count.
+
+`board` and `stories` are detached deeply frozen copies of one coordinated local snapshot, scoped
+to the selected Board. The Data Root lock is released before collection. The collector runs in a
+`board-stats` scope: external reads are allowed, but mutations, nested collection and Git effects
+are refused even through retained contexts. `PluginBoardStatsContext` has only `inspectBag`,
+`externalRead` and `externalReadSignal` at run time. It has no services or operation/file writers.
+The signal combines caller cancellation, Plugin disposal and a 30-second deadline; retained reads
+are refused after collection. Invalid results make this Plugin's metrics unavailable, without
+hiding the core metrics. No data is saved. Core treats Plugin metrics as opaque labelled values.
+
+```ts
+export const statistics = definePlugin({
+  id: 'statistics',
+  name: 'Statistics',
+  description: 'Contribute one read-only Board statistic',
+  boardStats: {
+    metrics: [{ key: 'count', label: 'Existing Stories' }],
+    async collect({ stories }) {
+      return { count: { status: 'complete', value: stories.length } };
+    },
+  },
+});
+```
+
+The host-owned `boardStats` helper is called only by CLI/TUI, outside existing read scopes. It
+collects current records, without date filtering or historical reconstruction. See
+[ADR-0054](../agents/adr/0054-board-stats-use-bounded-plugin-reads.md).
+
 ## External reads
 
 A Plugin declares the fixed templates it uses. `externalRead(name, parameters, { signal }?)` returns
 `{ exitCode, stdout, stderr }`; `ExternalReadName` and `ExternalReadResult` are exported types.
-There is one template, `gh-pr-view`: its only parameter is `url`, an HTTPS URL with exactly
+Both templates take `url`, an HTTPS URL with exactly
 `/owner/repository/pull/<positive integer>` (optional trailing slash), without credentials, ports,
 query, fragment, encoded path parts or extra arguments. The host owns the executable, argv,
-working directory and environment. It runs `gh pr view` with a fixed JSON field selection.
+working directory and environment.
+
+- `gh-pr-view` accepts only `url` and runs `gh pr view` with the existing fixed JSON field selection.
+- `gh-pr-commits` accepts `url` and optional `after` (1–512 base64/base64url characters). A fixed
+  `gh api graphql` query on that URL's host returns PR `id`, canonical `url`, `headRefOid` and
+  `commits { totalCount, nodes { commit { oid } }, pageInfo { endCursor, hasNextPage } }`, with
+  100 commits per page. PR numbers must fit a GraphQL positive signed 32-bit integer. No query,
+  endpoint or arbitrary pagination flags are accepted. The result is still raw stdout/stderr:
+  callers must reject GraphQL errors, invalid data, nonadvancing cursors and incomplete lists.
 
 ```ts
 export const externalReader = definePlugin({
@@ -592,7 +639,7 @@ export const externalReader = definePlugin({
 });
 ```
 
-A live command for that Plugin may call it. Mounted Plugin screens and slots receive a context
+A live command or Board Stats collector for that Plugin may call it. Mounted Plugin screens and slots receive a context
 with a screen lease, allowing effects and timers to call it outside a callback scope. Ordinary
 unscoped contexts cannot call it. Hooks have no API; even a retained surface context refuses calls
 from operation bodies/replacements, transforms, guards, reactions, doctor, fields, filters, rows

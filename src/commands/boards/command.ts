@@ -1,9 +1,17 @@
 import type { Command } from 'commander';
 import { UsageError } from '../../core';
 import { printResult } from '../../output';
+import { boardStats } from '../../services/boardStats';
 import { storyCountsByStage } from '../../services/boards';
 import { boardFlag, confirmDestructive, pluginOptions, promptIfMissing, withContext } from '../shared';
-import { renderBoardCreated, renderBoardDeleted, renderBoardShow, renderBoards, renderBoardUpdated } from './render';
+import {
+  renderBoardCreated,
+  renderBoardDeleted,
+  renderBoardShow,
+  renderBoardStats,
+  renderBoards,
+  renderBoardUpdated,
+} from './render';
 import type { BoardOptions } from './types';
 
 export function registerBoards(program: Command): void {
@@ -54,6 +62,17 @@ export function registerBoards(program: Command): void {
         const effective = await services.config.effective(boardId);
         const storyCounts = await storyCountsByStage(ctx, boardId);
         printResult({ ...effective, storyCounts }, { json: globals.json, human: renderBoardShow });
+      }),
+    );
+
+  boards
+    .command('stats [id]')
+    .description('Show all-time counts of current Board records and Plugin statistics')
+    .action(async (id: string | undefined, _opts: unknown, cmd: Command) =>
+      withContext(cmd, async ({ ctx, services, globals }) => {
+        const boardId = await services.context.resolveBoard(id ?? boardFlag({}));
+        const data = await boardStats(ctx, services, boardId);
+        printResult(data, { json: globals.json, human: renderBoardStats });
       }),
     );
 

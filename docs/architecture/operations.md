@@ -210,3 +210,20 @@ change the Story's `updatedAt`. See [ADR-0048](../agents/adr/0048-stage-run-hear
 
 GitHub adds no mutation operation of its own: its flags and form supply the input above.
 `github status` is an external read, never an operation; it saves no PR status.
+
+
+## Board Stats (read only)
+
+`boards stats [id]` uses `services/boardStats.ts`, not an Operation. It returns
+`{board: {id, name}, window: "all-time", metrics, plugins: [{id, name, metrics}]}`. Each metric has
+`key`, `label`, `status: complete|partial|unavailable`, `value` (a nonnegative count or `null` when
+unavailable), and a reason for partial/unavailable results. Partial counts are established lower
+bounds. Core counts existing Stories and those currently in Stage Category `done`.
+
+The helper reads configuration, Stories and enabled Plugin entries in one coordinated scope, then
+closes it before invoking declared `boardStats` collectors with detached frozen copies. Calls from
+existing read scopes or Plugin callbacks are refused. Collectors have no mutation capabilities,
+run with a 30-second cancellation deadline and transport Plugin-owned metrics without core knowing
+their terms. GitHub uses the fixed paginated `gh-pr-commits` template for currently linked PR
+identities and unique commit SHAs. No counts, external responses or historical events are saved.
+See [ADR-0054](../agents/adr/0054-board-stats-use-bounded-plugin-reads.md).

@@ -1,3 +1,4 @@
+export * from './boardStats';
 export * from './cascade';
 export * from './colors';
 export * from './render';

@@ -1198,8 +1198,9 @@ export interface PluginDefinition<
   options?: PluginOptionsMap<In, FS>;
   /** Whether `story` matches this Plugin's filter, parsed by `storyFilterSchema` when declared. */
   filterStories?(story: Story, filter: z.output<FS>, plugin: PluginContext<S>): boolean;
-  /** Rows for `stories show` and the TUI Story screen. */
+  /** Declared read-only Board metrics, including labels for unavailable sources (ADR-0054). */
   boardStats?: PluginBoardStats;
+  /** Rows for `stories show` and the TUI Story screen. */
   storyRows?(story: Story, plugin: PluginContext<S>): Promise<PluginRow[]>;
   /**
    * This Plugin's section of the Story's context (`PluginContext.storyContext`), or `null` when it
