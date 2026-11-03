@@ -11,6 +11,8 @@ import {
   useKeyHints,
   useState,
 } from '../../plugin-api/tui';
+import { currentHeartbeat, DEFAULT_STALE_AFTER_MINUTES, liveness } from './liveness';
+import { type Heartbeat, readRunMetadata } from './runMetadata';
 import { currentRun, StageRunBag } from './stageRuns';
 
 /** How often a running Stage Run's ages refresh while the tab shows it. */
@@ -43,6 +45,18 @@ export function StageRunTab({ story, active, plugin }: PluginStoryTabProps) {
     return () => clearInterval(timer);
   }, [plugin, running, story]);
 
+  // The heartbeat is in the Run details file: keep the last one shown while it reloads.
+  const [heartbeat, setHeartbeat] = useState<Heartbeat | null | 'unavailable'>(null);
+  useEffect(() => {
+    let live = true;
+    void readRunMetadata(plugin, story).then((state) => {
+      if (live) setHeartbeat(currentHeartbeat(state));
+    });
+    return () => {
+      live = false;
+    };
+  }, [plugin, story]);
+
   if (plugin.inspectBag(story, StageRunBag).kind === 'invalid')
     return <Text color={theme.danger}>The Stage Run is unavailable: invalid Plugin Data; run `rowbly doctor`.</Text>;
   if (!run)
@@ -53,6 +67,7 @@ export function StageRunTab({ story, active, plugin }: PluginStoryTabProps) {
       </Box>
     );
   const at = (timestamp: string) => `${formatDate(timestamp)} · ${relativeDate(timestamp, now)}`;
+  const seen = running ? liveness(run, heartbeat, now, DEFAULT_STALE_AFTER_MINUTES) : null;
   return (
     <DetailView
       rows={[
@@ -71,6 +86,14 @@ export function StageRunTab({ story, active, plugin }: PluginStoryTabProps) {
           label: running ? 'Running for' : 'Took',
           value: elapsedText(run.startedAt, run.finishedAt ? new Date(run.finishedAt) : now),
         },
+        ...(seen
+          ? [
+              {
+                label: 'Last seen',
+                value: `${seen.heartbeat === 'unavailable' ? 'unavailable; run rowbly doctor' : seen.lastSeenAt ? at(seen.lastSeenAt) : 'not reported'}${seen.stale ? ' · stale: check the worker' : ''}`,
+              },
+            ]
+          : []),
         ...(run.reason ? [{ label: 'Reason', value: <Text wrap="wrap">{run.reason}</Text> }] : []),
       ]}
     />

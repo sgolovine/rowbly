@@ -129,7 +129,8 @@ tell the user what is missing and how to fix it, and stop.
    require independent verification from a launch receipt or harness result, followed by
    `run attach` for this exact Run and Board publication. Opaque metadata needs explicit repair.
    Reconcile unknown/conflicting launch state before clearing or retrying; ask the user when it
-   cannot be resolved. Do not start a duplicate or infer failure from age alone.
+   cannot be resolved. Do not start a duplicate or infer failure from age alone. Finding the worker
+   is not activity: touch only on what it has done since (see [Stale Runs](#stale-runs)).
 
 Then tell the user the Board, the Stages that have a Stage Prompt on, the worker limit and model, and
 where workers run. One supervisor works a Board: if the user says another one is running, stop.
@@ -144,8 +145,8 @@ Run until the user stops you. Do not wait for the user between events.
    background, with the harness's way to run a command and resume when it exits. It returns as soon
    as `runs` differs from that digest (a Story entered a Stage whose Stage Prompt is on, or a Stage
    Run or eligibility changed), at once if it already does, or with `changed: false` after the
-   timeout. Act on what it returns as on `runs`. Worker messages do not reach it: resume on them
-   as well, and keep the timeout as long as your check on quiet workers allows. Stop the wait (a signal) when you stop.
+   timeout, or once when a running Stage Run becomes stale. Act on what it returns as on `runs`.
+   Worker messages do not reach it: resume on them as well. Stop the wait (a signal) when you stop.
    Never wait on a digest newer than the `runs` you acted on. Re-read `software-factory stages`
    before each start, so a Stage Prompt the user changed or turned off takes effect.
 2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
@@ -165,6 +166,8 @@ Run until the user stops you. Do not wait for the user between events.
    was. If eligibility cannot be read, report the error and start nothing from
    that result. Existing running workers are still supervised normally.
 6. **Act on each worker message**, as in [Worker messages](#worker-messages).
+7. **Stale Runs.** Check each running Stage Run whose `liveness.stale` is true, as in
+   [Stale Runs](#stale-runs).
 
 Report each start, retry, finish, failure, question and Board change to the user in one short line.
 
@@ -307,8 +310,33 @@ Workers end messages with these markers, as the brief asks:
 | `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end. |
 | `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move. |
 
-A worker that stops with no final marker, or has written nothing for a long time, needs a look:
-ask it for its state. If it is gone, run `run fail` with what you know.
+Each message from a worker, and each event its harness reports for it (a turn starting or ending,
+a commit pushed), is verified activity: record it as the Stage Run's heartbeat.
+
+```sh
+rowbly software-factory run touch <KEY> --stage <stage> --attempt <attempt> --started-at <startedAt> \
+  --worker <worker> --source "<what you saw, such as: worker message, PLAN>" --json --no-prompt
+```
+
+Copy the Run and worker from `runs`. Touch only on activity you saw: not on polling, on the thread
+being reachable, or on a status such as `completed` or `running`. Exit 4 means the Run changed or
+has no attached worker: read `runs` again and do not attach just to touch. Exit 6: report it.
+
+## Stale Runs
+
+`runs` marks a running Stage Run `stale` when its worker has not been seen (its heartbeat, else its
+start) for 15 minutes, or `--stale-after <minutes>` given to both `runs` and `wait`. Stale asks you
+to check; it never permits clearing, failing, retrying or starting another worker by itself.
+
+1. Find the worker through its attached identity and read its thread.
+2. New activity since `lastSeenAt` (a message, a turn, a commit): touch with that as `--source`.
+3. Waiting for a person, or for an answer you owe it: leave the Run as it is and tell the user once.
+   Do not touch for waiting.
+4. Verifiably gone (the harness reports the thread missing or ended with no final marker, and asking
+   it for its state gets no reply): `run fail <KEY> --reason "<what you checked>"`; the usual retry
+   rule then applies.
+5. You cannot tell (the machine is unreachable, the evidence conflicts): report it to the user and
+   leave the Run alone.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
 

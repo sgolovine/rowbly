@@ -61,11 +61,12 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0030](0030-git-work-runs-outside-the-data-root-lock.md) | Git work runs in a queue outside the Data Root lock | Accepted |
 | [0035](0035-manual-sync-rebases-in-a-temporary-worktree.md) | Manual Sync rebases in isolation and never force-pushes | Accepted |
 | [0039](0039-software-factory-stage-prompts.md) | Stage Prompts are per-Stage settings with Markdown files in the Plugin's folder | Accepted; amended by 0047 |
-| [0040](0040-stage-runs-record-the-current-visit.md) | A Stage Run records one agent's work on a Story's current visit to a Stage | Accepted; amended by 0043, 0045 and 0046 |
+| [0040](0040-stage-runs-record-the-current-visit.md) | A Stage Run records one agent's work on a Story's current visit to a Stage | Accepted; amended by 0043, 0045, 0046 and 0048 |
 | [0043](0043-a-hold-keeps-a-story-out-of-stage-runs.md) | A hold keeps a Story out of Stage Runs and lives in its own Plugin file | Accepted |
 | [0045](0045-reported-board-commands-are-checked-and-applied-by-rowbly.md) | Rowbly checks a worker's reported Board commands and applies them through the CLI | Accepted |
 | [0046](0046-verified-workers-use-current-run-metadata.md) | Verified workers use metadata bound to the current Stage Run | Accepted; amends 0040 |
 | [0047](0047-plugins-read-rowbly-md-as-inert-text.md) | A Plugin command can read `ROWBLY.md` as inert text | Accepted |
+| [0048](0048-stage-run-heartbeats-are-attested-evidence.md) | A Stage Run heartbeat records attested worker activity, and staleness only asks for a check | Accepted |
 
 ### Development
 
