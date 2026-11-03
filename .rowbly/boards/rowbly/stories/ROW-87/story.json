@@ -12,5 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:37:45.012Z",
-  "updatedAt": "2026-11-03T23:37:45.012Z"
+  "updatedAt": "2026-11-03T23:39:18.442Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aroOVSTy9",
+          "name": "image-20261103-2339.png",
+          "type": "image/png",
+          "size": 130741,
+          "createdAt": "2026-11-03T23:39:18.440Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
 }
