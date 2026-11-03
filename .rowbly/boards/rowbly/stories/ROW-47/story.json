@@ -104,6 +104,13 @@
           "updatedAt": "2026-11-03T04:37:18.026Z"
         },
         {
+          "id": "YGMcg5r8",
+          "author": "sunny",
+          "body": "Supervisor applied reviewed coordinated ROW47/48 configuration: InPR independent review and exact-head merge gate plus returned-work/failure routing; InProgress verified samePR continuation and handoff with head SHA, validation, numbered finding responses and implementation records before move. ROWBLY guide stage summary and live-catalog reviewer model rule updated; same provider allowed, all actual author models excluded. Preserved current step2 pending ROW57 separate wait-policy application; no overwrite from stale full proposals. Guide commit dcbcd196. Supervisor typecheck PASS, lint PASS, unit78 PASS, CLI21 PASS; doctor clean. No product edits or cleanup/evidence removal.",
+          "createdAt": "2026-11-03T04:39:33.831Z",
+          "updatedAt": "2026-11-03T04:39:33.831Z"
+        },
+        {
           "id": "ZISWaS2X",
           "author": "sunny",
           "body": "Plan ACCEPTED for scoped additive main integration of SAME PR149 branch row-47-independent-review-gate at verified 801ae8ffc1c2356e315bed70bb2e565de49d8c4f. Keep Returned work followed by Independent review, each once, preserving all complementary main rules and earlier fixes. Use isolated worktree, normal fast-forward push, all four checks once under bounded lease, actual generated brief assembly on throwaway Data Root; retain prior evidence and numbered responses. No product expansion or .rowbly edits. The selectedReviewer section appended to this In Progress brief was supervisor assembly error: 37cf3370 is this correction worker, not an independent reviewer. Ignore that section for this Run; omit it outside independent review. A fresh reviewer after this correction must use a model different from every actual implementer (Opus and Sol); same provider allowed, options do not count as model difference. Later factory PRs stay held behind149. Supervisor-owned proposal changes remain outside worker scope.",
@@ -137,13 +144,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
-        },
-        {
-          "id": "YGMcg5r8",
-          "author": "sunny",
-          "body": "Supervisor applied reviewed coordinated ROW47/48 configuration: InPR independent review and exact-head merge gate plus returned-work/failure routing; InProgress verified samePR continuation and handoff with head SHA, validation, numbered finding responses and implementation records before move. ROWBLY guide stage summary and live-catalog reviewer model rule updated; same provider allowed, all actual author models excluded. Preserved current step2 pending ROW57 separate wait-policy application; no overwrite from stale full proposals. Guide commit dcbcd196. Supervisor typecheck PASS, lint PASS, unit78 PASS, CLI21 PASS; doctor clean. No product edits or cleanup/evidence removal.",
-          "createdAt": "2026-11-03T04:39:33.831Z",
-          "updatedAt": "2026-11-03T04:39:33.831Z"
         }
       ]
     }
