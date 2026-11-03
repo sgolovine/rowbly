@@ -55,17 +55,17 @@ export interface StagePromptsOverview {
 }
 
 /** Where a level keeps its files: the Data Root's or the Board's Plugin folder. */
-function scopeOf(level: Level, board: string | undefined): FileScope {
+export function scopeOf(level: Level, board: string | undefined): FileScope {
   return level === 'board' && board ? { board } : 'dataRoot';
 }
 
 /** The folder of this Plugin at a level, relative to the Data Root, ending in `/`. */
-function folderOf(level: Level, board: string | undefined): string {
+export function folderOf(level: Level, board: string | undefined): string {
   return `${level === 'board' ? `boards/${board}/` : ''}plugins/${PLUGIN_ID}/`;
 }
 
 /** The file a new Stage Prompt gets, inside the Plugin folder. */
-function defaultName(stage: string): string {
+export function defaultName(stage: string): string {
   return `stage-prompts/${stage}.md`;
 }
 
@@ -85,7 +85,7 @@ export function resolvePath(level: Level, board: string | undefined, path: strin
 }
 
 /** The Stage Prompt entries stored in a raw settings value; an unreadable one reads as none (doctor reports it). */
-function entriesOf(raw: unknown): Entries {
+export function entriesOf(raw: unknown): Entries {
   const parsed = Settings.safeParse(raw ?? {});
   return parsed.success ? parsed.data.stagePrompts : {};
 }
@@ -101,7 +101,7 @@ function storedEntries(raw: unknown, where: string): Entries {
 }
 
 /** The raw settings of this Plugin in a Board's `board.config.json`, without `enabled`. */
-function boardBag(plugins: Record<string, unknown> | undefined): Record<string, unknown> {
+export function boardBag(plugins: Record<string, unknown> | undefined): Record<string, unknown> {
   const { enabled: _enabled, ...bag } = (plugins?.[PLUGIN_ID] ?? {}) as Record<string, unknown>;
   return bag;
 }
@@ -234,7 +234,7 @@ export function checkTarget(target: Target): Target {
 }
 
 /** Reads a level's entries from the Change Set and writes them back with `update` applied. */
-async function updateEntries(
+export async function updateEntries(
   changes: PluginChangeSet,
   plugin: PluginReadContext,
   target: Target,

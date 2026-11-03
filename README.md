@@ -177,7 +177,7 @@ save, the next Rowbly command finishes or undoes it, so Rowbly never reads half 
 ## The board
 
 `rowbly` opens the Board in a full-screen terminal app. Stages sit side by side: Backlog first, then the
-Stages you configure (Todo and In Progress to start), then Done. Each Story shows its Story Key, Priority
+Stages you configure (TODO and In Progress to start), then Done. Each Story shows its Story Key, Priority
 and name.
 
 | Key | What it does |
@@ -212,7 +212,7 @@ Moved WEB-4 to todo
 $ rowbly stories list --open --sort priority
 KEY    NAME            STAGE          PRIORITY  LABELS  DUE
 WEB-1  Password reset  ● In Progress  P1        auth
-WEB-4  Sign-up form    ● Todo         P2
+WEB-4  Sign-up form    ● TODO         P2
 WEB-2  Theme picker    ● Backlog
 WEB-3  CSV export      ● Backlog
 ```

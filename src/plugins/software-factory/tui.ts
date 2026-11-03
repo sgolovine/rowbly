@@ -1,4 +1,5 @@
 import type { PluginTui } from '../../plugin-api';
+import { FactorySetupScreen } from './FactorySetupScreen';
 import { StagePromptHeader } from './StagePromptHeader';
 import { StagePromptsScreen } from './StagePromptsScreen';
 import { StageRunTab } from './StageRunTab';
@@ -6,8 +7,11 @@ import { currentRun } from './stageRuns';
 
 export const tui: PluginTui = {
   stageHeader: StagePromptHeader,
-  screens: { 'stage-prompts': StagePromptsScreen },
-  settings: [{ label: 'Stage Prompts', screen: 'stage-prompts', scopes: ['global', 'board'] }],
+  screens: { 'stage-prompts': StagePromptsScreen, 'factory-setup': FactorySetupScreen },
+  settings: [
+    { label: 'Stage Prompts', screen: 'stage-prompts', scopes: ['global', 'board'] },
+    { label: 'Factory setup', screen: 'factory-setup', scopes: ['board'] },
+  ],
   storyTabs: [{ label: 'Stage Run', component: StageRunTab }],
   /** `▶ running` or `✕ failed` for this visit's Stage Run, with `#n` after the first attempt. */
   cardBadge({ story, plugin }) {

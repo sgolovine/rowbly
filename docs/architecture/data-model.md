@@ -86,7 +86,7 @@ No known roots preserves the home-folder fallback and first-run onboarding/setup
 1. `rowbly.config.json` (global);
 2. `board.config.json` (Board).
 
-A Board uses the most specific level that defines the list. Lists are not merged: the Board's list replaces the global one. With no list anywhere, a Board has the built-in Stages `todo` and `in-progress`, and no Custom Fields. Changing a level that has no list of its own first copies the inherited list to that level.
+A Board uses the most specific level that defines the list. Lists are not merged: the Board's list replaces the global one. With no list anywhere, a Board has the built-in Stages `todo` (TODO) and `in-progress` (In Progress), and no Custom Fields. Changing a level that has no list of its own first copies the inherited list to that level.
 
 Every Board starts with the fixed Stage `backlog` (Backlog) and ends with the fixed Stage `done` (Done); neither is stored, and their keys cannot be configured ([ADR-0024](../agents/adr/0024-backlog-and-done-are-fixed-stages.md)). A configured Stage has a `key` and a `name`, and sits between them; the list may be empty. A Stage's Stage Category follows from where it is: `backlog`, `board` for every configured Stage, or `done`. A Custom Field has a `key`, a `name`, an optional `description`, `required`, and a type: `text`, `number` (with optional `min`, `max`, `integer`), `boolean`, `date`, `url`, `select` or `multiselect` (with `options`).
 

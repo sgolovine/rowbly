@@ -1,6 +1,6 @@
 # ADR-0024: Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage
 
-**Status:** Accepted. Built. Amends ADR-0005 and ADR-0016.
+**Status:** Accepted. Built. Amends ADR-0005 and ADR-0016. §3's name Todo amended to TODO by [ADR-0053](0053-software-factory-setup-gives-default-stages-and-stage-prompts.md).
 
 The Stage Categories were `todo`, `in_progress` and `done`, and every Stage in a configured list chose one. A Board could have no Stage in `done`, several Stages in `done`, or a `done` Stage in the middle, so the board view could not group Stories into "not started", "on the board" and "finished" without guessing. The board's list view needs those three groups.
 

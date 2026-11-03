@@ -279,6 +279,7 @@ included), off by default, set globally or per Board; a Board's entry for a Stag
 
 ```sh
 rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
+rowbly software-factory setup --board web --json --no-prompt   # adds missing todo/in-progress/in-review Stages and default Stage Prompts; keeps every Stage, entry and file; {board, stages: [{key, name, outcome}], prompts: [{key, outcome, source, enabled, path, reason?}]}
 rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
 rowbly software-factory runs --board web [--stale-after <min>] --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null, liveness|null, runMetadata, eligibility}], staleAfterMinutes, digest}
