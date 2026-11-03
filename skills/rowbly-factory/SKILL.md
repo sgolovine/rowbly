@@ -194,7 +194,10 @@ Report each start, retry, finish, failure, question and Board change to the user
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
    attestation and Me; it does not contact the harness. Identical repeats write nothing; conflicting
    identity is refused. Preserve another section's values when adding current-Run metadata.
-5. Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
+5. Retain the verified thread identity and exact worktree/branch paths in a supervisor-owned
+   [resource record](references/cleanup.md) outside the checkout. Add private daemon directories
+   as workers report them; complete the merged PR/head/base fields before cleanup.
+   Publish the attachment as [Board persistence](#board-persistence) says, then send the full brief
    and GO. Attachment or publication failure means no GO; inspect the recorded Run and reconcile.
 6. A confirmed failed launch uses `run fail <KEY> --reason "<why>"`. If launch success is uncertain,
    reconcile the receipt and actual harness state first; do not retry, clear or start another worker
@@ -262,6 +265,12 @@ A worker that stops with no final marker, or has written nothing for a long time
 ask it for its state. If it is gone, run `run fail` with what you know.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
+
+After a PR is verified merged and its worker is finished, follow
+[completion cleanup](references/cleanup.md) on the owning machine. This is a supervisor completion
+step, not a new Stage Prompt or a sweep of historical Stories. Retain explicit resource ownership
+at launch; cleanup defaults to dry run, requires fresh harness inactivity and an exclusive resource
+lease, and retains remote refs and all evidence branches. Unknown or active resources stay.
 
 ## Apply a worker's commands
 
