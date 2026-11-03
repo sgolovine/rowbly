@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-03T16:20:59.857Z"
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "high"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "bug hunting: GPT Sol default",
+    "fallback": null,
+    "usage": "unknown",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-03T16:20:59.857Z"
+  }
+}
