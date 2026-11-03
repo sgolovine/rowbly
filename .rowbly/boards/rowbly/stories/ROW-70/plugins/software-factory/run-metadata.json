@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
-    "at": "2026-11-03T17:27:37.483Z",
-    "source": "Verified rook/T3 assistant messages from mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4; snapshot /tmp/rowbly-factory-session/ROW-70-poll.json; SHA256 6a11031e17e5dc4df42762df19ae3316d984df895373b4a989ba5309066e80f5",
+    "at": "2026-11-03T17:29:54.061Z",
+    "source": "Verified rook/T3 assistant messages from mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4; snapshot /tmp/rowbly-factory-session/ROW-70-poll.json; SHA256 c18cf0b8cb077df50e46e9e0ab56d712bdf36a1de1476f2c5b94422f9de24a65",
     "by": "sunny"
   }
 }
