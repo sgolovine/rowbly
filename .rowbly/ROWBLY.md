@@ -6,7 +6,9 @@
 - **In Progress**: a person moves a Story here when it is ready to build. The factory takes it to a
   draft PR with `rowbly-dev` (its Stage Prompt), then moves it to In PR.
 - **In PR**: the factory merges the PR when it is ready and moves the Story to Done, or sends it back
-  to In Progress when a review requests changes (its Stage Prompt).
+  to In Progress, with its branch and PR, when a review requests changes, a check fails or it
+  conflicts with `main` (its Stage Prompt). It asks when a conflict involves another open PR or a
+  stack layer.
 - **Done**: merged.
 
 Rowbly data is committed on `main` and pushed; the Git Plugin commits each change (Automatic
@@ -51,6 +53,10 @@ Resolution On).
 - Coding uses Claude Opus (latest version) by default.
 - Bug hunting uses GPT Sol (latest version).
 - Refinement and PR writing use Claude Opus.
+- Review (In PR) uses a new worker whose model differs from every implementing model in the
+  verified implementation records. The same provider is allowed; changing effort or options does
+  not qualify. Choose an available eligible model from the live catalog; ask when provenance is
+  unknown or no eligible model is available.
 - The supervisor checks how much usage is left in the current period for each provider. When Claude
   usage is running low, it starts new threads on GPT, and vice versa.
 
