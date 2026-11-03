@@ -29,6 +29,10 @@ An agent the Supervisor starts for one Stage Run. It follows the Stage Prompt an
 changes it wants instead of making them.
 _Avoid_: runner, bot
 
+**Hold**:
+A person's request, with a reason, that no Stage Run start for a Story until they release it, so they
+can work it by hand. It stays through Stage changes and leaves the Story's Stage Run as it is.
+
 **Reported block**:
 The fenced `rowbly` block in which a Worker reports the Board changes it wants. The Supervisor
 checks and applies it with `software-factory apply`, which refuses it whole when any line is not an

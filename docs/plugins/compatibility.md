@@ -60,6 +60,8 @@ These are requirements for the release that first loads code that does not ship 
 | Specs | Markdown files at Board and Story scope | none; Markdown need not carry a version. A release before ADR-0025 reads only the Story Spec `spec.md` and ignores a Story's other Story Specs |
 | Tasks | Story bag `{ "nextNumber": n, "tasks": [ … ] }` | legacy v1 (no `version` key) |
 | Comments | Story bag `{ "comments": [ … ] }` | legacy v1 (no `version` key) |
+| Software Factory | Story bag `{ "stageRun": { … } }` | legacy v1 (no `version` key) |
+| Software Factory | Story file `plugins/software-factory/hold.json` | explicit `version: 1`; kept in a file, not the bag, so a release without holds never drops it ([ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)). A file that does not parse, has another `version` or unknown fields, or is a symbolic link counts as held, is never rewritten, and doctor reports it |
 | Software Factory | Story file `plugins/software-factory/run-metadata.json`; independent optional identity, selection, heartbeat bound to `{stage, attempt, startedAt}` | explicit `version: 1`; strict nested schemas; unknown fields refused |
 | Story Linking | Story bag `{ "blocks": ["<Story Key>", …] }` on the blocking Story; incoming links are derived | v1 (no `version` key); strict schema refuses unknown fields |
 

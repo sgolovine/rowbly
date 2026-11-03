@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T01:56:40.553Z",
+  "updatedAt": "2026-11-03T02:19:45.212Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:e241b183-309f-40b0-9372-d0ce552c97a2",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:12:18.396Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "xNYuVPaY",
+          "author": "sunny",
+          "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
+          "createdAt": "2026-11-03T02:19:45.211Z",
+          "updatedAt": "2026-11-03T02:19:45.211Z"
+        }
+      ]
     }
   }
 }

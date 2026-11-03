@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T02:03:06.562Z",
+  "updatedAt": "2026-11-03T02:26:08.359Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -29,6 +29,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "6FJvzxiW",
+          "author": "sunny",
+          "body": "Terminal handoff received; PR146 registered in supervisor thread. Your fenced block omits the required rowbly prefix on both lines. Please resend the same own-Story Comment+move with full rowbly prefixes and FACTORY-DONE ROW-50; no implementation changes needed. Keep current Run/branch/PR and do not start another worker. Proposed guide change held until independent review/merge.",
+          "createdAt": "2026-11-03T02:26:08.358Z",
+          "updatedAt": "2026-11-03T02:26:08.358Z"
+        },
         {
           "id": "pqncR2ap",
           "author": "sunny",

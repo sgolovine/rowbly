@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-pr",
+    "attempt": 1,
+    "startedAt": "2026-11-03T02:23:04.427Z"
+  },
+  "identity": {
+    "worker": "mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406",
+    "verification": {
+      "source": "Native t3_thread_launch/read/configuration verified independent fresh Sol high, full-access, explicit existing worktree, RESERVED; /tmp/rowbly-factory-session/ROW-53-review-verified.json and ROW-53-review-config.json",
+      "verifiedAt": "2026-11-03T02:23:05.111Z",
+      "by": "sunny"
+    }
+  }
+}
