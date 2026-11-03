@@ -41,6 +41,13 @@
           "updatedAt": "2026-11-03T02:26:06.777Z"
         },
         {
+          "id": "Ka28SCJs",
+          "author": "sunny",
+          "body": "APPROVED exact head 79ab63d8b6c1b9cc56fdcb30a22c4caf3c612dde. Independent review: https://github.com/sgolovine/rowbly/pull/151#issuecomment-6594964986. Typecheck and lint passed; unit 78 and CLI 21 passed. Controlled throwaway worktree removal and fail-closed cases passed; screenshot HTTP 200. Merged https://github.com/sgolovine/rowbly/pull/151 as 029b726707f7e21e0864346069d11ef325cfd6ae. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41574506079. Production adapter/lease remains required; remote refs, evidence cleanup and automatic branch deletion remain deferred. No actual resources or settings changed.",
+          "createdAt": "2026-11-03T04:16:08.189Z",
+          "updatedAt": "2026-11-03T04:16:08.189Z"
+        },
+        {
           "id": "KxmOCKHu",
           "author": "sunny",
           "body": "Retry2 recovered the preserved cleanup draft on factory/row-61 at 501a2a53 and safely merged origin/main. Continuing the accepted plan: dry-run-first owned local cleanup, mandatory supervisor harness inactivity checks, exact recorded daemon state ownership, protected refs and guarded local deletion. No real resources, remote refs, pr-assets, Board files or repository settings will be changed. Linked evidence remains retained indefinitely pending ROW-65.",
@@ -67,13 +74,6 @@
           "body": "Implementation record before Stage change: verified authoring history initial Opus partial script71348b9f plus Sol continuationc4d7a92b. Current implementing worker mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d on thinkpad model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/151. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
           "createdAt": "2026-11-03T03:35:19.978Z",
           "updatedAt": "2026-11-03T03:35:19.978Z"
-        },
-        {
-          "id": "Ka28SCJs",
-          "author": "sunny",
-          "body": "APPROVED exact head 79ab63d8b6c1b9cc56fdcb30a22c4caf3c612dde. Independent review: https://github.com/sgolovine/rowbly/pull/151#issuecomment-6594964986. Typecheck and lint passed; unit 78 and CLI 21 passed. Controlled throwaway worktree removal and fail-closed cases passed; screenshot HTTP 200. Merged https://github.com/sgolovine/rowbly/pull/151 as 029b726707f7e21e0864346069d11ef325cfd6ae. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41574506079. Production adapter/lease remains required; remote refs, evidence cleanup and automatic branch deletion remain deferred. No actual resources or settings changed.",
-          "createdAt": "2026-11-03T04:16:08.189Z",
-          "updatedAt": "2026-11-03T04:16:08.189Z"
         }
       ]
     }

@@ -27,6 +27,20 @@
           "updatedAt": "2026-11-03T02:03:07.459Z"
         },
         {
+          "id": "NRcpDT2D",
+          "author": "sunny",
+          "body": "Implementation record before return to In PR: verified Sol correction worker mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b rook, branch factory/row-60 PR145 heade3e2b691a624119696f925c5ef02dfbafb1a700c, original Opus and Sol authored work. New controlled local validation allfour PASS unit78 CLI20 with exacthead unchanged, original failure preserved. Fresh reviewer must differ from both authors; shared merge hold149->147->146->145 persists.",
+          "createdAt": "2026-11-03T04:15:58.069Z",
+          "updatedAt": "2026-11-03T04:15:58.069Z"
+        },
+        {
+          "id": "TSI6LsBH",
+          "author": "sunny",
+          "body": "Authorized controlled local validation PASS at unchanged head e3e2b691a624119696f925c5ef02dfbafb1a700c. Typecheck, lint, unit78/78 and CLI20/20 ran once sequentially under the bounded shared lease after measured CPU-headroom admission, with original timeout and external telemetry. No source/test/dependency changes or retries. Original timeout evidence preserved; no historical cause inferred. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595244682. PR remains draft and unmerged.",
+          "createdAt": "2026-11-03T04:16:00.803Z",
+          "updatedAt": "2026-11-03T04:16:00.803Z"
+        },
+        {
           "id": "V5tVZQ0I",
           "author": "sunny",
           "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
@@ -95,20 +109,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "NRcpDT2D",
-          "author": "sunny",
-          "body": "Implementation record before return to In PR: verified Sol correction worker mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b rook, branch factory/row-60 PR145 heade3e2b691a624119696f925c5ef02dfbafb1a700c, original Opus and Sol authored work. New controlled local validation allfour PASS unit78 CLI20 with exacthead unchanged, original failure preserved. Fresh reviewer must differ from both authors; shared merge hold149->147->146->145 persists.",
-          "createdAt": "2026-11-03T04:15:58.069Z",
-          "updatedAt": "2026-11-03T04:15:58.069Z"
-        },
-        {
-          "id": "TSI6LsBH",
-          "author": "sunny",
-          "body": "Authorized controlled local validation PASS at unchanged head e3e2b691a624119696f925c5ef02dfbafb1a700c. Typecheck, lint, unit78/78 and CLI20/20 ran once sequentially under the bounded shared lease after measured CPU-headroom admission, with original timeout and external telemetry. No source/test/dependency changes or retries. Original timeout evidence preserved; no historical cause inferred. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595244682. PR remains draft and unmerged.",
-          "createdAt": "2026-11-03T04:16:00.803Z",
-          "updatedAt": "2026-11-03T04:16:00.803Z"
         }
       ]
     }
