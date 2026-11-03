@@ -12,10 +12,31 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.194Z",
-  "updatedAt": "2026-11-02T23:27:44.748Z",
+  "updatedAt": "2026-11-03T00:06:06.839Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:57:59.376Z"
+      }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "x5XiPkgY",
+          "author": "sunny",
+          "body": "Supervisor review: Sidecar/attach approach approved in principle; before implementation, coordinate exact common schema with ROW60 and return it for one final interface acceptance. Use run-metadata.json bound to stage/attempt/startedAt and keep legacy bag shape intact except updating worker string through attach. Identity and selection must be independently optional sections so selection can be recorded for a failed launch without an attached worker; same-Run writes preserve the other owner's section. Common file reader/writer belongs to49, selection mutations/policy to60. v1 must not strip unknown/future data; reject unsupported versions and preserve unreadable bytes, report via doctor. Stale metadata must never identify a later Run. Attach expected-Run guard under operation lock, refuse conflicting identity replacement, identical repeats no changes; guard against transforms invalidating the final Run/ref. CLI records supervisor attestation of verification (source/identity), not a claim that Rowbly contacted T3 by itself. Reserve0046. Existing failure/preservation tests; no new test file or >100 total. I am relaying the same boundary to60 now; do not independently design two files/schemas.",
+          "createdAt": "2026-11-03T00:06:06.837Z",
+          "updatedAt": "2026-11-03T00:06:06.837Z"
+        }
+      ]
     }
   }
 }

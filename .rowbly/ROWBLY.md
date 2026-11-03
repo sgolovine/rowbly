@@ -9,21 +9,24 @@
   to In Progress when a review requests changes (its Stage Prompt).
 - **Done**: merged.
 
-Rowbly data is committed on `main` and pushed; the Git Plugin commits each change.
+Rowbly data is committed on `main` and pushed; the Git Plugin commits each change (Automatic
+Commits On, frequency `change`) and `rowbly git sync` pushes it (Automatic Merge Conflict
+Resolution On).
 
 ## The factory (`rowbly-factory`)
 
 - **Supervisor**: runs on the main computer, in the main checkout on `main`, with
-  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It pushes `main` after it applies
-  Board changes, so workers get them by merging `origin/main`.
+  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It runs `rowbly git sync` after each
+  `run start` (before the brief), each worker block it applies and each `run finish` or `run fail`,
+  so workers get Board changes by merging `origin/main`.
 - **Workers run on the supervisor's computer (`thinkpad`) or the server `rook`**
   (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
   ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
   that is intended, not a fallback for sub-agents.
 - **Rook's checkout.** After the supervisor updates its own checkout, it updates rook's shared
-  checkout `~/Projects/rowbly` over SSH the same way: a cleanup commit and cleanup PR for any
-  uncommitted changes, then `git pull --ff-only` on `main`. Only the supervisor pulls there, at
-  start, before any worker runs.
+  checkout `~/Projects/rowbly` over SSH the same way: Rowbly changes saved there first through the
+  Git Plugin, a cleanup commit and cleanup PR for any other uncommitted changes, then
+  `git pull --ff-only` on `main`. Only the supervisor pulls there, at start, before any worker runs.
 - **Memory on rook.** Check `free -h` there before each start, and start nothing while less than
   about 6 GB is available.
 - **Worker model**: chosen per Stage and usage (see Model Selection), unless the user names another.

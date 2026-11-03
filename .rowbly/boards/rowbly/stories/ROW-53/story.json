@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-02T23:48:23.717Z",
+  "updatedAt": "2026-11-03T00:06:05.511Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -29,6 +29,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "BumPpY4P",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/140. Adds a read-only Story Context (ADR-0044): each Built-in Plugin (Tasks, Specs, Comments, Epics, Story Linking, Attachments, Assignees) gives a section, and PluginContext.storyContext reads them all, listing every Plugin that failed to load or whose section failed or is partial in 'incomplete'. 'rowbly software-factory brief <KEY>' prints the context part of a worker's brief (Story with all sections, Stage Prompt, Stages, instructions and retry context). It is deterministic and exits 4 with details.incomplete unless --allow-incomplete is given. The factory skill uses it, and the worker-brief template (with the ROW-63 and ROW-66 rules) stays as the rules block and fallback. Not done yet: reading ROWBLY.md waits for the user's approval of a read-only exception; the brief leaves a placeholder for the supervisor. Checks: typecheck, lint, test:unit (78) and test:cli (20) pass.",
+          "createdAt": "2026-11-03T00:06:05.510Z",
+          "updatedAt": "2026-11-03T00:06:05.510Z"
+        },
         {
           "id": "NrXfQbOh",
           "author": "sunny",
