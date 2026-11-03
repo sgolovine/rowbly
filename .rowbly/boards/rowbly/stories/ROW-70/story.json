@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T18:00:44.287Z",
+  "updatedAt": "2026-11-03T18:00:44.958Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -110,6 +110,13 @@
           "body": "PR157 corrected at d78c1c1021a1bf21e21523303483694d531f5d75: https://github.com/sgolovine/rowbly/pull/157. 1. Pagination inconsistencies exclude tainted commit contributions across every alias; identity changes prevent exact PR counts. 2. Malformed declarations cannot crash Stats; valid labels remain unavailable while core and healthy metrics survive. Existing contracts extended; total stays 100. Typecheck PASS, lint PASS, unit 79 PASS, CLI 21 PASS. Final CI snapshot: all six checks SUCCESS, none pending; draft PR mergeable. Evidence: https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611552729. Worktree and assets retained; private daemon stopped.",
           "createdAt": "2026-11-03T18:00:44.286Z",
           "updatedAt": "2026-11-03T18:00:44.286Z"
+        },
+        {
+          "id": "D5tavg52",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"threadId\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"machine\":\"rook\",\"harness\":\"t3\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/fb16809589f2249deba8c73dbe38f60a.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-correction-sol-1\",\"branch\":\"factory/row-70-correction-sol-1\",\"remoteBranch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"d78c1c1021a1bf21e21523303483694d531f5d75\",\"scope\":\"Both P2 corrections, existing contract extensions, documentation, validation and evidence; no subagents\"}",
+          "createdAt": "2026-11-03T18:00:44.957Z",
+          "updatedAt": "2026-11-03T18:00:44.957Z"
         }
       ]
     }
