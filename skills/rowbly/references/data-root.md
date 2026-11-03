@@ -135,5 +135,7 @@ from. To change them, see [Setup and configuration](setup.md).
 
 - `ROWBLY_BOARD` stands in for `--board`.
 - `ROWBLY_DEBUG=trace` prints each operation and Plugin step to stderr.
+- `ROWBLY_NO_UPDATE_CHECK=1` stops the TUI from asking npm for a newer release at startup. Commands
+  never ask.
 - `NO_COLOR` and `FORCE_COLOR` control colour. `ROWBLY_ROOT` is no longer supported: a run with it set
   exits 2.
