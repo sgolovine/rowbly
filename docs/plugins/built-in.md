@@ -460,10 +460,21 @@ rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
+rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-run]   # check a worker's reported block, then run what it allows
 ```
 
 Writes default to the Board level (`--board`, then the current Board). `stages` and `prompt show`
 show the effective Stage Prompts without `--level`, and one level alone with it.
+
+`apply` checks a worker's reported `rowbly` block against an allowlist of commands that write only
+the given Story, refuses the whole block when any line fails, holds a `stories move` until the
+Story's Stage Run is finished (drops it after a failed one), and runs each allowed line as its own
+`rowbly` command through `runCommand`, stopping at the first failure
+([ADR-0045](../agents/adr/0045-reported-board-commands-are-checked-and-applied-by-rowbly.md)). It
+runs the move with `--finished-run <stage>/<attempt>/<startedAt>`: the Plugin's option on
+`stories move` (its `stories.move` input `{ finishedRun: { stage, attempt, startedAt } }`), whose
+guard refuses the move (`CONFLICT`) unless that Run is still the visit's finished Stage Run when the
+move is saved, under the Data Root lock.
 
 `stages --json` returns `{ board, stagesSource, stages: [{ key, name, category, prompt }] }`, where
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
