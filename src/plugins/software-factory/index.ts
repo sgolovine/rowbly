@@ -3,7 +3,7 @@ import { commands } from './commands';
 import { doctor } from './doctor';
 import { holdText, readHold } from './holds';
 import { PLUGIN_ID, Settings } from './stagePrompts';
-import { currentRun, endVisit, runText, StageRunBag } from './stageRuns';
+import { currentRun, endVisit, guardFinishedRun, MoveInput, parseRunRef, runText, StageRunBag } from './stageRuns';
 
 export const softwareFactory = definePlugin({
   id: PLUGIN_ID,
@@ -12,8 +12,24 @@ export const softwareFactory = definePlugin({
   settings: Settings,
   bags: { story: StageRunBag },
   commands,
+  inputs: { 'stories.move': MoveInput },
+  options: {
+    'stories move': {
+      options: [
+        {
+          flags: '--finished-run <stage/attempt/startedAt>',
+          description: "move only while this is the visit's finished Stage Run",
+        },
+      ],
+      input: ({ finishedRun }) =>
+        finishedRun === undefined ? undefined : { finishedRun: parseRunRef(String(finishedRun)) },
+    },
+  },
   hooks: {
-    'stories.move': { transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin) },
+    'stories.move': {
+      transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin),
+      guard: ({ changes, result, pluginInput, plugin }) => guardFinishedRun(changes, result.key, pluginInput, plugin),
+    },
     'stories.update': { transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin) },
   },
   async storyRows(story, plugin) {

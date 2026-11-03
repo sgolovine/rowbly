@@ -304,7 +304,7 @@ rowbly stories edit <KEY> [--name <n>] [description flags]
                     [--priority <P> | --no-priority]
                     [--label <l>… | --add-label <l>… | --remove-label <l>…]
                     [--due <date> | --no-due] [--field key=value …] [--unset-field <key>…]
-rowbly stories move <KEY> <stage> [--top]
+rowbly stories move <KEY> <stage> [--top] [--finished-run <stage>/<attempt>/<startedAt>]
 rowbly stories rank <KEY> (--before <KEY>|--after <KEY>|--top|--bottom)
 rowbly stories delete <KEY>                          # confirms; pass --yes when not interactive
 ```
@@ -454,6 +454,7 @@ rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
 rowbly software-factory hold <story> --reason <text>   # no Stage Run starts until it is released
 rowbly software-factory release <story>
+rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-run]   # check a worker's reported block, then run what it allows
 ```
 
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
@@ -474,8 +475,26 @@ rowbly software-factory release <story>
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
+- `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>` moves the Story only
+  while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
+  Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
+  changes nothing.
 - `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`.
   `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
+- `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
+  ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
+  `reject`. A line may only edit or move the Story given, or change its Comments, Tasks, Story
+  Specs or the links it blocks (`story-linking add|remove <KEY> --blocks`); it is split with shell
+  quoting but never run by a shell. Shell syntax (`;`, `|`, `$(…)`, …), another Story, a line that
+  writes another Story (`--blocked-by`), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--edit`, `--*-file` or `--finished-run` are rejected, and then nothing
+  runs (exit 2, every line's decision in `details.commands`). A `stories move` runs last and only
+  once the Story's Stage Run is finished; it is held while the Stage Run runs or when there is none,
+  and dropped after a failed one. `apply` runs it with `--finished-run`, so it exits 4 (`CONFLICT`)
+  and moves nothing when the Stage Run was cleared or replaced while the earlier lines ran. Each allowed line runs as its own `rowbly` command on the same Data Root with
+  `--json --no-prompt`; the first that fails stops the block, the lines before it stay applied, and
+  `apply` exits with that command's code. `--dry-run` only shows the decisions.
+  `--json` returns `{ key, stageRun, dryRun, commands: [{ line, text, argv, decision, reason?, exitCode?, output? }] }`.
 - `wait` blocks until `runs` differs from `--since <digest>` (without it, from `runs` when the wait
   starts), then prints `runs` with `changed: true`. That happens when a Story enters or leaves a
   Stage whose Stage Prompt is on, a Stage Prompt is turned on or off, or a Stage Run starts, ends or
@@ -631,7 +650,8 @@ and grants no implementation permission. Install with
 one Stage Prompt that is on and written (not the template), and an agent harness that can start
 threads. It starts a worker for each Story that arrives in such a Stage, up to 4 at once by default,
 records a Stage Run for it, and is the only agent that changes the Board: workers report the
-`rowbly` commands their Stage Prompt asks for, and it applies them. A failed Stage Run is retried
+`rowbly` commands their Stage Prompt asks for, and it checks and applies them with
+`rowbly software-factory apply`. A failed Stage Run is retried
 once unless `ROWBLY.md` or the Stage Prompt says otherwise. Before starting the retry, the supervisor
 captures the previous Run and recovers existing work from the Story, Comments and identified worker's
 messages: outcome, failure reason, branch, worktree/machine and PR when known, with sources and

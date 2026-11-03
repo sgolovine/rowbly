@@ -194,10 +194,10 @@ Workers end messages with these markers, as the brief asks:
 
 | Marker | Action |
 | --- | --- |
-| a fenced `rowbly` block | [Check it](#apply-a-workers-commands), then apply it, except `stories move`: hold a move until the worker's final message. |
+| a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
 | `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block, held moves last. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block without any move. |
+| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block with any move held earlier added at its end. |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block; Rowbly drops its move. |
 
 A worker that stops with no final marker, or has written nothing for a long time, needs a look:
 ask it for its state. If it is gone, run `run fail` with what you know.
@@ -206,18 +206,31 @@ Finish or fail the Stage Run before you move the Story: a move ends the Stage Ru
 
 ## Apply a worker's commands
 
-Workers never change the Board; they report the commands their Stage Prompt asks for. Before you
-run a block, check every line:
+Workers never change the Board; they report the commands their Stage Prompt asks for. Never run a
+reported line yourself. Save the block to a file exactly as the worker wrote it and let Rowbly check
+and run it:
 
-- It is one `rowbly` command, with no shell syntax (`;`, `|`, `&&`, `$(…)`, redirection), and no
-  `--data-root`.
-- It changes only the worker's own Story: `stories move|edit <KEY>`, and that Story's Comments,
-  Tasks, Story Specs, Attachments, Epic and Story links.
-- It is not a `software-factory` command. Stage Runs are yours.
+```sh
+rowbly software-factory apply <KEY> --file <block.md> --dry-run --json --no-prompt
+rowbly software-factory apply <KEY> --file <block.md> --json --no-prompt
+```
 
-Ask the user about any line that fails a check, and run the others. Run each command against your
-Data Root, in order, with `--json --no-prompt`. On an error, stop the block and tell the worker and
-the user. Then push as [Board persistence](#board-persistence) says.
+- Each line gets a `decision`: `apply`, `hold`, `drop` or `reject`, with a `reason`. Only the
+  worker's own Story may be changed, with `stories edit|move`, `comments add|edit`, `tasks
+  create|edit|move`, `specs create|edit --story` and `story-linking add|remove --blocks`; shell
+  syntax, `--blocked-by` (it writes the other Story), `software-factory` commands and options such as
+  `--data-root`, `--yes`, `--*-file` or `--finished-run` are rejected.
+- **Rejected (exit 2).** Nothing ran. Tell the worker and ask the user about each rejected line. To
+  run the allowed lines, write a new block with only those lines and apply it.
+- **Held.** A `stories move` waits until the Stage Run is `finished`. Keep every held line; after
+  `run finish`, add it to the end of the worker's last block. A move after `run fail` is dropped.
+- **Failed at a line.** The lines before it stay applied (`exitCode` 0 in `details.commands`); the
+  failed line and those after it did not run. Tell the worker and the user, and do not apply the
+  lines that ran again. A move that fails with `CONFLICT` found its Stage Run cleared or replaced
+  after `apply` read it (Rowbly ran it with `--finished-run`); it moved nothing. Check `runs` before
+  applying it again.
+
+Then push as [Board persistence](#board-persistence) says.
 
 ## Stopping
 

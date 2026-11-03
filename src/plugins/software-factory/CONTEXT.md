@@ -33,6 +33,13 @@ _Avoid_: runner, bot
 A person's request, with a reason, that no Stage Run start for a Story until they release it, so they
 can work it by hand. It stays through Stage changes and leaves the Story's Stage Run as it is.
 
+**Reported block**:
+The fenced `rowbly` block in which a Worker reports the Board changes it wants. The Supervisor
+checks and applies it with `software-factory apply`, which refuses it whole when any line is not an
+allowed command that writes only the Worker's Story, and holds a move until the Stage Run is
+finished; the move it runs names that Stage Run, and is refused when it is no longer the visit's.
+_Avoid_: patch, script
+
 ## Stage Prompts and ROWBLY.md
 
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not
