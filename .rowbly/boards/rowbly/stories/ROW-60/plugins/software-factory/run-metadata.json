@@ -15,5 +15,11 @@
       "verifiedAt": "2026-11-03T05:33:03.593Z",
       "by": "sunny"
     }
+  },
+  "heartbeat": {
+    "worker": "mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337",
+    "at": "2026-11-03T05:34:46.668Z",
+    "source": "Verified rook/T3 assistant messages from mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337; snapshot /tmp/rowbly-factory-session/ROW-60-poll.json; SHA256 40a9ca8b0adf79f8b3841ff6bed4453e1f69c8c5de3f2a9a79f468dc2fa44f13,62d76d21b6597c21dbdce112697a3e10f448f30696c1d832058497248b8e9314,52e84cb4d67252a7de139942670c9e12dddcc346c7f06206d6ee07dbe0670508",
+    "by": "sunny"
   }
 }
