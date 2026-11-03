@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T03:22:49.979Z",
+  "updatedAt": "2026-11-03T04:00:44.106Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -91,6 +91,13 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "fUB1qJOd",
+          "author": "sunny",
+          "body": "PR145 correction pushed to factory/row-60 at e3e2b691a624119696f925c5ef02dfbafb1a700c. Both review findings addressed; current main integrated; fresh CLI screenshots and policy proposal posted. Typecheck, lint and CLI20 pass locally. Local unit77/78 has the storage timeout assigned to ROW48; no rerun or timeout increase. All six exact-head CI checks pass, including unit78. Draft remains unmerged; independent review required.",
+          "createdAt": "2026-11-03T04:00:44.105Z",
+          "updatedAt": "2026-11-03T04:00:44.105Z"
         }
       ]
     }
