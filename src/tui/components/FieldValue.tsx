@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import type { FormField } from './Form';
+import { SearchableSelect } from './SearchableSelect';
 import { TextArea } from './TextArea';
 import { TextInput } from './TextInput';
 
@@ -26,6 +27,15 @@ export function FieldValue({
     case 'boolean':
       return <Text>{raw === true ? '[x] yes' : '[ ] no'}</Text>;
     case 'select':
+      if (field.searchable)
+        return (
+          <SearchableSelect
+            field={field}
+            value={typeof raw === 'string' ? raw : null}
+            focused={focused}
+            onChange={onChange}
+          />
+        );
       return <Text>{`‹ ${typeof raw === 'string' ? (field.optionLabels?.[raw] ?? raw) : '—'} ›`}</Text>;
     case 'multiselect': {
       const checked = Array.isArray(raw) ? raw : [];
