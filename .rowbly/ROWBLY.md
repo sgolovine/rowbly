@@ -38,7 +38,7 @@ Resolution On).
   `git pull --ff-only` on `main`. Only the supervisor pulls there, at start, before any worker runs.
 - **Memory on rook.** Check `free -h` there before each start, and start nothing while less than
   about 6 GB is available.
-- **Worker model**: chosen per Stage and usage (see Model Selection), unless the user names another.
+- **Worker model**: chosen per Stage (see Model Selection), unless the user names another.
 - **Retries**: the default, one.
 
 ### Capacity and Remote Machines
@@ -49,16 +49,21 @@ Resolution On).
 
 ### Model Selection
 
-- The supervisor chooses each worker's model from the Stage being run and the usage limits.
+- The supervisor chooses each worker's model from the Stage being run and the target harness's live
+  catalog. Record its exact provider instance/model IDs, complete typed options, policy rule and any
+  fallback with `run start --provider --model --rule` (see the `rowbly-factory` skill).
 - Coding uses Claude Opus (latest version) by default.
 - Bug hunting uses GPT Sol (latest version).
 - Refinement and PR writing use Claude Opus.
 - Review (In PR) uses a new worker whose model differs from every implementing model in the
-  verified implementation records. The same provider is allowed; changing effort or options does
-  not qualify. Choose an available eligible model from the live catalog; ask when provenance is
-  unknown or no eligible model is available.
-- The supervisor checks how much usage is left in the current period for each provider. When Claude
-  usage is running low, it starts new threads on GPT, and vice versa.
+  verified implementation records, including correction workers. The same provider is allowed;
+  changing effort or options does not qualify. Choose an available eligible model from the live
+  catalog; ask when provenance is unknown or no eligible model is available.
+- Keep variety across workers while preserving those defaults and every independent-review gate.
+- Remaining usage is unknown: no supported tool here reports it. Never estimate or infer a quota.
+  On an observed usage/rate limit, or when the user says a provider is low, choose another available
+  provider/model and record `--fallback "<reason>"` with `--usage observed-limit` or
+  `--usage user-stated`. Otherwise record `--usage unknown` (the default).
 
 ### Starting workers on rook
 
@@ -91,8 +96,11 @@ node skills/rowbly-factory/scripts/launch-worker.mjs launch \
 - **Model selection**: for example
   `{"instanceId":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}`.
 - **Stage Run first.** Use the worker's thread id as its Stage Run `--worker`. Launch with a short
-  reservation as the brief, run `run start <KEY> --worker <threadId>`, and only when that succeeds
-  send the full brief with GO (same flags as above, without the launch-only ones):
+  reservation as the brief, then run `run start <KEY> --worker <threadId> --provider <planned-instanceId>
+  --model <planned-modelId> --rule "<rule>"` with the planned JSON-scalar `--option` values
+  (for example `--option 'reasoningEffort="high"'`) and any fallback/usage source. Keep the worker
+  reserved until selection comparison, attachment and publication below succeed; only then send
+  the full brief with GO (same flags as above, without the launch-only ones):
 
   ```bash
   node skills/rowbly-factory/scripts/launch-worker.mjs send \
@@ -107,14 +115,21 @@ node skills/rowbly-factory/scripts/launch-worker.mjs launch \
   on thinkpad; never edit or delete them. Archive a worker only when done with it: its request then
   reports `conflict` and starts nothing, and a new worker needs a new title.
 
-Keep each launched worker reserved and waiting for GO. After `run start`, retain its returned
-`stage`, `attempt` and `startedAt`, then attach the verified launch receipt through
+Keep each launched worker reserved and waiting for GO. Before attachment/publication/GO, compare
+its actual provider instance/model IDs and complete typed options with the recorded planned
+selection, ignoring option order. Extra, missing or duplicate option IDs and type/value differences
+are mismatches: fail the Run with the verified reason and keep intent unchanged. Missing, empty or
+malformed identity/configuration evidence is unverified, not a proven mismatch. Unknown or
+unverified outcomes require receipt/remote-harness reconciliation, without GO or a duplicate.
+After `run start`, retain its returned `stage`, `attempt` and `startedAt`, then attach the verified
+launch receipt through
 `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at <startedAt>
 --worker <threadId> --machine rook --harness t3 --thread-id <threadId> --source "<receipt>"`.
 For local workers use machine `thinkpad`; never resolve a rook thread through thinkpad's tools.
-The CLI records the supervisor's attestation; it does not contact T3. Publish the attachment before
-sending the full brief and GO. If attachment or publication fails, keep the worker reserved and
-reconcile rather than launching another. A definite failed launch ends the Stage Run with its
+The CLI records the supervisor's attestation; it does not contact T3. Retain the verified identity
+and exact worktree/branch paths in the supervisor-owned resource record as the factory skill says.
+Publish the selection and attachment before sending the full brief and GO. If attachment or
+publication fails, keep the worker reserved and reconcile rather than launching another. A definite failed launch ends the Stage Run with its
 reason; an uncertain launch requires checking the durable receipt and remote harness first.
 On supervisor restart use `runs --json` current `runMetadata.identity` to find the machine, harness
 and thread. Legacy titles are unverified hints; an unreachable machine does not prove absence.
