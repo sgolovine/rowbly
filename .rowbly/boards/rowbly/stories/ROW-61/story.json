@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T03:35:21.355Z",
+  "updatedAt": "2026-11-03T03:35:22.631Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 2,
+        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:04:34.806Z",
+        "finishedAt": "2026-11-03T03:35:21.354Z"
+      }
     },
     "comments": {
       "comments": [
@@ -60,19 +71,15 @@
           "body": "Implementation record before Stage change: verified authoring history initial Opus partial script71348b9f plus Sol continuationc4d7a92b. Current implementing worker mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d on thinkpad model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/151. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
           "createdAt": "2026-11-03T03:35:19.978Z",
           "updatedAt": "2026-11-03T03:35:19.978Z"
+        },
+        {
+          "id": "07fJCe3r",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/151 opened at 79ab63d8b6c1b9cc56fdcb30a22c4caf3c612dde. Implements dry-run-first owned local cleanup, mandatory harness inactivity and exclusive lease checks, protected refs, guarded branch deletion, exact task daemon shutdown and completion guidance. Typecheck, lint, 78 unit tests and 21 CLI tests passed; temporary-repository race/refusal and daemon checks passed. Screenshot uploaded and verified HTTP 200. Successful worktree removal remains unverified because unreadable process information correctly caused retention. Remote refs, all pr-assets and delete_branch_on_merge remain conditional/deferred; no existing repository resources deleted or settings changed. Coordinate ROW-65 retention/shared docs. CI Verify passed; remaining checks pending at handoff.",
+          "createdAt": "2026-11-03T03:35:22.630Z",
+          "updatedAt": "2026-11-03T03:35:22.630Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 2,
-        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:04:34.806Z",
-        "finishedAt": "2026-11-03T03:35:21.354Z"
-      }
     }
   }
 }
