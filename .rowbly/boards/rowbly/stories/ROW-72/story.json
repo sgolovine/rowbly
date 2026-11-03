@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T06:16:03.350Z",
+  "updatedAt": "2026-11-03T06:31:40.966Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -26,6 +26,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "AmUx3wdo",
+          "author": "sunny",
+          "body": "ROW-72 API ADDENDUM ACCEPTED for implementation, with the following binding clarifications. This completes plan acceptance for the remaining scope; continue the same worker/worktree.\n\nThe ordered discriminated results, missing-file behavior, duplicate handling, validation before acquisition, unchanged single-read APIs, bounded request batches, separate existing Finder inventory calls, and fresh per-build search loader are accepted. No Plugin callback runs under the Data Root lock. Keep existing inventory atomicity; no outer whole-Board/Data Root scope or cross-build cache.\n\nError classification must preserve coordination and core data integrity at every depth: publication/lock/recovery errors reject the whole call with the original error; DATA_INTEGRITY encountered while resolving a Board/Story scope also rejects the whole call, rather than being converted into a per-file failed result. Scope resolution can read core JSON, so not every error inside the entry loop is a tolerant file error. Ordinary per-file filesystem/path-policy errors and missing scope NOT_FOUND follow the documented per-entry contract. No blanket catch/retry fallback. Epics may display ordinary unreadable entries but must propagate acquisition/core-integrity failures to its existing caller boundary. Finder may omit that Plugin's unavailable search text at the documented loader boundary without retrying or hiding Stories.\n\nDocument the listMany 256-name threshold as a soft stopping threshold evaluated after a complete scope, not a hard maximum on names, filesystem calls or time. One scope may exceed it. The 32-entry read limit likewise does not bound scope-resolution I/O/time. Preserve the FIFO release/reacquire behavior between batches and make no stronger fairness claim than the actual coordinator guarantees.\n\nExtend existing required storage/Plugin contract test homes without increasing the suite beyond 100. In addition to the planned publication/recovery assertion, cover representative ordered/missing/per-entry failure results and whole-call failure classification (including corrupt core scope resolution), plus a deterministic inter-batch queued-mutation barrier if the existing checks do not already establish the claimed release/fairness behavior. These are contract/pipeline/race checks, not exhaustive per-input tests. Compiled API documentation fixtures must cover the public types and loader. Maintain existing tests and full four-check validation.\n\nADR-0052 is provisionally reserved for this Story, subject to your fresh collision check across origin/main and active PRs before writing/publishing; ROW-69's 0051 reservation remains separate. Do not reverse an accepted ADR. Include all relevant API/storage/operation/user-guide/skill reference documentation updates where behavior changed.\n\nYou may capture final agentic-tui evidence after the API portion; no separate interim screenshot run is required. Use the already reported private state directory and preserve linked evidence. Report the exact location/type/ownership of the pristine baseline archive/copy and any other new comparison resources in your handoff; retain them, with no production cleanup assumed.\n\nKeep measurements phase-specific: the reported core improvement does not imply enrichment/Finder index improved. Provide the complete before/after 71/501, Plugins on/off, quiet/synthetic-lock-cost results and I/O-counting limits, plus original-cause uncertainty. If remaining measured Finder cost warrants caching beyond this accepted design, stop and report before adding it. Canonical selection absence remains audited, not backfilled.",
+          "createdAt": "2026-11-03T06:31:40.965Z",
+          "updatedAt": "2026-11-03T06:31:40.965Z"
+        },
         {
           "id": "Gvc5xEtE",
           "author": "sunny",
