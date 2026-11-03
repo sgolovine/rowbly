@@ -4,10 +4,31 @@ The Story has a draft PR. Merge it when it is ready, then finish the Story.
 
 1. **Find the PR** in the Story's Comments, or with `gh pr list --search <KEY>`. If there is none, or
    more than one, ask.
-2. **Wait for GitHub.** Mergeability reads `UNKNOWN` for a while after any push to `main`, the
-   supervisor's Board commits included, and checks may not be registered yet. Wait until
-   `gh pr view <n> --json mergeable,mergeStateStatus,statusCheckRollup,reviewDecision` settles and
-   every check has finished.
+2. **Wait for GitHub without polling.** Mergeability reads `UNKNOWN` for a while after any push to
+   `main`, and checks may not be registered yet. Do not loop on `gh pr view` or `gh pr checks`; every
+   look costs a model turn. Follow `ROWBLY.md` ("Waiting for checks") and the factory skill's
+   "Waiting for pull request checks":
+   - The supervisor owns the wait. Independent diff review may start and finish while CI is pending;
+     do not defer launching or completing it solely because checks are pending. Complete work that
+     does not depend on CI first. If remaining work needs the checks, report the PR URL, the exact
+     head SHA and each pending check's name, end your turn and let the supervisor resume you. Do not
+     start a watch, timer or poller.
+   - On any wake or watch exit, read the result once:
+     `gh pr view <n> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision`.
+     Use all checks, not `--required`. Confirm the head matches the head being processed; if it
+     changed, discard the old result and process the new head. No exit code, including 0, proves
+     every check passed.
+   - All passed requires a nonempty current-head rollup: every CheckRun is `COMPLETED` with
+     conclusion `SUCCESS`, and every StatusContext has state `SUCCESS`. Continue to step 3, with
+     ROW-47's independent review and approval gates still required.
+   - An actual failed conclusion (`FAILURE`, `TIMED_OUT`, `ACTION_REQUIRED`, or a StatusContext state
+     of `FAILURE` or `ERROR`) routes as step 5 says; name the check and its link. Step 5 remains
+     ROW-48's failure and return policy.
+   - No checks registered yet, pending checks, or an elapsed wait timeout mean waiting: report the
+     head SHA and pending names, or ask; never infer failure or route to repair from those alone.
+   - `CANCELLED`, `SKIPPED`, `NEUTRAL` or any unrecognized terminal conclusion or state do not establish
+     all passed: follow an explicit policy or ask for a decision. An unreadable or unusable PR is
+     separate: report the error and ask.
 3. **Independent review.** You review this PR; you did not write it. Do it while checks run; it
    does not wait for them.
    - Check the filled Implementation records section appended after the generated brief: it must
