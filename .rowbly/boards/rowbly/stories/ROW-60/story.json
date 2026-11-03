@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:16:14.677Z",
+  "updatedAt": "2026-11-03T05:18:36.939Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -175,6 +175,13 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "ejlXNuKs",
+          "author": "sunny",
+          "body": "Independent reviewer reports remaining CONFIG empty provider/model/runtime strings classified conflict despite unusable evidence; equivalent CLI values now unverified. This is within accepted uncertainty-versus-proven-mismatch scope. Request evidence-backed numbered finding with deterministic actual-script reproduction and source location, then Changes Requested/Returned to In Progress handoff for SAMEPR145/currenthead. Preserve original twelve fixture results and all evidence. Current four-check attempt stopped at CPU admission75 BEFORE checks, capacity waiting not test failure; do not delay known blocking review or rerun checks automatically. Reviewer changes no product. Supervisor finishes Run before move and fresh correction worker receives narrow plan gate.",
+          "createdAt": "2026-11-03T05:18:36.938Z",
+          "updatedAt": "2026-11-03T05:18:36.938Z"
         }
       ]
     }
