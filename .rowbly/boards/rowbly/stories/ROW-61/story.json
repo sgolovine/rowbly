@@ -12,19 +12,51 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T02:11:38.406Z",
+  "updatedAt": "2026-11-03T03:04:35.598Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "EVUVthgu",
+          "author": "sunny",
+          "body": "Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:71348b9f-de59-4060-97e8-c806ec1f5588 on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-61 (thinkpad), branch factory/row-61, HEAD501a2a5, untracked clean-up-task.mjs draft preserved. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-61-failed-attempt1-context.json.",
+          "createdAt": "2026-11-03T02:37:47.779Z",
+          "updatedAt": "2026-11-03T02:37:47.779Z"
+        },
+        {
+          "id": "JtjwWzQ1",
+          "author": "sunny",
+          "body": "REVISED PLAN ACCEPTED with final constraints. Implement dry-run-by-default explicit-owned-resource cleanup and per-task daemon isolation, no real repository resources/settings cleanup now. Never delete remote refs or pr-assets. Report those criteria as conditional/deferred, not already deleted/satisfied. Coordinate ROW65 indefinite linked-evidence retention. Local compare-and-delete must recheck branch not checked out in any other worktree immediately before action; protect main/default/base/control branches. Daemon stopping requires the EXACT task-owned nondefault state directory recorded for this Story, not merely any nondefault env value and CWD match; otherwise retain/report. Prefer stopping via that daemon's own scoped API, recheck PID identity before any signal, never shared/unknown process. Supervisor harness inactivity/ownership checks mandatory even when no CWD process. No archive of threads. A1/A2 ROW65 Git changes separate. Four checks and meaningful temporary-repo failure/race checks as planned; use existing regression test home if a race-fix contract requires it under AGENTS. No ADR for guidance alone. All .rowbly and delete_branch_on_merge settings remain proposals, not execution.",
+          "createdAt": "2026-11-03T02:26:06.777Z",
+          "updatedAt": "2026-11-03T02:26:06.777Z"
+        },
+        {
+          "id": "sbndiBQz",
+          "author": "sunny",
+          "body": "User explicitly authorized Continue existing work for retry2 on fresh Sol (Claude session limit). Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:71348b9f-de59-4060-97e8-c806ec1f5588 on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-61 (thinkpad), branch factory/row-61, HEAD501a2a5, untracked clean-up-task.mjs draft preserved. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-61-failed-attempt1-context.json. Prior failed Run: {\"stage\": \"in-progress\", \"status\": \"failed\", \"attempt\": 1, \"worker\": \"mcp:71348b9f-de59-4060-97e8-c806ec1f5588\", \"by\": \"sunny\", \"startedAt\": \"2026-11-03T02:11:37.662Z\", \"finishedAt\": \"2026-11-03T02:35:59.747Z\", \"reason\": \"Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry.\"}. Prior Run metadata preserved: {\"version\": 1, \"run\": {\"stage\": \"in-progress\", \"attempt\": 1, \"startedAt\": \"2026-11-03T02:11:37.662Z\"}, \"identity\": {\"worker\": \"mcp:71348b9f-de59-4060-97e8-c806ec1f5588\", \"machine\": \"thinkpad\", \"harness\": \"t3\", \"threadId\": \"mcp:71348b9f-de59-4060-97e8-c806ec1f5588\", \"verification\": {\"source\": \"Local T3 launch/read/configuration verified71348b9f full-access Opus5.5 high existing bound factory-row-61 reservation\", \"verifiedAt\": \"2026-11-03T02:11:38.405Z\", \"by\": \"sunny\"}}}. Exact head branch factory/row-61 verified: no PR. Continue this work, not restart; preserve partial files. Authority: user selected Continue existing work (Recommended) in supervisor thread. ROW65 A1 ADR change remains held; this answer only authorizes continuation.",
+          "createdAt": "2026-11-03T03:01:12.643Z",
+          "updatedAt": "2026-11-03T03:01:12.643Z"
+        },
+        {
+          "id": "slQ6P8Yg",
+          "author": "sunny",
+          "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
+          "createdAt": "2026-11-03T02:19:44.435Z",
+          "updatedAt": "2026-11-03T02:19:44.435Z"
+        }
+      ]
     },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
         "status": "running",
-        "attempt": 1,
-        "worker": "mcp:71348b9f-de59-4060-97e8-c806ec1f5588",
+        "attempt": 2,
+        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
         "by": "sunny",
-        "startedAt": "2026-11-03T02:11:37.662Z"
+        "startedAt": "2026-11-03T03:04:34.806Z"
       }
     }
   }

@@ -1,5 +1,5 @@
 import { definePlugin } from '../../plugin-api';
-import { appendAttachment } from './attachments';
+import { appendAttachment, requireAttachments } from './attachments';
 import { commands } from './commands';
 import { doctor } from './doctor';
 import { AttachmentsBag, AttachmentsInput } from './model';
@@ -34,5 +34,11 @@ export const attachments = definePlugin({
   },
   tui: () => import('./tui').then((m) => m.tui),
   commands,
+  async storyContext(story, plugin) {
+    // Names only: the images stay in their files, opened with `attachments open`.
+    const list = requireAttachments(plugin, story);
+    const text = list.map((a) => `- \`${a.id}\` ${a.name} (${a.type}, ${a.size} bytes)`);
+    return { title: 'Attachments', text: text.join('\n') || 'None.', data: list };
+  },
   doctor,
 });

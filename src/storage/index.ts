@@ -23,6 +23,7 @@ export {
   listPluginFiles,
   readPluginBinaryFile,
   readPluginFile,
+  readRowblyMd,
   resolvePluginFile,
 } from './pathPolicy';
 export { type DataRootPaths, paths } from './paths';

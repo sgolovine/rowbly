@@ -5,26 +5,65 @@
   "name": "Wait efficiently for PR checks in the In PR Stage",
   "description": "Factory review recommendation 11 of 20.\n\n## Context\n\nIn PR workers repeatedly inspect check and merge state while CI is still running.\n\n## Acceptance criteria\n\n- Use gh pr checks --watch or defer launching In PR work until required checks finish.\n- Resume merge/review processing when checks settle and route failed checks to the repair workflow.\n- Document timeout, cancellation and pending-check handling without repeated model polling.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
   "stage": "in-progress",
-  "rank": "a4",
+  "rank": "aB",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T02:11:04.829Z",
+  "updatedAt": "2026-11-03T03:00:01.467Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "6QKHSbDi",
+          "author": "sunny",
+          "body": "Returned-work continuation: current In PR Stage Prompt directs requested changes back to In Progress so the factory builds them again. Continue existing PR147 branch factory/row-57 verified OPEN at7cf0c151d46f8273759b58d0414d3603639990cd; no restart/newPR. Fresh Sol correction worker must plan then await acceptance, fix numbered independent findings6594163668 (pendingCI permits independentreview; watch exit0 requires exact current-head conclusion inspection), preserve main generated brief and complementary skills/config sections. No .rowbly writes by worker. Existing implementation was Sonnet5.5; current reviewer was independent Sol. No product edits yet for this new visit.",
+          "createdAt": "2026-11-03T02:56:00.237Z",
+          "updatedAt": "2026-11-03T02:56:00.237Z"
+        },
+        {
+          "id": "cm2hGoNl",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/147. Adds a \"Waiting for pull request checks\" section to the rowbly-factory skill (event-driven watch first, one bounded gh pr checks --watch as fallback, never model-turn polling), a worker-brief rule that workers return head SHA and pending checks instead of polling, and a user-guide note. No checks registered and timeouts count as waiting, not as a failed check. Proposed In PR step 2 and ROWBLY.md changes are in /tmp/row-57-proposals.md for supervisor review.",
+          "createdAt": "2026-11-03T02:26:19.611Z",
+          "updatedAt": "2026-11-03T02:26:19.611Z"
+        },
+        {
+          "id": "jAFcNufp",
+          "author": "sunny",
+          "body": "Implementation record: attempt 1; worker mcp:241441f8-f97a-454f-a22a-8f3e445d24ed; machine rook; provider claudeAgent; model claude-sonnet-5-5; PR https://github.com/sgolovine/rowbly/pull/147 branch factory/row-57. All four checks passed, unit78 CLI20. Source: verified remote thread terminal handoff; ignore ROW48 handoff typo saying thinkpad, attached identity is rook.",
+          "createdAt": "2026-11-03T02:26:17.083Z",
+          "updatedAt": "2026-11-03T02:26:17.083Z"
+        },
+        {
+          "id": "lDkFw7aT",
+          "author": "sunny",
+          "body": "Independent review CHANGES REQUESTED on PR https://github.com/sgolovine/rowbly/pull/147 at 7cf0c151d46f8273759b58d0414d3603639990cd. Permit independent review before yielding for pending CI, and classify actual check conclusions instead of treating watch exit 0 as every check passed. Review evidence: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6594163668. Typecheck PASS, lint PASS, unit 78 passed, CLI 20 passed. Current main merged cleanly for validation. Not merged; supervisor-owned configuration proposals were not applied.",
+          "createdAt": "2026-11-03T02:54:39.440Z",
+          "updatedAt": "2026-11-03T02:54:39.440Z"
+        },
+        {
+          "id": "ofyMW533",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
+          "createdAt": "2026-11-03T02:19:43.746Z",
+          "updatedAt": "2026-11-03T02:19:43.746Z"
+        }
+      ]
     },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+        "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
         "by": "sunny",
-        "startedAt": "2026-11-03T02:11:04.043Z"
+        "startedAt": "2026-11-03T03:00:00.590Z"
       }
     }
   }

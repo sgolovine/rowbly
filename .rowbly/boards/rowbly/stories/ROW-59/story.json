@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Allow people to hold Stories out of automatic dispatch",
   "description": "Factory review recommendation 13 of 20.\n\n## Context\n\nEvery Story entering an enabled Stage is currently eligible for dispatch, including work a person wants to handle manually.\n\n## Acceptance criteria\n\n- Define an explicit hold mechanism for individual Stories.\n- Exclude held Stories from automatic dispatch and show why they are held.\n- Allow releasing the hold to restore normal eligibility without losing Story or Stage Run context.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a1",
+  "stage": "done",
+  "rank": "b06",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T02:03:05.854Z",
+  "updatedAt": "2026-11-03T02:19:56.082Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:86d50748-f2aa-46a0-bba3-814dbbf53b8b",
-        "by": "sunny",
-        "startedAt": "2026-11-03T01:19:03.464Z"
-      }
     },
     "comments": {
       "comments": [
@@ -70,6 +60,13 @@
           "body": "Supervisor plan review: Plan needs two revisions before implementation. Adopt ROW-58's canonical eligibility:{eligible:boolean,reasons:[{code,message,blockers?}]} shape; use code HELD and derive Waiting table text from reasons, no parallel waiting[] contract. ROW-58 owns eligibility.ts and blocked-link integration; you own hold persistence, hold/release commands and hold rendering. Required reason and surviving Stage changes are within Story scope. BUT optional hold beside a still-valid legacy stageRun is not compatible with docs/plugins/compatibility.md §3.4: old readers would silently erase a hold and unexpectedly resume dispatch. Do not document harmful hold loss as acceptable or merely add version:2 that old Zod drops. Propose safe storage: consider a separate Plugin-owned per-Story hold file that older versions never rewrite, or a versioned shape old schema rejects with explicit migration/test policy. Prefer the smallest solution that preserves holds and existing Stage Runs. Keep ADR-0043 provisionally for hold; recheck before publishing. Do not add new glossary Avoid words such as pause/lock/freeze globally unless necessary; lock is an existing core storage term. Return adjusted storage/interface plan before editing; TUI work must use rowbly-tui-design. ROWBLY.md remains proposed diff only.",
           "createdAt": "2026-11-02T23:41:13.205Z",
           "updatedAt": "2026-11-02T23:41:13.205Z"
+        },
+        {
+          "id": "Ztl18zvX",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/141 as 501a2a5348cd9cc98f44c1a3fc0dd84e9851b2d6. Integrated current main while preserving holds, strict Run details and guards. Typecheck, lint, 78 unit tests, 20 CLI tests and manual preservation checks passed. All six PR checks passed. Integration evidence: https://github.com/sgolovine/rowbly/pull/141#issuecomment-6593629706 . Main CI is running: https://github.com/sgolovine/rowbly/actions/runs/41564642619",
+          "createdAt": "2026-11-03T02:19:55.443Z",
+          "updatedAt": "2026-11-03T02:19:55.443Z"
         },
         {
           "id": "kUemXgOI",

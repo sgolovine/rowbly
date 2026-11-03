@@ -10,7 +10,7 @@ import {
 } from '../../core';
 import { formatIssues, type LocalState, type Story } from '../../schemas';
 import type { Repositories } from '../../storage';
-import { pathExists } from '../../storage';
+import { pathExists, readRowblyMd } from '../../storage';
 import { openAssociatedFile } from '../../storage/binaryInput';
 import { coordinated, outsideCoordination } from '../coordination';
 import { effectiveMe } from '../identity';
@@ -30,6 +30,7 @@ import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
 import { attributed, type Invocation, invokePlugin, pluginError } from './invoke';
+import { readStoryContext } from './storyContext';
 import { countChanges, failure, type TraceEvent, trace, traceClock, tracing } from './trace';
 import {
   type Bagged,
@@ -611,6 +612,8 @@ function pluginContext(
       });
       await openAssociatedFile(path);
     },
+    storyContext: (key: string) => readStoryContext(ctx, services(), key),
+    readRowblyMd: () => coordinated(ctx.root, `${id}.readRowblyMd`, () => readRowblyMd(ctx.root.path)),
     warn: (message: string) => ctx.warn(message),
   });
 }
