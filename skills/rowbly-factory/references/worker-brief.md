@@ -1,7 +1,13 @@
 # Worker brief
 
 `rowbly software-factory brief <KEY>` prints every section after the rules, filled in, `ROWBLY.md`
-included; send the rules below with `<KEY>` filled in, then its output. Fill in the whole template by
+included; send the rules below with `<KEY>` filled in, then its `markdown` output.
+Keep `--instructions-file` and, on retries, `--retry-file`. For independent review, append exactly
+one filled Implementation records section AFTER the generated markdown: ALL verified authoring
+records with evidence sources, plus the selected reviewer worker ID, thread ID, provider instance
+and model verified from its launch. Check the actual assembled message before GO; unused template
+placeholders do not carry this information. Missing or unknown provenance requires asking the user.
+Omit this appended section outside independent review. Fill in the whole template by
 hand only without that command: fill in each `<…>` and send the block as the worker's first
 message. Give the Story in full, so the worker does not need to read the Board. Leave out the retry section unless this is a retry. Capture
 the previous attempt before `run start --retry` replaces it. Fill its context from recorded Story,
@@ -61,6 +67,16 @@ Plugins on: <list>. Stages of the Board, in order: <key (Name), …>.
 ## Other instructions
 
 <the user's instructions for workers, the other Stories that workers are on now, or "None.">
+
+## Implementation records
+
+Selected reviewer: <verified worker ID, thread ID, provider instance and model; launch source>.
+
+You review this work; you are not one of these workers and your model is not one of these models.
+If that is not true, or the branch has commits that no record accounts for, report
+FACTORY-QUESTIONS <KEY> and wait.
+
+<each implementation record Comment in full, oldest first, with its Comment id>
 
 ## Retry
 
