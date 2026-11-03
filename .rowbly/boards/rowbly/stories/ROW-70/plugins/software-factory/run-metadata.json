@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-03T16:18:16.040Z"
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "high"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "coding: latest Claude Opus default",
+    "fallback": "Repeated verified Claude session-limit failures during current factory; using available Sol for research and coding",
+    "usage": "observed-limit",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-03T16:18:16.040Z"
+  }
+}
