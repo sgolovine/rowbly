@@ -21,12 +21,12 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0007](0007-no-workspaces.md) | The Data Root is the only container; there are no Workspaces | Accepted |
 | [0008](0008-no-epics.md) | There are no Epics in core | Partly superseded by 0014 |
 | [0019](0019-coordinated-recoverable-commits.md) | Operations are coordinated per Data Root and committed through a recoverable journal | Accepted; amended by 0034 and 0036 |
-| [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted |
+| [0024](0024-backlog-and-done-are-fixed-stages.md) | Every Board starts with a fixed Backlog Stage and ends with a fixed Done Stage | Accepted; amended by 0053 |
 | [0031](0031-per-user-settings-live-in-a-home-config.md) | Per-user settings live in a Home Config, `~/.rowblyrc.json` | Accepted; amended by 0032, extended by 0033 |
 | [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
 | [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted; amended by 0042 |
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
-| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042 |
+| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042 and 0053 |
 | [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted |
 | [0049](0049-the-tui-checks-npm-for-a-newer-release.md) | The TUI checks npm for a newer Rowbly release when it starts | Accepted |
 
@@ -69,6 +69,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0046](0046-verified-workers-use-current-run-metadata.md) | Verified workers use metadata bound to the current Stage Run | Accepted; amends 0040 |
 | [0047](0047-plugins-read-rowbly-md-as-inert-text.md) | A Plugin command can read `ROWBLY.md` as inert text | Accepted |
 | [0048](0048-stage-run-heartbeats-are-attested-evidence.md) | A Stage Run heartbeat records attested worker activity, and staleness only asks for a check | Accepted |
+| [0053](0053-software-factory-setup-gives-default-stages-and-stage-prompts.md) | Software Factory setup gives one Board the default Stages and Stage Prompts it lacks | Accepted |
 
 ### Development
 

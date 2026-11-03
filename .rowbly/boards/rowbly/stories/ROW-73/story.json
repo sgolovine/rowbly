@@ -17,6 +17,13 @@
     "comments": {
       "comments": [
         {
+          "id": "2MCjg8W3",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa. Merge commit e582f92e118b33b0f4c4106912f3d3d2375fc34d. All six PR checks passed before merge; post-merge main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41683835712.",
+          "createdAt": "2026-11-03T17:24:44.780Z",
+          "updatedAt": "2026-11-03T17:24:44.780Z"
+        },
+        {
           "id": "COM1gxzk",
           "author": "sunny",
           "body": "Implementation record: {\"worker\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"threadId\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"machine\":\"rook\",\"provider\":\"claudeAgent\",\"model\":\"claude-opus-5-5\",\"options\":[{\"id\":\"effort\",\"value\":\"high\"},{\"id\":\"fastMode\",\"value\":false}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/3d1b46742fdd3385207209102686e5e5.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-73-story\",\"branch\":\"factory/row-73\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/156\",\"head\":\"3f05ca647fb0c6172d439cebaacf8b82839f8ffa\",\"scope\":\"Sole product implementation author, research through final checkpoint; no correction workers\"}",
@@ -29,6 +36,13 @@
           "body": "Supervisor accepts revised ROW-73 plan and ADR0053 allocation. Implement explicit atomic Board-scoped setup and onboarding action, built-in TODO display-name default without migrating stored configuration, preserving existing Stage labels/order and every effective global or Board prompt entry/file. Portable TODO prompt may ship off by default with prerequisites and conservative INCOMPLETE behavior documented; In Progress and In Review defaults enabled only through explicit setup. Keep internal .rowbly and in-pr configuration untouched. Generic In Review must retain exact-head independent approval, complete check classification, conflict/return policy, and a successful merge handoff ending with own-Story Done move plus FACTORY-DONE for supervisor processing. Preserve once-per-visit advisory lifecycle and no implementation from TODO. Extend the existing preservation contract test as proposed, keep100 tests, update required docs/ADR Status/index and identical skill references. Merge latest main before implementation and validation; coordinate small shared documentation sections with ROW70 ADR0054. Run all four checks under shared lease, capture required screenshots with reported private daemon, open one draft PR and report exact head.",
           "createdAt": "2026-11-03T17:00:56.643Z",
           "updatedAt": "2026-11-03T17:00:56.643Z"
+        },
+        {
+          "id": "HgVhqiQW",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa by codex/gpt-6-astra: APPROVED. Reviewed the complete diff against ROW-73 and the accepted plan, including Board-scoped atomic setup, collision refusal and idempotence, preservation of effective global/Board Stages and prompt entries/files, explicit onboarding and settings navigation, Plugin/core boundaries, portable TODO advisory lifecycle and independent-review/merge/return gates, ADR-0053 and its amendments, documentation, and existing preservation assertions. Verified implementer/reviewer provenance and no internal .rowbly prompt changes. Independently merged current main f5047d80 into the isolated review branch (only published Board records differed) and ran the unchanged checks under the shared validation lease: typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), 100 tests total. All four skill reference copies are byte-identical. All 11 screenshot URLs and the validation log returned HTTP 200; all screenshots were inspected and the changed screens are readable. No required changes found.",
+          "createdAt": "2026-11-03T17:24:44.167Z",
+          "updatedAt": "2026-11-03T17:24:44.167Z"
         },
         {
           "id": "LfQsKRET",
@@ -57,20 +71,6 @@
           "body": "Plan (research done, awaiting acceptance; complexity 5; branch factory/row-73 from origin/main 324ac90b): ship portable default In Progress and In Review Stage Prompts in the Software Factory Plugin; add software-factory.setup (CLI software-factory setup) that adds only missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) at Board level and writes default prompts only where the Board has no entry, never overwriting, renaming or removing; offer it as an explicit choice in Software Factory/Both onboarding; ADR-0053 amends ADR-0041 section 2; update docs, the rowbly and rowbly-factory skills and the reference copies; no new tests; screenshots of CLI and onboarding. Open questions: TODO label, existing-Board behavior, TODO/Backlog prompts, surfaces, In Review key.",
           "createdAt": "2026-11-03T16:51:03.983Z",
           "updatedAt": "2026-11-03T16:51:03.983Z"
-        },
-        {
-          "id": "HgVhqiQW",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa by codex/gpt-6-astra: APPROVED. Reviewed the complete diff against ROW-73 and the accepted plan, including Board-scoped atomic setup, collision refusal and idempotence, preservation of effective global/Board Stages and prompt entries/files, explicit onboarding and settings navigation, Plugin/core boundaries, portable TODO advisory lifecycle and independent-review/merge/return gates, ADR-0053 and its amendments, documentation, and existing preservation assertions. Verified implementer/reviewer provenance and no internal .rowbly prompt changes. Independently merged current main f5047d80 into the isolated review branch (only published Board records differed) and ran the unchanged checks under the shared validation lease: typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), 100 tests total. All four skill reference copies are byte-identical. All 11 screenshot URLs and the validation log returned HTTP 200; all screenshots were inspected and the changed screens are readable. No required changes found.",
-          "createdAt": "2026-11-03T17:24:44.167Z",
-          "updatedAt": "2026-11-03T17:24:44.167Z"
-        },
-        {
-          "id": "2MCjg8W3",
-          "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa. Merge commit e582f92e118b33b0f4c4106912f3d3d2375fc34d. All six PR checks passed before merge; post-merge main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41683835712.",
-          "createdAt": "2026-11-03T17:24:44.780Z",
-          "updatedAt": "2026-11-03T17:24:44.780Z"
         }
       ]
     }
