@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:48:35.937Z",
+  "updatedAt": "2026-11-03T15:48:37.380Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -85,6 +85,13 @@
           "body": "Implementation record: ROW-62 retry2 PR https://github.com/sgolovine/rowbly/pull/154 head 30c4d8960266c9e6e189d36f71ff211de278919b authored by worker mcp:3803ae1e-36e4-4d2e-82f9-32764d071044 on thinkpad, provider codex model gpt-6.1-sol, reasoningEffort high serviceTier default. Verified native launch/read/configuration /tmp/rowbly-factory-session/ROW-62-verified-retry2.json native launch/read/configuration: exact provider model full typed options; existing worktree binding and clean preserved HEAD verified. Failed prior Sonnet research worker made no product edits; preserved clean HEAD was verified before retry. Current worker continued preserved work, wrote helper/docs/test extension and all product commits. Research and final assistant handoff retained under /tmp/rowbly-factory-session. All four local checks passed (79 unit,21 CLI). Exact-head independent review by a new worker with a different model is required. TODO activation remains pending supervisor final-artifact review/application after merge.",
           "createdAt": "2026-11-03T15:48:35.936Z",
           "updatedAt": "2026-11-03T15:48:35.936Z"
+        },
+        {
+          "id": "VXvhdHU9",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/154 opened at head 30c4d8960266c9e6e189d36f71ff211de278919b. Typecheck, lint, unit 79 and CLI 21 passed; total 100 tests. Five CI checks passed; Clipboard smoke (windows-latest) is pending and mergeability was UNKNOWN. Screenshots and complete rollout proposals: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608312095. Exact rollout files and hashes are under /tmp/row62/retry2/rollout. Supervisor must revalidate and apply/enable TODO after code merge; activation is not done. Worktree clean; owned daemon and sessions stopped.",
+          "createdAt": "2026-11-03T15:48:37.380Z",
+          "updatedAt": "2026-11-03T15:48:37.380Z"
         }
       ]
     }
