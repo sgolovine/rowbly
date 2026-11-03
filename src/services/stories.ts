@@ -27,7 +27,7 @@ import type { CoreChangeSet } from './plugins/changeSet';
 import { invokePluginSync } from './plugins/invoke';
 import { latestStory, type OperationRunner } from './plugins/runtime';
 import { checkStage } from './stageValidation';
-import type { RowblyContext, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
+import type { RowblyContext, Services, StoriesService, StoryFilter, StoryPatch, StorySort } from './types';
 
 export function createStoriesService(ctx: RowblyContext, repos: Repositories, ops: OperationRunner): StoriesService {
   /** The Story's Board and its effective Stages and Custom Fields. */
@@ -273,6 +273,21 @@ export async function storyChoices(ctx: RowblyContext, boardId: Slug): Promise<S
     ]),
   );
   return { ...config, labels };
+}
+
+/**
+ * Story `key` and its Board's effective configuration, as one read scope (ADR-0019 §5), for the TUI
+ * Story screen. It runs no Plugin callback, so it never holds the lock while one runs.
+ */
+export function storyWithConfig(
+  ctx: RowblyContext,
+  services: Services,
+  key: string,
+): Promise<{ story: Story; config: EffectiveBoardConfig }> {
+  return coordinated(ctx.root, 'stories.withConfig', async () => {
+    const story = await services.stories.get(key);
+    return { story, config: await services.config.effective(story.boardId) };
+  });
 }
 
 /** Every given filter must match (contracts §5). */

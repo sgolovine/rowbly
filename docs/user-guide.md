@@ -1078,7 +1078,7 @@ The arrow keys are the main keys; the vim keys work too. `h`/`j`/`k`/`l` stand i
 
 Long Story names and Plugin badges truncate to keep each Story on one line in the list view. Selection uses the same bar and fill in lists, forms and Plugin tabs.
 
-Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen, badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
+Plugins that are on can add home menu entries, screens, fields to the Story form and filter, tabs and rows to the Story screen (the Story shows, and takes its keys, before its Plugin rows and badges have loaded), badges to Stories on the board and in the board's list view, and sections to the Board detail. A Plugin's **Actions** are keys that show in the footer, the help (`?`) and as buttons in the header wherever the Board or Story they act on is in focus. While an Action that acts on nothing in particular runs, such as **Sync**, its label in the header ends in `…` and its key does nothing.
 <!-- END tui -->
 
 ## Exit codes

@@ -1,11 +1,14 @@
 import { dirname } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { definePlugin } from '../../src/plugin-api';
 import { createServices, type RowblyContext } from '../../src/services';
 import { createRepositories } from '../../src/storage';
 import { App } from '../../src/tui/app';
 import { createToastStore } from '../../src/tui/hooks';
 import type { RouteParams } from '../../src/tui/router';
-import { fixedClock, fixedIds, makeBoard, type TempRoot, tempRoot } from '../helpers';
+import { deferred, fixedClock, fixedIds, makeBoard, makeStory, type TempRoot, tempRoot } from '../helpers';
+import { pluginRoot, readJsonFile, storyFile } from '../plugins/helpers';
+import { openPluginApp } from '../plugins/tuiHelpers';
 import { KEYS, renderTui, waitForFrame } from './helpers';
 
 const web = { boardId: 'web' };
@@ -65,5 +68,47 @@ describe('story form', () => {
       customFields: { size: 's' },
     });
     app.unmount();
+  });
+});
+
+describe('story screen', () => {
+  it('shows and moves a Story while a Plugin row is still loading, and drops a row loaded for an earlier version', async () => {
+    // The first row load waits for the test; every later one answers at once.
+    const held = deferred();
+    const loads: string[] = [];
+    const probe = definePlugin({
+      id: 'probe',
+      name: 'Probe',
+      description: 'A row that waits',
+      async storyRows(story) {
+        loads.push(story.stage);
+        if (loads.length === 1) await held.promise;
+        return [{ label: 'Probe', value: `seen ${story.stage}` }];
+      },
+    });
+    const t = await pluginRoot({ probe: true });
+    await makeStory(t.path, { boardId: 'web', key: 'WEB-1', name: 'Login' });
+    const { app } = await openPluginApp(t, [probe], { screen: 'story', params: { key: 'WEB-1' } });
+    try {
+      // The Story and its keys show while its row is on its way.
+      await waitForFrame(app, (f) => f.includes('Login') && f.includes('move Stage') && f.includes('Loading'));
+      const before = loads[0];
+      await app.press('m');
+      await waitForFrame(app, (f) => f.includes('Move Stage') && f.includes('(current)'));
+      await app.press(KEYS.down);
+      await app.press(KEYS.enter);
+      // The move saves while the row is held: no Plugin callback holds the Data Root lock.
+      await waitForFrame(app, (f) => f.includes('Moved WEB-1'));
+      const after = (await readJsonFile(t, storyFile('WEB-1'))).stage;
+      expect(after).not.toBe(before);
+      await waitForFrame(app, (f) => f.includes(`seen ${after}`));
+      // The row loaded for the Story before the move settles last, and changes nothing.
+      held.resolve();
+      await new Promise(setImmediate);
+      expect(app.lastFrame()).toContain(`seen ${after}`);
+      expect(app.lastFrame()).not.toContain(`seen ${before}`);
+    } finally {
+      held.resolve();
+    }
   });
 });
