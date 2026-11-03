@@ -345,6 +345,15 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 
 - Field names are unique within the Plugin; a duplicate fails its fields.
 - A `select` cycles through `options` only, so "no value" is an option of the Plugin's own whose label cannot be a real value (Epics: `No Epic`). A filter keeps "any" (`All Epics`) apart from "none".
+- For a `Form` field with `kind: 'select'`, `searchable: true` opens a fuzzy picker over option
+  values and `optionLabels` instead of cycling. Type or press Enter on the field to open it; use
+  ↑/↓ and Enter to choose without submitting the form. Escape cancels the query and keeps the
+  prior value; Ctrl+L clears only the query. Empty queries show all options; no matches leave the
+  value unchanged. Ranking matches the Story finder: case-insensitive, exact/contiguous before
+  subsequences, with space-separated terms allowed in different fields. The submitted value is
+  always the chosen option, never the query. `optionSearchText` can map each option to separate
+  searchable strings instead of its display label, for example a Story name when the label also
+  includes its Key; the option value itself remains searchable. Ordinary selects keep their existing keys.
 - `storyFilter.fields` / `filter(values)` / `describe(values)` fill the filter of the Stories list and the board. A Plugin whose filter fields fail is left out of the filter, and the screen says so.
 - `storyBadges({ story, plugin })` returns short texts, such as `@ada`, shown on the Story in the board's Stages view, its line in the board's list view and its row in the Stories list, in registry order. It runs while the screen renders, so it must be synchronous and cheap: read the Story's bag, not files. Badges only show something, so a Plugin whose `storyBadges` throws shows none.
 - `loadStoryBadges({ plugin })` is for badges that need the Plugin's files, such as the Epics Plugin's `◆ <Epic name>`. It reads them once each time the board, the Stories list or a Story detail loads its Stories, so a change shows when the screen reloads, and returns a function from a Story to its badges, shown after the Plugin's `storyBadges` in the same places. The returned function runs while the screen renders, so it reads only what was loaded and the Story. A Plugin whose load or badges throw shows none.

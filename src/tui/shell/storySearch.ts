@@ -1,3 +1,4 @@
+import { fuzzySearch } from '../../core';
 import type { Story } from '../../schemas';
 import { type EffectiveBoardConfig, invokePlugin, type Services } from '../../services';
 import type { TuiPlugin } from '../hooks';
@@ -54,35 +55,11 @@ export async function loadStorySearch(
   return entries;
 }
 
-/** Exact and contiguous matches lead; otherwise prefer a compact, early subsequence. */
-function matchScore(text: string, query: string): number {
-  if (text === query) return 0;
-  const contiguous = text.indexOf(query);
-  if (contiguous >= 0) return 1 + contiguous / (text.length + 1);
-  let position = -1;
-  let first = 0;
-  for (const [index, char] of [...query].entries()) {
-    position = text.indexOf(char, position + 1);
-    if (position < 0) return Number.POSITIVE_INFINITY;
-    if (index === 0) first = position;
-  }
-  return 2 + (position - first + 1 - query.length) / Math.max(query.length, 1) + first / (text.length + 1);
-}
-
 export function findStories(entries: readonly StorySearchEntry[], query: string): StorySearchEntry[] {
-  const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  if (!terms.length) return [...entries];
-  return entries
-    .map((entry) => ({
-      entry,
-      score: terms.reduce(
-        (total, term) => total + Math.min(...entry.fields.map((field) => matchScore(field, term))),
-        0,
-      ),
-    }))
-    .filter(({ score }) => Number.isFinite(score))
-    .sort(
-      (a, b) => a.score - b.score || a.entry.story.key.localeCompare(b.entry.story.key, undefined, { numeric: true }),
-    )
-    .map(({ entry }) => entry);
+  return fuzzySearch(
+    entries,
+    query,
+    (entry) => entry.fields,
+    (a, b) => a.story.key.localeCompare(b.story.key, undefined, { numeric: true }),
+  );
 }
