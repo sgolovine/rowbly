@@ -455,6 +455,7 @@ rowbly software-factory prompt disable <stage> [--board <id>] [--level board|glo
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -468,10 +469,14 @@ show the effective Stage Prompts without `--level`, and one level alone with it.
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`: `stages` are the
-Board's Stages whose Stage Prompt is on, `stories` every Story in them, and `stageRun` the Story's
-Stage Run for its current visit or `null`. `run start`, `finish` and `fail` return
-`{ key, stageRun }`; `run clear` returns `{ cleared }`.
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`: `stages`
+are the Board's Stages whose Stage Prompt is on, `stories` every Story in them, `stageRun` the
+Story's Stage Run for its current visit or `null`, and `digest` a short hash of `stages` and
+`stories` (all their fields, so ones added to a row count too). `wait` returns the same object with
+`changed` first, once `digest` differs from `--since` (or from the first read), or with
+`changed: false` after `--timeout`. It uses the command host's `waitFor`: the Data Root watch of the
+TUI, started before the first read, with a recheck every minute in case a change went unseen.
+`run start`, `finish` and `fail` return `{ key, stageRun }`; `run clear` returns `{ cleared }`.
 
 **Rules**
 

@@ -11,7 +11,17 @@ import {
   setStagePrompt,
   showStagePrompt,
 } from './stagePrompts';
-import { clearRun, endRun, type RunsOverview, runsOverview, runText, type StageRunResult, startRun } from './stageRuns';
+import {
+  clearRun,
+  endRun,
+  type RunsOverview,
+  runsOverview,
+  runText,
+  type StageRunResult,
+  startRun,
+  type WaitResult,
+  waitForRuns,
+} from './stageRuns';
 
 interface PromptOptions {
   board?: string;
@@ -32,8 +42,9 @@ function runLine(result: StageRunResult): string {
 }
 
 function runsTable(overview: RunsOverview): string {
-  if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}`;
-  return renderTable(
+  const digest = `Digest: ${overview.digest}`;
+  if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
+  const table = renderTable(
     ['Story', 'Stage', 'Stage Run', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
@@ -43,6 +54,22 @@ function runsTable(overview: RunsOverview): string {
       s.name,
     ]),
   );
+  return `${table}\n${digest}`;
+}
+
+function waitText(result: WaitResult): string {
+  return `${result.changed ? 'Changed' : 'No change before the timeout'}\n${runsTable(result)}`;
+}
+
+/** The longest `--timeout`: a longer timer would fire at once. */
+const MAX_TIMEOUT_SECONDS = 2_147_483;
+
+function parseTimeout(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const seconds = Number(value);
+  if (!/^\d+(\.\d+)?$/.test(value.trim()) || seconds > MAX_TIMEOUT_SECONDS)
+    throw new UsageError(`--timeout takes a number of seconds from 0 to ${MAX_TIMEOUT_SECONDS}`);
+  return seconds;
 }
 
 function promptLine(stage: string, prompt: StagePrompt): string {
@@ -132,6 +159,23 @@ export const commands: PluginCommands = (group, cli) => {
     .action((opts: { board?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
         print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+      }),
+    );
+
+  group
+    .command('wait')
+    .description(
+      'Wait until the Stories in Stages whose Stage Prompt is on, or their Stage Runs, change; then list them as runs does',
+    )
+    .option('--board <id>', 'the Board')
+    .option('--since <digest>', 'the digest of the runs last read; without it, the runs when the wait starts')
+    .option('--timeout <seconds>', 'stop waiting after this many seconds, with nothing changed')
+    .action((opts: { board?: string; since?: string; timeout?: string }, cmd) =>
+      cli.run(cmd, async ({ plugin, print, resolveBoard, waitFor }) => {
+        const timeout = parseTimeout(opts.timeout);
+        const board = await resolveBoard(opts.board);
+        const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout * 1000);
+        print(await waitForRuns(plugin, board, waitFor, { since: opts.since?.trim() || undefined, signal }), waitText);
       }),
     );
 
