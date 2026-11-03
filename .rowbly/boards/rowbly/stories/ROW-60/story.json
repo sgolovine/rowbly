@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:23:11.799Z",
+  "updatedAt": "2026-11-03T05:25:01.483Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:23:11.036Z"
+      }
     },
     "comments": {
       "comments": [
@@ -160,6 +170,20 @@
           "updatedAt": "2026-11-03T00:34:14.459Z"
         },
         {
+          "id": "o0Ie9Y5t",
+          "author": "sunny",
+          "body": "Finding5 correction plan ACCEPTED for current fresh Sol worker1db6f174, SAMEPR145 factory/row-60 da843d1. Match CONFIG nonempty trimmed threadId/provider/model/runtime validation to CLI gate before comparison, preserve original values/intendedselection/receipts and proven-difference conflict. Extend existing deterministic fakeT3 fixture with ONE representative empty CONFIG model; retain prior12scenarios/no realcreation/GO, manually verify whitespace/otherfields/complete differences. Clarify matching remote-launch guidance. Private deps, refetch/mainmerge, allfourchecks once under boundedlease with no actualfailure retry; changed CONFIG screenshot via private agentic-tui ownership reported beforestartup, retainedrawassets200, normalpushsamePR/finding5response/headsummary/freshindependentreview. No broadrefactor/.rowbly edits/newPR.",
+          "createdAt": "2026-11-03T05:25:00.682Z",
+          "updatedAt": "2026-11-03T05:25:00.682Z"
+        },
+        {
+          "id": "qYFPh1bl",
+          "author": "sunny",
+          "body": "Historical prior review tail aca87554 closed: its already-reported check group completed typecheck/lint/unit78/CLI21 PASS once, no failed-check retry, and reviewer explicitly confirms no own processes remain or additional checks after routing. Evidence https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596126377, /tmp/row60-review-aca87554. This validates old da843d1 plus Board-only main integration, does not approve finding5 or current correction. Preserve initial setup/admission75 evidence and chronology. Prior Run already finished/returned; late old command blocks/terminal markers are archival only and are NOT replayed on new Run.",
+          "createdAt": "2026-11-03T05:25:01.483Z",
+          "updatedAt": "2026-11-03T05:25:01.483Z"
+        },
+        {
           "id": "rz5Xrc62",
           "author": "sunny",
           "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/145 original branch factory/row-60 verified OPEN at d6d9c1e45d7b4a884c899a80a3b7776bc81f372d. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
@@ -188,16 +212,6 @@
           "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:23:11.036Z"
-      }
     }
   }
 }
