@@ -41,6 +41,13 @@
           "updatedAt": "2026-11-02T23:43:24.679Z"
         },
         {
+          "id": "SwNc01wj",
+          "author": "sunny",
+          "body": "Corrected PR139 review blockers: https://github.com/sgolovine/rowbly/pull/139 (head 35342c3, still draft). apply now runs a move as stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>, a Software Factory option on stories move with a strict schema; its stories.move guard reads the Story as stored under the move Data Root lock, after all transforms, and refuses with CONFLICT, saving nothing, unless that same Run is still the visit finished Stage Run. Workers may not give --finished-run. story-linking add/remove --blocked-by, with a space or =, is refused because it writes the other Story; only --blocks is allowed. Regression assertions in the existing agentWorkflows step: real applyBlock with the Run replaced between Comment and move keeps the replacement story.json byte-identical; a same-start Run of another attempt or Stage does not authorize a move; the other Story stays byte-identical after a refused --blocked-by= line. Each fails without its fix. Merged origin/main, keeping waitFor and runCommand. ADR-0045, docs, skills and reference copies updated. typecheck, lint, unit 78 and CLI 20 pass; three new screenshots return HTTP 200. GitHub checks were pending at handoff except Verify, which passed.",
+          "createdAt": "2026-11-03T01:05:35.938Z",
+          "updatedAt": "2026-11-03T01:05:35.938Z"
+        },
+        {
           "id": "XNbkGCbl",
           "author": "sunny",
           "body": "Factory review reproduced two merge blockers in PR139 despite green checks: a finished Run cached at planning authorized a later move that erased a replacement running Run, and story-linking add with blocked-by wrote another Story. Reviewer was instructed to return a final handoff for In Progress; corrections need deterministic regression checks and current-visit enforcement under the mutation lock. PR139 remains draft/unmerged.",
@@ -53,13 +60,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
           "createdAt": "2026-11-03T00:06:02.194Z",
           "updatedAt": "2026-11-03T00:06:02.194Z"
-        },
-        {
-          "id": "SwNc01wj",
-          "author": "sunny",
-          "body": "Corrected PR139 review blockers: https://github.com/sgolovine/rowbly/pull/139 (head 35342c3, still draft). apply now runs a move as stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>, a Software Factory option on stories move with a strict schema; its stories.move guard reads the Story as stored under the move Data Root lock, after all transforms, and refuses with CONFLICT, saving nothing, unless that same Run is still the visit finished Stage Run. Workers may not give --finished-run. story-linking add/remove --blocked-by, with a space or =, is refused because it writes the other Story; only --blocks is allowed. Regression assertions in the existing agentWorkflows step: real applyBlock with the Run replaced between Comment and move keeps the replacement story.json byte-identical; a same-start Run of another attempt or Stage does not authorize a move; the other Story stays byte-identical after a refused --blocked-by= line. Each fails without its fix. Merged origin/main, keeping waitFor and runCommand. ADR-0045, docs, skills and reference copies updated. typecheck, lint, unit 78 and CLI 20 pass; three new screenshots return HTTP 200. GitHub checks were pending at handoff except Verify, which passed.",
-          "createdAt": "2026-11-03T01:05:35.938Z",
-          "updatedAt": "2026-11-03T01:05:35.938Z"
         }
       ]
     }
