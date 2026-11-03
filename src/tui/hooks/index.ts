@@ -9,6 +9,7 @@ export * from './useAsync';
 export * from './useCursor';
 export * from './useDataRootSession';
 export * from './useEscape';
+export * from './usePluginScreenContext';
 export * from './useReloadOnReturn';
 export * from './useServices';
 export * from './useStoryPaste';

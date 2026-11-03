@@ -176,6 +176,7 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       ['story-linking', false, false],
       ['git', false, false],
       ['software-factory', false, false],
+      ['github', false, false],
     ]);
 
     await json('epics', 'create', 'auth', '--name', 'Authentication');

@@ -138,3 +138,20 @@ function nestedError(scope: ExecutionScope, what: string, extra: Record<string, 
         : `change data through the Change Set your ${scope.stage} receives, not through services or operations`,
   });
 }
+
+/** A retained surface context never bypasses a running read or operation callback (ADR-0051 §2). */
+export function assertExternalRead(plugin: string, screen: boolean): void {
+  const scope = currentScope();
+  if (!scope && screen) return;
+  if (
+    scope &&
+    !scope.ended &&
+    scope.plugin === plugin &&
+    (scope.stage === 'command' || (screen && scope.stage === 'screen'))
+  )
+    return;
+  throw new PluginError(`Plugin "${plugin}" external reads require a live command or screen`, {
+    details: { plugin, ...(scope ? { stage: scope.stage, operation: scope.operation } : {}) },
+    hint: 'fetch external data from a command or an active screen, never from read or operation hooks',
+  });
+}

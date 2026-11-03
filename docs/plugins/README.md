@@ -15,7 +15,7 @@ Rowbly keeps its core small and adds features as Plugins. This page explains how
 Built:
 
 - The Plugin API, the registry and loading; the operation pipeline (guard, transform, replace, react) with the Data Root lock and commit journal; Plugin Data and Plugin files; the `plugins` commands and the TUI **Plugins** settings section; every slot listed under [Surfaces](#surfaces).
-- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs), [Comments](built-in.md#comments), [Attachments](built-in.md#attachments), [Story Linking](built-in.md#story-linking) and [Git](built-in.md#git).
+- The Built-in Plugins [Tasks](built-in.md#tasks), [Epics](built-in.md#epics), [Specs](built-in.md#specs), [Comments](built-in.md#comments), [Attachments](built-in.md#attachments), [Story Linking](built-in.md#story-linking) [Git](built-in.md#git) and [GitHub](built-in.md#github).
 
 Planned, not built:
 
@@ -25,7 +25,7 @@ Planned, not built:
 ## Where Plugins live
 
 - Each Built-in Plugin is a folder `src/plugins/<id>/`, built into the same bundle as core and listed in one static registry, `builtInPlugins` in `src/plugins/index.ts`. Only the entry point, `src/cli.ts`, reads the registry ([ADR-0009](../agents/adr/0009-built-in-plugins-use-only-the-plugin-api.md)).
-- A Plugin imports only the Plugin API (`src/plugin-api`, and `src/plugin-api/tui` from its TUI part) and its own files. Core never imports a Plugin. A Plugin uses no Node built-in module: it works outside its own data only through capabilities of the Plugin API, today its own `plugins/<id>/` folders (`files`) and `$EDITOR` (`editText`, command mode only). `test/architecture.test.ts` enforces these rules. They are conventions for trusted code, not confinement ([trust.md](trust.md#2-what-the-safeguards-are-and-what-they-are-not)).
+- A Plugin imports only the Plugin API (`src/plugin-api`, and `src/plugin-api/tui` from its TUI part) and its own files. Core never imports a Plugin. A Plugin uses no Node built-in module: it works outside its own data only through capabilities of the Plugin API, its own `plugins/<id>/` folders (`files`), `$EDITOR` (`editText`, command mode only), the Git capability and fixed host-owned [external reads](api.md#external-reads). `test/architecture.test.ts` enforces these rules. They are conventions for trusted code, not confinement ([trust.md](trust.md#2-what-the-safeguards-are-and-what-they-are-not)).
 - A Plugin's TUI part loads only when the TUI starts, so command mode never loads Ink or React for it. The registry and every Built-in Plugin's definition module are evaluated on every run, even for Plugins that are off; a throw at the top level of such a module stops Rowbly from starting.
 - Plugins run in registry order.
 

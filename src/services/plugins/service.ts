@@ -49,19 +49,25 @@ export function createPluginsService(ctx: RowblyContext, repos: Repositories, op
       }),
 
     disable: (id, opts = {}) =>
-      ops.run('plugins.disable', { id, ...opts }, async (changes) => {
-        await changes.updateRootConfig((config) => {
-          const entry = config.plugins?.[id];
-          // A configured Plugin can be turned off even if this version does not have it; otherwise
-          // the id must be one this version has.
-          if (!entry) requireDefinition(id);
-          // Turning a Plugin off keeps its settings and all its data (ADR-0010).
-          return { ...config, plugins: { ...config.plugins, [id]: { ...entry, enabled: false } } };
-        });
-        return { id, enabled: false };
-      }),
+      ops
+        .run('plugins.disable', { id, ...opts }, async (changes) => {
+          await changes.updateRootConfig((config) => {
+            const entry = config.plugins?.[id];
+            // A configured Plugin can be turned off even if this version does not have it; otherwise
+            // the id must be one this version has.
+            if (!entry) requireDefinition(id);
+            // Turning a Plugin off keeps its settings and all its data (ADR-0010).
+            return { ...config, plugins: { ...config.plugins, [id]: { ...entry, enabled: false } } };
+          });
+          return { id, enabled: false };
+        })
+        .then((result) => {
+          ctx.plugins?.externalReads?.(id).dispose();
+          return result;
+        }),
 
     context: (id) => ops.context(id),
+    screenContext: (id, signal) => ops.screenContext(id, signal),
   };
 }
 
