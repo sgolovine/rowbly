@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T02:03:06.562Z",
+  "updatedAt": "2026-11-03T02:26:08.359Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -42,6 +42,13 @@
           "body": "PR143 is merged as bb120a6 and main CI passed; ROW49 is Done. Your accepted shared run-details helpers are now on main. Resume the SAME In Progress Run/branch factory/row-50: fetch and merge current origin/main before touch/heartbeat integration, no stack or temporary writer. Preserve the accepted identity/selection/heartbeat and full RunRef contracts, ROW55 locked move guard and existing wait semantics; use shared helper rather than duplicating persistence. Verified worker activity only, no heartbeat from mere polling/status. Existing accepted plan remains in force. Recheck ADR0048, all four checks, stable digest and stale transition/atomicity scenarios and agentic-tui evidence before draft PR. No Board writes.",
           "createdAt": "2026-11-03T02:03:06.561Z",
           "updatedAt": "2026-11-03T02:03:06.561Z"
+        },
+        {
+          "id": "6FJvzxiW",
+          "author": "sunny",
+          "body": "Terminal handoff received; PR146 registered in supervisor thread. Your fenced block omits the required rowbly prefix on both lines. Please resend the same own-Story Comment+move with full rowbly prefixes and FACTORY-DONE ROW-50; no implementation changes needed. Keep current Run/branch/PR and do not start another worker. Proposed guide change held until independent review/merge.",
+          "createdAt": "2026-11-03T02:26:08.358Z",
+          "updatedAt": "2026-11-03T02:26:08.358Z"
         }
       ]
     }
