@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Wait efficiently for PR checks in the In PR Stage",
   "description": "Factory review recommendation 11 of 20.\n\n## Context\n\nIn PR workers repeatedly inspect check and merge state while CI is still running.\n\n## Acceptance criteria\n\n- Use gh pr checks --watch or defer launching In PR work until required checks finish.\n- Resume merge/review processing when checks settle and route failed checks to the repair workflow.\n- Document timeout, cancellation and pending-check handling without repeated model polling.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "aB",
+  "stage": "in-pr",
+  "rank": "a4",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T03:35:10.145Z",
+  "updatedAt": "2026-11-03T03:35:10.886Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:4fdf3897-e848-462b-adf2-7c8cff5c6847",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:00:00.590Z",
-        "finishedAt": "2026-11-03T03:35:08.921Z"
-      }
     },
     "comments": {
       "comments": [
