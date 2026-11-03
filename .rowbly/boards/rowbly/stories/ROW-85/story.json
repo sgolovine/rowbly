@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-85",
+  "boardId": "rowbly",
+  "name": "New data root option should be a button at the top",
+  "description": "- Currently it's at the bottom of the list\n- It should instead remain on top.",
+  "stage": "todo",
+  "rank": "aA",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T23:24:17.700Z",
+  "updatedAt": "2026-11-03T23:24:17.702Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aHZJgiZF6",
+          "name": "image-20261103-2323.png",
+          "type": "image/png",
+          "size": 131121,
+          "createdAt": "2026-11-03T23:24:17.702Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
