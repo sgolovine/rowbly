@@ -20,8 +20,16 @@ turns the check off; the demo (`ROWBLY_TUI_DEMO=1`) skips it.
 ## 2. The check never delays Rowbly
 
 The check starts beside the TUI and nothing waits for it. Being offline, an error, an unexpected
-answer or no answer within 3 s ends it with nothing shown. Its socket and timer are unreferenced and
-quitting destroys the request, so a check still running never keeps Rowbly from exiting.
+answer or no answer within 3 s ends it with nothing shown. Quitting ends it at once, and a check
+still running never keeps Rowbly from exiting:
+
+- The request has its own socket, timer and DNS resolver. The socket and timer are unreferenced;
+  the timeout and quitting destroy the request and cancel its DNS query. `dns.lookup` is not used
+  because a DNS server that never answers would hold the process until the system gives up.
+- When Node sends HTTPS through a proxy from the environment (`NODE_USE_ENV_PROXY=1` or
+  `--use-env-proxy`, with `HTTPS_PROXY`), the check is skipped and shows nothing. Node cannot
+  cancel that proxy's pending CONNECT, so a proxy that never answers would delay exit by up to
+  5 s. The shared agents are not changed and the proxy is not bypassed.
 
 ## 3. Where it shows
 
@@ -39,3 +47,7 @@ keep their width. The row stays for the session.
 - Caching the last result in the Home Config would add writes and settings for a request that
   costs about 2 KB once per TUI start.
 - Updating Rowbly itself would need to know how it was installed; the notice gives the command.
+- `fetch` keeps a connection to an unreachable address open for about 10 s after it is aborted.
+- Sending the check through the environment proxy with an agent of its own does not help: that
+  agent's tunnel is not cancelled either, and without the shared agent's timeout it holds the
+  process until the proxy answers.
