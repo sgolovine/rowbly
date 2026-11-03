@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T03:41:26.409Z",
+  "updatedAt": "2026-11-03T04:00:45.995Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:b5702986-bb4b-404f-acc8-561262c4c845",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:41:25.604Z"
+      }
     },
     "comments": {
       "comments": [
@@ -74,18 +84,15 @@
           "body": "Corrected existing draft PR https://github.com/sgolovine/rowbly/pull/147 at head d5054f35b9237774e7fc682d7e74f9e7284b57d6. Finding 1: worker brief, skill, user guide and outside-DataRoot proposals explicitly permit independent diff review to start and finish during pending CI; yield only remaining CI-dependent work. Finding 2: every watch exit is only a wake signal; inspect all actual current-head conclusions before merging. Cancelled, skipped, neutral and unknown terminal results require explicit policy or decision. Actual failures, pending checks, absent registration, timeouts and unreadable PRs remain distinct. Preserved generated-brief guidance and ROW47 review/approval and ROW48 failure/return ownership. Proposals updated only in /tmp/row-57-proposals.md, not applied. Typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS. CI pending at handoff: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest). No merge or authored Data Root changes.",
           "createdAt": "2026-11-03T03:35:10.144Z",
           "updatedAt": "2026-11-03T03:35:10.144Z"
+        },
+        {
+          "id": "cKFu0Hrk",
+          "author": "sunny",
+          "body": "Independent review APPROVED at d5054f35b9237774e7fc682d7e74f9e7284b57d6: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6594885399. Typecheck, lint, unit 78 and CLI 20 passed; all six GitHub checks succeeded. Latest mergeability and merge state UNKNOWN, so awaiting supervisor resume; PR remains draft and unmerged. Configuration proposal remains at /tmp/row-57-proposals.md. Reviewer accidentally fast-forwarded the shared checkout from 55fca2d1e349c9a2c1e7dba64aff9697011f2fb8 to 36eb9b710a88ccc61bbc126a49372422d51dde47; checkout was clean afterward.",
+          "createdAt": "2026-11-03T04:00:45.994Z",
+          "updatedAt": "2026-11-03T04:00:45.994Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b5702986-bb4b-404f-acc8-561262c4c845",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:41:25.604Z"
-      }
     }
   }
 }
