@@ -1,6 +1,6 @@
 # ADR-0040: A Stage Run records one agent's work on a Story's current visit to a Stage
 
-**Status:** Accepted
+**Status:** Accepted; heartbeats and stale Runs added by [ADR-0048](0048-stage-run-heartbeats-are-attested-evidence.md).
 
 ## 1. Context
 
