@@ -691,7 +691,7 @@ rowbly plugins disable <id>    # keeps its settings and data
 - A Plugin that is on adds commands under `rowbly <id>`, options on core commands (in their `--help`), rows to `stories show`, and checks to `doctor`. It keeps its values on records as `"plugins": { "<id>": { … } }` and its files in `plugins/<id>/` folders. Rowbly keeps both unchanged while the Plugin is off, and `--json` prints records with them.
 - A Plugin that fails to load (its settings are invalid, it throws while it starts, it clashes with a name already in use, or this version of Rowbly does not have it) is skipped with a warning, and `plugins list` and `doctor` report it. Its data is kept.
 - A Plugin can refuse a change (exit 4). An expected error from a Plugin keeps its own code, such as `VALIDATION` (exit 2) for bad input. If a Plugin fails unexpectedly while handling a change, nothing is saved and the command exits 1; the error names the Plugin and says how to turn it off. With `--json`, these errors carry `details.plugin` and `details.stage`.
-- `ROWBLY_DEBUG=trace` prints each operation and Plugin step, with its time and outcome, to stderr.
+- `ROWBLY_DEBUG=trace` prints each operation and Plugin step, with its time and outcome, to stderr, and each wait for the Data Root lock, with how long it waited and for which operation. The TUI prints its last 1,000 lines when it exits, so run `ROWBLY_DEBUG=trace rowbly` to see what a slow screen waited for.
 - In the TUI, the **Plugins** section of the settings (`,`) turns Plugins on and off (`enter`).
 <!-- END plugins -->
 

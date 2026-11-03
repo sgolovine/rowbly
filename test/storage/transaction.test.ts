@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
 import { deferred, FIXED_NOW, fixedClock, tempRoot } from '../helpers';
-import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree } from './engineHelpers';
+import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree, startScript } from './engineHelpers';
 
 let publicationRun: Promise<void> | undefined;
 
@@ -592,6 +592,8 @@ describe('Git local publication', () => {
   it('recovers real SIGKILLs around reservation, intent, ref and index effects through linked-worktree reads while synchronization is Off', async () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
+    const { setTraceSink } = await import('../../src/services/plugins/trace');
+    const { io } = await import('../../src/storage/io');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
     const { requireRepository } = await import('../../src/storage/gitRepository');
     for (const target of [
@@ -645,6 +647,51 @@ describe('Git local publication', () => {
       expect((await readdir(join(f.repo.gitDir, 'rowbly'))).filter((name) => name.startsWith('index-token-'))).toEqual(
         [],
       );
+      if (target !== 'complete') continue;
+      // The trace shows a read that waits behind a publication gate another process holds, and for
+      // whom (ADR-0019 §1).
+      const events: unknown[] = [];
+      const gateLock = join(f.repo.gate, '.lock');
+      const holder = startScript(fixtureScript('holdLock.ts'), ['hold', f.repo.gate]);
+      await holder.printed('locked');
+      const waiting = deferred();
+      const original = io.readFile;
+      const spy = vi.spyOn(io, 'readFile').mockImplementation((path) => {
+        if (path === gateLock) waiting.resolve(); // The reader found the gate held.
+        return original(path);
+      });
+      setTraceSink((event) => events.push(event));
+      try {
+        let read = false;
+        const reading = coordinated(t.root, 'read behind publication', async () => {
+          read = true;
+        });
+        await waiting.promise;
+        expect(read).toBe(false);
+        holder.child.stdin.end();
+        await reading;
+        expect(read).toBe(true);
+      } finally {
+        setTraceSink(undefined);
+        spy.mockRestore();
+        holder.child.stdin.end();
+        await holder.exited;
+      }
+      expect(events).toContainEqual({
+        operationId: expect.stringMatching(/^lock-\d+$/),
+        operation: 'read behind publication',
+        plugin: null,
+        stage: 'coordination',
+        ms: expect.any(Number),
+        outcome: 'ok',
+        coordination: {
+          publication: expect.any(Number),
+          queue: expect.any(Number),
+          lock: expect.any(Number),
+          recovery: expect.any(Number),
+          publicationHolder: 'hold',
+        },
+      });
     }
   });
 });

@@ -484,9 +484,11 @@ rowbly trace op-4 stories.create guard plugin=points ok 0.8 ms
 rowbly trace op-4 stories.create commit ok changes=story:1 2.9 ms
 rowbly trace op-4 stories.create operation ok 5.1 ms
 rowbly trace op-5 stories.update operation rejected code=CONFLICT at=guard:points 1.2 ms
+rowbly trace lock-9 stories.get coordination ok wait=publication:2001.3,queue:0.0,lock:0.4,recovery:0.2 holder=publication:git.publish held 1.1 ms
 ```
 
 - Each line has the operation ID, the operation (or, outside one, the stage), the stage, the Plugin, the outcome (`ok`, `failed`, `rejected`, `timeout`), the error code, the place a failed operation names, and for a commit the number of changes of each type.
+- A `coordination` line is one acquisition of the Data Root lock ([storage](../architecture/storage.md)), named after the read or operation that took it. `wait=` gives the milliseconds spent waiting for the Git publication gate (including publication recovery), behind earlier callers in this process, for the lock file, and on recovering interrupted commits; `holder=` names the operation that held the gate or the lock meanwhile, when it waited for one; the last figure is how long the lock was held. A failed acquisition, such as a busy lock, has outcome `failed` and its code.
 - Command mode writes each line to stderr as it happens, so `--json` output on stdout still parses. The TUI keeps the last 1,000 lines and writes them to stderr when it exits.
 - It never records inputs, bags, settings, records, file text, error messages or editor text. When it is off nothing is measured or kept.
 

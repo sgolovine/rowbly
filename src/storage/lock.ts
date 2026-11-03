@@ -57,10 +57,24 @@ export interface AcquireOptions {
   file?: string;
   /** What the lock guards, named when it is busy; `Data Root` by default. */
   subject?: string;
+  /** Filled in with how long the acquisition waited, for the trace; nothing is measured without it. */
+  timing?: LockTiming;
+}
+
+/** How long one acquisition waited, in milliseconds (ADR-0019 §1). Names and durations only. */
+export interface LockTiming {
+  /** Behind earlier callers in this process. */
+  queuedMs: number;
+  /** For a lock file another holder had. */
+  waitedMs: number;
+  /** The operation that held the lock when it arrived, in this process or in the lock file it waited for. */
+  holder?: string;
 }
 
 /** Waiters in this process, per lock file (canonical folder and file name), in FIFO order. */
 const queues = new Map<string, Promise<void>>();
+/** The operation that holds each lock file in this process, for `LockTiming.holder`. */
+const owners = new Map<string, { operation: string }>();
 /**
  * Canonicalizing the root is asynchronous, so queue places are handed out through this chain, in
  * call order: every realpath starts at once, but a caller takes its place only after every earlier
@@ -120,15 +134,24 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
     token: randomBytes(8).toString('hex'),
     operation: options.operation ?? 'unknown',
   };
+  const { timing } = options;
+  const owner = owners.get(path);
+  if (timing && owner) timing.holder = owner.operation;
   try {
+    const queued = timing ? performance.now() : 0;
     if (!(await settlesBefore(previous, deadline))) throw busy(subject, path, (await readLock(path))?.holder);
-    await createLock(path, holder, deadline, subject);
+    const created = timing ? performance.now() : 0;
+    if (timing) timing.queuedMs = created - queued;
+    await createLock(path, holder, deadline, subject, timing);
+    if (timing) timing.waitedMs = performance.now() - created;
   } catch (err) {
     leave();
     throw err;
   }
 
   let released = false;
+  const mine = { operation: holder.operation };
+  owners.set(path, mine);
   const handle: LockHandle = {
     root: canonical,
     path,
@@ -140,6 +163,7 @@ export async function acquireLock(root: string, options: AcquireOptions = {}): P
     async release() {
       if (released) return true;
       released = true;
+      if (owners.get(path) === mine) owners.delete(path);
       try {
         const current = await readLock(path);
         if (current?.holder?.token !== holder.token) return false;
@@ -194,12 +218,19 @@ function reuse(held: LockHandle, path: string): LockHandle {
 }
 
 /** Creates the lock file `path`, waiting for its holder or breaking it when stale, until `deadline`. */
-async function createLock(path: string, holder: LockHolder, deadline: number, subject: string): Promise<void> {
+async function createLock(
+  path: string,
+  holder: LockHolder,
+  deadline: number,
+  subject: string,
+  timing?: LockTiming,
+): Promise<void> {
   let delay = 25;
   for (;;) {
     if (await createExclusive(path, holder)) return;
     const current = await readLock(path);
     if (!current) continue; // Released meanwhile: try again at once.
+    if (timing && current.holder) timing.holder = current.holder.operation;
     if (isStale(current) && (await breakStale(path, current))) continue;
     const left = deadline - Date.now();
     if (left <= 0) throw busy(subject, path, current.holder);
