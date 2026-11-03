@@ -543,6 +543,15 @@ TUI, started before the first read, with a recheck every minute in case a change
 `run start`, `finish` and `fail` return `{ key, stageRun }`, and `run start` also `selection` when it
 recorded one; `run clear` returns `{ cleared }`.
 
+An advisory Stage Prompt may finish without moving the Story: Comments and edits leave its finished
+Run intact, and a person requests another pass after new input with `run clear`, which keeps the
+Story in place; the prompt, rather than the Plugin, skips duplicate reviews only from complete,
+known and unchanged review inputs. Filtered CLI lists can omit unsafe files; readiness guidance
+must check input completeness separately and treat omissions as gaps. The original normalized
+Story must be checked again after collection, independently of Story Linking; comparing only a
+later inventory cannot detect requirements changed between those reads. Other collected inputs
+also need final comparisons before an unchanged-input claim.
+
 **Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
 the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)
 together, with `--option <id>=<json>` (repeatable; unique IDs, JSON string, finite number or boolean),

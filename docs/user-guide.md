@@ -510,6 +510,16 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
+- An advisory Stage Prompt can finish a readiness review and leave the Story in its current Stage.
+  Comments and requirement edits do not restart its finished Run. After supplying new input, a
+  person can request another pass with `rowbly software-factory run clear <KEY>`; clearing the Run
+  leaves the Story in place. The supervisor leaves finished Runs alone. Duplicate review suppression
+  belongs to the Stage Prompt: it needs complete, known and unchanged review inputs, not just the
+  same Comment count or latest timestamp. A filtered CLI list cannot establish completeness when
+  it omits unsafe files; an incomplete input must prevent skipping the review. A readiness helper
+  must also compare its original reviewed Story with a final read, including when Story Linking is
+  off, and detect changes to its other review inputs during collection. Rowbly does not compare
+  readiness fingerprints itself.
 - `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>` moves the Story only
   while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
   Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
