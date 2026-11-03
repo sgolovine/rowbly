@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T04:26:05.637Z",
+  "updatedAt": "2026-11-03T04:31:39.713Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -119,6 +119,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
+        },
+        {
+          "id": "DsO0DBdn",
+          "author": "sunny",
+          "body": "Implementation record: Run in-progress/1/2026-11-03T04:22:40.198Z; worker/thread mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14; machine rook; provider claudeAgent; model claude-opus-5-5; effort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/814e8a3e9df689b296a15a9e7a8e3de0.json. Actual additive integration author at PR149 c62461424c93a4e9dc1b3576a6391f4ff84d75eb; earlier actual authors Opus and Sol retained. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-47-correction-opus branch row-47-correction-opus. Fresh reviewer model must differ from every actual author model.",
+          "createdAt": "2026-11-03T04:31:39.712Z",
+          "updatedAt": "2026-11-03T04:31:39.712Z"
         }
       ]
     }
