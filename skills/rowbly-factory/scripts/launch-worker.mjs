@@ -177,10 +177,9 @@ async function settle(receipt, threadIds, expected, status, reply) {
   }
   const options = actual?.modelSelection?.options === undefined ? [] : actual?.modelSelection?.options;
   if (
-    typeof actual?.threadId !== 'string' ||
-    typeof actual?.modelSelection?.instanceId !== 'string' ||
-    typeof actual?.modelSelection?.model !== 'string' ||
-    typeof actual?.runtimeMode !== 'string' ||
+    [actual?.threadId, actual?.modelSelection?.instanceId, actual?.modelSelection?.model, actual?.runtimeMode].some(
+      (value) => typeof value !== 'string' || !value.trim(),
+    ) ||
     !validOptions(options)
   ) {
     stop('unverified', { ...identity, launcherId, reason: 'options not verified: malformed configuration' });

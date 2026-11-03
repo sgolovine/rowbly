@@ -448,6 +448,7 @@ else if (args[1] === 'show') {
       expect(JSON.parse(await readFile(verified.receipt, 'utf8')).request).toEqual(receipt.request);
     }
     await checkLaunch({ actual: { ...actual, modelSelection: { ...planned, options: null } } }, 'unverified');
+    await checkLaunch({ actual: { ...actual, modelSelection: { ...planned, model: '' } } }, 'unverified');
     await checkLaunch({ omitModel: true }, 'unverified');
     await checkLaunch({ worker: { providerInstanceId: 123, runtimeMode: '' } }, 'unverified');
     await checkLaunch({ worker: { model: 'different-model' } }, 'conflict');

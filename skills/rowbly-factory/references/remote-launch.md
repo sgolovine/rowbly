@@ -57,8 +57,10 @@ and, once known, its thread. In order, the script:
    its first message. Then the script asks the launcher for the thread's `t3_thread_configuration`
    (`CONFIG`), because the CLI does not show options, and compares the complete typed option set
    independent of order, refusing extra, missing or duplicate IDs and different types/values. The
-   receipt records the thread. Missing or malformed CLI provider, model or runtime evidence is
-   `unverified`; only complete, well-formed differing values establish a mismatch.
+   receipt records the thread. Missing, empty, whitespace-only or malformed CLI provider, model or
+   runtime evidence, or CONFIG thread ID, provider, model or runtime evidence, is `unverified`.
+   Validation leaves the original values and intended selection unchanged; only complete,
+   well-formed differing values establish a mismatch.
 
 Neither the title alone nor the launcher's own answer counts as verification. The launcher's turns
 take up a slot on the server, as the worker threads do.
@@ -77,7 +79,7 @@ oddly but the checks passed.
 | `failed`, `error` | 1 | Nothing was started | Fix the `reason`, then run the same command again. |
 | `unknown` | 2 | A requested or discovered thread cannot be found or confirmed | Wait, then run the **same** command again. If it stays `unknown`, see Restarting. |
 | `conflict` | 2 | Several threads for the request, a thread that differs from it, an archived thread, or a title used for another request | Start nothing for the Story; look at the threads (`t3 thread show`) and tell the user. |
-| `unverified` | 2 | CLI identity/configuration evidence is missing or malformed, or the launcher could not confirm options | Do not count it as verified; run the same command again later, or tell the user. |
+| `unverified` | 2 | CLI or CONFIG identity/configuration evidence is missing, empty, whitespace-only or malformed, or the launcher could not confirm options | Do not count it as verified; run the same command again later, or tell the user. |
 
 ## Retrying, archiving and restarting
 
