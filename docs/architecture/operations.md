@@ -140,6 +140,13 @@ else `CONFLICT`; `clear` removes any Stage Run, else `NOT_FOUND`. They also set 
 `updatedAt`. The Plugin's `stories.move` and `stories.update` transforms remove a valid Stage Run when
 the Story's Stage changes; a Stage Run for another Stage than the Story's is ignored.
 
+`rowbly software-factory apply` runs no operation of its own: it holds no lock and runs each
+command of a worker's block that it allows as a separate `rowbly` process, so each runs its own
+operation, under its own lock, as that command always does
+([ADR-0045](../agents/adr/0045-reported-board-commands-are-checked-and-applied-by-rowbly.md)).
+Its move carries the Stage Run it decided on as the Plugin's `stories.move` input, so the move's
+own guard checks that Run again under that lock.
+
 ## Plugin input of core operations
 
 A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin's `inputs` schema for the operation before anything runs. The built-ins take this input:
@@ -155,6 +162,7 @@ A Plugin's input of a core operation (`plugins.<id>`) is checked by that Plugin'
 | Tasks | `stories.update` | `{ tasks: [{ number?, name, description?, stage? }], baseline?: [StoredTask] }`; replaces the list, keeps existing numbers, creation dates and unknown Task/bag fields, allocates new numbers without reuse; missing or duplicate existing numbers reject the operation |
 | Story Linking | `stories.update` | `{ blocks?: [Story Key], blockedBy?: [Story Key], baseline?: { blocks?, blockedBy? } }`; replaces each given direction, including incoming blockers in the same Change Set; existing stale outgoing links may be kept or removed |
 | Story Linking | `stories.create` | `{ blocks?: [Story Key], blockedBy?: [Story Key] }`; linked Stories must exist on the same Board |
+| Software Factory | `stories.move` | `{ finishedRun: { stage, attempt, startedAt } }`; its guard refuses the move (`CONFLICT`) unless that is still the finished Stage Run of the Story's current visit, read as stored under the move's lock |
 
 A Story filter (`StoryFilter.plugins.<id>`) is checked by the Plugin's `storyFilterSchema`. For Assignees this is a non-empty list of handles (`me` is Me), matching Stories with any of them. For Epics this is an Epic ID, or `false` for Stories without one. Story Linking takes `{ blocks: Story Key }`, returning Stories whose outgoing links include that key;
 its strict query schema rejects malformed queries, and invalid stored linking bags fail explicitly.

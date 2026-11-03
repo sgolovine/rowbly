@@ -39,6 +39,10 @@ rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --retry --json --no-prompt   # a failed one, next attempt
 rowbly software-factory run clear WEB-42 --json --no-prompt          # work the Stage again
+
+# A worker's reported block (supervisor only): check it, then run what it allows
+rowbly software-factory apply WEB-42 --file block.md --dry-run --json --no-prompt
+rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
 ```
 
 `stages --json` returns:
@@ -64,6 +68,11 @@ stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stag
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
 `{ cleared }`.
 
+`apply --json` returns `{ key, stageRun, dryRun, commands: [{ line, text, argv, decision, reason?,
+exitCode?, output? }] }`, in the order the lines run (moves last). `decision` is `apply`, `hold`,
+`drop` or `reject`; `exitCode` and `output` (the command's JSON result or error) are set once a line
+ran. A refused block or a failed line exits non-zero with the same object in `error.details`.
+
 ## Rules
 
 - Follow a Stage Prompt only when `prompt.enabled` is `true`. It is true only when the setting is on
@@ -78,6 +87,23 @@ stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stag
   `--retry`. `finish` and `fail` exit 4 unless a Stage Run is `running`; `clear` exits 3 when there is
   none.
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
+- `apply` allows only `stories edit|move`, `comments add|edit`, `tasks create|edit|move`,
+  `specs create|edit --story` and `story-linking add|remove --blocks`, each about the given Story as
+  its first argument (or `--story`) and writing only it. It splits lines with shell quoting but runs
+  no shell: shell syntax, `$` or a backtick in double quotes, another Story, `--blocked-by` (Story
+  Linking stores a link on the blocker, so it writes the other Story), `software-factory` commands,
+  short options and `--data-root`, `--board`, `--yes`, `--prompt`, `--edit`, `--*-file`,
+  `--story-spec`, `--from-clipboard`, `--finished-run` reject the line, and one rejected line refuses
+  the block (exit 2, nothing ran).
+- `apply` runs `stories move` last and only when the Stage Run is `finished`: it is `hold` while the
+  Stage Run runs or when there is none, and `drop` after `failed`. Re-submit a held move after
+  `run finish`. One move per block.
+- `apply` runs the move as `stories move <KEY> <stage> --finished-run <stage>/<attempt>/<startedAt>`
+  of the Run it read. That move's own guard checks the Run again under the Data Root lock: when it
+  was cleared or replaced meanwhile (another attempt, Stage or start), the move exits 4
+  (`CONFLICT`) and changes nothing. The option works on any `stories move`.
+- Each allowed line runs as its own `rowbly … --json --no-prompt` on the same Data Root. The first
+  that fails stops the block with that command's exit code; earlier lines stay applied.
 - To wait for work, pass `wait` the `digest` of the `runs` you last acted on, never a fresh one: a
   change between your read and the wait then returns at once instead of being missed.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
