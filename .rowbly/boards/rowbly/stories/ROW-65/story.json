@@ -20,6 +20,13 @@
     "comments": {
       "comments": [
         {
+          "id": "603n0LB0",
+          "author": "sunny",
+          "body": "Supervisor applied the exact Astra-reviewed /tmp/row65-reviewed-supervisor.patch to .rowbly/ROWBLY.md: coherent-event sync barriers, publish-before-GO/dependent-reply, frequency change retained, conflict provenance investigation, and explicit evidence/pr-assets retention. A1 remains held and no evidence/settings/resources removed. Doctor clean; root typecheck, lint, unit and CLI checks all passed on the guide change. This is the authorized supervisor-only policy application after PR150 merge.",
+          "createdAt": "2026-11-03T04:06:30.442Z",
+          "updatedAt": "2026-11-03T04:06:30.442Z"
+        },
+        {
           "id": "8lxZPsxM",
           "author": "sunny",
           "body": "PARTIAL PLAN ACCEPTANCE: implement A2 as correction of spurious deletion-intent evidence on one-sided additions, plus retention/docs and event-batching guidance within your owned sections. Keep every existing evidence file and pr-assets branch. Evidence-format slimming deferred. Reserve ADR0050 for this correction/retention clarification; preserve0034 accepted concurrency and deterministic reconciliation semantics. A1 skipping reconciliation on ancestor-only merges changes ADR0034 section2 explicit rule, so HOLD A1 pending user decision; do not implement it yet. Keep Automatic Commits frequency change: supervisor verified live interval5000 mismatch and restored change per explicit user/ROWBLY policy. Do not weaken force-change or claim batching reduces per-change commits; batch sync once per coherent event while retaining every GO/publication barrier and replies workers await. A conflict/evidence does not prove second writer (main product merges/legacy data can explain it); investigate provenance, preserve data and report unresolved conflicts rather than categorical false claim. Add required existing reconciliation regression assertion for base-absent addition/no evidence and real deletion intent/evidence retained, plus all four checks. ROW61 owns cleanup mechanics/task daemon and screenshot skill daemon changes; you own one retention line there. Send revised A1-independent plan/ADR wording before coding if separation is unclear.",
@@ -67,13 +74,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/150 . Completed A2 deletion-intent correction, ADR-0050 retention policy and coherent supervisor-event sync batching while preserving publication barriers and frequency change. A1 remains held. Typecheck, lint, 78 unit tests, 20 CLI tests and build passed; uploaded CLI screenshot verified HTTP 200. All existing evidence and pr-assets preserved. Supervisor-owned ROWBLY.md patch is in PR comment https://github.com/sgolovine/rowbly/pull/150#issuecomment-6594504587 for application on main. Branch factory/row-65 pushed at 96e6bc5e7c365a183a3134115423ef762cc61e86; CI queued.",
           "createdAt": "2026-11-03T03:22:55.460Z",
           "updatedAt": "2026-11-03T03:22:55.460Z"
-        },
-        {
-          "id": "603n0LB0",
-          "author": "sunny",
-          "body": "Supervisor applied the exact Astra-reviewed /tmp/row65-reviewed-supervisor.patch to .rowbly/ROWBLY.md: coherent-event sync barriers, publish-before-GO/dependent-reply, frequency change retained, conflict provenance investigation, and explicit evidence/pr-assets retention. A1 remains held and no evidence/settings/resources removed. Doctor clean; root typecheck, lint, unit and CLI checks all passed on the guide change. This is the authorized supervisor-only policy application after PR150 merge.",
-          "createdAt": "2026-11-03T04:06:30.442Z",
-          "updatedAt": "2026-11-03T04:06:30.442Z"
         }
       ]
     }
