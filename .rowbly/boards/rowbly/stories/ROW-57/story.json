@@ -41,6 +41,13 @@
           "updatedAt": "2026-11-03T03:35:07.501Z"
         },
         {
+          "id": "UBvJcGFi",
+          "author": "sunny",
+          "body": "Implementation record: Run in-progress/1/2026-11-03T04:42:36.790Z; worker/thread mcp:d7cd258b-6cd9-4d5d-8c10-68ef549b0a5a; machine rook; provider claudeAgent; model claude-opus-5-5; effort high; verification /home/sgolovine/.rowbly-factory/receipts/52e79481b396021c23d6fbb8b3de1258.json. Actual additive integration author of PR147 head 6c63dc208aa41f518f794196210a11ff09345d18. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-57-integration, branch row-57-integration. All actual author models are Sonnet5.5, Sol, Opus5.5; review-only workers excluded. Fresh reviewer model must differ from every actual author.",
+          "createdAt": "2026-11-03T04:49:58.683Z",
+          "updatedAt": "2026-11-03T04:49:58.683Z"
+        },
+        {
           "id": "cKFu0Hrk",
           "author": "sunny",
           "body": "Independent review APPROVED at d5054f35b9237774e7fc682d7e74f9e7284b57d6: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6594885399. Typecheck, lint, unit 78 and CLI 20 passed; all six GitHub checks succeeded. Latest mergeability and merge state UNKNOWN, so awaiting supervisor resume; PR remains draft and unmerged. Configuration proposal remains at /tmp/row-57-proposals.md. Reviewer accidentally fast-forwarded the shared checkout from 55fca2d1e349c9a2c1e7dba64aff9697011f2fb8 to 36eb9b710a88ccc61bbc126a49372422d51dde47; checkout was clean afterward.",
@@ -83,6 +90,13 @@
           "updatedAt": "2026-11-03T02:19:43.746Z"
         },
         {
+          "id": "rfnycCU1",
+          "author": "sunny",
+          "body": "Integrated current main into the same draft PR https://github.com/sgolovine/rowbly/pull/147 on branch factory/row-57; new head 6c63dc208aa41f518f794196210a11ff09345d18 (merges origin/main 6f1b8384f5a67b6488468375a9cf945d3440a271; ordinary merge, no rebase or force push). 1. docs/user-guide.md: kept main's independent review paragraph word for word, with one hold sentence and one 'It runs until you stop it.'; added the ROW-57 CI waiting sentences just before that closing sentence. 2. skills/rowbly-factory/SKILL.md: kept main's completion cleanup paragraph under Worker messages, followed by the unchanged Waiting for pull request checks section, including the full conclusion classification and independent review while CI is pending; Returned work, Independent review, Retry context and Evidence retention each appear once. 3. references/worker-brief.md: kept main's numbering (4 Finish, 5 Task resources), fixed the duplicate rule 5 that the clean auto-merge produced, and added the ROW-57 rule unchanged as 6 Pull request checks. The diff against main is these 3 files only (+56/-1); no .rowbly edits by the worker. All four checks were run once on the final head under the validation lock: typecheck PASS, lint PASS, unit 78 PASS, CLI 21 PASS. GitHub at handoff: MERGEABLE/UNSTABLE, with six checks pending (Verify, Unit tests, CLI tests, Clipboard smoke on macos, windows and ubuntu). This head needs a fresh independent review. Integration worker: Opus 5.5 on rook. PR comment: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6595718449",
+          "createdAt": "2026-11-03T04:50:00.736Z",
+          "updatedAt": "2026-11-03T04:50:00.736Z"
+        },
+        {
           "id": "ue0T0Gcl",
           "author": "sunny",
           "body": "Integration plan ACCEPTED for SAME PR147 factory/row-57 d5054f35: new isolated row-57-integration worktree, ordinary currentmain merge. Preserve main user-guide independentreview paragraph and single hold/run-until-stop sentences; add all ROW57 CIwaiting classification sentences. Keep completioncleanup paragraph under Worker messages then unchanged Waiting for pull request checks section, all Returnedwork/Independentreview/retry/retention/resource/identity/hold/publication rules exactlyonce. Fix silently duplicated workerbrief numbering: retain main4Finish/5Taskresources, append unchanged Pull request checks as6; no source references need changing. No unrelated edits/tests/ADR/.rowbly edits. Refetch/merge before allfour finalchecks once under boundedlease, preserve prior evidence; screenshots onlyif actual visible CLI/TUI output changes, existing unchanged evidence retained. Normalpush samePR, newhead/findings/validation handoff, fresh independentreview required. Proposals remain supervisorowned unchanged,146/145held.",
@@ -102,20 +116,6 @@
           "body": "Corrected existing draft PR https://github.com/sgolovine/rowbly/pull/147 at head d5054f35b9237774e7fc682d7e74f9e7284b57d6. Finding 1: worker brief, skill, user guide and outside-DataRoot proposals explicitly permit independent diff review to start and finish during pending CI; yield only remaining CI-dependent work. Finding 2: every watch exit is only a wake signal; inspect all actual current-head conclusions before merging. Cancelled, skipped, neutral and unknown terminal results require explicit policy or decision. Actual failures, pending checks, absent registration, timeouts and unreadable PRs remain distinct. Preserved generated-brief guidance and ROW47 review/approval and ROW48 failure/return ownership. Proposals updated only in /tmp/row-57-proposals.md, not applied. Typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS. CI pending at handoff: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest). No merge or authored Data Root changes.",
           "createdAt": "2026-11-03T03:35:10.144Z",
           "updatedAt": "2026-11-03T03:35:10.144Z"
-        },
-        {
-          "id": "UBvJcGFi",
-          "author": "sunny",
-          "body": "Implementation record: Run in-progress/1/2026-11-03T04:42:36.790Z; worker/thread mcp:d7cd258b-6cd9-4d5d-8c10-68ef549b0a5a; machine rook; provider claudeAgent; model claude-opus-5-5; effort high; verification /home/sgolovine/.rowbly-factory/receipts/52e79481b396021c23d6fbb8b3de1258.json. Actual additive integration author of PR147 head 6c63dc208aa41f518f794196210a11ff09345d18. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-57-integration, branch row-57-integration. All actual author models are Sonnet5.5, Sol, Opus5.5; review-only workers excluded. Fresh reviewer model must differ from every actual author.",
-          "createdAt": "2026-11-03T04:49:58.683Z",
-          "updatedAt": "2026-11-03T04:49:58.683Z"
-        },
-        {
-          "id": "rfnycCU1",
-          "author": "sunny",
-          "body": "Integrated current main into the same draft PR https://github.com/sgolovine/rowbly/pull/147 on branch factory/row-57; new head 6c63dc208aa41f518f794196210a11ff09345d18 (merges origin/main 6f1b8384f5a67b6488468375a9cf945d3440a271; ordinary merge, no rebase or force push). 1. docs/user-guide.md: kept main's independent review paragraph word for word, with one hold sentence and one 'It runs until you stop it.'; added the ROW-57 CI waiting sentences just before that closing sentence. 2. skills/rowbly-factory/SKILL.md: kept main's completion cleanup paragraph under Worker messages, followed by the unchanged Waiting for pull request checks section, including the full conclusion classification and independent review while CI is pending; Returned work, Independent review, Retry context and Evidence retention each appear once. 3. references/worker-brief.md: kept main's numbering (4 Finish, 5 Task resources), fixed the duplicate rule 5 that the clean auto-merge produced, and added the ROW-57 rule unchanged as 6 Pull request checks. The diff against main is these 3 files only (+56/-1); no .rowbly edits by the worker. All four checks were run once on the final head under the validation lock: typecheck PASS, lint PASS, unit 78 PASS, CLI 21 PASS. GitHub at handoff: MERGEABLE/UNSTABLE, with six checks pending (Verify, Unit tests, CLI tests, Clipboard smoke on macos, windows and ubuntu). This head needs a fresh independent review. Integration worker: Opus 5.5 on rook. PR comment: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6595718449",
-          "createdAt": "2026-11-03T04:50:00.736Z",
-          "updatedAt": "2026-11-03T04:50:00.736Z"
         }
       ]
     }
