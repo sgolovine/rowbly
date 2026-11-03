@@ -4,5 +4,16 @@
     "stage": "in-progress",
     "attempt": 1,
     "startedAt": "2026-11-03T04:22:40.198Z"
+  },
+  "identity": {
+    "worker": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
+    "verification": {
+      "source": "/home/sgolovine/.rowbly-factory/receipts/814e8a3e9df689b296a15a9e7a8e3de0.json",
+      "verifiedAt": "2026-11-03T04:22:40.958Z",
+      "by": "sunny"
+    }
   }
 }
