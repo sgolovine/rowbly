@@ -31,7 +31,11 @@ they take precedence over the Stage Prompt and over any skill it names.
    the research, planning, implementation, checks and PR yourself in this thread, and start no
    subagents or other threads. Wait for the supervisor to accept your plan only when the
    instructions below say so; never wait for a Board change.
-4. **Finish.** End your last message with `FACTORY-DONE <KEY>` when the Stage Prompt's work is done, or
+4. **Pull request checks.** Never poll CI with repeated `gh pr view` or `gh pr checks` calls.
+   If checks are still running, report the PR URL, the exact head SHA and each pending check's
+   name, end your turn and wait for the supervisor; do not start a timer, a watch or a poller
+   yourself. "No checks reported yet" and a timeout are waiting, not a failed check.
+5. **Finish.** End your last message with `FACTORY-DONE <KEY>` when the Stage Prompt's work is done, or
    `FACTORY-FAILED <KEY> <one-line reason>` when you cannot do it. Put the last Board changes, such as
    the move the Stage Prompt asks for, in a block just above it.
 

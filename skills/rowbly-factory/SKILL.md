@@ -221,6 +221,44 @@ ask it for its state. If it is gone, run `run fail` with what you know.
 
 Finish or fail the Stage Run before you move the Story: a move ends the Stage Run.
 
+## Waiting for pull request checks
+
+A Stage whose work depends on a pull request's checks (merging, say) must not spend model turns
+watching CI. Waiting is the supervisor's job, and a worker never loops on `gh pr view` or `gh pr
+checks`.
+
+- **Prefer an event.** If the harness can watch a pull request and wake you when its checks finish,
+  a review arrives or the branch conflicts, use it, end your turn and act on the wake. The
+  supervisor owns that watch; a worker does not start one. `ROWBLY.md` names the harness's tool.
+- **A worker returns state instead of waiting.** When checks are still running, it reports the PR
+  URL, the exact head SHA and each pending check's name, ends its turn and lets the supervisor
+  resume it. Independent work that needs only the diff, such as a review, does not wait for checks.
+- **Fallback: one bounded watch.** Where there is no event, the supervisor starts a single command in
+  the background, with the harness's way to resume when it exits, and never a loop of model turns:
+
+  ```sh
+  timeout 30m gh pr checks <number> --watch --fail-fast --interval 30
+  ```
+
+  Watch all checks; `--required` reports nothing on a branch without protection rules. Read the
+  result once, then `gh pr view <number> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup`
+  for the head SHA and the conclusions.
+- **Four different outcomes**, none of which is another:
+
+  | Outcome | Sign | Do |
+  | --- | --- | --- |
+  | Settled, all passed | exit 0 | continue the Stage's work |
+  | A check failed | exit 1 and a conclusion of `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED` in `statusCheckRollup` | route it as the Stage Prompt says for failed checks; name the check and its link |
+  | No checks yet | exit 1 and "no checks reported", or an empty `statusCheckRollup`, soon after a push | not a failure: wait one grace period (about 2 minutes) and watch once more; then report **waiting** or ask, never repair |
+  | Still pending | exit 124 (timeout), or a check with no conclusion | not a failure: report **waiting** with the head SHA and the pending names, or ask |
+
+  A pull request that cannot be read (no access, wrong repository, closed) is a fourth thing:
+  report the error and ask. `mergeable` reads `UNKNOWN` for a while after a push to the base
+  branch; that is pending too.
+- **Cancel and restart.** A push gives the pull request a new head and new checks, so cancel the
+  watch for the old head (send the process a signal) and start one for the new head. Stopping the
+  factory, finishing the Stage Run or moving the Story away cancels it too. Leave no watch running.
+
 ## Apply a worker's commands
 
 Workers never change the Board; they report the commands their Stage Prompt asks for. Never run a
