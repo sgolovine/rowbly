@@ -27,18 +27,18 @@
     "comments": {
       "comments": [
         {
-          "id": "SmCEMgSY",
-          "author": "sunny",
-          "body": "Supervisor audit: this Run has ABSENT Model Selection metadata because a supervisor helper checked obsolete literal flag spelling --provider <provider>; current CLI is --provider <id>. Actual requested and verified launch is claudeAgent/claude-opus-5-5, typed option effort=high, coding default, usage unknown; durable receipt /home/sgolovine/.rowbly-factory/receipts/afa543a259170ea4d2d011169e74994f.json and ROW-72-launch-new.json preserve the pre-GO request/verification. Identity and Run attachment are valid. Do not backfill immutable selection, clear/retry the Run or launch a duplicate. The same verified worker 4e1fd55c may continue research; implementation still waits for plan acceptance. This Comment records the omission and verified receipt, not retroactive metadata. Future starts now query live CLI capability, require selection flags and exact complete typed published selection before GO; missing intent fails closed. Planned task allocation /home/sgolovine/Projects/rowbly-worktrees/row-72-story-opening branchfactory/row-72 is supervisor-chosen in prelaunch instructions; actual creation to be confirmed by worker.",
-          "createdAt": "2026-11-03T05:58:24.209Z",
-          "updatedAt": "2026-11-03T05:58:24.209Z"
-        },
-        {
           "id": "Gvc5xEtE",
           "author": "sunny",
           "body": "Plan revision required before implementation; plan is NOT accepted yet. 1. Do not hold generic coordinated scopes across Plugin row/badge/search callbacks (including chunk20 callbacks or Board badges). A held optional async callback would block Root mutations/edit-move-delete despite core rendering; fixed callback count/current Built-ins/ADR0044 precedent do not satisfy Spec bounded-read and fairness requirement. Batch known bounded data reads under service-layer control, invoke arbitrary callbacks outside the hold, and explain explicit yield/bounds. 2. Separate same-Board Local State avoidance from route/reset decisions: context.use must not mutate an already-current Board merely because root route is nondefault/explicit params. Preserve appropriate covered-Board filters/cursor and cross-Board behavior; enumerate same-context explicit-board/home/other-route cases. 3. No-test plan insufficient for changed coordination/read-scope and async freshness semantics. Propose minimal deterministic barriers in existing storage/Plugin/TUI test homes: publication-hold recovery/snapshot safety and telemetry, core usable plus a mutation progressing while optional callback is held, stale enrichment cannot replace a newer Story/reload. Extend kept tests where meaningful; at most one necessary new test keeps total<=100. No timing thresholds/sleeps/duplicate UI snapshots. 4. Deferring cache and Spec/Epic search deduplication may be justified after measured revised batching; demonstrate post-change71/501/Plugins-on-off/slow-storage and separate core/enrichment/index timings, full read/lock counts with measurement limits. Do not treat estimated29reads<1ms as post-change proof or claim original incident attribution. Telemetry must separate queue/publication/Root-lock/recovery/held work with operation names/durations only, no raw holder records/PIDs/hosts/paths/body data. Keep ADR0019 safety, no fsync/lock bypass. Revise plan and WAIT acceptance; research/harness work outside repo only. Resource and absent-selection audit acknowledged, no metadata backfill.",
           "createdAt": "2026-11-03T06:06:11.068Z",
           "updatedAt": "2026-11-03T06:06:11.068Z"
+        },
+        {
+          "id": "SmCEMgSY",
+          "author": "sunny",
+          "body": "Supervisor audit: this Run has ABSENT Model Selection metadata because a supervisor helper checked obsolete literal flag spelling --provider <provider>; current CLI is --provider <id>. Actual requested and verified launch is claudeAgent/claude-opus-5-5, typed option effort=high, coding default, usage unknown; durable receipt /home/sgolovine/.rowbly-factory/receipts/afa543a259170ea4d2d011169e74994f.json and ROW-72-launch-new.json preserve the pre-GO request/verification. Identity and Run attachment are valid. Do not backfill immutable selection, clear/retry the Run or launch a duplicate. The same verified worker 4e1fd55c may continue research; implementation still waits for plan acceptance. This Comment records the omission and verified receipt, not retroactive metadata. Future starts now query live CLI capability, require selection flags and exact complete typed published selection before GO; missing intent fails closed. Planned task allocation /home/sgolovine/Projects/rowbly-worktrees/row-72-story-opening branchfactory/row-72 is supervisor-chosen in prelaunch instructions; actual creation to be confirmed by worker.",
+          "createdAt": "2026-11-03T05:58:24.209Z",
+          "updatedAt": "2026-11-03T05:58:24.209Z"
         }
       ]
     }
