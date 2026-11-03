@@ -19,6 +19,12 @@ running, finished or failed, with its attempt number and the worker that does it
 most one, and a change of Stage ends it, so the next visit starts unworked.
 _Avoid_: job, claim, lock
 
+**Model Selection**:
+The provider, model and options the Supervisor chose for a Stage Run's Worker before its launch,
+with the model policy rule it applied, why it fell back from that rule's model, and where its
+knowledge of usage came from. It records intent; the launch receipt confirms it.
+_Avoid_: model choice, routing
+
 **Heartbeat**:
 The last time the Supervisor verified that a running Stage Run's worker was active (a message from
 it or an event from its harness), with where that evidence came from. It belongs to one Stage Run.
