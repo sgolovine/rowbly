@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T04:49:59.461Z",
+  "updatedAt": "2026-11-03T04:50:00.737Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:d7cd258b-6cd9-4d5d-8c10-68ef549b0a5a",
+        "by": "sunny",
+        "startedAt": "2026-11-03T04:42:36.790Z",
+        "finishedAt": "2026-11-03T04:49:59.460Z"
+      }
     },
     "comments": {
       "comments": [
@@ -109,19 +120,15 @@
           "body": "Implementation record: Run in-progress/1/2026-11-03T04:42:36.790Z; worker/thread mcp:d7cd258b-6cd9-4d5d-8c10-68ef549b0a5a; machine rook; provider claudeAgent; model claude-opus-5-5; effort high; verification /home/sgolovine/.rowbly-factory/receipts/52e79481b396021c23d6fbb8b3de1258.json. Actual additive integration author of PR147 head 6c63dc208aa41f518f794196210a11ff09345d18. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-57-integration, branch row-57-integration. All actual author models are Sonnet5.5, Sol, Opus5.5; review-only workers excluded. Fresh reviewer model must differ from every actual author.",
           "createdAt": "2026-11-03T04:49:58.683Z",
           "updatedAt": "2026-11-03T04:49:58.683Z"
+        },
+        {
+          "id": "rfnycCU1",
+          "author": "sunny",
+          "body": "Integrated current main into the same draft PR https://github.com/sgolovine/rowbly/pull/147 on branch factory/row-57; new head 6c63dc208aa41f518f794196210a11ff09345d18 (merges origin/main 6f1b8384f5a67b6488468375a9cf945d3440a271; ordinary merge, no rebase or force push). 1. docs/user-guide.md: kept main's independent review paragraph word for word, with one hold sentence and one 'It runs until you stop it.'; added the ROW-57 CI waiting sentences just before that closing sentence. 2. skills/rowbly-factory/SKILL.md: kept main's completion cleanup paragraph under Worker messages, followed by the unchanged Waiting for pull request checks section, including the full conclusion classification and independent review while CI is pending; Returned work, Independent review, Retry context and Evidence retention each appear once. 3. references/worker-brief.md: kept main's numbering (4 Finish, 5 Task resources), fixed the duplicate rule 5 that the clean auto-merge produced, and added the ROW-57 rule unchanged as 6 Pull request checks. The diff against main is these 3 files only (+56/-1); no .rowbly edits by the worker. All four checks were run once on the final head under the validation lock: typecheck PASS, lint PASS, unit 78 PASS, CLI 21 PASS. GitHub at handoff: MERGEABLE/UNSTABLE, with six checks pending (Verify, Unit tests, CLI tests, Clipboard smoke on macos, windows and ubuntu). This head needs a fresh independent review. Integration worker: Opus 5.5 on rook. PR comment: https://github.com/sgolovine/rowbly/pull/147#issuecomment-6595718449",
+          "createdAt": "2026-11-03T04:50:00.736Z",
+          "updatedAt": "2026-11-03T04:50:00.736Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:d7cd258b-6cd9-4d5d-8c10-68ef549b0a5a",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:42:36.790Z",
-        "finishedAt": "2026-11-03T04:49:59.460Z"
-      }
     }
   }
 }
