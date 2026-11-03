@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T01:22:57.378Z",
+  "updatedAt": "2026-11-03T02:03:05.854Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -70,6 +70,13 @@
           "body": "Supervisor plan review: Plan needs two revisions before implementation. Adopt ROW-58's canonical eligibility:{eligible:boolean,reasons:[{code,message,blockers?}]} shape; use code HELD and derive Waiting table text from reasons, no parallel waiting[] contract. ROW-58 owns eligibility.ts and blocked-link integration; you own hold persistence, hold/release commands and hold rendering. Required reason and surviving Stage changes are within Story scope. BUT optional hold beside a still-valid legacy stageRun is not compatible with docs/plugins/compatibility.md §3.4: old readers would silently erase a hold and unexpectedly resume dispatch. Do not document harmful hold loss as acceptable or merely add version:2 that old Zod drops. Propose safe storage: consider a separate Plugin-owned per-Story hold file that older versions never rewrite, or a versioned shape old schema rejects with explicit migration/test policy. Prefer the smallest solution that preserves holds and existing Stage Runs. Keep ADR-0043 provisionally for hold; recheck before publishing. Do not add new glossary Avoid words such as pause/lock/freeze globally unless necessary; lock is an existing core storage term. Return adjusted storage/interface plan before editing; TUI work must use rowbly-tui-design. ROWBLY.md remains proposed diff only.",
           "createdAt": "2026-11-02T23:41:13.205Z",
           "updatedAt": "2026-11-02T23:41:13.205Z"
+        },
+        {
+          "id": "kUemXgOI",
+          "author": "sunny",
+          "body": "Supervisor decision: KEEP PR143 merged. The queued hold was received after its authorized merge; no revert or restart is requested. PR143/bb120a6 and PR144/30254f3 are on main with passing main CI. The former 141-first plan is superseded by actual merged state. Keep your current In PR Stage Run and SAME PR141. You are explicitly authorized to perform only the scoped integration correction: fetch and merge current origin/main into factory/row-59-correction-rook, resolve the 11 additive conflicts by retaining hold/release/HELD reasons and doctor findings alongside strict run details/identity lifecycle, common runRef schema, start/attach guards, and ROW55 locked stories.move --finished-run/apply allowlist. Preserve all ADR0040 amendments0043/0045/0046 and index rows, docs/API/reference copies, full runs/wait digest and combined HELD/BLOCKED. No behavior redesign, new storage, history or cross-Story writes. Plain merge and normal push HEAD:factory/row-59, no rebase/force. Re-run typecheck, lint, unit and CLI plus relevant strict hold and run-detail unsafe-path/unknown-byte/guard-failing-hook preservation checks on the merged source. Build current dist before manual scenarios (CLI tests build in temp). Recheck exact-head CI/reviews/screenshots and readiness before ready+mergecommit under Stage Prompt, then main CI and full valid ownStoryComment/moveDone block plus FACTORY-DONE. If the integration raises actual scope/design ambiguity rather than additive conflicts, report questions. No Board writes, no duplicate PR or new worker. Proceed.",
+          "createdAt": "2026-11-03T02:03:05.853Z",
+          "updatedAt": "2026-11-03T02:03:05.853Z"
         },
         {
           "id": "nGgg0QmV",
