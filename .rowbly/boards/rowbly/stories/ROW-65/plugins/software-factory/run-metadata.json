@@ -4,5 +4,16 @@
     "stage": "in-progress",
     "attempt": 2,
     "startedAt": "2026-11-03T03:05:33.830Z"
+  },
+  "identity": {
+    "worker": "mcp:818848ba-51cb-4499-9dd5-601669d045be",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:818848ba-51cb-4499-9dd5-601669d045be",
+    "verification": {
+      "source": "Native t3_thread_launch/read/configuration verified Sol high/full-access explicit existing worktree and unchanged partial-file hashes; /tmp/rowbly-factory-session/ROW-65-verified-retry2.json",
+      "verifiedAt": "2026-11-03T03:05:34.601Z",
+      "by": "sunny"
+    }
   }
 }
