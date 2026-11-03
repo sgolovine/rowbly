@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:16:17.227Z",
+  "updatedAt": "2026-11-03T15:34:19.228Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
+        "by": "sunny",
+        "startedAt": "2026-11-03T15:16:16.471Z"
+      }
     },
     "comments": {
       "comments": [
@@ -46,18 +56,15 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
+        },
+        {
+          "id": "dzICUJh4",
+          "author": "sunny",
+          "body": "Retry 2 revised plan submitted for acceptance. Continued factory/row-62 through origin/main c20c2528187b7941c6214b3b0d9a489572dd9106. Complete plan, TODO prompt, ROWBLY.md proposal and executable method-2 Node fingerprint candidate are preserved under /tmp/row62/retry2. Candidate passed 140 throwaway research scenarios; real ROW-62 collection, syntax check and doctor passed. Comparison requires complete known inputs and a verified digest; gaps never produce overall. No product edits or worker Board changes. Implementation and supervisor-owned post-merge TODO activation remain unaccepted.",
+          "createdAt": "2026-11-03T15:34:19.227Z",
+          "updatedAt": "2026-11-03T15:34:19.227Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:16:16.471Z"
-      }
     }
   }
 }
