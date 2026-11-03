@@ -14,6 +14,7 @@ import type {
   Story,
   StoryKey,
 } from '../../schemas';
+import type { ExternalReadName, ExternalReadResult } from '../../storage/externalRead';
 import type { GitCommitOptions } from '../../storage/git';
 import type {
   BoardCreateInput,
@@ -563,6 +564,14 @@ export interface PluginOperationOptions<R> {
 
 /** The context of commands, screens, fields, filters, rows, option input and Actions. */
 export interface PluginContext<S = unknown> extends PluginReadContext<S> {
+  /** A declared host template; live command or leased screen only (ADR-0051). */
+  externalRead(
+    name: ExternalReadName,
+    parameters: Readonly<Record<string, string>>,
+    options?: { signal?: AbortSignal },
+  ): Promise<ExternalReadResult>;
+  /** Aborted when this loaded Plugin or screen context is disposed. */
+  readonly externalReadSignal: AbortSignal;
   services: PluginServices;
   /** Opens an existing file in this Plugin's scope with the platform's associated application. */
   openFile(scope: FileScope, name: string): Promise<void>;
@@ -1135,6 +1144,8 @@ export interface PluginDefinition<
   settings?: ZodType<S>;
   /** Refuse activation unless the Data Root is inside a Git repository. */
   requiresGit?: boolean;
+  /** Fixed host templates this Plugin uses; no executable or argv declarations. */
+  externalReads?: readonly ExternalReadName[];
   bags?: PluginBagSchemas;
   /** Pure supported-format import, scoped to this Plugin, including while it is Off (ADR-0034 §3). */
   reconcile?: PluginReconciler;
@@ -1182,3 +1193,5 @@ export type AnyPluginDefinition = PluginDefinition<any, any, any>;
 
 /** The type of a Plugin's `commands`, for declaring them in their own module (DX-23). */
 export type PluginCommands<S = Record<string, unknown>> = NonNullable<PluginDefinition<S>['commands']>;
+
+export type { ExternalReadName, ExternalReadResult } from '../../storage/externalRead';

@@ -1,5 +1,8 @@
+import * as childProcess from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { PassThrough } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
 import { definePlugin, type PluginChangeSet, type PluginHookContext, readBinaryInput } from '../../src/plugin-api';
@@ -20,6 +23,8 @@ import { storyLinking } from '../../src/plugins/story-linking';
 import { addLink, readLinks, removeLink } from '../../src/plugins/story-linking/links';
 import { tasks } from '../../src/plugins/tasks';
 import { createTask, deleteTask, listTasks, updateTask } from '../../src/plugins/tasks/tasks';
+import { invokePlugin } from '../../src/services';
+import { inScope, type Stage } from '../../src/services/plugins/executionScope';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
 import type { TuiPlugin } from '../../src/tui/hooks';
@@ -28,6 +33,8 @@ import { makeStory } from '../helpers';
 import { deferred } from '../helpers/deferred';
 import { echo, faulty, notes, order, tracer } from './fixtures';
 import { pluginRoot, withPlugins } from './helpers';
+
+vi.mock('node:child_process', { spy: true });
 
 describe('transform (ADR-0012)', () => {
   it('creates Plugin bags, Story Spec files and incoming links atomically; rejected input saves nothing', async () => {
@@ -911,7 +918,8 @@ describe('react', () => {
 });
 
 describe('binary Plugin files', () => {
-  it('keeps bytes private through transforms, guards, stored reads and sealed writers', async () => {
+  it('keeps Plugin files and external reads inside their capability and lifetime boundaries', async () => {
+    await externalReadBoundary();
     const bytes = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
     let writer: PluginChangeSet | undefined;
     const binary = definePlugin({
@@ -1077,3 +1085,169 @@ describe('binary Plugin files', () => {
     await expect(plugin.files.listMany([scope])).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
   });
 });
+
+/** Exercise the actual runner protocol without credentials, network, sleeps or a live child. */
+async function externalReadBoundary() {
+  const children: (EventEmitter & { stdout: PassThrough; stderr: PassThrough; kill: ReturnType<typeof vi.fn> })[] = [];
+  const realSpawn = (await vi.importActual<typeof childProcess>('node:child_process')).spawn;
+  const spawn = vi.mocked(childProcess.spawn).mockImplementation((...args) => {
+    if (args[0] !== 'gh') return Reflect.apply(realSpawn, childProcess, args);
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+      kill: vi.fn(),
+    });
+    child.kill.mockImplementation((signal) => {
+      if (signal === 'SIGKILL') queueMicrotask(() => child.emit('close', null));
+      return true;
+    });
+    children.push(child);
+    return child as unknown as ReturnType<typeof childProcess.spawn>;
+  });
+  const reader = definePlugin({ id: 'reader', name: 'Reader', description: '', externalReads: ['gh-pr-view'] });
+  const t = await pluginRoot({ reader: true, notes: true });
+  const { services, host } = await withPlugins(t, [reader, notes]);
+  const ordinary = services.plugins.context('reader');
+  const lease = new AbortController();
+  const screen = services.plugins.screenContext('reader', lease.signal);
+  const parameters = { url: 'https://github.com/owner/name/pull/1' };
+  const call = () => screen.externalRead('gh-pr-view', parameters);
+  try {
+    await expect(ordinary.externalRead('gh-pr-view', parameters)).rejects.toBeInstanceOf(PluginError);
+    const command = invokePlugin({ plugin: 'reader', stage: 'command' }, () =>
+      ordinary.externalRead('gh-pr-view', parameters),
+    );
+    expect(children).toHaveLength(1);
+    children[0]?.stdout.write('command');
+    children[0]?.emit('close', 0);
+    await expect(command).resolves.toEqual({ exitCode: 0, stdout: 'command', stderr: '' });
+    expect(spawn).toHaveBeenLastCalledWith(
+      'gh',
+      [
+        'pr',
+        'view',
+        parameters.url,
+        '--json',
+        'number,title,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup',
+      ],
+      expect.objectContaining({ cwd: t.path, shell: false, stdio: ['ignore', 'pipe', 'pipe'] }),
+    );
+    for (const stage of [
+      'body',
+      'replacement',
+      'transform',
+      'guard',
+      'commit',
+      'reaction',
+      'doctor-check',
+      'doctor-fix',
+      'field',
+      'filter',
+      'row',
+      'option-input',
+    ] satisfies Stage[]) {
+      await inScope({ operationId: 'boundary', operation: 'stories.update', plugin: 'reader', stage }, async () => {
+        await expect(call()).rejects.toBeInstanceOf(PluginError);
+      });
+    }
+    await services.stories.create('web', { name: 'No external read from the operation body' });
+    await expect(
+      screen.operation('bad', {}, async () => {
+        await call();
+      }),
+    ).rejects.toMatchObject({ code: 'INTERNAL' });
+    await inScope({ operationId: 'ended', operation: 'command', plugin: 'reader', stage: 'command' }, async (scope) => {
+      scope.ended = true;
+      await expect(call()).rejects.toBeInstanceOf(PluginError);
+    });
+    await inScope({ operationId: 'other', operation: 'command', plugin: 'notes', stage: 'command' }, async () => {
+      await expect(call()).rejects.toBeInstanceOf(PluginError);
+    });
+    const undeclared = services.plugins.screenContext('notes', lease.signal);
+    await expect(undeclared.externalRead('gh-pr-view', parameters)).rejects.toBeInstanceOf(PluginError);
+    await expect(screen.externalRead('gh-pr-view', { url: '--help' })).rejects.toMatchObject({ code: 'VALIDATION' });
+    await expect(
+      screen.externalRead('gh-pr-view', { url: 'https://user:password@github.com/owner/name/pull/1' }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    expect(children).toHaveLength(1);
+
+    const success = call();
+    children.at(-1)?.stdout.write('screen');
+    children.at(-1)?.emit('close', 0);
+    await expect(success).resolves.toMatchObject({ stdout: 'screen' });
+    // Fake clocks exercise deadlines and escalation, while controlled promises exercise the queue.
+    vi.useFakeTimers();
+    for (const stream of ['stdout', 'stderr'] as const) {
+      const bounded = expect(call()).rejects.toMatchObject({
+        code: 'USAGE',
+        message: expect.stringContaining('output limit'),
+      });
+      const child = children.at(-1);
+      child?.[stream].write(Buffer.alloc(stream === 'stdout' ? 1024 * 1024 + 1 : 64 * 1024 + 1));
+      expect(child?.kill).toHaveBeenCalledWith('SIGTERM');
+      await vi.advanceTimersByTimeAsync(250);
+      await bounded;
+      expect(child?.kill).toHaveBeenCalledWith('SIGKILL');
+    }
+    const timed = expect(call()).rejects.toMatchObject({
+      code: 'USAGE',
+      message: expect.stringContaining('timed out'),
+    });
+    await vi.advanceTimersByTimeAsync(10_250);
+    await timed;
+
+    const cancelled = new AbortController();
+    const first = call(),
+      second = call();
+    const queued = expect(
+      screen.externalRead('gh-pr-view', parameters, { signal: cancelled.signal }),
+    ).rejects.toMatchObject({ name: 'AbortError' });
+    const count = children.length;
+    cancelled.abort();
+    await queued;
+    expect(children).toHaveLength(count);
+    const waiting = Array.from({ length: 8 }, () => call());
+    await expect(call()).rejects.toMatchObject({ code: 'USAGE', message: expect.stringContaining('queue is full') });
+    children.at(-2)?.emit('close', 0);
+    children.at(-1)?.emit('close', 0);
+    await Promise.all([first, second]);
+    await Promise.resolve();
+    expect(children.length).toBe(count + 2);
+    const pending = waiting.map((promise) => expect(promise).rejects.toMatchObject({ name: 'AbortError' }));
+    lease.abort();
+    expect(screen.externalReadSignal.aborted).toBe(true);
+    await vi.advanceTimersByTimeAsync(250);
+    await Promise.all(pending);
+    await expect(call()).rejects.toMatchObject({ name: 'AbortError' });
+    const fresh = services.plugins.screenContext('reader', new AbortController().signal);
+    const disposing = expect(fresh.externalRead('gh-pr-view', parameters)).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    host.dispose?.();
+    expect(fresh.externalReadSignal.aborted).toBe(true);
+    await vi.advanceTimersByTimeAsync(250);
+    await disposing;
+    await expect(fresh.externalRead('gh-pr-view', parameters)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(vi.getTimerCount()).toBe(0);
+    vi.useRealTimers();
+    const disabled = await withPlugins(t, [reader]);
+    try {
+      const context = disabled.services.plugins.screenContext('reader', new AbortController().signal);
+      const stopping = expect(context.externalRead('gh-pr-view', parameters)).rejects.toMatchObject({
+        name: 'AbortError',
+      });
+      await disabled.services.plugins.disable('reader');
+      await stopping;
+      expect(context.externalReadSignal.aborted).toBe(true);
+      await expect(context.externalRead('gh-pr-view', parameters)).rejects.toMatchObject({ name: 'AbortError' });
+    } finally {
+      disabled.host.dispose?.();
+    }
+  } finally {
+    host.dispose?.();
+    for (const child of children) child.emit('close', null);
+    vi.useRealTimers();
+    spawn.mockRestore();
+    await t.cleanup();
+  }
+}

@@ -25,6 +25,7 @@ Today every Plugin is a Built-in Plugin in this repository ([trust.md](trust.md)
 - [Tracing](#tracing)
 - [Testing](#testing)
 - [Clipboard images](#clipboard-images)
+- [External reads](#external-reads)
 - [Git capability](#git-capability)
 - [Supported-format reconciliation](#supported-format-reconciliation)
 
@@ -63,6 +64,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `reconcile` | Optional pure supported-format reconciliation during Git import, including while Off; see below. |
 | `inputs`, `storyFilterSchema` | Schemas of its input of core operations and of its Story filter ([input](#plugin-input-and-cli-options)). |
 | `start({ settings, git, localData })` | Runs each time the Plugin loads. Throwing fails the load. |
+| `externalReads` | Distinct fixed host template names; currently only `gh-pr-view` ([External reads](#external-reads)). |
 | `requiresGit` | When true, enabling the Plugin requires a Git repository containing the Data Root. |
 | `react` | A reaction for every saved Operation, including other Plugins’ Operations, with the same event and deadline as a named reaction. Runs before the named reaction. |
 | `hooks` | `{ '<operation>': { transform, guard, react } }`. |
@@ -562,6 +564,55 @@ rowbly trace lock-9 stories.get coordination ok wait=publication:2001.3,queue:0.
 - `validatePluginDefinition(definition)` lists what loading would refuse; empty when it is fine.
 - For a TUI part, render one component with `ink-testing-library`, `host.context(id)` and a recording `PluginUi`, and wait for its loaded data before pressing keys (the recipe is in the module header).
 - `pnpm bench:plugins` runs the opt-in performance measurements ([`test/performance/README.md`](../../test/performance/README.md)).
+
+## External reads
+
+A Plugin declares the fixed templates it uses. `externalRead(name, parameters, { signal }?)` returns
+`{ exitCode, stdout, stderr }`; `ExternalReadName` and `ExternalReadResult` are exported types.
+There is one template, `gh-pr-view`: its only parameter is `url`, an HTTPS URL with exactly
+`/owner/repository/pull/<positive integer>` (optional trailing slash), without credentials, ports,
+query, fragment, encoded path parts or extra arguments. The host owns the executable, argv,
+working directory and environment. It runs `gh pr view` with a fixed JSON field selection.
+
+```ts
+export const externalReader = definePlugin({
+  id: 'external-reader',
+  name: 'External reader',
+  description: 'Inspect a pull request through a fixed host template',
+  externalReads: ['gh-pr-view'],
+  commands(group, cli) {
+    group.command('read <url>').action((url: string, _opts: unknown, cmd) =>
+      cli.run(cmd, async ({ plugin, print }) => {
+        const result = await plugin.externalRead('gh-pr-view', { url });
+        if (result.exitCode !== 0) throw new UsageError('External read failed', { hint: result.stderr });
+        print(result, (value) => value.stdout);
+      }),
+    );
+  },
+});
+```
+
+A live command for that Plugin may call it. Mounted Plugin screens and slots receive a context
+with a screen lease, allowing effects and timers to call it outside a callback scope. Ordinary
+unscoped contexts cannot call it. Hooks have no API; even a retained surface context refuses calls
+from operation bodies/replacements, transforms, guards, reactions, doctor, fields, filters, rows
+and option-input callbacks, or an ended command. Badges and search contributions run as rows.
+Actions should open a screen; they do not receive an external-read lease.
+
+`plugin.externalReadSignal` aborts when its screen unmounts or its loaded Plugin is disabled,
+failed, reloaded or disposed, including Data Root replacement. Combine it with the caller's
+`signal` when scheduling refresh work, and clear every timer when it aborts. The host cancels queued
+and running reads on teardown; the capability saves nothing and holds no Data Root lock.
+
+Each loaded Plugin has two running slots and eight queued slots. Excess calls fail. Each process
+has a 10-second deadline, stdout capped at 1 MiB and stderr at 64 KiB. Overflow, cancellation or
+timeout sends SIGTERM, then SIGKILL after 250 ms if needed; the slot is released only on close.
+Limits and missing executables throw `UsageError`; invalid parameters throw `ValidationError`.
+A nonzero exit code is returned so the Plugin can explain it; partial overflow output is never
+returned as a successful result. The host uses an argv array, no shell and closed stdin, and
+cleans up listeners and deadline/escalation timers. Active pipes retain a running request until it
+finishes or is cancelled. This is a trusted in-process capability, not a sandbox or a permission
+system ([ADR-0051](../agents/adr/0051-plugins-use-fixed-host-external-reads.md), [trust](trust.md)).
 
 ## Git capability
 

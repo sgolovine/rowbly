@@ -1,6 +1,6 @@
-import { type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import type { PluginContext, PluginUi } from '../../services';
-import { usePluginUi, useServices } from '../hooks';
+import { usePluginScreenContext, usePluginUi } from '../hooks';
 
 /**
  * Calls Plugin `pluginId`'s `render` with its context and UI. It is the child of the slot's
@@ -13,8 +13,7 @@ export function PluginSlotContent({
   pluginId: string;
   render(context: PluginContext, ui: PluginUi): ReactNode;
 }) {
-  const services = useServices();
   const ui = usePluginUi(pluginId);
-  const context = useMemo(() => services.plugins.context(pluginId), [services, pluginId]);
-  return <>{render(context, ui)}</>;
+  const context = usePluginScreenContext(pluginId);
+  return context ? render(context, ui) : null;
 }

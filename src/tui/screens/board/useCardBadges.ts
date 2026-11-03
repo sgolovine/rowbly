@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { Stage, Story } from '../../../schemas';
+import { invokePluginSync } from '../../../services';
 import { usePlugins, useServices } from '../../hooks';
 
 /**
@@ -21,7 +22,7 @@ export function useCardBadges(): (story: Story, stages: readonly Stage[]) => str
     (story, stages) =>
       badgers.flatMap(({ badge, plugin }) => {
         try {
-          return badge({ story, stages, plugin }) ?? [];
+          return invokePluginSync({ plugin: plugin.id, stage: 'row' }, () => badge({ story, stages, plugin })) ?? [];
         } catch {
           return [];
         }
