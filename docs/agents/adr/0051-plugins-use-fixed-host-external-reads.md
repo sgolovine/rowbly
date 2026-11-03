@@ -1,6 +1,6 @@
 # ADR-0051: Plugins use fixed host-owned external reads
 
-**Status:** Accepted. Built for ROW-69. Extends [ADR-0020](0020-plugin-execution-and-data-contracts.md) §1.
+**Status:** Accepted. Built for ROW-69. Extends [ADR-0020](0020-plugin-execution-and-data-contracts.md) §1. Amended by [ADR-0054](0054-board-stats-use-bounded-plugin-reads.md) §1–2.
 
 ## 1. Fixed templates
 

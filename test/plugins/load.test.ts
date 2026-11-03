@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { loadProgram, reservedNames } from '../../src/main';
 import type { AnyPluginDefinition } from '../../src/services';
 import { failureWarning, loadPlugins, onOff, validatePluginDefinition } from '../../src/services';
+import { boardStats } from '../../src/services/boardStats';
 import { coordinated } from '../../src/services/coordination';
 import { withGitWorker } from '../../src/storage/gitRepository';
 import { publishPublication, withPublication } from '../../src/storage/gitSyncJournal';
@@ -157,7 +158,72 @@ describe('loading Plugins (ADR-0010)', () => {
   });
 
   it('skips a Plugin that throws while it starts, whose settings are invalid, or that it does not have', async () => {
-    expect(validatePluginDefinition({ ...notes, externalReads: ['gh-pr-view'] }, reservedNames())).toEqual([]);
+    expect(
+      validatePluginDefinition({ ...notes, externalReads: ['gh-pr-view', 'gh-pr-commits'] }, reservedNames()),
+    ).toEqual([]);
+    expect(
+      validatePluginDefinition(
+        {
+          ...notes,
+          boardStats: {
+            metrics: [
+              { key: 'count', label: 'Count' },
+              { key: 'count', label: 'Duplicate' },
+            ],
+            collect: async () => ({}),
+          },
+        },
+        reservedNames(),
+      ),
+    ).toContainEqual(expect.objectContaining({ path: 'boardStats' }));
+    for (const enabled of [true, false]) {
+      const t = await pluginRoot({ broken: { enabled }, mixed: { enabled }, healthy: true });
+      const invalidStats = (id: string, metrics: unknown) =>
+        ({
+          id,
+          name: id,
+          description: '',
+          boardStats: {
+            metrics,
+            async collect() {
+              throw new Error('A rejected or Off collector must not run');
+            },
+          },
+        }) as unknown as AnyPluginDefinition;
+      const setup = await withPlugins(t, [
+        invalidStats('broken', null),
+        invalidStats('mixed', [null, { key: 'kept', label: 'Kept' }, { key: 'bad', label: 42 }]),
+        {
+          id: 'healthy',
+          name: 'Healthy',
+          description: '',
+          boardStats: {
+            metrics: [{ key: 'count', label: 'Count' }],
+            collect: async () => ({ count: { status: 'complete', value: 4 } }),
+          },
+        },
+      ]);
+      try {
+        expect(setup.host.failures().map((entry) => entry.id)).toEqual(enabled ? ['broken', 'mixed'] : []);
+        const stats = await boardStats(setup.ctx, setup.services, 'web');
+        expect(stats.metrics[0]).toMatchObject({ status: 'complete', value: 0 });
+        expect(stats.plugins).toEqual([
+          {
+            id: 'mixed',
+            name: 'mixed',
+            metrics: [{ key: 'kept', label: 'Kept', status: 'unavailable', value: null, reason: expect.any(String) }],
+          },
+          {
+            id: 'healthy',
+            name: 'Healthy',
+            metrics: [{ key: 'count', label: 'Count', status: 'complete', value: 4 }],
+          },
+        ]);
+      } finally {
+        setup.host.dispose?.();
+        await t.cleanup();
+      }
+    }
     for (const reads of [['arbitrary-executable'], ['gh-pr-view', 'gh-pr-view']]) {
       const definition = { ...notes, externalReads: reads } as unknown as AnyPluginDefinition;
       expect(validatePluginDefinition(definition, reservedNames())).toContainEqual(

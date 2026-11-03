@@ -7,6 +7,7 @@ import {
 } from '../../plugin-api';
 import { commands } from './commands';
 import { GitHubBag, GitHubInput } from './model';
+import { boardStats } from './stats';
 
 async function applyInput(
   plugin: PluginReadContext,
@@ -32,7 +33,8 @@ export const github = definePlugin({
   settings: z.object({}),
   bags: { story: GitHubBag },
   inputs: { 'stories.create': GitHubInput, 'stories.update': GitHubInput },
-  externalReads: ['gh-pr-view'],
+  externalReads: ['gh-pr-view', 'gh-pr-commits'],
+  boardStats,
   commands,
   options: {
     'stories create': { options: [option], input },

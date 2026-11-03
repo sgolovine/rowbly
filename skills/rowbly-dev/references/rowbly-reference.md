@@ -88,6 +88,7 @@ Use these in commands, commit messages and replies.
 
 ```sh
 rowbly use --json --no-prompt            # {"board": {"id": "web", "source": "local"}}; exit 5 if there is no Data Root
+rowbly boards stats [id] --json --no-prompt # {board,window:"all-time",metrics,plugins}; current Stories/Done, Plugin counts
 rowbly boards list --json --no-prompt    # [{id, name, keyPrefix, …}]
 ```
 
@@ -408,3 +409,9 @@ GitHub (`github`): `stories create … --github-pr <HTTPS PR URL>`; `stories edi
 Story bag: `plugins.github: {pr:url}`. JSON inspection: `{pr,number,title,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision?,checks:{total,passed,failed,pending,other},fetchedAt}`.
 No link exits3; opaque bags exit6 on owner writes and remain unchanged; doctor warns `PLUGIN_DATA_INVALID`.
 Active TUI Story tab refreshes every60s/on r in memory; empty/unknown checks never establish success.
+
+Board Stats metrics: `{key,label,status:complete|partial|unavailable,value:number|null,reason?}`.
+Partial is a known lower bound; unavailable is null. GitHub contributes unique currently linked PR
+identities and unique commit SHAs in them; no deleted/unlinked history. Limits: 100 PRs, 100 commits/page,
+10 pages/PR, 200 pages/refresh, two requests concurrently, 30 s. TUI Board Stats: Settings → Board → Stats,
+or t in Board details; r refreshes, teardown cancels; no background polling.

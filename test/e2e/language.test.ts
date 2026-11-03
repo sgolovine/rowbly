@@ -14,6 +14,11 @@ const AVOID =
 /** Legitimate uses, removed from the text before matching. */
 const ALLOWED: { file?: RegExp; text: RegExp; why: string }[] = [
   {
+    file: /^storage\/externalRead\.ts$/,
+    text: /^query\(\$account: String!, \$name: String!, \$number: Int!, \$after: String\) \{[\s\S]*\}$/,
+    why: 'Fixed GraphQL protocol query, including repository(owner:), ADR-0054',
+  },
+  {
     file: /^plugins\/github\/commands\.ts$/,
     text: /^status <key>$/,
     why: 'GitHub PR inspection command, not a Story Stage',

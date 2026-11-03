@@ -2,22 +2,37 @@ import { spawn } from 'node:child_process';
 import { UsageError, ValidationError } from '../core';
 
 /** Host-owned templates, not executable or argv supplied by a Plugin (ADR-0051 §1). */
-export type ExternalReadName = 'gh-pr-view';
+export type ExternalReadName = 'gh-pr-view' | 'gh-pr-commits';
 export interface ExternalReadResult {
   exitCode: number;
   stdout: string;
   stderr: string;
 }
 
+const COMMITS_QUERY = `query($account: String!, $name: String!, $number: Int!, $after: String) {
+  repository(owner: $account, name: $name) {
+    pullRequest(number: $number) {
+      id url headRefOid
+      commits(first: 100, after: $after) {
+        totalCount nodes { commit { oid } } pageInfo { endCursor hasNextPage }
+      }
+    }
+  }
+}`;
+
 const FIELDS = 'number,title,url,state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup';
 
 export function isExternalReadName(name: string): name is ExternalReadName {
-  return name === 'gh-pr-view';
+  return name === 'gh-pr-view' || name === 'gh-pr-commits';
 }
 
 /** Validate the whole argument before it reaches the fixed invocation, independently of its caller. */
 function invocation(name: ExternalReadName, parameters: Readonly<Record<string, string>>): string[] {
-  if (!isExternalReadName(name) || Object.keys(parameters).length !== 1 || typeof parameters.url !== 'string')
+  if (
+    !isExternalReadName(name) ||
+    typeof parameters.url !== 'string' ||
+    Object.keys(parameters).some((key) => key !== 'url' && !(name === 'gh-pr-commits' && key === 'after'))
+  )
     throw new ValidationError('Invalid external read or parameters');
   const url = parameters.url;
   if (
@@ -37,7 +52,27 @@ function invocation(name: ExternalReadName, parameters: Readonly<Record<string, 
     throw new ValidationError('External read URL has an invalid path');
   if (parsed.hostname.split('.').some((part) => !part || part.startsWith('-') || part.endsWith('-')))
     throw new ValidationError('External read URL has an invalid host');
-  return ['pr', 'view', url, '--json', FIELDS];
+  if (name === 'gh-pr-view') return ['pr', 'view', url, '--json', FIELDS];
+  const [, owner, repository, , number] = parsed.pathname.split('/');
+  if (!number || !Number.isSafeInteger(Number(number)) || Number(number) > 2_147_483_647)
+    throw new ValidationError('External read requires a supported PR number');
+  if (parameters.after !== undefined && !/^[A-Za-z0-9+/_=-]{1,512}$/.test(parameters.after))
+    throw new ValidationError('External read cursor is invalid');
+  return [
+    'api',
+    'graphql',
+    '--hostname',
+    parsed.hostname,
+    '-f',
+    `query=${COMMITS_QUERY}`,
+    '-f',
+    `account=${owner}`,
+    '-f',
+    `name=${repository}`,
+    '-F',
+    `number=${number}`,
+    ...(parameters.after === undefined ? [] : ['-f', `after=${parameters.after}`]),
+  ];
 }
 
 export interface ExternalReads {

@@ -30,3 +30,18 @@ The Story bag is strict unversioned v1 `{ "pr": "<url>" }`; unrelated core edits
 
 The TUI form adds **GitHub PR**. Its Story tab fetches immediately, every 60 seconds while active,
 and with `r`; errors label the last result as stale. It cancels on leaving/teardown and saves no status.
+
+
+## Board Stats
+
+`rowbly boards stats [id] --json --no-prompt` includes GitHub metrics `linked-prs` and `commits`.
+They count unique PR identities currently linked to existing Stories on that Board, and unique full
+commit SHAs in those PRs, across all time. All PR lifecycle values count. No unlinked history or
+repository-wide commits are inferred. GitHub must be on and gh authenticated for each host.
+Equivalent links/returned PR identities and SHAs are deduplicated. Invalid bags remain unchanged.
+
+A source is complete, partial (validated known lower bound) or unavailable (null), with reasons.
+Only a complete empty source is an exact zero. Refresh caps: two requests concurrently, 100 candidate
+PRs, 100 commits/page, 10 pages/PR, 200 pages overall, 30 seconds. Changed, unreadable or incomplete
+PR commit lists are excluded. No retries, saved analytics or background polling. The TUI shows the
+same metrics on Board Stats; r refreshes and page teardown cancels requests.

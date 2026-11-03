@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
 import {
   definePlugin,
+  type PluginBoardStatsContext,
   type PluginChangeSet,
   type PluginContext,
   type PluginHookContext,
@@ -31,6 +32,8 @@ import { addLink, readLinks, removeLink } from '../../src/plugins/story-linking/
 import { tasks } from '../../src/plugins/tasks';
 import { createTask, deleteTask, listTasks, updateTask } from '../../src/plugins/tasks/tasks';
 import { invokePlugin } from '../../src/services';
+import { boardStats } from '../../src/services/boardStats';
+import { coordinated } from '../../src/services/coordination';
 import { inScope, type Stage } from '../../src/services/plugins/executionScope';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
@@ -947,6 +950,7 @@ describe('react', () => {
 describe('binary Plugin files', () => {
   it('keeps Plugin files and external reads inside their capability and lifetime boundaries', async () => {
     await externalReadBoundary();
+    await boardStatsBoundary();
     const bytes = new Uint8Array([137, 80, 78, 71, 0, 255, 128]);
     let writer: PluginChangeSet | undefined;
     const binary = definePlugin({
@@ -1142,7 +1146,7 @@ async function externalReadBoundary() {
     id: 'reader',
     name: 'Reader',
     description: '',
-    externalReads: ['gh-pr-view'],
+    externalReads: ['gh-pr-view', 'gh-pr-commits'],
     hooks: { 'stories.create': { transform: refuseRetained, guard: refuseRetained, react: refuseRetained } },
     doctor: {
       async check(event) {
@@ -1216,6 +1220,14 @@ async function externalReadBoundary() {
     await expect(
       screen.externalRead('gh-pr-view', { url: 'https://user:password@github.com/owner/name/pull/1' }),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
+    await expect(
+      screen.externalRead('gh-pr-commits', { ...parameters, after: 'invalid cursor' }),
+    ).rejects.toMatchObject({
+      code: 'VALIDATION',
+    });
+    await expect(screen.externalRead('gh-pr-commits', { ...parameters, query: 'arbitrary' })).rejects.toMatchObject({
+      code: 'VALIDATION',
+    });
     expect(children).toHaveLength(1);
 
     const success = call();
@@ -1294,6 +1306,253 @@ async function externalReadBoundary() {
     host.dispose?.();
     for (const child of children) child.emit('close', null);
     vi.useRealTimers();
+    spawn.mockRestore();
+    await t.cleanup();
+  }
+}
+
+async function boardStatsBoundary() {
+  const t = await pluginRoot({ github: true, probe: true });
+  let retained: PluginContext | undefined;
+  let retainedStats: PluginBoardStatsContext | undefined;
+  let invalidResult = false;
+  let pause = false;
+  const entered = deferred();
+  const release = deferred();
+  const probe = definePlugin({
+    id: 'probe',
+    name: 'Probe',
+    description: '',
+    boardStats: {
+      metrics: [{ key: 'count', label: 'Count' }],
+      async collect({ board, stories, plugin }) {
+        retainedStats = plugin;
+        if (pause) {
+          entered.resolve();
+          await release.promise;
+          plugin.externalReadSignal.throwIfAborted();
+        }
+        expect(Object.keys(plugin).sort()).toEqual(['externalRead', 'externalReadSignal', 'inspectBag']);
+        expect(Object.isFrozen(board)).toBe(true);
+        expect(Object.isFrozen(stories[0]?.plugins?.github)).toBe(true);
+        expect(() => Object.assign(stories[0]?.plugins?.github ?? {}, { pr: 'changed' })).toThrow();
+        await expect(retained?.services.stories.create('web', { name: 'Forbidden' })).rejects.toBeInstanceOf(
+          PluginError,
+        );
+        await expect(boardStats(ctx, services, 'web')).rejects.toBeInstanceOf(PluginError);
+        return { count: { status: 'complete' as const, value: invalidResult ? -1 : stories.length } };
+      },
+    },
+  });
+  const { services, host, ctx } = await withPlugins(t, [github, probe]);
+  retained = services.plugins.context('probe');
+  const shas = ['a'.repeat(40), 'b'.repeat(40), 'c'.repeat(40)];
+  let fail = false;
+  const realSpawn = (await vi.importActual<typeof childProcess>('node:child_process')).spawn;
+  const spawn = vi.mocked(childProcess.spawn).mockImplementation((...args) => {
+    if (args[0] !== 'gh') return Reflect.apply(realSpawn, childProcess, args);
+    const argv = args[1] as string[];
+    expect(argv.slice(0, 4)).toEqual(['api', 'graphql', '--hostname', 'github.com']);
+    expect(argv.some((arg) => arg.includes('commits(first: 100, after: $after)'))).toBe(true);
+    expect(argv).not.toContain('--paginate');
+    const number = argv.find((arg) => arg.startsWith('number='))?.slice(7);
+    const after = argv.includes('after=next');
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+      kill: vi.fn(),
+    });
+    queueMicrotask(() => {
+      void (async () => {
+        expect(await pathExists(join(t.path, '.lock'))).toBe(false);
+        const unavailable = fail && number === '2';
+        const commits = number === '2' ? [shas[1], shas[2]] : after ? [shas[1]] : [shas[0]];
+        child.stdout.write(
+          JSON.stringify({
+            data: {
+              repository: {
+                pullRequest: {
+                  id: `pr-${number}`,
+                  url: `https://github.com/owner/name/pull/${number}`,
+                  headRefOid: shas[2],
+                  commits: {
+                    totalCount: 2,
+                    nodes: commits.map((oid) => ({ commit: { oid } })),
+                    pageInfo: {
+                      endCursor: number === '1' && !after ? 'next' : null,
+                      hasNextPage: number === '1' && !after,
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        );
+        child.emit('close', unavailable ? 1 : 0);
+      })().catch((error) => {
+        child.emit('error', error);
+        child.emit('close', 1);
+      });
+    });
+    return child as unknown as ReturnType<typeof childProcess.spawn>;
+  });
+  try {
+    for (const url of [
+      'https://github.com/owner/name/pull/1',
+      'https://GITHUB.com/Owner/Name/pull/1/',
+      'https://github.com/old/name/pull/1',
+      'https://github.com/owner/name/pull/2',
+    ]) {
+      await services.stories.create('web', { name: 'Linked', plugins: { github: { pr: url } } });
+    }
+    const saved = await services.stories.list('web', {});
+    await expect(coordinated(t.root, 'held read', () => boardStats(ctx, services, 'web'))).rejects.toBeInstanceOf(
+      PluginError,
+    );
+    const full = await boardStats(ctx, services, 'web');
+    expect(full.plugins[0]?.metrics).toMatchObject([
+      { key: 'linked-prs', value: 2, status: 'complete' },
+      { key: 'commits', value: 3, status: 'complete' },
+    ]);
+    expect(spawn.mock.calls.filter((call) => call[0] === 'gh')).toHaveLength(5);
+    expect(await services.stories.list('web', {})).toEqual(saved);
+    await expect(
+      retainedStats?.externalRead('gh-pr-commits', { url: 'https://github.com/owner/name/pull/1' }),
+    ).rejects.toBeInstanceOf(PluginError);
+    const base = saved[0];
+    if (!base || !github.boardStats) throw new Error('missing Stats fixture');
+    let calls = 0;
+    const pages = new Map<string, number>();
+    const bounded = await github.boardStats.collect({
+      board: await services.boards.get('web'),
+      stories: Array.from({ length: 101 }, (_, n) => ({
+        ...base,
+        plugins: { github: { pr: `https://github.com/owner/name/pull/${n + 1}` } },
+      })),
+      plugin: {
+        inspectBag: services.plugins.context('github').inspectBag,
+        externalReadSignal: new AbortController().signal,
+        async externalRead(_name, parameters) {
+          calls++;
+          const page = (pages.get(parameters.url ?? '') ?? 0) + 1;
+          pages.set(parameters.url ?? '', page);
+          return {
+            exitCode: 0,
+            stderr: '',
+            stdout: JSON.stringify({
+              data: {
+                repository: {
+                  pullRequest: {
+                    id: parameters.url,
+                    url: parameters.url,
+                    headRefOid: shas[0],
+                    commits: {
+                      totalCount: 1000,
+                      nodes: Array.from({ length: 100 }, (_, n) => ({
+                        commit: { oid: ((page - 1) * 100 + n).toString(16).padStart(40, '0') },
+                      })),
+                      pageInfo: { endCursor: `page${page}`, hasNextPage: true },
+                    },
+                  },
+                },
+              },
+            }),
+          };
+        },
+      },
+    });
+    expect(calls).toBe(200);
+    expect(Math.max(...pages.values())).toBe(2);
+    expect(bounded).toMatchObject({
+      'linked-prs': { status: 'partial', value: 100 },
+      commits: { status: 'unavailable', value: null },
+    });
+
+    // A later changed page taints every alias, even one that completed first.
+    for (const changedIdentity of [false, true]) {
+      const raced = await github.boardStats.collect({
+        board: await services.boards.get('web'),
+        stories: saved,
+        plugin: {
+          inspectBag: services.plugins.context('github').inspectBag,
+          externalReadSignal: new AbortController().signal,
+          async externalRead(_name, parameters) {
+            const continued = Boolean(parameters.after);
+            const healthy = parameters.url?.endsWith('/2');
+            const paginated = parameters.url?.includes('/old/') && !continued;
+            return {
+              exitCode: 0,
+              stderr: '',
+              stdout: JSON.stringify({
+                data: {
+                  repository: {
+                    pullRequest: {
+                      id: healthy ? 'healthy' : continued && changedIdentity ? 'changed' : 'aliased',
+                      url: `https://github.com/owner/name/pull/${healthy ? 2 : 1}`,
+                      headRefOid: continued ? shas[2] : shas[1],
+                      commits: {
+                        totalCount: continued ? 1 : 2,
+                        nodes: (paginated
+                          ? [shas[0]]
+                          : continued
+                            ? [shas[2]]
+                            : healthy
+                              ? [shas[1], shas[2]]
+                              : [shas[0], shas[1]]
+                        ).map((oid) => ({ commit: { oid } })),
+                        pageInfo: { hasNextPage: paginated, endCursor: paginated ? 'next' : null },
+                      },
+                    },
+                  },
+                },
+              }),
+            };
+          },
+        },
+      });
+      expect(raced['linked-prs']).toMatchObject({
+        status: changedIdentity ? 'partial' : 'complete',
+        value: changedIdentity ? 1 : 2,
+      });
+      expect(raced.commits).toMatchObject({
+        status: 'partial',
+        value: 2,
+        reason: expect.stringContaining('changed during pagination'),
+      });
+    }
+
+    fail = true;
+    const partial = await boardStats(ctx, services, 'web');
+    expect(partial.plugins[0]?.metrics).toMatchObject([
+      { value: 1, status: 'partial' },
+      { value: 2, status: 'partial' },
+    ]);
+    await services.plugins.disable('github');
+    const off = await boardStats(ctx, services, 'web');
+    expect(off.plugins[0]?.metrics).toMatchObject([
+      { value: null, status: 'unavailable', reason: 'Plugin is off' },
+      { value: null, status: 'unavailable' },
+    ]);
+    invalidResult = true;
+    const malformed = await boardStats(ctx, services, 'web');
+    expect(malformed.plugins[1]?.metrics).toMatchObject([{ status: 'unavailable', value: null }]);
+    expect(malformed.metrics[0]?.value).toBe(saved.length);
+    pause = true;
+    const cancelled = new AbortController();
+    const stopped = expect(boardStats(ctx, services, 'web', cancelled.signal)).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+    try {
+      await entered.promise;
+      cancelled.abort();
+      await stopped;
+      expect(retainedStats?.externalReadSignal.aborted).toBe(true);
+    } finally {
+      release.resolve();
+    }
+  } finally {
+    release.resolve();
+    host.dispose?.();
     spawn.mockRestore();
     await t.cleanup();
   }
