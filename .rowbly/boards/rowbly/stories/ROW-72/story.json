@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T05:54:20.299Z",
+  "updatedAt": "2026-11-03T05:58:24.210Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -23,6 +23,17 @@
         "by": "sunny",
         "startedAt": "2026-11-03T05:54:19.539Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "SmCEMgSY",
+          "author": "sunny",
+          "body": "Supervisor audit: this Run has ABSENT Model Selection metadata because a supervisor helper checked obsolete literal flag spelling --provider <provider>; current CLI is --provider <id>. Actual requested and verified launch is claudeAgent/claude-opus-5-5, typed option effort=high, coding default, usage unknown; durable receipt /home/sgolovine/.rowbly-factory/receipts/afa543a259170ea4d2d011169e74994f.json and ROW-72-launch-new.json preserve the pre-GO request/verification. Identity and Run attachment are valid. Do not backfill immutable selection, clear/retry the Run or launch a duplicate. The same verified worker 4e1fd55c may continue research; implementation still waits for plan acceptance. This Comment records the omission and verified receipt, not retroactive metadata. Future starts now query live CLI capability, require selection flags and exact complete typed published selection before GO; missing intent fails closed. Planned task allocation /home/sgolovine/Projects/rowbly-worktrees/row-72-story-opening branchfactory/row-72 is supervisor-chosen in prelaunch instructions; actual creation to be confirmed by worker.",
+          "createdAt": "2026-11-03T05:58:24.209Z",
+          "updatedAt": "2026-11-03T05:58:24.209Z"
+        }
+      ]
     }
   }
 }
