@@ -86,3 +86,7 @@ cp "$out"/*.png "$out/assets/" && git -C "$out/assets" add . &&
 git worktree remove "$out/assets"
 # ![Board](https://raw.githubusercontent.com/<owner>/<repo>/pr-assets/<pr-branch>/01-board.png)
 ```
+
+Keep the `pr-assets/<pr-branch>` branch after the PR merges or closes: its comments link these files
+by branch name. Delete it only with the user's approval, after every linked image is hosted elsewhere
+and the links are updated (ADR-0050 §2.3).

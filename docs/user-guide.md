@@ -815,9 +815,17 @@ the Data Root. Edit wins over delete, including edited descendants. Distinct con
 retain both records and their scoped files with source-qualified key remapping; exact identical
 additions coalesce. Configuration Cascade levels stay separate. Referenced definitions can be
 restored, incompatible field types split and constraints relaxed to retain valid data; original
-values and repair decisions remain in the evidence. Supported Plugin formats reconcile their own
-references and files, including while the Plugin is Off. Unknown, invalid or unsupported data is
-kept opaque; an unsafe result stops the attempt rather than discarding it.
+values and repair decisions remain in the evidence. Evidence is written only for such a decision: a
+Board or Story that is new on one side merges as an addition, without evidence. Supported Plugin
+formats reconcile their own references and files, including while the Plugin is Off. Unknown,
+invalid or unsupported data is kept opaque; an unsafe result stops the attempt rather than
+discarding it.
+
+Evidence files are audit history. Rowbly never edits, expires or prunes them. To remove one, first
+check that the merge commit that added it is on the upstream, review its decisions and obtain the
+user's explicit approval. Record the path, adding commit (`git log --diff-filter=A -- <path>`), review
+and approval in the ordinary upstream commit that removes the file. Never rewrite history to
+remove it; `git show <commit>:<path>` still reads it afterwards.
 
 Repeated Task numbers or Comment ids within a recognized current-format Story bag stop synchronization
 before local publication or push (`CONFLICT`, exit 4), even in BASE, while the owner is Off, or beside
