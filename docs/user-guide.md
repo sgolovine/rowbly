@@ -449,6 +449,7 @@ rowbly software-factory prompt remove <stage> [--board <id>] [--level board|glob
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
 rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
 rowbly software-factory run clear <story>
@@ -477,7 +478,7 @@ rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-ru
   while that Stage Run (its Stage, attempt and `startedAt`) is still the finished Stage Run of the
   Story's current visit, checked when the move is saved; otherwise it exits 4 (`CONFLICT`) and
   changes nothing.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`.
   `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
 - `apply` is for a factory supervisor. It reads a worker's reported `rowbly` block (the lines in
   ```` ```rowbly ```` fences, else every line) and decides each line: `apply`, `hold`, `drop` or
@@ -507,6 +508,41 @@ rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-ru
   `#2` after the first attempt. The Story's **Stage Run** tab shows it in full: outcome,
   attempt, worker, who started it, when it started and ended (with how long ago), how long it ran,
   and the failure reason.
+
+`run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
+Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual
+worker ID, machine, harness, thread ID and verification source. Me and the operation clock supply
+`verification.by` and `verifiedAt`. Attachment updates `stageRun.worker` atomically with the file.
+A changed Run or conflicting identity is `CONFLICT` (exit 4). Repeating identical inputs writes
+nothing, including no timestamp change. Attach requires a running Run; it can initialize absent or
+recognized stale v1 metadata. Invalid or unsupported metadata refuses attachment with
+`DATA_INTEGRITY` (exit 6) and remains unchanged.
+
+`runs` includes `runMetadata: { status, current, ... }`. Status is `absent`, `valid`, `invalid` or
+`unsupported`. A matching valid file includes `version`, `run` and its optional `identity`,
+`selection` and `heartbeat`; a stale valid file has `current: false` and exposes none of those
+sections. Invalid/unsupported output includes a diagnostic message. The table shows the verified
+machine/harness/thread or says not recorded/unavailable. Human `stories show` and the TUI Story
+Details show an attached worker identity; `stories show --json` remains the stored Story, and
+`runs --json` is the structured metadata reader. Attachment changes the `runs` digest and wakes
+`wait`.
+
+The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
+bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
+optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
+sections' JSON values. Selection and heartbeat mutations are separate planned additions. Every
+start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
+Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
+returning when timestamps repeat. Unknown fields, future versions and unreadable files remain
+unavailable and unchanged, including through clear/Stage changes; a new start refuses them until
+explicit repair. Older releases preserve the file but do not maintain this lifecycle.
+
+For launch and restart recovery: keep the launched worker waiting for GO, verify the actual
+identity, attach it, publish the Board, then send GO. Resolve a recovered thread on its recorded
+machine through its recorded harness. A legacy worker string or a title is only an unverified hint.
+A confirmed failed launch uses `run fail --reason`; an uncertain launch, unreachable worker or
+failed attachment/publication needs reconciliation before GO or another launch. Preserve the
+previous attempt's metadata in retry context before replacing it.
 
 `eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
 Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
@@ -557,6 +593,8 @@ rowbly doctor --json    # a DoctorReport: { findings, fixed, summary }
 | `STORY_LINKING_INVALID_TARGET` | warning | A Story link to a missing Story, another Board or itself | Removes the link, keeping other Plugin Data |
 | `ATTACHMENTS_MISSING_FILE` | warning | An Attachment entry whose PNG is missing | Removes the entry from a valid bag |
 | `ATTACHMENTS_ORPHAN_FILE` | warning | An Attachment file with no entry | — (preserves bytes for recovery) |
+| `SOFTWARE_FACTORY_RUN_METADATA_INVALID` | warning | Run metadata is unreadable or fails the strict v1 shape, including unknown fields or an inconsistent heartbeat | — (preserved; repair explicitly) |
+| `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION` | warning | Run metadata declares a version other than 1 | — (preserved; use a compatible Rowbly or repair explicitly) |
 | `SOFTWARE_FACTORY_MISSING_PROMPT` | warning | A Stage Prompt that is on, at the global level or on a Board, whose path is not set, is outside the Plugin's folder, or whose file is missing or cannot be read (a symbolic link is not followed) | — (create the file with `prompt edit`, or turn it off) |
 | `TRANSACTION_PENDING` | error | A commit that was interrupted and could not be completed | Tries the recovery again |
 | `TRANSACTION_LEFTOVER` | warning | The folder of a finished or abandoned commit in `.txn/` that could not be removed | Removes it |

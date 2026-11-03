@@ -19,6 +19,8 @@ import {
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
+import { endRunMetadata, freshRunMetadata, metadataOutput, readRunMetadata } from './runMetadata';
+import { RunRef } from './runRef';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -54,17 +56,10 @@ export async function endVisit(changes: PluginChangeSet, key: string, plugin: Pl
   const change = changes.story(key);
   if (!change?.before || !change.after || change.before.stage === change.after.stage) return;
   // An invalid bag is left for doctor to report rather than dropped (ADR-0011).
-  if (plugin.inspectBag(change.after, StageRunBag).kind !== 'valid') return;
-  await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  if (plugin.inspectBag(change.after, StageRunBag).kind === 'valid')
+    await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
+  await endRunMetadata(changes, key);
 }
-
-/** Names one Stage Run: its Stage, attempt and start (ADR-0045 §2). */
-export const RunRef = z.strictObject({
-  stage: SlugSchema,
-  attempt: z.number().int().min(1),
-  startedAt: TimestampSchema,
-});
-export type RunRef = z.infer<typeof RunRef>;
 
 /** This Plugin's input of `stories.move`: move only while `finishedRun` is the visit's finished Stage Run. */
 export const MoveInput = z.strictObject({ finishedRun: RunRef });
@@ -168,6 +163,7 @@ export async function startRun(
         startedAt: toTimestamp(plugin.now()),
       };
       await saveRun(changes, plugin, story.key, run);
+      await freshRunMetadata(changes, story, run);
       return { key: story.key, stageRun: run };
     },
   );
@@ -213,6 +209,7 @@ export async function clearRun(plugin: PluginContext, key: string): Promise<{ cl
       ...plugin.writeBag(s, undefined),
       updatedAt: toTimestamp(plugin.now()),
     }));
+    await endRunMetadata(changes, story.key);
     return { cleared: story.key };
   });
 }
@@ -221,7 +218,14 @@ export interface RunsOverview {
   board: string;
   /** The Stages whose Stage Prompt is on, in Board order. */
   stages: string[];
-  stories: { key: string; name: string; stage: string; stageRun: StageRun | null; eligibility: Eligibility }[];
+  stories: {
+    key: string;
+    name: string;
+    stage: string;
+    stageRun: StageRun | null;
+    runMetadata: ReturnType<typeof metadataOutput>;
+    eligibility: Eligibility;
+  }[];
   /** A hash of `stages` and `stories`: any change to them changes it (`wait --since`). */
   digest: string;
 }
@@ -238,6 +242,7 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
       name: s.name,
       stage: s.stage,
       stageRun: currentRun(plugin, s),
+      runMetadata: metadataOutput(await readRunMetadata(plugin, s)),
       eligibility: await storyEligibility(plugin, s),
     })),
   );
