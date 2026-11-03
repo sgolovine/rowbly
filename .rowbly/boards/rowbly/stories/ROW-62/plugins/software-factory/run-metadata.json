@@ -2,17 +2,17 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 2,
-    "startedAt": "2026-11-03T15:16:16.471Z"
+    "attempt": 1,
+    "startedAt": "2026-11-03T15:57:26.671Z"
   },
   "identity": {
-    "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
-    "machine": "thinkpad",
+    "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+    "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
+    "threadId": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
     "verification": {
-      "source": "/tmp/rowbly-factory-session/ROW-62-verified-retry2.json native launch/read/configuration: exact provider model full typed options; existing worktree binding and clean preserved HEAD verified",
-      "verifiedAt": "2026-11-03T15:16:17.227Z",
+      "source": "/home/sgolovine/.rowbly-factory/receipts/df2d3070059c31fbc6821fa086190a2d.json",
+      "verifiedAt": "2026-11-03T15:57:27.513Z",
       "by": "sunny"
     }
   },
@@ -29,16 +29,10 @@
         "value": "default"
       }
     ],
-    "rule": "user named: Sol retry continuing preserved research",
-    "fallback": "Verified Claude session limit during research; explicit user-directed Sol continuation",
-    "usage": "observed-limit",
+    "rule": "bug hunting: GPT Sol default",
+    "fallback": null,
+    "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-03T15:16:16.471Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
-    "at": "2026-11-03T15:41:32.327Z",
-    "source": "Verified thinkpad/T3 assistant messages from mcp:3803ae1e-36e4-4d2e-82f9-32764d071044; snapshot /tmp/rowbly-factory-session/ROW-62-local-poll.json; SHA256 6d89f9754443af0dcba7435dd43cab6cdaa8a49d2ec1a7b25361667269c27605",
-    "by": "sunny"
+    "selectedAt": "2026-11-03T15:57:26.671Z"
   }
 }

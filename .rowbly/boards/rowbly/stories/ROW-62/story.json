@@ -5,27 +5,17 @@
   "name": "Add a TODO refinement Stage Prompt",
   "description": "Factory review recommendation 16 of 20.\n\n## Context\n\nScope questions raised during implementation could be surfaced earlier by a readiness pass.\n\n## Acceptance criteria\n\n- Enable a TODO Stage Prompt that reviews Story readiness and records concrete questions or missing requirements in a Comment.\n- Keep the Story in its current Stage and avoid authorizing implementation.\n- Ensure a completed readiness pass does not trigger repeated identical runs without new input.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
   "stage": "in-progress",
-  "rank": "a6",
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:36:10.627Z",
+  "updatedAt": "2026-11-03T15:57:27.514Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:3803ae1e-36e4-4d2e-82f9-32764d071044",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:16:16.471Z"
-      }
     },
     "comments": {
       "comments": [
@@ -35,6 +25,13 @@
           "body": "Revised direction is good, but fingerprint script is NOT accepted yet. Please fix fail-closed reads before implementation: missing jq/sha256sum/plugins-list, failed specs list/show, blocker reads and pipeline stages must yield a gap with no overall (current no pipefail and grouped commands can mask failures as empty JSON). Check every subcommand exit, do not infer Plugin off from unreadable list, and validate expected JSON types. Read guide only as own regular non-symlink file; distinguish absent from unreadable/unsafe rather than omit it. Align claimed off-Plugin behavior with story bag contents. Add throwaway fault scenarios for each read class, not just happy-path input changes, and include actual full script in proposed prompt, no placeholder. jq and sha256sum verified /usr/bin on rook. Keep .rowbly proposals outside Data Root; no actual enable yet. No repository edits until revised acceptance. Use dedicated script/reference instead of embedding large shell in prompt if simpler, but maintain self-contained published skill. Method/version explicit. No need ask user for these routine correctness fixes.",
           "createdAt": "2026-11-03T02:37:46.328Z",
           "updatedAt": "2026-11-03T02:37:46.328Z"
+        },
+        {
+          "id": "6nxQM8c1",
+          "author": "sunny",
+          "body": "Implementation record: ROW-62 retry2 PR https://github.com/sgolovine/rowbly/pull/154 head 30c4d8960266c9e6e189d36f71ff211de278919b authored by worker mcp:3803ae1e-36e4-4d2e-82f9-32764d071044 on thinkpad, provider codex model gpt-6.1-sol, reasoningEffort high serviceTier default. Verified native launch/read/configuration /tmp/rowbly-factory-session/ROW-62-verified-retry2.json native launch/read/configuration: exact provider model full typed options; existing worktree binding and clean preserved HEAD verified. Failed prior Sonnet research worker made no product edits; preserved clean HEAD was verified before retry. Current worker continued preserved work, wrote helper/docs/test extension and all product commits. Research and final assistant handoff retained under /tmp/rowbly-factory-session. All four local checks passed (79 unit,21 CLI). Exact-head independent review by a new worker with a different model is required. TODO activation remains pending supervisor final-artifact review/application after merge.",
+          "createdAt": "2026-11-03T15:48:35.936Z",
+          "updatedAt": "2026-11-03T15:48:35.936Z"
         },
         {
           "id": "BefK1Fa9",
@@ -58,6 +55,27 @@
           "updatedAt": "2026-11-03T15:15:23.983Z"
         },
         {
+          "id": "VXvhdHU9",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/154 opened at head 30c4d8960266c9e6e189d36f71ff211de278919b. Typecheck, lint, unit 79 and CLI 21 passed; total 100 tests. Five CI checks passed; Clipboard smoke (windows-latest) is pending and mergeability was UNKNOWN. Screenshots and complete rollout proposals: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608312095. Exact rollout files and hashes are under /tmp/row62/retry2/rollout. Supervisor must revalidate and apply/enable TODO after code merge; activation is not done. Worktree clean; owned daemon and sessions stopped.",
+          "createdAt": "2026-11-03T15:48:37.380Z",
+          "updatedAt": "2026-11-03T15:48:37.380Z"
+        },
+        {
+          "id": "YbyHyQY8",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/154 at 30c4d8960266c9e6e189d36f71ff211de278919b by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] skills/rowbly-factory/scripts/readiness-fingerprint.mjs:285: Do not treat a successful Story Spec listing as proof of complete inputs. The underlying listPluginFiles deliberately omits symbolic links and other non-regular entries, so adding plugins/specs/new-requirements.md as a symlink after a saved readiness review leaves specs list returning [] and makes this helper emit an overall and comparison=equal with exit 0. Reproduced with the real CLI against disposable data, with no product or Board changes. This violates the accepted unsafe-input gap contract and lets the proposed TODO prompt skip an incomplete review. Validate the relevant Story Spec inventory and safe files before accepting the list, or use a read contract that exposes omitted unsafe entries; emit gap=specs with no overall in this case, preserve the existing CLI symlink policy, and extend the kept workflow check without increasing the 100-test count. Reviewed all seven changed files, CLI read behavior, provenance, the complete posted rollout proposals and four screenshot URLs (all HTTP 200). Required local checks passed unchanged under the shared lease: typecheck, lint, 79 unit tests and 21 CLI tests. All six current-head GitHub checks were successful. Evidence: /tmp/row-62-review-astra-1/reproduce-spec-gap-v2.py, baseline.txt, spec-list.txt and unsafe-spec.txt on rook. TODO activation remains pending supervisor revalidation and application after a corrected code PR merges.",
+          "createdAt": "2026-11-03T15:55:57.449Z",
+          "updatedAt": "2026-11-03T15:55:57.449Z"
+        },
+        {
+          "id": "a9tCn5xN",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-62, PR https://github.com/sgolovine/rowbly/pull/154, head 30c4d8960266c9e6e189d36f71ff211de278919b. Independent review finding 1: the readiness helper accepts a Story Spec listing that silently omits unsafe entries and can falsely return comparison=equal. Detect incomplete Spec inventory, report a gap without overall, and extend the kept regression check. Review: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608600113. Continue the existing branch and PR; activation remains pending.",
+          "createdAt": "2026-11-03T15:55:58.195Z",
+          "updatedAt": "2026-11-03T15:55:58.195Z"
+        },
+        {
           "id": "dzICUJh4",
           "author": "sunny",
           "body": "Retry 2 revised plan submitted for acceptance. Continued factory/row-62 through origin/main c20c2528187b7941c6214b3b0d9a489572dd9106. Complete plan, TODO prompt, ROWBLY.md proposal and executable method-2 Node fingerprint candidate are preserved under /tmp/row62/retry2. Candidate passed 140 throwaway research scenarios; real ROW-62 collection, syntax check and doctor passed. Comparison requires complete known inputs and a verified digest; gaps never produce overall. No product edits or worker Board changes. Implementation and supervisor-owned post-merge TODO activation remain unaccepted.",
@@ -79,6 +97,16 @@
           "updatedAt": "2026-11-03T02:19:45.211Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+        "by": "sunny",
+        "startedAt": "2026-11-03T15:57:26.671Z"
+      }
     }
   }
 }
