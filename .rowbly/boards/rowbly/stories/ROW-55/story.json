@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T00:09:51.225Z",
+  "updatedAt": "2026-11-03T00:34:15.724Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:95c47fb0-72c3-4d26-bf56-f5f8eec29ad7",
+        "by": "sunny",
+        "startedAt": "2026-11-03T00:09:51.225Z"
+      }
     },
     "comments": {
       "comments": [
@@ -32,18 +42,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
           "createdAt": "2026-11-03T00:06:02.194Z",
           "updatedAt": "2026-11-03T00:06:02.194Z"
+        },
+        {
+          "id": "XNbkGCbl",
+          "author": "sunny",
+          "body": "Factory review reproduced two merge blockers in PR139 despite green checks: a finished Run cached at planning authorized a later move that erased a replacement running Run, and story-linking add with blocked-by wrote another Story. Reviewer was instructed to return a final handoff for In Progress; corrections need deterministic regression checks and current-visit enforcement under the mutation lock. PR139 remains draft/unmerged.",
+          "createdAt": "2026-11-03T00:34:15.723Z",
+          "updatedAt": "2026-11-03T00:34:15.723Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:95c47fb0-72c3-4d26-bf56-f5f8eec29ad7",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:09:51.225Z"
-      }
     }
   }
 }
