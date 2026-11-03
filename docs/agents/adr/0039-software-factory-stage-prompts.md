@@ -1,6 +1,6 @@
 # ADR-0039: Stage Prompts are per-Stage settings with Markdown files in the Plugin's folder
 
-**Status:** Accepted
+**Status:** Accepted; amended by [ADR-0047](0047-plugins-read-rowbly-md-as-inert-text.md), which lets a Plugin command read `ROWBLY.md` as inert text.
 
 ## 1. Context
 

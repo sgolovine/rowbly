@@ -1,10 +1,9 @@
 # Worker brief
 
-`rowbly software-factory brief <KEY>` prints every section after the rules, filled in except the
-`ROWBLY.md` one; send the rules below with `<KEY>` filled in, then its output. Fill in the whole
-template by hand only without that command. Fill in each `<…>` and send the block as the worker's
-first message. Give the Story in full, so the
-worker does not need to read the Board. Leave out the retry section unless this is a retry. Capture
+`rowbly software-factory brief <KEY>` prints every section after the rules, filled in, `ROWBLY.md`
+included; send the rules below with `<KEY>` filled in, then its output. Fill in the whole template by
+hand only without that command: fill in each `<…>` and send the block as the worker's first
+message. Give the Story in full, so the worker does not need to read the Board. Leave out the retry section unless this is a retry. Capture
 the previous attempt before `run start --retry` replaces it. Fill its context from recorded Story,
 Stage Run, Comments and identified worker messages; mark missing details "unknown" and stale or
 inaccessible details "unverified". Do not guess identities. Resolve the continuation/restart decision

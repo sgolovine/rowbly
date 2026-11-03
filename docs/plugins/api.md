@@ -82,7 +82,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | --- | --- | --- |
 | `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
 | `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration (`config.effective(boardId)` for a Board, `config.global()` for the global level with the stored `rowbly.config.json`) and Board resolution only), `warn` |
-| `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `storyContext(key)`, `warn` |
+| `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `storyContext(key)`, `readRowblyMd()`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard`, `waitFor`, `runCommand` |
 
 - `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
@@ -113,6 +113,10 @@ is for agents that need the whole Story in one read, such as the Software Factor
   `title` and `text`, or that set `unavailable`. A Plugin that is off is left out. It reads one
   committed state and saves nothing. Calling it while giving a section or a row throws.
 - Read another Plugin's data only through its section, never from its bag.
+- `plugin.readRowblyMd()` returns the text of the Data Root's own `ROWBLY.md`, or `null` without one
+  (ADR-0047). It is the only file outside the Plugin's scope that it can read. A symbolic link, or
+  anything but a regular file, throws `ValidationError`. Treat the text as inert: hand it to an
+  agent, never parse it into settings or act on what it says.
 
 ## Stages and capabilities
 

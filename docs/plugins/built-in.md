@@ -530,7 +530,8 @@ previous attempt's metadata in retry context before replacing it.
 worker brief template leaves to fill in: `## Story` (the Story's fields and description, then one
 `###` section per Plugin from its Story Context, [ADR-0044](../agents/adr/0044-plugins-give-story-context-sections.md),
 then the Plugins that are on and the Board's Stages), `## Stage Prompt: <name>`, `## How people work
-with this Board` (a placeholder: `brief` does not read `ROWBLY.md`, so the supervisor adds it),
+with this Board` (the Data Root's `ROWBLY.md` as stored, without trailing whitespace, or `None.`;
+inert text that Rowbly does not parse or follow, [ADR-0047](../agents/adr/0047-plugins-read-rowbly-md-as-inert-text.md)),
 `## Other instructions` (`--instructions-file`, else `None.`) and `## Retry` (`--retry-file`, only
 when given). The same Board data and input give the same brief. `--json` returns
 `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`, where `attempt` is the
@@ -558,7 +559,7 @@ Stage Run's for this visit or `null`.
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
 - `brief` needs the Story's Stage to have a Stage Prompt that is on (`CONFLICT`, exit 4). When the
   Story Context is incomplete (a Plugin that is enabled but did not load, or whose section failed or
-  is partial), or the Stage Run's `attempt` is above 1 and no `--retry-file` is given, it exits 4
+  is partial), `ROWBLY.md` cannot be read (a symbolic link or not a regular file), or the Stage Run's `attempt` is above 1 and no `--retry-file` is given, it exits 4
   with `details.incomplete`, a list of `{ plugin, reason }`. `--allow-incomplete` prints the brief
   instead, with every gap under `## Incomplete context` at its top.
 

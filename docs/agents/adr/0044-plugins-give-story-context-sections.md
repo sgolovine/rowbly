@@ -35,9 +35,8 @@ parse another Plugin's bag to fix this: each Plugin owns its data format (ADR-00
 - The Software Factory Plugin's `brief` command uses it to print the context part of a Worker's
   brief: the Story with every section, the Stage Prompt, the Board's Stages, the instructions and
   retry context it is given. It refuses with `CONFLICT` and `details.incomplete` when the context
-  is incomplete, unless `--allow-incomplete`, which lists every gap at the top of the brief. It does
-  not read `ROWBLY.md`, which Rowbly does not read (data model, ROWBLY.md); the brief leaves a
-  placeholder for the supervisor to fill.
+  is incomplete, unless `--allow-incomplete`, which lists every gap at the top of the brief.
+  [ADR-0047](0047-plugins-read-rowbly-md-as-inert-text.md) adds `ROWBLY.md` to it, as inert text.
 
 ## 3. Rejected alternatives
 

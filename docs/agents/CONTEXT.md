@@ -15,7 +15,7 @@ A Kanban board inside the Data Root that holds Stories and defines their Stages 
 _Avoid_: project, list
 
 **ROWBLY.md**:
-An optional Markdown file at the top of the Data Root (`.rowbly/ROWBLY.md`) where the people who use it write down how they work with its Boards: what each Stage means, when a Story moves, which Labels and Comments they expect. Rowbly does not read or enforce it; agents read it before they change data and follow it over their own defaults.
+An optional Markdown file at the top of the Data Root (`.rowbly/ROWBLY.md`) where the people who use it write down how they work with its Boards: what each Stage means, when a Story moves, which Labels and Comments they expect. Rowbly does not parse or enforce it (`software-factory brief` only copies it into a worker's brief as text); agents read it before they change data and follow it over their own defaults.
 _Avoid_: board rules, agent config
 
 ### Work items

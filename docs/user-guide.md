@@ -89,7 +89,7 @@ Rowbly also keeps a per-user Home Config, `~/.rowblyrc.json`, outside every Data
 
 Its `dataRoots` list holds the Data Roots you use, each `{ "label"?, "path", "default"? }`. Rowbly adds every Data Root it opens or creates (one with a `rowbly.config.json`), once per folder even when you reach it through a symlink or `~`, and never changes a label or the default when it does. Mark one entry `"default": true` to use it for commands from any folder and list it first in the TUI startup picker. When the home folder cannot be written, a command that would add a new Data Root warns and still runs.
 
-`ROWBLY.md` is an optional Markdown file you write by hand to record how you work with these Boards: what each Stage means, when a Story moves, which Labels and Comments you expect. Rowbly does not read or enforce it, but the Rowbly agent skill and reference tell an agent to read it before changing data and to follow it. Commit it with the rest of `.rowbly/`; `rowbly doctor` treats it as part of the Data Root.
+`ROWBLY.md` is an optional Markdown file you write by hand to record how you work with these Boards: what each Stage means, when a Story moves, which Labels and Comments you expect. Rowbly does not parse or enforce it (only `software-factory brief` copies it, as text, into an agent's brief), but the Rowbly agent skill and reference tell an agent to read it before changing data and to follow it. Commit it with the rest of `.rowbly/`; `rowbly doctor` treats it as part of the Data Root.
 
 Commit `.rowbly/` with your code; `init` writes a `.gitignore` that keeps `local.json` and Rowbly's lock and commit files (`.lock`, `.lock.break`, `.txn/`) out. Each Story is its own folder, so most changes touch one small file and merge cleanly.
 
@@ -506,10 +506,11 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
 - `brief` prints what an agent needs to work the Story in its Stage, as Markdown: the Story with
   everything each Plugin that is on keeps about it (Specs, Tasks, Comments, Epic, Story links,
   Attachments, Assignees), the Stage Prompt, the Board's Stages, and the text of
-  `--instructions-file` and `--retry-file`. It leaves a placeholder for `ROWBLY.md`, which it does
-  not read. It exits 4 (`CONFLICT`) when the Stage has no Stage Prompt that is on, and when part of
-  the Story cannot be read (a Plugin that did not load, invalid Plugin Data) or a retry has no
-  `--retry-file`, with each gap in `details.incomplete`; `--allow-incomplete` prints it anyway, with
+  `--instructions-file` and `--retry-file`, and the Data Root's `ROWBLY.md` as it is written ("None."
+  without one; it is only copied, never followed by Rowbly). It exits 4 (`CONFLICT`) when the Stage
+  has no Stage Prompt that is on, and when part of the Story cannot be read (a Plugin that did not
+  load, invalid Plugin Data), `ROWBLY.md` cannot be read (a symbolic link, not a file) or a retry has
+  no `--retry-file`, with each gap in `details.incomplete`; `--allow-incomplete` prints it anyway, with
   the gaps listed at the top. `--json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**. A Story whose Stage Run for its current Stage is

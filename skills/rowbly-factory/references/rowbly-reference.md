@@ -96,7 +96,7 @@ Run one of these before a series of changes and confirm it is the Data Root and 
 **`ROWBLY.md`.** People write down how they use their Boards (what each Stage means, when a Story
 moves, who moves it to `done`, which Labels and Comments they expect) in an optional Markdown file at the
 top of the Data Root: `.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`. Rowbly does
-not read or enforce it.
+not parse or enforce it; `software-factory brief` only copies it into a worker's brief.
 
 - Read it before the first command that changes data. Without it, use the defaults on this page.
 - Follow it over this page's defaults and over your skill's own Board steps. The user's request comes

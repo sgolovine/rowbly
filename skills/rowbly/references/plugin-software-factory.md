@@ -44,7 +44,7 @@ rowbly software-factory run clear WEB-42 --json --no-prompt          # work the 
 # A worker's reported block (supervisor only): check it, then run what it allows
 rowbly software-factory apply WEB-42 --file block.md --dry-run --json --no-prompt
 rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
-# The context part of a worker's brief: the Story in full, its Stage Prompt and Stages
+# The context part of a worker's brief: the Story in full, its Stage Prompt, Stages and ROWBLY.md
 rowbly software-factory brief WEB-42 --instructions-file ./instructions.md --json --no-prompt
 rowbly software-factory brief WEB-42 --retry-file ./retry.md --json --no-prompt   # a retry (attempt 2 or later)
 ```
@@ -76,11 +76,12 @@ stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stag
 exitCode?, output? }] }`, in the order the lines run (moves last). `decision` is `apply`, `hold`,
 `drop` or `reject`; `exitCode` and `output` (the command's JSON result or error) are set once a line
 ran. A refused block or a failed line exits non-zero with the same object in `error.details`.
+
 `brief --json` returns `{ key, board, stage, attempt, complete, incomplete, sections, markdown }`.
 `markdown` holds `## Story` (the Story's fields, then a `###` section per Plugin that is on: Tasks,
 Epic, Specs in full, Comments, Attachments, Story links, Assignees; then the Plugins on and the
-Stages), `## Stage Prompt: <name>`, `## How people work with this Board` (a placeholder: add
-`ROWBLY.md` yourself), `## Other instructions` and, with `--retry-file`, `## Retry`. `sections` are
+Stages), `## Stage Prompt: <name>`, `## How people work with this Board` (the Data Root's
+`ROWBLY.md` as written, or "None."; copied as text, never followed by Rowbly), `## Other instructions` and, with `--retry-file`, `## Retry`. `sections` are
 `[{ plugin, title, text, data, unavailable? }]`; `attempt` is the Stage Run's, or `null`.
 
 ## Rules
@@ -98,7 +99,8 @@ Stages), `## Stage Prompt: <name>`, `## How people work with this Board` (a plac
   none.
 - `brief` exits 4 (`CONFLICT`) when the Stage has no Stage Prompt that is on, and when the brief would
   be incomplete: a Plugin that is enabled but did not load, a section that cannot be read (invalid
-  Plugin Data, a missing linked Board Spec), or an `attempt` above 1 without `--retry-file`. Each gap
+  Plugin Data, a missing linked Board Spec), a `ROWBLY.md` that cannot be read (a symbolic link or
+  not a file), or an `attempt` above 1 without `--retry-file`. Each gap
   is in `details.incomplete` as `{ plugin, reason }`. Repair it (`doctor`) rather than pass
   `--allow-incomplete`, which prints the brief with the gaps listed at its top.
 - A Stage Run for another Stage than the Story's (left by a git merge or a hand edit) does not count.
