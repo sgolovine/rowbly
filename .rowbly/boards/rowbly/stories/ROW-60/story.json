@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:33:03.594Z",
+  "updatedAt": "2026-11-03T05:37:24.435Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:33:02.839Z"
+      }
     },
     "comments": {
       "comments": [
@@ -214,18 +224,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "CDhVzfms",
+          "author": "sunny",
+          "body": "Terra posted exact-head PR approval at https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596310990 for8c74acd6, allfourchecks78/21pass once. Reported Board command block was dry-run refused solely because its quoted Comment spans physical lines (unclosed quote/semicolon outside quote); nothing applied. Requested same ownStory approval as one physical command line. This is formatting within authorized scope, not a product/scope decision. Initial UNKNOWN mergeability predates completedreview; authorize ONE final current-head/fullrollup/readiness gate, no repeatedtests or hostpollloop. Headguard merge onlyifallgatespass; otherwise explicitpendingstate.",
+          "createdAt": "2026-11-03T05:37:24.434Z",
+          "updatedAt": "2026-11-03T05:37:24.434Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:33:02.839Z"
-      }
     }
   }
 }
