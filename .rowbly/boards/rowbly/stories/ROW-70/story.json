@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T16:47:41.124Z",
+  "updatedAt": "2026-11-03T16:58:59.910Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -39,6 +39,13 @@
           "body": "Research and proposed plan awaiting supervisor acceptance. Isolated worktree /home/sgolovine/Projects/rowbly-worktrees/row-70-story on factory/row-70 from origin/main d44db09e72b243757264a6504c5e5360a97ad571. Story records contain creation timestamps and current Stage but no Done-transition history. GitHub Plugin stores one current PR URL per Story and its fixed live read has no creation date or commits. Git has no Board-to-code-commit association. Proposed scope is a shared read-only Board Stats page and CLI aggregation with Plugin-owned contributions, explicit unavailable sources, matching documentation, existing-test extensions, screenshots and all four checks. No product implementation until metric semantics and plan are explicitly accepted.",
           "createdAt": "2026-11-03T16:23:06.547Z",
           "updatedAt": "2026-11-03T16:23:06.547Z"
+        },
+        {
+          "id": "ct2MKbXp",
+          "author": "sunny",
+          "body": "Revised plan awaiting acceptance after merging origin/main 550d6017161826ed47d73144e2a926d397fee644. Current-record all-time Stats will share one Board snapshot between CLI and TUI. Core owns existing Story and current Done counts. A narrow read-only boardStats Plugin contribution keeps GitHub metrics and bag interpretation in the GitHub Plugin. Proposed additional fixed host read gh-pr-commits uses a constant paginated GraphQL query returning PR identity, head, commit SHAs and completeness information. Deduplicate PR identities and commit SHAs. Proposed refresh limits are two concurrent requests, 100 candidate PRs, 10 pages per PR, 200 pages overall and 30 seconds, retaining existing process limits. Failed, capped or inconsistent sources remain partial or unavailable. Extend existing contract tests without increasing the 100-test total, update API fixtures and documentation, record the capability ADR, capture screenshots and run all four checks before one draft PR. No product implementation yet.",
+          "createdAt": "2026-11-03T16:58:59.909Z",
+          "updatedAt": "2026-11-03T16:58:59.909Z"
         }
       ]
     }
