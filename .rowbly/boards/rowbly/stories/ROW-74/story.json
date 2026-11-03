@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-74",
+  "boardId": "rowbly",
+  "name": "Remove board label during setup",
+  "description": "This is redundant and is the same thing as Board Name\n",
+  "stage": "todo",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:01:20.421Z",
+  "updatedAt": "2026-11-03T22:01:20.426Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "ao7VxfLBj",
+          "name": "image-20261103-2200.png",
+          "type": "image/png",
+          "size": 116840,
+          "createdAt": "2026-11-03T22:01:20.425Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
