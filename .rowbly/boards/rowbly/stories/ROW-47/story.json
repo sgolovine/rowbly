@@ -44,18 +44,18 @@
           "updatedAt": "2026-11-03T02:19:42.361Z"
         },
         {
-          "id": "ylWLs1qb",
-          "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
-          "createdAt": "2026-11-03T02:36:09.049Z",
-          "updatedAt": "2026-11-03T02:36:09.049Z"
-        },
-        {
           "id": "jlUWqpZ9",
           "author": "sunny",
           "body": "The generated-brief Implementation records omission is within ROW47 intended integration and must be corrected before merge. Finish review with concrete finding and expected behavior, all validation/evidence, then report ownStory Comment plus move in-progress and FACTORY-DONE ROW-47 if requesting changes. Do not implement/integrate in this review Run. Preserve PR149 and original branch, currentmain brief command and all complementary skills; no duplicate PR. Configuration proposals are supervisor-only and combined only after corrections/review. Supervisor finishes Run before moving then assigns fresh correction worker. Reviewer model rule means different model, not necessarily a provider unavailable across all implementers; flag unclear wording if needed.",
           "createdAt": "2026-11-03T02:55:59.527Z",
           "updatedAt": "2026-11-03T02:55:59.527Z"
+        },
+        {
+          "id": "ylWLs1qb",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
+          "createdAt": "2026-11-03T02:36:09.049Z",
+          "updatedAt": "2026-11-03T02:36:09.049Z"
         }
       ]
     }
