@@ -32,7 +32,7 @@ export async function loadStorySearch(
       if (!load) return undefined;
       try {
         return await invokePlugin({ plugin: id, stage: 'screen' }, () =>
-          load({ stories, plugin: services.plugins.context(id) }),
+          load({ stories: structuredClone(stories), plugin: services.plugins.context(id) }),
         );
       } catch {
         return undefined;
@@ -56,7 +56,7 @@ export async function loadStorySearch(
       const text = loaded[at];
       if (text) {
         try {
-          fields.push(...text(story));
+          fields.push(...text(structuredClone(story)));
         } catch {
           // Its text is left out for this Story only.
         }
@@ -66,7 +66,7 @@ export async function loadStorySearch(
         fields.push(
           ...(await invokePlugin(
             { plugin: id, stage: 'screen' },
-            () => tui.storySearchText?.({ story, plugin: services.plugins.context(id) }) ?? [],
+            () => tui.storySearchText?.({ story: structuredClone(story), plugin: services.plugins.context(id) }) ?? [],
           )),
         );
       } catch {

@@ -216,7 +216,7 @@ export async function fileCounts(plugin: PluginReadContext, stories: readonly St
   return lists.map((list) => (list.status === 'found' ? list.names.length : 0));
 }
 
-/** Notes are searchable: read once each time the finder opens, then looked up for each Story. */
+/** Search inputs are detached deep copies: key the loaded text by Story Key, not object identity. */
 export const searchableNotes: PluginTui = {
   async loadStorySearchText({ stories, plugin }) {
     const notes = await storyNotes(plugin, stories);
@@ -418,7 +418,9 @@ Promise of one). The Story finder calls it once per Story when opened, only for 
 Plugins. Text that needs the Plugin's files belongs in `loadStorySearchText({ stories, plugin })`
 instead (example above): the finder calls it once each time it opens, with every Story it searches,
 outside the Data Root lock, and calls the function it returns for each Story; its text comes before
-`storySearchText`'s. Read through `files.readMany` and `listMany` there. A load that throws leaves the
+`storySearchText`'s. Each loader receives its own detached array and deep Story copies. Each call
+to the returned function or `storySearchText` also receives a separate deep Story copy, so input
+mutation cannot change the core inventory or another contribution's inputs. Read through `files.readMany` and `listMany` there. A load that throws leaves the
 Plugin's text out of that search, and a function that throws leaves it out for that Story; nothing is
 retried or kept for the next search. Read bags and related files through the Plugin context; include display names and text,
 not binary attachment contents. Core indexes its own Story fields separately and never inspects

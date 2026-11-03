@@ -1080,13 +1080,14 @@ export interface PluginTui<S = Record<string, unknown>> {
    * They only show something, so a Plugin whose load or badges throw shows none there.
    */
   loadStoryBadges?(args: { plugin: PluginContext<S> }): Promise<(story: Story) => string[]>;
-  /** Searchable text owned by this Plugin, loaded when the Story finder opens. Failure skips its text. */
+  /** Searchable text owned by this Plugin, given a detached Story when the finder opens. Failure skips its text. */
   storySearchText?(args: { story: Story; plugin: PluginContext<S> }): Promise<string[]> | string[];
   /**
    * Searchable text that needs the Plugin's files, loaded once each time the Story finder opens for all
    * the `stories` it searches, outside the Data Root lock (ADR-0052). It returns the text of a Story,
    * added before `storySearchText`'s. A Plugin whose load throws adds no text to that search; one whose
-   * function throws adds none to that Story.
+   * function throws adds none to that Story. Each loader receives its own detached array and deep Story
+   * copies; its returned function and `storySearchText` each receive a separate deep Story copy.
    */
   loadStorySearchText?(args: {
     stories: readonly Story[];

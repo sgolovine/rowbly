@@ -22,6 +22,8 @@ import { tasks } from '../../src/plugins/tasks';
 import { createTask, deleteTask, listTasks, updateTask } from '../../src/plugins/tasks/tasks';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
+import type { TuiPlugin } from '../../src/tui/hooks';
+import { findStories, loadStorySearch } from '../../src/tui/shell/storySearch';
 import { makeStory } from '../helpers';
 import { deferred } from '../helpers/deferred';
 import { echo, faulty, notes, order, tracer } from './fixtures';
@@ -237,10 +239,10 @@ describe('transform (ADR-0012)', () => {
     expect(order).toEqual(['transform:1', 'guard', 'react:todo']);
   });
 
-  it('a thrown error fails the operation as INTERNAL, naming the Plugin; nothing is saved', async () => {
-    const t = await pluginRoot({ faulty: true, 'software-factory': true });
+  it('a thrown error fails mutations without saving, while failed display contributions preserve core search', async () => {
+    const t = await pluginRoot({ faulty: true, 'software-factory': true, notes: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [softwareFactory, faulty]);
+    const { services } = await withPlugins(t, [softwareFactory, faulty, notes]);
     const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(PluginError);
     expect(err).toMatchObject({
@@ -255,6 +257,92 @@ describe('transform (ADR-0012)', () => {
     const hold = holdStory(services.plugins.context('software-factory'), 'WEB-1', { reason: 'By hand' });
     await expect(hold).rejects.toMatchObject({ code: 'INTERNAL', details: { stage: 'transform' } });
     expect(await pathExists(join(t.path, 'boards/web/stories/WEB-1/plugins/software-factory/hold.json'))).toBe(false);
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-2',
+      name: 'Original searchable name',
+      plugins: { faulty: { nested: { kept: true } } },
+    });
+    const inventory = await services.stories.list('web', {});
+    const expected = structuredClone(inventory);
+    // Reuse the exact service-owned inventory to detect mutation, including nested Plugin Data.
+    const list = vi.spyOn(services.stories, 'list').mockResolvedValue(inventory);
+    const calls: string[] = [];
+    const contributors: TuiPlugin[] = [
+      {
+        id: 'faulty',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            const story = stories.find((s) => s.key === 'WEB-2');
+            if (!story) throw new Error('Missing fixture');
+            story.name = 'Poisoned name';
+            story.labels.push('poison');
+            (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+            (stories as typeof inventory).splice(0);
+            throw new Error('Unavailable loader');
+          },
+        },
+      },
+      {
+        id: 'software-factory',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            expect(stories).toEqual(expected);
+            return (story) => {
+              expect(story).toEqual(expected.find((s) => s.key === story.key));
+              calls.push(`mapper:${story.key}`);
+              story.name = 'Poisoned mapper';
+              story.labels.push('mapper');
+              if (story.key === 'WEB-2') {
+                (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+              }
+              throw new Error('Unavailable mapper');
+            };
+          },
+          storySearchText({ story }) {
+            expect(story).toEqual(expected.find((s) => s.key === story.key));
+            calls.push(`legacy:${story.key}`);
+            story.name = 'Poisoned legacy callback';
+            story.labels.push('legacy');
+            if (story.key === 'WEB-2') {
+              (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+            }
+            throw new Error('Unavailable legacy callback');
+          },
+        },
+      },
+      {
+        id: 'notes',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            expect(stories).toEqual(expected);
+            return (story) => {
+              expect(story).toEqual(expected.find((s) => s.key === story.key));
+              calls.push(`observer:${story.key}`);
+              story.labels.push('private copy');
+              return ['loaded text'];
+            };
+          },
+          storySearchText({ story }) {
+            expect(story).toEqual(expected.find((s) => s.key === story.key));
+            return ['legacy text'];
+          },
+        },
+      },
+    ];
+    try {
+      const entries = await loadStorySearch(services, contributors, 'web');
+      expect(inventory).toEqual(expected);
+      expect(entries.map((entry) => entry.story)).toEqual(expected);
+      expect(findStories(entries, 'Original searchable name').map((entry) => entry.story.key)).toEqual(['WEB-2']);
+      expect(entries.every((entry) => entry.fields.slice(-2).join('|') === 'loaded text|legacy text')).toBe(true);
+      expect(calls).toEqual(expected.flatMap((s) => [`mapper:${s.key}`, `legacy:${s.key}`, `observer:${s.key}`]));
+    } finally {
+      list.mockRestore();
+    }
   });
 });
 

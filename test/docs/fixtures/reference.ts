@@ -144,7 +144,7 @@ export async function fileCounts(plugin: PluginReadContext, stories: readonly St
   return lists.map((list) => (list.status === 'found' ? list.names.length : 0));
 }
 
-/** Notes are searchable: read once each time the finder opens, then looked up for each Story. */
+/** Search inputs are detached deep copies: key the loaded text by Story Key, not object identity. */
 export const searchableNotes: PluginTui = {
   async loadStorySearchText({ stories, plugin }) {
     const notes = await storyNotes(plugin, stories);
