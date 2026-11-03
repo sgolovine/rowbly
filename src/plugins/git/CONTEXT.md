@@ -19,7 +19,7 @@ _Avoid_: committer identity
 An independently enabled, interval or on-demand synchronization of the current branch with its configured upstream, retaining conflicting Rowbly alternatives as committed evidence before pushing a valid result.
 
 **Merge Evidence**:
-Content-addressed files under `plugins/git/merge-evidence/` retaining the base, exact alternatives, provenance, remapping and repair decisions of synchronization.
+Content-addressed files under `plugins/git/merge-evidence/` retaining the base, exact alternatives, provenance, remapping and repair decisions of synchronization. Written only when an attempt makes a decision (a one-sided addition is none); never edited, expired or pruned by Rowbly, and removed only by a person in an ordinary commit after review (ADR-0050).
 
 **Sync**: the Git Plugin's header Action (`S`). Commits pending Rowbly data/configuration before
 fetching, reconciles while rebasing onto the configured upstream, publishes recoverably and pushes.
