@@ -4,28 +4,25 @@
   "boardId": "rowbly",
   "name": "Default stage prompts",
   "description": "We want to make it really easy for people to standup a software factory. Using the stage prompts Rowbly uses for internal development (located within .rowbly), create a series of default stage prompts for the default columns.\n\nWhen setting up rowbly as a software factory. We should have the following stages\n\n- Backlog\n- TODO\n- In Progress\n- In Review\n- Done\n\nFor non-factory setups, use the following columns\n\n\n- Backlog\n- TODO\n- In Progress\n- Done\n\n\nAdd default stage prompts when using software factory. Use defaults from internal development, make sure to modify them to remove anything custom to the project. Stages assume that a user has/will install the accompanying skills",
-  "stage": "in-progress",
-  "rank": "aA",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T17:00:56.644Z",
+  "updatedAt": "2026-11-03T17:20:52.654Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:44:55.274Z"
-      }
-    },
     "comments": {
       "comments": [
+        {
+          "id": "COM1gxzk",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"threadId\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"machine\":\"rook\",\"provider\":\"claudeAgent\",\"model\":\"claude-opus-5-5\",\"options\":[{\"id\":\"effort\",\"value\":\"high\"},{\"id\":\"fastMode\",\"value\":false}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/3d1b46742fdd3385207209102686e5e5.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-73-story\",\"branch\":\"factory/row-73\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/156\",\"head\":\"3f05ca647fb0c6172d439cebaacf8b82839f8ffa\",\"scope\":\"Sole product implementation author, research through final checkpoint; no correction workers\"}",
+          "createdAt": "2026-11-03T17:19:32.742Z",
+          "updatedAt": "2026-11-03T17:19:32.742Z"
+        },
         {
           "id": "D8BxrfdE",
           "author": "sunny",
@@ -39,6 +36,13 @@
           "body": "Revised plan (worktree factory/row-73 at origin/main 02d8600a, awaiting acceptance): layouts are non-factory todo TODO, in-progress In Progress and factory adds in-review In Review; DEFAULT_STAGES name becomes TODO with stored lists untouched. software-factory.setup (CLI software-factory setup --board) is explicit and atomic: a key match is present and keeps its label (case-only difference counts as equivalent, other labels reported custom), it never renames, reorders or removes, it refuses CONFLICT on a same-label different-key Stage, writes a Board stage list only when a factory key is missing, keeps every effective Board or global prompt entry and any existing file, and writes defaults otherwise: In Progress and In Review on, portable TODO advisory readiness off. Explicit onboarding option in Software Factory or Both mode; no init flag. ADR-0053 amends ADR-0024 section 3 and ADR-0041 section 2. Docs, rowbly and rowbly-factory skills and reference copies updated; preservation assertions added to the existing agentWorkflows step, suite stays at 100. Internal in-pr and .rowbly prompts untouched.",
           "createdAt": "2026-11-03T17:00:55.401Z",
           "updatedAt": "2026-11-03T17:00:55.401Z"
+        },
+        {
+          "id": "VUNRjExC",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/156 at head 3f05ca647fb0c6172d439cebaacf8b82839f8ffa (branch factory/row-73). Adds software-factory setup: a Board-scoped, idempotent operation that adds missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) and portable default Stage Prompts (In Progress and In Review on, TODO advisory readiness off with prerequisites documented). It keeps every existing Stage name and order and every Board or global prompt entry and file, and refuses CONFLICT on a same-name Stage. The built-in todo Stage is named TODO, with stored lists untouched. Explicit Factory setup option in Software Factory or Both onboarding and in Board settings. ADR-0053 amends ADR-0024 section 3 and ADR-0041 section 2. Docs, rowbly and rowbly-factory skills and the four identical reference copies are updated; internal .rowbly prompts are unchanged. Validation at 3f05ca64 under the shared lease: typecheck, lint, unit 79 and CLI 21 passed, 100 tests total, no new test cases (preservation assertions added to the existing agentWorkflows Stage step and the operation inventory). 11 agentic-tui screenshots in https://github.com/sgolovine/rowbly/pull/156#issuecomment-6610673645 (all URLs HTTP 200). CI at PR open: Verify, Unit tests, CLI tests and the three Clipboard smoke checks in progress. Review findings: none yet.",
+          "createdAt": "2026-11-03T17:19:30.832Z",
+          "updatedAt": "2026-11-03T17:19:30.832Z"
         },
         {
           "id": "ZetFujFJ",
@@ -55,6 +59,16 @@
           "updatedAt": "2026-11-03T16:51:03.983Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4cfde944-87dc-465f-a7cf-0ccb901a7a54",
+        "by": "sunny",
+        "startedAt": "2026-11-03T17:20:51.905Z"
+      }
     }
   }
 }
