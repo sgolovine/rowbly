@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:12:11.378Z",
+  "updatedAt": "2026-11-03T16:12:12.636Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -127,6 +127,13 @@
           "body": "Implementation record: ROW-62 correction PR https://github.com/sgolovine/rowbly/pull/154 head 0c5f219cd71d4a6638833ff0df394d4b46a276ac, correction commit05430c5f2ad2c9c088480638d8fc3f8fc4863cdd authored by mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801 on rook provider codex model gpt-6.1-sol reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/df2d3070059c31fbc6821fa086190a2d.json. Fresh correction worker continued remote factory/row-62 in isolated local factory/row-62-correction-sol-1 worktree, fixed finding1, added existing regression and docs updates. Prior original product implementer mcp:3803ae1e-36e4-4d2e-82f9-32764d071044 also codex/gpt-6.1-sol; first Astra reviewer wrote no product code. All four local checks79unit21CLI and30 disposable faults passed. Complete corrected evidence/rollout manifest https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609071374. Requires NEW worker exact-head independent review different from both implementing workers and Sol model; no inheritance of old-head review approval. TODO activation remains supervisor-owned after merge.",
           "createdAt": "2026-11-03T16:12:11.377Z",
           "updatedAt": "2026-11-03T16:12:11.377Z"
+        },
+        {
+          "id": "iEe0UYoe",
+          "author": "sunny",
+          "body": "Returned PR154 corrected at head 0c5f219cd71d4a6638833ff0df394d4b46a276ac: https://github.com/sgolovine/rowbly/pull/154. Finding 1 fixed in 05430c5f2ad2c9c088480638d8fc3f8fc4863cdd with safe physical Spec inventory, linked Board Spec and off-Plugin checks, incoming-link inventory guards and final rechecks; incomplete inputs yield a gap without overall. Typecheck, lint, 79 unit and 21 CLI tests passed; 30 disposable fault scenarios passed; doctor zero findings. Five current-head CI checks succeeded; Clipboard smoke (windows-latest) remains pending. Fresh screenshots, complete rollout proposals and hashes: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609071374. Worktree clean and retained; owned sessions removed and daemon stopped. TODO activation remains pending supervisor review and application after merge.",
+          "createdAt": "2026-11-03T16:12:12.636Z",
+          "updatedAt": "2026-11-03T16:12:12.636Z"
         }
       ]
     }
