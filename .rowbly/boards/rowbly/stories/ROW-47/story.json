@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T03:16:45.960Z",
+  "updatedAt": "2026-11-03T03:22:51.470Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:16:45.182Z"
+      }
     },
     "comments": {
       "comments": [
@@ -60,18 +70,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
+        },
+        {
+          "id": "Po5B7rT0",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Preserve software-factory brief --instructions-file and --retry-file generated context; append one explicit filled Implementation records section with ALL verified authoring records and selected reviewer worker/thread/provider/model, rather than relying on unused template placeholders. Verify the actual assembled review brief on a throwaway DataRoot; missing/unknown provenance remains an escalation, not assumed. New worker and model different from EVERY implementing model, same provider allowed; option/effort differences do not count. Preserve records beforeStagechange, head-pinned approval invalidation and --match-head-commit. Integrate own existingPR with currentmain without dropping complementary wait/return/metadata/hold/brief rules. Configuration proposals outside .rowbly only, ownedreviewsteps3-4/47 vswait2/57 vsreturn5/48. Allfourchecks/relevant evidence, normal push to SAME PR149, answer findings. No branchprotection changes or merge.",
+          "createdAt": "2026-11-03T03:22:51.469Z",
+          "updatedAt": "2026-11-03T03:22:51.469Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:16:45.182Z"
-      }
     }
   }
 }
