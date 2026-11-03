@@ -141,6 +141,8 @@ function checkSelection(input: SelectionInput): Omit<ModelSelection, 'selectedBy
     throw new UsageError(
       `A Model Selection needs a provider, a model and a rule: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
     );
+  if (new Set(parsed.data.options.map((option) => option.id)).size !== parsed.data.options.length)
+    throw new UsageError('Model Selection option ids must be unique');
   return parsed.data;
 }
 

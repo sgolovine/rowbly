@@ -117,6 +117,11 @@ the reciprocal view is derived. Its `stories.remove` transform removes incoming 
 deletion's Change Set, refusing the entire operation if an invalid linking bag on the Board prevents
 safe cleanup. Its `doctor.fix` repairs only invalid targets in valid bags and keeps other Plugin Data.
 
+A start's optional `selection.options` holds exact string, finite number or boolean values with
+unique option IDs. CLI `--option <id>=<json>` requires a JSON scalar (including JSON quotes for
+strings); malformed, null, compound and nonfinite values or duplicate IDs refuse with `USAGE`
+before the operation. No model catalog types are inferred. The stored ADR-0046 schema is unchanged.
+
 Software Factory's `level` is `global` (the entry in `rowbly.config.json`) or `board` (the bag in
 `boards/<board>/board.config.json`, with `board`); `stage` is a Stage key that `set` checks against
 that level's Stages, Backlog and Done included. `set` turns the Stage Prompt on or off (`enabled`),

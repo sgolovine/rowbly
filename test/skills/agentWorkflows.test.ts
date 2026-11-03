@@ -310,20 +310,137 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       worked.key,
       '--worker',
       'w3',
-      ...['--provider', 'codex', '--model', 'gpt-6.1-sol', '--rule', 'coding default', '--option', 'effort=high'],
+      ...['--provider', 'codex', '--model', 'gpt-6.1-sol', '--rule', 'coding default'],
+      ...['--option', 'reasoningEffort="high"', '--option', 'numericText="123"', '--option', 'number=1e3'],
+      ...['--option', 'booleanText="true"', '--option', 'boolean=true'],
       ...['--fallback', 'Claude usage limit observed', '--usage', 'observed-limit'],
     );
+    const selection = (await json('software-factory', 'runs', '--board', 'web')).stories[0].runMetadata.selection;
+    expect(selection).toMatchObject({
+      provider: 'codex',
+      model: 'gpt-6.1-sol',
+      options: [
+        { id: 'reasoningEffort', value: 'high' },
+        { id: 'numericText', value: '123' },
+        { id: 'number', value: 1000 },
+        { id: 'booleanText', value: 'true' },
+        { id: 'boolean', value: true },
+      ],
+      rule: 'coding default',
+      fallback: 'Claude usage limit observed',
+      usage: 'observed-limit',
+    });
+    // Invalid scalar encodings and duplicate ids fail before replacing this Run or its intent.
+    for (const options of [['x=high'], ['x=null'], ['x=[]'], ['x={}'], ['x=1e999'], ['x=NaN'], ['x=true', 'x=false']]) {
+      const refused = await rowbly(
+        'software-factory',
+        'run',
+        'start',
+        worked.key,
+        '--worker',
+        'wrong',
+        '--provider',
+        'codex',
+        '--model',
+        'gpt-6.1-sol',
+        '--rule',
+        'test',
+        ...options.flatMap((option) => ['--option', option]),
+        '--json',
+      );
+      expect(refused.exitCode).toBe(2);
+      expect(jsonError(refused).code).toBe('USAGE');
+    }
     expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].runMetadata).toMatchObject({
       current: true,
-      selection: {
-        provider: 'codex',
-        model: 'gpt-6.1-sol',
-        options: [{ id: 'effort', value: 'high' }],
-        rule: 'coding default',
-        fallback: 'Claude usage limit observed',
-        usage: 'observed-limit',
-      },
+      selection,
     });
+
+    // Exercise the actual launcher script against a deterministic CLI, never a real worker.
+    const launcher = join(process.cwd(), 'skills/rowbly-factory/scripts/launch-worker.mjs');
+    const fakeT3 = join(tmp.dir, 't3-fixture');
+    const configFile = join(tmp.dir, 'config.json');
+    const answerFile = join(tmp.dir, 'answer.json');
+    const briefFile = join(tmp.dir, 'reservation.md');
+    await writeFile(briefFile, 'Reserved; wait for GO.');
+    await writeFile(
+      fakeT3,
+      `#!${process.execPath}\n${String.raw`
+const fs = require('node:fs');
+const path = require('node:path');
+const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+const answerFile = path.join(__dirname, 'answer.json');
+const args = process.argv.slice(2);
+const launcher = { threadId: 'launcher', title: 'Launcher: workers', status: 'completed' };
+const worker = { threadId: 'worker', title: 'Fixture worker', status: 'completed',
+  providerInstanceId: 'codex', model: 'gpt-6.1-sol', runtimeMode: 'full-access' };
+if (args[0] !== 'thread') throw Error('Unexpected command');
+if (args[1] === 'list') console.log(JSON.stringify([launcher, worker]));
+else if (args[1] === 'show') {
+  if (args.at(-1) === 'worker') {
+    if (config.unreachable) throw Error('fixture unavailable');
+    console.log(JSON.stringify({ thread: worker, messages: [{ role: 'user', text: 'Reserved; wait for GO.' }] }));
+  } else {
+    const messages = fs.existsSync(answerFile) ? JSON.parse(fs.readFileSync(answerFile, 'utf8')) : [];
+    console.log(JSON.stringify({ thread: launcher, messages }));
+  }
+} else if (args[1] === 'send') {
+  const text = fs.readFileSync(0, 'utf8');
+  if (!text.startsWith('CONFIG\n')) throw Error('No launches or GO allowed');
+  const id = text.match(/^id: (.+)$/m)[1];
+  fs.writeFileSync(answerFile, JSON.stringify([{ role: 'user', text },
+    { role: 'assistant', text: 'CONFIG ' + id + ' ' + JSON.stringify(config.actual) }]));
+} else throw Error('No real launch allowed');
+`}`,
+      { mode: 0o755 },
+    );
+    const planned = { instanceId: selection.provider, model: selection.model, options: selection.options };
+    const actual = {
+      threadId: 'worker',
+      runtimeMode: 'full-access',
+      modelSelection: { ...planned, options: [...planned.options].reverse() },
+    };
+    const checkLaunch = async (config: unknown, expectedStatus: string, expectedSelection = planned) => {
+      await writeFile(configFile, JSON.stringify(config));
+      await rm(answerFile, { force: true });
+      const result = await promisify(execFile)(process.execPath, [
+        launcher,
+        'launch',
+        '--key',
+        worked.key,
+        '--title',
+        'Fixture worker',
+        '--brief',
+        briefFile,
+        '--model-selection',
+        JSON.stringify(expectedSelection),
+        '--project',
+        tmp.dir,
+        '--t3',
+        fakeT3,
+        '--receipt-dir',
+        join(tmp.dir, 'receipts'),
+      ]).catch((error) => error);
+      const output = JSON.parse(result.stdout);
+      expect(output.status, output.reason).toBe(expectedStatus);
+      return output;
+    };
+    const verified = await checkLaunch({ actual }, 'existing');
+    expect(verified.options).toEqual(actual.modelSelection.options);
+    const receipt = JSON.parse(await readFile(verified.receipt, 'utf8'));
+    for (const options of [
+      planned.options.map((o: { id: string; value: unknown }) => (o.id === 'number' ? { ...o, value: '1000' } : o)),
+      planned.options.map((o: { id: string; value: unknown }) => (o.id === 'boolean' ? { ...o, value: 'true' } : o)),
+      [...planned.options, { id: 'extra', value: true }],
+      planned.options.slice(1),
+      [...planned.options, planned.options[0]],
+    ]) {
+      await checkLaunch({ actual: { ...actual, modelSelection: { ...planned, options } } }, 'conflict');
+      expect(JSON.parse(await readFile(verified.receipt, 'utf8')).request).toEqual(receipt.request);
+    }
+    await checkLaunch({ actual: { ...actual, modelSelection: { ...planned, options: null } } }, 'unverified');
+    await checkLaunch({ unreachable: true }, 'unknown');
+    await checkLaunch({ actual }, 'error', { ...planned, options: [...planned.options, planned.options[0]] });
 
     // A worker's reported block: a line that writes another Story refuses all of it; a move waits for `run finish`.
     const block = (...lines: string[]) => ['```rowbly', ...lines, '```'].join('\n');

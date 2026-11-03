@@ -167,15 +167,25 @@ async function settle(receipt, threadIds, expected, status, reply) {
   } catch {
     stop('unverified', { ...identity, launcherId, reason: 'options not verified: launcher answer is not JSON' });
   }
-  const options = actual.modelSelection?.options ?? [];
+  const options = actual?.modelSelection?.options === undefined ? [] : actual?.modelSelection?.options;
+  if (
+    typeof actual?.threadId !== 'string' ||
+    typeof actual?.modelSelection?.instanceId !== 'string' ||
+    typeof actual?.modelSelection?.model !== 'string' ||
+    typeof actual?.runtimeMode !== 'string' ||
+    !validOptions(options)
+  ) {
+    stop('unverified', { ...identity, launcherId, reason: 'options not verified: malformed configuration' });
+  }
   const differences = [
     actual.threadId !== threadId && `threadId ${actual.threadId}`,
     actual.modelSelection?.instanceId !== modelSelection.instanceId && `provider ${actual.modelSelection?.instanceId}`,
     actual.modelSelection?.model !== modelSelection.model && `model ${actual.modelSelection?.model}`,
     actual.runtimeMode !== 'full-access' && `runtimeMode ${actual.runtimeMode}`,
-    ...(modelSelection.options ?? [])
-      .filter((o) => !options.some((a) => a.id === o.id && a.value === o.value))
-      .map((o) => `option ${o.id} is not ${o.value}`),
+    !uniqueOptions(options) && 'duplicate option ids',
+    (options.length !== (modelSelection.options ?? []).length ||
+      !(modelSelection.options ?? []).every((o) => options.some((a) => a.id === o.id && a.value === o.value))) &&
+      `options differ: expected ${JSON.stringify(modelSelection.options ?? [])}, actual ${JSON.stringify(options)}`,
   ].filter(Boolean);
   if (differences.length) {
     stop('conflict', { ...identity, options, launcherId, reason: `configuration mismatch: ${differences.join(', ')}` });
@@ -410,10 +420,39 @@ function parseSelection(text) {
   } catch {
     stop('error', { reason: '--model-selection is not JSON' });
   }
-  if (typeof selection?.instanceId !== 'string' || typeof selection.model !== 'string') {
+  if (
+    typeof selection?.instanceId !== 'string' ||
+    !selection.instanceId.trim() ||
+    typeof selection.model !== 'string' ||
+    !selection.model.trim()
+  ) {
     stop('error', { reason: '--model-selection needs instanceId and model' });
   }
+  if (
+    !validOptions(selection.options === undefined ? [] : selection.options) ||
+    !uniqueOptions(selection.options ?? [])
+  ) {
+    stop('error', { reason: '--model-selection options need unique ids and string, finite number or boolean values' });
+  }
   return selection;
+}
+
+function validOptions(options) {
+  return (
+    Array.isArray(options) &&
+    options.every(
+      (option) =>
+        typeof option?.id === 'string' &&
+        option.id.trim() &&
+        (typeof option.value === 'string' ||
+          typeof option.value === 'boolean' ||
+          (typeof option.value === 'number' && Number.isFinite(option.value))),
+    )
+  );
+}
+
+function uniqueOptions(options) {
+  return new Set(options.map((option) => option.id)).size === options.length;
 }
 
 function parseArgs(argv) {

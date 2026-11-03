@@ -21,6 +21,10 @@ node scripts/launch-worker.mjs launch --key <KEY> --title "<title>" --brief <fil
 
 - `--brief` is the worker's first message, a local file. `--model-selection` is T3's
   `{"instanceId":…,"model":…,"options":[{"id":…,"value":…}]}`.
+  Choose these exact IDs and typed values from the target server's live model catalog and option
+  descriptors, resolving inherited options before launch. Keep the complete intended option set:
+  strings, finite numbers and booleans retain their JSON types; IDs must be unique. Do not guess
+  supported types, coerce numeric-looking strings or silently substitute defaults.
 - `--project` is the checkout on the server; workers start in it (`workspaceStrategy` root,
   `runtimeMode` full-access). A `~` in `--project`, `--t3` or `--brief-dir` means the server's home.
 - Leave out `--ssh` to drive a T3 server on this computer.
@@ -49,7 +53,8 @@ and, once known, its thread. In order, the script:
    thread may belong to the request, and it must not be archived. It must have the title, the
    requested provider and model, full-access in the project folder (no worktree), and the brief as
    its first message. Then the script asks the launcher for the thread's `t3_thread_configuration`
-   (`CONFIG`), because the CLI does not show options, and checks every requested option. The
+   (`CONFIG`), because the CLI does not show options, and compares the complete typed option set
+   independent of order, refusing extra, missing or duplicate IDs and different types/values. The
    receipt records the thread.
 
 Neither the title alone nor the launcher's own answer counts as verification. The launcher's turns
@@ -94,18 +99,44 @@ and report it as `existing` or `conflict`.
 
 ## The Stage Run comes first
 
-Record the Stage Run and verified identity before a worker starts on the Story. Use **Park, then
-GO**: launch with a short reservation as the brief ("You are reserved for <KEY>. Do nothing. Reply
-RESERVED <KEY> and wait for GO."). Use the script's verified result and durable receipt, then:
+Record the planned Model Selection, Stage Run and verified identity before a worker starts on the
+Story. Use **Park, then GO**:
 
-1. Run `run start <KEY> --worker <threadId>` and keep its returned Stage, attempt and startedAt.
+1. Choose the exact provider instance/model IDs and complete typed options as the skill's
+   Model Selection policy says. Preserve this intent, its policy rule and any fallback reason.
+   Launch with this `--model-selection` and a short reservation as the brief ("You are reserved for
+   <KEY>. Do nothing. Reply RESERVED <KEY> and wait for GO."). Keep the result and durable receipt.
+2. Run `rowbly software-factory run start <KEY> --worker <threadId> --provider <instanceId>
+   --model <modelId> --rule "<rule>" [--option '<id>=<json>']… [--fallback "<why>"]
+   [--usage unknown|observed-limit|user-stated]`, recording the selection chosen in step 1,
+   not one reconstructed from the returned worker. Keep its returned Stage, attempt and startedAt.
+   T3 `instanceId` maps to `--provider`; each option's `value` is its JSON scalar. For example,
+   `{"id":"reasoningEffort","value":"high"}` becomes `--option 'reasoningEffort="high"'`,
+   while `{"id":"fastMode","value":true}` becomes `--option 'fastMode=true'`.
+   String `"123"` needs `--option 'text="123"'`; number `123` needs `--option 'number=123'`.
+   Null, compound, nonfinite or malformed values and duplicate IDs are refused with exit 2.
    Alternatively, when `ROWBLY.md` permits it, start with a unique launch title first, then launch
    the reservation. A title is an unverified hint, never sufficient recovery identity.
-2. Attach the verified actual worker using `run attach <KEY> --stage <stage> --attempt <attempt>
+3. Compare the recorded intent with the actual `provider`, `model` and complete `options` from the
+   verified result. Comparison is order-independent and type-sensitive: extra, missing or duplicate
+   IDs, differing values, and string/number/boolean differences are mismatches. The script checks
+   the request against the worker's CLI identity and launcher CONFIG result; compare those actual
+   values with the Stage Run selection too. A proven selection mismatch means no attachment,
+   publication or GO: run `rowbly software-factory run fail <KEY> --reason "<actual mismatch>"`.
+   Never rewrite intended selection to match the worker. A `conflict` caused by ambiguous identity
+   or a reused title requires reconciliation; it is not by itself proof of a model mismatch.
+   `unknown` or `unverified` means insufficient evidence: keep the worker reserved and reconcile
+   the receipt and remote harness, without failing on a guessed mismatch or launching a duplicate.
+4. Generate the full brief as the skill's Start a Story procedure says: combine the worker
+   template's rules with `rowbly software-factory brief <KEY>`, including `--instructions-file`
+   when needed and `--retry-file` on retry. Incomplete context means no GO; fail the Run with its
+   gaps unless the user explicitly permits incomplete context. Preserve the prior attempt's
+   metadata, receipt and continuation decision in retry context before `run start --retry`.
+5. Attach the verified actual worker using `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt>
    --started-at <startedAt> --worker <threadId> --machine <machine> --harness t3 --thread-id <threadId>
    --source "<durable launch receipt>"`. Rowbly records the supervisor's attestation; it does not
    contact T3. Use the receipt's machine and actual returned identity, never a guessed title.
-3. Publish the Board, then send the full brief and GO:
+6. Publish the Board (including planned selection and verified identity), then send the full brief and GO:
 
    ```bash
    node scripts/launch-worker.mjs send --thread <threadId> --title "<title>" --message <file> \

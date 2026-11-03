@@ -448,7 +448,7 @@ rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edi
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
 rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
-rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<value>]... [--fallback <why>] [--usage <source>]]
+rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<json>]... [--fallback <why>] [--usage <source>]]
 rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -523,7 +523,7 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
 
 **Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
 the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)
-together, with `--option <id>=<value>` (repeatable; `true`, `false` and numbers are typed),
+together, with `--option <id>=<json>` (repeatable; unique IDs, JSON string, finite number or boolean),
 `--fallback <why>` when the rule's model is not used, and `--usage` (`unknown`, the default,
 `observed-limit` or `user-stated`). An incomplete group exits 2. Rowbly adds `selectedBy` (Me) and
 `selectedAt` (the Run's start), saves it as the current Run's `selection` in `run-metadata.json` in
@@ -531,6 +531,14 @@ the same operation as the start, and returns it as `selection`. It records inten
 launched: the supervisor compares the launch receipt with it and fails the Run on a difference,
 leaving it unchanged. Rowbly has no usage source and records no quota. The `runs` table shows it in
 a Model column and `stories show` in a Model Selection row; without the flags a start records none.
+
+Option values are JSON scalars: `--option 'reasoningEffort="high"'`, `--option 'text="123"'`,
+`--option 'number=1e3'` (number `1000`), `--option 'textBoolean="true"'` and
+`--option 'fastMode=true'`. Keep the JSON quotes around strings inside the shell argument.
+Malformed JSON, null, arrays, objects, nonfinite numbers and duplicate option IDs exit 2 before
+starting a Run. Copy IDs and typed values from the harness's catalog; Rowbly does not infer which
+options a model supports. These flags are new; existing saved selections and starts without them
+need no migration.
 
 `run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
 Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual

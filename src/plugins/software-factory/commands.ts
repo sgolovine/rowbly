@@ -66,10 +66,17 @@ interface StartOptions {
 
 const USAGE = ModelSelection.shape.usage.options;
 
-/** An `--option` value as T3 sends it: `true`, `false` and numbers are typed; anything else is text. */
+/** JSON scalars preserve the exact type chosen from the harness's model catalog. */
 function optionValue(text: string): string | number | boolean {
-  if (text === 'true' || text === 'false') return text === 'true';
-  return /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw new UsageError('--option values must be JSON strings, finite numbers or booleans; quote strings as JSON');
+  }
+  if (typeof value === 'string' || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value)))
+    return value;
+  throw new UsageError('--option values must be JSON strings, finite numbers or booleans');
 }
 
 /** The Model Selection flags of `run start`: none, or `--provider`, `--model` and `--rule` together. */
@@ -86,7 +93,7 @@ function selectionInput(opts: StartOptions): SelectionInput | undefined {
     throw new UsageError(`--usage must be one of ${USAGE.join(', ')}`);
   const options = opts.option.map((pair) => {
     const at = pair.indexOf('=');
-    if (at < 1) throw new UsageError(`--option "${pair}" is not <id>=<value>`);
+    if (at < 1) throw new UsageError(`--option "${pair}" is not <id>=<json>`);
     return { id: pair.slice(0, at), value: optionValue(pair.slice(at + 1)) };
   });
   return {
@@ -298,7 +305,12 @@ export const commands: PluginCommands = (group, cli) => {
     .option('--provider <id>', "the Model Selection: the provider instance the worker's harness launches it with")
     .option('--model <id>', 'the Model Selection: the model id')
     .option('--rule <text>', 'the Model Selection: the model policy rule applied')
-    .option('--option <id=value>', 'a model option, such as reasoningEffort=high; repeatable', collect, [])
+    .option(
+      '--option <id=json>',
+      'a model option as a JSON scalar, e.g. \'reasoningEffort="high"\'; repeatable, unique ids',
+      collect,
+      [],
+    )
     .option('--fallback <why>', "why the worker does not use the rule's model")
     .option('--usage <source>', `where usage knowledge came from: ${USAGE.join(', ')}; ${USAGE[0]} by default`)
     .action((key: string, opts: StartOptions, cmd) =>

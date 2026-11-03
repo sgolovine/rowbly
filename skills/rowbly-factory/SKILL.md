@@ -150,7 +150,7 @@ Report each start, retry, finish, failure, question and Board change to the user
 
 1. Choose the worker's provider, model and options as [Model Selection](#model-selection) says.
 2. Run `rowbly software-factory run start <KEY> --worker "<launch identifier>" --provider <id>
-   --model <id> --rule "<rule>" [--option <id>=<value>]… [--fallback "<why>"] [--usage <source>]`.
+   --model <id> --rule "<rule>" [--option <id>=<json>]… [--fallback "<why>"] [--usage <source>]`.
    Keep its returned `stage`, `attempt` and `startedAt` as the expected Run reference. The worker
    string alone is a launch hint, not verified identity. If the harness can reserve a real thread
    waiting for GO, use its actual ID. Start work only after this succeeds. Exit 4 means a Run
@@ -169,9 +169,11 @@ Report each start, retry, finish, failure, question and Board change to the user
 4. Launch or use the reserved worker with the recorded selection, as `ROWBLY.md` says, keeping it
    waiting for GO. Verify the actual machine, harness, worker ID and thread ID from the launch
    receipt/harness result. For a remote T3 CLI use [remote launches](references/remote-launch.md),
-   including its durable receipt. Compare the receipt's provider, model and options with the
-   recorded selection: on a difference, send no GO and fail the Run as step 7 says, naming what
-   launched. Never change the selection to match the launch; a retry records its own.
+   including its durable receipt. Compare actual provider instance/model IDs and the complete
+   typed option set with the recorded selection, ignoring option order. Extra, missing or duplicate
+   IDs and different types or values are mismatches: send no GO and fail the Run as step 7 says,
+   naming what launched. Unknown or unverified evidence needs reconciliation first. Never change
+   the selection to match the launch; a retry records its own.
 5. Run `rowbly software-factory run attach <KEY> --stage <stage> --attempt <attempt> --started-at
    <startedAt> --worker <actual-id> --machine <machine> --harness <harness> --thread-id <thread-id>
    --source "<verification receipt>"`. Use the expected reference from start. Rowbly records your
@@ -194,6 +196,13 @@ receipt confirms it.
 - **Policy.** Follow the user's instructions, then `ROWBLY.md`'s model policy. Without either, use
   your own model and record `--rule "supervisor default"`. A model the user names for a Story or a
   run is `--rule "user named"`.
+- **Exact options.** Read the target harness's live model catalog and supported option descriptors.
+  Resolve any inherited options before recording the full intended selection; never guess types
+  or silently substitute values. `--option <id>=<json>` takes a JSON string, finite number or
+  boolean, with unique IDs: `--option 'reasoningEffort="high"'` or `--option 'fastMode=true'`.
+  String `"123"` and number `123`, or string `"true"` and boolean `true`, remain different.
+  Malformed JSON, null, compound/nonfinite values and duplicate IDs exit 2. These new flags need
+  no released CLI or stored-data migration; starts without selection still work.
 - **Usage is unknown unless you can see it.** Rowbly has no usage source. Count remaining usage
   only when your harness reports it for that provider; never estimate it, never infer it from
   signing in or a successful launch, and never record a number you did not read. `--usage` is
