@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Return failed checks and merge conflicts to implementation",
   "description": "Factory review recommendation 2 of 20.\n\n## Context\n\nIn PR failures currently exhaust a retry by checking the same unresolved PR, then wait for the user.\n\n## Acceptance criteria\n\n- For failed checks or conflicts with main, record the concrete failure and move the Story back to In Progress.\n- Include the existing branch and PR so the worker repairs the current work.\n- Escalate ambiguous conflicts with other open PRs or stack layers rather than choosing their intent.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "in-pr",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T02:26:15.666Z",
+  "updatedAt": "2026-11-03T02:26:16.318Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:5b03db55-4bc3-4e62-951d-c87479706e94",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:09:57.051Z",
-        "finishedAt": "2026-11-03T02:26:14.442Z"
-      }
     },
     "comments": {
       "comments": [
