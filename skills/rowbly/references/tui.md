@@ -69,6 +69,12 @@ default; kept in `~/.rowblyrc.json`).
 | Epics | `enter` open, `n` new Epic, `a` open / closed / all, `e` edit, `c` close / reopen, `d` delete (asks first). A right click on an Epic opens a menu with Open, Edit, Close or Reopen, Delete |
 | Stage Prompts (Software Factory, in Settings) | `space` turn on / off at the shown level, `enter` read, `e` edit (`ctrl+s` saves), `d` remove the shown level's entry and file |
 
+With Software Factory on, a Story card or list line shows `▶ running` or `✕ failed` (`#2` after
+the first attempt) while the Story's current Stage has such a Stage Run, and the Story screen has a
+read-only **Stage Run** tab: outcome, attempt, worker, started by, started and finished times
+with their age, how long it ran, and the failure reason. Ages come from the start and finish times
+only; they say nothing about whether a running worker is still active.
+
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt
 is off or missing (a missing file starts with a template). `tab` or `e` switches to editing;

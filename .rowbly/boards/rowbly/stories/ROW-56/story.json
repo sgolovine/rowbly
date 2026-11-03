@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Wait for actionable factory changes without model polling",
   "description": "Factory review recommendation 10 of 20.\n\n## Context\n\nA minute-by-minute model polling loop spends turns while no actionable Board change has occurred.\n\n## Acceptance criteria\n\n- Provide a blocking CLI wait for Stories entering prompted Stages or relevant Stage Run changes.\n- Use file watching with an initial state check so changes around startup are not missed.\n- Support cancellation and update the factory skill to resume only when action is needed.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a5",
+  "stage": "done",
+  "rank": "b01",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:51.268Z",
-  "updatedAt": "2026-11-02T23:58:04.734Z",
+  "updatedAt": "2026-11-03T00:59:55.649Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -34,23 +34,27 @@
           "updatedAt": "2026-11-02T23:55:35.775Z"
         },
         {
+          "id": "U5W16Mu0",
+          "author": "sunny",
+          "body": "Supervisor authorized integrating origin/main into factory/row-56 and resolving the reported PR138 conflicts while preserving landed blocker eligibility and complete runsOverview digest behavior, then revalidating all four checks and exact-head CI before readiness/merge. No rebase or force push.",
+          "createdAt": "2026-11-03T00:06:08.158Z",
+          "updatedAt": "2026-11-03T00:06:08.158Z"
+        },
+        {
           "id": "e8yO2pni",
           "author": "sunny",
           "body": "Supervisor accepted plan: Plan accepted with the canonical eligibility digest boundary. Keep digest computation in runsOverview over deterministic {stages,stories} and no duplicate eligibility logic. Coordinate host PluginCommandEnv additions with ROW-55 runCommand: add separate members without changing each other's behavior. Watch before initial read; serialize/coalesce rechecks and never drop an event arriving while check() is in flight. On all exit/error/abort paths close watchers, timers, abort/signal handlers and avoid lingering CLI processes. Manual verification must include a change during a delayed initial check, stale digest, timeout, watcher fallback and SIGINT/SIGTERM. Existing AGENTS test policy allows manual checks for this new read command; extend a kept test if you find an actual correctness race requiring a regression. ROW-58 eligibility computed in runsOverview, ROW-59 HELD reason, so wait remains independent. No ADR number needed. Implement only wait/poll section and your command/doc additions. Run/report all four checks and agentic-tui screenshot evidence. Proceed.",
           "createdAt": "2026-11-02T23:43:26.970Z",
           "updatedAt": "2026-11-02T23:43:26.970Z"
+        },
+        {
+          "id": "yPE9c7TA",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/138",
+          "createdAt": "2026-11-03T00:59:54.993Z",
+          "updatedAt": "2026-11-03T00:59:54.993Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:d92d9b9f-33f8-4cf1-825c-ed5f482f20b4",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:58:04.733Z"
-      }
     }
   }
 }

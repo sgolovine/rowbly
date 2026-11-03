@@ -9,21 +9,24 @@
   to In Progress when a review requests changes (its Stage Prompt).
 - **Done**: merged.
 
-Rowbly data is committed on `main` and pushed; the Git Plugin commits each change.
+Rowbly data is committed on `main` and pushed; the Git Plugin commits each change (Automatic
+Commits On, frequency `change`) and `rowbly git sync` pushes it (Automatic Merge Conflict
+Resolution On).
 
 ## The factory (`rowbly-factory`)
 
 - **Supervisor**: runs on the main computer, in the main checkout on `main`, with
-  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It pushes `main` after it applies
-  Board changes, so workers get them by merging `origin/main`.
+  `pnpm --silent dev … --data-root .rowbly --json --no-prompt`. It runs `rowbly git sync` after each
+  `run start` (before the brief), each worker block it applies and each `run finish` or `run fail`,
+  so workers get Board changes by merging `origin/main`.
 - **Workers run on the supervisor's computer (`thinkpad`) or the server `rook`**
   (`ssh 192.168.68.62`), whichever has capacity (see Capacity and Remote Machines). They are
   ordinary top-level T3 threads, started with `t3_thread_launch` on thinkpad and as below on rook;
   that is intended, not a fallback for sub-agents.
 - **Rook's checkout.** After the supervisor updates its own checkout, it updates rook's shared
-  checkout `~/Projects/rowbly` over SSH the same way: a cleanup commit and cleanup PR for any
-  uncommitted changes, then `git pull --ff-only` on `main`. Only the supervisor pulls there, at
-  start, before any worker runs.
+  checkout `~/Projects/rowbly` over SSH the same way: Rowbly changes saved there first through the
+  Git Plugin, a cleanup commit and cleanup PR for any other uncommitted changes, then
+  `git pull --ff-only` on `main`. Only the supervisor pulls there, at start, before any worker runs.
 - **Memory on rook.** Check `free -h` there before each start, and start nothing while less than
   about 6 GB is available.
 - **Worker model**: chosen per Stage and usage (see Model Selection), unless the user names another.
@@ -48,31 +51,48 @@ Rowbly data is committed on `main` and pushed; the Git Plugin commits each chang
 
 The supervisor's T3 tools only reach its own computer, so it drives rook's T3 through its CLI over
 SSH. Non-login SSH shells lack `node` and `pnpm`, so call the binary by its full path (check the
-version folder):
+version folder, `ls ~/.t3/runtime/versions` on rook, after T3 updates). Read workers' messages and
+check threads with:
 
 ```bash
 T3=~/.t3/runtime/versions/0.1.2/t3
 ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread list --json"
 ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread show --json <threadId>"
-ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread send <threadId> -" < message.md
 ```
 
-`t3 thread start` cannot set reasoning effort. Start one **launcher** thread on rook and reuse it; its
-own `t3_thread_launch` can set the model:
+Start every worker, and send it its brief, with the `rowbly-factory` skill's launcher script (its
+`references/remote-launch.md`), run from this checkout with rook's settings. Do not rebuild these
+steps by hand:
 
 ```bash
-ssh 192.168.68.62 "cd ~/Projects/rowbly && $T3 thread start --json --wait \
-  --title 'Launcher: workers' --provider codex --model gpt-6.1-sol . -" < launcher.md
+node skills/rowbly-factory/scripts/launch-worker.mjs launch \
+  --ssh 192.168.68.62 --project '~/Projects/rowbly' --t3 '~/.t3/runtime/versions/0.1.2/t3' \
+  --brief-dir '~/rook-briefs' --min-free-gb 6 --launcher-title 'Launcher: workers' \
+  --launcher-provider codex --launcher-model gpt-6.1-sol \
+  --key <KEY> --title '<title>' --brief <file> --model-selection '<modelSelection JSON>'
 ```
 
-`launcher.md` tells it to launch a thread with `t3_thread_launch` in this project with
-`workspaceStrategy: {"type":"root"}`, `runtimeMode: "full-access"`, the given modelSelection (for
-example `{"instanceId":"codex","model":"gpt-6.1-sol","options":[{"id":"reasoningEffort","value":"medium"}]}`),
-the given title, and a brief file's exact contents as the message; then to check it with
-`t3_thread_read` and reply with one line, `LAUNCHED <threadId> <provider> <model> <options>` or
-`LAUNCH-FAILED <reason>`. Copy each brief to `~/rook-briefs/<KEY>.md` on rook first, and send the
-launcher the next title and brief path with `t3 thread send --wait <launcherId> -`. Use the worker's
-thread id as its Stage Run `--worker`.
+- **Title**: `rook: <KEY> <Stage name> <UTC time you decided to start it> #<attempt>`, for example
+  `rook: ROW-12 In Progress 2026-11-02T23:28Z #1`. It identifies the launch: a retry of the same
+  launch reuses it unchanged, and a new visit or attempt gets a new one.
+- **Model selection**: for example
+  `{"instanceId":"claudeAgent","model":"claude-opus-5-5","options":[{"id":"effort","value":"high"}]}`.
+- **Stage Run first.** Use the worker's thread id as its Stage Run `--worker`. Launch with a short
+  reservation as the brief, run `run start <KEY> --worker <threadId>`, and only when that succeeds
+  send the full brief with GO (same flags as above, without the launch-only ones):
+
+  ```bash
+  node skills/rowbly-factory/scripts/launch-worker.mjs send \
+    --ssh 192.168.68.62 --project '~/Projects/rowbly' --t3 '~/.t3/runtime/versions/0.1.2/t3' \
+    --thread <threadId> --title '<title>' --message <file>
+  ```
+
+- **Results**: on `launched`, `existing` or `sent`, go on. On `failed`, fix the reason and run the
+  same command again. On `unknown`, wait and run the same command again. On `conflict` or
+  `unverified`, start nothing for the Story and tell the user.
+- **Receipts and archiving**: the script keeps a receipt per request in `~/.rowbly-factory/receipts`
+  on thinkpad; never edit or delete them. Archive a worker only when done with it: its request then
+  reports `conflict` and starts nothing, and a new worker needs a new title.
 
 ### Rules for workers on rook
 

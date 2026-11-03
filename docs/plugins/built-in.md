@@ -455,6 +455,7 @@ rowbly software-factory prompt disable <stage> [--board <id>] [--level board|glo
 rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edit] [--board <id>] [--level board|global]
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
+rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
 rowbly software-factory run start <story> --worker <name> [--retry]
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -470,10 +471,14 @@ show the effective Stage Prompts without `--level`, and one level alone with it.
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }] }`: `stages` are the
-Board's Stages whose Stage Prompt is on, `stories` every Story in them, and `stageRun` the Story's
-Stage Run for its current visit or `null`. `run start`, `finish` and `fail` return
-`{ key, stageRun }`; `run clear` returns `{ cleared }`.
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`: `stages`
+are the Board's Stages whose Stage Prompt is on, `stories` every Story in them, `stageRun` the
+Story's Stage Run for its current visit or `null`, and `digest` a short hash of `stages` and
+`stories` (all their fields, so ones added to a row count too). `wait` returns the same object with
+`changed` first, once `digest` differs from `--since` (or from the first read), or with
+`changed: false` after `--timeout`. It uses the command host's `waitFor`: the Data Root watch of the
+TUI, started before the first read, with a recheck every minute in case a change went unseen.
+`run start`, `finish` and `fail` return `{ key, stageRun }`; `run clear` returns `{ cleared }`.
 
 **Rules**
 
@@ -532,7 +537,13 @@ highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` e
 full-screen editor (`ctrl+s` saves), and `d` removes the selected scope's entry and its file.
 The Story screen shows a **Stage Run** row while the Story has one for its current Stage, such as `running (ROW-12 worker)` or
 `failed (ROW-12 worker, attempt 2): tests failed`, and a **Hold** row while it is held, such as
-`held by alex: pairing on it by hand`.
+`held by alex: pairing on it by hand`. A Story with a running or failed Stage Run for
+its current Stage has a badge on its board card and list line: `▶ running` or `✕ failed`, with `#2`
+after the first attempt (a finished one has none). The Story's **Stage Run** tab shows that Stage
+Run read-only: outcome (running, finished or failed), attempt, the worker as recorded, who started it, when it started and
+ended with how long ago, how long it ran (`Running for`, refreshed every 30 seconds while running,
+or `Took`), and the reason it failed. Ages come from `startedAt` and `finishedAt`; a Stage Run has no
+record of later activity. A Story with none in this visit shows `—`; earlier visits are not kept.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
