@@ -2,17 +2,17 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:29:09.220Z"
+    "attempt": 2,
+    "startedAt": "2026-11-03T03:03:09.200Z"
   },
   "identity": {
-    "worker": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
+    "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
     "machine": "rook",
     "harness": "t3",
-    "threadId": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
+    "threadId": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
     "verification": {
-      "source": "/home/sgolovine/.rowbly-factory/receipts/8a465e4621ed3087a79b13ec6b725fb9.json verified launch/read/configuration Opus5.5 high full-access root reservation",
-      "verifiedAt": "2026-11-03T02:29:10.099Z",
+      "source": "SSH T3 start/show actual root-bound Sol/default options/full-access reservation, product work must reuse verified existing row-71-linked-stories-fuzzy worktree; /tmp/rowbly-factory-session/ROW-71-verified-retry2.json",
+      "verifiedAt": "2026-11-03T03:03:09.950Z",
       "by": "sunny"
     }
   }

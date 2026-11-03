@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Make factory model selection explicit and auditable",
   "description": "Factory review recommendation 14 of 20.\n\n## Context\n\nROWBLY.md’s model and provider-usage policy differs from observed worker choices, and Stage Runs do not explain the selection.\n\n## Acceptance criteria\n\n- Define a feasible model-selection policy and specify the supported usage source, or remove unverifiable usage requirements.\n- Record the selected provider/model and relevant fallback reason with each Stage Run.\n- Make policy compliance inspectable after supervisor restart.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a1",
+  "stage": "in-progress",
+  "rank": "aC",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T02:55:58.021Z",
+  "updatedAt": "2026-11-03T03:13:37.616Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b614fbcf-6df2-4f19-8d1d-5e1081ce19f9",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:30:28.860Z"
-      }
     },
     "comments": {
       "comments": [
@@ -65,6 +55,13 @@
           "updatedAt": "2026-11-03T00:34:14.459Z"
         },
         {
+          "id": "rz5Xrc62",
+          "author": "sunny",
+          "body": "Returned-work continuation authorized under In PR Stage Prompt requested-changes return: Continue SAME PR https://github.com/sgolovine/rowbly/pull/145 original branch factory/row-60 verified OPEN at d6d9c1e45d7b4a884c899a80a3b7776bc81f372d. Fresh Sol correction worker must present plan before implementation, answer numbered independent review findings and resolve scoped main integration, preserve existing branch/worktrees, no restart/duplicatePR/forcepush. Exact accepted correction scope is the review Comment and supervisor instructions; .rowbly proposals remain supervisor-owned. Current review Run finished before moving back to In Progress.",
+          "createdAt": "2026-11-03T03:11:43.759Z",
+          "updatedAt": "2026-11-03T03:11:43.759Z"
+        },
+        {
           "id": "sIXlQntd",
           "author": "sunny",
           "body": "Supervisor review: ROW49 plan is approved in principle: shared Plugin-owned per-Story run-metadata.json bound to stage/attempt/startedAt, legacy StageRun bag stays compatible. ROW49 owns common file reader/writer and actual-worker attach; you own selection section and model policy/mutations. Coordinate the exact v1 schema with49 BEFORE editing, then send one proposed interface to supervisor. Identity and selection sections independently optional, so selected provider/model/fallback reason can be recorded for failed launch without identity; same-Run edits preserve the other section. Unsupported/future/unreadable data must never be overwritten; don't create a second audit file or put silently-losable fields into legacy bag. Record actual provider instance/model ids with selection/fallback reason; quota unknown is explicit, no fabricated live-usage source. ADR0047 only if truly separate decision;0046 identity can describe common record. ROW49 rook thread id mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74; communicate through supervisor if T3 tools cannot message it. Return exact minimal schema/commands and policy plan for acceptance.",
@@ -79,6 +76,16 @@
           "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:13:36.374Z"
+      }
     }
   }
 }

@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T02:37:49.286Z",
+  "updatedAt": "2026-11-03T03:11:14.841Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -29,17 +29,29 @@
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
-        "status": "failed",
-        "attempt": 1,
-        "worker": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:25903f5a-d341-4af9-a3ab-015c6f9c76ab",
         "by": "sunny",
-        "startedAt": "2026-11-03T02:29:09.220Z",
-        "finishedAt": "2026-11-03T02:36:01.274Z",
-        "reason": "Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry."
+        "startedAt": "2026-11-03T03:03:09.200Z"
       }
     },
     "comments": {
       "comments": [
+        {
+          "id": "XJfqHnPE",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Search linked Story choices by Key and name, preserving existing finder ranking and ordinary select behavior. Shared fuzzy helper plus opt-in generic searchable field is appropriate; keep selected Story Key separate from query and preserve draft edits. Cover create/edit and separate add-link form with same Board/self-link restrictions. Ensure Enter chooses the candidate without accidentally submitting the whole form; Escape restores/cancels query appropriately, clear/no-results states intentional, key capture/footer agree. Follow TUI design tokens/one-component-per-file/barrels. New/changed Plugin API docs examples must update compiled fixture regions in same change; no new tests by default, extend required existing doc/architecture contracts only. Manual fuzzy/no-results/selection/draft/persistedrelationship checks, agentic-tui screenshots, allfourchecks, draft PR/normal push, no .rowbly changes. Keep scope to linked Story search, not unrelated Form redesign.",
+          "createdAt": "2026-11-03T03:11:14.841Z",
+          "updatedAt": "2026-11-03T03:11:14.841Z"
+        },
+        {
+          "id": "ix5ItIFN",
+          "author": "sunny",
+          "body": "User explicitly authorized Continue existing work for retry2 on fresh Sol (Claude session limit). Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:21fdc1db-4907-4959-aea9-7281fdde4f73 on rook model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/Projects/rowbly-worktrees/row-71-linked-stories-fuzzy (rook), branch claude/row-71-linked-stories-fuzzy, HEAD483e0fca, clean; worktree setup only, no accepted implementation plan. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-71-failed-attempt1-context.json. Prior failed Run: {\"stage\": \"in-progress\", \"status\": \"failed\", \"attempt\": 1, \"worker\": \"mcp:21fdc1db-4907-4959-aea9-7281fdde4f73\", \"by\": \"sunny\", \"startedAt\": \"2026-11-03T02:29:09.220Z\", \"finishedAt\": \"2026-11-03T02:36:01.274Z\", \"reason\": \"Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry.\"}. Prior Run metadata preserved: {\"version\": 1, \"run\": {\"stage\": \"in-progress\", \"attempt\": 1, \"startedAt\": \"2026-11-03T02:29:09.220Z\"}, \"identity\": {\"worker\": \"mcp:21fdc1db-4907-4959-aea9-7281fdde4f73\", \"machine\": \"rook\", \"harness\": \"t3\", \"threadId\": \"mcp:21fdc1db-4907-4959-aea9-7281fdde4f73\", \"verification\": {\"source\": \"/home/sgolovine/.rowbly-factory/receipts/8a465e4621ed3087a79b13ec6b725fb9.json verified launch/read/configuration Opus5.5 high full-access root reservation\", \"verifiedAt\": \"2026-11-03T02:29:10.099Z\", \"by\": \"sunny\"}}}. Exact head branch claude/row-71-linked-stories-fuzzy verified: no PR. Continue this work, not restart; preserve partial files. Authority: user selected Continue existing work (Recommended) in supervisor thread. ROW65 A1 ADR change remains held; this answer only authorizes continuation.",
+          "createdAt": "2026-11-03T03:01:15.085Z",
+          "updatedAt": "2026-11-03T03:01:15.085Z"
+        },
         {
           "id": "vB4itwuV",
           "author": "sunny",
