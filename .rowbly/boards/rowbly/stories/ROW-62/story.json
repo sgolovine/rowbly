@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:39:26.863Z",
+  "updatedAt": "2026-11-03T16:46:46.706Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:45106024-da79-4b81-8623-0eeb89f35368",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:39:26.080Z"
+      }
     },
     "comments": {
       "comments": [
@@ -165,18 +175,15 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
+        },
+        {
+          "id": "wTObhO9f",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/154 at 8a364c93e60130f73b0ef26c70ac2f53a0833262 by codex/gpt-6-astra: APPROVED.  Fresh reviewer mcp:45106024-da79-4b81-8623-0eeb89f35368 is independent of all three recorded codex/gpt-6.1-sol implementers. All four product commits and upstream-only merges are accounted for. Reviewed all seven changed files, both corrections, the Story requirements, relevant CLI read contracts and factory guidance, and the complete final rollout proposal. Independently reproduced saved-review equality, unsafe Spec rejection, and the original description-edit ordering case with Story Linking on and off: changed or unsafe inputs emit a gap without overall. The first probe rewrote the Story at both config reads and correctly produced gap=links; a one-shot injection matching the reported ordering case produces gap=story with either linking setting. The kept regression also verifies the real catalog remains an unknown-Plugin gap. Required unchanged checks passed once under the shared lease on clean local integration 7a6e0d0b61399bc9d820af030a299b27de03b4bb with main dacd7924: typecheck PASS, lint PASS, unit 79 PASS, CLI 21 PASS (100 total). All ten hosted screenshots returned HTTP 200 and were inspected; final prompt, Stages proposal, helper and reference hashes match the posted manifest. No product edits, Board writes or PR-branch pushes. Evidence is retained at /tmp/row-62-review-astra-3 on rook.  All six current-head GitHub checks are COMPLETED/SUCCESS and there are no formal changes-requested reviews. The final mergeability read is UNKNOWN (merge state UNKNOWN), so merge processing waits for the supervisor; no worker polling or watch was started. TODO activation remains REQUIRED after merge: the supervisor must apply and publish the reviewed final rollout before declaring the Story complete. GitHub remains an explicitly unknown readiness input contract, even when disabled; this approval does not claim a complete production readiness pass or authorize hiding the catalog entry. Final rollout and hashes: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609698759.",
+          "createdAt": "2026-11-03T16:46:46.705Z",
+          "updatedAt": "2026-11-03T16:46:46.705Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:45106024-da79-4b81-8623-0eeb89f35368",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:39:26.080Z"
-      }
     }
   }
 }
