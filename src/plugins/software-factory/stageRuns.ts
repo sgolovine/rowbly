@@ -19,7 +19,14 @@ import {
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
-import { endRunMetadata, freshRunMetadata, metadataOutput, readRunMetadata } from './runMetadata';
+import {
+  endRunMetadata,
+  freshRunMetadata,
+  ModelSelection,
+  metadataOutput,
+  readRunMetadata,
+  writeRunMetadata,
+} from './runMetadata';
 import { RunRef } from './runRef';
 import { boardOverview } from './stagePrompts';
 
@@ -117,6 +124,26 @@ export interface StageRunResult {
   stageRun: StageRun;
 }
 
+/** What `run start` takes to record a Model Selection; Rowbly adds who chose it and when (ADR-0046). */
+export type SelectionInput = Omit<ModelSelection, 'options' | 'fallback' | 'usage' | 'selectedBy' | 'selectedAt'> &
+  Partial<Pick<ModelSelection, 'options' | 'fallback' | 'usage'>>;
+
+const SelectionInput = ModelSelection.omit({ selectedBy: true, selectedAt: true });
+
+function checkSelection(input: SelectionInput): Omit<ModelSelection, 'selectedBy' | 'selectedAt'> {
+  const parsed = SelectionInput.safeParse({
+    options: [],
+    usage: 'unknown',
+    ...input,
+    fallback: input.fallback?.trim() || null,
+  });
+  if (!parsed.success)
+    throw new UsageError(
+      `A Model Selection needs a provider, a model and a rule: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`,
+    );
+  return parsed.data;
+}
+
 /**
  * Starts a Stage Run on the Story's current Stage (`software-factory.start`). The Stage's Stage
  * Prompt must be on. A Stage Run for this visit refuses it, unless it failed and `retry` is set,
@@ -125,14 +152,15 @@ export interface StageRunResult {
 export async function startRun(
   plugin: PluginContext,
   key: string,
-  input: { worker: string; retry?: boolean },
-): Promise<StageRunResult> {
+  input: { worker: string; retry?: boolean; selection?: SelectionInput },
+): Promise<StageRunResult & { selection?: ModelSelection }> {
   const worker = input.worker.trim();
   if (!worker) throw new UsageError('A Stage Run needs a worker');
+  const chosen = input.selection && checkSelection(input.selection);
   const stored = await plugin.services.stories.get(key);
   return plugin.operation(
     'start',
-    { key: stored.key, worker, ...(input.retry ? { retry: true } : {}) },
+    { key: stored.key, worker, ...(input.retry ? { retry: true } : {}), ...(chosen ? { selection: chosen } : {}) },
     async (changes) => {
       const story = await latest(changes, plugin, stored.key);
       const stage = (await boardOverview(plugin, story.boardId)).stages.find((s) => s.key === story.stage);
@@ -163,8 +191,11 @@ export async function startRun(
         startedAt: toTimestamp(plugin.now()),
       };
       await saveRun(changes, plugin, story.key, run);
-      await freshRunMetadata(changes, story, run);
-      return { key: story.key, stageRun: run };
+      const fresh = await freshRunMetadata(changes, story, run);
+      if (!chosen) return { key: story.key, stageRun: run };
+      const selection: ModelSelection = { ...chosen, selectedBy: plugin.me, selectedAt: run.startedAt };
+      await writeRunMetadata(changes, story, { ...fresh, selection });
+      return { key: story.key, stageRun: run, selection };
     },
   );
 }
@@ -297,6 +328,13 @@ export async function waitForRuns(
   );
   const overview = next ?? (await read());
   return { changed: overview.digest !== (since ?? overview.digest), ...overview };
+}
+
+/** A Model Selection in one line, for `run start`, `stories show` and the `runs` table. */
+export function selectionText(selection: ModelSelection): string {
+  const options = selection.options.map((o) => `${o.id}=${o.value}`).join(', ');
+  const fallback = selection.fallback ? `, fallback: ${selection.fallback}` : '';
+  return `${selection.provider}/${selection.model}${options ? ` (${options})` : ''}; rule: ${selection.rule}${fallback}`;
 }
 
 /** A Stage Run in one line, for `stories show`, the TUI Story screen and the `runs` table. */

@@ -23,23 +23,27 @@ export const WorkerIdentity = z.strictObject({
   verification: z.strictObject({ source: Text, verifiedAt: TimestampSchema, by: SlugSchema.nullable() }),
 });
 export type WorkerIdentity = z.infer<typeof WorkerIdentity>;
+/**
+ * The model the supervisor chose for a Stage Run's worker before its launch, the policy rule it
+ * applied and why it fell back from that rule's model. It records intent; the launch receipt confirms it.
+ */
+export const ModelSelection = z.strictObject({
+  provider: Text,
+  model: Text,
+  options: z.array(z.strictObject({ id: Text, value: z.union([z.string(), z.number(), z.boolean()]) })),
+  rule: Text,
+  fallback: Text.nullable(),
+  usage: z.enum(['unknown', 'observed-limit', 'user-stated']),
+  selectedBy: SlugSchema.nullable(),
+  selectedAt: TimestampSchema,
+});
+export type ModelSelection = z.infer<typeof ModelSelection>;
 export const RunMetadata = z
   .strictObject({
     version: z.literal(1),
     run: RunRef,
     identity: WorkerIdentity.optional(),
-    selection: z
-      .strictObject({
-        provider: Text,
-        model: Text,
-        options: z.array(z.strictObject({ id: Text, value: z.union([z.string(), z.number(), z.boolean()]) })),
-        rule: Text,
-        fallback: Text.nullable(),
-        usage: z.enum(['unknown', 'observed-limit', 'user-stated']),
-        selectedBy: SlugSchema.nullable(),
-        selectedAt: TimestampSchema,
-      })
-      .optional(),
+    selection: ModelSelection.optional(),
     heartbeat: z
       .strictObject({ worker: Text, at: TimestampSchema, source: Text, by: SlugSchema.nullable() })
       .optional(),

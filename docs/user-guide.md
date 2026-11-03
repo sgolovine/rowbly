@@ -448,7 +448,7 @@ rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edi
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; pass --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
 rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
-rowbly software-factory run start <story> --worker <name> [--retry]
+rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<value>]... [--fallback <why>] [--usage <source>]]
 rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
 rowbly software-factory run fail <story> [--reason <text>]
@@ -509,6 +509,17 @@ rowbly software-factory apply <story> [--text <block>|--file <path|->] [--dry-ru
   attempt, worker, who started it, when it started and ended (with how long ago), how long it ran,
   and the failure reason.
 
+**Model Selection.** `run start`, including `--retry`, can record the model the supervisor chose for
+the worker before its launch: `--provider`, `--model` and `--rule` (the model policy rule applied)
+together, with `--option <id>=<value>` (repeatable; `true`, `false` and numbers are typed),
+`--fallback <why>` when the rule's model is not used, and `--usage` (`unknown`, the default,
+`observed-limit` or `user-stated`). An incomplete group exits 2. Rowbly adds `selectedBy` (Me) and
+`selectedAt` (the Run's start), saves it as the current Run's `selection` in `run-metadata.json` in
+the same operation as the start, and returns it as `selection`. It records intent, not what
+launched: the supervisor compares the launch receipt with it and fails the Run on a difference,
+leaving it unchanged. Rowbly has no usage source and records no quota. The `runs` table shows it in
+a Model column and `stories show` in a Model Selection row; without the flags a start records none.
+
 `run attach` records supervisor-attested launch verification; Rowbly does not contact the harness.
 Copy `stage`, `attempt` and `startedAt` from the successful start result, and supply the actual
 worker ID, machine, harness, thread ID and verification source. Me and the operation clock supply
@@ -530,7 +541,7 @@ Details show an attached worker identity; `stories show --json` remains the stor
 The strict v1 file is `boards/<board>/stories/<KEY>/plugins/software-factory/run-metadata.json`,
 bound by `{stage, attempt, startedAt}`. Identity, selection and heartbeat are independently
 optional; a heartbeat requires the same worker as identity. Same-Run writes preserve the other
-sections' JSON values. Selection and heartbeat mutations are separate planned additions. Every
+sections' JSON values. Heartbeat mutations are a separate planned addition. Every
 start/retry resets recognized metadata, even without selection; finish/fail retains it. Clear and
 Stage changes remove recognized v1 metadata. Explicit resets prevent old identity/activity from
 returning when timestamps repeat. Unknown fields, future versions and unreadable files remain

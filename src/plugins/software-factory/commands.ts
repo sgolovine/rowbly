@@ -1,5 +1,6 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
 import { applyBlock, applyTable } from './reportedCommands';
+import { ModelSelection } from './runMetadata';
 import {
   boardOverview,
   type Level,
@@ -18,12 +19,18 @@ import {
   type RunsOverview,
   runsOverview,
   runText,
+  type SelectionInput,
   type StageRunResult,
+  selectionText,
   startRun,
   type WaitResult,
   waitForRuns,
 } from './stageRuns';
 import { type AttachWorker, attachWorker } from './workerIdentity';
+
+function collect(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
 
 interface PromptOptions {
   board?: string;
@@ -39,21 +46,73 @@ function table(overview: StagePromptsOverview): string {
   return renderTable(HEAD, overview.stages.map(rowLine));
 }
 
-function runLine(result: StageRunResult): string {
-  return `Stage Run of ${result.key} in ${result.stageRun.stage}: ${runText(result.stageRun)}`;
+function runLine(result: StageRunResult & { selection?: ModelSelection }): string {
+  const line = `Stage Run of ${result.key} in ${result.stageRun.stage}: ${runText(result.stageRun)}`;
+  return result.selection ? `${line}\nModel Selection: ${selectionText(result.selection)}` : line;
+}
+
+interface StartOptions {
+  worker: string;
+  retry?: boolean;
+  provider?: string;
+  model?: string;
+  rule?: string;
+  option: string[];
+  fallback?: string;
+  usage?: string;
+}
+
+const USAGE = ModelSelection.shape.usage.options;
+
+/** An `--option` value as T3 sends it: `true`, `false` and numbers are typed; anything else is text. */
+function optionValue(text: string): string | number | boolean {
+  if (text === 'true' || text === 'false') return text === 'true';
+  return /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
+}
+
+/** The Model Selection flags of `run start`: none, or `--provider`, `--model` and `--rule` together. */
+function selectionInput(opts: StartOptions): SelectionInput | undefined {
+  const { provider, model, rule } = opts;
+  if (provider === undefined && model === undefined && rule === undefined) {
+    if (opts.option.length || opts.fallback !== undefined || opts.usage !== undefined)
+      throw new UsageError('Use --option, --fallback and --usage only with --provider, --model and --rule');
+    return undefined;
+  }
+  if (provider === undefined || model === undefined || rule === undefined)
+    throw new UsageError('Give --provider, --model and --rule together');
+  if (opts.usage !== undefined && !USAGE.includes(opts.usage as (typeof USAGE)[number]))
+    throw new UsageError(`--usage must be one of ${USAGE.join(', ')}`);
+  const options = opts.option.map((pair) => {
+    const at = pair.indexOf('=');
+    if (at < 1) throw new UsageError(`--option "${pair}" is not <id>=<value>`);
+    return { id: pair.slice(0, at), value: optionValue(pair.slice(at + 1)) };
+  });
+  return {
+    provider,
+    model,
+    rule,
+    options,
+    fallback: opts.fallback ?? null,
+    usage: (opts.usage as (typeof USAGE)[number] | undefined) ?? 'unknown',
+  };
 }
 
 function runsTable(overview: RunsOverview): string {
   const digest = `Digest: ${overview.digest}`;
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
   const table = renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Verified worker', 'Eligibility', 'Name'],
+    ['Story', 'Stage', 'Stage Run', 'Verified worker', 'Model', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
       s.stage,
       runText(s.stageRun),
       s.runMetadata.identity
         ? `${s.runMetadata.identity.machine} / ${s.runMetadata.identity.harness} / ${s.runMetadata.identity.threadId}`
+        : s.runMetadata.status === 'invalid' || s.runMetadata.status === 'unsupported'
+          ? 'unavailable'
+          : 'not recorded',
+      s.runMetadata.selection
+        ? `${s.runMetadata.selection.provider}/${s.runMetadata.selection.model}${s.runMetadata.selection.fallback ? ' (fallback)' : ''}`
         : s.runMetadata.status === 'invalid' || s.runMetadata.status === 'unsupported'
           ? 'unavailable'
           : 'not recorded',
@@ -192,9 +251,16 @@ export const commands: PluginCommands = (group, cli) => {
     .description("Start a Stage Run on the Story's current Stage, whose Stage Prompt must be on")
     .requiredOption('--worker <name>', 'the agent or thread that works the Story')
     .option('--retry', 'start a failed Stage Run again, as its next attempt')
-    .action((key: string, opts: { worker: string; retry?: boolean }, cmd) =>
+    .option('--provider <id>', "the Model Selection: the provider instance the worker's harness launches it with")
+    .option('--model <id>', 'the Model Selection: the model id')
+    .option('--rule <text>', 'the Model Selection: the model policy rule applied')
+    .option('--option <id=value>', 'a model option, such as reasoningEffort=high; repeatable', collect, [])
+    .option('--fallback <why>', "why the worker does not use the rule's model")
+    .option('--usage <source>', `where usage knowledge came from: ${USAGE.join(', ')}; ${USAGE[0]} by default`)
+    .action((key: string, opts: StartOptions, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
-        print(await startRun(plugin, key, { worker: opts.worker, retry: opts.retry }), runLine);
+        const selection = selectionInput(opts);
+        print(await startRun(plugin, key, { worker: opts.worker, retry: opts.retry, selection }), runLine);
       }),
     );
   run

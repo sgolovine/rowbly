@@ -283,7 +283,7 @@ rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>]
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
 rowbly software-factory runs --board web --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null, runMetadata, eligibility}], digest}
 rowbly software-factory wait --board web --since <digest> [--timeout <s>] --json --no-prompt   # blocks until runs differ; runs + changed
-rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-prompt   # {key, stageRun}; exit 4 if one exists
+rowbly software-factory run start WEB-42 --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<v>]... [--fallback <why>] [--usage unknown|observed-limit|user-stated]] --json --no-prompt   # {key, stageRun, selection?}; exit 4 if one exists
 rowbly software-factory run attach WEB-42 --stage <stage> --attempt <n> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<receipt>" --json --no-prompt
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
@@ -386,3 +386,5 @@ repeats write nothing, replacement exits4. Metadata file is per-Story
 remove it, finish/fail keep it. Opaque bytes stay unchanged/unavailable; owning writes exit6;
 doctor warns `SOFTWARE_FACTORY_RUN_METADATA_INVALID` or `SOFTWARE_FACTORY_RUN_METADATA_UNSUPPORTED_VERSION`.
 Stale data never supplies current identity; recover via its recorded machine/harness, not a title.
+Selection is `{provider,model,options:[{id,value}],rule,fallback|null,usage,selectedBy,selectedAt}`: the
+model chosen before launch (intent; compare the launch receipt), written by `run start`. No quota is recorded.

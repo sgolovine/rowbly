@@ -258,7 +258,28 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       eligible: true,
       reasons: [],
     });
-    await json('software-factory', 'run', 'start', worked.key, '--worker', 'w3');
+    // SKILL.md Model Selection: the start records the chosen model, and `runs` shows it after a restart.
+    await json(
+      'software-factory',
+      'run',
+      'start',
+      worked.key,
+      '--worker',
+      'w3',
+      ...['--provider', 'codex', '--model', 'gpt-6.1-sol', '--rule', 'coding default', '--option', 'effort=high'],
+      ...['--fallback', 'Claude usage limit observed', '--usage', 'observed-limit'],
+    );
+    expect((await json('software-factory', 'runs', '--board', 'web')).stories[0].runMetadata).toMatchObject({
+      current: true,
+      selection: {
+        provider: 'codex',
+        model: 'gpt-6.1-sol',
+        options: [{ id: 'effort', value: 'high' }],
+        rule: 'coding default',
+        fallback: 'Claude usage limit observed',
+        usage: 'observed-limit',
+      },
+    });
 
     // A worker's reported block: a line that writes another Story refuses all of it; a move waits for `run finish`.
     const block = (...lines: string[]) => ['```rowbly', ...lines, '```'].join('\n');

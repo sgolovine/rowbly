@@ -34,7 +34,7 @@ rowbly software-factory prompt remove todo --board web --yes --json --no-prompt 
 # Stage Runs
 rowbly software-factory runs --board web --json --no-prompt          # Stories in Stages whose Stage Prompt is on
 rowbly software-factory wait --board web --since <digest> --timeout 600 --json --no-prompt   # blocks until runs change
-rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --json --no-prompt
+rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --provider codex --model gpt-6.1-sol --rule "coding default" [--option reasoningEffort=high] [--fallback "<why>"] [--usage unknown|observed-limit|user-stated] --json --no-prompt
 rowbly software-factory run attach WEB-42 --stage todo --attempt 1 --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<launch receipt>" --json --no-prompt
 rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
@@ -65,7 +65,8 @@ differs from `--since <digest>` (without it, from when it starts) and returns `r
 `changed: true`: a Story entered or left a Stage whose Stage Prompt is on, a Stage Prompt was turned
 on or off, a Stage Run started, ended or was cleared, or eligibility changed. A stale `--since`
 returns at once. After `--timeout <seconds>` it returns `changed: false`. Both exit 0; a signal
-stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
+stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stageRun }` (`run start` also
+`selection` when it recorded one), with `stageRun`
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
 `{ cleared }`.
 
@@ -133,6 +134,17 @@ entry with the global entry's setting. Use Stage Prompts in Settings to change t
   with files in `boards/<board>/plugins/software-factory/stage-prompts/<key>.md`.
 - `path` is relative to `.rowbly/`.
 
+## Model Selection
+
+`run start` (and `--retry`) records the model the supervisor chose before the launch when given
+`--provider`, `--model` and `--rule` together (an incomplete group exits 2), with optional repeatable
+`--option <id>=<value>` (`true`, `false` and numbers are typed), `--fallback <why>` and `--usage`
+`unknown` (default), `observed-limit` or `user-stated`. It is saved as the current Run's
+`runMetadata.selection` `{provider, model, options, rule, fallback|null, usage, selectedBy, selectedAt}`
+in the start's operation; `selectedBy` is Me. It records intent: compare the launch receipt with it,
+and on a difference fail the Run without changing it. Rowbly has no usage source; record no quota.
+The `runs` table shows a Model column and human `stories show` a Model Selection row.
+
 ## Verified worker identity
 
 Start records a launch hint; only `run attach` records a supervisor-attested actual identity.
@@ -155,7 +167,7 @@ Unknown fields/versions and unreadable bytes are kept unchanged and unavailable.
 preserve other sections' JSON values. Every new start/retry resets recognized metadata even when
 timestamps repeat; clear and Stage changes remove recognized metadata, finish/fail keep it. A
 start refuses opaque metadata until explicit repair. Older releases keep the file but cannot
-maintain its verified lifecycle. Selection and heartbeat mutation commands are planned separately.
+maintain its verified lifecycle. Heartbeat mutation commands are planned separately.
 
 After restart, resolve `identity.threadId` through `identity.harness` on `identity.machine`.
 A title or legacy worker string is only a hint; do not assume a remote ID is local, or that an

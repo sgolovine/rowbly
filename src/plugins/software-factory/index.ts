@@ -3,7 +3,16 @@ import { commands } from './commands';
 import { doctor } from './doctor';
 import { metadataOutput, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
-import { currentRun, endVisit, guardFinishedRun, MoveInput, parseRunRef, runText, StageRunBag } from './stageRuns';
+import {
+  currentRun,
+  endVisit,
+  guardFinishedRun,
+  MoveInput,
+  parseRunRef,
+  runText,
+  StageRunBag,
+  selectionText,
+} from './stageRuns';
 import { guardAttachedWorker, guardStartedRun } from './workerIdentity';
 
 export const softwareFactory = definePlugin({
@@ -48,6 +57,7 @@ export const softwareFactory = definePlugin({
         value: `${i.machine} / ${i.harness} / ${i.threadId} (attested: ${i.verification.source})`,
       });
     }
+    if (metadata.selection) rows.push({ label: 'Model Selection', value: selectionText(metadata.selection) });
     return rows;
   },
   doctor,
