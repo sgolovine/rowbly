@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T16:51:03.984Z",
+  "updatedAt": "2026-11-03T16:52:00.743Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -32,6 +32,13 @@
           "body": "Plan (research done, awaiting acceptance; complexity 5; branch factory/row-73 from origin/main 324ac90b): ship portable default In Progress and In Review Stage Prompts in the Software Factory Plugin; add software-factory.setup (CLI software-factory setup) that adds only missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) at Board level and writes default prompts only where the Board has no entry, never overwriting, renaming or removing; offer it as an explicit choice in Software Factory/Both onboarding; ADR-0053 amends ADR-0041 section 2; update docs, the rowbly and rowbly-factory skills and the reference copies; no new tests; screenshots of CLI and onboarding. Open questions: TODO label, existing-Board behavior, TODO/Backlog prompts, surfaces, In Review key.",
           "createdAt": "2026-11-03T16:51:03.983Z",
           "updatedAt": "2026-11-03T16:51:03.983Z"
+        },
+        {
+          "id": "ZetFujFJ",
+          "author": "sunny",
+          "body": "Supervisor review: plan revision required before implementation. Story explicitly requests TODO and In Review labels and the factory/non-factory layouts; propose the necessary ADR amendments around that requested behavior, keys todo and in-review. Keep setup explicit and Board-scoped, retain existing Stages/custom order and all effective user/global prompt entries/files without shadowing them; define the safe default-equivalent label case rather than silently renaming custom Stages. CLI plus explicit onboarding action is appropriate; no implicit init Plugin enablement. Backlog and Done need no work prompt. ROW62 PR154 is now merged and reviewed TODO rollout is being enabled on this Board; fetch current main and reconsider portable TODO default inclusion using final advisory lifecycle, not stale pre-merge assumptions. Preserve once-per-visit/no move/no implementation and conservative input gaps; do not copy repository-specific paths/commands into published defaults. Generic independent review and repository policy remain intact. Reassess tests against AGENTS required storage/pipeline/skill contracts and extend existing checks only where required; a new command alone does not justify new tests, but blanket no-tests reasoning is insufficient if provisioning adds contract behavior. Keep100-test ceiling. Submit a revised concrete plan and no product edits yet.",
+          "createdAt": "2026-11-03T16:52:00.742Z",
+          "updatedAt": "2026-11-03T16:52:00.742Z"
         }
       ]
     }
