@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-77",
+  "boardId": "rowbly",
+  "name": "Data root onboarding should walk you through steps",
+  "description": "Currently, data root onboarding takes you back to the original screen which makes a user believe an action was not done, and actions you select are within a modal.\n\n- Remove modals, place on the screen\n- Tabs at the top for sections\n- Button to move forward, go back and skip onboarding.\n- Indicate when a step has been completed (track onboarding progress in config)",
+  "stage": "todo",
+  "rank": "a3",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:07:06.081Z",
+  "updatedAt": "2026-11-03T22:07:06.083Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "amPSSsoab",
+          "name": "image-20261103-2205.png",
+          "type": "image/png",
+          "size": 186341,
+          "createdAt": "2026-11-03T22:07:06.083Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
