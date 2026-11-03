@@ -5,7 +5,13 @@ import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
-import { definePlugin, type PluginChangeSet, type PluginHookContext, readBinaryInput } from '../../src/plugin-api';
+import {
+  definePlugin,
+  type PluginChangeSet,
+  type PluginContext,
+  type PluginHookContext,
+  readBinaryInput,
+} from '../../src/plugin-api';
 import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
@@ -1125,13 +1131,31 @@ async function externalReadBoundary() {
     children.push(child);
     return child as unknown as ReturnType<typeof childProcess.spawn>;
   });
-  const reader = definePlugin({ id: 'reader', name: 'Reader', description: '', externalReads: ['gh-pr-view'] });
+  const parameters = { url: 'https://github.com/owner/name/pull/1' };
+  let retained: PluginContext;
+  const refuseRetained = async ({ plugin }: { plugin: PluginHookContext }) => {
+    expect('externalRead' in plugin).toBe(false);
+    await expect(retained.externalRead('gh-pr-view', parameters)).rejects.toBeInstanceOf(PluginError);
+  };
+  const reader = definePlugin({
+    id: 'reader',
+    name: 'Reader',
+    description: '',
+    externalReads: ['gh-pr-view'],
+    hooks: { 'stories.create': { transform: refuseRetained, guard: refuseRetained, react: refuseRetained } },
+    doctor: {
+      async check(event) {
+        await refuseRetained(event);
+        return [];
+      },
+    },
+  });
   const t = await pluginRoot({ reader: true, notes: true });
   const { services, host } = await withPlugins(t, [reader, notes]);
   const ordinary = services.plugins.context('reader');
   const lease = new AbortController();
   const screen = services.plugins.screenContext('reader', lease.signal);
-  const parameters = { url: 'https://github.com/owner/name/pull/1' };
+  retained = screen;
   const call = () => screen.externalRead('gh-pr-view', parameters);
   try {
     await expect(ordinary.externalRead('gh-pr-view', parameters)).rejects.toBeInstanceOf(PluginError);
@@ -1171,7 +1195,8 @@ async function externalReadBoundary() {
         await expect(call()).rejects.toBeInstanceOf(PluginError);
       });
     }
-    await services.stories.create('web', { name: 'No external read from the operation body' });
+    await services.stories.create('web', { name: 'Retained contexts cannot bypass real hooks' });
+    await services.doctor.check();
     await expect(
       screen.operation('bad', {}, async () => {
         await call();

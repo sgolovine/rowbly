@@ -72,5 +72,10 @@ export function checksText(checks: PrStatus['checks']): string {
 }
 
 export function statusText(status: PrStatus): string {
-  return `#${status.number} ${status.state.toLowerCase()}${status.isDraft ? ' · draft' : ''} · checks ${checksText(status.checks)} · review ${status.reviewDecision?.toLowerCase().replaceAll('_', ' ') || 'not reported'}`;
+  return `#${status.number} ${status.state.toLowerCase()}${status.isDraft ? ' · draft' : ''} · checks ${checksText(status.checks)} · review ${
+    status.reviewDecision
+      ?.toLowerCase()
+      .replaceAll('_', ' ')
+      .replace(/^review /, '') || 'not reported'
+  }`;
 }
