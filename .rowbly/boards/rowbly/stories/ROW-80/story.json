@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-80",
+  "boardId": "rowbly",
+  "name": "If a user chooses agent skills, skip asking if they will use AI in onboarding",
+  "description": "Right now if a user chooses several agent skills to install and then proceeds, the next step will ask if they want to use AI. This is redundant, do not ask if they installed skills",
+  "stage": "todo",
+  "rank": "a6",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:10:18.449Z",
+  "updatedAt": "2026-11-03T22:10:18.449Z"
+}
