@@ -204,6 +204,56 @@ export async function listStorySpecs(
   return specs;
 }
 
+/**
+ * The searchable text of each of `stories`' Specs: its linked Board Specs' slugs, and the slug, title
+ * and text of those and of its Story Specs. Every file is read once, in batches (ADR-0052); a Spec
+ * that cannot be read only leaves its own text out.
+ */
+export async function loadSpecSearchText(
+  plugin: PluginReadContext,
+  stories: readonly Story[],
+): Promise<(story: Story) => string[]> {
+  const lists = await plugin.files.listMany(stories.map((story) => ({ story: story.key })));
+  const targets: SpecTarget[] = stories.flatMap((story, at) => {
+    const list = lists[at];
+    const slugs = list?.status === 'found' ? specSlugs(list.names) : [];
+    return slugs.map((slug) => ({ board: story.boardId, story: story.key, slug }));
+  });
+  const linked = new Set<string>();
+  for (const story of stories) {
+    for (const slug of linkedSpecs(plugin, story)) {
+      if (isSlug(slug) && !linked.has(`${story.boardId}/${slug}`)) {
+        linked.add(`${story.boardId}/${slug}`);
+        targets.push({ board: story.boardId, slug });
+      }
+    }
+  }
+  const read = await plugin.files.readMany(targets.map(location));
+  const specs = new Map<string, Spec>();
+  targets.forEach((target, at) => {
+    const file = read[at];
+    if (file?.status === 'found') specs.set(targetKey(target), toSpec(target, file.text));
+  });
+  const own = new Map<string, Spec[]>();
+  for (const target of targets) {
+    const spec = specs.get(targetKey(target));
+    if (target.story === undefined || !spec) continue;
+    own.set(target.story, [...(own.get(target.story) ?? []), spec]);
+  }
+  return (story) => {
+    const slugs = linkedSpecs(plugin, story);
+    const found = [
+      ...slugs.flatMap((slug) => specs.get(targetKey({ board: story.boardId, slug })) ?? []),
+      ...(own.get(story.key) ?? []),
+    ];
+    return [...slugs, ...found.flatMap((spec) => [spec.slug, spec.title, spec.text])];
+  };
+}
+
+function targetKey(target: SpecTarget): string {
+  return target.story === undefined ? `${target.board}/${target.slug}` : `${target.story}//${target.slug}`;
+}
+
 export function createSpec(plugin: PluginContext, target: SpecTarget, text: string): Promise<Spec> {
   return writeSpec(plugin, target, text, 'create');
 }

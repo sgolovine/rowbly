@@ -87,8 +87,12 @@ async function readMetadata(read: () => Promise<string | null>): Promise<Metadat
 }
 
 /** A stale file is visible as stale, but never supplies the current Run's identity. */
-export async function readRunMetadata(plugin: PluginReadContext, story: RunStory): Promise<MetadataState> {
-  const state = await readMetadata(() => plugin.files.read({ story: story.key }, RUN_METADATA_FILE));
+export async function readRunMetadata(
+  plugin: PluginReadContext,
+  story: RunStory,
+  read = () => plugin.files.read({ story: story.key }, RUN_METADATA_FILE),
+): Promise<MetadataState> {
+  const state = await readMetadata(read);
   if (state.status !== 'valid') return state;
   const run = currentRun(plugin, story);
   return {

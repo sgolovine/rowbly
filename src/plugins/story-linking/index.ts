@@ -1,7 +1,7 @@
 import { definePlugin, parseStoryKey, ValidationError } from '../../plugin-api';
 import { commands } from './commands';
 import { guardFactoryStart } from './factoryGuard';
-import { applyCreateLinks, applyUpdateLinks, checkLinks, readLinks, unlinkDeleted } from './links';
+import { applyCreateLinks, applyUpdateLinks, checkLinks, readLinksOf, unlinkDeleted } from './links';
 import { BlocksFilter, directionLabel, LinksBag, LinksCreateInput, LinksUpdateInput } from './model';
 import { reconcile } from './reconcile';
 
@@ -50,7 +50,7 @@ export const storyLinking = definePlugin({
     },
   },
   async storyRows(story, plugin) {
-    const view = await readLinks(plugin, story.key);
+    const view = await readLinksOf(plugin, story);
     const invalid = view.unavailable.length ? `unavailable (invalid: ${view.unavailable.join(', ')})` : undefined;
     return [
       {
@@ -75,7 +75,7 @@ export const storyLinking = definePlugin({
     ];
   },
   async storyContext(story, plugin) {
-    const view = await readLinks(plugin, story.key);
+    const view = await readLinksOf(plugin, story);
     const text = view.links.map(
       (link) =>
         `- ${directionLabel(link.relation)} ${link.key}${link.name === null ? ' (not found)' : `: ${link.name}`}`,
