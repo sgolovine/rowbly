@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T03:45:00.192Z",
+  "updatedAt": "2026-11-03T04:00:47.854Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:0b367672-4758-4903-bb58-8f17c7c04fc7",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:44:59.387Z"
+      }
     },
     "comments": {
       "comments": [
@@ -81,18 +91,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/149 at head 7abfa9bc110e3ac419e05aa71f105841b04dcbaa. Adds the independent review gate to the factory skills: the supervisor records each implementing Run's worker and model in an implementation record Comment before the move, the reviewer is a new worker on a model no record names, unknown authors are asked rather than guessed, an approval holds for one head SHA, and the supervisor refuses a move to Done without an approval for the final head. The worker brief gains an Implementation records section; rowbly-dev's draft-PR Comment carries the head SHA and answers numbered review findings. Proposed In PR steps 3-4 (review, merge with --match-head-commit), In Progress step 7 and ROWBLY.md changes are in /tmp/row-47 on thinkpad for the supervisor to apply. typecheck, lint, test:unit (78) and test:cli (20) passed; agentic-tui screenshots of the proposed prompt are linked from the PR and return 200.",
           "createdAt": "2026-11-03T02:36:09.049Z",
           "updatedAt": "2026-11-03T02:36:09.049Z"
+        },
+        {
+          "id": "NncAzCQc",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/149 at 801ae8ffc1c2356e315bed70bb2e565de49d8c4f by codex/gpt-6-astra: CHANGES REQUESTED. Reviewer mcp:0b367672-4758-4903-bb58-8f17c7c04fc7 is a fresh worker, independent of the verified original claude-opus-5-5 implementer b396dc5c and gpt-6.1-sol correction implementer 3fa520ee. Both previous findings are fixed in the published skills: generated context retains instructions/retry and appends one filled provenance section, and same-provider reviewers are allowed while effort/options do not change model identity. 1. Integration blocker at skills/rowbly-factory/SKILL.md:219-259: merging current main ceee1a727427d1525177449945237cfcb6ea4f1c conflicts between Independent review and the already-landed Returned work section. Integrate the same PR branch, retaining BOTH sections and complementary persistence/retention/brief/identity/hold rules, then run all four checks and obtain fresh exact-head independent review. I aborted the local merge without resolving it; integrated-tree validation is not claimed. 2. Supervisor-only configuration proposal at /tmp/row-47/proposed/ROWBLY.md:48-50 still requires asking whenever records name both Opus and Sol, despite another eligible model being available. Replace that bullet with: Review (In PR) uses a new worker whose model differs from every implementing model in the verified implementation records. The same provider is allowed; changing effort or options does not qualify. Choose an available eligible model from the live catalog; ask when provenance is unknown or no eligible model is available. Do not apply the older provider-pair restriction. This proposal correction belongs to the supervisor; workers must not edit .rowbly. Validation at the published head under the bounded shared lease: typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS, unchanged timeouts and no retries. Read-only CLI re-generation and assembly on the existing synthetic demo passed: all three Plugin sections, guide, instructions and Retry retained, exactly one filled provenance section appended. Synthetic identities are fixtures, not real attestations. The actual Story brief was complete with all six Plugin sections. All six GitHub checks are COMPLETED/SUCCESS; no formal review requests changes. All five PNG URLs returned HTTP 200 via curl, and review/merge/assembled-brief images were inspected. GitHub reports CONFLICTING/DIRTY. Review evidence: /tmp/row-47-astra-review on rook. No product or Board edits, commits, pushes, ready transition or merge. Preserve PR149 and row-47-independent-review-gate; configuration remains supervisor-only, retaining ROW57 step 2 and ROW48 step 5 and using /tmp/row-47-correction-evidence/proposed-in-pr-steps-3-4.md for ROW47 steps 3-4.",
+          "createdAt": "2026-11-03T04:00:47.853Z",
+          "updatedAt": "2026-11-03T04:00:47.853Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:0b367672-4758-4903-bb58-8f17c7c04fc7",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:44:59.387Z"
-      }
     }
   }
 }
