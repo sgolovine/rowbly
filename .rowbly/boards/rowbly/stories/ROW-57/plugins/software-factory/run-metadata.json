@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-03T02:11:04.043Z"
+  },
+  "identity": {
+    "worker": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:241441f8-f97a-454f-a22a-8f3e445d24ed",
+    "verification": {
+      "source": "SSH CLI verified reserved thread241441f8 actual Sonnet5.5/full-access/bound factory-row-57; provider default options (none requested)",
+      "verifiedAt": "2026-11-03T02:11:04.828Z",
+      "by": "sunny"
+    }
+  }
+}
