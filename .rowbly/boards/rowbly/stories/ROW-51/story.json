@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Persist supervisor Board changes promptly",
   "description": "Factory review recommendation 5 of 20.\n\n## Context\n\nInterval Git commits in short CLI calls can leave Board changes unavailable to workers that synchronize through origin/main; startup cleanup may also misclassify pending Rowbly data.\n\n## Acceptance criteria\n\n- Configure the supervisor to commit Board changes promptly and define when it pushes them for worker synchronization.\n- Handle pending Rowbly data through the Git Plugin before the generic cleanup-PR path.\n- Preserve unrelated changes and update ROWBLY.md and the factory startup instructions consistently.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a3",
+  "stage": "done",
+  "rank": "ay",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.135Z",
-  "updatedAt": "2026-11-02T23:51:57.500Z",
+  "updatedAt": "2026-11-03T00:06:00.901Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -32,18 +32,15 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/134 at head cc29f49. The rowbly-factory skill now runs rowbly git sync at startup when the Git Plugin is on, before the cleanup PR step. Sync commits Rowbly changes that were saved but not yet committed, merges the upstream and pushes, and leaves unrelated staged, changed and untracked files as they are. Files edited by hand still go to the cleanup PR. A new Board persistence section says to switch to commits after each change only when ROWBLY.md or the user asks. It says to push with rowbly git sync after run start before the brief, after each applied worker block and after finish or fail, and never to rebase, reset or force push by hand. The CLI git sync needs Automatic Merge Conflict Resolution On and fails while it is Off. Only the TUI Sync key S works with it Off. Checked against the source and a scratch repository. AGENTS.md is updated to match. The ROWBLY.md diff went to the supervisor as a proposal only. Typecheck, lint, test unit 77 and test cli 20 pass.",
           "createdAt": "2026-11-02T23:50:48.440Z",
           "updatedAt": "2026-11-02T23:50:48.440Z"
+        },
+        {
+          "id": "Lu7FZdkB",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/134. Merge commit 58f7e9b. Typecheck, lint, unit (77), CLI (20), and all six GitHub checks passed. Screenshot HTTP 200. Main CI queued.",
+          "createdAt": "2026-11-03T00:06:00.206Z",
+          "updatedAt": "2026-11-03T00:06:00.206Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:08785f02-726c-4a4a-9bf5-c093d9e79efa",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:51:57.499Z"
-      }
     }
   }
 }

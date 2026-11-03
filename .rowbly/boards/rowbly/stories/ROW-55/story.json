@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Validate worker-reported Board commands mechanically",
   "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "Zt",
+  "stage": "in-pr",
+  "rank": "a6",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-02T23:43:24.680Z",
+  "updatedAt": "2026-11-03T00:06:02.847Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:6843535a-6b80-40cc-ad45-9933d86eee81",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:37:21.081Z"
-      }
     },
     "comments": {
       "comments": [
@@ -35,6 +25,13 @@
           "body": "Supervisor accepted plan: Plan accepted with refinements. Reject the whole block before any mutation when any line is invalid; return every line's decision so supervisor can explicitly resubmit allowed lines. Keep bounded own-Story allowlist and never pass through a shell. Host runCommand must pin the opened Data Root and noninteractive JSON flags and reject caller-supplied root/global/interactive overrides, rather than relying only on the Software Factory parser; avoid arbitrary shell capability or recursion. Keep execution outside an enclosing mutation/lock so child commands don't deadlock; each child operation owns its lock. Document partial success on later runtime failure. Guard move using current-visit finished Stage Run; hold while running/absent, drop failed; do not silently lose returned held commands. Read-only dry-run changes nothing. Reserve ADR-0045 (0043 hold,0044 brief reserved) and recheck. Extend an existing test in test/plugins or agentWorkflows instead of new file; keep total suite <=100 (currently97), one representative failure contract. No worker-brief changes yet: ROW-63/66 template updates are opening PRs, so merge them first; add only necessary quoting note. Parent remains main; no stack without approval. Run/report all four checks and screenshot scenarios. Proceed.",
           "createdAt": "2026-11-02T23:43:24.679Z",
           "updatedAt": "2026-11-02T23:43:24.679Z"
+        },
+        {
+          "id": "vAOmfcev",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/139. Adds `rowbly software-factory apply <KEY> --file|--text <block> [--dry-run]`, which checks a worker-reported rowbly block without a shell and runs only allowed commands about that Story. It refuses the whole block before any change when a line names another Story, uses shell syntax, runs a software-factory command or passes options such as --data-root, --yes, --edit or --*-file. A move runs last and only after the Stage Run is finished: it is held while the Run is running or absent and dropped after it fails. Each allowed line runs as its own rowbly child process through the new PluginCommandEnv.runCommand, which pins the opened Data Root and --json --no-prompt, refuses root or global overrides and cannot run recursively; the first failing line stops the block and earlier lines stay applied. Recorded in ADR-0045, which amends ADR-0040. Docs, the factory skill, reference pages and one existing workflow test are updated; typecheck, lint, test:unit and test:cli pass.",
+          "createdAt": "2026-11-03T00:06:02.194Z",
+          "updatedAt": "2026-11-03T00:06:02.194Z"
         }
       ]
     }

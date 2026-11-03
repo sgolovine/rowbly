@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:55.313Z",
-  "updatedAt": "2026-11-02T23:57:56.367Z",
+  "updatedAt": "2026-11-03T00:06:06.140Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -26,6 +26,17 @@
         "by": "sunny",
         "startedAt": "2026-11-02T23:57:56.366Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "wLGAnjsR",
+          "author": "sunny",
+          "body": "Supervisor review: Plan accepted. Use shared DetailView and per-component PascalCase file, existing tokens, and plain badge text; no new hue/core shell redesign. The Stage Run tab is read-only so no creation key. Use useReloadOnReturn without hiding loaded rows or gating keys during a reload; no-Run empty view is accurate under ADR0040 (do not retain prior visits/history). Label elapsed/relative age from existing timestamps honestly; if displayed as live, use a bounded cleaned-up refresh/shared ticker, not a watcher/server. Current worker string is sufficient now; ROW49 sidecar identity contract is being coordinated, no dependency or invented heartbeat fields. Export relativeDate narrowly with API docs; keep TS/TSX documentation blocks sourced from compiled fixtures if added. Badges use currentRun with no extra I/O; existing ADR0028 permits file-loaded badges but you do not need it here. Agentic-tui evidence as proposed including narrow view/long worker id legibility and failed reason. No new tests for cosmetic changes; run all four checks. Proceed.",
+          "createdAt": "2026-11-03T00:06:06.139Z",
+          "updatedAt": "2026-11-03T00:06:06.139Z"
+        }
+      ]
     }
   }
 }
