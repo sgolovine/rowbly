@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T04:16:04.166Z",
+  "updatedAt": "2026-11-03T04:16:04.836Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -80,6 +80,13 @@
           "body": "Independent In PR review (Opus 5.5 high; different model from GPT Sol implementer 25903f5a): APPROVED exact head d4861bedded72511f07823ddf4d0338e0418c3b8 (https://github.com/sgolovine/rowbly/pull/152#issuecomment-6595010584). On that head merged locally with current main: typecheck, lint, unit 78/78 and CLI 20/20 passed. GitHub run 41572203164 on the same head: all six checks passed; mergeable and clean; no reviews requested changes; six screenshot URLs returned 200. Manually checked the built TUI: fuzzy search by Key and name, no results, Ctrl+L clear, Enter chooses without saving the form, Escape keeps the prior choice and draft, current Story left out, same-Board choices, and links saved from create, edit and add-link. Four suggestions, none blocking: counter clipped at 80x20, enter hint shown with no matches, placement of the api.md note, and the picker hides the Story window instead of stacking on it.",
           "createdAt": "2026-11-03T04:16:04.165Z",
           "updatedAt": "2026-11-03T04:16:04.165Z"
+        },
+        {
+          "id": "GT0NxtPn",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/152",
+          "createdAt": "2026-11-03T04:16:04.835Z",
+          "updatedAt": "2026-11-03T04:16:04.835Z"
         }
       ]
     }
