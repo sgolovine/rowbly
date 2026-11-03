@@ -17,6 +17,13 @@
     "comments": {
       "comments": [
         {
+          "id": "COM1gxzk",
+          "author": "sunny",
+          "body": "Implementation record: {\"worker\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"threadId\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"machine\":\"rook\",\"provider\":\"claudeAgent\",\"model\":\"claude-opus-5-5\",\"options\":[{\"id\":\"effort\",\"value\":\"high\"},{\"id\":\"fastMode\",\"value\":false}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/3d1b46742fdd3385207209102686e5e5.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-73-story\",\"branch\":\"factory/row-73\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/156\",\"head\":\"3f05ca647fb0c6172d439cebaacf8b82839f8ffa\",\"scope\":\"Sole product implementation author, research through final checkpoint; no correction workers\"}",
+          "createdAt": "2026-11-03T17:19:32.742Z",
+          "updatedAt": "2026-11-03T17:19:32.742Z"
+        },
+        {
           "id": "D8BxrfdE",
           "author": "sunny",
           "body": "Supervisor accepts revised ROW-73 plan and ADR0053 allocation. Implement explicit atomic Board-scoped setup and onboarding action, built-in TODO display-name default without migrating stored configuration, preserving existing Stage labels/order and every effective global or Board prompt entry/file. Portable TODO prompt may ship off by default with prerequisites and conservative INCOMPLETE behavior documented; In Progress and In Review defaults enabled only through explicit setup. Keep internal .rowbly and in-pr configuration untouched. Generic In Review must retain exact-head independent approval, complete check classification, conflict/return policy, and a successful merge handoff ending with own-Story Done move plus FACTORY-DONE for supervisor processing. Preserve once-per-visit advisory lifecycle and no implementation from TODO. Extend the existing preservation contract test as proposed, keep100 tests, update required docs/ADR Status/index and identical skill references. Merge latest main before implementation and validation; coordinate small shared documentation sections with ROW70 ADR0054. Run all four checks under shared lease, capture required screenshots with reported private daemon, open one draft PR and report exact head.",
@@ -31,6 +38,13 @@
           "updatedAt": "2026-11-03T17:00:55.401Z"
         },
         {
+          "id": "VUNRjExC",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/156 at head 3f05ca647fb0c6172d439cebaacf8b82839f8ffa (branch factory/row-73). Adds software-factory setup: a Board-scoped, idempotent operation that adds missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) and portable default Stage Prompts (In Progress and In Review on, TODO advisory readiness off with prerequisites documented). It keeps every existing Stage name and order and every Board or global prompt entry and file, and refuses CONFLICT on a same-name Stage. The built-in todo Stage is named TODO, with stored lists untouched. Explicit Factory setup option in Software Factory or Both onboarding and in Board settings. ADR-0053 amends ADR-0024 section 3 and ADR-0041 section 2. Docs, rowbly and rowbly-factory skills and the four identical reference copies are updated; internal .rowbly prompts are unchanged. Validation at 3f05ca64 under the shared lease: typecheck, lint, unit 79 and CLI 21 passed, 100 tests total, no new test cases (preservation assertions added to the existing agentWorkflows Stage step and the operation inventory). 11 agentic-tui screenshots in https://github.com/sgolovine/rowbly/pull/156#issuecomment-6610673645 (all URLs HTTP 200). CI at PR open: Verify, Unit tests, CLI tests and the three Clipboard smoke checks in progress. Review findings: none yet.",
+          "createdAt": "2026-11-03T17:19:30.832Z",
+          "updatedAt": "2026-11-03T17:19:30.832Z"
+        },
+        {
           "id": "ZetFujFJ",
           "author": "sunny",
           "body": "Supervisor review: plan revision required before implementation. Story explicitly requests TODO and In Review labels and the factory/non-factory layouts; propose the necessary ADR amendments around that requested behavior, keys todo and in-review. Keep setup explicit and Board-scoped, retain existing Stages/custom order and all effective user/global prompt entries/files without shadowing them; define the safe default-equivalent label case rather than silently renaming custom Stages. CLI plus explicit onboarding action is appropriate; no implicit init Plugin enablement. Backlog and Done need no work prompt. ROW62 PR154 is now merged and reviewed TODO rollout is being enabled on this Board; fetch current main and reconsider portable TODO default inclusion using final advisory lifecycle, not stale pre-merge assumptions. Preserve once-per-visit/no move/no implementation and conservative input gaps; do not copy repository-specific paths/commands into published defaults. Generic independent review and repository policy remain intact. Reassess tests against AGENTS required storage/pipeline/skill contracts and extend existing checks only where required; a new command alone does not justify new tests, but blanket no-tests reasoning is insufficient if provisioning adds contract behavior. Keep100-test ceiling. Submit a revised concrete plan and no product edits yet.",
@@ -43,20 +57,6 @@
           "body": "Plan (research done, awaiting acceptance; complexity 5; branch factory/row-73 from origin/main 324ac90b): ship portable default In Progress and In Review Stage Prompts in the Software Factory Plugin; add software-factory.setup (CLI software-factory setup) that adds only missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) at Board level and writes default prompts only where the Board has no entry, never overwriting, renaming or removing; offer it as an explicit choice in Software Factory/Both onboarding; ADR-0053 amends ADR-0041 section 2; update docs, the rowbly and rowbly-factory skills and the reference copies; no new tests; screenshots of CLI and onboarding. Open questions: TODO label, existing-Board behavior, TODO/Backlog prompts, surfaces, In Review key.",
           "createdAt": "2026-11-03T16:51:03.983Z",
           "updatedAt": "2026-11-03T16:51:03.983Z"
-        },
-        {
-          "id": "VUNRjExC",
-          "author": "sunny",
-          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/156 at head 3f05ca647fb0c6172d439cebaacf8b82839f8ffa (branch factory/row-73). Adds software-factory setup: a Board-scoped, idempotent operation that adds missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) and portable default Stage Prompts (In Progress and In Review on, TODO advisory readiness off with prerequisites documented). It keeps every existing Stage name and order and every Board or global prompt entry and file, and refuses CONFLICT on a same-name Stage. The built-in todo Stage is named TODO, with stored lists untouched. Explicit Factory setup option in Software Factory or Both onboarding and in Board settings. ADR-0053 amends ADR-0024 section 3 and ADR-0041 section 2. Docs, rowbly and rowbly-factory skills and the four identical reference copies are updated; internal .rowbly prompts are unchanged. Validation at 3f05ca64 under the shared lease: typecheck, lint, unit 79 and CLI 21 passed, 100 tests total, no new test cases (preservation assertions added to the existing agentWorkflows Stage step and the operation inventory). 11 agentic-tui screenshots in https://github.com/sgolovine/rowbly/pull/156#issuecomment-6610673645 (all URLs HTTP 200). CI at PR open: Verify, Unit tests, CLI tests and the three Clipboard smoke checks in progress. Review findings: none yet.",
-          "createdAt": "2026-11-03T17:19:30.832Z",
-          "updatedAt": "2026-11-03T17:19:30.832Z"
-        },
-        {
-          "id": "COM1gxzk",
-          "author": "sunny",
-          "body": "Implementation record: {\"worker\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"threadId\":\"mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971\",\"machine\":\"rook\",\"provider\":\"claudeAgent\",\"model\":\"claude-opus-5-5\",\"options\":[{\"id\":\"effort\",\"value\":\"high\"},{\"id\":\"fastMode\",\"value\":false}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/3d1b46742fdd3385207209102686e5e5.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-73-story\",\"branch\":\"factory/row-73\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/156\",\"head\":\"3f05ca647fb0c6172d439cebaacf8b82839f8ffa\",\"scope\":\"Sole product implementation author, research through final checkpoint; no correction workers\"}",
-          "createdAt": "2026-11-03T17:19:32.742Z",
-          "updatedAt": "2026-11-03T17:19:32.742Z"
         }
       ]
     }
