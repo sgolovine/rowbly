@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:51:58.167Z",
+  "updatedAt": "2026-11-03T16:51:59.448Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -179,6 +179,13 @@
           "body": "Merged https://github.com/sgolovine/rowbly/pull/154 at 8a364c93e60130f73b0ef26c70ac2f53a0833262. Merge commit a79ebee52aa923178444f34675305381811d5d06 at 2026-11-03T16:47:52Z. Exact-head independent approval, clean mergeability and all six successful checks verified before merging. Typecheck, lint, 79 unit and 21 CLI tests passed previously; no reruns. Single main CI snapshot did not yet list the merge commit; preceding head 5306485d CI was running and three earlier runs succeeded. Final rollout artifacts and hashes verified at https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609698759. TODO activation remains supervisor-owned and must be published before Story completion; GitHub remains an unknown readiness input contract. Review worktree and evidence retained; no task daemon, watcher or sessions remain.",
           "createdAt": "2026-11-03T16:51:57.522Z",
           "updatedAt": "2026-11-03T16:51:57.522Z"
+        },
+        {
+          "id": "3IrpaqVJ",
+          "author": "sunny",
+          "body": "Supervisor rollout complete after PR154 merge a79ebee52aa923178444f34675305381811d5d06: final posted manifest and helper/reference/prompt/guide proposal hashes verified against reviewed artifacts. Applied reviewed TODO Stage Prompt at Board level, replaced only the combined Backlog/TODO Stages bullet in ROWBLY.md, enabled TODO and published all configuration at 6cacc3aafe32a50a8c71ca17a7f25aed856faf2d. Fresh effective prompt and upstream files verified, normalized text exactly matches reviewed prompt; stored prompt SHA256 ea6969626adeacc03748616e233763392529db086e400bac268085e7a415c308 (CLI trailing-newline normalization). No existing TODO Stories were waiting; no additional worker starts required. Advisory lifecycle keeps Stories in TODO, never authorizes implementation and leaves finished Runs alone. GitHub remains an explicit unknown input-contract gap even when off; readiness must report incomplete and cannot skip on that gap. All acceptance work is now complete; resources and linked evidence retained.",
+          "createdAt": "2026-11-03T16:51:59.448Z",
+          "updatedAt": "2026-11-03T16:51:59.448Z"
         }
       ]
     }
