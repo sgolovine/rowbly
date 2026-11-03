@@ -1,4 +1,5 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
+import { livenessText, parseStaleAfter } from './liveness';
 import {
   boardOverview,
   type Level,
@@ -45,11 +46,12 @@ function runsTable(overview: RunsOverview): string {
   const digest = `Digest: ${overview.digest}`;
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
   const table = renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Eligibility', 'Name'],
+    ['Story', 'Stage', 'Stage Run', 'Last seen', 'Eligibility', 'Name'],
     overview.stories.map((s) => [
       s.key,
       s.stage,
       runText(s.stageRun),
+      livenessText(s.liveness),
       s.eligibility.reasons.map((r) => r.message).join('; ') || 'Eligible',
       s.name,
     ]),
@@ -60,6 +62,8 @@ function runsTable(overview: RunsOverview): string {
 function waitText(result: WaitResult): string {
   return `${result.changed ? 'Changed' : 'No change before the timeout'}\n${runsTable(result)}`;
 }
+
+const STALE_AFTER = 'minutes without a sign of its worker before a running Stage Run is stale (default 15)';
 
 /** The longest `--timeout`: a longer timer would fire at once. */
 const MAX_TIMEOUT_SECONDS = 2_147_483;
@@ -156,9 +160,11 @@ export const commands: PluginCommands = (group, cli) => {
     .command('runs')
     .description('List the Stories in Stages whose Stage Prompt is on, with their Stage Runs')
     .option('--board <id>', 'the Board')
-    .action((opts: { board?: string }, cmd) =>
+    .option('--stale-after <minutes>', STALE_AFTER)
+    .action((opts: { board?: string; staleAfter?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard }) => {
-        print(await runsOverview(plugin, await resolveBoard(opts.board)), runsTable);
+        const staleAfterMinutes = parseStaleAfter(opts.staleAfter);
+        print(await runsOverview(plugin, await resolveBoard(opts.board), { staleAfterMinutes }), runsTable);
       }),
     );
 
@@ -170,12 +176,15 @@ export const commands: PluginCommands = (group, cli) => {
     .option('--board <id>', 'the Board')
     .option('--since <digest>', 'the digest of the runs last read; without it, the runs when the wait starts')
     .option('--timeout <seconds>', 'stop waiting after this many seconds, with nothing changed')
-    .action((opts: { board?: string; since?: string; timeout?: string }, cmd) =>
+    .option('--stale-after <minutes>', `${STALE_AFTER}; give the same as to runs`)
+    .action((opts: { board?: string; since?: string; timeout?: string; staleAfter?: string }, cmd) =>
       cli.run(cmd, async ({ plugin, print, resolveBoard, waitFor }) => {
         const timeout = parseTimeout(opts.timeout);
+        const staleAfterMinutes = parseStaleAfter(opts.staleAfter);
         const board = await resolveBoard(opts.board);
         const signal = timeout === undefined ? undefined : AbortSignal.timeout(timeout * 1000);
-        print(await waitForRuns(plugin, board, waitFor, { since: opts.since?.trim() || undefined, signal }), waitText);
+        const since = opts.since?.trim() || undefined;
+        print(await waitForRuns(plugin, board, waitFor, { since, signal, staleAfterMinutes }), waitText);
       }),
     );
 

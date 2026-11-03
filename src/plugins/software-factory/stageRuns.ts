@@ -14,6 +14,7 @@ import {
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
+import { DEFAULT_STALE_AFTER_MINUTES, type Liveness, liveness, stableLiveness } from './liveness';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -169,13 +170,32 @@ export interface RunsOverview {
   board: string;
   /** The Stages whose Stage Prompt is on, in Board order. */
   stages: string[];
-  stories: { key: string; name: string; stage: string; stageRun: StageRun | null; eligibility: Eligibility }[];
-  /** A hash of `stages` and `stories`: any change to them changes it (`wait --since`). */
+  /** How long a running Stage Run may go unseen before it is stale (ADR-0048 §2). */
+  staleAfterMinutes: number;
+  stories: {
+    key: string;
+    name: string;
+    stage: string;
+    stageRun: StageRun | null;
+    /** When a running Stage Run's worker was last seen; `null` for any other. */
+    liveness: Liveness | null;
+    eligibility: Eligibility;
+  }[];
+  /**
+   * A hash of `stages`, `staleAfterMinutes` and `stories`, without each Run's age (`wait --since`):
+   * it changes when what `runs` lists changes or a Run becomes stale, not as time passes.
+   */
   digest: string;
 }
 
 /** Every Story of the Board in a Stage whose Stage Prompt is on, with its Stage Run for this visit. */
-export async function runsOverview(plugin: PluginContext, board: string): Promise<RunsOverview> {
+export async function runsOverview(
+  plugin: PluginContext,
+  board: string,
+  opts: { staleAfterMinutes?: number } = {},
+): Promise<RunsOverview> {
+  const staleAfterMinutes = opts.staleAfterMinutes ?? DEFAULT_STALE_AFTER_MINUTES;
+  const now = plugin.now();
   const overview = await boardOverview(plugin, board);
   const stages = overview.stages.filter((s) => s.prompt.enabled).map((s) => s.key);
   // An empty Stage filter would match every Stage.
@@ -185,11 +205,25 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
       key: s.key,
       name: s.name,
       stage: s.stage,
-      stageRun: currentRun(plugin, s),
+      ...runWithLiveness(currentRun(plugin, s), now, staleAfterMinutes),
       eligibility: await storyEligibility(plugin, s),
     })),
   );
-  return { board, stages, stories: rows, digest: digestOf({ stages, stories: rows }) };
+  const stable = rows.map((row) => ({ ...row, liveness: stableLiveness(row.liveness) }));
+  return {
+    board,
+    stages,
+    staleAfterMinutes,
+    stories: rows,
+    digest: digestOf({ stages, staleAfterMinutes, stories: stable }),
+  };
+}
+
+function runWithLiveness(stageRun: StageRun | null, now: Date, staleAfterMinutes: number) {
+  return {
+    stageRun,
+    liveness: stageRun?.status === 'running' ? liveness(stageRun, null, now, staleAfterMinutes) : null,
+  };
 }
 
 /**
@@ -197,7 +231,7 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
  * apart and nothing more (a Plugin imports no Node built-in): two 32-bit lanes of a multiply-xor
  * hash over the JSON text.
  */
-function digestOf(state: Pick<RunsOverview, 'stages' | 'stories'>): string {
+function digestOf(state: unknown): string {
   const text = JSON.stringify(state);
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
@@ -219,17 +253,17 @@ export interface WaitResult extends RunsOverview {
 /**
  * Waits until the Board's `runs` differ from the digest `since`, or from the first read without it:
  * a Story entering or leaving a Stage whose Stage Prompt is on, a Stage Prompt turned on or off, or a
- * Stage Run started, ended or cleared. Rechecks on every change to the Data Root, so a change to
+ * Stage Run started, ended, cleared or become stale. Rechecks on every change to the Data Root, so a change to
  * another Board that alters what `runs` lists counts too. `signal` ends the wait unchanged.
  */
 export async function waitForRuns(
   plugin: PluginContext,
   board: string,
   waitFor: PluginCommandEnv<unknown>['waitFor'],
-  opts: { since?: string; signal?: AbortSignal },
+  opts: { since?: string; signal?: AbortSignal; staleAfterMinutes?: number },
 ): Promise<WaitResult> {
   let since = opts.since;
-  const read = () => runsOverview(plugin, board);
+  const read = () => runsOverview(plugin, board, { staleAfterMinutes: opts.staleAfterMinutes });
   const next = await waitFor(
     async () => {
       const overview = await read();
