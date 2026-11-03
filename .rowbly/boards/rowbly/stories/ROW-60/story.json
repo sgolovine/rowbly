@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T04:00:44.106Z",
+  "updatedAt": "2026-11-03T04:00:48.568Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -98,6 +98,13 @@
           "body": "PR145 correction pushed to factory/row-60 at e3e2b691a624119696f925c5ef02dfbafb1a700c. Both review findings addressed; current main integrated; fresh CLI screenshots and policy proposal posted. Typecheck, lint and CLI20 pass locally. Local unit77/78 has the storage timeout assigned to ROW48; no rerun or timeout increase. All six exact-head CI checks pass, including unit78. Draft remains unmerged; independent review required.",
           "createdAt": "2026-11-03T04:00:44.105Z",
           "updatedAt": "2026-11-03T04:00:44.105Z"
+        },
+        {
+          "id": "V5tVZQ0I",
+          "author": "sunny",
+          "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
+          "createdAt": "2026-11-03T04:00:48.567Z",
+          "updatedAt": "2026-11-03T04:00:48.567Z"
         }
       ]
     }
