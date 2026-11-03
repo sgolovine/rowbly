@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T04:18:19.450Z",
+  "updatedAt": "2026-11-03T04:22:40.199Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -104,6 +104,16 @@
           "updatedAt": "2026-11-03T02:36:09.049Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:37cf3370-ab5e-459a-b70c-59d9737bbe14",
+        "by": "sunny",
+        "startedAt": "2026-11-03T04:22:40.198Z"
+      }
     }
   }
 }
