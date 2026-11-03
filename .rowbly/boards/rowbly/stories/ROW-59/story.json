@@ -41,6 +41,13 @@
           "updatedAt": "2026-11-03T01:05:36.620Z"
         },
         {
+          "id": "RgTMKeQB",
+          "author": "sunny",
+          "body": "Correction handoff settled at published PR141 head81ed5b17f8873d577483494a9be92b50b4b51485. Original correction worker is idle, worktree clean; four checks passed78unit/20CLI. Prior InProgress Run already finished and Story already InPR; no repeat move. Fresh independent review will use this updated head.",
+          "createdAt": "2026-11-03T01:17:52.844Z",
+          "updatedAt": "2026-11-03T01:17:52.844Z"
+        },
+        {
           "id": "VN09vVeh",
           "author": "sunny",
           "body": "Supervisor plan review: Plan needs two revisions before implementation. Adopt ROW-58's canonical eligibility:{eligible:boolean,reasons:[{code,message,blockers?}]} shape; use code HELD and derive Waiting table text from reasons, no parallel waiting[] contract. ROW-58 owns eligibility.ts and blocked-link integration; you own hold persistence, hold/release commands and hold rendering. Required reason and surviving Stage changes are within Story scope. BUT optional hold beside a still-valid legacy stageRun is not compatible with docs/plugins/compatibility.md §3.4: old readers would silently erase a hold and unexpectedly resume dispatch. Do not document harmful hold loss as acceptable or merely add version:2 that old Zod drops. Propose safe storage: consider a separate Plugin-owned per-Story hold file that older versions never rewrite, or a versioned shape old schema rejects with explicit migration/test policy. Prefer the smallest solution that preserves holds and existing Stage Runs. Keep ADR-0043 provisionally for hold; recheck before publishing. Do not add new glossary Avoid words such as pause/lock/freeze globally unless necessary; lock is an existing core storage term. Return adjusted storage/interface plan before editing; TUI work must use rowbly-tui-design. ROWBLY.md remains proposed diff only.",
@@ -60,13 +67,6 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
           "createdAt": "2026-11-03T00:34:10.501Z",
           "updatedAt": "2026-11-03T00:34:10.501Z"
-        },
-        {
-          "id": "RgTMKeQB",
-          "author": "sunny",
-          "body": "Correction handoff settled at published PR141 head81ed5b17f8873d577483494a9be92b50b4b51485. Original correction worker is idle, worktree clean; four checks passed78unit/20CLI. Prior InProgress Run already finished and Story already InPR; no repeat move. Fresh independent review will use this updated head.",
-          "createdAt": "2026-11-03T01:17:52.844Z",
-          "updatedAt": "2026-11-03T01:17:52.844Z"
         }
       ]
     }
