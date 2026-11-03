@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T04:24:00.268Z",
+  "updatedAt": "2026-11-03T04:29:26.289Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:92b151ad-65f6-4941-9dcb-4bd1d63c0636",
+        "by": "sunny",
+        "startedAt": "2026-11-03T04:23:59.489Z"
+      }
     },
     "comments": {
       "comments": [
@@ -109,18 +119,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "DrZCOq4r",
+          "author": "sunny",
+          "body": "Independent Astra review requests changes at PR145 head e3e2b691a624119696f925c5ef02dfbafb1a700c. Original corrections verified; two remaining launcher uncertainty-classification cases reproduced. Main integration conflicts in skills/rowbly-factory/SKILL.md, unresolved. All six CI checks pass; four screenshot URLs HTTP200 and inspected. Local four-check group did not start because CPU admission returned capacity-waiting75. No implementation or Board edits, push, ready or merge. Full findings, policy amendment and retained evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595466903",
+          "createdAt": "2026-11-03T04:29:26.288Z",
+          "updatedAt": "2026-11-03T04:29:26.288Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:92b151ad-65f6-4941-9dcb-4bd1d63c0636",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:23:59.489Z"
-      }
     }
   }
 }
