@@ -274,6 +274,7 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
         name: 'Signup',
         stage: 'todo',
         stageRun: null,
+        liveness: null,
         runMetadata: { status: 'absent', current: false },
         eligibility: { eligible: true, reasons: [] },
       },

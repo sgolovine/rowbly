@@ -96,6 +96,7 @@ The input and result types are in `CoreOperations` (`src/services/plugins/types.
 | `software-factory.remove` | `{ level, board?, stage }` | `{ removed }` (the Stage key) |
 | `software-factory.start` | `{ key, worker, retry? }` | `{ key, stageRun }` |
 | `software-factory.attach` | `{ key, stage, attempt, startedAt, worker, machine, harness, threadId, source }` | `{ key, stageRun, identity }` |
+| `software-factory.touch` | `{ key, stage, attempt, startedAt, worker, source }` | `{ key, stageRun, heartbeat }` |
 | `software-factory.finish` | `{ key }` | `{ key, stageRun }` |
 | `software-factory.fail` | `{ key, reason? }` | `{ key, stageRun }` |
 | `software-factory.clear` | `{ key }` | `{ cleared }` (the Story Key) |
@@ -190,3 +191,13 @@ and again against pending state after transforms. A conflicting identity is refu
 attestations write nothing. Every start resets recognized metadata to an empty envelope even when
 timestamps repeat. Clear/Stage changes remove recognized metadata, finish/fail retain it, and
 opaque metadata is preserved and reported. See [ADR-0046](../agents/adr/0046-verified-workers-use-current-run-metadata.md).
+
+`software-factory.touch` replaces the current Run's `heartbeat` with `{ worker, at, source, by }`,
+where `at` is the operation clock and `by` is Me, and keeps the other sections. It checks the
+expected `{stage, attempt, startedAt}`, a running Run and an attached identity for `worker` under the
+lock and again against pending state after transforms; otherwise `CONFLICT`, saving nothing. It
+also retains the complete attached identity observed under the lock and compares it after all
+transforms and guards, including machine, harness, thread and verification. Replacing that identity
+while keeping the same worker still refuses the whole operation without writing Story or metadata.
+It never creates an identity, and opaque Run details refuse it with `DATA_INTEGRITY`. It does not
+change the Story's `updatedAt`. See [ADR-0048](../agents/adr/0048-stage-run-heartbeats-are-attested-evidence.md).

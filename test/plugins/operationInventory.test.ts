@@ -15,7 +15,9 @@ import { createEpic, deleteEpic, editEpic, setEpicClosed } from '../../src/plugi
 import { git } from '../../src/plugins/git';
 import { configure } from '../../src/plugins/git/model';
 import { softwareFactory } from '../../src/plugins/software-factory';
+import { touchRun } from '../../src/plugins/software-factory/heartbeat';
 import { holdStory, releaseStory } from '../../src/plugins/software-factory/holds';
+import { runRef } from '../../src/plugins/software-factory/runMetadata';
 import { removeStagePrompt, setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
 import { attachWorker } from '../../src/plugins/software-factory/workerIdentity';
@@ -148,6 +150,11 @@ describe('the operation inventory (ARCH-02)', () => {
       harness: 't3',
       threadId: 'mcp:verified',
       source: 'launch receipt',
+    });
+    await touchRun(factory, 'WEB-1', {
+      ...runRef(firstRun.stageRun),
+      worker: 'mcp:verified',
+      source: 'worker message',
     });
     await endRun(factory, 'WEB-1', { status: 'failed', reason: 'checks failed' });
     await startRun(factory, 'WEB-1', { worker: 'w2', retry: true });

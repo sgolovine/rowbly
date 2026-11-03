@@ -23,6 +23,9 @@ export const WorkerIdentity = z.strictObject({
   verification: z.strictObject({ source: Text, verifiedAt: TimestampSchema, by: SlugSchema.nullable() }),
 });
 export type WorkerIdentity = z.infer<typeof WorkerIdentity>;
+/** Supervisor-attested worker activity for the current Run (ADR-0048 §2). */
+export const Heartbeat = z.strictObject({ worker: Text, at: TimestampSchema, source: Text, by: SlugSchema.nullable() });
+export type Heartbeat = z.infer<typeof Heartbeat>;
 export const RunMetadata = z
   .strictObject({
     version: z.literal(1),
@@ -40,9 +43,7 @@ export const RunMetadata = z
         selectedAt: TimestampSchema,
       })
       .optional(),
-    heartbeat: z
-      .strictObject({ worker: Text, at: TimestampSchema, source: Text, by: SlugSchema.nullable() })
-      .optional(),
+    heartbeat: Heartbeat.optional(),
   })
   .refine((m) => !m.heartbeat || m.heartbeat.worker === m.identity?.worker, {
     message: 'Heartbeat needs the same verified worker identity',
