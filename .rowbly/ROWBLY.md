@@ -145,6 +145,53 @@ Give these to every worker with its brief:
 - **`gh … -q` output** with empty fields shifts whitespace-split fields; join them with `|` and read
   them with `IFS='|'`.
 
+### Waiting for checks
+
+Workers and the supervisor never poll CI with model turns.
+
+- **Supervisor first choice: T3's PR watch.** After a PR is opened (or when an In PR Stage Run
+  starts), the supervisor registers its nonblocking `watch_pull_request`. Process actionable Board
+  work and register all pending PR watches before yielding; T3 wakes it when checks finish,
+  someone comments, or the branch conflicts. Independent diff review may start and
+  finish while CI is pending. Defer only CI-dependent merge processing. Every wake requires a fresh
+  inspection of all current-head conclusions; a comment or conflict wake does not mean checks
+  settled. `unwatch_pull_request` when the PR merges, closes or is handed back.
+- **Delegated review workers do not watch or poll PRs.** They return the head SHA and pending-check
+  state to the supervisor after completing independent diff review and any other work that does
+  not depend on CI; yield only remaining CI-dependent work.
+- **Fallback (no PR watch in the harness): one bounded blocking command**, in the background with the
+  harness's resume-on-exit, never a loop:
+
+  ```bash
+  timeout 30m gh pr checks <n> --watch --fail-fast --interval 30
+  ```
+
+  Every exit code, including 0, is only a wake signal. Read once with
+  `gh pr view <n> --json headRefOid,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision`.
+  Confirm the exact current head matches the head being processed; discard stale results and
+  process the new head if it changed. Inspect the full rollup before any merge:
+  - All passed requires a nonempty rollup with every CheckRun `COMPLETED` and concluded `SUCCESS`,
+    and every StatusContext in state `SUCCESS`; other review and merge gates still apply.
+  - Actual `FAILURE`, `TIMED_OUT` or `ACTION_REQUIRED` conclusions, or StatusContext `FAILURE` or
+    `ERROR`, route to the Stage Prompt's failure/return policy, with the check's name and link.
+    `--fail-fast` may wake before other checks finish; classify actual results, not its exit code.
+  - An empty rollup soon after a push (including "no checks reported") means checks are not yet
+    registered: waiting, not failure. Wait one grace period of about 2 minutes and watch once more,
+    then report waiting or ask.
+  - Unfinished checks or pending StatusContexts, including after exit 124 (the 30-minute timeout),
+    mean waiting: report the head SHA and pending names, never repair solely for a wait timeout and
+    do not repeat a timed-out watch.
+  - `CANCELLED`, `SKIPPED`, `NEUTRAL` and any unrecognized terminal conclusion or state cannot
+    establish all passed. Follow explicit policy or ask for a decision; never infer success from
+    exit 0. An unreadable or unusable PR is separate: report the error and ask.
+- **Do not use `--required`**: `main` has no branch protection, so GitHub reports no required checks.
+  Watch all checks.
+- **Cancellation.** Stopping the factory or moving the Story out of In PR sends the watch a signal
+  (`SIGINT`/`SIGTERM`); leave nothing running. A new push restarts checks: the watch for the old head
+  is stale, so cancel it and start one for the new head.
+- **Timeout.** 30 minutes by default (CI takes about 2 minutes today). A timeout is not a failure:
+  report the head SHA and pending checks and ask rather than watching again.
+
 ### Evidence retention
 
 Keep all existing `plugins/git/merge-evidence/` files and linked `pr-assets/<branch>` branches,
