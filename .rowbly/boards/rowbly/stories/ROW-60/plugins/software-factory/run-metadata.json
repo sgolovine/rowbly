@@ -15,5 +15,11 @@
       "verifiedAt": "2026-11-03T04:34:36.569Z",
       "by": "sunny"
     }
+  },
+  "heartbeat": {
+    "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
+    "at": "2026-11-03T05:07:23.863Z",
+    "source": "Verified SSH T3 assistant activity from mcp:c10f649b-1065-41f0-a173-dbf23695fabf; integration/heartbeat-model preservation and private screenshot daemon ownership; /tmp/rowbly-factory-session/ROW-60-poll.json; SHA256 3b793d3250d07403f202a1ee29e9a1ccfec5bf6d24a98ef709623568d06a07ce,79c1028264a1a62bede3776934038db3525129b859257e8a1bb9b8e40578a324,facd1da3d3557b5aa7ed0f36701bded8e0083d0fa681b366a01161f2496b3c9f",
+    "by": "sunny"
   }
 }
