@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T02:30:29.693Z",
+  "updatedAt": "2026-11-03T02:54:36.884Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:b614fbcf-6df2-4f19-8d1d-5e1081ce19f9",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:30:28.860Z"
+      }
     },
     "comments": {
       "comments": [
@@ -53,18 +63,15 @@
           "body": "Supervisor review: ROW49 plan is approved in principle: shared Plugin-owned per-Story run-metadata.json bound to stage/attempt/startedAt, legacy StageRun bag stays compatible. ROW49 owns common file reader/writer and actual-worker attach; you own selection section and model policy/mutations. Coordinate the exact v1 schema with49 BEFORE editing, then send one proposed interface to supervisor. Identity and selection sections independently optional, so selected provider/model/fallback reason can be recorded for failed launch without identity; same-Run edits preserve the other section. Unsupported/future/unreadable data must never be overwritten; don't create a second audit file or put silently-losable fields into legacy bag. Record actual provider instance/model ids with selection/fallback reason; quota unknown is explicit, no fabricated live-usage source. ADR0047 only if truly separate decision;0046 identity can describe common record. ROW49 rook thread id mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74; communicate through supervisor if T3 tools cannot message it. Return exact minimal schema/commands and policy plan for acceptance.",
           "createdAt": "2026-11-03T00:06:07.504Z",
           "updatedAt": "2026-11-03T00:06:07.504Z"
+        },
+        {
+          "id": "ycVgjvy6",
+          "author": "sunny",
+          "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
+          "createdAt": "2026-11-03T02:54:36.883Z",
+          "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b614fbcf-6df2-4f19-8d1d-5e1081ce19f9",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:30:28.860Z"
-      }
     }
   }
 }
