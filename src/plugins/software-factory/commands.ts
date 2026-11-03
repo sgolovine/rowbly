@@ -1,4 +1,5 @@
 import { type PluginCommands, renderTable, UsageError } from '../../plugin-api';
+import { applyBlock, applyTable } from './reportedCommands';
 import {
   boardOverview,
   type Level,
@@ -239,6 +240,20 @@ export const commands: PluginCommands = (group, cli) => {
     .action((key: string, _opts: unknown, cmd) =>
       cli.run(cmd, async ({ plugin, print }) => {
         print(await clearRun(plugin, key), (r) => `Cleared the Stage Run of ${r.cleared}`);
+      }),
+    );
+
+  group
+    .command('apply <story>')
+    .description("Check a worker's reported rowbly block for its Story, then run the commands it allows")
+    .option('--text <block>', 'the block, or the message holding it')
+    .option('--file <path|->', 'read the block from a file or stdin')
+    .option('--dry-run', 'only check the block and show what each line would do')
+    .action((key: string, opts: { text?: string; file?: string; dryRun?: boolean }, cmd) =>
+      cli.run(cmd, async (env) => {
+        const text = await env.readText({ text: opts.text, file: opts.file }, { name: 'text' });
+        if (text === undefined) throw new UsageError('Give the block with --text or --file');
+        env.print(await applyBlock(env, key, text, !!opts.dryRun), applyTable);
       }),
     );
 };

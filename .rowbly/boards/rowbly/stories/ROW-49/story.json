@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Record verified worker identities on Stage Runs",
   "description": "Factory review recommendation 3 of 20.\n\n## Context\n\nStage Runs are claimed before worker launch and can contain guessed titles rather than real worker identities; ROW-45 exposed a recovery failure.\n\n## Acceptance criteria\n\n- Provide a supported way to attach the actual worker identity after a successful launch.\n- Record enough identity information to find the worker after supervisor restart, including machine and harness thread identity.\n- Reconcile launch failures and document the lifecycle; amend ADR-0040 through a new repository ADR if required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
+  "stage": "in-pr",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,29 +12,43 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.194Z",
-  "updatedAt": "2026-11-03T00:34:13.816Z",
+  "updatedAt": "2026-11-03T01:14:25.857Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
     },
     "software-factory": {
       "stageRun": {
-        "stage": "in-progress",
+        "stage": "in-pr",
         "status": "running",
         "attempt": 1,
-        "worker": "mcp:a0bc5294-869b-4421-b0da-382f7cdf4e74",
+        "worker": "mcp:34851387-1197-4e96-bc14-b2c6fc9dd6b5",
         "by": "sunny",
-        "startedAt": "2026-11-02T23:57:59.376Z"
+        "startedAt": "2026-11-03T01:04:26.541Z"
       }
     },
     "comments": {
       "comments": [
+        {
+          "id": "0OkqDRF8",
+          "author": "sunny",
+          "body": "Supervisor decision: PR139 already landed; integration order is settled. Keep current In PR Stage Run and update the SAME PR143 yourself with this narrow integration correction. This explicitly authorizes the previously prohibited product edits only to merge current origin/main, resolve listed additive conflicts, consolidate equivalent strict RunRef definitions without changing their contract, and fix the two identified documentation nits. Preserve ROW55 stories.move locked/posttransform finished-run guard/options plus ROW49 start/attach/lifecycle guards and strict preservation. If importing RunRef from stageRuns would introduce a dependency cycle because it imports runMetadata, use a small shared Plugin-local schema module and keep dependencies acyclic; do not add a second definition or change public/core APIs. Preserve both ADR0040 amendments and index rows0045/0046, fix table blankline, list runMetadata in the runs JSON sentence. No additional behavior or redesign. Plain merge/normal push, no rebase/force. Revalidate typecheck, lint, unit, CLI and strict unsafe-path/lifecycle/interleaving checks relevant to merged guards; confirm exact-head CI/reviews/screenshots before authorized ready+merge. Existing screenshots can remain if still accurately represent behavior, HTTP200 required. No Board writes. Your malformed/withdrawn example blocks were not executed; final own-Story block must have full rowbly prefixes and comments --body, then FACTORY-DONE ROW-49. If integration reveals actual design ambiguity rather than additive conflicts, return questions. Proceed with the scoped accepted integration plan.",
+          "createdAt": "2026-11-03T01:14:25.856Z",
+          "updatedAt": "2026-11-03T01:14:25.856Z"
+        },
         {
           "id": "5TnDD34T",
           "author": "sunny",
           "body": "Supervisor accepted coordinated plan: Combined v1 interface ACCEPTED, including identity/selection/heartbeat fields from your final proposal and by=plugin.me (no caller --by). Proceed with common module, attach, doctor/output and ADR0046. Incorporate these initialization/lifecycle clarifications: expectedRef is checked against the CURRENT Run under lock and after transforms. Attach may initialize metadata for that Run when absent or replacing positively recognized stale v1; invalid/unsupported bytes refuse unchanged. Touch never initializes missing/stale identity. Provide a fresh-Run creation/reset path for ROW60: recognized stale v1 can be replaced by an empty new envelope, selection written atomically with new Run. A no-selection new start must invalidate positively recognized prior-Run metadata too (or prove equivalent isolation); do not rely solely on millisecond timestamps being unique. Cover clear/endVisit/new-start lifecycle so a frozen clock and repeated stage/attempt/startedAt cannot resurrect old identity/heartbeat. Unknown/future data is preserved and shown unavailable, never implicitly removed. No history or migration machinery. Same-Run writes preserve all other sections' values, attach repeat identical inputs writes nothing including no verification timestamp churn. Identity worker must agree with final current Run after transforms. Include fresh-init/old-ref/no-selection retry, same-ref frozen-clock lifecycle and final-transform guard assertions in existing fixtures, total<=100. ROW60/50 wait for your helpers on main, no duplicate writer or stack. Send them the accepted exact interfaces; all four checks/screenshots/draft PR as planned.",
           "createdAt": "2026-11-03T00:34:13.815Z",
           "updatedAt": "2026-11-03T00:34:13.815Z"
+        },
+        {
+          "id": "BkKQNHTY",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/143 adds verified worker attachment, shared current-Run metadata, lifecycle guards, doctor findings and recovery guidance. Typecheck and lint passed; 78 unit tests and 20 CLI tests passed. Screenshots uploaded and verified. Head 3309e61. CI pending.",
+          "createdAt": "2026-11-03T01:03:04.393Z",
+          "updatedAt": "2026-11-03T01:03:04.393Z"
         },
         {
           "id": "x5XiPkgY",

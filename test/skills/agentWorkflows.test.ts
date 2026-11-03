@@ -1,7 +1,13 @@
 import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { type RunCliResult, runCli, tempRoot } from '../helpers';
+import { builtInPlugins } from '../../src/plugins';
+import { applyBlock } from '../../src/plugins/software-factory/reportedCommands';
+import { clearRun, endRun, startRun } from '../../src/plugins/software-factory/stageRuns';
+import { FIXED_NOW, type RunCliResult, runCli, tempRoot } from '../helpers';
+import { withPlugins } from '../plugins/helpers';
 
 /**
  * Task checks for the agent skill in skills/rowbly: each test runs a documented workflow from its
@@ -151,7 +157,7 @@ describe('rowbly skill: references/stories.md', () => {
 
 describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
   it('turns Plugins on and uses Epics, Specs and Comments as documented', async () => {
-    const { rowbly, json } = await project();
+    const { tmp, rowbly, json } = await project();
     const off = await rowbly('epics', 'list');
     expect(off.exitCode).toBe(2);
     expect(off.stderr).toContain('rowbly plugins enable epics');
@@ -253,6 +259,77 @@ describe('rowbly skill: references/plugins.md and plugin-*.md', () => {
       reasons: [],
     });
     await json('software-factory', 'run', 'start', worked.key, '--worker', 'w3');
+
+    // A worker's reported block: a line that writes another Story refuses all of it; a move waits for `run finish`.
+    const block = (...lines: string[]) => ['```rowbly', ...lines, '```'].join('\n');
+    const own = `rowbly comments add ${worked.key} --body 'PR opened'`;
+    const move = `rowbly stories move ${worked.key} done`;
+    const storyJson = (key: string) => readFile(join(tmp.path, `boards/web/stories/${key}/story.json`), 'utf8');
+    const blocker = await storyJson(story.key);
+    const refusedBlock = jsonError(
+      await rowbly(
+        'software-factory',
+        'apply',
+        worked.key,
+        '--text',
+        block(
+          own,
+          `rowbly stories move ${story.key} todo`,
+          `rowbly story-linking remove ${worked.key} --blocked-by=${story.key}`,
+        ),
+        '--json',
+      ),
+    );
+    expect(refusedBlock.code).toBe('USAGE');
+    expect((refusedBlock.details.commands as { decision: string }[]).map((c) => c.decision)).toEqual([
+      'apply',
+      'reject',
+      'reject',
+    ]);
+    expect(await json('comments', 'list', worked.key)).toEqual([]);
+    expect(await storyJson(story.key)).toBe(blocker);
+    const applied = await json('software-factory', 'apply', worked.key, '--text', block(move, own));
+    expect(applied.commands.map((c: { line: number; decision: string }) => [c.line, c.decision])).toEqual([
+      [3, 'apply'],
+      [2, 'hold'],
+    ]);
+    await json('software-factory', 'run', 'finish', worked.key);
+
+    // The Stage Run is replaced between the block's Comment and its move: the move's own operation refuses it.
+    const { services } = await withPlugins(tmp, builtInPlugins);
+    const sf = services.plugins.context('software-factory');
+    let replaced = '';
+    const runCommand = async (argv: readonly string[]) => {
+      if (argv[1] === 'move') {
+        await json('software-factory', 'run', 'clear', worked.key);
+        await json('software-factory', 'run', 'start', worked.key, '--worker', 'w4');
+        replaced = await storyJson(worked.key);
+      }
+      const result = await rowbly(...argv, '--json');
+      return { exitCode: result.exitCode, output: JSON.parse(result.exitCode ? result.stderr : result.stdout) };
+    };
+    await expect(applyBlock({ plugin: sf, runCommand }, worked.key, block(own, move), false)).rejects.toMatchObject({
+      code: 'CONFLICT',
+    });
+    expect(await storyJson(worked.key)).toBe(replaced);
+    // A Run with the same start but another attempt or Stage is not the Run a move names.
+    await clearRun(sf, worked.key);
+    await startRun(sf, worked.key, { worker: 'w5' });
+    await endRun(sf, worked.key, { status: 'failed' });
+    await startRun(sf, worked.key, { worker: 'w5', retry: true });
+    await endRun(sf, worked.key, { status: 'finished' });
+    const sameClock = await storyJson(worked.key);
+    for (const ref of [`todo/1/${FIXED_NOW}`, `in-progress/2/${FIXED_NOW}`])
+      expect(jsonError(await rowbly('stories', 'move', worked.key, 'done', '--finished-run', ref, '--json')).code).toBe(
+        'CONFLICT',
+      );
+    expect(await storyJson(worked.key)).toBe(sameClock);
+
+    const finalMove = await json('software-factory', 'apply', worked.key, '--text', move);
+    expect(finalMove.commands[0].argv.slice(-2)).toEqual(['--finished-run', `todo/2/${FIXED_NOW}`]);
+    const moved = await json('stories', 'show', worked.key);
+    expect([moved.stage, moved.plugins['software-factory']]).toEqual(['done', undefined]);
+    expect(await json('comments', 'list', worked.key)).toHaveLength(2);
 
     expect((await rowbly('plugins', 'disable', 'comments')).exitCode).toBe(0);
     expect((await json('stories', 'show', story.key)).plugins.comments.comments).toHaveLength(1);

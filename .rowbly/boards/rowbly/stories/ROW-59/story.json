@@ -4,18 +4,28 @@
   "boardId": "rowbly",
   "name": "Allow people to hold Stories out of automatic dispatch",
   "description": "Factory review recommendation 13 of 20.\n\n## Context\n\nEvery Story entering an enabled Stage is currently eligible for dispatch, including work a person wants to handle manually.\n\n## Acceptance criteria\n\n- Define an explicit hold mechanism for individual Stories.\n- Exclude held Stories from automatic dispatch and show why they are held.\n- Allow releasing the hold to restore normal eligibility without losing Story or Stage Run context.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a8",
+  "stage": "in-progress",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T00:42:51.716Z",
+  "updatedAt": "2026-11-03T01:05:36.621Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:f87fcc42-635b-4fa9-9681-87e52bd3c4b2",
+        "by": "sunny",
+        "startedAt": "2026-11-03T01:01:37.423Z"
+      }
     },
     "comments": {
       "comments": [
@@ -27,11 +37,25 @@
           "updatedAt": "2026-11-02T23:48:23.067Z"
         },
         {
+          "id": "FEkuDjkl",
+          "author": "sunny",
+          "body": "Supervisor: correction plan ACCEPTED. Implement the scoped strict Hold schema and shared owned-read helper, preserve absent-file semantics (no hold), map unreadable/unsafe stored paths to DATA_INTEGRITY6 without following symlinks, and preserve unknown fields/future versions/link/target/Story bytes. Extend the existing hold test step to cover both hold and release refusal for unknown-field and symlink cases, doctor finding and fail-closed eligibility; suite remains98. Keep combined HELD/BLOCKED, full eligibility digest, Stage Run schema and current main features. Fetch/merge main before final checks; current143 shared helpers review is independent and does not authorize changing its contract. Recheck ADR0043 reservation. All four checks, manual built-CLI reproduction, required agentic-tui screenshots/HTTP200 and same draftPR141 ordinary push HEAD:factory/row-59. No Board edits or merge. Proceed.",
+          "createdAt": "2026-11-03T01:05:36.620Z",
+          "updatedAt": "2026-11-03T01:05:36.620Z"
+        },
+        {
           "id": "VN09vVeh",
           "author": "sunny",
           "body": "Supervisor plan review: Plan needs two revisions before implementation. Adopt ROW-58's canonical eligibility:{eligible:boolean,reasons:[{code,message,blockers?}]} shape; use code HELD and derive Waiting table text from reasons, no parallel waiting[] contract. ROW-58 owns eligibility.ts and blocked-link integration; you own hold persistence, hold/release commands and hold rendering. Required reason and surviving Stage changes are within Story scope. BUT optional hold beside a still-valid legacy stageRun is not compatible with docs/plugins/compatibility.md §3.4: old readers would silently erase a hold and unexpectedly resume dispatch. Do not document harmful hold loss as acceptable or merely add version:2 that old Zod drops. Propose safe storage: consider a separate Plugin-owned per-Story hold file that older versions never rewrite, or a versioned shape old schema rejects with explicit migration/test policy. Prefer the smallest solution that preserves holds and existing Stage Runs. Keep ADR-0043 provisionally for hold; recheck before publishing. Do not add new glossary Avoid words such as pause/lock/freeze globally unless necessary; lock is an existing core storage term. Return adjusted storage/interface plan before editing; TUI work must use rowbly-tui-design. ROWBLY.md remains proposed diff only.",
           "createdAt": "2026-11-02T23:41:13.205Z",
           "updatedAt": "2026-11-02T23:41:13.205Z"
+        },
+        {
+          "id": "nGgg0QmV",
+          "author": "sunny",
+          "body": "PR141 verification at clean head 3c71a546cc53d5f130edf2b30510f1da52c8e176 found merge blockers. Current main conflicts in src/plugins/software-factory/commands.ts and docs/plugins/built-in.md. Reproduction: add futureState to an otherwise valid v1 hold.json; doctor reports nothing and release exits 0 deleting unknown bytes. Symlink hold.json to a valid external file; hold and release exit 2 VALIDATION instead of documented DATA_INTEGRITY exit 6, while eligibility remains held and bytes remain unchanged. Fresh correction worker must continue PR141: integrate main preserving combined HELD/BLOCKED behavior; strictly refuse unknown v1 fields; return DATA_INTEGRITY exit 6 for unreadable or unsafe stored hold paths without following symlinks; retain doctor reporting and add byte-preservation regressions. Preserve StageRun schema and Run context. Verification passed typecheck, lint, unit78, CLI20, six GitHub checks and four screenshot HTTP200 checks. No product edits, pushes or merge from verification.",
+          "createdAt": "2026-11-03T00:59:57.018Z",
+          "updatedAt": "2026-11-03T00:59:57.018Z"
         },
         {
           "id": "tuDIKQR5",
@@ -41,16 +65,6 @@
           "updatedAt": "2026-11-03T00:34:10.501Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:bd319bbc-6c1c-429f-b760-b070d2cfb7d1",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:42:51.715Z"
-      }
     }
   }
 }

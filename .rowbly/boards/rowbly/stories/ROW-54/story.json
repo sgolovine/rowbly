@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Script and verify remote factory worker launches",
   "description": "Factory review recommendation 8 of 20.\n\n## Context\n\nThe rook launcher-thread protocol repeatedly relies on agents reconstructing fragile shell and harness steps.\n\n## Acceptance criteria\n\n- Provide a launcher script that transfers the brief, starts the worker and verifies its actual identity.\n- Check whether launch succeeded before retrying after an ambiguous response to avoid duplicate workers.\n- Return a compact structured result and keep reusable skill assets self-contained; isolate rook-specific settings in repository configuration.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a7",
+  "stage": "done",
+  "rank": "b00",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.416Z",
-  "updatedAt": "2026-11-03T00:42:46.427Z",
+  "updatedAt": "2026-11-03T00:59:53.607Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -32,18 +32,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/137. Adds skills/rowbly-factory/scripts/launch-worker.mjs, assets/launcher.md and references/remote-launch.md. The script copies the brief to a T3 server, starts the worker through a reusable launcher thread and checks the result itself: one thread for the request, the requested provider, model and options, full-access in the project folder, and the brief as its first message. Each request (host, project and title, tied to its brief and model) has a receipt saved before the launch is sent, and reruns also check the launcher's earlier answers. So a rerun reuses the verified thread or refuses (conflict for an archived thread, unknown when the outcome can't be confirmed) and never starts a second worker; only a new title starts one. send delivers GO to a parked worker at most once. The live test on rook passed, and the real rerun of the archived test started 0 threads. The rook settings are proposed as ROWBLY.md text in the PR and are not committed. typecheck, lint, test:unit and test:cli all pass.",
           "createdAt": "2026-11-03T00:34:08.492Z",
           "updatedAt": "2026-11-03T00:34:08.492Z"
+        },
+        {
+          "id": "h0Dg4Fyh",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/137. Merge commit 91a693a. Verified head 49fc401 (fast-forwarded from the cached 4408a07). All six GitHub checks passed, no reviews, both screenshot URLs returned HTTP 200. Local typecheck, lint, test:unit (78) and test:cli (20) passed. A read-only run over SSH from thinkpad to rook returned conflict for the archived test thread with 0 new threads, no launcher turn and no brief copied. Main CI for the merge commit was not yet registered at the worker's final check.",
+          "createdAt": "2026-11-03T00:59:52.838Z",
+          "updatedAt": "2026-11-03T00:59:52.838Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:dc4262bb-ca53-49ed-ad41-b8781f4d1c64",
-        "by": "sunny",
-        "startedAt": "2026-11-03T00:42:46.426Z"
-      }
     }
   }
 }

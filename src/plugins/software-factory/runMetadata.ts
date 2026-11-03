@@ -10,16 +10,11 @@ import {
   TimestampSchema,
   z,
 } from '../../plugin-api';
+import { RunRef } from './runRef';
 import { currentRun, type StageRun, StageRunBag } from './stageRuns';
 
 export const RUN_METADATA_FILE = 'run-metadata.json';
 const Text = z.string().trim().min(1);
-export const RunRef = z.strictObject({
-  stage: SlugSchema,
-  attempt: z.number().int().min(1),
-  startedAt: TimestampSchema,
-});
-export type RunRef = z.infer<typeof RunRef>;
 export const WorkerIdentity = z.strictObject({
   worker: Text,
   machine: Text,

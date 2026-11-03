@@ -3,7 +3,7 @@ import { commands } from './commands';
 import { doctor } from './doctor';
 import { metadataOutput, readRunMetadata } from './runMetadata';
 import { PLUGIN_ID, Settings } from './stagePrompts';
-import { currentRun, endVisit, runText, StageRunBag } from './stageRuns';
+import { currentRun, endVisit, guardFinishedRun, MoveInput, parseRunRef, runText, StageRunBag } from './stageRuns';
 import { guardAttachedWorker, guardStartedRun } from './workerIdentity';
 
 export const softwareFactory = definePlugin({
@@ -13,10 +13,26 @@ export const softwareFactory = definePlugin({
   settings: Settings,
   bags: { story: StageRunBag },
   commands,
+  inputs: { 'stories.move': MoveInput },
+  options: {
+    'stories move': {
+      options: [
+        {
+          flags: '--finished-run <stage/attempt/startedAt>',
+          description: "move only while this is the visit's finished Stage Run",
+        },
+      ],
+      input: ({ finishedRun }) =>
+        finishedRun === undefined ? undefined : { finishedRun: parseRunRef(String(finishedRun)) },
+    },
+  },
   hooks: {
     'software-factory.start': { guard: ({ plugin, changes, result }) => guardStartedRun(plugin, changes, result) },
     'software-factory.attach': { guard: ({ plugin, changes, result }) => guardAttachedWorker(plugin, changes, result) },
-    'stories.move': { transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin) },
+    'stories.move': {
+      transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin),
+      guard: ({ changes, result, pluginInput, plugin }) => guardFinishedRun(changes, result.key, pluginInput, plugin),
+    },
     'stories.update': { transform: ({ changes, result, plugin }) => endVisit(changes, result.key, plugin) },
   },
   async storyRows(story, plugin) {

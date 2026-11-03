@@ -8,7 +8,8 @@ import {
   UsageError,
   z,
 } from '../../plugin-api';
-import { RunRef, requireRunMetadata, requireRunRef, runRef, WorkerIdentity, writeRunMetadata } from './runMetadata';
+import { requireRunMetadata, requireRunRef, runRef, WorkerIdentity, writeRunMetadata } from './runMetadata';
+import { RunRef } from './runRef';
 import { type StageRun, StageRunBag } from './stageRuns';
 
 export const AttachWorker = z.strictObject({

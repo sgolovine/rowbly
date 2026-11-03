@@ -1,20 +1,26 @@
 import {
   type Bagged,
+  type ChangeSetView,
   ConflictError,
+  type DeepReadonly,
+  type GuardResult,
   NotFoundError,
   type PluginChangeSet,
   type PluginCommandEnv,
   type PluginContext,
+  type PluginHookContext,
   type PluginReadContext,
   SlugSchema,
   type Story,
   TimestampSchema,
   toTimestamp,
   UsageError,
+  ValidationError,
   z,
 } from '../../plugin-api';
 import { type Eligibility, storyEligibility } from './eligibility';
 import { endRunMetadata, freshRunMetadata, metadataOutput, readRunMetadata } from './runMetadata';
+import { RunRef } from './runRef';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -53,6 +59,45 @@ export async function endVisit(changes: PluginChangeSet, key: string, plugin: Pl
   if (plugin.inspectBag(change.after, StageRunBag).kind === 'valid')
     await changes.updateStory(key, (story) => plugin.writeBag(story, undefined));
   await endRunMetadata(changes, key);
+}
+
+/** This Plugin's input of `stories.move`: move only while `finishedRun` is the visit's finished Stage Run. */
+export const MoveInput = z.strictObject({ finishedRun: RunRef });
+
+/** A Stage Run reference as `--finished-run` takes it: `<stage>/<attempt>/<startedAt>`. */
+export function formatRunRef(run: RunRef): string {
+  return `${run.stage}/${run.attempt}/${run.startedAt}`;
+}
+
+export function parseRunRef(text: string): RunRef {
+  const match = /^([^/]+)\/(\d+)\/([^/]+)$/.exec(text);
+  const parsed = match && RunRef.safeParse({ stage: match[1], attempt: Number(match[2]), startedAt: match[3] });
+  if (!parsed?.success)
+    throw new ValidationError(`--finished-run "${text}" is not <stage>/<attempt>/<startedAt> of a Stage Run`);
+  return parsed.data;
+}
+
+/**
+ * The `stories.move` guard for `--finished-run` (ADR-0045 §2). It runs after every transform and
+ * reads the Story as stored when the move took the Data Root lock, so a Stage Run cleared, replaced or
+ * started again since `apply` planned the move refuses it, and nothing is saved.
+ */
+export async function guardFinishedRun(
+  changes: ChangeSetView,
+  key: string,
+  input: DeepReadonly<{ finishedRun: RunRef }> | undefined,
+  plugin: PluginHookContext,
+): Promise<GuardResult> {
+  if (!input) return undefined;
+  const stored = changes.story(key)?.before ?? (await plugin.services.stories.get(key));
+  const run = currentRun(plugin, stored);
+  const want = input.finishedRun;
+  if (run?.status === 'finished' && formatRunRef(run) === formatRunRef(want)) return undefined;
+  return {
+    reject: `${stored.key} was not moved: its Stage Run ${formatRunRef(want)} is not this visit's finished Stage Run (now ${
+      run ? `${formatRunRef(run)}, ${run.status}` : 'none'
+    })`,
+  };
 }
 
 /** The latest Story `key`: as this operation left it, else as stored. */

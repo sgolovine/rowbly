@@ -9,7 +9,7 @@ import {
   type PluginHost,
   pluginServices,
 } from '../../services';
-import { editTextInEditor, waitForDataRoot } from '../../storage';
+import { editTextInEditor, runChildCommand, waitForDataRoot } from '../../storage';
 import {
   type AttachedPluginOptions,
   boardFlag,
@@ -178,6 +178,7 @@ function pluginCli(id: string): PluginCli<unknown> {
             readText: (flags, opts) => readLongText(flags, opts),
             editText: (initial) => editTextInEditor(initial),
             resolveBoard: (flag) => services.context.resolveBoard(boardFlag({ board: flag })),
+            runCommand: (argv) => runChildCommand(ctx.root.path, argv),
             waitFor: (check, opts) =>
               waitForDataRoot(ctx.root, check, {
                 signal: opts?.signal,

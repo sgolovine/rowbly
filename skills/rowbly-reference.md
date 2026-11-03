@@ -287,12 +287,19 @@ rowbly software-factory run start WEB-42 --worker <name> [--retry] --json --no-p
 rowbly software-factory run attach WEB-42 --stage <stage> --attempt <n> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<receipt>" --json --no-prompt
 rowbly software-factory run finish|clear WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
+rowbly software-factory apply WEB-42 --file block.md [--dry-run] --json --no-prompt   # {key, stageRun, dryRun, commands: [{line, text, argv, decision: apply|hold|drop|reject, reason?, exitCode?, output?}]}
 ```
 
 Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path inside the Plugin folder,
 file exists). `SOFTWARE_FACTORY_MISSING_PROMPT` (doctor warning) is one that is on without its file.
 A Stage Run (`{stage, status: running|finished|failed, attempt, worker, by, startedAt, finishedAt?,
 reason?}`) is one agent's work on a Story's current visit to a Stage; a Stage change removes it.
+`apply` checks a worker's reported `rowbly` block for that Story only, without a shell: any
+rejected line (another Story, `--blocked-by`, shell syntax, `software-factory`, `--data-root`,
+`--yes`, `--*-file`, `--finished-run`) refuses the whole block with exit 2. A move runs only after
+`run finish` (held while running, dropped after `run fail`), as `stories move … --finished-run
+<stage>/<attempt>/<startedAt>`, which exits 4 if that Run was cleared or replaced meanwhile. Each
+allowed line runs as its own command; the first failure stops the block.
 
 Factory `eligibility` is `{eligible, reasons:[{code,message,blockers?}]}`, separate from Stage Runs.
 With Story Linking on, unfinished blockers give `BLOCKED` and `blockers:[{key,name,stage}]`.
