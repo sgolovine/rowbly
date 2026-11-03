@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T04:55:24.676Z",
+  "updatedAt": "2026-11-03T04:57:05.926Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -130,6 +130,13 @@
           "body": "Corrected existing draft PR https://github.com/sgolovine/rowbly/pull/147 at head d5054f35b9237774e7fc682d7e74f9e7284b57d6. Finding 1: worker brief, skill, user guide and outside-DataRoot proposals explicitly permit independent diff review to start and finish during pending CI; yield only remaining CI-dependent work. Finding 2: every watch exit is only a wake signal; inspect all actual current-head conclusions before merging. Cancelled, skipped, neutral and unknown terminal results require explicit policy or decision. Actual failures, pending checks, absent registration, timeouts and unreadable PRs remain distinct. Preserved generated-brief guidance and ROW47 review/approval and ROW48 failure/return ownership. Proposals updated only in /tmp/row-57-proposals.md, not applied. Typecheck PASS; lint PASS; unit 78 PASS; CLI 20 PASS. CI pending at handoff: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest). No merge or authored Data Root changes.",
           "createdAt": "2026-11-03T03:35:10.144Z",
           "updatedAt": "2026-11-03T03:35:10.144Z"
+        },
+        {
+          "id": "LEC9NR0o",
+          "author": "sunny",
+          "body": "Supervisor applied exact reviewed wait-policy configuration after merge147: replaced only InPR step2, preserved steps3-7 review/merge/return gates; added Waiting for checks guide subsection with accepted clarification that watch registration is nonblocking and all actionable Board work plus pending watches precede yielding. Full current-head conclusion classification, bounded fallback, cancellation/timeout waiting semantics, no --required retained. Guide commit94d05626. Supervisor typecheckPASS, lintPASS, unit78PASS, CLI21PASS, doctorclean. Postmerge147 mainCI41580762112 SUCCESS; postmerge149 mainCI41579099832 SUCCESS. No product edits or resource/evidence removal.",
+          "createdAt": "2026-11-03T04:57:05.925Z",
+          "updatedAt": "2026-11-03T04:57:05.925Z"
         }
       ]
     }
