@@ -64,6 +64,11 @@ export const faulty = definePlugin({
         throw new Error('kaboom');
       },
     },
+    'software-factory.hold': {
+      transform() {
+        throw new Error('kaboom');
+      },
+    },
   },
 });
 
