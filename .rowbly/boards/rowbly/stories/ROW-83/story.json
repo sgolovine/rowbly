@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-83",
+  "boardId": "rowbly",
+  "name": "Scroll up/down with mouse wheel in list view.",
+  "description": "- When viewing stories in list view, a user should be able to scroll up/down just the same way they do when scrolling a column in board view.",
+  "stage": "backlog",
+  "rank": "a0",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T23:17:19.754Z",
+  "updatedAt": "2026-11-03T23:17:19.757Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aWYGcHJSQ",
+          "name": "image-20261103-2316.png",
+          "type": "image/png",
+          "size": 454567,
+          "createdAt": "2026-11-03T23:17:19.756Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
