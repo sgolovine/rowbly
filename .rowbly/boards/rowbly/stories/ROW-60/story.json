@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T00:34:14.460Z",
+  "updatedAt": "2026-11-03T02:03:07.460Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -29,6 +29,13 @@
     },
     "comments": {
       "comments": [
+        {
+          "id": "L4uotwPp",
+          "author": "sunny",
+          "body": "PR143 is merged as bb120a6 and main CI passed; ROW49 is Done. Resume the SAME In Progress Run/branch factory/row-60: fetch and merge current origin/main, use merged shared run-details helpers for selection and no stack/temporary writer. Existing accepted plan and exact schema remain in force; selected identity is planned before launch, actual receipt compared without rewriting intent, reserved worker -> actual id/run start with planned selection -> receipt compare -> verified identity attach -> publish -> GO. Preserve ROW55 locked move guard and existing identity/heartbeat sections. Selection uses ADR0046 (not0047);0047 user-approved ROW53 guide exception,0048 heartbeat,0049 updater. All four checks/manual selection/retry/proxy-independent launch verification/docs/agentic-tui evidence before draft PR. No Board writes.",
+          "createdAt": "2026-11-03T02:03:07.459Z",
+          "updatedAt": "2026-11-03T02:03:07.459Z"
+        },
         {
           "id": "nZ6S9GVX",
           "author": "sunny",

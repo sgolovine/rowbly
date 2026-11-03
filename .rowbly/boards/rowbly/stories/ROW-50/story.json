@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T00:34:15.085Z",
+  "updatedAt": "2026-11-03T02:03:06.562Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -35,6 +35,13 @@
           "body": "Supervisor accepted coordinated plan: Plan ACCEPTED with refinements: use shared approved v1 heartbeat {worker,at,source,by}, by=plugin.me; REMOVE caller --by. Missing/mismatched identity or Run=>CONFLICT with no write; invalid/future metadata=>DATA_INTEGRITY. Use source attestation, not a self-reported health proof. 15-minute configurable stale threshold accepted; no automatic clear/fail/retry from age. Being merely alive is not enough to touch after restart: require verified worker activity/harness evidence; waiting-user/ambiguous state stays explicit without invented progress. Stable digest excludes derived ageSeconds and any clock-formatted strings but retains stable fields and semantic stale transition. Verify repeated reads/fallback before/after threshold: no repeated wakeups, one actual transition; keep other sections unchanged. Sequence: prepare independent ADR/docs/liveness work now; wait for ROW49 helpers and PR138/142 to land before integrating dependent code, NO stack/duplicate writer. ADR0048 reserved. ROW64 tab has existing 30s timer; reuse it. Extend existing race/refusal/preservation checks and keep suite<=100. All four checks and screenshots. ROW56 is LOCAL thread d92d9b9f...; I will relay digest note.",
           "createdAt": "2026-11-03T00:34:15.084Z",
           "updatedAt": "2026-11-03T00:34:15.084Z"
+        },
+        {
+          "id": "qaVoVFx0",
+          "author": "sunny",
+          "body": "PR143 is merged as bb120a6 and main CI passed; ROW49 is Done. Your accepted shared run-details helpers are now on main. Resume the SAME In Progress Run/branch factory/row-50: fetch and merge current origin/main before touch/heartbeat integration, no stack or temporary writer. Preserve the accepted identity/selection/heartbeat and full RunRef contracts, ROW55 locked move guard and existing wait semantics; use shared helper rather than duplicating persistence. Verified worker activity only, no heartbeat from mere polling/status. Existing accepted plan remains in force. Recheck ADR0048, all four checks, stable digest and stale transition/atomicity scenarios and agentic-tui evidence before draft PR. No Board writes.",
+          "createdAt": "2026-11-03T02:03:06.561Z",
+          "updatedAt": "2026-11-03T02:03:06.561Z"
         }
       ]
     }

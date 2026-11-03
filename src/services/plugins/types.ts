@@ -575,6 +575,14 @@ export interface PluginCommandEnv<S> {
   /** `--board`, then `ROWBLY_BOARD`, then the context (contracts §4). */
   resolveBoard(flag?: string): Promise<Slug>;
   /**
+   * Runs one Rowbly command, `argv` without `rowbly`, as a child process on this Data Root with
+   * `--json --no-prompt`, and returns its exit code and JSON output (ADR-0045 §3). No shell is used.
+   * `argv` may not give `--data-root`, `--json`, `--yes`, `--prompt`, `--help` or short options, and a
+   * command run this way cannot run commands itself. Call it outside any operation: the child locks
+   * the Data Root for its own.
+   */
+  runCommand(argv: readonly string[]): Promise<{ exitCode: number; output: unknown }>;
+  /**
    * Waits for the Data Root to reach a state: runs `check` now, again after each change to the Data
    * Root by any process, and every minute in case a change went unseen, and resolves with its first
    * result that is not `undefined`; with `undefined` once `signal` aborts. Checks never overlap, and a

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-69",
+  "boardId": "rowbly",
+  "name": "Add Github Plugin",
+  "description": "Add a github plugin. This plugin will link a github PR to a story\n\n- Stories will contain a \"Github PR\" field when plugin is enabled.\n- Update rowbly factory and dev skills so they update this wheneer a PR for a story is opened.\n- Use the `gh` cli to periodically fetch the status of a PR.",
+  "stage": "in-progress",
+  "rank": "a8",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T02:02:22.004Z",
+  "updatedAt": "2026-11-03T02:03:02.726Z"
+}

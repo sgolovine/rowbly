@@ -48,7 +48,7 @@
   },
   "overrides": [
     {
-      "includes": ["src/storage/**", "test/**"],
+      "includes": ["src/storage/**", "test/**", "skills/rowbly-factory/scripts/**"],
       "linter": { "rules": { "style": { "noRestrictedImports": "off" } } }
     }
   ],
