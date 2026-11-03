@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T04:00:38.139Z",
+  "updatedAt": "2026-11-03T04:06:30.443Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -67,6 +67,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/150 . Completed A2 deletion-intent correction, ADR-0050 retention policy and coherent supervisor-event sync batching while preserving publication barriers and frequency change. A1 remains held. Typecheck, lint, 78 unit tests, 20 CLI tests and build passed; uploaded CLI screenshot verified HTTP 200. All existing evidence and pr-assets preserved. Supervisor-owned ROWBLY.md patch is in PR comment https://github.com/sgolovine/rowbly/pull/150#issuecomment-6594504587 for application on main. Branch factory/row-65 pushed at 96e6bc5e7c365a183a3134115423ef762cc61e86; CI queued.",
           "createdAt": "2026-11-03T03:22:55.460Z",
           "updatedAt": "2026-11-03T03:22:55.460Z"
+        },
+        {
+          "id": "603n0LB0",
+          "author": "sunny",
+          "body": "Supervisor applied the exact Astra-reviewed /tmp/row65-reviewed-supervisor.patch to .rowbly/ROWBLY.md: coherent-event sync barriers, publish-before-GO/dependent-reply, frequency change retained, conflict provenance investigation, and explicit evidence/pr-assets retention. A1 remains held and no evidence/settings/resources removed. Doctor clean; root typecheck, lint, unit and CLI checks all passed on the guide change. This is the authorized supervisor-only policy application after PR150 merge.",
+          "createdAt": "2026-11-03T04:06:30.442Z",
+          "updatedAt": "2026-11-03T04:06:30.442Z"
         }
       ]
     }
