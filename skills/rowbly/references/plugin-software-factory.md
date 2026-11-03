@@ -32,10 +32,11 @@ rowbly software-factory prompt disable todo --board web --json --no-prompt # kee
 rowbly software-factory prompt remove todo --board web --yes --json --no-prompt  # entry and file, this level only
 
 # Stage Runs
-rowbly software-factory runs --board web --json --no-prompt          # Stories in Stages whose Stage Prompt is on
-rowbly software-factory wait --board web --since <digest> --timeout 600 --json --no-prompt   # blocks until runs change
+rowbly software-factory runs --board web [--stale-after 15] --json --no-prompt   # Stories in Stages whose Stage Prompt is on
+rowbly software-factory wait --board web --since <digest> --timeout 600 [--stale-after 15] --json --no-prompt   # blocks until runs change
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --json --no-prompt
 rowbly software-factory run attach WEB-42 --stage todo --attempt 1 --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source "<launch receipt>" --json --no-prompt
+rowbly software-factory run touch WEB-42 --stage todo --attempt 1 --started-at <timestamp> --worker <id> --source "<verified activity>" --json --no-prompt
 rowbly software-factory run finish WEB-42 --json --no-prompt
 rowbly software-factory run fail WEB-42 --reason "checks failed" --json --no-prompt
 rowbly software-factory run start WEB-42 --worker "WEB-42 worker" --retry --json --no-prompt   # a failed one, next attempt
@@ -58,9 +59,9 @@ rowbly software-factory apply WEB-42 --file block.md --json --no-prompt
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, runMetadata, eligibility }], digest }`, where
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, liveness, runMetadata, eligibility }], staleAfterMinutes, digest }`, where
 `stages` are the Stages whose Stage Prompt is on, `stageRun` is `null` for a Story nobody works in
-this visit, and `digest` changes whenever `stages` or `stories` do. `wait` blocks until `runs`
+this visit, and `digest` changes whenever `stages` or `stories` do, except for each Run's age. `wait` blocks until `runs`
 differs from `--since <digest>` (without it, from when it starts) and returns `runs` with
 `changed: true`: a Story entered or left a Stage whose Stage Prompt is on, a Stage Prompt was turned
 on or off, a Stage Run started, ended or was cleared, or eligibility changed. A stale `--since`
@@ -155,7 +156,7 @@ Unknown fields/versions and unreadable bytes are kept unchanged and unavailable.
 preserve other sections' JSON values. Every new start/retry resets recognized metadata even when
 timestamps repeat; clear and Stage changes remove recognized metadata, finish/fail keep it. A
 start refuses opaque metadata until explicit repair. Older releases keep the file but cannot
-maintain its verified lifecycle. Selection and heartbeat mutation commands are planned separately.
+maintain its verified lifecycle. A selection command is planned separately.
 
 After restart, resolve `identity.threadId` through `identity.harness` on `identity.machine`.
 A title or legacy worker string is only a hint; do not assume a remote ID is local, or that an
@@ -163,6 +164,24 @@ unreachable worker is absent. A confirmed launch failure ends the Run with `run 
 Uncertain launch, attachment or publication needs reconciliation before GO, clearing or retrying.
 Capture the old metadata in retry context before a retry replaces it. No age implies permission to
 clear, retry or end a Run.
+
+## Heartbeats and stale Runs
+
+`run touch` saves the current Run's `heartbeat: {worker, at, source, by}`. Run it only when you
+verified the attached worker's activity: a message from it or an event from its harness, named in
+`--source`. Polling, a reachable worker or a harness status is not activity. It needs the current
+running Run (exact stage/attempt/startedAt) and an attached identity for `--worker`, else exit 4
+(`CONFLICT`) with nothing written; opaque Run details exit 6. It keeps identity and selection.
+
+Running rows of `runs` have `liveness: {lastSeenAt, heartbeat: reported|none|unavailable,
+ageSeconds, stale}`; others `null`. With no heartbeat, `lastSeenAt` is `null` and the age counts
+from `startedAt`. `stale` is age >= `--stale-after` minutes (default 15); pass the same value to
+`runs` and `wait`. The digest omits `ageSeconds`: it changes on a saved heartbeat and once when a Run
+becomes stale (seen by `wait` within a minute), never on time alone.
+
+A stale Run is a reason to check the worker, never to clear, fail, retry or start another worker.
+Check it through its recorded identity: touch on new verified activity; `run fail --reason` when it
+is verifiably gone; otherwise report it to the user. A worker waiting for a person stays as it is.
 
 ## Doctor
 

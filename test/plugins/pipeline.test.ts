@@ -2,12 +2,13 @@ import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ConflictError, PluginError } from '../../src/core';
-import { definePlugin, type PluginChangeSet, readBinaryInput } from '../../src/plugin-api';
+import { definePlugin, type PluginChangeSet, type PluginHookContext, readBinaryInput } from '../../src/plugin-api';
 import { attachments } from '../../src/plugins/attachments';
 import { addAttachment, listAttachments, removeAttachment } from '../../src/plugins/attachments/attachments';
 import { comments } from '../../src/plugins/comments';
 import { editComment } from '../../src/plugins/comments/comments';
 import { softwareFactory } from '../../src/plugins/software-factory';
+import { touchRun } from '../../src/plugins/software-factory/heartbeat';
 import { readRunMetadata, runRef } from '../../src/plugins/software-factory/runMetadata';
 import { setStagePrompt } from '../../src/plugins/software-factory/stagePrompts';
 import { clearRun, endRun, runsOverview, StageRunBag, startRun } from '../../src/plugins/software-factory/stageRuns';
@@ -255,24 +256,31 @@ describe('guard', () => {
   it('refuses factory starts and retries after concurrent or pending blocker changes without saving the Run', async () => {
     let pendingBlocker = false;
     let invalidateAttachment: 'worker' | 'ref' | null = null;
+    const invalidate = async ({
+      changes,
+      plugin,
+      result,
+    }: {
+      changes: PluginChangeSet;
+      plugin: PluginHookContext;
+      result: unknown;
+    }) => {
+      if (invalidateAttachment)
+        await changes.updateStory((result as { key: string }).key, (s) => ({
+          ...plugin.writeBag(s, {
+            stageRun: {
+              ...StageRunBag.parse(s.plugins?.['software-factory']).stageRun,
+              ...(invalidateAttachment === 'worker' ? { worker: 'another-worker' } : { attempt: 99 }),
+            },
+          }),
+        }));
+    };
     const factoryPlugin = definePlugin({
       ...softwareFactory,
       hooks: {
         ...softwareFactory.hooks,
-        'software-factory.attach': {
-          ...softwareFactory.hooks?.['software-factory.attach'],
-          async transform({ changes, plugin, result }) {
-            if (invalidateAttachment)
-              await changes.updateStory((result as { key: string }).key, (s) => ({
-                ...plugin.writeBag(s, {
-                  stageRun: {
-                    ...StageRunBag.parse(s.plugins?.['software-factory']).stageRun,
-                    ...(invalidateAttachment === 'worker' ? { worker: 'another-worker' } : { attempt: 99 }),
-                  },
-                }),
-              }));
-          },
-        },
+        'software-factory.attach': { ...softwareFactory.hooks?.['software-factory.attach'], transform: invalidate },
+        'software-factory.touch': { ...softwareFactory.hooks?.['software-factory.touch'], transform: invalidate },
       },
     });
     const linking = definePlugin({
@@ -396,9 +404,25 @@ describe('guard', () => {
     await writeFile(metadataFile, JSON.stringify(selected));
     const attached = await attachWorker(factory, 'WEB-2', attachment);
     expect(JSON.parse(await readFile(metadataFile, 'utf8')).selection).toEqual(selected.selection);
+    // A touch checks its Run and worker again after transforms, and keeps the other sections (ADR-0048 §2).
+    const touch = { ...ref, worker: attached.identity.worker, source: 'worker message' };
+    const beforeTouch = await readFile(metadataFile, 'utf8');
+    invalidateAttachment = 'ref';
+    try {
+      await expect(touchRun(factory, 'WEB-2', touch)).rejects.toMatchObject({
+        code: 'CONFLICT',
+        details: { stage: 'guard' },
+      });
+    } finally {
+      invalidateAttachment = null;
+    }
+    await expect(touchRun(factory, 'WEB-2', { ...touch, worker: 'mcp:other' })).rejects.toMatchObject({
+      code: 'CONFLICT',
+    });
+    expect(await readFile(metadataFile, 'utf8')).toBe(beforeTouch);
+    const touched = await touchRun(factory, 'WEB-2', touch);
     const enriched = JSON.parse(await readFile(metadataFile, 'utf8'));
-    enriched.heartbeat = { worker: attached.identity.worker, at: ref.startedAt, source: 'worker message', by: null };
-    await writeFile(metadataFile, JSON.stringify(enriched));
+    expect(enriched).toEqual({ ...JSON.parse(beforeTouch), heartbeat: touched.heartbeat });
     const unchangedMetadata = await readFile(metadataFile);
     const unchangedStory = await readFile(file);
     await attachWorker(factory, 'WEB-2', attachment);
