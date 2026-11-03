@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:43:34.364Z",
+  "updatedAt": "2026-11-03T05:43:35.577Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:33:02.839Z",
+        "finishedAt": "2026-11-03T05:43:34.364Z"
+      }
     },
     "comments": {
       "comments": [
@@ -228,19 +239,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "R3fNhW0i",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/145 at approved head 8c74acd6a22522bb292c7fb5b91cadfadb90d52a. Merge commit: 66adbf96c9da3d493a5963ab3c60f54323c12b2a. Main CI queued at https://github.com/sgolovine/rowbly/actions/runs/41585460538.",
+          "createdAt": "2026-11-03T05:43:35.576Z",
+          "updatedAt": "2026-11-03T05:43:35.576Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:1b9e76b2-43b3-4642-8ea1-2078f83ac337",
-        "by": "sunny",
-        "startedAt": "2026-11-03T05:33:02.839Z",
-        "finishedAt": "2026-11-03T05:43:34.364Z"
-      }
     }
   }
 }
