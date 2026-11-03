@@ -273,7 +273,7 @@ describe('guard', () => {
     }) => {
       if (invalidateAttachment === 'identity') {
         const scope = { story: (result as { key: string }).key };
-        const metadata = JSON.parse((await changes.readFile(scope, 'run-metadata.json'))!);
+        const metadata = JSON.parse((await changes.readFile(scope, 'run-metadata.json')) ?? 'null');
         metadata.identity.machine = 'different-machine';
         metadata.identity.threadId = 'different-thread';
         await changes.writeFile(scope, 'run-metadata.json', JSON.stringify(metadata));
