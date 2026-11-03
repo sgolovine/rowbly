@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-03T18:02:05.754Z"
   },
+  "identity": {
+    "worker": "mcp:fbdac1b9-6882-481c-b2e0-d47b8946cbee",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:fbdac1b9-6882-481c-b2e0-d47b8946cbee",
+    "verification": {
+      "source": "/home/sgolovine/.rowbly-factory/receipts/3e3c20b13cbeb582d7a787a098fe9adf.json",
+      "verifiedAt": "2026-11-03T18:02:06.539Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "codex",
     "model": "gpt-6-astra",
