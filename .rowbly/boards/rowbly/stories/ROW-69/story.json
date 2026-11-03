@@ -36,6 +36,13 @@
           "updatedAt": "2026-11-03T15:24:32.415Z"
         },
         {
+          "id": "HYZ6CMXP",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/155 at 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96 by codex/gpt-6-astra: APPROVED. Independent reviewer mcp:71762c53-6293-4b5d-8352-61d3b58aa5b2; the verified sole product implementer was codex/gpt-6.1-sol, and the branch commits match that record. I reviewed the integrated diff against ROW-69 and its accepted revisions: fixed host-owned invocation and resource bounds, command/screen admission and retained-context hook refusal, cancellation and disposal, strict URL parsing and opaque-bag preservation, CLI inspection and active-tab refresh, conservative check summaries, and the required docs, ADR, Plugin inventory and skill updates. In a private review worktree, current main merged cleanly with Board metadata changes only; typecheck and lint passed, unit tests passed 79/79, and CLI tests passed 21/21 under the shared validation lease with unchanged timeouts. All four compact references are byte-identical. I inspected all six screenshot images and confirmed HTTP 200, and inspected the retained event log showing a 60,000 ms refresh interval and cancellation of the controlled child on tab departure. No merge-blocking findings. Validation log: /tmp/row-69-review-astra-1-checks.log; local integration commit: 38a597c812aa0816fcf20d6994b8108d3e066082. No product edits or branch pushes were made.",
+          "createdAt": "2026-11-03T16:16:39.341Z",
+          "updatedAt": "2026-11-03T16:16:39.341Z"
+        },
+        {
           "id": "J4Yq91G9",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/155. Head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96. Self-validation passed: typecheck, lint, 79 unit tests and 21 CLI tests, 100 total. Six verified screenshots: https://github.com/sgolovine/rowbly/pull/155#issuecomment-6608866448. Plan-review responses: 1. Fixed host-owned gh-pr-view template with bounded output, concurrency, deadlines, cancellation and revocable leases. 2. Retained contexts refused in real hooks and doctor callbacks. 3. Strict URL validation and opaque-bag preservation, including refused explicit overwrites. 4. In-memory active-tab refresh verified at 60000 ms, stale-result display and cancellation verified. 5. Docs, ADR-0051, dev/factory skills and identical references updated. Current main merged before final checks. At handoff CI pending: CLI tests and Clipboard smoke (windows-latest). Independent review remains with the supervisor. Owned processes stopped and evidence retained.",
@@ -57,6 +64,13 @@
           "updatedAt": "2026-11-03T15:15:24.740Z"
         },
         {
+          "id": "SQ9fuZ8o",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/155 at 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96. Merge commit 67610da1c862aa0247dbbd3034b9df80c1e5b3cf. Exact-head approval: https://github.com/sgolovine/rowbly/pull/155#issuecomment-6609200324. Before merge: all six checks completed SUCCESS, clean mergeability, no changes-requested reviews, all six screenshot URLs HTTP 200. Post-merge main CI read showed only earlier successful runs; no run for the merge commit was listed yet. Review branch factory/review-row-69-astra-1 and worktree /home/sgolovine/Projects/rowbly-worktrees/row-69-review-astra-1 retained; no owned processes remain.",
+          "createdAt": "2026-11-03T16:16:39.958Z",
+          "updatedAt": "2026-11-03T16:16:39.958Z"
+        },
+        {
           "id": "k3p078nt",
           "author": "sunny",
           "body": "Plan revision required before acceptance. github id and GitHub PR field accepted; Story-screen in-memory periodic gh refresh plus explicit status is enough; no saved polling data and no timers in hooks/CLI. Defer Board-card badge/cache fan-out unless needed for criteria. Avoid redundant link/unlink commands if stories create/edit flags already meet linking. Reserve ADR0051 only after revised API plan; 0050 is ROW65. Scope process capability to demonstrated read-only gh PR inspection; propose a narrow host-owned API or a constrained declared invocation rather than unrestricted executable/argv feature. Keep core free of Plugin terms and document this is trusted in-process capability, not permission/sandbox. Require argv arrays/no shell, bounded stdout/stderr/timeouts/concurrency/cancellation and no effect from read/operation hooks; all timers disposed on unmount/disable/root switch. Add/update REQUIRED tests in existing homes: runtime capability boundary outside/inside hooks, storage-format compatibility per new Built-in Plugin checklist, existing operation inventory/docs fixtures/language. No tests planned is not sufficient for new Plugin loading/API pipeline/storage contract. URL parsing must reject credentials/invalid path and preserve opaque/future data. Keep short distinct skill additions; merge main before final checks. Do not edit .rowbly and await accepted revised plan before implementation.",
@@ -69,20 +83,6 @@
           "body": "Implementation record: ROW-69 retry2 PR https://github.com/sgolovine/rowbly/pull/155 head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96 authored by verified worker mcp:a5863cb0-fbe5-4242-ac5a-154659ec79cd on rook, provider codex model gpt-6.1-sol, reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/e08e8cf94b381789686856d7c1e7621a.json; /tmp/rowbly-factory-session/ROW-69-verified-retry2.json SSH launcher reservation exact provider/model/typed options; existing task worktree separately verified, root-bound thread must use only task worktree. Failed prior Opus research attempt made no product edits; clean preserved HEAD verified before retry. Current Sol worker authored host capability, Github Plugin and integrated docs/tests/skills changes. All branch product commits belong to this Run; main merges preserve published upstream work. All four checks passed (79 unit+21 CLI), six hosted screenshots verified. Requires a fresh independent review worker whose model differs from every actual product implementer. Full handoff retained in supervisor session.",
           "createdAt": "2026-11-03T16:06:56.564Z",
           "updatedAt": "2026-11-03T16:06:56.564Z"
-        },
-        {
-          "id": "HYZ6CMXP",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/155 at 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96 by codex/gpt-6-astra: APPROVED. Independent reviewer mcp:71762c53-6293-4b5d-8352-61d3b58aa5b2; the verified sole product implementer was codex/gpt-6.1-sol, and the branch commits match that record. I reviewed the integrated diff against ROW-69 and its accepted revisions: fixed host-owned invocation and resource bounds, command/screen admission and retained-context hook refusal, cancellation and disposal, strict URL parsing and opaque-bag preservation, CLI inspection and active-tab refresh, conservative check summaries, and the required docs, ADR, Plugin inventory and skill updates. In a private review worktree, current main merged cleanly with Board metadata changes only; typecheck and lint passed, unit tests passed 79/79, and CLI tests passed 21/21 under the shared validation lease with unchanged timeouts. All four compact references are byte-identical. I inspected all six screenshot images and confirmed HTTP 200, and inspected the retained event log showing a 60,000 ms refresh interval and cancellation of the controlled child on tab departure. No merge-blocking findings. Validation log: /tmp/row-69-review-astra-1-checks.log; local integration commit: 38a597c812aa0816fcf20d6994b8108d3e066082. No product edits or branch pushes were made.",
-          "createdAt": "2026-11-03T16:16:39.341Z",
-          "updatedAt": "2026-11-03T16:16:39.341Z"
-        },
-        {
-          "id": "SQ9fuZ8o",
-          "author": "sunny",
-          "body": "Merged https://github.com/sgolovine/rowbly/pull/155 at 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96. Merge commit 67610da1c862aa0247dbbd3034b9df80c1e5b3cf. Exact-head approval: https://github.com/sgolovine/rowbly/pull/155#issuecomment-6609200324. Before merge: all six checks completed SUCCESS, clean mergeability, no changes-requested reviews, all six screenshot URLs HTTP 200. Post-merge main CI read showed only earlier successful runs; no run for the merge commit was listed yet. Review branch factory/review-row-69-astra-1 and worktree /home/sgolovine/Projects/rowbly-worktrees/row-69-review-astra-1 retained; no owned processes remain.",
-          "createdAt": "2026-11-03T16:16:39.958Z",
-          "updatedAt": "2026-11-03T16:16:39.958Z"
         }
       ]
     }
