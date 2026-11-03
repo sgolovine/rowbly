@@ -1468,6 +1468,59 @@ async function boardStatsBoundary() {
       commits: { status: 'unavailable', value: null },
     });
 
+    // A later changed page taints every alias, even one that completed first.
+    for (const changedIdentity of [false, true]) {
+      const raced = await github.boardStats.collect({
+        board: await services.boards.get('web'),
+        stories: saved,
+        plugin: {
+          inspectBag: services.plugins.context('github').inspectBag,
+          externalReadSignal: new AbortController().signal,
+          async externalRead(_name, parameters) {
+            const continued = Boolean(parameters.after);
+            const healthy = parameters.url?.endsWith('/2');
+            const paginated = parameters.url?.includes('/old/') && !continued;
+            return {
+              exitCode: 0,
+              stderr: '',
+              stdout: JSON.stringify({
+                data: {
+                  repository: {
+                    pullRequest: {
+                      id: healthy ? 'healthy' : continued && changedIdentity ? 'changed' : 'aliased',
+                      url: `https://github.com/owner/name/pull/${healthy ? 2 : 1}`,
+                      headRefOid: continued ? shas[2] : shas[1],
+                      commits: {
+                        totalCount: continued ? 1 : 2,
+                        nodes: (paginated
+                          ? [shas[0]]
+                          : continued
+                            ? [shas[2]]
+                            : healthy
+                              ? [shas[1], shas[2]]
+                              : [shas[0], shas[1]]
+                        ).map((oid) => ({ commit: { oid } })),
+                        pageInfo: { hasNextPage: paginated, endCursor: paginated ? 'next' : null },
+                      },
+                    },
+                  },
+                },
+              }),
+            };
+          },
+        },
+      });
+      expect(raced['linked-prs']).toMatchObject({
+        status: changedIdentity ? 'partial' : 'complete',
+        value: changedIdentity ? 1 : 2,
+      });
+      expect(raced.commits).toMatchObject({
+        status: 'partial',
+        value: 2,
+        reason: expect.stringContaining('changed during pagination'),
+      });
+    }
+
     fail = true;
     const partial = await boardStats(ctx, services, 'web');
     expect(partial.plugins[0]?.metrics).toMatchObject([

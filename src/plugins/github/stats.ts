@@ -42,6 +42,8 @@ export const boardStats: PluginBoardStats = {
   ],
   async collect({ stories, plugin }) {
     const links = new Set<string>();
+    const inconsistent = new Set<string>();
+    const unstableIdentities = new Set<string>();
     const reasons = new Set<string>();
     let invalid = false;
     for (const story of stories) {
@@ -94,8 +96,15 @@ export const boardStats: PluginBoardStats = {
           if (
             candidate.id &&
             (candidate.id !== id || candidate.head !== pr.headRefOid || candidate.total !== pr.commits.totalCount)
-          )
+          ) {
+            inconsistent.add(candidate.id);
+            inconsistent.add(id);
+            if (candidate.id !== id) {
+              unstableIdentities.add(candidate.id);
+              unstableIdentities.add(id);
+            }
             throw new UsageError('GitHub PR changed during pagination');
+          }
           candidate.id = id;
           candidate.head = pr.headRefOid;
           candidate.total = pr.commits.totalCount;
@@ -137,6 +146,7 @@ export const boardStats: PluginBoardStats = {
     for (const group of groups.values()) {
       const first = group[0];
       const complete = group.find((candidate) => candidate.complete);
+      if (first?.id && inconsistent.has(first.id)) continue;
       if (group.some((candidate) => candidate.head !== first?.head || candidate.total !== first?.total)) {
         reasons.add('GitHub PR changed between linked aliases');
       } else if (complete) {
@@ -144,7 +154,9 @@ export const boardStats: PluginBoardStats = {
         for (const sha of complete.shas) shas.add(sha);
       }
     }
-    const identitiesComplete = !invalid && links.size <= 100 && candidates.every((candidate) => candidate.id);
+    const knownIdentities = [...groups.keys()].filter((id) => !unstableIdentities.has(id)).length;
+    const identitiesComplete =
+      !invalid && !unstableIdentities.size && links.size <= 100 && candidates.every((candidate) => candidate.id);
     const commitsComplete = identitiesComplete && completed === groups.size;
     const reason = [...reasons].join('; ') || 'Some linked PR information is unavailable';
     const value = (count: number, complete: boolean, known: boolean): BoardStatValue =>
@@ -154,7 +166,7 @@ export const boardStats: PluginBoardStats = {
           ? { status: 'partial', value: count, reason }
           : { status: 'unavailable', value: null, reason };
     return {
-      'linked-prs': value(groups.size, identitiesComplete, groups.size > 0),
+      'linked-prs': value(knownIdentities, identitiesComplete, knownIdentities > 0),
       commits: value(shas.size, commitsComplete, completed > 0),
     };
   },
