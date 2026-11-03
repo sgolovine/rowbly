@@ -134,10 +134,14 @@ Give these to every worker with its brief:
 
 ### Pitfalls
 
-- **A worker that shows `completed` can still be working.** Codex workers often hand the work to a
-  sub-agent and end their own turn. Before counting its slot free, compare its worktree over a few
-  minutes (`git rev-parse HEAD`, `git status --porcelain | md5sum`, `git diff | md5sum`). One that is
-  quiet for 15 minutes without a final marker needs a look.
+- **Worker liveness.** Use the current Run metadata identity to find the worker on its recorded
+  machine and harness. A completed/running status, successful poll or reachable thread does not
+  prove recent activity. Record a heartbeat only for a verified worker message or harness
+  activity event, using the exact RunRef and worker and describing the evidence in source.
+  Review stale Runs after the configured threshold; never clear, fail, retry or launch a
+  duplicate from age alone. Keep waiting-user and ambiguous/unreachable states explicit.
+  Fail only after verifying the worker is gone; reconcile a changed identity/Run or unreadable
+  metadata before any dependent action.
 - **Base branches.** Check where a Story's dependencies merged (`gh pr view <n> --json baseRefName`);
   work merged to `develop` is not on `main`. Ask before basing on anything but `main`.
 - **zsh**: `"$c:refs/…"` applies the `:r` modifier, so write `"${c}:refs/…"`; a variable holding several

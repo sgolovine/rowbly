@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T05:03:11.150Z",
+  "updatedAt": "2026-11-03T05:05:14.564Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -53,6 +53,13 @@
           "body": "Full identity-preservation guard finding is material and within accepted Story scope. Complete your exact-head review/evidence and terminal handoff; do not implement or integrate in this review Run. For CHANGES REQUESTED, report ownStory Comment with concrete reproduction/fix expectation plus move in-progress and FACTORY-DONE ROW-50, per current InPR requested-changes route. Preserve PR146/branch, no duplicate PR. Integration corrections need preserve PR140 brief and ADR0047 plus ADR0048/strict run metadata. Supervisor finishes Run before move and gives fresh correction worker continuation context. All actual check results/evidence needed; no rerun to seek pass.",
           "createdAt": "2026-11-03T02:55:58.818Z",
           "updatedAt": "2026-11-03T02:55:58.818Z"
+        },
+        {
+          "id": "e4KvtnPD",
+          "author": "sunny",
+          "body": "Supervisor applied exact Astra-reviewed /tmp/row50-astra-review-evidence/guide-proposal.patch after merge146, replacing status/md5/age assumptions with verified current-Run identity/activity heartbeat and explicit waiting/unreachable states; no fail/retry/duplicate by age. Guide commit50d9c869. Root typecheckPASS, lintPASS, unit78PASS, CLI21PASS, doctorclean. No product edits or cleanup/evidence removal. Heartbeats require exact RunRef/attached worker and observed activity source; polling/status do not count.",
+          "createdAt": "2026-11-03T05:05:14.563Z",
+          "updatedAt": "2026-11-03T05:05:14.563Z"
         },
         {
           "id": "e7FiPqSX",
