@@ -6,9 +6,15 @@ import {
   DataIntegrityError,
   definePlugin,
   type PluginContext,
+  type PluginFileList,
+  type PluginFileRead,
+  type PluginFileRequest,
+  type PluginReadContext,
+  type PluginTui,
   type RequiredStage,
   type RequiredStory,
   readBinaryInput,
+  type Story,
   z,
 } from '../../../src/plugin-api';
 
@@ -116,4 +122,36 @@ export async function importImage(plugin: PluginContext, key: string, path: stri
   await saveImage(plugin, key, input.bytes);
   await plugin.openFile({ story: key }, 'image.png');
 }
+// #endregion
+
+// #region batched-reads
+/** Each Story's note, read in batches; a note that cannot be read shows as unavailable. */
+export async function storyNotes(plugin: PluginReadContext, stories: readonly Story[]): Promise<Map<string, string>> {
+  const requests: PluginFileRequest[] = stories.map((story) => ({ scope: { story: story.key }, name: 'note.md' }));
+  const read: PluginFileRead[] = await plugin.files.readMany(requests);
+  const notes = new Map<string, string>();
+  stories.forEach((story, at) => {
+    const file = read[at];
+    if (file?.status === 'found') notes.set(story.key, file.text);
+    else if (file?.status === 'failed') notes.set(story.key, `unavailable (${file.code})`);
+  });
+  return notes;
+}
+
+/** How many files each Story has, listed in batches. */
+export async function fileCounts(plugin: PluginReadContext, stories: readonly Story[]): Promise<number[]> {
+  const lists: PluginFileList[] = await plugin.files.listMany(stories.map((story) => ({ story: story.key })));
+  return lists.map((list) => (list.status === 'found' ? list.names.length : 0));
+}
+
+/** Notes are searchable: read once each time the finder opens, then looked up for each Story. */
+export const searchableNotes: PluginTui = {
+  async loadStorySearchText({ stories, plugin }) {
+    const notes = await storyNotes(plugin, stories);
+    return (story) => {
+      const note = notes.get(story.key);
+      return note === undefined ? [] : [note];
+    };
+  },
+};
 // #endregion
