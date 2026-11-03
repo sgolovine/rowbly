@@ -12,5 +12,17 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T16:42:20.340Z"
+  "updatedAt": "2026-11-03T16:44:55.275Z",
+  "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:44:55.274Z"
+      }
+    }
+  }
 }
