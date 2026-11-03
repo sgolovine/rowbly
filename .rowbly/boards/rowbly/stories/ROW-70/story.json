@@ -41,6 +41,13 @@
           "updatedAt": "2026-11-03T17:49:00.008Z"
         },
         {
+          "id": "92MakYNh",
+          "author": "sunny",
+          "body": "Approval posted at https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611678873. Final gate read: head d78c1c1021a1bf21e21523303483694d531f5d75 unchanged; all six checks SUCCESS; no formal change-request reviews; mergeable UNKNOWN and mergeStateStatus UNKNOWN. PR remains draft and unmerged. Supervisor owns the wait; no worker polling or watcher.",
+          "createdAt": "2026-11-03T18:05:46.964Z",
+          "updatedAt": "2026-11-03T18:05:46.964Z"
+        },
+        {
           "id": "D5tavg52",
           "author": "sunny",
           "body": "Implementation record: {\"worker\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"threadId\":\"mcp:ec878799-d692-4573-96ef-0de312856c10\",\"machine\":\"rook\",\"harness\":\"t3\",\"provider\":\"codex\",\"model\":\"gpt-6.1-sol\",\"options\":[{\"id\":\"reasoningEffort\",\"value\":\"high\"},{\"id\":\"serviceTier\",\"value\":\"default\"}],\"verification\":\"/home/sgolovine/.rowbly-factory/receipts/fb16809589f2249deba8c73dbe38f60a.json\",\"worktree\":\"/home/sgolovine/Projects/rowbly-worktrees/row-70-correction-sol-1\",\"branch\":\"factory/row-70-correction-sol-1\",\"remoteBranch\":\"factory/row-70\",\"pr\":\"https://github.com/sgolovine/rowbly/pull/157\",\"head\":\"d78c1c1021a1bf21e21523303483694d531f5d75\",\"scope\":\"Both P2 corrections, existing contract extensions, documentation, validation and evidence; no subagents\"}",
@@ -97,6 +104,13 @@
           "updatedAt": "2026-11-03T18:00:44.286Z"
         },
         {
+          "id": "n9cWvrA0",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/157 at d78c1c1021a1bf21e21523303483694d531f5d75 by codex/gpt-6-astra: APPROVED. Reviewed the full integrated diff and both correction commits against the accepted all-time current-record scope. Verified core/Plugin ownership, detached frozen snapshots, lock release before external reads, narrow read-only collector capabilities, fixed GraphQL arguments, resource limits, cancellation, identity/SHA deduplication, truthful complete/partial/unavailable results, shared CLI/TUI collection, navigation/refresh/scrolling, documentation and compiled API fixtures. ADR-0053 and ADR-0054 are preserved; all four operating-reference copies are byte-identical. Both actual product authors are verified codex/gpt-6.1-sol workers; this fresh reviewer is independent. Both prior findings are resolved. The retained head-change and changed-count reproductions now return unavailable commits with the pagination-change reason; malformed metrics no longer crash core Stats. The extended existing contracts cover identity changes across aliases with an independent healthy PR and malformed declarations for failed/Off Plugins alongside a healthy collector. No further required changes found. Independent validation on a clean local merge of current main (only Board metadata added): pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79); pnpm test:cli PASS (21). No retries or timeout changes; total remains 100. All six current-head CI checks passed, none pending. All seven original and two correction screenshot URLs returned HTTP 200. No product edits or branch pushes by this reviewer. Review worktree and local evidence retained at /home/sgolovine/Projects/rowbly-worktrees/row-70-review-astra-2 and /tmp/row-70-review-astra-2-checks.log.",
+          "createdAt": "2026-11-03T18:05:46.337Z",
+          "updatedAt": "2026-11-03T18:05:46.337Z"
+        },
+        {
           "id": "qExIDLpu",
           "author": "sunny",
           "body": "PR watch event: GitHub reports PR157 at head 3bccb6f0b651735444c20e0c94a4263f0dfe3813 conflicts with main (DIRTY/CONFLICTING); rollup currently empty, which is not check failure. Story remains In Progress with its current verified implementation worker. Continue in the existing isolated worktree: fetch and merge current origin/main, resolve integration conflicts preserving ROW73 setup/ADR0053 and ROW70 Stats/ADR0054 intent, validate the changed integration under the shared lease, and push the existing branch without rebase or force push. Report exact resolved files/head/check results before final handoff; ask only if a semantic conflict cannot be settled by Story/accepted plans. No supervisor product edits.",
@@ -116,20 +130,6 @@
           "body": "Supervisor accepts correction plan for PR157 findings6611303603 after both reproduced in fresh correction worktree. Track pagination inconsistency across ALL aliases at PR identity/group level, exclude every tainted identity from commit contributions and preserve explicit partial/unavailable reasons. Identity changes must not yield exact PR count. Extend existing collector contract with the alias/page race plus an independent healthy contribution. Validate/sanitize metric declarations safely even for failed or Off Plugins, retaining valid declared labels as unavailable while malformed entries cannot crash core or healthy metrics; extend existing loading/collection checks. Keep suite100 tests and current bounded external-read/cancellation/core-Plugin boundaries. No historical scope or unrelated redesign. Rerun both retained reproductions, update relevant docs, record private capture daemon before starting, capture correction evidence and run all four checks under shared lease. Push focused commits normally to existing factory/row-70 PR157; final exact-head handoff must address each finding with evidence and verified implementation provenance. Implementation now authorized, no .rowbly edits. Avoid extra posthandoff work after terminal unless explicitly routed.",
           "createdAt": "2026-11-03T17:52:55.070Z",
           "updatedAt": "2026-11-03T17:52:55.070Z"
-        },
-        {
-          "id": "n9cWvrA0",
-          "author": "sunny",
-          "body": "Review of https://github.com/sgolovine/rowbly/pull/157 at d78c1c1021a1bf21e21523303483694d531f5d75 by codex/gpt-6-astra: APPROVED. Reviewed the full integrated diff and both correction commits against the accepted all-time current-record scope. Verified core/Plugin ownership, detached frozen snapshots, lock release before external reads, narrow read-only collector capabilities, fixed GraphQL arguments, resource limits, cancellation, identity/SHA deduplication, truthful complete/partial/unavailable results, shared CLI/TUI collection, navigation/refresh/scrolling, documentation and compiled API fixtures. ADR-0053 and ADR-0054 are preserved; all four operating-reference copies are byte-identical. Both actual product authors are verified codex/gpt-6.1-sol workers; this fresh reviewer is independent. Both prior findings are resolved. The retained head-change and changed-count reproductions now return unavailable commits with the pagination-change reason; malformed metrics no longer crash core Stats. The extended existing contracts cover identity changes across aliases with an independent healthy PR and malformed declarations for failed/Off Plugins alongside a healthy collector. No further required changes found. Independent validation on a clean local merge of current main (only Board metadata added): pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79); pnpm test:cli PASS (21). No retries or timeout changes; total remains 100. All six current-head CI checks passed, none pending. All seven original and two correction screenshot URLs returned HTTP 200. No product edits or branch pushes by this reviewer. Review worktree and local evidence retained at /home/sgolovine/Projects/rowbly-worktrees/row-70-review-astra-2 and /tmp/row-70-review-astra-2-checks.log.",
-          "createdAt": "2026-11-03T18:05:46.337Z",
-          "updatedAt": "2026-11-03T18:05:46.337Z"
-        },
-        {
-          "id": "92MakYNh",
-          "author": "sunny",
-          "body": "Approval posted at https://github.com/sgolovine/rowbly/pull/157#issuecomment-6611678873. Final gate read: head d78c1c1021a1bf21e21523303483694d531f5d75 unchanged; all six checks SUCCESS; no formal change-request reviews; mergeable UNKNOWN and mergeStateStatus UNKNOWN. PR remains draft and unmerged. Supervisor owns the wait; no worker polling or watcher.",
-          "createdAt": "2026-11-03T18:05:46.964Z",
-          "updatedAt": "2026-11-03T18:05:46.964Z"
         }
       ]
     }
