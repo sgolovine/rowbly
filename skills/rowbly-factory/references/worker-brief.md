@@ -69,8 +69,6 @@ You review this work; you are not one of these workers and your model is not one
 If that is not true, or the branch has commits that no record accounts for, report
 FACTORY-QUESTIONS <KEY> and wait.
 
-Reviewer: <your worker, provider instance and model>.
-
 <each implementation record Comment in full, oldest first, with its Comment id>
 
 ## Retry

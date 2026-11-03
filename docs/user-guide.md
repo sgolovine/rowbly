@@ -710,7 +710,8 @@ choice, and explains any deliberate restart. Missing context stays unknown; unre
 to the user. When a Stage Prompt asks for an independent review before a merge, the supervisor
 records each implementing Run's worker and model in an implementation record Comment before the
 Story moves on. It then starts the review with a new worker whose model differs from every recorded
-one, and asks you when it cannot tell who wrote the work. An approval holds only for the commit it
+one (the same provider is allowed; changing effort or options does not qualify), and asks you
+when it cannot tell who wrote the work. An approval holds only for the commit it
 names. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
 until you release it. It runs until you stop it.
 

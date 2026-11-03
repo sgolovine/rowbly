@@ -162,8 +162,8 @@ Report each start, retry, finish, failure, question and Board change to the user
    append one filled Implementation records section after the generated markdown, containing all
    verified authoring records and the selected reviewer identity. Do not substitute the manual
    template or rely on its unfilled placeholders. Finalize that section from the verified launch
-   before sending GO in step 5. Exit 4 with `details.incomplete` means part of the Story or `ROWBLY.md` cannot be
-   read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
+   before sending GO in step 5. Exit 4 with `details.incomplete` means part of the Story or
+   `ROWBLY.md` cannot be read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
    `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
    template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
 3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
@@ -220,8 +220,8 @@ discarding earlier work.
 ## Independent review
 
 Follow this when a Stage Prompt asks for an independent review before a merge. The reviewer must be
-a new worker using a model different from every model that implemented the Story, and its approval holds only
-for the commit it reviewed.
+a new worker using a model different from every model that implemented the Story. Its approval
+holds only for the commit it reviewed.
 
 1. **Record each implementation.** A Run is an implementation when its worker can change the
    Story's code (for example, its Stage Prompt names `rowbly-dev`), finished or failed. Before you
@@ -244,9 +244,10 @@ for the commit it reviewed.
    models wrote them. Never guess a model.
 3. **Choose the reviewer.** Start a new worker: never send the brief to a thread named in a record.
    Its model must differ from every implementing model in the records. The same provider is
-   allowed; changing only effort or options does not make it another model. When `ROWBLY.md` and the user leave no such model available, ask
-   the user rather than reuse one. Append one filled Implementation records section to the actual generated review brief after
-   its markdown. Include ALL verified authoring records, their evidence sources, and the selected
+   allowed; changing only effort or options does not make it another model. When `ROWBLY.md`
+   and the user leave no such model available, ask the user rather than reuse one. Append one
+   filled Implementation records section to the actual generated review brief after its markdown.
+   Include ALL verified authoring records, their evidence sources, and the selected
    reviewer's verified worker ID, thread ID, provider instance and model. Check the assembled
    message before GO; missing or unknown provenance requires asking the user, never guessing.
 4. **Approval holds for one commit.** A review Comment approves only the head SHA it names. A commit
