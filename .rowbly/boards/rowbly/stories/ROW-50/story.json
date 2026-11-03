@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T04:00:40.191Z",
+  "updatedAt": "2026-11-03T04:00:41.546Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:15:47.160Z",
+        "finishedAt": "2026-11-03T04:00:40.190Z"
+      }
     },
     "comments": {
       "comments": [
@@ -88,19 +99,15 @@
           "body": "Implementation record: Sol correction worker mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad rook gpt-6.1-sol, SAME branch factory/row-50 PR146 head2d47c9084c0a04b32339f4eae76eff59573149f0. Original author Opus5.5; both actualmodels must be excluded for new reviewer. Allfour localchecks unit78 CLI20 pass and fullidentity regression/bytes preserved; newexact-head review required.",
           "createdAt": "2026-11-03T04:00:38.898Z",
           "updatedAt": "2026-11-03T04:00:38.898Z"
+        },
+        {
+          "id": "wQqYskAU",
+          "author": "sunny",
+          "body": "PR146 correction complete: https://github.com/sgolovine/rowbly/pull/146 at 2d47c9084c0a04b32339f4eae76eff59573149f0. Complete identity preservation fixed with byte-preservation regression; current main integrated additively. Typecheck, lint, unit78 and CLI20 pass; suite remains98; all six CI checks pass. Both findings answered with fresh screenshots and evidence: https://github.com/sgolovine/rowbly/pull/146#issuecomment-6594799983. Awaiting independent review; guide proposal remains outside the Data Root.",
+          "createdAt": "2026-11-03T04:00:41.545Z",
+          "updatedAt": "2026-11-03T04:00:41.545Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:15:47.160Z",
-        "finishedAt": "2026-11-03T04:00:40.190Z"
-      }
     }
   }
 }
