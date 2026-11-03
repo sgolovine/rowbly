@@ -157,8 +157,15 @@ Report each start, retry, finish, failure, question and Board change to the user
    already exists, its Stage Prompt is off, unresolved blocking Stories remain or a person holds
    it: report the returned reason and skip it. Re-read eligibility after Board changes; never
    launch from a stale overview or after a refused start.
-3. Read the Story in full: `stories show`, and for each enabled Plugin its Specs, Tasks, Comments,
-   Epic and Story links. Write the brief from [the worker brief](references/worker-brief.md).
+3. Run `rowbly software-factory brief <KEY>`, with `--instructions-file` for the user's instructions
+   for workers and the other Stories workers are on, and on a retry `--retry-file` with the
+   [retry context](#retry-context). Its `markdown` is every section of
+   [the worker brief](references/worker-brief.md) after the rules: the Story in full, the Stage
+   Prompt and `ROWBLY.md`. The brief is the template's rules, with `<KEY>` filled in, followed by
+   `markdown`. Exit 4 with `details.incomplete` means part of the Story or `ROWBLY.md` cannot be
+   read: launch nothing, run `run fail <KEY> --reason "<the gaps>"` and tell the user. Use
+   `--allow-incomplete` only when the user says so. Without the `brief` command, fill in the whole
+   template by hand from `stories show`, each Plugin's own commands and `ROWBLY.md`.
 4. Launch or use the reserved worker with the recorded selection, as `ROWBLY.md` says, keeping it
    waiting for GO. Verify the actual machine, harness, worker ID and thread ID from the launch
    receipt/harness result. For a remote T3 CLI use [remote launches](references/remote-launch.md),
@@ -225,9 +232,10 @@ discarding earlier work.
    the reason and the instruction authorizing that deliberate restart. Preserve previous work;
    an unavailable machine or unknown branch is not permission to silently start again.
 4. **Preserve and hand off.** Assemble the retry section of
-   [the worker brief](references/worker-brief.md). If Comments are on, save the captured context,
-   evidence sources and continuation/restart decision as a Comment before replacing the Run, so
-   another supervisor can recover it. Otherwise retain it in the supervisor's messages and brief.
+   [the worker brief](references/worker-brief.md) in a file for `brief --retry-file`. If Comments
+   are on, save the captured context, evidence sources and continuation/restart decision as a
+   Comment before replacing the Run, so another supervisor can recover it. Otherwise retain it in
+   the supervisor's messages and brief.
    Only then run `run start <KEY> --worker <name> --retry` with the new attempt's selection, as in
    [Start a Story](#start-a-story); launch only on success, using the
    returned attempt number and the captured previous outcome. Do not substitute the new Run's

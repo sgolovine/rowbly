@@ -15,6 +15,8 @@ import {
   listSpecSlugs,
   listStorySpecs,
   parseSpecsInput,
+  readSpec,
+  type Spec,
   SpecsBag,
   SpecsCreateInput,
   specFile,
@@ -187,6 +189,28 @@ export const specs = definePlugin({
     if (!Array.isArray(filter)) return false;
     const linked = linkedSpecs(plugin, story);
     return filter.some((slug) => linked.includes(slug));
+  },
+  async storyContext(story, plugin) {
+    // An invalid link bag throws, so the Story Context lists Specs as incomplete rather than as none.
+    const linked = plugin.requireBag(story, SpecsBag)?.specs ?? [];
+    const storySpecs = await listStorySpecs(plugin, story);
+    const boardSpecs: Spec[] = [];
+    const missing: string[] = [];
+    for (const slug of linked) {
+      const spec = await readSpec(plugin, { board: story.boardId, slug });
+      if (spec) boardSpecs.push(spec);
+      else missing.push(slug);
+    }
+    const text = [
+      ...storySpecs.map((spec) => `**Story Spec \`${spec.slug}\`**\n\n${spec.text.trim()}`),
+      ...boardSpecs.map((spec) => `**Board Spec \`${spec.slug}\`**\n\n${spec.text.trim()}`),
+    ];
+    return {
+      title: 'Specs',
+      text: text.join('\n\n') || 'None.',
+      data: { storySpecs, boardSpecs },
+      ...(missing.length ? { unavailable: `linked Board Specs not found: ${missing.join(', ')}` } : {}),
+    };
   },
   doctor: {
     async check({ data, plugin }) {

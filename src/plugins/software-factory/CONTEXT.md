@@ -49,7 +49,8 @@ _Avoid_: patch, script
 ## Stage Prompts and ROWBLY.md
 
 `ROWBLY.md` describes how people work with every Board of the Data Root, in one file Rowbly does not
-read. A Stage Prompt is one Stage's instructions, turned on or off per Stage and Board, that
+parse or enforce; `rowbly software-factory brief` copies it into a Worker's brief as text
+(ADR-0047). A Stage Prompt is one Stage's instructions, turned on or off per Stage and Board, that
 `rowbly software-factory stages` hands to an agent with the Stages.
 
 ## Launch eligibility

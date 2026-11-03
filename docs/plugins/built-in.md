@@ -456,6 +456,7 @@ rowbly software-factory prompt edit <stage> [--text <text>|--file <path|->|--edi
 rowbly software-factory prompt remove <stage> [--board <id>] [--level board|global]   # confirms; --yes when not interactive
 rowbly software-factory runs [--board <id>]   # Stories in Stages whose Stage Prompt is on, with their Stage Runs
 rowbly software-factory wait [--board <id>] [--since <digest>] [--timeout <seconds>]   # blocks until runs change
+rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-file <path|->] [--allow-incomplete]
 rowbly software-factory run start <story> --worker <name> [--retry] [--provider <id> --model <id> --rule <text> [--option <id>=<value>]... [--fallback <why>] [--usage <source>]]
 rowbly software-factory run attach <story> --stage <stage> --attempt <number> --started-at <timestamp> --worker <id> --machine <name> --harness <name> --thread-id <id> --source <text>
 rowbly software-factory run finish <story>
@@ -539,6 +540,17 @@ A confirmed failed launch uses `run fail --reason`; an uncertain launch, unreach
 failed attachment/publication needs reconciliation before GO or another launch. Preserve the
 previous attempt's metadata in retry context before replacing it.
 
+`brief` prints the context part of a Worker's brief, the sections the `rowbly-factory` skill's
+worker brief template leaves to fill in: `## Story` (the Story's fields and description, then one
+`###` section per Plugin from its Story Context, [ADR-0044](../agents/adr/0044-plugins-give-story-context-sections.md),
+then the Plugins that are on and the Board's Stages), `## Stage Prompt: <name>`, `## How people work
+with this Board` (the Data Root's `ROWBLY.md` as stored, without trailing whitespace, or `None.`;
+inert text that Rowbly does not parse or follow, [ADR-0047](../agents/adr/0047-plugins-read-rowbly-md-as-inert-text.md)),
+`## Other instructions` (`--instructions-file`, else `None.`) and `## Retry` (`--retry-file`, only
+when given). The same Board data and input give the same brief. `--json` returns
+`{ key, board, stage, attempt, complete, incomplete, sections, markdown }`, where `attempt` is the
+Stage Run's for this visit or `null`.
+
 **Rules**
 
 - `enabled` is true only when the setting is on, `path` points inside the Plugin's folder for its
@@ -559,6 +571,11 @@ previous attempt's metadata in retry context before replacing it.
   visit (`CONFLICT`, exit 4). `--retry` starts a failed one again as its next `attempt`. `by` is Me,
   or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
+- `brief` needs the Story's Stage to have a Stage Prompt that is on (`CONFLICT`, exit 4). When the
+  Story Context is incomplete (a Plugin that is enabled but did not load, or whose section failed or
+  is partial), `ROWBLY.md` cannot be read (a symbolic link or not a regular file), or the Stage Run's `attempt` is above 1 and no `--retry-file` is given, it exits 4
+  with `details.incomplete`, a list of `{ plugin, reason }`. `--allow-incomplete` prints the brief
+  instead, with every gap under `## Incomplete context` at its top.
 - `hold` writes the Story's hold, `boards/<board>/stories/<KEY>/plugins/software-factory/hold.json`
   (`{ "version": 1, "reason", "by", "heldAt" }`, [ADR-0043](../agents/adr/0043-a-hold-keeps-a-story-out-of-stage-runs.md)),
   and returns `{ key, hold }`; `release` deletes it and returns `{ key, released }`. A held Story

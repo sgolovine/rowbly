@@ -96,7 +96,7 @@ Run one of these before a series of changes and confirm it is the Data Root and 
 **`ROWBLY.md`.** People write down how they use their Boards (what each Stage means, when a Story
 moves, who moves it to `done`, which Labels and Comments they expect) in an optional Markdown file at the
 top of the Data Root: `.rowbly/ROWBLY.md`, or `<path>/ROWBLY.md` for `--data-root <path>`. Rowbly does
-not read or enforce it.
+not parse or enforce it; `software-factory brief` only copies it into a worker's brief.
 
 - Read it before the first command that changes data. Without it, use the defaults on this page.
 - Follow it over this page's defaults and over your skill's own Board steps. The user's request comes
@@ -290,6 +290,7 @@ rowbly software-factory run fail WEB-42 --reason "<why>" --json --no-prompt
 rowbly software-factory hold WEB-42 --reason "<why>" --json --no-prompt   # {key, hold}; exit 4 if held
 rowbly software-factory release WEB-42 --json --no-prompt   # {key, released}; exit 3 if not held
 rowbly software-factory apply WEB-42 --file block.md [--dry-run] --json --no-prompt   # {key, stageRun, dryRun, commands: [{line, text, argv, decision: apply|hold|drop|reject, reason?, exitCode?, output?}]}
+rowbly software-factory brief WEB-42 [--instructions-file <path|->] [--retry-file <path|->] [--allow-incomplete] --json --no-prompt   # {key, board, stage, attempt, complete, incomplete, sections, markdown}; exit 4 when incomplete
 ```
 
 Follow a Stage Prompt only when `prompt.enabled` is true (setting on, path inside the Plugin folder,

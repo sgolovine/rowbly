@@ -4,18 +4,64 @@
   "boardId": "rowbly",
   "name": "Reduce factory Git noise and define evidence retention",
   "description": "Factory review recommendation 19 of 20.\n\n## Context\n\nThe review found 181 Rowbly data commits in the last 300 commits and 4.8 MB of tracked merge-evidence JSON.\n\n## Acceptance criteria\n\n- Define retention and cleanup rules for merge evidence while preserving evidence needed to audit outcomes.\n- Batch coherent supervisor-event changes where practical without delaying synchronization required by workers.\n- Document the role of Data Root synchronization in the single-writer setup and remove unnecessary churn.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a7",
+  "stage": "in-pr",
+  "rank": "a3",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T01:56:42.412Z",
+  "updatedAt": "2026-11-03T03:22:56.124Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "8lxZPsxM",
+          "author": "sunny",
+          "body": "PARTIAL PLAN ACCEPTANCE: implement A2 as correction of spurious deletion-intent evidence on one-sided additions, plus retention/docs and event-batching guidance within your owned sections. Keep every existing evidence file and pr-assets branch. Evidence-format slimming deferred. Reserve ADR0050 for this correction/retention clarification; preserve0034 accepted concurrency and deterministic reconciliation semantics. A1 skipping reconciliation on ancestor-only merges changes ADR0034 section2 explicit rule, so HOLD A1 pending user decision; do not implement it yet. Keep Automatic Commits frequency change: supervisor verified live interval5000 mismatch and restored change per explicit user/ROWBLY policy. Do not weaken force-change or claim batching reduces per-change commits; batch sync once per coherent event while retaining every GO/publication barrier and replies workers await. A conflict/evidence does not prove second writer (main product merges/legacy data can explain it); investigate provenance, preserve data and report unresolved conflicts rather than categorical false claim. Add required existing reconciliation regression assertion for base-absent addition/no evidence and real deletion intent/evidence retained, plus all four checks. ROW61 owns cleanup mechanics/task daemon and screenshot skill daemon changes; you own one retention line there. Send revised A1-independent plan/ADR wording before coding if separation is unclear.",
+          "createdAt": "2026-11-03T02:26:07.581Z",
+          "updatedAt": "2026-11-03T02:26:07.581Z"
+        },
+        {
+          "id": "HCe66fOh",
+          "author": "sunny",
+          "body": "Implementation record: InProgress retry2 worker mcp:818848ba-51cb-4499-9dd5-601669d045be machine thinkpad provider codex model gpt-6.1-sol, branch factory/row-65, PR150 head96e6bc5e7c365a183a3134115423ef762cc61e86. Preserved previous partial implementation from verified Opus5.5 worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad. Both models authored this work; independent reviewer must differ from both. Scope A2-only correction/retention/ADR0050; A1 remains held. Allfourchecks pass unit78 CLI20, screenshot200; original evidence/PRassets untouched.",
+          "createdAt": "2026-11-03T03:22:52.918Z",
+          "updatedAt": "2026-11-03T03:22:52.918Z"
+        },
+        {
+          "id": "K18nkMo8",
+          "author": "sunny",
+          "body": "Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-65 (thinkpad), branch factory/row-65, HEAD7ee3b17, modified A2/test/docs/ADR0050/skill files preserved; regression failed without fix and passed with it, full checks not yet run; A1 remains unauthorized. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-65-failed-attempt1-context.json.",
+          "createdAt": "2026-11-03T02:37:48.491Z",
+          "updatedAt": "2026-11-03T02:37:48.491Z"
+        },
+        {
+          "id": "Wsv63Si4",
+          "author": "sunny",
+          "body": "Coordination: ROW-61 owns completion cleanup script, worktree/merged-branch ownership and per-task agentic-tui daemon isolation. You own evidence retention (merge-evidence and linked pr-assets) and coherent supervisor-event batching. Keep all existing evidence until a reviewed policy defines audit preservation and safe archival/cleanup; no actual pruning/deletion/settings changes during research. ROW-61 has been told keep pr-assets pending your retention decision and to avoid mass historical Done dispatch. Keep your shared skill edits in retention/batching sections, separate from cleanup mechanics and ROW-47/48/57 review/repair/wait sections.",
+          "createdAt": "2026-11-03T02:19:46.023Z",
+          "updatedAt": "2026-11-03T02:19:46.023Z"
+        },
+        {
+          "id": "ehcatK42",
+          "author": "sunny",
+          "body": "User explicitly authorized Continue existing work for retry2 on fresh Sol (Claude session limit). Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-65 (thinkpad), branch factory/row-65, HEAD7ee3b17, modified A2/test/docs/ADR0050/skill files preserved; regression failed without fix and passed with it, full checks not yet run; A1 remains unauthorized. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-65-failed-attempt1-context.json. Prior failed Run: {\"stage\": \"in-progress\", \"status\": \"failed\", \"attempt\": 1, \"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"by\": \"sunny\", \"startedAt\": \"2026-11-03T02:13:11.585Z\", \"finishedAt\": \"2026-11-03T02:36:00.540Z\", \"reason\": \"Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry.\"}. Prior Run metadata preserved: {\"version\": 1, \"run\": {\"stage\": \"in-progress\", \"attempt\": 1, \"startedAt\": \"2026-11-03T02:13:11.585Z\"}, \"identity\": {\"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"machine\": \"thinkpad\", \"harness\": \"t3\", \"threadId\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"verification\": {\"source\": \"Local T3 launch/read/configuration verified ec258031 Opus5.5 high/full-access/bound factory-row-65 reservation\", \"verifiedAt\": \"2026-11-03T02:13:12.380Z\", \"by\": \"sunny\"}}}. Exact head branch factory/row-65 verified: no PR. Continue this work, not restart; preserve partial files. Authority: user selected Continue existing work (Recommended) in supervisor thread. ROW65 A1 ADR change remains held; this answer only authorizes continuation.",
+          "createdAt": "2026-11-03T03:01:13.881Z",
+          "updatedAt": "2026-11-03T03:01:13.881Z"
+        },
+        {
+          "id": "iGsbj9fG",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/150 . Completed A2 deletion-intent correction, ADR-0050 retention policy and coherent supervisor-event sync batching while preserving publication barriers and frequency change. A1 remains held. Typecheck, lint, 78 unit tests, 20 CLI tests and build passed; uploaded CLI screenshot verified HTTP 200. All existing evidence and pr-assets preserved. Supervisor-owned ROWBLY.md patch is in PR comment https://github.com/sgolovine/rowbly/pull/150#issuecomment-6594504587 for application on main. Branch factory/row-65 pushed at 96e6bc5e7c365a183a3134115423ef762cc61e86; CI queued.",
+          "createdAt": "2026-11-03T03:22:55.460Z",
+          "updatedAt": "2026-11-03T03:22:55.460Z"
+        }
+      ]
     }
   }
 }
