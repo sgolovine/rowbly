@@ -56,7 +56,8 @@ both together, and doctor renumbering moves the files with the Story.
 Every Board is set up a little differently, and the people who use it have their own rituals: what a
 Stage means, when a Story may move, which Labels or Comments they expect. Rowbly's configuration holds
 none of that. `ROWBLY.md`, an optional Markdown file at the top of the Data Root, is where they write it
-down. Rowbly itself does not read or enforce it, and `rowbly init` does not create it; it is for you.
+down. Rowbly itself does not parse or enforce it (only `software-factory brief` copies it, as text, into
+a worker's brief), and `rowbly init` does not create it; it is for you.
 
 **Read it** before the first command that changes data, once per Data Root:
 

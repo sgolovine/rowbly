@@ -12,7 +12,7 @@ import {
 import { commands } from './commands';
 import { TasksBag, TasksCreateInput, TasksUpdateInput } from './model';
 import { reconcile } from './reconcile';
-import { checkStage, doneCount, stagesOf, storedTasks, updateTasks } from './tasks';
+import { checkStage, doneCount, listTasks, stagesOf, storedTasks, updateTasks } from './tasks';
 
 /** Where `stages.remove` removes a Stage: the Data Root's list, or one Board's. */
 type StageLevel = { level: 'global' } | { level: 'board'; boardId: string };
@@ -164,6 +164,15 @@ export const tasks = definePlugin({
     if (list === null) return [{ label: 'Tasks', value: 'unavailable (invalid)' }];
     const done = doneCount(list, await stagesOf(plugin, story));
     return [{ label: 'Tasks', value: `${done}/${list.length} done` }];
+  },
+  async storyContext(story, plugin) {
+    // An invalid bag throws, so the Story Context lists Tasks as incomplete rather than as none.
+    const tasks = await listTasks(plugin, story.key);
+    const text = tasks.map((t) => {
+      const line = `- ${t.id} [${t.stage}] ${t.name}`;
+      return t.description.trim() ? `${line}\n\n${t.description.trim().replace(/^/gm, '  ')}` : line;
+    });
+    return { title: 'Tasks', text: text.join('\n') || 'None.', data: tasks };
   },
   doctor: {
     check({ data, plugin }) {

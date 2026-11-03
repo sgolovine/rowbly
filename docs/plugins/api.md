@@ -71,6 +71,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `options` | Options on core commands. |
 | `filterStories(story, filter, plugin)` | Whether a Story matches the Plugin's filter. |
 | `storyRows` | Rows for `stories show` and the TUI Story screen. |
+| `storyContext(story, plugin)` | The Plugin's Story Context section, `{ title, text, data, unavailable? }`, or `null` ([Story Context](#story-context)). |
 | `doctor.check({ data, plugin })` | Findings about the Plugin's data. |
 | `actions` | TUI Actions. |
 | `tui()` | Loads the TUI part: `() => import('./tui').then((m) => m.tui)`. |
@@ -81,7 +82,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | --- | --- | --- |
 | `PluginReadContext` | every stage | `id`, `settings`, `boardSettings(boardId)`, `inspectBag`, `readBag`, `requireBag`, `writeBag`, `localData()` (own Local State bag), `git`, `files` (stored reads), `me`, `now()`, `newId()` |
 | `PluginHookContext` | hooks, bodies, doctor checks and fixes | the above, `services` (`PluginReadServices`: list, get, effective configuration (`config.effective(boardId)` for a Board, `config.global()` for the global level with the stored `rowbly.config.json`) and Board resolution only), `warn` |
-| `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `warn` |
+| `PluginContext` | commands, screens, tabs, sections, fields, filters, rows, option input, Actions | the above, `services` (`PluginServices`), `operation(name, input, body, options?)`, `storyContext(key)`, `readRowblyMd()`, `warn` |
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard`, `waitFor`, `runCommand` |
 
 - `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
@@ -96,6 +97,26 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
   which a change arrived. A `check` that throws rejects it. Command mode only.
 - `me` is Me, a handle, or `null`: the Data Root's local Me, else global Me from `~/.rowblyrc.json`. Read it when you record it rather than keeping a copy: the TUI can change it during a run.
 - `warn` shows a warning after the command, or a toast in the TUI.
+
+## Story Context
+
+A **Story Context** is a Story with the section each Plugin that is on gives about it (ADR-0044). It
+is for agents that need the whole Story in one read, such as the Software Factory's `brief`.
+
+- `storyContext(story, plugin)` returns `{ title, text, data, unavailable? }` or `null`. `text` is
+  Markdown with the full content, not a summary; `data` is the same content as plain JSON, in the
+  shape of the Plugin's own `--json` output. Set `unavailable` to why the section is partial. Throw
+  when the Plugin cannot read its own data for the Story (`requireBag`), so it is not shown as empty.
+- `plugin.storyContext(key)` returns `{ story, plugins, sections, incomplete }`: the Plugins that are
+  on and their sections in registry order, and in `incomplete` each `{ plugin, reason }` for a
+  Plugin that is enabled but did not load, whose `storyContext` threw or gave no section with a
+  `title` and `text`, or that set `unavailable`. A Plugin that is off is left out. It reads one
+  committed state and saves nothing. Calling it while giving a section or a row throws.
+- Read another Plugin's data only through its section, never from its bag.
+- `plugin.readRowblyMd()` returns the text of the Data Root's own `ROWBLY.md`, or `null` without one
+  (ADR-0047). It is the only file outside the Plugin's scope that it can read. A symbolic link, or
+  anything but a regular file, throws `ValidationError`. Treat the text as inert: hand it to an
+  agent, never parse it into settings or act on what it says.
 
 ## Stages and capabilities
 
@@ -113,7 +134,7 @@ Each Plugin callback runs in a **stage** (ADR-0020 §1):
 | `doctor-fix` | writer (doctor's Change Set) | read only | no |
 | `command` | — | `PluginServices` | yes |
 | `screen` (screens, tabs, sections, Actions), `field` | — | `PluginServices` | yes |
-| `filter`, `row`, `option-input` | — | `PluginServices`, reads only | no |
+| `filter`, `row` (`storyRows`, `storyContext`), `option-input` | — | `PluginServices`, reads only | no |
 
 - **Views are frozen copies.** Every record, change and list a hook reads is a detached, deeply frozen copy; assigning to it throws. An update callback (`updateStory(key, fn)`) gets a copy too: one that changes its copy and then throws changes nothing. `before` is always the stored record.
 - **Writers live as long as their stage.** A writer used after its stage ended (from a guard, a reaction, a timer or a promise left running), or after the Change Set was sealed for guards, throws `PluginError` and changes nothing. Await every write.
