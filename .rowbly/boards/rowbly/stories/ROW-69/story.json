@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T16:06:56.565Z",
+  "updatedAt": "2026-11-03T16:06:57.868Z",
   "plugins": {
     "story-linking": {
       "blocks": [
@@ -73,6 +73,13 @@
           "body": "Implementation record: ROW-69 retry2 PR https://github.com/sgolovine/rowbly/pull/155 head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96 authored by verified worker mcp:a5863cb0-fbe5-4242-ac5a-154659ec79cd on rook, provider codex model gpt-6.1-sol, reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/e08e8cf94b381789686856d7c1e7621a.json; /tmp/rowbly-factory-session/ROW-69-verified-retry2.json SSH launcher reservation exact provider/model/typed options; existing task worktree separately verified, root-bound thread must use only task worktree. Failed prior Opus research attempt made no product edits; clean preserved HEAD verified before retry. Current Sol worker authored host capability, Github Plugin and integrated docs/tests/skills changes. All branch product commits belong to this Run; main merges preserve published upstream work. All four checks passed (79 unit+21 CLI), six hosted screenshots verified. Requires a fresh independent review worker whose model differs from every actual product implementer. Full handoff retained in supervisor session.",
           "createdAt": "2026-11-03T16:06:56.564Z",
           "updatedAt": "2026-11-03T16:06:56.564Z"
+        },
+        {
+          "id": "J4Yq91G9",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/155. Head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96. Self-validation passed: typecheck, lint, 79 unit tests and 21 CLI tests, 100 total. Six verified screenshots: https://github.com/sgolovine/rowbly/pull/155#issuecomment-6608866448. Plan-review responses: 1. Fixed host-owned gh-pr-view template with bounded output, concurrency, deadlines, cancellation and revocable leases. 2. Retained contexts refused in real hooks and doctor callbacks. 3. Strict URL validation and opaque-bag preservation, including refused explicit overwrites. 4. In-memory active-tab refresh verified at 60000 ms, stale-result display and cancellation verified. 5. Docs, ADR-0051, dev/factory skills and identical references updated. Current main merged before final checks. At handoff CI pending: CLI tests and Clipboard smoke (windows-latest). Independent review remains with the supervisor. Owned processes stopped and evidence retained.",
+          "createdAt": "2026-11-03T16:06:57.868Z",
+          "updatedAt": "2026-11-03T16:06:57.868Z"
         }
       ]
     }
