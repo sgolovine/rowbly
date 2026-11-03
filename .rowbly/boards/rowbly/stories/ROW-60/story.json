@@ -230,18 +230,18 @@
           "updatedAt": "2026-11-03T05:13:05.671Z"
         },
         {
-          "id": "ycVgjvy6",
-          "author": "sunny",
-          "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
-          "createdAt": "2026-11-03T02:54:36.883Z",
-          "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
           "id": "whfsSU5N",
           "author": "sunny",
           "body": "Supervisor applied exact independently reviewed Model Selection guide patch SHA256e05bfd0bd5e19cd264eb7c1daae7629fb253d5d32ce8c3fb39613cd40ea59547 after merge145; guide commitcdd7547b. Planned live-catalog provider/model/complete typedoptions/rule/fallback/usage-source recorded before verified attach/publication/GO; unknown/unverified evidence reconciles without GO or duplicate, genuine mismatches preserve intent. Defaults, variety, every-author independentreview (including corrections), current liveness/wait/retention policies retained; usage unknown unless observed/user-stated. Root typecheckPASS, lintPASS, unit78PASS, CLI21PASS, doctorclean. Merge145 mainCI41585460538 SUCCESS. Completion resources and all evidence retained: no trusted supervisor harness adapter/exclusive resource lease is configured, so cleanup is unavailable; no worktree/ref/assets/dependency deletion or repository setting change performed.",
           "createdAt": "2026-11-03T05:46:39.880Z",
           "updatedAt": "2026-11-03T05:46:39.880Z"
+        },
+        {
+          "id": "ycVgjvy6",
+          "author": "sunny",
+          "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
+          "createdAt": "2026-11-03T02:54:36.883Z",
+          "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
     }
