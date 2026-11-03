@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T16:52:00.743Z",
+  "updatedAt": "2026-11-03T17:00:55.401Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -39,6 +39,13 @@
           "body": "Plan (research done, awaiting acceptance; complexity 5; branch factory/row-73 from origin/main 324ac90b): ship portable default In Progress and In Review Stage Prompts in the Software Factory Plugin; add software-factory.setup (CLI software-factory setup) that adds only missing factory Stages (todo TODO, in-progress In Progress, in-review In Review) at Board level and writes default prompts only where the Board has no entry, never overwriting, renaming or removing; offer it as an explicit choice in Software Factory/Both onboarding; ADR-0053 amends ADR-0041 section 2; update docs, the rowbly and rowbly-factory skills and the reference copies; no new tests; screenshots of CLI and onboarding. Open questions: TODO label, existing-Board behavior, TODO/Backlog prompts, surfaces, In Review key.",
           "createdAt": "2026-11-03T16:51:03.983Z",
           "updatedAt": "2026-11-03T16:51:03.983Z"
+        },
+        {
+          "id": "LfQsKRET",
+          "author": "sunny",
+          "body": "Revised plan (worktree factory/row-73 at origin/main 02d8600a, awaiting acceptance): layouts are non-factory todo TODO, in-progress In Progress and factory adds in-review In Review; DEFAULT_STAGES name becomes TODO with stored lists untouched. software-factory.setup (CLI software-factory setup --board) is explicit and atomic: a key match is present and keeps its label (case-only difference counts as equivalent, other labels reported custom), it never renames, reorders or removes, it refuses CONFLICT on a same-label different-key Stage, writes a Board stage list only when a factory key is missing, keeps every effective Board or global prompt entry and any existing file, and writes defaults otherwise: In Progress and In Review on, portable TODO advisory readiness off. Explicit onboarding option in Software Factory or Both mode; no init flag. ADR-0053 amends ADR-0024 section 3 and ADR-0041 section 2. Docs, rowbly and rowbly-factory skills and reference copies updated; preservation assertions added to the existing agentWorkflows step, suite stays at 100. Internal in-pr and .rowbly prompts untouched.",
+          "createdAt": "2026-11-03T17:00:55.401Z",
+          "updatedAt": "2026-11-03T17:00:55.401Z"
         }
       ]
     }
