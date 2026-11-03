@@ -285,6 +285,13 @@ Returning from a linked Story or the form refreshes the relationships.
 CLI `list` also exits 6 if any linking bag on the Board is invalid, because incoming links could be
 concealed. The TUI shows readable links with an explicit warning that the view may be incomplete.
 
+Story Linking also exposes a public Story filter through the existing Plugin API:
+`stories.list(board, { plugins: { 'story-linking': { blocks: key } }, open: true })` returns unfinished
+Stories that block `key`. Only Story Linking interprets its own bags. A malformed filter is a
+`VALIDATION` error; invalid stored links are a `DATA_INTEGRITY` error. The Software Factory uses this
+query and Story Linking’s final start guard; no private bags cross Plugin ownership boundaries.
+
+
 ## Upgrading from before Plugins
 
 Earlier Rowbly versions kept Epics, Comments, Tasks and Assignees in core ([ADR-0008](../agents/adr/0008-no-epics.md), [ADR-0018](../agents/adr/0018-comments-are-a-built-in-plugin.md), [ADR-0022](../agents/adr/0022-tasks-are-a-built-in-plugin.md)). Rowbly has no importer for that data.
@@ -462,14 +469,14 @@ show the effective Stage Prompts without `--level`, and one level alone with it.
 `prompt` is `{ enabled, configured, source, path, exists, text }`: `configured` is the saved on/off
 setting, `source` is `board`, `global` or `null` (none), and `text` is the file's Markdown or `null`.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }], digest }`: `stages`
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`: `stages`
 are the Board's Stages whose Stage Prompt is on, `stories` every Story in them, `stageRun` the
 Story's Stage Run for its current visit or `null`, and `digest` a short hash of `stages` and
 `stories` (all their fields, so ones added to a row count too). `wait` returns the same object with
 `changed` first, once `digest` differs from `--since` (or from the first read), or with
 `changed: false` after `--timeout`. It uses the command host's `waitFor`: the Data Root watch of the
-TUI, started before the first read, with a recheck every minute in case a change went unseen. `run start`, `finish` and `fail` return
-`{ key, stageRun }`; `run clear` returns `{ cleared }`.
+TUI, started before the first read, with a recheck every minute in case a change went unseen.
+`run start`, `finish` and `fail` return `{ key, stageRun }`; `run clear` returns `{ cleared }`.
 
 **Rules**
 
@@ -491,6 +498,16 @@ TUI, started before the first read, with a recheck every minute in case a change
   visit (`CONFLICT`, exit 4). `--retry` starts a failed one again as its next `attempt`. `by` is Me,
   or `null`. `finish` and `fail` end a running Stage Run (`CONFLICT` otherwise); `clear` removes any
   Stage Run (`NOT_FOUND`, exit 3, when there is none), so the Stage is worked again.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

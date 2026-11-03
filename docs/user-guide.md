@@ -472,17 +472,28 @@ rowbly software-factory run clear <story>
   Moving the Story to another Stage removes it, so the Stage is worked again on the next visit.
   `run start` exits 4 (`CONFLICT`) when the Story's Stage has no Stage Prompt that is on, or the
   Story already has a Stage Run there; `--retry` starts a failed one again. `run clear` removes it.
-- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }], digest }`.
+- `runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`.
   `digest` is a short hash of `stages` and `stories`: it changes whenever they do.
 - `wait` blocks until `runs` differs from `--since <digest>` (without it, from `runs` when the wait
   starts), then prints `runs` with `changed: true`. That happens when a Story enters or leaves a
   Stage whose Stage Prompt is on, a Stage Prompt is turned on or off, or a Stage Run starts, ends or
-  is cleared; Comments and other edits do not count. It watches the Data Root for changes by any
-  process, and checks once at the start, so a change made before it began is not missed. With
+  is cleared, or eligibility changes (for example, a blocker reaches Done); Comments do not count.
+  It watches the Data Root for changes by any process, and checks once at the start, so a change
+  made before it began is not missed. With
   `--timeout`, it stops after that many seconds and prints `runs` with `changed: false`; exit 0 either
   way. `ctrl+c` (or `SIGTERM`) stops it with nothing changed (exit 130 or 143).
 - In the TUI, **Stage Prompts** in the settings (`,`) lists the Stages with their Stage Prompts, and
   the Story screen shows the Story's **Stage Run**.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

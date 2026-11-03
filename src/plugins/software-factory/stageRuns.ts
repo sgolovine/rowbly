@@ -13,6 +13,7 @@ import {
   UsageError,
   z,
 } from '../../plugin-api';
+import { type Eligibility, storyEligibility } from './eligibility';
 import { boardOverview } from './stagePrompts';
 
 /**
@@ -101,6 +102,11 @@ export async function startRun(
         );
       if (input.retry && !current)
         throw new ConflictError(`${story.key} has no failed Stage Run in "${story.stage}" to retry`);
+      const eligibility = await storyEligibility(plugin, story);
+      if (!eligibility.eligible)
+        throw new ConflictError(`${story.key}: ${eligibility.reasons.map((reason) => reason.message).join('; ')}`, {
+          details: { key: story.key, eligibility },
+        });
       const run: StageRun = {
         stage: story.stage,
         status: 'running',
@@ -163,7 +169,7 @@ export interface RunsOverview {
   board: string;
   /** The Stages whose Stage Prompt is on, in Board order. */
   stages: string[];
-  stories: { key: string; name: string; stage: string; stageRun: StageRun | null }[];
+  stories: { key: string; name: string; stage: string; stageRun: StageRun | null; eligibility: Eligibility }[];
   /** A hash of `stages` and `stories`: any change to them changes it (`wait --since`). */
   digest: string;
 }
@@ -174,7 +180,15 @@ export async function runsOverview(plugin: PluginContext, board: string): Promis
   const stages = overview.stages.filter((s) => s.prompt.enabled).map((s) => s.key);
   // An empty Stage filter would match every Stage.
   const stories = stages.length ? await plugin.services.stories.list(board, { stages }) : [];
-  const rows = stories.map((s) => ({ key: s.key, name: s.name, stage: s.stage, stageRun: currentRun(plugin, s) }));
+  const rows = await Promise.all(
+    stories.map(async (s) => ({
+      key: s.key,
+      name: s.name,
+      stage: s.stage,
+      stageRun: currentRun(plugin, s),
+      eligibility: await storyEligibility(plugin, s),
+    })),
+  );
   return { board, stages, stories: rows, digest: digestOf({ stages, stories: rows }) };
 }
 

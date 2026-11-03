@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Wait for actionable factory changes without model polling",
   "description": "Factory review recommendation 10 of 20.\n\n## Context\n\nA minute-by-minute model polling loop spends turns while no actionable Board change has occurred.\n\n## Acceptance criteria\n\n- Provide a blocking CLI wait for Stories entering prompted Stages or relevant Stage Run changes.\n- Use file watching with an initial state check so changes around startup are not missed.\n- Support cancellation and update the factory skill to resume only when action is needed.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "Zu",
+  "stage": "in-pr",
+  "rank": "a5",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:51.268Z",
-  "updatedAt": "2026-11-02T23:45:03.524Z",
+  "updatedAt": "2026-11-02T23:58:04.734Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b8fb1f33-1af7-4dca-b1a1-39c36c658a2e",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:37:26.057Z"
-      }
     },
     "comments": {
       "comments": [
@@ -37,6 +27,13 @@
           "updatedAt": "2026-11-02T23:45:03.524Z"
         },
         {
+          "id": "Sz268Ck7",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/138. Adds rowbly software-factory wait [--board] [--since <digest>] [--timeout <s>], which blocks until the Board's runs differ from the digest: a Story entering or leaving a prompted Stage, a Stage Prompt toggled, or a Stage Run started, ended or cleared. A stale digest returns at once, a timeout returns changed:false, and SIGINT/SIGTERM end it cleanly. runs gains a digest over {stages, stories}, so eligibility fields from ROW-58/59 are covered automatically. The Plugin API gains PluginCommandEnv.waitFor (watch before the first check, no overlapping checks, coalesced rechecks, 60 s fallback, full cleanup). The rowbly-factory loop now waits in the background on the digest instead of polling once a minute. Docs and skill references are updated. typecheck, lint, test:unit (77) and test:cli (20) pass; the race, stale digest, timeout, watcher fallback and signal paths were checked by hand; agentic-tui screenshots are in the PR.",
+          "createdAt": "2026-11-02T23:55:35.775Z",
+          "updatedAt": "2026-11-02T23:55:35.775Z"
+        },
+        {
           "id": "e8yO2pni",
           "author": "sunny",
           "body": "Supervisor accepted plan: Plan accepted with the canonical eligibility digest boundary. Keep digest computation in runsOverview over deterministic {stages,stories} and no duplicate eligibility logic. Coordinate host PluginCommandEnv additions with ROW-55 runCommand: add separate members without changing each other's behavior. Watch before initial read; serialize/coalesce rechecks and never drop an event arriving while check() is in flight. On all exit/error/abort paths close watchers, timers, abort/signal handlers and avoid lingering CLI processes. Manual verification must include a change during a delayed initial check, stale digest, timeout, watcher fallback and SIGINT/SIGTERM. Existing AGENTS test policy allows manual checks for this new read command; extend a kept test if you find an actual correctness race requiring a regression. ROW-58 eligibility computed in runsOverview, ROW-59 HELD reason, so wait remains independent. No ADR number needed. Implement only wait/poll section and your command/doc additions. Run/report all four checks and agentic-tui screenshot evidence. Proceed.",
@@ -44,6 +41,16 @@
           "updatedAt": "2026-11-02T23:43:26.970Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:d92d9b9f-33f8-4cf1-825c-ed5f482f20b4",
+        "by": "sunny",
+        "startedAt": "2026-11-02T23:58:04.733Z"
+      }
     }
   }
 }

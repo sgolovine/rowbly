@@ -45,8 +45,14 @@ function runsTable(overview: RunsOverview): string {
   const digest = `Digest: ${overview.digest}`;
   if (!overview.stages.length) return `No Stage Prompt is on for Board ${overview.board}\n${digest}`;
   const table = renderTable(
-    ['Story', 'Stage', 'Stage Run', 'Name'],
-    overview.stories.map((s) => [s.key, s.stage, runText(s.stageRun), s.name]),
+    ['Story', 'Stage', 'Stage Run', 'Eligibility', 'Name'],
+    overview.stories.map((s) => [
+      s.key,
+      s.stage,
+      runText(s.stageRun),
+      s.eligibility.reasons.map((r) => r.message).join('; ') || 'Eligible',
+      s.name,
+    ]),
   );
   return `${table}\n${digest}`;
 }

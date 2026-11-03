@@ -52,13 +52,14 @@ rowbly software-factory run clear WEB-42 --json --no-prompt          # work the 
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
 
-`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun }], digest }`, where
+`runs --json` returns `{ board, stages, stories: [{ key, name, stage, stageRun, eligibility }], digest }`, where
 `stages` are the Stages whose Stage Prompt is on, `stageRun` is `null` for a Story nobody works in
 this visit, and `digest` changes whenever `stages` or `stories` do. `wait` blocks until `runs`
 differs from `--since <digest>` (without it, from when it starts) and returns `runs` with
 `changed: true`: a Story entered or left a Stage whose Stage Prompt is on, a Stage Prompt was turned
-on or off, or a Stage Run started, ended or was cleared. A stale `--since` returns at once. After
-`--timeout <seconds>` it returns `changed: false`. Both exit 0; a signal stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
+on or off, a Stage Run started, ended or was cleared, or eligibility changed. A stale `--since`
+returns at once. After `--timeout <seconds>` it returns `changed: false`. Both exit 0; a signal
+stops it (exit 130 or 143). `run start`, `finish` and `fail` return `{ key, stageRun }`, with `stageRun`
 `{ stage, status, attempt, worker, by, startedAt, finishedAt?, reason? }`; `run clear` returns
 `{ cleared }`.
 
@@ -79,6 +80,16 @@ on or off, or a Stage Run started, ended or was cleared. A stale `--since` retur
 - To wait for work, pass `wait` the `digest` of the `runs` you last acted on, never a fresh one: a
   change between your read and the wait then returns at once instead of being missed.
 - Data: `"plugins": { "software-factory": { "stageRun": { … } } }` in the Story's `story.json`.
+
+`eligibility` is `{ eligible, reasons: [{ code, message, blockers? }] }`, separate from the Stage
+Run. With Story Linking on, unfinished incoming blockers produce a `BLOCKED` reason and
+`blockers: [{ key, name, stage }]`; the table shows the reason. `run start`, including `--retry`,
+refuses them with exit 4 (`CONFLICT`) and `details.eligibility`, saving no Run or attempt change.
+Moving each blocker to a Stage of category `done` restores eligibility on the next `runs` call;
+links remain recorded. Supervisors skip blocked Stories and reconsider them after Board changes.
+Invalid linking data fails explicitly (exit 6), and an enabled but unavailable provider fails the
+query rather than reporting no blockers. With Story Linking off, its preserved data is ignored.
+An eligible Story still needs the appropriate Stage Run state to start or retry.
 
 With Software Factory on, each Stage heading in the Board's Stages view has a clickable `✎`.
 It opens that Stage's effective Stage Prompt in the fullscreen viewer, including when the prompt

@@ -96,7 +96,7 @@ Assigned worker:
    - If none exists, stop and ask which supported parent branch to create or use. Do not base autonomous development on any other branch.
 3. Preserve unrelated local work. Do not overwrite, revert, stash, or commit pre-existing user changes. A dirty original checkout does not need to be cleaned.
 4. Fetch remotes with pruning. Choose `origin/<parent>` as the start point when available; otherwise use the local parent and note that push and PR steps may be blocked.
-5. Read [the shared linked worktree contract](references/worktrees.md), then apply it before planning or editing, even when the original checkout is clean. Use:
+5. Read [the shared linked worktree contract](references/worktrees.md), then apply it before planning or editing, even when the original checkout is clean. Create the task branch with tracking disabled, so it never tracks the parent. Use:
    - the original checkout as the control checkout,
    - the selected parent ref as the start point,
    - `<harness>/<story-key-lowercase>-<short-kebab-summary>` (for example `claude/row-18-skills-create`) as the unique local branch unless the user requests another name,
@@ -141,7 +141,7 @@ Assigned development worker:
    - Use a single commit only for very minor work that forms one small, coherent change, such as a typo fix or a narrowly scoped one-line correction. A task being atomic does not by itself justify one commit. Choose meaningful boundaries; do not create empty or artificial commits merely to increase the count.
    - Before each checkpoint, run the fastest relevant targeted check and inspect the staged diff. Keep each commit focused and leave the branch in a usable state when practical.
    - Follow the repository's documented or recent commit convention. If none is clear, use Conventional Commits 1.0.0 (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, and similar). Mention the Story Key in each commit message, for example `feat(cli): add skills create (ROW-18)`.
-   - Push immediately after the first commit with `git push -u origin <branch>`, then push again after every later commit. Do not wait until the end of a multi-milestone task to publish all progress.
+   - Push immediately after the first commit with `git push -u origin <branch>` and confirm that `git rev-parse --abbrev-ref '@{upstream}'` prints `origin/<branch>`, never the parent branch. Then push again after every later commit. Do not wait until the end of a multi-milestone task to publish all progress.
    - Do not use meaningless checkpoint messages such as `WIP`, and do not amend, squash, rebase, or force-push already published checkpoints unless the user explicitly asks.
    - Report each finished Task to the supervisor, which moves it to `done`.
 
@@ -179,7 +179,7 @@ Capture actual task-relevant output, including for non-UI changes: rendered docu
 Assigned workers whose scope includes finalization perform it in their own thread after completing validation and any acceptance required by their brief. In standalone mode, after validation sign-off, the supervisor finalizes scores 1–2 in the same thread; for scores 3–10, assign a fresh development worker to finalize the branch and PR. The screenshot owner supplies the images and evidence for upload. Any delegated follow-up capture remains with the designated role in a fresh assignment.
 
 1. Confirm task changes are committed and the branch still matches the signed-off commit. If final changes are needed, return through development, fresh validation, and supervisor sign-off before opening the PR. Stage only files that belong to the task and follow the checkpoint rules.
-2. Confirm every commit has been pushed and the local task branch is synchronized with its upstream.
+2. Confirm every commit has been pushed and the local task branch is synchronized with its own upstream, `origin/<branch>`, not the parent branch.
 3. Open a draft pull request by default with `gh pr create --draft --base <parent>`, where `<parent>` is the parent branch established earlier. Start the title with the Story Key or follow the commit convention with the Key, for example `feat(cli): add skills create (ROW-18)`. Use a ready-for-review PR only when the user explicitly requests it. If `gh` is unavailable or unauthenticated, leave the branch pushed and report the compare URL as the blocker instead of retrying other tooling.
 4. Write the PR body with:
    - the Story Key and name, and a summary of the user-facing or developer-facing change,
