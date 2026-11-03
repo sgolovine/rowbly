@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Add Stage Run heartbeats and stale-worker visibility",
   "description": "Factory review recommendation 4 of 20.\n\n## Context\n\nStage Runs have no last-seen time, so the supervisor hashes worktrees to infer activity.\n\n## Acceptance criteria\n\n- Provide a supported heartbeat/touch operation and expose last-seen time and age in Stage Run output.\n- Have the supervisor refresh liveness from verified worker activity and identify stale Runs.\n- Define restart and stale-worker handling while preserving ADR-0040’s lifecycle intent.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a8",
+  "stage": "done",
+  "rank": "b0E",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T05:03:10.469Z",
+  "updatedAt": "2026-11-03T05:03:11.150Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:937968c5-2db3-43bc-a66e-390a92c178a4",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:08:46.321Z",
-        "finishedAt": "2026-11-03T05:03:09.230Z"
-      }
     },
     "comments": {
       "comments": [
