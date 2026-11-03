@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-03T02:19:59.465Z",
+  "updatedAt": "2026-11-03T02:23:05.111Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -32,6 +32,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/140. Adds a read-only Story Context (ADR-0044): each Built-in Plugin (Tasks, Specs, Comments, Epics, Story Linking, Attachments, Assignees) gives a section, and PluginContext.storyContext reads them all, listing every Plugin that failed to load or whose section failed or is partial in 'incomplete'. 'rowbly software-factory brief <KEY>' prints the context part of a worker's brief (Story with all sections, Stage Prompt, Stages, instructions and retry context). It is deterministic and exits 4 with details.incomplete unless --allow-incomplete is given. The factory skill uses it, and the worker-brief template (with the ROW-63 and ROW-66 rules) stays as the rules block and fallback. Not done yet: reading ROWBLY.md waits for the user's approval of a read-only exception; the brief leaves a placeholder for the supervisor. Checks: typecheck, lint, test:unit (78) and test:cli (20) pass.",
           "createdAt": "2026-11-03T00:06:05.510Z",
           "updatedAt": "2026-11-03T00:06:05.510Z"
+        },
+        {
+          "id": "HrDnqv2y",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, worker mcp:a0b9183a-4671-4809-9a22-ff79b054034d, machine thinkpad, provider claudeAgent, model claude-opus-5-5; branch factory/row-53; PR https://github.com/sgolovine/rowbly/pull/140; head cf8e57f4c64a3a3f4525b291ca57228e6ab575dd. User-approved narrow read-only ROWBLY.md exception recorded in ADR-0047. All four checks passed (unit78, CLI20). Independent In PR reviewer is fresh Sol thread mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406.",
+          "createdAt": "2026-11-03T02:22:26.876Z",
+          "updatedAt": "2026-11-03T02:22:26.876Z"
         },
         {
           "id": "NrXfQbOh",
@@ -55,6 +62,16 @@
           "updatedAt": "2026-11-03T01:56:53.944Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:23:04.427Z"
+      }
     }
   }
 }
