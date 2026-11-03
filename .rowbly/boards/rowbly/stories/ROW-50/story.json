@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T03:15:47.975Z",
+  "updatedAt": "2026-11-03T03:22:50.711Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:15:47.160Z"
+      }
     },
     "comments": {
       "comments": [
@@ -39,6 +49,13 @@
           "body": "Full identity-preservation guard finding is material and within accepted Story scope. Complete your exact-head review/evidence and terminal handoff; do not implement or integrate in this review Run. For CHANGES REQUESTED, report ownStory Comment with concrete reproduction/fix expectation plus move in-progress and FACTORY-DONE ROW-50, per current InPR requested-changes route. Preserve PR146/branch, no duplicate PR. Integration corrections need preserve PR140 brief and ADR0047 plus ADR0048/strict run metadata. Supervisor finishes Run before move and gives fresh correction worker continuation context. All actual check results/evidence needed; no rerun to seek pass.",
           "createdAt": "2026-11-03T02:55:58.818Z",
           "updatedAt": "2026-11-03T02:55:58.818Z"
+        },
+        {
+          "id": "e7FiPqSX",
+          "author": "sunny",
+          "body": "PLAN ACCEPTED. Integrate currentmain additively in isolated correction branch/worktree, preserving generated brief/API, all ADR0040 amendments including0047/0048, strict shared metadata/selection/hold semantics. Capture complete current attached identity under lock and require exact full identity equality after transforms, not just workerID. Extend existing pipeline regression to reproduce same-worker machine/thread replacement and assert CONFLICT plus unchanged complete Story/metadata bytes; no newtestfile or count increase. Keep result shape, RunRef, clock/Me and ordinarytouch behavior unchanged. Manual opaque/unsafe/refusal/preservation/staledigest checks, allfourchecks and relevant fresh evidence; normal push to SAME PR146 and answer both findings. No .rowbly changes or merge.",
+          "createdAt": "2026-11-03T03:22:50.710Z",
+          "updatedAt": "2026-11-03T03:22:50.710Z"
         },
         {
           "id": "iMYNKqAN",
@@ -76,16 +93,6 @@
           "updatedAt": "2026-11-03T02:36:05.070Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c964f7e9-3e94-46ae-ab43-4f6fd8ec12ad",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:15:47.160Z"
-      }
     }
   }
 }

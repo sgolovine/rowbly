@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:46.593Z",
-  "updatedAt": "2026-11-03T03:11:36.461Z",
+  "updatedAt": "2026-11-03T03:22:52.197Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -63,6 +63,13 @@
           "body": "PLAN ACCEPTED with coordination. Own In PR return/failure step 5 and Returned work in In Progress, plus rowbly-dev step 5 continuation exception and baseline continuation mechanics. ROW-47 owns independent review/approval steps 3-4, implementation records and head-SHA handoff; ROW-57 owns step 2 CI waiting. Use the same Returned to In Progress Comment format for review requests, failed checks and main conflicts; include review findings or concrete logs/conflict paths. Changes requested can return immediately; pending checks alone never return or fail. Continue only after verifying PR is still open and recorded branch/head match; mismatch asks, never discards work. Fresh Stage worker, finish Run before move. No screenshots required for text-only skill changes; no ADR. Exact .rowbly proposals outside Data Root only, supervisor applies after review; combine with companion sections before final config proposal. Do not add an overlapping returned-work section to rowbly-dev beyond your owned lines. Four checks required.",
           "createdAt": "2026-11-03T02:19:43.052Z",
           "updatedAt": "2026-11-03T02:19:43.052Z"
+        },
+        {
+          "id": "iN9d0OCC",
+          "author": "sunny",
+          "body": "One unmodified validation pass AUTHORIZED based on the new controlled diagnostic evidence, not as repeated tests until green. Run all four checks ONCE sequentially on a clean current-main integration of exact PR148 head, retaining original20s limit and unchanged repository/test code. Admit only with demonstrably adequate CPU capacity; reserve/control only your own fresh processes and temporary fixtures, never stop/reconfigure other workers or shared resources. Capture external CPU-pressure/throttling/process/wait telemetry and exact integration/head/commands throughout. If capacity cannot be established, return waiting rather than start. Stop on ANY failure, preserve logs and do not repeat again without new causal evidence. A pass establishes this measured validation run, not proof that original failure was CPU contention; keep both historical failure and diagnostic distinction in finalreview/Comment. No code fix justified yet. Merge only if all required gates AND evidence-backed exact-head independent approval are satisfied; if ambiguity remains return specific diagnosis/question. No source/test edits, timeout increase, retries, polling or .rowbly writes.",
+          "createdAt": "2026-11-03T03:22:52.196Z",
+          "updatedAt": "2026-11-03T03:22:52.196Z"
         },
         {
           "id": "ou4AqDd9",
