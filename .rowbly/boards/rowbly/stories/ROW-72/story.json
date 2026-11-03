@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T07:10:10.469Z",
+  "updatedAt": "2026-11-03T07:12:36.484Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:c9aa3c43-3fe1-4116-902f-543c2b9ae4af",
+        "by": "sunny",
+        "startedAt": "2026-11-03T07:10:09.678Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -59,6 +69,13 @@
           "updatedAt": "2026-11-03T05:58:24.209Z"
         },
         {
+          "id": "iDnR7Bmy",
+          "author": "sunny",
+          "body": "ROW-72 correction plan ACCEPTED for both numbered findings on existing PR153. Continue the allocated new correction checkout/local branch and push only HEAD:factory/row-72, preserving the existing PR and all earlier work.\n\n1. Finalize publication, queue, lock-file and recovery phase elapsed times on success and rejection, before cleanup can inflate them. Preserve original thrown errors, operation-name/duration privacy and no measurement with tracing off. Extend the existing storage telemetry check with controlled clock/failure assertions, no wall-time thresholds/sleeps, including failed acquisition and phase attribution rather than merely nonzero total duration.\n2. Give each loader its own detached array/deep Story snapshots; isolate the per-Story mapper and legacy callback boundaries too. Preserve core inventory and other contributors even when input arrays are spliced, nested fields mutated, or callbacks throw. Extend the existing Plugin contract check for these actual failure modes; keep total tests at100. Preserve loader/callback ordering, ordinary unavailable-text behavior, and batched-read consistency/error guarantees.\n\nThe full correction brief still applies: update relevant behavior/API/storage docs and compiled fixtures where semantics are clarified; no new ADR reversal or unrelated refactor. Run all four checks at the actual final head under the bounded shared lease with original timeouts; diagnose failures before changed reruns, no retry-to-green. Include numbered finding responses, exact head/PR/branch, all implementing-model provenance, and appropriate new correction evidence/screenshots using repository agentic-tui workflow. Retain old screenshots/assets and measurement evidence, with honest synthetic/I/O limits. Report your exact owned private state directory before any daemon startup, and stop only your own processes before handoff. No Board edits, new PR, merge or CI poller.\n\nThe clean correction checkout/branch and merged HEAD1f4e2a7f9eea47ecfcb1d6f05af78116a495ee19 were verified read-only by the supervisor. This acceptance authorizes implementation of these two fixes; no additional user scope decision is needed. Report any newly discovered scope conflict before extending it.",
+          "createdAt": "2026-11-03T07:12:36.483Z",
+          "updatedAt": "2026-11-03T07:12:36.483Z"
+        },
+        {
           "id": "kDDGME4c",
           "author": "sunny",
           "body": "ROW-72 round 2: PARTIAL PLAN ACCEPTANCE.\n\nYou may implement the independent portion now in the existing worktree: opt-in coordination telemetry (operation names and durations only), same-context-Board selection without context.use/version changes with route reset decided separately, core Story/config loading before optional enrichment, freshness guards and usable keys/hints, and the one deterministic TUI barrier regression you proposed. Keep optional Plugin callbacks outside the Data Root lock. Update the corresponding docs and measure these phases. The existing publication/recovery test can cover telemetry now; extend it for batch reads only after the API contract is accepted. The total remains at most 100 tests. Your private agentic-tui state directory ownership is recorded; you may use it for this accepted scope under the existing screenshot/check rules.\n\nThe new files.readMany/listMany, loadStorySearchText, associated Plugin migrations and Finder inventory batching are NOT accepted for implementation yet. Before coding that portion, send a short typed interface/semantics addendum:\n1. Exact input/result types, ordered association to requested entries/scopes, missing-file behavior, duplicate handling, validation, and error semantics across multiple batches. \"An I/O error rejects only its own batch\" does not yet define the caller's observable result. Distinguish tolerant per-file display errors from publication/lock/recovery/data-integrity failures. A generic catch-and-retry-every-file fallback must not swallow or repeatedly retry coordination/integrity failures.\n2. Remove the proposed single outer scope across boards.list + stories.list + every Board config: that can cover the whole Data Root and contradicts the stated bound. Explain the bounded inventory approach while retaining the existing service consistency guarantees. Distinguish 32 requested entries/scopes from 32 filesystem operations or bounded time: recursive list and stories.list may each read arbitrarily many files. Do not claim the latter bounds without evidence or change existing atomic service semantics silently.\n3. Confirm the search loader's failure handling, freshness/invalidation and compatibility with existing storySearchText callbacks; no callbacks under the lock and no unbounded whole-Board/Root wrapper.\n\nThis is an interface/implementation clarification within the existing Story, not a request to expand scope or reverse ADR-0019. A new ADR must use docs/agents/adr and the index; ROW-69 has a pending reservation for 0051, so coordinate a different free number. Your before/after measurement plan and conditional cache deferral are accepted as evidence requirements, not promised performance results. Keep reporting mechanisms separately from the unproved original incident cause.\n\nCanonical Model Selection absence remains audited by Comment SmCEMgSY and the verified receipt; do not backfill it, restart or duplicate this worker. Report progress and the API addendum here; await separate acceptance before that API portion.",
@@ -73,16 +90,6 @@
           "updatedAt": "2026-11-03T07:07:56.625Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c9aa3c43-3fe1-4116-902f-543c2b9ae4af",
-        "by": "sunny",
-        "startedAt": "2026-11-03T07:10:09.678Z"
-      }
     }
   }
 }
