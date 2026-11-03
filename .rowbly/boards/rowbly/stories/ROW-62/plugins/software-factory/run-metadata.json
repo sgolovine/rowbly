@@ -2,18 +2,26 @@
   "version": 1,
   "run": {
     "stage": "in-progress",
-    "attempt": 1,
-    "startedAt": "2026-11-03T02:12:18.396Z"
+    "attempt": 2,
+    "startedAt": "2026-11-03T15:16:16.471Z"
   },
-  "identity": {
-    "worker": "mcp:e241b183-309f-40b0-9372-d0ce552c97a2",
-    "machine": "thinkpad",
-    "harness": "t3",
-    "threadId": "mcp:e241b183-309f-40b0-9372-d0ce552c97a2",
-    "verification": {
-      "source": "Local T3 launch/read/configuration verified e241b183 Sonnet5.5 high/full-access/bound factory-row-62 reservation",
-      "verifiedAt": "2026-11-03T02:12:19.380Z",
-      "by": "sunny"
-    }
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "high"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "user named: Sol retry continuing preserved research",
+    "fallback": "Verified Claude session limit during research; explicit user-directed Sol continuation",
+    "usage": "observed-limit",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-03T15:16:16.471Z"
   }
 }
