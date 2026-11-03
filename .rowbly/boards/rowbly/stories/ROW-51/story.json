@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.135Z",
-  "updatedAt": "2026-11-03T00:06:00.901Z",
+  "updatedAt": "2026-11-03T00:13:00.463Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -32,6 +32,13 @@
           "body": "Merged https://github.com/sgolovine/rowbly/pull/134. Merge commit 58f7e9b. Typecheck, lint, unit (77), CLI (20), and all six GitHub checks passed. Screenshot HTTP 200. Main CI queued.",
           "createdAt": "2026-11-03T00:06:00.206Z",
           "updatedAt": "2026-11-03T00:06:00.206Z"
+        },
+        {
+          "id": "YTntQnm0",
+          "author": "sunny",
+          "body": "Supervisor applied the reviewed ROWBLY.md persistence-policy diff after PR134 merged, completing its matching repository-policy acceptance criterion: commit each saved change, synchronize before GO and after Board changes, and handle saved Rowbly data before generic cleanup. This is Board policy only; no worker checkout was pulled or changed.",
+          "createdAt": "2026-11-03T00:13:00.462Z",
+          "updatedAt": "2026-11-03T00:13:00.462Z"
         },
         {
           "id": "ktpDKDiW",

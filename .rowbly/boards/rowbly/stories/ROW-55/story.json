@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Validate worker-reported Board commands mechanically",
   "description": "Factory review recommendation 9 of 20.\n\n## Context\n\nThe supervisor currently interprets worker command blocks using prose rules, leaving room for cross-Story writes or unsafe command interpretation.\n\n## Acceptance criteria\n\n- Add validation and a dry run for reported Board command blocks.\n- Allow only supported commands for the worker’s Story; reject shell syntax and Stage Run mutations.\n- Apply permitted changes through the CLI and hold Stage moves until the Stage Run has been finished as required.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a6",
+  "stage": "in-progress",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.805Z",
-  "updatedAt": "2026-11-03T00:06:02.847Z",
+  "updatedAt": "2026-11-03T00:43:05.867Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -20,11 +20,25 @@
     "comments": {
       "comments": [
         {
+          "id": "LR7pTH8s",
+          "author": "sunny",
+          "body": "PR139 review reproduced two merge blockers: applyBlock uses a finished Run snapshot to authorize a later move; replacing that Run with a running Run between the Comment and move still moves the Story and erases the replacement. Also, story-linking add TEST-1 --blocked-by TEST-2 submitted for TEST-1 writes the Story Linking bag on TEST-2. Corrections need regression checks for both cases and current-visit preconditions enforced at the actual mutation under the Data Root lock; a second unlocked read is insufficient. Continue existing PR139 and branch sunny/row-55-validate-worker-commands in /home/sgolovine/Projects/rowbly-worktrees/row-55. Local unpublished merge SHA: e5e5b14e092dd5ff4cfc7cf4788f6ebebab7e157. No source fixes or pushes from review. Typecheck, lint, unit78, CLI20, six GitHub checks and four screenshot HTTP200 checks passed.",
+          "createdAt": "2026-11-03T00:37:20.364Z",
+          "updatedAt": "2026-11-03T00:37:20.364Z"
+        },
+        {
           "id": "Pn4OEDFN",
           "author": "sunny",
           "body": "Supervisor accepted plan: Plan accepted with refinements. Reject the whole block before any mutation when any line is invalid; return every line's decision so supervisor can explicitly resubmit allowed lines. Keep bounded own-Story allowlist and never pass through a shell. Host runCommand must pin the opened Data Root and noninteractive JSON flags and reject caller-supplied root/global/interactive overrides, rather than relying only on the Software Factory parser; avoid arbitrary shell capability or recursion. Keep execution outside an enclosing mutation/lock so child commands don't deadlock; each child operation owns its lock. Document partial success on later runtime failure. Guard move using current-visit finished Stage Run; hold while running/absent, drop failed; do not silently lose returned held commands. Read-only dry-run changes nothing. Reserve ADR-0045 (0043 hold,0044 brief reserved) and recheck. Extend an existing test in test/plugins or agentWorkflows instead of new file; keep total suite <=100 (currently97), one representative failure contract. No worker-brief changes yet: ROW-63/66 template updates are opening PRs, so merge them first; add only necessary quoting note. Parent remains main; no stack without approval. Run/report all four checks and screenshot scenarios. Proceed.",
           "createdAt": "2026-11-02T23:43:24.679Z",
           "updatedAt": "2026-11-02T23:43:24.679Z"
+        },
+        {
+          "id": "XNbkGCbl",
+          "author": "sunny",
+          "body": "Factory review reproduced two merge blockers in PR139 despite green checks: a finished Run cached at planning authorized a later move that erased a replacement running Run, and story-linking add with blocked-by wrote another Story. Reviewer was instructed to return a final handoff for In Progress; corrections need deterministic regression checks and current-visit enforcement under the mutation lock. PR139 remains draft/unmerged.",
+          "createdAt": "2026-11-03T00:34:15.723Z",
+          "updatedAt": "2026-11-03T00:34:15.723Z"
         },
         {
           "id": "vAOmfcev",
@@ -34,6 +48,16 @@
           "updatedAt": "2026-11-03T00:06:02.194Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:c3adf1a3-db76-48d7-8154-cb63e8b86809",
+        "by": "sunny",
+        "startedAt": "2026-11-03T00:43:05.866Z"
+      }
     }
   }
 }

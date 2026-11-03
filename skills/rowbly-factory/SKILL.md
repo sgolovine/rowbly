@@ -110,10 +110,16 @@ where workers run. One supervisor works a Board: if the user says another one is
 
 Run until the user stops you. Do not wait for the user between events.
 
-1. **Poll.** Run `rowbly software-factory runs --board <id>` about once a minute, and whenever a
-   worker reports. Use the harness's way to wait or watch; do not busy-loop. Re-read
-   `software-factory stages` before each start, so a Stage Prompt the user changed or turned off
-   takes effect.
+1. **Read, then wait.** Run `rowbly software-factory runs --board <id>`, act on it (steps 2 to 5),
+   and keep its `digest`. If you changed the Board, read `runs` again; when you changed nothing, run
+   `rowbly software-factory wait --board <id> --since <digest> --timeout <seconds>` in the
+   background, with the harness's way to run a command and resume when it exits. It returns as soon
+   as `runs` differs from that digest (a Story entered a Stage whose Stage Prompt is on, or a Stage
+   Run or eligibility changed), at once if it already does, or with `changed: false` after the
+   timeout. Act on what it returns as on `runs`. Worker messages do not reach it: resume on them
+   as well, and keep the timeout as long as your check on quiet workers allows. Stop the wait (a signal) when you stop.
+   Never wait on a digest newer than the `runs` you acted on. Re-read `software-factory stages`
+   before each start, so a Stage Prompt the user changed or turned off takes effect.
 2. **Start** each Story whose `stageRun` is `null` and `eligibility.eligible` is `true`, in the order
    `runs` lists them, while fewer workers run than the limit. See [Start a Story](#start-a-story).
 3. **Retry** each eligible Story whose Stage Run is `failed`, once: when `attempt` is 1, follow
