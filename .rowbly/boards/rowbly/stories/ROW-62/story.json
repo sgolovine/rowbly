@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:21:00.605Z",
+  "updatedAt": "2026-11-03T16:25:00.582Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4638c180-871e-43c3-b4fd-c683fc3ec0b0",
+        "by": "sunny",
+        "startedAt": "2026-11-03T16:20:59.857Z"
+      }
     },
     "comments": {
       "comments": [
@@ -137,18 +147,15 @@
           "body": "PLAN NEEDS SMALL REVISION before implementation acceptance. Advisory TODO once per visit, no move/implementation, no Done-loop, no ADR are approved direction. A Reviewed input line with counts/latest Comment alone cannot detect edited Spec/Task/link/Epic/older Comment/blocker/prompt changes. Propose a stable complete-input fingerprint (or equivalent complete comparison) covering actual review inputs, excluding readiness-generated output; compare only equal complete known inputs and ask/report gaps rather than claiming no new input on an incomplete fingerprint. Include Epic and blocker status among inputs. Keep all .rowbly proposals outside Data Root for supervisor review/application after validation; do not enable TODO yourself. You may own one sentence in factory loop step4, separate from ROW-47/48/57 sections. Update user-guide if documenting human-facing run-clear readiness workflow. Screenshots on temporary Data Root as proposed are appropriate. Send revised prompt/fingerprint method before coding.",
           "createdAt": "2026-11-03T02:19:45.211Z",
           "updatedAt": "2026-11-03T02:19:45.211Z"
+        },
+        {
+          "id": "qdx8I8u4",
+          "author": "sunny",
+          "body": "Correction round2 investigation confirmed both review findings on PR154. Complexity 3 plan: isolate known-input success fixtures and assert unknown Plugin gaps; recheck the original normalized Story with Story Linking on and off; audit adjacent collection reads; extend the kept deterministic regression while preserving unsafe Spec checks and the 100-test ceiling; update guidance and rollout hashes; run all four leased checks and fresh owned screenshot evidence. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-62-correction-sol-2, branch factory/row-62-correction-sol-2, integrated HEAD 1f0adc23b8ed1af6500e3a1f269c543ef4135f48. No product edits or Board writes. TODO activation remains pending supervisor application after merge.",
+          "createdAt": "2026-11-03T16:25:00.581Z",
+          "updatedAt": "2026-11-03T16:25:00.581Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:4638c180-871e-43c3-b4fd-c683fc3ec0b0",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:20:59.857Z"
-      }
     }
   }
 }
