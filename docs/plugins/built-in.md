@@ -384,7 +384,14 @@ The deterministic rules are defined in [ADR-0034](../agents/adr/0034-git-synchro
 - Combine independent fields and non-overlapping Markdown hunks, even when Git could merge JSON text
   cleanly. For conflicting leaves or overlapping hunks, select by stable content/source ordering and
   retain the exact base, both alternatives, provenance and decisions in committed content-addressed
-  `plugins/git/merge-evidence/` files. Evidence failure blocks publication.
+  `plugins/git/merge-evidence/` files. Evidence failure blocks publication. A record is written only
+  when the attempt makes a decision; a Board or Story absent from BASE and added on one side, with
+  its files, is an addition, not a decision ([ADR-0050](../agents/adr/0050-merge-evidence-records-only-decisions-and-is-retained.md)).
+- Merge Evidence is append-only audit history. Rowbly never edits, expires or prunes it. A person
+  removes a file only with explicit user approval and an ordinary commit on the upstream branch,
+  after the adding merge commit is upstream and its decisions were reviewed. Record the path, adding
+  commit, review and approval in the removal commit message; history is never rewritten, so
+  `git show <commit>:<path>` still reads it.
 - Keep edits over deletions, including edited descendants. Distinct concurrent additions keep both
   complete record/file subtrees with source-qualified Board/Story remapping; identical additions coalesce.
 - Keep Configuration Cascade levels separate. Restore referenced definitions, split incompatible
