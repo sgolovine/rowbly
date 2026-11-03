@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.163Z",
-  "updatedAt": "2026-11-03T03:04:35.598Z",
+  "updatedAt": "2026-11-03T03:09:30.840Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 2,
+        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:04:34.806Z"
+      }
     },
     "comments": {
       "comments": [
@@ -46,18 +56,15 @@
           "body": "PLAN NEEDS REVISION before implementation acceptance. Equivalent completion workflow instead of Done Prompt is approved direction; no historical dispatch. Keep every pr-assets branch for now and coordinate ROW-65 retention: deleting linked evidence is not accepted. Your Story explicitly includes associated pr-assets cleanup, so explain a retained-evidence condition/archival prerequisite rather than silently dropping that criterion. ROW-65 owns evidence-retention policy; you own cleanup script/worktree and task-owned daemon mechanics. Per-task daemon isolation is good; do not stop shared/existing daemons or archive other workers. Repository delete_branch_on_merge setting remains proposal only, no execution yet. Require protected main/base/default branches never deleted, no active assigned worktrees/threads (CWD scan alone cannot establish inactivity), exact branch/PR ownership, and recheck refs immediately before actions. Avoid remote deletion race: if you cannot atomically ensure the remote ref is still the verified merged tip without any force push, retain it/report for supervisor instead of deleting a possibly advanced ref. Provide revised plan covering these and evidence retention before coding. No ADR needed for guidance alone. Four checks/manual temp-repo evidence remain appropriate.",
           "createdAt": "2026-11-03T02:19:44.435Z",
           "updatedAt": "2026-11-03T02:19:44.435Z"
+        },
+        {
+          "id": "KxmOCKHu",
+          "author": "sunny",
+          "body": "Retry2 recovered the preserved cleanup draft on factory/row-61 at 501a2a53 and safely merged origin/main. Continuing the accepted plan: dry-run-first owned local cleanup, mandatory supervisor harness inactivity checks, exact recorded daemon state ownership, protected refs and guarded local deletion. No real resources, remote refs, pr-assets, Board files or repository settings will be changed. Linked evidence remains retained indefinitely pending ROW-65.",
+          "createdAt": "2026-11-03T03:09:30.839Z",
+          "updatedAt": "2026-11-03T03:09:30.839Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:c4d7a92b-31c4-46b3-9367-f2ca3526865d",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:04:34.806Z"
-      }
     }
   }
 }
