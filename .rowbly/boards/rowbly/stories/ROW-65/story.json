@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:56.111Z",
-  "updatedAt": "2026-11-03T02:37:48.492Z",
+  "updatedAt": "2026-11-03T03:01:13.882Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -51,6 +51,13 @@
           "body": "Coordination: ROW-61 owns completion cleanup script, worktree/merged-branch ownership and per-task agentic-tui daemon isolation. You own evidence retention (merge-evidence and linked pr-assets) and coherent supervisor-event batching. Keep all existing evidence until a reviewed policy defines audit preservation and safe archival/cleanup; no actual pruning/deletion/settings changes during research. ROW-61 has been told keep pr-assets pending your retention decision and to avoid mass historical Done dispatch. Keep your shared skill edits in retention/batching sections, separate from cleanup mechanics and ROW-47/48/57 review/repair/wait sections.",
           "createdAt": "2026-11-03T02:19:46.023Z",
           "updatedAt": "2026-11-03T02:19:46.023Z"
+        },
+        {
+          "id": "ehcatK42",
+          "author": "sunny",
+          "body": "User explicitly authorized Continue existing work for retry2 on fresh Sol (Claude session limit). Attempt1 failed on explicit Claude session limit, not failed implementation. Prior worker mcp:ec258031-f91b-455d-a30b-d7d3b238985d on thinkpad model claude-opus-5-5. Existing work verified with Git status/HEAD on owning machine: /home/sgolovine/.t3/worktrees/rowbly/factory-row-65 (thinkpad), branch factory/row-65, HEAD7ee3b17, modified A2/test/docs/ADR0050/skill files preserved; regression failed without fix and passed with it, full checks not yet run; A1 remains unauthorized. No PR reported; retry continuation choice requested from user, one fresh Sol retry held until decision; do not discard work or launch duplicate. Prior Run/metadata captured in supervisor /tmp/rowbly-factory-session/ROW-65-failed-attempt1-context.json. Prior failed Run: {\"stage\": \"in-progress\", \"status\": \"failed\", \"attempt\": 1, \"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"by\": \"sunny\", \"startedAt\": \"2026-11-03T02:13:11.585Z\", \"finishedAt\": \"2026-11-03T02:36:00.540Z\", \"reason\": \"Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry.\"}. Prior Run metadata preserved: {\"version\": 1, \"run\": {\"stage\": \"in-progress\", \"attempt\": 1, \"startedAt\": \"2026-11-03T02:13:11.585Z\"}, \"identity\": {\"worker\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"machine\": \"thinkpad\", \"harness\": \"t3\", \"threadId\": \"mcp:ec258031-f91b-455d-a30b-d7d3b238985d\", \"verification\": {\"source\": \"Local T3 launch/read/configuration verified ec258031 Opus5.5 high/full-access/bound factory-row-65 reservation\", \"verifiedAt\": \"2026-11-03T02:13:12.380Z\", \"by\": \"sunny\"}}}. Exact head branch factory/row-65 verified: no PR. Continue this work, not restart; preserve partial files. Authority: user selected Continue existing work (Recommended) in supervisor thread. ROW65 A1 ADR change remains held; this answer only authorizes continuation.",
+          "createdAt": "2026-11-03T03:01:13.881Z",
+          "updatedAt": "2026-11-03T03:01:13.881Z"
         }
       ]
     }
