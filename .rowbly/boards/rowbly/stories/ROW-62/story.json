@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T16:19:38.468Z",
+  "updatedAt": "2026-11-03T16:19:39.080Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -141,6 +141,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/154 at 0c5f219cd71d4a6638833ff0df394d4b46a276ac by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] test/skills/agentWorkflows.test.ts:245-246: The new success-path assertion fails after a clean merge with current main (48dc512a219d43026e71a2f3b77639101a53e8e5). The CLI now lists the GitHub Plugin, so the helper correctly returns exit 1 and gap=plugins: unknown or enabled unloaded Plugin instead of the expected exit 0. Preserve the explicitly approved conservative unknown-Plugin policy and reconcile the kept regression with the current catalog, using a controlled known-input fixture for success cases and checking the unknown-input gap; do not silently declare GitHub inputs complete just to pass. 2. [P2] skills/rowbly-factory/scripts/readiness-fingerprint.mjs:403-408: The Story inventory snapshot starts after the Story and Comments were read and is never reconciled with that earlier Story. A description edit between those reads and the inventory snapshot is therefore accepted by every final recheck, while the fingerprint still hashes the old description. A deterministic disposable command fixture changed the actual story.json description during config show: the helper emitted overall and comparison=equal against the saved old review, exit 0. This allows the TODO prompt to skip new requirements. Recheck the reviewed Story against its original normalized input before emitting overall, including when Story Linking is off, and extend the kept regression with this deterministic ordering case. Prior finding 1 is fixed: the unsafe Spec fixture now emits gap=specs with no overall. Reviewed all seven changed files, verified both Sol implementation records and fresh reviewer identity, checked the complete corrected rollout and matching manifest hashes, and inspected all seven hosted PNGs (HTTP 200). Independent unchanged checks ran once under the shared lease on local integration d8223c589d09b24abeebd6cdf05d8543e33e767f: typecheck PASS; lint PASS; unit 79 PASS; CLI 20 PASS and 1 FAIL as finding 1. The assigned-head six GitHub checks were SUCCESS; those do not supersede the local integration failure. Evidence on rook: /tmp/row-62-review-astra-2/validation.log and /tmp/row-62-review-astra-2/probe.py with probe/ outputs. No product fixes, Board writes or PR-branch pushes. TODO activation remains pending supervisor revalidation and application after a corrected code merge.",
           "createdAt": "2026-11-03T16:19:38.467Z",
           "updatedAt": "2026-11-03T16:19:38.467Z"
+        },
+        {
+          "id": "4Lfx5sbH",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-62, PR https://github.com/sgolovine/rowbly/pull/154, head 0c5f219cd71d4a6638833ff0df394d4b46a276ac. Finding 1: reconcile the kept workflow regression with the current Plugin catalog while preserving unknown-input gaps. Finding 2: prevent a Story edit during collection from producing false equality by checking the original reviewed input and adding a deterministic regression. Review: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6609320682. Continue the existing PR; TODO activation remains pending.",
+          "createdAt": "2026-11-03T16:19:39.079Z",
+          "updatedAt": "2026-11-03T16:19:39.079Z"
         }
       ]
     }
