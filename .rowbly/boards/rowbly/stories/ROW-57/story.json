@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:52.322Z",
-  "updatedAt": "2026-11-03T02:19:43.747Z",
+  "updatedAt": "2026-11-03T02:26:17.084Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
@@ -35,6 +35,13 @@
           "body": "PLAN ACCEPTED with corrections. Own standalone Waiting for pull request checks section and In PR step 2 proposal only; ROW-47 owns review/approval steps 3-4 and ROW-48 owns failure/return step 5. Independent review may run while checks pending; it must not wait to start solely because checks are pending. Supervisor owns native event watch; workers return exact head and pending state and end their turn. Fallback one bounded background gh pr checks --watch, never model-turn polling. Naming gh in the GitHub-specific fallback is fine; T3-specific tools remain repository policy proposal. Do not treat no checks registered as a failed check: distinguish absent registration, pending/timeout, actual failed conclusion and unreadable PR; absence/timeout returns waiting/question, not repair or failure. Use all checks, not --required. No screenshots/ADR required for text-only guidance. Proposal outside .rowbly, no Data Root edits. Four checks required.",
           "createdAt": "2026-11-03T02:19:43.746Z",
           "updatedAt": "2026-11-03T02:19:43.746Z"
+        },
+        {
+          "id": "jAFcNufp",
+          "author": "sunny",
+          "body": "Implementation record: attempt 1; worker mcp:241441f8-f97a-454f-a22a-8f3e445d24ed; machine rook; provider claudeAgent; model claude-sonnet-5-5; PR https://github.com/sgolovine/rowbly/pull/147 branch factory/row-57. All four checks passed, unit78 CLI20. Source: verified remote thread terminal handoff; ignore ROW48 handoff typo saying thinkpad, attached identity is rook.",
+          "createdAt": "2026-11-03T02:26:17.083Z",
+          "updatedAt": "2026-11-03T02:26:17.083Z"
         }
       ]
     }
