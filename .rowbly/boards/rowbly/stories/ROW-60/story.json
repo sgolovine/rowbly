@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T04:00:48.568Z",
+  "updatedAt": "2026-11-03T04:15:58.070Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
@@ -105,6 +105,13 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "NRcpDT2D",
+          "author": "sunny",
+          "body": "Implementation record before return to In PR: verified Sol correction worker mcp:5978dcb4-e083-41f1-9499-42e9e03bd89b rook, branch factory/row-60 PR145 heade3e2b691a624119696f925c5ef02dfbafb1a700c, original Opus and Sol authored work. New controlled local validation allfour PASS unit78 CLI20 with exacthead unchanged, original failure preserved. Fresh reviewer must differ from both authors; shared merge hold149->147->146->145 persists.",
+          "createdAt": "2026-11-03T04:15:58.069Z",
+          "updatedAt": "2026-11-03T04:15:58.069Z"
         }
       ]
     }
