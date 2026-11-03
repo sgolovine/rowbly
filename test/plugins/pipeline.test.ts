@@ -22,6 +22,8 @@ import { tasks } from '../../src/plugins/tasks';
 import { createTask, deleteTask, listTasks, updateTask } from '../../src/plugins/tasks/tasks';
 import { pathExists } from '../../src/storage';
 import { io } from '../../src/storage/io';
+import type { TuiPlugin } from '../../src/tui/hooks';
+import { findStories, loadStorySearch } from '../../src/tui/shell/storySearch';
 import { makeStory } from '../helpers';
 import { deferred } from '../helpers/deferred';
 import { echo, faulty, notes, order, tracer } from './fixtures';
@@ -237,10 +239,10 @@ describe('transform (ADR-0012)', () => {
     expect(order).toEqual(['transform:1', 'guard', 'react:todo']);
   });
 
-  it('a thrown error fails the operation as INTERNAL, naming the Plugin; nothing is saved', async () => {
-    const t = await pluginRoot({ faulty: true, 'software-factory': true });
+  it('a thrown error fails mutations without saving, while failed display contributions preserve core search', async () => {
+    const t = await pluginRoot({ faulty: true, 'software-factory': true, notes: true });
     await makeStory(t.path, { boardId: 'web', key: 'WEB-1' });
-    const { services } = await withPlugins(t, [softwareFactory, faulty]);
+    const { services } = await withPlugins(t, [softwareFactory, faulty, notes]);
     const err = await services.boards.update('web', { name: 'Renamed' }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(PluginError);
     expect(err).toMatchObject({
@@ -255,6 +257,92 @@ describe('transform (ADR-0012)', () => {
     const hold = holdStory(services.plugins.context('software-factory'), 'WEB-1', { reason: 'By hand' });
     await expect(hold).rejects.toMatchObject({ code: 'INTERNAL', details: { stage: 'transform' } });
     expect(await pathExists(join(t.path, 'boards/web/stories/WEB-1/plugins/software-factory/hold.json'))).toBe(false);
+    await makeStory(t.path, {
+      boardId: 'web',
+      key: 'WEB-2',
+      name: 'Original searchable name',
+      plugins: { faulty: { nested: { kept: true } } },
+    });
+    const inventory = await services.stories.list('web', {});
+    const expected = structuredClone(inventory);
+    // Reuse the exact service-owned inventory to detect mutation, including nested Plugin Data.
+    const list = vi.spyOn(services.stories, 'list').mockResolvedValue(inventory);
+    const calls: string[] = [];
+    const contributors: TuiPlugin[] = [
+      {
+        id: 'faulty',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            const story = stories.find((s) => s.key === 'WEB-2');
+            if (!story) throw new Error('Missing fixture');
+            story.name = 'Poisoned name';
+            story.labels.push('poison');
+            (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+            (stories as typeof inventory).splice(0);
+            throw new Error('Unavailable loader');
+          },
+        },
+      },
+      {
+        id: 'software-factory',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            expect(stories).toEqual(expected);
+            return (story) => {
+              expect(story).toEqual(expected.find((s) => s.key === story.key));
+              calls.push(`mapper:${story.key}`);
+              story.name = 'Poisoned mapper';
+              story.labels.push('mapper');
+              if (story.key === 'WEB-2') {
+                (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+              }
+              throw new Error('Unavailable mapper');
+            };
+          },
+          storySearchText({ story }) {
+            expect(story).toEqual(expected.find((s) => s.key === story.key));
+            calls.push(`legacy:${story.key}`);
+            story.name = 'Poisoned legacy callback';
+            story.labels.push('legacy');
+            if (story.key === 'WEB-2') {
+              (story.plugins as { faulty: { nested: { kept: boolean } } }).faulty.nested.kept = false;
+            }
+            throw new Error('Unavailable legacy callback');
+          },
+        },
+      },
+      {
+        id: 'notes',
+        actions: [],
+        tui: {
+          async loadStorySearchText({ stories }) {
+            expect(stories).toEqual(expected);
+            return (story) => {
+              expect(story).toEqual(expected.find((s) => s.key === story.key));
+              calls.push(`observer:${story.key}`);
+              story.labels.push('private copy');
+              return ['loaded text'];
+            };
+          },
+          storySearchText({ story }) {
+            expect(story).toEqual(expected.find((s) => s.key === story.key));
+            return ['legacy text'];
+          },
+        },
+      },
+    ];
+    try {
+      const entries = await loadStorySearch(services, contributors, 'web');
+      expect(inventory).toEqual(expected);
+      expect(entries.map((entry) => entry.story)).toEqual(expected);
+      expect(findStories(entries, 'Original searchable name').map((entry) => entry.story.key)).toEqual(['WEB-2']);
+      expect(entries.every((entry) => entry.fields.slice(-2).join('|') === 'loaded text|legacy text')).toBe(true);
+      expect(calls).toEqual(expected.flatMap((s) => [`mapper:${s.key}`, `legacy:${s.key}`, `observer:${s.key}`]));
+    } finally {
+      list.mockRestore();
+    }
   });
 });
 
@@ -908,5 +996,84 @@ describe('binary Plugin files', () => {
     await expect(
       plugin.operation('linked', {}, (changes) => changes.writeBinaryFile('dataRoot', 'linked/image.png', bytes)),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
+
+    // Batched reads (ADR-0052) answer each request in order; a file or Story scope fails on its own.
+    const folder = join(t.path, 'plugins/binary');
+    await writeFile(join(folder, 'a.txt'), 'A');
+    const failed = (code: string) => ({ status: 'failed', code, message: expect.any(String) });
+    expect(
+      await plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope: 'dataRoot', name: 'gone.txt' },
+        { scope: 'dataRoot', name: 'linked/image.png' },
+        { scope: { story: 'WEB-99' }, name: 'a.txt' },
+        { scope: 'dataRoot', name: 'a.txt' },
+      ]),
+    ).toEqual([
+      { status: 'found', text: 'A' },
+      { status: 'missing' },
+      failed('VALIDATION'),
+      failed('NOT_FOUND'),
+      {
+        status: 'found',
+        text: 'A',
+      },
+    ]);
+    expect(await plugin.files.listMany(['dataRoot', { story: 'WEB-99' }])).toEqual([
+      { status: 'found', names: ['a.txt', 'image.png'] },
+      failed('NOT_FOUND'),
+    ]);
+    // Each batch of 32 is its own read scope: a change that queued for the lock during one goes before the next.
+    const requests = Array.from({ length: 33 }, (_, n) => ({ scope: 'dataRoot' as const, name: `n${n}.txt` }));
+    for (const { name } of requests) await writeFile(join(folder, name), 'old');
+    const reading = deferred();
+    const resume = deferred();
+    const queued = deferred();
+    const read = io.readFile;
+    const readSpy = vi.spyOn(io, 'readFile').mockImplementation(async (path) => {
+      if (path === join(folder, 'n0.txt')) {
+        reading.resolve();
+        await resume.promise;
+      }
+      return read(path);
+    });
+    const timer = globalThis.setTimeout;
+    let timerSpy: { mockRestore(): void } | undefined;
+    try {
+      const many = plugin.files.readMany(requests);
+      await reading.promise;
+      // `acquireLock` sets its 10 s deadline once a caller has its place in the lock's queue.
+      timerSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number) => {
+        if (typeof ms === 'number' && ms > 5_000) queued.resolve();
+        return timer(fn, ms);
+      }) as typeof setTimeout);
+      const change = plugin.operation('rewrite', {}, (changes) => changes.writeFile('dataRoot', 'n32.txt', 'new'));
+      await queued.promise;
+      resume.resolve();
+      const [result] = await Promise.all([many, change]);
+      expect([result[0], result[32]]).toEqual([
+        { status: 'found', text: 'old' },
+        { status: 'found', text: 'new' },
+      ]);
+    } finally {
+      resume.resolve();
+      readSpy.mockRestore();
+      timerSpy?.mockRestore();
+    }
+    // An invalid name rejects the call before anything is read; so does a Story that cannot be read.
+    await expect(
+      plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope: 'dataRoot', name: '../a.txt' },
+      ]),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    await writeFile(join(t.path, `boards/web/stories/${story.key}/story.json`), '{ not json');
+    await expect(
+      plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope, name: 'note.txt' },
+      ]),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    await expect(plugin.files.listMany([scope])).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
   });
 });

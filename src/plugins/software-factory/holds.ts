@@ -74,9 +74,13 @@ async function storedHold(read: () => Promise<string | null>): Promise<HoldState
   return parseHold(text);
 }
 
-/** The Story's hold as stored. */
-export function readHold(plugin: PluginReadContext, key: string): Promise<HoldState> {
-  return storedHold(() => plugin.files.read({ story: key }, HOLD_FILE));
+/** The Story's hold as stored; `read` reads its file, by default on its own. */
+export function readHold(
+  plugin: PluginReadContext,
+  key: string,
+  read = () => plugin.files.read({ story: key }, HOLD_FILE),
+): Promise<HoldState> {
+  return storedHold(read);
 }
 
 /** A hold in one line, for `stories show`, the TUI Story screen and the `runs` table. */

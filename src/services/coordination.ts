@@ -7,12 +7,14 @@ import {
   acquireLock,
   canonicalDataRoot,
   type LockHandle,
+  type LockTiming,
   type RecoveryReport,
   type Repositories,
   recoverTransactions,
 } from '../storage';
 import { enterPublication } from '../storage/gitSyncJournal';
 import type { OperationCoordinator } from './plugins/runtime';
+import { failure, type TraceEvent, trace, traceClock, tracing } from './plugins/trace';
 
 /** The lock one coordinated call holds on one Data Root. */
 interface Hold {
@@ -46,41 +48,134 @@ function canonical(root: DataRoot): Promise<string> {
 
 /** Takes the lock, then recovers interrupted commits before anything is read (ADR-0019 §2). */
 async function lockAndRecover(path: string, operation: string, recover = true): Promise<LockHandle> {
-  const publication = await enterPublication({ path, kind: 'local' });
+  // Measured only while the trace is on (OBS-01).
+  const clock = tracing() ? acquisitionClock(operation) : undefined;
+  let handle: LockHandle;
+  try {
+    handle = await acquire(path, operation, recover, clock);
+  } catch (err) {
+    clock?.failed(err);
+    throw err;
+  }
+  if (!clock) return handle;
+  let reported = false;
+  return wrapRelease(handle, async () => {
+    try {
+      return await handle.release();
+    } finally {
+      if (!reported) clock.released();
+      reported = true;
+    }
+  });
+}
+
+async function acquire(path: string, operation: string, recover: boolean, clock?: AcquisitionClock) {
+  let publication: Awaited<ReturnType<typeof enterPublication>>;
+  try {
+    publication = await enterPublication({ path, kind: 'local' }, clock?.gate);
+  } finally {
+    clock?.published();
+  }
   let lock: LockHandle;
   try {
-    lock = await acquireLock(path, { operation });
+    lock = await acquireLock(path, { operation, timing: clock?.root });
   } catch (error) {
-    await publication?.gate.release();
+    // Cleanup must not replace the acquisition error.
+    await publication?.gate.release().catch(() => undefined);
     throw error;
   }
+  clock?.locked();
   try {
-    if (recover) await recoverTransactions(path);
+    try {
+      if (recover) await recoverTransactions(path);
+    } finally {
+      clock?.recovered();
+    }
   } catch (err) {
-    await lock.release();
-    await publication?.gate.release();
+    await lock.release().catch(() => undefined);
+    await publication?.gate.release().catch(() => undefined);
     throw err;
   }
   if (!publication) return lock;
-  const release = async () => {
+  return wrapRelease(lock, async () => {
     try {
       return await lock.release();
     } finally {
       await publication.gate.release();
     }
-  };
+  });
+}
+
+/** `handle` with `release` in place of its own. */
+function wrapRelease(handle: LockHandle, release: () => Promise<boolean>): LockHandle {
   return {
-    root: lock.root,
-    path: lock.path,
-    token: lock.token,
-    owning: lock.owning,
+    root: handle.root,
+    path: handle.path,
+    token: handle.token,
+    owning: handle.owning,
     get released() {
-      return lock.released;
+      return handle.released;
     },
     release,
     async [Symbol.asyncDispose]() {
       await release();
     },
+  };
+}
+
+/** Acquisitions in the trace: `lock-1`, `lock-2`, … */
+let acquisitions = 0;
+
+type AcquisitionClock = ReturnType<typeof acquisitionClock>;
+
+/**
+ * Times one acquisition for the trace: the wait at each step, then how long the lock was held, as one
+ * `coordination` event when it is released or fails. It records operation names and durations only.
+ */
+function acquisitionClock(operation: string) {
+  const gate: LockTiming = { queuedMs: 0, waitedMs: 0 };
+  const root: LockTiming = { queuedMs: 0, waitedMs: 0 };
+  let publication = 0;
+  let recovery = 0;
+  let mark = traceClock();
+  const lap = () => {
+    const now = traceClock();
+    const ms = now - mark;
+    mark = now;
+    return ms;
+  };
+  const operationId = `lock-${++acquisitions}`;
+  const report = (ms: number, outcome: Pick<TraceEvent, 'outcome' | 'code' | 'failedAt'>) =>
+    trace({
+      operationId,
+      operation,
+      plugin: null,
+      stage: 'coordination',
+      ms,
+      ...outcome,
+      coordination: {
+        publication,
+        queue: root.queuedMs,
+        lock: root.waitedMs,
+        recovery,
+        ...(gate.holder ? { publicationHolder: gate.holder } : {}),
+        ...(root.holder ? { lockHolder: root.holder } : {}),
+      },
+    });
+  return {
+    gate,
+    root,
+    published: () => {
+      publication = lap();
+    },
+    locked: () => {
+      lap();
+    },
+    recovered: () => {
+      recovery = lap();
+    },
+    released: () => report(lap(), { outcome: 'ok' }),
+    failed: (err: unknown) => report(0, failure(err)),
   };
 }
 

@@ -159,7 +159,7 @@ These are guards against mistakes, not a sandbox ([`trust.md` §2](trust.md#2-wh
 | Read | Sees |
 | --- | --- |
 | `plugin.services.*` (lists and gets) | stored records |
-| `plugin.files.read` / `files.readBinary` / `files.list` | stored files |
+| `plugin.files.read` / `files.readBinary` / `files.list` / `files.readMany` / `files.listMany` | stored files |
 | `changes.changes`, `changes.story(key)`, `changes.board(id)` | the Change Set as it is when called, including this stage's own writes |
 | `changes.updateStory(key, fn)` | the latest version: the Change Set's, else the stored one |
 | `changes.readFile(scope, name)` | the pending text: the Change Set's, else the stored file; `null` for none |
@@ -172,6 +172,61 @@ A hook that must see what earlier hooks of the same operation did reads through 
 - Writing a file of a Story or Board that the same operation deletes fails with `CONFLICT`. Reading it gives `null`, and deleting it does nothing: the whole folder goes.
 - `updateStory` cannot change `key` or `boardId` (`VALIDATION`). Putting again a Story or Board that the operation deleted fails with `CONFLICT`.
 - A file reached through a symbolic link inside `plugins/<id>/` is refused for reading, writing, listing and deleting.
+
+### Batched file reads
+
+`plugin.files.readMany(requests)` reads many stored files, and `plugin.files.listMany(scopes)` lists
+many scopes, in a few read scopes instead of one each ([ADR-0052](../agents/adr/0052-plugins-read-many-files-in-bounded-read-scopes.md)):
+
+- `result[i]` answers `requests[i]` (or `scopes[i]`): `{ status: 'found', text }` (`{ status: 'found', names }`
+  for a listing, as `list` gives them), `{ status: 'missing' }` where `read` gives `null`, or
+  `{ status: 'failed', code, message }` (`PluginFileRead`, `PluginFileList`). A duplicate request gets
+  its own entry.
+- Every scope and name is checked as `read` checks it before anything is read; an invalid one rejects
+  the call (`VALIDATION`, or `USAGE` for a Story Key).
+- One entry fails on its own (`failed`) for a Story or Board that does not exist (`NOT_FOUND`), a
+  filesystem error on its file or folder (such as `EACCES`) and a symbolic link (`VALIDATION`).
+- Anything else rejects the whole call with its error and no partial result: a busy Data Root
+  (`CONFLICT`), an interrupted commit or publication that cannot be recovered, and a Story or Board
+  record that cannot be read (`DATA_INTEGRITY`). Rowbly does not retry it.
+- `readMany` reads at most 32 requests in one read scope; `listMany` lists at most 32 scopes in one
+  and takes no further scope once 256 names were listed, checked after each whole scope (one scope
+  can list more). These limits count requests: they do not bound the reads needed to find a Story's
+  folder, one listing's size, or time. Between batches the lock is released, so callers that waited
+  for it in this process meanwhile go first. Each batch sees one committed state; two batches may see
+  different ones. Inside an operation, every batch uses the operation's lock.
+
+```ts
+/** Each Story's note, read in batches; a note that cannot be read shows as unavailable. */
+export async function storyNotes(plugin: PluginReadContext, stories: readonly Story[]): Promise<Map<string, string>> {
+  const requests: PluginFileRequest[] = stories.map((story) => ({ scope: { story: story.key }, name: 'note.md' }));
+  const read: PluginFileRead[] = await plugin.files.readMany(requests);
+  const notes = new Map<string, string>();
+  stories.forEach((story, at) => {
+    const file = read[at];
+    if (file?.status === 'found') notes.set(story.key, file.text);
+    else if (file?.status === 'failed') notes.set(story.key, `unavailable (${file.code})`);
+  });
+  return notes;
+}
+
+/** How many files each Story has, listed in batches. */
+export async function fileCounts(plugin: PluginReadContext, stories: readonly Story[]): Promise<number[]> {
+  const lists: PluginFileList[] = await plugin.files.listMany(stories.map((story) => ({ story: story.key })));
+  return lists.map((list) => (list.status === 'found' ? list.names.length : 0));
+}
+
+/** Search inputs are detached deep copies: key the loaded text by Story Key, not object identity. */
+export const searchableNotes: PluginTui = {
+  async loadStorySearchText({ stories, plugin }) {
+    const notes = await storyNotes(plugin, stories);
+    return (story) => {
+      const note = notes.get(story.key);
+      return note === undefined ? [] : [note];
+    };
+  },
+};
+```
 
 ### Binary Plugin files
 
@@ -360,7 +415,14 @@ The form calls `input` **only when one of the Plugin's own fields changed**, com
 
 `storySearchText({ story, plugin })` on `PluginTui` returns an array of searchable strings (or a
 Promise of one). The Story finder calls it once per Story when opened, only for loaded, enabled
-Plugins. Read bags and related files through the Plugin context; include display names and text,
+Plugins. Text that needs the Plugin's files belongs in `loadStorySearchText({ stories, plugin })`
+instead (example above): the finder calls it once each time it opens, with every Story it searches,
+outside the Data Root lock, and calls the function it returns for each Story; its text comes before
+`storySearchText`'s. Each loader receives its own detached array and deep Story copies. Each call
+to the returned function or `storySearchText` also receives a separate deep Story copy, so input
+mutation cannot change the core inventory or another contribution's inputs. Read through `files.readMany` and `listMany` there. A load that throws leaves the
+Plugin's text out of that search, and a function that throws leaves it out for that Story; nothing is
+retried or kept for the next search. Read bags and related files through the Plugin context; include display names and text,
 not binary attachment contents. Core indexes its own Story fields separately and never inspects
 Plugin bags. Missing related records should be skipped individually. If the contribution throws,
 its text is skipped for that Story and core fields remain searchable. This is a read-only display
@@ -484,9 +546,11 @@ rowbly trace op-4 stories.create guard plugin=points ok 0.8 ms
 rowbly trace op-4 stories.create commit ok changes=story:1 2.9 ms
 rowbly trace op-4 stories.create operation ok 5.1 ms
 rowbly trace op-5 stories.update operation rejected code=CONFLICT at=guard:points 1.2 ms
+rowbly trace lock-9 stories.get coordination ok wait=publication:2001.3,queue:0.0,lock:0.4,recovery:0.2 holder=publication:git.publish held 1.1 ms
 ```
 
 - Each line has the operation ID, the operation (or, outside one, the stage), the stage, the Plugin, the outcome (`ok`, `failed`, `rejected`, `timeout`), the error code, the place a failed operation names, and for a commit the number of changes of each type.
+- A `coordination` line is one acquisition of the Data Root lock ([storage](../architecture/storage.md)), named after the read or operation that took it. `wait=` gives the milliseconds spent waiting for the Git publication gate (including publication recovery), behind earlier callers in this process, for the lock file, and on recovering interrupted commits; `holder=` names the operation that held the gate or the lock meanwhile, when it waited for one; the last figure is how long the lock was held. A failed acquisition, such as a busy lock, has outcome `failed` and its code. Its elapsed publication, queue, lock-file or recovery phase is recorded even when that phase rejects, before failure cleanup; phases it never reached remain zero.
 - Command mode writes each line to stderr as it happens, so `--json` output on stdout still parses. The TUI keeps the last 1,000 lines and writes them to stderr when it exits.
 - It never records inputs, bags, settings, records, file text, error messages or editor text. When it is off nothing is measured or kept.
 

@@ -108,20 +108,19 @@ export async function readEpic(read: EpicReader, id: string): Promise<Epic> {
   return file.epic;
 }
 
-/** Every Epic file of the Data Root, sorted by ID, each read on its own. */
+/**
+ * Every Epic file of the Data Root, sorted by ID, each parsed on its own and read in batches
+ * (ADR-0052). A file that cannot be read is unavailable; a Data Root that cannot be read throws.
+ */
 export async function readEpicFiles(files: PluginFiles): Promise<EpicFile[]> {
   const ids = (await files.list('dataRoot')).flatMap((name) => epicIdOf(name) ?? []);
-  return Promise.all(
-    ids.map(async (id): Promise<EpicFile> => {
-      try {
-        const text = await files.read('dataRoot', epicFileName(id));
-        if (text !== null) return parseEpicFile(id, text);
-        return { id, path: epicFilePath(id), problem: 'unreadable', message: 'file disappeared while reading' };
-      } catch (err) {
-        return { id, path: epicFilePath(id), problem: 'unreadable', message: (err as Error).message };
-      }
-    }),
-  );
+  const read = await files.readMany(ids.map((id) => ({ scope: 'dataRoot' as const, name: epicFileName(id) })));
+  return ids.map((id, at): EpicFile => {
+    const file = read[at];
+    if (file?.status === 'found') return parseEpicFile(id, file.text);
+    const message = file?.status === 'failed' ? file.message : 'file disappeared while reading';
+    return { id, path: epicFilePath(id), problem: 'unreadable', message };
+  });
 }
 
 /** Writes `epic` to its file: validated, two-space JSON in schema key order, with a final newline. */
