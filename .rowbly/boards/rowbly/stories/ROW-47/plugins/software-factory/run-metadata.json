@@ -4,5 +4,16 @@
     "stage": "in-progress",
     "attempt": 1,
     "startedAt": "2026-11-03T03:16:45.182Z"
+  },
+  "identity": {
+    "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+    "machine": "rook",
+    "harness": "t3",
+    "threadId": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+    "verification": {
+      "source": "SSH T3 start/show verified explicit new bound review worktree, Sol provider defaults no options requested, full-access reservation; /tmp/rowbly-factory-session/ROW-47-verified-new.json",
+      "verifiedAt": "2026-11-03T03:16:45.959Z",
+      "by": "sunny"
+    }
   }
 }
