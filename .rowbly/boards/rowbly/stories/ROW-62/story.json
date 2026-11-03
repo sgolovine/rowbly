@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:54.534Z",
-  "updatedAt": "2026-11-03T15:57:27.514Z",
+  "updatedAt": "2026-11-03T16:00:05.700Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
+        "by": "sunny",
+        "startedAt": "2026-11-03T15:57:26.671Z"
+      }
     },
     "comments": {
       "comments": [
@@ -55,11 +65,25 @@
           "updatedAt": "2026-11-03T15:15:23.983Z"
         },
         {
+          "id": "S5EcU0Ic",
+          "author": "sunny",
+          "body": "Correction investigation complete for PR154 at verified open head 30c4d8960266c9e6e189d36f71ff211de278919b. Isolated rook worktree /home/sgolovine/Projects/rowbly-worktrees/row-62-correction-sol-1, branch factory/row-62-correction-sol-1, merged main at c5daa0fc3900c17a090ab8a280470768cc707dee. Cause: filtered Plugin file listing hides unsafe Story Spec entries. Proposed complexity 3 correction validates physical Spec inventory and safe files, checks linked Board Specs and off-Plugin stored Specs, and guards analogous omitted incoming-link Story candidates without changing core listing policy. Extend the kept workflow regression within 100 tests, update guidance and rollout evidence, run all four leased checks and fresh private agentic-tui evidence, then update the existing PR. No product edits or Board writes; awaiting supervisor plan acceptance. TODO activation remains pending after merge.",
+          "createdAt": "2026-11-03T16:00:04.338Z",
+          "updatedAt": "2026-11-03T16:00:04.338Z"
+        },
+        {
           "id": "VXvhdHU9",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/154 opened at head 30c4d8960266c9e6e189d36f71ff211de278919b. Typecheck, lint, unit 79 and CLI 21 passed; total 100 tests. Five CI checks passed; Clipboard smoke (windows-latest) is pending and mergeability was UNKNOWN. Screenshots and complete rollout proposals: https://github.com/sgolovine/rowbly/pull/154#issuecomment-6608312095. Exact rollout files and hashes are under /tmp/row62/retry2/rollout. Supervisor must revalidate and apply/enable TODO after code merge; activation is not done. Worktree clean; owned daemon and sessions stopped.",
           "createdAt": "2026-11-03T15:48:37.380Z",
           "updatedAt": "2026-11-03T15:48:37.380Z"
+        },
+        {
+          "id": "XNdMxIoJ",
+          "author": "sunny",
+          "body": "Supervisor accepts bounded correction plan complexity3 for PR154: validate physical Story Spec inventory and safe own files against successful CLI results, recheck inventory after collection, fail with gap and no overall for unsafe/unreadable/omitted/changed inputs; check linked Board Spec files and off-Plugin stored Specs; guard analogous omitted same-Board Story candidates that affect incoming links. Keep changes in helper/reference/guidance and existing regression, preserve CLI listing policy/core APIs and 100-test ceiling. Method2 and14 input fields may remain because helper-content hash invalidates older comparisons. Require all four leased final checks, fresh privately owned agentic-tui evidence, complete revised rollout/hash manifest and numbered response to finding1 on the same PR/remote branch. No .rowbly edits or TODO activation by worker; supervisor revalidates and applies after corrected code merge.",
+          "createdAt": "2026-11-03T16:00:05.699Z",
+          "updatedAt": "2026-11-03T16:00:05.699Z"
         },
         {
           "id": "YbyHyQY8",
@@ -97,16 +121,6 @@
           "updatedAt": "2026-11-03T02:19:45.211Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:a4ba1019-8f10-447d-a4f4-9aa1b79e9801",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:57:26.671Z"
-      }
     }
   }
 }
