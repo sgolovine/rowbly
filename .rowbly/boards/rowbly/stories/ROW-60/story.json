@@ -97,6 +97,13 @@
           "updatedAt": "2026-11-03T02:26:11.607Z"
         },
         {
+          "id": "ZzTUlNj5",
+          "author": "sunny",
+          "body": "Implementation record: Run in-progress/1/2026-11-03T05:23:11.036Z; worker/thread mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/3ddb796363eb7fa34af6cde3892b81d0.json. Actual finding5 correction25f69cdc author and main integration at PR145 head8c74acd6a22522bb292c7fb5b91cadfadb90d52a; worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-3 branchcodex/row-60-pr145-correction-3. Previous actual Opus/Sol authors retained, reviewer-only Astra excluded. Allactualauthor models Opus/Sol; freshreviewer model mustdifferfromeveryauthor. Finaltypecheck/lint/unit78CLI21pass once, twoPNG200, allprivateprocessesstopped.",
+          "createdAt": "2026-11-03T05:31:27.864Z",
+          "updatedAt": "2026-11-03T05:31:27.864Z"
+        },
+        {
           "id": "aToiWMGD",
           "author": "sunny",
           "body": "Supervisor accepts independent findings3-4 in review6595466903: first discovery of existing worker with unreadable details stays unknown with identity/intendedselection preserved; missing/malformed CLI identity/configuration remains unverified, complete well-formed differing evidence remains conflict. Extend existing deterministic fakeT3 fixture, no realstart/GO. Return to InProgress for fresh correction worker continuing SAME PR145 factory/row-60 head e3e2b691a624119696f925c5ef02dfbafb1a700c; present plan and wait acceptance. Scoped additive integration must retain supervisor resource ownership and complete selection/verification/publication ordering; integration waits until149/147/146 land to avoid churn. No restart/newPR/forcepush/.rowbly edits. Reviewer sends ONLY moveInProgress with actual FACTORY-DONE; supervisor finishes currentRun before move. Configuration proposal retained for supervisor-only application with reviewer different from ALL actual implementation models, including correction workers. Capacity admission75 is no test failure.",
@@ -167,6 +174,13 @@
           "updatedAt": "2026-11-03T05:25:00.682Z"
         },
         {
+          "id": "pjiW90oi",
+          "author": "sunny",
+          "body": "PR145 updated at 8c74acd6a22522bb292c7fb5b91cadfadb90d52a. Finding 5 fixed: unusable CONFIG identity evidence remains unverified without changing original values, intended selection or receipts. Typecheck, lint, unit78 and CLI21 passed once under the validation lease. Two inspected screenshot URLs returned HTTP200. CI pending: Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest). Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596246143. Fresh independent review required.",
+          "createdAt": "2026-11-03T05:31:29.092Z",
+          "updatedAt": "2026-11-03T05:31:29.092Z"
+        },
+        {
           "id": "qYFPh1bl",
           "author": "sunny",
           "body": "Historical prior review tail aca87554 closed: its already-reported check group completed typecheck/lint/unit78/CLI21 PASS once, no failed-check retry, and reviewer explicitly confirms no own processes remain or additional checks after routing. Evidence https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596126377, /tmp/row60-review-aca87554. This validates old da843d1 plus Board-only main integration, does not approve finding5 or current correction. Preserve initial setup/admission75 evidence and chronology. Prior Run already finished/returned; late old command blocks/terminal markers are archival only and are NOT replayed on new Run.",
@@ -200,20 +214,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "ZzTUlNj5",
-          "author": "sunny",
-          "body": "Implementation record: Run in-progress/1/2026-11-03T05:23:11.036Z; worker/thread mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/3ddb796363eb7fa34af6cde3892b81d0.json. Actual finding5 correction25f69cdc author and main integration at PR145 head8c74acd6a22522bb292c7fb5b91cadfadb90d52a; worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-3 branchcodex/row-60-pr145-correction-3. Previous actual Opus/Sol authors retained, reviewer-only Astra excluded. Allactualauthor models Opus/Sol; freshreviewer model mustdifferfromeveryauthor. Finaltypecheck/lint/unit78CLI21pass once, twoPNG200, allprivateprocessesstopped.",
-          "createdAt": "2026-11-03T05:31:27.864Z",
-          "updatedAt": "2026-11-03T05:31:27.864Z"
-        },
-        {
-          "id": "pjiW90oi",
-          "author": "sunny",
-          "body": "PR145 updated at 8c74acd6a22522bb292c7fb5b91cadfadb90d52a. Finding 5 fixed: unusable CONFIG identity evidence remains unverified without changing original values, intended selection or receipts. Typecheck, lint, unit78 and CLI21 passed once under the validation lease. Two inspected screenshot URLs returned HTTP200. CI pending: Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest). Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596246143. Fresh independent review required.",
-          "createdAt": "2026-11-03T05:31:29.092Z",
-          "updatedAt": "2026-11-03T05:31:29.092Z"
         }
       ]
     }
