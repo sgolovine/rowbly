@@ -1,7 +1,8 @@
 # Worker brief
 
 Fill in each `<…>` and send the block as the worker's first message. Give the Story in full, so the
-worker does not need to read the Board. Leave out the retry section unless this is a retry. Capture
+worker does not need to read the Board. Leave out the implementation records section unless the
+Stage Prompt asks for an independent review, and the retry section unless this is a retry. Capture
 the previous attempt before `run start --retry` replaces it. Fill its context from recorded Story,
 Stage Run, Comments and identified worker messages; mark missing details "unknown" and stale or
 inaccessible details "unverified". Do not guess identities. Resolve the continuation/restart decision
@@ -52,6 +53,16 @@ Plugins on: <list>. Stages of the Board, in order: <key (Name), …>.
 ## Other instructions
 
 <the user's instructions for workers, the other Stories that workers are on now, or "None.">
+
+## Implementation records
+
+You review this work; you are not one of these workers and your model is not one of these models.
+If that is not true, or the branch has commits that no record accounts for, report
+FACTORY-QUESTIONS <KEY> and wait.
+
+Reviewer: <your worker, provider instance and model>.
+
+<each implementation record Comment in full, oldest first, with its Comment id>
 
 ## Retry
 

@@ -154,7 +154,9 @@ Report each start, retry, finish, failure, question and Board change to the user
    reason and skip it. Re-read eligibility after Board changes; never launch from a stale overview
    or after a refused start.
 2. Read the Story in full: `stories show`, and for each enabled Plugin its Specs, Tasks, Comments,
-   Epic and Story links. Write the brief from [the worker brief](references/worker-brief.md).
+   Epic and Story links. Write the brief from [the worker brief](references/worker-brief.md). When
+   the Stage Prompt asks for an independent review, choose the worker and its model as
+   [Independent review](#independent-review) says.
 3. Launch or use the reserved worker as `ROWBLY.md` says, keeping it waiting for GO. Verify the
    actual machine, harness, worker ID and thread ID from the launch receipt/harness result. For a
    remote T3 CLI use [remote launches](references/remote-launch.md), including its durable receipt.
@@ -205,6 +207,44 @@ discarding earlier work.
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
 
+## Independent review
+
+Follow this when a Stage Prompt asks for an independent review before a merge. The reviewer must be
+neither a worker that wrote the Story's code nor one of their models, and its approval holds only
+for the commit it reviewed.
+
+1. **Record each implementation.** A Run is an implementation when its worker can change the
+   Story's code (for example, its Stage Prompt names `rowbly-dev`), finished or failed. Before you
+   apply its block, whose move ends the Run and removes its metadata, add a Comment yourself:
+
+   ```text
+   Implementation record: <Stage name> attempt <n>, <finished|failed>.
+   Worker: <worker> (thread <threadId>, harness <harness>, machine <machine>).
+   Model: <provider instance>/<model>, options <id=value, …>. Source: <launch receipt or result>.
+   Branch: <branch or unknown>. PR: <URL or unknown>. Head: <commit SHA or unknown>.
+   ```
+
+   Take the worker and model from the launch you verified, not from the worker's own message; take
+   the head from `gh pr view <n> --json headRefOid` or the branch. Record a failed attempt too: it
+   may have pushed commits.
+2. **Check provenance before a review.** Read every implementation record in the Comments. When the
+   branch has commits that no record accounts for (work from before this rule, a person, an
+   unverified worker or an unknown model), you may add a record from verified evidence, such as a
+   launch receipt or the harness's thread, citing it. Otherwise ask the user which workers and
+   models wrote them. Never guess a model.
+3. **Choose the reviewer.** Start a new worker: never send the brief to a thread named in a record.
+   Its provider and model must differ from every recorded model; another effort or option of the
+   same model is the same model. When `ROWBLY.md` and the user leave no such model available, ask
+   the user rather than reuse one. Put the records in the brief's Implementation records section.
+4. **Approval holds for one commit.** A review Comment approves only the head SHA it names. A commit
+   pushed after it, including a merge of the base branch, needs another review. Changes requested
+   send the Story back to be built; that Run gets its own record, and the next reviewer must differ
+   from it as well.
+5. **Check before Done.** Before you apply a move to a Stage of category `done` from a reviewing
+   Stage, check that a review Comment, on the Board or earlier in the same block, approves the PR's
+   final head (`gh pr view <n> --json headRefOid,state`) from a reviewer that meets step 3. If none
+   does, do not apply the move; tell the user.
+
 ## Worker messages
 
 Workers end messages with these markers, as the brief asks:
@@ -213,8 +253,8 @@ Workers end messages with these markers, as the brief asks:
 | --- | --- |
 | a fenced `rowbly` block | [Apply it](#apply-a-workers-commands); Rowbly holds its move until the Stage Run is finished. |
 | `FACTORY-QUESTIONS <KEY>` | Answer from the Story, its Specs and Comments, the Stage Prompt and `ROWBLY.md` when they settle the question. Ask the user when you are not sure, and never guess at scope. Send the answers to the worker. If the Comments Plugin is on, record the answers as a Comment. |
-| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, then apply its last `rowbly` block with any move held earlier added at its end. |
-| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, then apply its last block; Rowbly drops its move. |
+| `FACTORY-DONE <KEY>` | Run `run finish <KEY>`, add the [implementation record](#independent-review) when the Run implemented work, then apply its last `rowbly` block with any move held earlier added at its end. |
+| `FACTORY-FAILED <KEY> <reason>` | Run `run fail <KEY> --reason "<reason>"`, add the implementation record when the Run implemented work, then apply its last block; Rowbly drops its move. |
 
 A worker that stops with no final marker, or has written nothing for a long time, needs a look:
 ask it for its state. If it is gone, run `run fail` with what you know.
