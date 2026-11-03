@@ -4,27 +4,16 @@
   "boardId": "rowbly",
   "name": "Rowbly Stats",
   "description": "Add a stats page per board. This page should show the following:\n\n- Cards created\n- Cards moved to done\n- PR's created\n- Commits created.",
-  "stage": "in-progress",
-  "rank": "a9",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:05:51.263Z",
-  "updatedAt": "2026-11-03T17:40:12.237Z",
+  "updatedAt": "2026-11-03T17:40:12.922Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c12f8a1a-9ef6-439f-ad4f-d220996deba4",
-        "by": "sunny",
-        "startedAt": "2026-11-03T16:18:16.040Z",
-        "finishedAt": "2026-11-03T17:40:11.025Z"
-      }
-    },
     "comments": {
       "comments": [
         {
