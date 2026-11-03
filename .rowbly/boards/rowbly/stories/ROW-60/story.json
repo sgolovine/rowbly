@@ -65,6 +65,13 @@
           "updatedAt": "2026-11-03T04:15:58.069Z"
         },
         {
+          "id": "TJdCS4Ts",
+          "author": "sunny",
+          "body": "Integration/publication hold CLEARED after149/147/146 merged and ROW50Donepublished; existing worker c10f649b continues SAMEPR145 and accepted findings3-4 corrections fd5c5995/411afc5f. Currentmain additive integration preserves full heartbeat immutableidentity/finalizer/currentRunRef/resultshape plus typedmodelselection/completeoptionverification/receiptuncertainty and all guide/resource/review/wait/retention/cleanup rules. Ask on semantic ambiguity beyond additive scope. Normalpush after one final integrated fourcheck pass under lease and needed screenshot evidence; fresh independent review after newhead, allactualOpus/Solauthor models excluded. No newworker/.rowbly-authorededits/reset/rebase/forcepush.",
+          "createdAt": "2026-11-03T05:05:15.300Z",
+          "updatedAt": "2026-11-03T05:05:15.300Z"
+        },
+        {
           "id": "TSI6LsBH",
           "author": "sunny",
           "body": "Authorized controlled local validation PASS at unchanged head e3e2b691a624119696f925c5ef02dfbafb1a700c. Typecheck, lint, unit78/78 and CLI20/20 ran once sequentially under the bounded shared lease after measured CPU-headroom admission, with original timeout and external telemetry. No source/test/dependency changes or retries. Original timeout evidence preserved; no historical cause inferred. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6595244682. PR remains draft and unmerged.",
@@ -147,13 +154,6 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "TJdCS4Ts",
-          "author": "sunny",
-          "body": "Integration/publication hold CLEARED after149/147/146 merged and ROW50Donepublished; existing worker c10f649b continues SAMEPR145 and accepted findings3-4 corrections fd5c5995/411afc5f. Currentmain additive integration preserves full heartbeat immutableidentity/finalizer/currentRunRef/resultshape plus typedmodelselection/completeoptionverification/receiptuncertainty and all guide/resource/review/wait/retention/cleanup rules. Ask on semantic ambiguity beyond additive scope. Normalpush after one final integrated fourcheck pass under lease and needed screenshot evidence; fresh independent review after newhead, allactualOpus/Solauthor models excluded. No newworker/.rowbly-authorededits/reset/rebase/forcepush.",
-          "createdAt": "2026-11-03T05:05:15.300Z",
-          "updatedAt": "2026-11-03T05:05:15.300Z"
         }
       ]
     }
