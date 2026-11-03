@@ -5,27 +5,17 @@
   "name": "Make factory model selection explicit and auditable",
   "description": "Factory review recommendation 14 of 20.\n\n## Context\n\nROWBLY.md’s model and provider-usage policy differs from observed worker choices, and Stage Runs do not explain the selection.\n\n## Acceptance criteria\n\n- Define a feasible model-selection policy and specify the supported usage source, or remove unverifiable usage requirements.\n- Record the selected provider/model and relevant fallback reason with each Stage Run.\n- Make policy compliance inspectable after supervisor restart.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
   "stage": "in-progress",
-  "rank": "aA",
+  "rank": "aB",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T05:05:15.301Z",
+  "updatedAt": "2026-11-03T05:23:11.799Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:34:35.728Z"
-      }
     },
     "comments": {
       "comments": [
@@ -79,11 +69,25 @@
           "updatedAt": "2026-11-03T04:16:00.803Z"
         },
         {
+          "id": "UactDsyc",
+          "author": "sunny",
+          "body": "Implementation record: Run in-progress/1/2026-11-03T04:34:35.728Z; worker/thread mcp:c10f649b-1065-41f0-a173-dbf23695fabf; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/320f92ec8eba652c0372b83d6d9a8e1d.json. Actual uncertainty corrections3-4 and main integration author of PR145 da843d1ce5470ad6f0b842bc861f9e19a828144e, local corrections fd5c5995/411afc5f. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-2; all prior Opus/Sol implementation records retained, review-only Astra excluded. Fresh reviewer must differ from every actual author model.",
+          "createdAt": "2026-11-03T05:13:04.392Z",
+          "updatedAt": "2026-11-03T05:13:04.392Z"
+        },
+        {
           "id": "V5tVZQ0I",
           "author": "sunny",
           "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
           "createdAt": "2026-11-03T04:00:48.567Z",
           "updatedAt": "2026-11-03T04:00:48.567Z"
+        },
+        {
+          "id": "XKR1qR5Q",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-60, PR https://github.com/sgolovine/rowbly/pull/145, head da843d1ce5470ad6f0b842bc861f9e19a828144e. Independent review requests correction of finding 5: empty CONFIG identity/configuration strings must remain unverified rather than conflict. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596096121. Findings 1-4 verified. Local validation remains capacity waiting, not failed; all six exact-head CI checks passed. Continue the same branch and PR; no implementation changes made by this reviewer.",
+          "createdAt": "2026-11-03T05:21:01.846Z",
+          "updatedAt": "2026-11-03T05:21:01.846Z"
         },
         {
           "id": "Z1KBQs1d",
@@ -98,6 +102,27 @@
           "body": "Supervisor accepts independent findings3-4 in review6595466903: first discovery of existing worker with unreadable details stays unknown with identity/intendedselection preserved; missing/malformed CLI identity/configuration remains unverified, complete well-formed differing evidence remains conflict. Extend existing deterministic fakeT3 fixture, no realstart/GO. Return to InProgress for fresh correction worker continuing SAME PR145 factory/row-60 head e3e2b691a624119696f925c5ef02dfbafb1a700c; present plan and wait acceptance. Scoped additive integration must retain supervisor resource ownership and complete selection/verification/publication ordering; integration waits until149/147/146 land to avoid churn. No restart/newPR/forcepush/.rowbly edits. Reviewer sends ONLY moveInProgress with actual FACTORY-DONE; supervisor finishes currentRun before move. Configuration proposal retained for supervisor-only application with reviewer different from ALL actual implementation models, including correction workers. Capacity admission75 is no test failure.",
           "createdAt": "2026-11-03T04:29:27.114Z",
           "updatedAt": "2026-11-03T04:29:27.114Z"
+        },
+        {
+          "id": "b0g5sXpo",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/145 at da843d1ce5470ad6f0b842bc861f9e19a828144e by codex/gpt-6-astra: CHANGES REQUESTED. Reviewer: mcp:aca87554-adff-422e-b9fd-6b52df9686c3, rook, high effort; independent of every recorded Opus/Sol implementation worker. 5. P2 — skills/rowbly-factory/scripts/launch-worker.mjs:178-199: CONFIG validation checks only string types for threadId, provider, model and runtime. With otherwise valid CLI evidence, an empty CONFIG model, provider or runtime passes that gate and returns conflict (configuration mismatch), although it establishes no usable value. Independently reproduced all three using the actual script and the deterministic fake T3, which refuses creation and GO. Require nonempty trimmed identity/configuration strings before comparing, returning unverified for empty/whitespace evidence; retain conflict for complete differing values, immutable intended selection and the same receipt. Extend the existing fixture with a representative empty CONFIG field. Findings 1-4 otherwise verified: typed scalars, complete order-independent option comparison, remote ordering, first-discovery unknown recovery and malformed CLI unverified behavior; all twelve prior launcher scenarios passed. Current-main a0259b23372ccf73be5b12bf19aa0daf0ad10443 integrated cleanly in the isolated review checkout; only published Board data differs from the PR head. Shared identity/heartbeat finalizers, metadata lifecycle, holds, generated briefs/retry context, resource ordering, independent review, wait and retention rules remain preserved; four reference copies are byte-identical. All six exact-head GitHub checks are SUCCESS; none pending. Latest mergeability is UNKNOWN, not a proven conflict. All eight linked PNGs returned HTTP 200 and were inspected. Fresh local typecheck, lint, unit and CLI: NOT RUN. Initial pnpm setup refused the dependency symlink before any check; after explicit authorization, private frozen installation succeeded, but the single leased admission attempt exited 75 before checks (minimum idle 79.35% against 85%). Capacity waiting is not a failed check; no automatic retry or timeout change. Earlier timeout and authorized-pass evidence remains intact. Reviewed supervisor-only policy patch: /tmp/row60-review-aca87554/ROWBLY-policy-proposal.patch, based on a0259b23, apply-check passed, SHA256 e05bfd0bd5e19cd264eb7c1daae7629fb253d5d32ce8c3fb39613cd40ea59547; preserves defaults, variety and every-author review while recording catalog intent and explicit unknown usage. Evidence: /tmp/row60-review-aca87554. Worktree retained: /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-review-aca87554. No implementation edits, Board writes, pushes, ready/merge, real launches or GO; no own daemon, watcher or server remains.",
+          "createdAt": "2026-11-03T05:21:01.163Z",
+          "updatedAt": "2026-11-03T05:21:01.163Z"
+        },
+        {
+          "id": "dzVSq8l8",
+          "author": "sunny",
+          "body": "Independent review dependency setup stopped before TypeScript/check scripts: ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY for ownreviewcheckout dependency symlink. Narrow environment recovery AUTHORIZED: verify own isolated checkout and node_modules symlink/target, remove only its symlink (never target/shared dependencies), install own dependencies with pnpm install --frozen-lockfile and noninteractive setup as needed. Preserve original log. Then run required four-check group ONCE under bounded lease, original timeouts; this is first actual check execution, not rerunning a failed test. Stop and report actual check failures without retries. Continue read-only source/evidence review; no product/.rowbly edits or source commits/pushes.",
+          "createdAt": "2026-11-03T05:16:14.676Z",
+          "updatedAt": "2026-11-03T05:16:14.676Z"
+        },
+        {
+          "id": "ejlXNuKs",
+          "author": "sunny",
+          "body": "Independent reviewer reports remaining CONFIG empty provider/model/runtime strings classified conflict despite unusable evidence; equivalent CLI values now unverified. This is within accepted uncertainty-versus-proven-mismatch scope. Request evidence-backed numbered finding with deterministic actual-script reproduction and source location, then Changes Requested/Returned to In Progress handoff for SAMEPR145/currenthead. Preserve original twelve fixture results and all evidence. Current four-check attempt stopped at CPU admission75 BEFORE checks, capacity waiting not test failure; do not delay known blocking review or rerun checks automatically. Reviewer changes no product. Supervisor finishes Run before move and fresh correction worker receives narrow plan gate.",
+          "createdAt": "2026-11-03T05:18:36.938Z",
+          "updatedAt": "2026-11-03T05:18:36.938Z"
         },
         {
           "id": "fUB1qJOd",
@@ -149,6 +174,13 @@
           "updatedAt": "2026-11-03T00:06:07.504Z"
         },
         {
+          "id": "u98r9iQV",
+          "author": "sunny",
+          "body": "PR145 updated at da843d1ce5470ad6f0b842bc861f9e19a828144e. Findings 3-4 corrected and current main integrated. Final typecheck, lint, unit78 and CLI21 passed once under the validation lease. Four inspected screenshot URLs returned HTTP200. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596001507. Fresh independent review required; PR remains draft and unmerged.",
+          "createdAt": "2026-11-03T05:13:05.671Z",
+          "updatedAt": "2026-11-03T05:13:05.671Z"
+        },
+        {
           "id": "ycVgjvy6",
           "author": "sunny",
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
@@ -156,6 +188,16 @@
           "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:1db6f174-6b1c-4606-9d15-a2f93a5c1b25",
+        "by": "sunny",
+        "startedAt": "2026-11-03T05:23:11.036Z"
+      }
     }
   }
 }
