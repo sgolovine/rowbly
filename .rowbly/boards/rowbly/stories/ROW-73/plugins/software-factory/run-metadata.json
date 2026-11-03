@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-03T16:44:55.274Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971",
+    "at": "2026-11-03T16:46:48.401Z",
+    "source": "Verified rook/T3 assistant messages from mcp:dcd5ceb5-88f2-4ede-ae18-1d4386c03971; snapshot /tmp/rowbly-factory-session/ROW-73-poll.json; SHA256 3ec93b6baeaefd99ceb396311360d199422f56e2b80d42e9ccec2f0b7d2f335b",
+    "by": "sunny"
   }
 }
