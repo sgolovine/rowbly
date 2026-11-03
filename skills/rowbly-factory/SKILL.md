@@ -117,7 +117,9 @@ tell the user what is missing and how to fix it, and stop.
    `prompt.enabled` is `true`, and there must be at least one. A Stage Prompt that is still the
    template Rowbly writes is missing: its text is exactly
    `# <Stage name>\n\nWhat an agent does with a Story in the <Stage name> Stage: what to read first, what to change, and when the Story is ready to leave it.\n`.
-   Name those Stages and tell the user to write them (`prompt edit`) or turn them off.
+   Name those Stages and tell the user to write them (`prompt edit`) or turn them off. When the
+   Board has no Stage Prompt yet, tell the user that `rowbly software-factory setup --board <id>`
+   adds the factory Stages and default Stage Prompts it lacks; do not run it yourself.
 5. **What the Stage Prompts need.** Read each Stage Prompt that is on, and `ROWBLY.md` if the Data
    Root has one. List every skill, tool, command, server, credential and permission they name, and
    check that you or the workers you start will have each. Name each one that is missing and the

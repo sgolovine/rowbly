@@ -23,6 +23,25 @@ alone and the prompt skips duplicate output only from complete, known and unchan
 Adding a Comment or editing requirements does not restart a finished Run. A filtered CLI list can
 omit unsafe files, so it cannot by itself prove complete review inputs; treat omissions as gaps.
 
+## Factory setup
+
+`setup` gets one Board ready for a factory: Backlog, TODO, In Progress, In Review, Done. It adds
+the Stages `todo` (TODO), `in-progress` (In Progress) and `in-review` (In Review) the Board lacks,
+and a default Stage Prompt on the Board for each of them that has no entry at either level and no
+file: In Progress (`rowbly-dev` to a draft PR) and In Review (independent review, merge or return)
+on; TODO (advisory readiness review with the `rowbly-factory` fingerprint helper) off until a
+person turns it on. It never renames, moves or removes a Stage, never replaces an entry (on or
+off, Board or global) or a file, and writes nothing when nothing is missing, so running it again is
+safe. A Stage with a factory key keeps its name (`custom` when it differs beyond case). Another Stage
+already named like a missing factory Stage exits 4 (`CONFLICT`) and saves nothing. It turns no
+Plugin on. Read the result instead of assuming the defaults were written:
+
+```sh
+rowbly software-factory setup --board web --json --no-prompt
+# {board, stages: [{key, name, outcome: added|present|custom}],
+#  prompts: [{key, outcome: added|kept|skipped, source, enabled, path, reason?}]}
+```
+
 ## Commands
 
 ```sh
@@ -64,10 +83,10 @@ rowbly software-factory brief WEB-42 --retry-file ./retry.md --json --no-prompt 
 
 ```json
 { "board": "web", "stagesSource": "global",
-  "stages": [{ "key": "todo", "name": "Todo", "category": "board",
+  "stages": [{ "key": "todo", "name": "TODO", "category": "board",
     "prompt": { "enabled": true, "configured": true, "source": "board",
       "path": "boards/web/plugins/software-factory/stage-prompts/todo.md", "exists": true,
-      "text": "# Todo\n\n…" } }] }
+      "text": "# TODO\n\n…" } }] }
 ```
 
 `enable`, `disable` and `edit` return the `prompt` object of the level they changed.
