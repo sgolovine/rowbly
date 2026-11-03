@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-81",
+  "boardId": "rowbly",
+  "name": "Fuzzy search when choosing a data root",
+  "description": "Allow type to fuzzy find when selectng a data root",
+  "stage": "todo",
+  "rank": "a7",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T23:03:09.119Z",
+  "updatedAt": "2026-11-03T23:03:09.121Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "a6Yg9lhMK",
+          "name": "image-20261103-2302.png",
+          "type": "image/png",
+          "size": 154012,
+          "createdAt": "2026-11-03T23:03:09.121Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
