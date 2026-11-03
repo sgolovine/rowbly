@@ -710,6 +710,13 @@ choice, and explains any deliberate restart. Missing context stays unknown; unre
 to the user. It skips a Story you hold (`rowbly software-factory hold <story> --reason <text>`)
 until you release it. It runs until you stop it.
 
+After a verified PR merge and worker completion, the supervisor follows the factory skill's
+completion workflow on the resource-owning machine. Its cleanup helper defaults to dry run and
+requires exact PR/resource ownership, fresh harness inactivity and an exclusive resource lease.
+It retains uncertain resources, remote refs and every evidence branch. Repository automatic branch
+deletion remains a proposal requiring approval; no setting changes happen automatically. See
+[factory completion resources](development/README.md#factory-completion-resources).
+
 A new skill holds
 the Rowbly reference (the `skills/rowbly-reference.md` page of this version of Rowbly) in its
 `references/` folder, and its `SKILL.md` opens with a short paragraph that sends the agent there.

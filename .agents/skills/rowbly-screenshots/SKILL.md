@@ -21,6 +21,10 @@ build.
 ```bash
 repo="$(pwd)"
 out="$(mktemp -d)"            # captures and the demo Data Root stay outside the repository
+mkdir "$out/agentic-tui-state"
+export AGENTIC_TUI_STATE_DIR="$out/agentic-tui-state"
+# Record this exact canonical directory against the task with the supervisor before daemon start.
+# It is new and task-owned; a session namespace alone would still share a daemon.
 pnpm build
 scripts/demo-data-root.sh "$out/rowbly-demo/.rowbly"   # the header shows `rowbly-demo`
 t() { pnpm -s exec agentic-tui --session-namespace rowbly-screenshots "$@"; }
@@ -65,7 +69,10 @@ Useful routes from the board (it opens with ROW-1 selected):
 For another terminal size, start a new run with other `--cols`/`--rows` rather than `t resize`:
 the resized capture can keep characters from the old right edge.
 
-Finish with `t kill`. Show each PNG to the user as a Markdown image with its absolute path.
+Finish with `t kill`, then `t daemon stop` with the same recorded `AGENTIC_TUI_STATE_DIR`.
+Never stop an existing/shared/default daemon. Report leftovers and retain the state directory for
+supervisor reconciliation if scoped shutdown fails. Show each PNG to the user as a Markdown image
+with its absolute path.
 
 ## Limits
 
