@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T16:42:18.188Z",
-  "updatedAt": "2026-11-03T17:24:44.168Z",
+  "updatedAt": "2026-11-03T17:24:44.780Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -75,6 +75,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa by codex/gpt-6-astra: APPROVED. Reviewed the complete diff against ROW-73 and the accepted plan, including Board-scoped atomic setup, collision refusal and idempotence, preservation of effective global/Board Stages and prompt entries/files, explicit onboarding and settings navigation, Plugin/core boundaries, portable TODO advisory lifecycle and independent-review/merge/return gates, ADR-0053 and its amendments, documentation, and existing preservation assertions. Verified implementer/reviewer provenance and no internal .rowbly prompt changes. Independently merged current main f5047d80 into the isolated review branch (only published Board records differed) and ran the unchanged checks under the shared validation lease: typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), 100 tests total. All four skill reference copies are byte-identical. All 11 screenshot URLs and the validation log returned HTTP 200; all screenshots were inspected and the changed screens are readable. No required changes found.",
           "createdAt": "2026-11-03T17:24:44.167Z",
           "updatedAt": "2026-11-03T17:24:44.167Z"
+        },
+        {
+          "id": "2MCjg8W3",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/156 at 3f05ca647fb0c6172d439cebaacf8b82839f8ffa. Merge commit e582f92e118b33b0f4c4106912f3d3d2375fc34d. All six PR checks passed before merge; post-merge main CI is queued: https://github.com/sgolovine/rowbly/actions/runs/41683835712.",
+          "createdAt": "2026-11-03T17:24:44.780Z",
+          "updatedAt": "2026-11-03T17:24:44.780Z"
         }
       ]
     }
