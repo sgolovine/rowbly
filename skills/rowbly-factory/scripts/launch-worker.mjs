@@ -4,8 +4,8 @@
 //
 //   node launch-worker.mjs launch --key <KEY> --title <title> --brief <file> --model-selection <json>
 //       --project <dir> [--ssh <host>] [--t3 <path>] [--launcher-title <title>]
-//       [--launcher-provider <id> --launcher-model <slug>] [--brief-dir <dir>] [--min-free-gb <n>]
-//       [--timeout <seconds>]
+//       [--launcher-provider <id> --launcher-model <slug>] [--brief-dir <dir>] [--receipt-dir <dir>]
+//       [--min-free-gb <n>] [--timeout <seconds>]
 //   node launch-worker.mjs send --thread <threadId> --title <title> --message <file> --project <dir>
 //       [--ssh <host>] [--t3 <path>] [--timeout <seconds>]
 //
@@ -14,7 +14,8 @@
 
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,6 +41,7 @@ const launcherTitle = flags['launcher-title'] ?? 'Launcher: workers';
 let home;
 let project;
 let t3Bin;
+let receiptPath;
 // Set once a request that can start a thread has been sent: from then on, an error is `unknown`.
 let requested = false;
 
@@ -60,7 +62,8 @@ async function main() {
         : new Result(requested ? 'unknown' : 'failed', { reason: error.message.trim().split('\n')[0] });
   }
   const { status, fields } = result;
-  console.log(JSON.stringify({ ok: EXIT[status] === 0, status, host: flags.ssh ?? 'local', ...fields }));
+  const receipt = receiptPath && { receipt: receiptPath };
+  console.log(JSON.stringify({ ok: EXIT[status] === 0, status, host: flags.ssh ?? 'local', ...fields, ...receipt }));
   process.exitCode = EXIT[status];
 }
 
@@ -69,9 +72,24 @@ async function launch() {
   const brief = readFileSync(flags.brief, 'utf8');
   const modelSelection = parseSelection(flags['model-selection']);
   const expected = { key, title, modelSelection, brief, briefSha256: sha256(brief) };
+  const receipt = loadReceipt(expected);
+  // An earlier run may have asked a launcher already; from here on, an error is `unknown`.
+  if (receipt.data) requested = true;
+  if (receipt.data?.threadId) return settle(receipt, [receipt.data.threadId], expected, 'existing');
 
-  const existing = await threadsTitled(title);
-  if (existing.length) return settle(existing, expected, 'existing');
+  const launcherId = await launcher();
+  if (!(await waitIdle(launcherId))) {
+    stop(requested ? 'unknown' : 'failed', { key, title, launcherId, reason: 'launcher busy until timeout' });
+  }
+  // The thread list hides archived threads, so also take the threads that earlier requests for this
+  // title were answered with, and check them with `show`.
+  const launcherIds = [...new Set([...(receipt.data?.launcherIds ?? []), launcherId])];
+  const earlier = await earlierLaunches(title, launcherIds);
+  const known = union(await titledIds(title), earlier.threadIds);
+  if (known.length) return settle(receipt, known, expected, 'existing');
+  if (earlier.unanswered) {
+    stop('unknown', { key, title, launcherId, reason: 'an earlier request for this title has no answer' });
+  }
 
   if (flags['min-free-gb']) await checkMemory(Number(flags['min-free-gb']));
 
@@ -80,11 +98,8 @@ async function launch() {
   const copied = await sh(`mkdir -p ${q(dir)} && cat > ${q(briefPath)} && cat ${q(briefPath)}`, brief);
   if (copied.code !== 0 || copied.stdout !== brief) stop('failed', { key, title, reason: 'brief copy did not match' });
 
-  const launcherId = await launcher();
-  if (!(await waitIdle(launcherId))) stop('failed', { key, title, launcherId, reason: 'launcher busy until timeout' });
-  const raced = await threadsTitled(title);
-  if (raced.length) return settle(raced, expected, 'existing');
-
+  // Record the request before sending it, so a crash after this point cannot lead to a second launch.
+  receipt.save({ launcherIds });
   requested = true;
   const reply = await ask(launcherId, 'LAUNCH', {
     title,
@@ -94,12 +109,7 @@ async function launch() {
   });
 
   // Check what the launcher did on our own; its answer may be missing, late or wrong.
-  let found = await threadsTitled(title);
-  const until = Math.max(deadline, Date.now() + 60000);
-  while (!found.length && reply?.marker === 'LAUNCHED' && Date.now() < until) {
-    await sleep(POLL_MS);
-    found = await threadsTitled(title);
-  }
+  const found = union(await titledIds(title), answeredIds(reply));
   if (!found.length) {
     const fields = { key, title, launcherId, briefPath };
     if (reply?.marker === 'LAUNCH-FAILED') stop('failed', { ...fields, reason: `launcher: ${reply.value}` });
@@ -111,23 +121,32 @@ async function launch() {
         : 'no answer from the launcher before the timeout',
     });
   }
-  return settle(found, { ...expected, briefPath }, reply?.marker === 'LAUNCH-EXISTS' ? 'existing' : 'launched', reply);
+  return settle(
+    receipt,
+    found,
+    { ...expected, briefPath },
+    reply?.marker === 'LAUNCH-EXISTS' ? 'existing' : 'launched',
+    reply,
+  );
 }
 
-// Verify the one thread with the title: identity from the CLI, options from the launcher.
-async function settle(found, expected, status, reply) {
+// Verify the one thread for this request: identity from the CLI, options from the launcher.
+async function settle(receipt, threadIds, expected, status, reply) {
   const { key, title, modelSelection, brief, briefSha256, briefPath } = expected;
   const base = { key, title, briefSha256, ...(briefPath && { briefPath }) };
-  if (found.length > 1) {
-    stop('conflict', { ...base, threadIds: found.map((t) => t.threadId), reason: 'several threads have the title' });
-  }
-  const threadId = found[0].threadId;
-  if (reply?.marker === 'LAUNCHED' && reply.value !== threadId) {
-    stop('conflict', { ...base, threadId, reason: `launcher reported ${reply.value}` });
-  }
+  if (threadIds.length > 1) stop('conflict', { ...base, threadIds, reason: 'several threads for this request' });
+  const [threadId] = threadIds;
+  receipt.save({ threadId });
   const { thread, messages } = await show(threadId, 100000);
+  if (thread.archived) {
+    stop('conflict', {
+      ...base,
+      threadId,
+      reason: 'the thread for this request is archived; a new launch needs a new title',
+    });
+  }
   const mismatches = [];
-  if (thread.archived) mismatches.push('archived');
+  if (thread.title !== title) mismatches.push(`title ${thread.title}`);
   if (thread.providerInstanceId !== modelSelection.instanceId) mismatches.push(`provider ${thread.providerInstanceId}`);
   if (thread.model !== modelSelection.model) mismatches.push(`model ${thread.model}`);
   if (thread.runtimeMode !== 'full-access') mismatches.push(`runtimeMode ${thread.runtimeMode}`);
@@ -170,6 +189,58 @@ async function settle(found, expected, status, reply) {
     launcherId,
     ...(reply && reply.marker !== 'LAUNCHED' && { note: `launcher said ${reply.marker} ${reply.value}` }),
   });
+}
+
+// The receipt for one request, on the computer that runs this script: the request's identity, the
+// launchers it was sent to and, once known, its thread. A title stays bound to its first request.
+function loadReceipt({ key, title, modelSelection, briefSha256 }) {
+  const identity = { host: flags.ssh ?? 'local', project, title };
+  const request = { key, briefSha256, modelSelection };
+  const dir = flags['receipt-dir'] ?? join(homedir(), '.rowbly-factory', 'receipts');
+  receiptPath = join(dir, `${sha256(JSON.stringify(identity)).slice(0, 32)}.json`);
+  let data = null;
+  try {
+    data = JSON.parse(readFileSync(receiptPath, 'utf8'));
+  } catch (error) {
+    if (error.code !== 'ENOENT') stop('unknown', { key, title, reason: `receipt unreadable: ${error.message}` });
+  }
+  if (data && JSON.stringify(data.request) !== JSON.stringify(request)) {
+    stop('conflict', { key, title, reason: 'this title was used for another brief or model; use a new title' });
+  }
+  return {
+    data,
+    save(fields) {
+      this.data = { ...identity, request, ...this.data, ...fields, updatedAt: new Date().toISOString() };
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(`${receiptPath}.tmp`, `${JSON.stringify(this.data, null, 2)}\n`);
+      renameSync(`${receiptPath}.tmp`, receiptPath);
+    },
+  };
+}
+
+// Every LAUNCH request for the title in these launchers' messages, with the threads they answered.
+async function earlierLaunches(title, launcherIds) {
+  const threadIds = [];
+  let unanswered = false;
+  for (const launcherId of launcherIds) {
+    const { messages } = await show(launcherId, 100000);
+    messages.forEach((m, i) => {
+      if (m.role !== 'user' || !m.text.startsWith('LAUNCH\n')) return;
+      if (!m.text.split('\n').includes(`title: ${title}`)) return;
+      const reply = findAnswer(messages.slice(i + 1), m.text.match(/^id: (\S+)$/m)?.[1]);
+      if (answeredIds(reply).length) threadIds.push(...answeredIds(reply));
+      else if (reply?.marker !== 'LAUNCH-FAILED') unanswered = true;
+    });
+  }
+  return { threadIds, unanswered };
+}
+
+function answeredIds(reply) {
+  return reply?.marker === 'LAUNCHED' || reply?.marker === 'LAUNCH-EXISTS' ? reply.value.split(/\s+/) : [];
+}
+
+function union(...lists) {
+  return [...new Set(lists.flat())];
 }
 
 // Send a follow-up message, such as the full brief and GO to a parked worker, at most once.
@@ -230,20 +301,26 @@ async function ask(launcherId, kind, fields) {
   const id = randomBytes(6).toString('hex');
   const body = [kind, `id: ${id}`, ...Object.entries(fields).map(([k, v]) => `${k}: ${v}`)].join('\n');
   const sent = await sh(t3Command(['thread', 'send', launcherId, '-']), body);
-  const answer = new RegExp(`^(LAUNCHED|LAUNCH-EXISTS|LAUNCH-FAILED|CONFIG|CONFIG-FAILED) ${id}(?: (.*))?$`, 'm');
   const until = Math.max(deadline, Date.now() + 60000);
   while (Date.now() < until) {
     const { thread, messages } = await show(launcherId, 20);
     const asked = messages.findIndex((m) => m.role === 'user' && m.text.includes(`id: ${id}`));
-    for (const m of messages.slice(asked + 1)) {
-      const match = m.role === 'assistant' && m.text.match(answer);
-      if (match) return { marker: match[1], value: (match[2] ?? '').trim() };
-    }
+    const answer = findAnswer(messages.slice(asked + 1), id);
+    if (answer) return answer;
     if (asked < 0 && sent.code !== 0) return { marker: 'NOT-SENT', value: sent.stderr.trim() };
     const repliedAfter = asked >= 0 && messages.slice(asked + 1).some((m) => m.role === 'assistant');
     if (repliedAfter && IDLE.has(thread.status))
       return { marker: 'NO-ANSWER', value: 'launcher ended its turn without one' };
     await sleep(POLL_MS);
+  }
+  return null;
+}
+
+function findAnswer(messages, id) {
+  const answer = new RegExp(`^(LAUNCHED|LAUNCH-EXISTS|LAUNCH-FAILED|CONFIG|CONFIG-FAILED) ${id}(?: (.*))?$`, 'm');
+  for (const m of messages) {
+    const match = id && m.role === 'assistant' && m.text.match(answer);
+    if (match) return { marker: match[1], value: (match[2] ?? '').trim() };
   }
   return null;
 }
@@ -260,6 +337,10 @@ async function checkMemory(minGb) {
   const { stdout } = await must(`awk '/^MemAvailable:/ {print $2}' /proc/meminfo`);
   const gb = Number(stdout) / 1024 / 1024;
   if (!(gb >= minGb)) stop('failed', { reason: `only ${gb.toFixed(1)} GB of memory available, need ${minGb}` });
+}
+
+async function titledIds(title) {
+  return (await threadsTitled(title)).map((t) => t.threadId);
 }
 
 async function threadsTitled(title) {
