@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:50.030Z",
-  "updatedAt": "2026-11-03T02:23:05.111Z",
+  "updatedAt": "2026-11-03T02:26:06.018Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:23:04.427Z"
+      }
     },
     "comments": {
       "comments": [
@@ -60,18 +70,15 @@
           "body": "USER DECISION: approved the narrow read-only ROWBLY.md exception, with a new ADR amending ADR-0039 and keeping the file as inert text that Rowbly neither executes nor enforces. Supervisor accepts your previously described approval-path plan. Continue SAME PR140/branch factory/row-53 in the existing bound worktree /home/sgolovine/.t3/worktrees/rowbly/factory-row-53 under the SAME running In Progress Stage Run. Prior partial handoff did not finish the Stage; its held move is obsolete and will be replaced by your full final handoff. First fetch/merge current origin/main, preserve all landed factory changes and existing draft work, no rebase/force/reset/duplicatePR. Add only a dedicated read-only reader of the resolved Data Root own fixed ROWBLY.md file, no arbitrary file-read API, no execute/parse/enforce behavior, and use the normal safe path policy. Missing guide is None; unreadable/unsafe guide must be an explicit incomplete gap under the existing brief policy, not silently invented contents. Brief embeds the original text deterministically under How people work with this Board, without treating it as Rowbly configuration. ADR0047 is reserved for this user-approved exception;0048 reserved heartbeat/0049 updater, recheck before publishing. Record new ADR in docs/agents/adr with index and ADR0039 Status update; amend actual data-model no-read rule and matching API/docs/compiled fixtures/operating skills/reference copies as applicable, preserving narrow inert-text boundary. Keep ADR0044 Story Context contributor contract and template rules/fallback/retry context. Extend the existing read-only Plugin test only as needed for new contract and byte preservation; keep suite<=100. Run all four checks, relevant complete/incomplete/missing/unsafe manual brief scenarios and required agentic-tui screenshots with HTTP200 evidence. Propose any ROWBLY.md workflow edits to supervisor only. PR140 remains draft; never merge in InProgress. Return corrected full ownStory Comment+moveInPR block and FACTORY-DONE ROW-53 once all acceptance criteria are satisfied. Proceed.",
           "createdAt": "2026-11-03T01:56:53.944Z",
           "updatedAt": "2026-11-03T01:56:53.944Z"
+        },
+        {
+          "id": "hcoXH3aW",
+          "author": "sunny",
+          "body": "Scoped integration ACCEPTED for this same In PR Run/worker: merge latest origin/main into existing factory/row-53 and resolve only the four additive conflicts reported (ADR index, built-in docs, factory skill, Software Factory commands). Preserve main's ROW49 attach/metadata, ROW59 holds and current updater ADR0049, and PR140 context/brief/read-only guide API ADR0047. No unrelated product changes. Then rereview resulting exact head, run all four checks and focused unsafe/missing/incomplete/no-write/determinism checks, refresh evidence if needed, push normally. Merge only approved exact head/all checks/clean readiness using --match-head-commit; pendingCI return waiting. If conflicts require a substantive new decision, stop and report. This is integration of current main, original implementation provenance remains Opus; reviewer remains independent Sol.",
+          "createdAt": "2026-11-03T02:26:06.017Z",
+          "updatedAt": "2026-11-03T02:26:06.017Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:5357a3fc-2079-41fc-8ac8-ea05b3377406",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:23:04.427Z"
-      }
     }
   }
 }
