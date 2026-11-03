@@ -4,28 +4,18 @@
   "boardId": "rowbly",
   "name": "Allow people to hold Stories out of automatic dispatch",
   "description": "Factory review recommendation 13 of 20.\n\n## Context\n\nEvery Story entering an enabled Stage is currently eligible for dispatch, including work a person wants to handle manually.\n\n## Acceptance criteria\n\n- Define an explicit hold mechanism for individual Stories.\n- Exclude held Stories from automatic dispatch and show why they are held.\n- Allow releasing the hold to restore normal eligibility without losing Story or Stage Run context.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-progress",
-  "rank": "a3",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.175Z",
-  "updatedAt": "2026-11-03T01:05:36.621Z",
+  "updatedAt": "2026-11-03T01:15:29.305Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:f87fcc42-635b-4fa9-9681-87e52bd3c4b2",
-        "by": "sunny",
-        "startedAt": "2026-11-03T01:01:37.423Z"
-      }
     },
     "comments": {
       "comments": [
@@ -63,6 +53,13 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/141. Adds rowbly software-factory hold <KEY> --reason <text> and release <KEY>. A hold is a Story-scope file, hold.json (version 1, ADR-0043), so the Stage Run data on the Story keeps its shape, nothing is migrated, and older Rowbly releases never drop it. A held Story gets a HELD reason in ROW-58's eligibility, so run start refuses it (exit 4, --retry included), and the reason shows in runs, in stories show and on the TUI Story screen. The hold stays through Stage changes and never touches the Stage Run, so release restores eligibility with the attempt unchanged. A hold file that can't be read counts as held, is left unchanged by hold and release (exit 6), and is reported by doctor as SOFTWARE_FACTORY_UNREADABLE_HOLD. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots are in a PR comment.",
           "createdAt": "2026-11-03T00:34:10.501Z",
           "updatedAt": "2026-11-03T00:34:10.501Z"
+        },
+        {
+          "id": "Ccex9VRf",
+          "author": "sunny",
+          "body": "Correction pushed to draft PR https://github.com/sgolovine/rowbly/pull/141 (head 296a69d). hold.json is now strict: a v1 file with unknown fields counts as unreadable, so the Story stays held, doctor reports SOFTWARE_FACTORY_UNREADABLE_HOLD naming the fields, and hold and release exit 6 (DATA_INTEGRITY) leaving the bytes unchanged. hold and release now read the file through the same helper as eligibility and doctor, so a symbolic link or unreadable path gives DATA_INTEGRITY exit 6 instead of VALIDATION; the link is never followed and neither it nor its outside target changes. Merged current main, including ROW-55 apply (hold/release are not in its allowlist), keeping combined HELD/BLOCKED eligibility, the full digest, the Stage Run schema and Run context. The existing hold test step now covers future-version, unknown-field and symlink files for both commands. typecheck, lint, test:unit 78 and test:cli 20 pass; screenshots are in a PR comment.",
+          "createdAt": "2026-11-03T01:15:28.608Z",
+          "updatedAt": "2026-11-03T01:15:28.608Z"
         }
       ]
     }
