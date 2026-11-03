@@ -4,30 +4,20 @@
   "boardId": "rowbly",
   "name": "Add Github Plugin",
   "description": "Add a github plugin. This plugin will link a github PR to a story\n\n- Stories will contain a \"Github PR\" field when plugin is enabled.\n- Update rowbly factory and dev skills so they update this wheneer a PR for a story is opened.\n- Use the `gh` cli to periodically fetch the status of a PR.",
-  "stage": "in-progress",
-  "rank": "a8",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:02:22.004Z",
-  "updatedAt": "2026-11-03T15:24:33.790Z",
+  "updatedAt": "2026-11-03T16:06:58.540Z",
   "plugins": {
     "story-linking": {
       "blocks": [
         "ROW-70"
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 2,
-        "worker": "mcp:a5863cb0-fbe5-4242-ac5a-154659ec79cd",
-        "by": "sunny",
-        "startedAt": "2026-11-03T15:17:00.377Z"
-      }
     },
     "comments": {
       "comments": [
@@ -44,6 +34,13 @@
           "body": "Retry 2 research complete; revised plan awaiting acceptance. Complexity 6. Continue factory/row-69 in the preserved rook worktree, clean at 8b4b5907faf85b6c155790fd4297498520b8965b after merging origin/main. Plan: github Plugin with GitHub PR field and create/edit flags; strict opaque-bag preservation; fixed host-owned gh-pr-view template with command/screen leases, bounded process resources and cancellation; one-shot CLI status and active Story-tab refresh in memory; extend existing tests without exceeding 100; update docs, ADR-0051 and skills; all four checks and owned agentic-tui screenshots before one draft PR. No implementation started.",
           "createdAt": "2026-11-03T15:24:32.415Z",
           "updatedAt": "2026-11-03T15:24:32.415Z"
+        },
+        {
+          "id": "J4Yq91G9",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/155. Head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96. Self-validation passed: typecheck, lint, 79 unit tests and 21 CLI tests, 100 total. Six verified screenshots: https://github.com/sgolovine/rowbly/pull/155#issuecomment-6608866448. Plan-review responses: 1. Fixed host-owned gh-pr-view template with bounded output, concurrency, deadlines, cancellation and revocable leases. 2. Retained contexts refused in real hooks and doctor callbacks. 3. Strict URL validation and opaque-bag preservation, including refused explicit overwrites. 4. In-memory active-tab refresh verified at 60000 ms, stale-result display and cancellation verified. 5. Docs, ADR-0051, dev/factory skills and identical references updated. Current main merged before final checks. At handoff CI pending: CLI tests and Clipboard smoke (windows-latest). Independent review remains with the supervisor. Owned processes stopped and evidence retained.",
+          "createdAt": "2026-11-03T16:06:57.868Z",
+          "updatedAt": "2026-11-03T16:06:57.868Z"
         },
         {
           "id": "KT8vbPyb",
@@ -65,6 +62,13 @@
           "body": "Plan revision required before acceptance. github id and GitHub PR field accepted; Story-screen in-memory periodic gh refresh plus explicit status is enough; no saved polling data and no timers in hooks/CLI. Defer Board-card badge/cache fan-out unless needed for criteria. Avoid redundant link/unlink commands if stories create/edit flags already meet linking. Reserve ADR0051 only after revised API plan; 0050 is ROW65. Scope process capability to demonstrated read-only gh PR inspection; propose a narrow host-owned API or a constrained declared invocation rather than unrestricted executable/argv feature. Keep core free of Plugin terms and document this is trusted in-process capability, not permission/sandbox. Require argv arrays/no shell, bounded stdout/stderr/timeouts/concurrency/cancellation and no effect from read/operation hooks; all timers disposed on unmount/disable/root switch. Add/update REQUIRED tests in existing homes: runtime capability boundary outside/inside hooks, storage-format compatibility per new Built-in Plugin checklist, existing operation inventory/docs fixtures/language. No tests planned is not sufficient for new Plugin loading/API pipeline/storage contract. URL parsing must reject credentials/invalid path and preserve opaque/future data. Keep short distinct skill additions; merge main before final checks. Do not edit .rowbly and await accepted revised plan before implementation.",
           "createdAt": "2026-11-03T02:37:47.045Z",
           "updatedAt": "2026-11-03T02:37:47.045Z"
+        },
+        {
+          "id": "tBpzDEvu",
+          "author": "sunny",
+          "body": "Implementation record: ROW-69 retry2 PR https://github.com/sgolovine/rowbly/pull/155 head 0b6c8d6fbde07a2e85aa549249d4d868b63f6f96 authored by verified worker mcp:a5863cb0-fbe5-4242-ac5a-154659ec79cd on rook, provider codex model gpt-6.1-sol, reasoningEffort high serviceTier default. Verification /home/sgolovine/.rowbly-factory/receipts/e08e8cf94b381789686856d7c1e7621a.json; /tmp/rowbly-factory-session/ROW-69-verified-retry2.json SSH launcher reservation exact provider/model/typed options; existing task worktree separately verified, root-bound thread must use only task worktree. Failed prior Opus research attempt made no product edits; clean preserved HEAD verified before retry. Current Sol worker authored host capability, Github Plugin and integrated docs/tests/skills changes. All branch product commits belong to this Run; main merges preserve published upstream work. All four checks passed (79 unit+21 CLI), six hosted screenshots verified. Requires a fresh independent review worker whose model differs from every actual product implementer. Full handoff retained in supervisor session.",
+          "createdAt": "2026-11-03T16:06:56.564Z",
+          "updatedAt": "2026-11-03T16:06:56.564Z"
         }
       ]
     }
