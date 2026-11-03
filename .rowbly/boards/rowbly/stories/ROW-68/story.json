@@ -4,26 +4,16 @@
   "boardId": "rowbly",
   "name": "Rowbly Updater",
   "description": "We want to tell users when their is a new version of rowbly available.\n\n- When starting up rowbly, run an async check to see if there is a new version available\n- Check npm: https://www.npmjs.com/package/rowbly\n- If a new version is available, inform the user that they can update by running `npm i -g rowbly`\n",
-  "stage": "in-progress",
-  "rank": "a4",
+  "stage": "in-pr",
+  "rank": "a2",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T01:11:48.683Z",
-  "updatedAt": "2026-11-03T01:38:22.959Z",
+  "updatedAt": "2026-11-03T01:43:54.013Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:52fa622b-f30e-456b-9a63-91479e97e5ee",
-        "by": "sunny",
-        "startedAt": "2026-11-03T01:13:19.690Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -46,6 +36,13 @@
           "body": "Draft PR144 is registered with the supervisor at cdaa1ca. Handoff is HELD: the reported NODE_USE_ENV_PROXY plus hung CONNECT quit delay remains contrary to the published supervisor refinement Ub1uqwMk. Do not move the Story or treat that limit as accepted. Continue the same branch and PR under the existing In Progress Run; apply the already-authorized request-local cancellation or skip optional checks under affected active proxy routing, without global agent changes or bypassing the configured proxy. Correct the PR description, ADR and comments so they do not claim quitting is never delayed while documenting the contrary. Recheck actual process exit in that case and all four checks after the fix. No new worker or duplicate PR. The earlier proposed final block and move are held, and its contradictory Comment was not applied. Return a corrected final handoff after the queued refinement is addressed.",
           "createdAt": "2026-11-03T01:38:22.958Z",
           "updatedAt": "2026-11-03T01:38:22.958Z"
+        },
+        {
+          "id": "v6UO5IFb",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/144 (branch factory/row-68, commit 64f601f). When the TUI starts, Rowbly reads npm's latest manifest in the background; if a newer release exists, a row above the footer says 'Rowbly <version> is available, update with npm i -g rowbly' (short form on narrow terminals), with key hints kept at full width. The check never delays startup or quitting: 3 s timeout, unreferenced socket and timer, a request-local DNS resolver that quitting cancels, and it is skipped when Node routes HTTPS through an environment proxy (whose CONNECT Node cannot cancel). Failures show nothing; ROWBLY_NO_UPDATE_CHECK=1 turns it off; commands, --json and --no-prompt make no request. ADR-0049, user guide and skill references updated. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots at 40/60/80/120 columns are in the PR comment.",
+          "createdAt": "2026-11-03T01:43:53.341Z",
+          "updatedAt": "2026-11-03T01:43:53.341Z"
         }
       ]
     }
