@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:14:41.373Z",
-  "updatedAt": "2026-11-03T07:29:50.445Z",
+  "updatedAt": "2026-11-03T07:29:51.684Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -96,6 +96,13 @@
           "body": "Implementation record — ROW-72 In Progress correction visit.\nWorker: mcp:c9aa3c43-3fe1-4116-902f-543c2b9ae4af (thread mcp:c9aa3c43-3fe1-4116-902f-543c2b9ae4af, harness t3, machine rook).\nModel: codex/gpt-6.1-sol, options reasoningEffort=\"high\", serviceTier=\"default\". Source: verified receipt /home/sgolovine/.rowbly-factory/receipts/30d1e50fc9323a60d2b598e58eef19bd.json and published current Run selection/identity.\nBranch: factory/row-72-correction-sol-1, pushed HEAD:factory/row-72. PR: https://github.com/sgolovine/rowbly/pull/153. Head: ab83538b74744918cb2b7ff745f41381506eeb7e (fresh gh pr view). Continued original Opus work; correction product author Sol, Astra reviewer authored no product. Both Opus/Sol excluded from next review. Handoff /tmp/rowbly-factory-session/ROW-72-correction-terminal.md.",
           "createdAt": "2026-11-03T07:29:50.445Z",
           "updatedAt": "2026-11-03T07:29:50.445Z"
+        },
+        {
+          "id": "fPdBsAIy",
+          "author": "sunny",
+          "body": "Corrections pushed to existing draft PR https://github.com/sgolovine/rowbly/pull/153, branch factory/row-72, head ab83538b74744918cb2b7ff745f41381506eeb7e. 1. Failed acquisition phases retain elapsed timing and original errors, with deterministic phase-attribution coverage. 2. Search loaders, mappers and legacy callbacks receive detached deep inputs, with mutation/failure isolation coverage. Typecheck and lint passed; unit 79 passed; CLI 21 passed; total 100. Three fresh screenshot URLs verified 200. Final CI snapshot: 11 successes, Clipboard smoke (windows-latest) pending. Correction author codex/gpt-6.1-sol, reasoningEffort high, serviceTier default, worker mcp:c9aa3c43-3fe1-4116-902f-543c2b9ae4af; receipt 30d1e50fc9323a60d2b598e58eef19bd.json. Original author claudeAgent/claude-opus-5-5 remains recorded; exclude both implementing models from independent review. Detailed responses and provenance: https://github.com/sgolovine/rowbly/pull/153#issuecomment-6597917880. All earlier resources retained; owned TUI and daemon stopped. No Board writes or merge performed.",
+          "createdAt": "2026-11-03T07:29:51.683Z",
+          "updatedAt": "2026-11-03T07:29:51.683Z"
         }
       ]
     }
