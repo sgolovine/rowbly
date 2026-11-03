@@ -520,7 +520,13 @@ off keeps the Board entry so the global prompt does not apply. `space` turns the
 highlighted Stage's prompt on or off at the shown level, `enter` reads it, `e` edits it in the
 full-screen editor (`ctrl+s` saves), and `d` removes the selected scope's entry and its file.
 The Story screen shows a **Stage Run** row while the Story has one for its current Stage, such as `running (ROW-12 worker)` or
-`failed (ROW-12 worker, attempt 2): tests failed`.
+`failed (ROW-12 worker, attempt 2): tests failed`. A Story with a running or failed Stage Run for
+its current Stage has a badge on its board card and list line: `▶ running` or `✕ failed`, with `#2`
+after the first attempt (a finished one has none). The Story's **Stage Run** tab shows that Stage
+Run read-only: outcome (running, finished or failed), attempt, the worker as recorded, who started it, when it started and
+ended with how long ago, how long it ran (`Running for`, refreshed every 30 seconds while running,
+or `Took`), and the reason it failed. Ages come from `startedAt` and `finishedAt`; a Stage Run has no
+record of later activity. A Story with none in this visit shows `—`; earlier visits are not kept.
 
 **Doctor:** `SOFTWARE_FACTORY_MISSING_PROMPT` (warning): a Stage Prompt is on at either level, but its
 path is not set, points outside the Plugin's folder, or its file is missing or cannot be read. There
