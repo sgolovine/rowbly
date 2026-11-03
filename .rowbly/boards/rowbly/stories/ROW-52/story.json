@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Create factory branches without tracking origin/main",
   "description": "Factory review recommendation 6 of 20.\n\n## Context\n\nA reviewed task branch tracked origin/main, creating a risk that an upstream-style push targets main.\n\n## Acceptance criteria\n\n- Create task branches from the intended base with tracking disabled.\n- Require the first push to set the upstream to the task branch.\n- Update worktree guidance and verify branch/upstream configuration on a representative worktree.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "a2",
+  "stage": "done",
+  "rank": "ax",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:49.511Z",
-  "updatedAt": "2026-11-02T23:51:51.774Z",
+  "updatedAt": "2026-11-02T23:55:34.457Z",
   "plugins": {
     "epics": {
       "epic": "factory-skill-tooling-improvements"
@@ -32,18 +32,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/135. The rowbly-dev worktree guidance now creates task branches with git worktree add --no-track, checks that a new branch has no upstream, and makes the first push set the upstream to the task's own branch (git push -u origin HEAD:<destination>) with a check that it never names the parent. SKILL.md Baseline, the Implementation push step and Finalize step 2 say the same. The old behavior (a branch tracking origin/main) was reproduced and the fix was checked on the ROW-52 worktree: no upstream before the first push, origin/claude/row-52-untracked-branches after. typecheck, lint, test:unit (77) and test:cli (20) pass; the screenshot is in a PR comment.",
           "createdAt": "2026-11-02T23:48:19.825Z",
           "updatedAt": "2026-11-02T23:48:19.825Z"
+        },
+        {
+          "id": "vrk6AHiO",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/135. Merge commit dde9c85. All six checks on head 55b44c3 passed and the screenshot URL returned HTTP 200. Main CI was queued at the worker check.",
+          "createdAt": "2026-11-02T23:55:33.749Z",
+          "updatedAt": "2026-11-02T23:55:33.749Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:bc7a8beb-6e1e-48dd-9ba9-cc56737f1f2b",
-        "by": "sunny",
-        "startedAt": "2026-11-02T23:51:51.773Z"
-      }
     }
   }
 }

@@ -94,7 +94,9 @@ unchanged and does not authorize implementation. Its browser UI has a numbered c
 
 `skills/rowbly-factory/` supervises a Board: it starts a worker for each Story that arrives in a
 Stage whose Stage Prompt is on, records Stage Runs (ADR-0040) and applies the Board changes workers
-report. At start it pulls the checkout, first moving any uncommitted changes to a cleanup PR. The
+report. At start it syncs Rowbly changes that were saved but not yet committed through the Git
+Plugin, moves any other uncommitted changes to a cleanup PR and pulls the checkout. It commits and
+pushes Board changes as they happen, when `ROWBLY.md` says to. The
 Stage Prompts and `ROWBLY.md` carry the workflow; the skill names no Stage, server, model or way of
 starting threads. Its `scripts/launch-worker.mjs` starts and verifies workers through a `t3` CLI on
 another computer; it takes every host, path and model as a flag, and `ROWBLY.md` holds this
