@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T03:35:17.138Z",
+  "updatedAt": "2026-11-03T03:35:18.436Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
+        "by": "sunny",
+        "startedAt": "2026-11-03T03:16:45.182Z",
+        "finishedAt": "2026-11-03T03:35:17.137Z"
+      }
     },
     "comments": {
       "comments": [
@@ -74,19 +85,15 @@
           "body": "Implementation record before Stage change: verified authoring history original Opus workerb396dc5c plus Sol correction3fa520ee. Current implementing worker mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a on rook model gpt-6.1-sol. PR https://github.com/sgolovine/rowbly/pull/149. Exact branch/head and four-check results in terminal handoff. Preserve ALL authoring models for next reviewer selection; do not infer authors from account/branch. ",
           "createdAt": "2026-11-03T03:35:15.718Z",
           "updatedAt": "2026-11-03T03:35:15.718Z"
+        },
+        {
+          "id": "7vMjVgsY",
+          "author": "sunny",
+          "body": "Correction pushed to existing PR https://github.com/sgolovine/rowbly/pull/149 at 801ae8ffc1c2356e315bed70bb2e565de49d8c4f by codex/gpt-6.1-sol. Both numbered findings answered: generated brief context preserved with explicit complete implementation records and reviewer identity; fresh reviewer must use a model different from every implementer, same provider allowed. Typecheck and lint passed, unit 78 and CLI 20 passed. Actual assembled brief verified on throwaway Data Root; screenshot and full responses: https://github.com/sgolovine/rowbly/pull/149#issuecomment-6594680451. Configuration proposals remain supervisor-only on rook. CI pending; fresh independent review required. Include original Opus implementation and this Sol correction in provenance.",
+          "createdAt": "2026-11-03T03:35:18.435Z",
+          "updatedAt": "2026-11-03T03:35:18.435Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:3fa520ee-bba9-4bc9-a1c9-89713adf233a",
-        "by": "sunny",
-        "startedAt": "2026-11-03T03:16:45.182Z",
-        "finishedAt": "2026-11-03T03:35:17.137Z"
-      }
     }
   }
 }
