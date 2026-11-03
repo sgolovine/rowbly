@@ -12,10 +12,20 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:53.705Z",
-  "updatedAt": "2026-11-03T04:34:36.570Z",
+  "updatedAt": "2026-11-03T04:37:32.234Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
+        "by": "sunny",
+        "startedAt": "2026-11-03T04:34:35.728Z"
+      }
     },
     "comments": {
       "comments": [
@@ -130,18 +140,15 @@
           "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
           "createdAt": "2026-11-03T02:54:36.883Z",
           "updatedAt": "2026-11-03T02:54:36.883Z"
+        },
+        {
+          "id": "5VzayKnt",
+          "author": "sunny",
+          "body": "Correction plan ACCEPTED for findings3-4 only: discovered existing-worker unreadability is unknown with ID/intendedselection preserved; missing/empty/malformed provider/model/runtime evidence is unverified, wellformed differing evidence stays conflict. Extend the existing deterministic fakeT3 fixtures for first recovery with no receipt and malformed CLI evidence, retain typedoption/CONFIG checks and no realstart/GO; update remote-launch guidance. Work isolated at row-60-pr145-correction-2, samePR145/head e3e2b69. Main integration and publication remain HELD until149->147->146 land and supervisor explicitly clears; afterclearance additive integration preserves all resource/selection/verification/publication rules, allfourchecks once under boundedlease and screenshotworkflow for changedCLIoutput. No unrelatedfixes, newPR, .rowbly edits or receiptdeletion.",
+          "createdAt": "2026-11-03T04:37:32.233Z",
+          "updatedAt": "2026-11-03T04:37:32.233Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:c10f649b-1065-41f0-a173-dbf23695fabf",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:34:35.728Z"
-      }
     }
   }
 }
