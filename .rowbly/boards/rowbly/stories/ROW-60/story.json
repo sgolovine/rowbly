@@ -69,6 +69,13 @@
           "updatedAt": "2026-11-03T04:16:00.803Z"
         },
         {
+          "id": "UactDsyc",
+          "author": "sunny",
+          "body": "Implementation record: Run in-progress/1/2026-11-03T04:34:35.728Z; worker/thread mcp:c10f649b-1065-41f0-a173-dbf23695fabf; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/320f92ec8eba652c0372b83d6d9a8e1d.json. Actual uncertainty corrections3-4 and main integration author of PR145 da843d1ce5470ad6f0b842bc861f9e19a828144e, local corrections fd5c5995/411afc5f. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-2; all prior Opus/Sol implementation records retained, review-only Astra excluded. Fresh reviewer must differ from every actual author model.",
+          "createdAt": "2026-11-03T05:13:04.392Z",
+          "updatedAt": "2026-11-03T05:13:04.392Z"
+        },
+        {
           "id": "V5tVZQ0I",
           "author": "sunny",
           "body": "Your correction implementation is reviewable, but required local unit validation failed, so the old FACTORY-DONE is superseded for lifecycle purposes. Supervisor will apply your final Comment now and HOLD its move; Run stays running. One unmodified four-check pass is authorized after the new shared validation lease and measured CPU-headroom admission, original20s timeout, external resource telemetry, no source/test/dependency changes. This is a controlled-condition verification justified by ROW48 diagnostics/late lease coordination, not rerun-untilgreen or proof of originalcause. Allfour once sequentially, stop on ANY failure and do not retry again. If lease unavailable before checks start, report capacity waiting. Preserve original timeout evidence and exacthead e3e2b691a624119696f925c5ef02dfbafb1a700c; if newhead/codechanges, report it first. On success send a NEW factual validation Comment and FACTORY-DONE ROW-60 with move in-pr; on failure FACTORY-FAILED with exactfailure and no move. Do not implement unrelated storage fix. Merge order after review: PR149, then147, then146, then145; no merge yourself. Current correction stage all code changes remain scoped and preserved.",
@@ -139,25 +146,18 @@
           "updatedAt": "2026-11-03T00:06:07.504Z"
         },
         {
-          "id": "ycVgjvy6",
-          "author": "sunny",
-          "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
-          "createdAt": "2026-11-03T02:54:36.883Z",
-          "updatedAt": "2026-11-03T02:54:36.883Z"
-        },
-        {
-          "id": "UactDsyc",
-          "author": "sunny",
-          "body": "Implementation record: Run in-progress/1/2026-11-03T04:34:35.728Z; worker/thread mcp:c10f649b-1065-41f0-a173-dbf23695fabf; machine rook; provider codex; model gpt-6.1-sol; reasoningEffort high; verified receipt /home/sgolovine/.rowbly-factory/receipts/320f92ec8eba652c0372b83d6d9a8e1d.json. Actual uncertainty corrections3-4 and main integration author of PR145 da843d1ce5470ad6f0b842bc861f9e19a828144e, local corrections fd5c5995/411afc5f. Worktree /home/sgolovine/Projects/rowbly-worktrees/row-60-pr145-correction-2; all prior Opus/Sol implementation records retained, review-only Astra excluded. Fresh reviewer must differ from every actual author model.",
-          "createdAt": "2026-11-03T05:13:04.392Z",
-          "updatedAt": "2026-11-03T05:13:04.392Z"
-        },
-        {
           "id": "u98r9iQV",
           "author": "sunny",
           "body": "PR145 updated at da843d1ce5470ad6f0b842bc861f9e19a828144e. Findings 3-4 corrected and current main integrated. Final typecheck, lint, unit78 and CLI21 passed once under the validation lease. Four inspected screenshot URLs returned HTTP200. Evidence: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6596001507. Fresh independent review required; PR remains draft and unmerged.",
           "createdAt": "2026-11-03T05:13:05.671Z",
           "updatedAt": "2026-11-03T05:13:05.671Z"
+        },
+        {
+          "id": "ycVgjvy6",
+          "author": "sunny",
+          "body": "Independent review requested changes on PR145 head d6d9c1e45d7b4a884c899a80a3b7776bc81f372d: preserve exact typed option values and update remote-launch selection recording/comparison. Typecheck, lint, unit78, CLI20, six GitHub checks and both screenshot HTTP200 checks passed. Current main now conflicts in docs/plugins/built-in.md and skills/rowbly-factory/SKILL.md after PR140 merged. Integration stopped without resolution or push. Full findings and policy proposal: https://github.com/sgolovine/rowbly/pull/145#issuecomment-6594058074",
+          "createdAt": "2026-11-03T02:54:36.883Z",
+          "updatedAt": "2026-11-03T02:54:36.883Z"
         }
       ]
     }
