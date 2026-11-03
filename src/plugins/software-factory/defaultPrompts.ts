@@ -1,6 +1,6 @@
 import type { StageConfig } from '../../plugin-api';
 
-/** The Stages a software factory Board has between Backlog and Done (ADR-0053 §1). */
+/** The Stages a software factory Board has between Backlog and Done (ADR-0053 §2). */
 export const FACTORY_STAGES: readonly StageConfig[] = Object.freeze([
   { key: 'todo', name: 'TODO' },
   { key: 'in-progress', name: 'In Progress' },
@@ -8,7 +8,7 @@ export const FACTORY_STAGES: readonly StageConfig[] = Object.freeze([
 ]);
 
 /**
- * The default Stage Prompt of each factory Stage, and whether setup turns it on (ADR-0053 §3). They
+ * The default Stage Prompt of each factory Stage, and whether setup turns it on (ADR-0053 §2). They
  * name only published skills, `gh` and `git`: no repository's paths, commands, branches or servers.
  */
 export const DEFAULT_PROMPTS: Readonly<Record<string, { enabled: boolean; text: string }>> = Object.freeze({

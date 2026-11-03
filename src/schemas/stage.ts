@@ -33,7 +33,7 @@ export const StageListSchema = z
   .array(StageConfigSchema)
   .superRefine(uniqueKeys<StageConfig>('stage key', (stage) => stage.key));
 
-/** Used when no Configuration Cascade level defines `stages`; also written by `init`. */
+/** Used when no Configuration Cascade level defines `stages`; also written by `init` (ADR-0024 §3, ADR-0053 §2). */
 export const DEFAULT_STAGES: readonly StageConfig[] = Object.freeze([
   { key: 'todo', name: 'TODO' },
   { key: 'in-progress', name: 'In Progress' },
