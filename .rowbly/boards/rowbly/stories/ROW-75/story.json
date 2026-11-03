@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "key": "ROW-75",
+  "boardId": "rowbly",
+  "name": "Remove duplicate confirmation during board setup",
+  "description": "When the user clicks \"Add factory Stages and default Stage Prompts\", it asks the user to confirm again which is redundant.",
+  "stage": "todo",
+  "rank": "a1",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T22:03:27.354Z",
+  "updatedAt": "2026-11-03T22:03:27.356Z",
+  "plugins": {
+    "attachments": {
+      "attachments": [
+        {
+          "id": "aYRu63f7R",
+          "name": "image-20261103-2202.png",
+          "type": "image/png",
+          "size": 98378,
+          "createdAt": "2026-11-03T22:03:27.356Z",
+          "createdBy": "sunny"
+        }
+      ]
+    }
+  }
+}
