@@ -12,10 +12,21 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:47.552Z",
-  "updatedAt": "2026-11-03T03:09:23.549Z",
+  "updatedAt": "2026-11-03T03:09:24.814Z",
   "plugins": {
     "epics": {
       "epic": "factory-product-improvements"
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:c76d7551-53b8-45a4-aafc-93b1e31c1eae",
+        "by": "sunny",
+        "startedAt": "2026-11-03T02:47:09.721Z",
+        "finishedAt": "2026-11-03T03:09:23.548Z"
+      }
     },
     "comments": {
       "comments": [
@@ -60,19 +71,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/146. Adds 'rowbly software-factory run touch', which records verified worker activity (a worker message or harness event, never polling or status) as the current Stage Run's heartbeat in the shared Run details. It refuses with CONFLICT on a changed Run, a missing or mismatched attached worker, or a Run that is not running, and with DATA_INTEGRITY on unreadable details. runs and wait gain liveness (last seen, age, stale) and --stale-after (default 15 minutes). The digest leaves out the age, so it changes once when a Run becomes stale and never just because time passes. The Stage Run tab gains a Last seen row. ADR-0048 (amends ADR-0040) says staleness only asks the supervisor to check the worker. Docs, the factory skill and the reference copies are updated. typecheck, lint, test:unit (78) and test:cli (20) pass; the suite stays at 98 tests; agentic-tui screenshots are linked from the PR.",
           "createdAt": "2026-11-03T02:36:05.070Z",
           "updatedAt": "2026-11-03T02:36:05.070Z"
+        },
+        {
+          "id": "vKJXPLkV",
+          "author": "sunny",
+          "body": "Independent review CHANGES REQUESTED for PR146 at a2828753b02fb6465ecd6e992470332a02870e3c. Reproduction: attach verified-worker on rook with threadId verified-thread, then have a touch transform replace identity.machine and identity.threadId while retaining identity.worker. touchRun succeeds and persists the replacement identity. Expected fix: retain the complete identity observed under the lock and compare it in the final post-transform guard. Extend the existing pipeline regression to require CONFLICT and unchanged Story and metadata bytes for same-worker identity replacement. Reproduction script on rook: /tmp/row50-review.mts. Evidence: https://github.com/sgolovine/rowbly/pull/146#issuecomment-6594219804. Actual checks passed: pnpm typecheck, pnpm lint, pnpm test:unit 78, pnpm test:cli 20. Initial pnpm attempts stopped before check execution during dependency setup. No failed check was rerun. Manual refusal, opaque-byte preservation, clock/Me, ordinary identity/selection preservation and deterministic stale-digest checks passed. All three screenshot URLs returned HTTP 200. Current main conflicts in commands.ts, built-in.md and the ADR index. Trial merge aborted without resolution. Correction must preserve PR140 brief behavior, ADR0047, ADR0048 and strict Run metadata. PR146 and factory/row-50 preserved. No product or Board changes performed.",
+          "createdAt": "2026-11-03T03:09:24.813Z",
+          "updatedAt": "2026-11-03T03:09:24.813Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c76d7551-53b8-45a4-aafc-93b1e31c1eae",
-        "by": "sunny",
-        "startedAt": "2026-11-03T02:47:09.721Z",
-        "finishedAt": "2026-11-03T03:09:23.548Z"
-      }
     }
   }
 }
