@@ -4,29 +4,18 @@
   "boardId": "rowbly",
   "name": "Require an independent review before factory merges",
   "description": "Factory review recommendation 1 of 20.\n\n## Context\n\nThe In PR Stage Prompt permits merging on green CI without requiring an independent review.\n\n## Acceptance criteria\n\n- Add an explicit review gate before merge using a different worker/model from the implementer.\n- Review the diff against the Story and record approval or actionable findings in a Comment.\n- Return changes requiring fixes to implementation and prevent merge until approval and required checks pass.\n\nRecheck the reviewed behavior against the current implementation and configuration before making changes. Update the relevant documentation, skill guidance and repository configuration together where applicable.",
-  "stage": "in-pr",
-  "rank": "aA",
+  "stage": "done",
+  "rank": "b0C",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-02T23:12:45.969Z",
-  "updatedAt": "2026-11-03T04:37:18.658Z",
+  "updatedAt": "2026-11-03T04:37:19.900Z",
   "plugins": {
     "epics": {
       "epic": "factory-configuration-improvements"
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:a75213d3-610d-4ae0-8ed4-6c98f127b65b",
-        "by": "sunny",
-        "startedAt": "2026-11-03T04:33:19.034Z",
-        "finishedAt": "2026-11-03T04:37:16.752Z"
-      }
     },
     "comments": {
       "comments": [
