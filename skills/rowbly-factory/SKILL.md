@@ -216,6 +216,16 @@ discarding earlier work.
    returned attempt number and the captured previous outcome. Do not substitute the new Run's
    worker or status for the previous attempt's details.
 
+## Returned work
+
+A worker in a later Stage may move a Story back to an earlier one, for example to repair a pull
+request. That is a new visit, not a retry: finish the later Stage Run before the move, and start a
+new worker for the earlier Stage as for any Story. When the Story's Comments record the branch and
+PR to repair, check that the PR is still open and its branch and head commit match the record, and
+put them in the brief's other instructions with the failure to fix: "Continue" when the Stage
+Prompt or `ROWBLY.md` says returned work is continued, otherwise as a question for the user. On a
+mismatch, report it and ask; never start again or discard the recorded work.
+
 ## Worker messages
 
 Workers end messages with these markers, as the brief asks:
