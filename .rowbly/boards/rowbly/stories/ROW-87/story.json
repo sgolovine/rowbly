@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "key": "ROW-87",
+  "boardId": "rowbly",
+  "name": "Onboarding layout changes.",
+  "description": "Onboarding currently is done within the story window and sidebar + header are shown. These other elements are not required during onboarding so just for onboarding, only show the content and do not show the header or sidebars",
+  "stage": "todo",
+  "rank": "aC",
+  "priority": null,
+  "labels": [],
+  "dueDate": null,
+  "customFields": {},
+  "createdBy": "sunny",
+  "createdAt": "2026-11-03T23:37:45.012Z",
+  "updatedAt": "2026-11-03T23:37:45.012Z"
+}
