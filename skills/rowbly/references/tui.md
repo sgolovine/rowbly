@@ -21,6 +21,11 @@ onboarding is complete, a Board in context opens its Kanban board; otherwise the
 Data Root, so changes made with commands show on their own a moment later, without losing the user's
 place or what they typed in a form.
 
+When a newer Rowbly release is on npm, a row above the footer says
+`Rowbly <version> is available, update with npm i -g rowbly`; the user updates by running that
+command. Offline or slow, the check shows nothing and never delays startup or quitting. Behind
+Node's environment proxy (`NODE_USE_ENV_PROXY=1` or `--use-env-proxy`) the check is skipped.
+
 ## Keys on every screen
 
 | Key | Action |
