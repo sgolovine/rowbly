@@ -3,7 +3,7 @@
   "key": "ROW-79",
   "boardId": "rowbly",
   "name": "When installing agent skills, indicate which one has already been installed",
-  "description": "Currently no way to tell if a skill has been installed after installing it",
+  "description": "Currently no way to tell if a skill has been installed after installing it\n\nAlso, ther should be a continue button so there is another way out besides clicking \"Continue without installing more skills\". Having that one button makes it seem like the user did something wrong",
   "stage": "todo",
   "rank": "a5",
   "priority": null,
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-03T22:08:20.974Z",
+  "updatedAt": "2026-11-03T22:09:07.296Z",
   "plugins": {
     "attachments": {
       "attachments": [
