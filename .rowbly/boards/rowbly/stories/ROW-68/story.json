@@ -38,18 +38,18 @@
           "updatedAt": "2026-11-03T01:38:22.958Z"
         },
         {
-          "id": "v6UO5IFb",
-          "author": "sunny",
-          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/144 (branch factory/row-68, commit 64f601f). When the TUI starts, Rowbly reads npm's latest manifest in the background; if a newer release exists, a row above the footer says 'Rowbly <version> is available, update with npm i -g rowbly' (short form on narrow terminals), with key hints kept at full width. The check never delays startup or quitting: 3 s timeout, unreferenced socket and timer, a request-local DNS resolver that quitting cancels, and it is skipped when Node routes HTTPS through an environment proxy (whose CONNECT Node cannot cancel). Failures show nothing; ROWBLY_NO_UPDATE_CHECK=1 turns it off; commands, --json and --no-prompt make no request. ADR-0049, user guide and skill references updated. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots at 40/60/80/120 columns are in the PR comment.",
-          "createdAt": "2026-11-03T01:43:53.341Z",
-          "updatedAt": "2026-11-03T01:43:53.341Z"
-        },
-        {
           "id": "ophwh5Wc",
           "author": "sunny",
           "body": "Merged https://github.com/sgolovine/rowbly/pull/144 as 30254f3; main CI passed. Independent review on 64f601f passed typecheck, lint, unit78, CLI20, six CI checks and seven screenshot URLs. Direct/timeout/abort/silent-DNS/native-proxy scenarios preserve prompt process exit; real TUI quit35-42ms matches opt-out40ms. Commands and non-TTY runs make no update request. Review noted two documentation follow-ups: bare --json/--no-prompt in a terminal still opens TUI and checks, while commands do not; request-local DNS ignores /etc/hosts. Worker suggested malformed CLI block was not executed; this supervisor Comment records the authorized merge outcome.",
           "createdAt": "2026-11-03T02:02:00.067Z",
           "updatedAt": "2026-11-03T02:02:00.067Z"
+        },
+        {
+          "id": "v6UO5IFb",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/144 (branch factory/row-68, commit 64f601f). When the TUI starts, Rowbly reads npm's latest manifest in the background; if a newer release exists, a row above the footer says 'Rowbly <version> is available, update with npm i -g rowbly' (short form on narrow terminals), with key hints kept at full width. The check never delays startup or quitting: 3 s timeout, unreferenced socket and timer, a request-local DNS resolver that quitting cancels, and it is skipped when Node routes HTTPS through an environment proxy (whose CONNECT Node cannot cancel). Failures show nothing; ROWBLY_NO_UPDATE_CHECK=1 turns it off; commands, --json and --no-prompt make no request. ADR-0049, user guide and skill references updated. typecheck, lint, test:unit (78) and test:cli (20) pass; screenshots at 40/60/80/120 columns are in the PR comment.",
+          "createdAt": "2026-11-03T01:43:53.341Z",
+          "updatedAt": "2026-11-03T01:43:53.341Z"
         }
       ]
     }
