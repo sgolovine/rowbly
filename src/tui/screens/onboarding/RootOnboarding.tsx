@@ -178,8 +178,9 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
         <>
           <Text bold>Guide your Software Factory</Text>
           <Text>
-            Stage Prompts tell agents what to do when a Story enters each Stage. Edit your instructions and turn on the
-            Stages agents should work. No starter prompts are added by onboarding.
+            Stage Prompts tell agents what to do when a Story enters each Stage. Factory setup adds the Stages TODO, In
+            Progress and In Review and default Stage Prompts to this Board when you choose it; it keeps the Stages and
+            Stage Prompts you already have. Edit your instructions and turn on the Stages agents should work.
           </Text>
           <Text color={theme.inkMuted}>
             Install rowbly-factory for a supervising agent and choose skills for the work in each Stage. Write your
@@ -187,6 +188,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           </Text>
           <SelectList
             items={[
+              { value: 'setup', label: 'Add factory Stages and default Stage Prompts' },
               { value: 'prompts', label: 'Open Stage Prompt editing' },
               { value: 'skills', label: 'Choose agent skills' },
               ...(aiAsked
@@ -195,9 +197,12 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
             ]}
             onSelect={(item) =>
               void run(async () => {
-                if (item.value === 'prompts') {
+                if (item.value === 'prompts' || item.value === 'setup') {
                   await plugins.reload();
-                  const route = pluginRoute('software-factory', 'stage-prompts');
+                  const route = pluginRoute(
+                    'software-factory',
+                    item.value === 'setup' ? 'factory-setup' : 'stage-prompts',
+                  );
                   router.push(route.screen, route.params);
                 } else if (item.value === 'skills') setStep('skills');
                 else if (item.value === 'ai') setStep('ai');
