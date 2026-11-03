@@ -1,6 +1,6 @@
 // A fixture Plugin that uses most of the Plugin API: settings, a Story bag, a transform, a guard and
 // a reaction, its own commands and files, options on core commands, a filter, `stories show` rows,
-// a doctor check with a fix, an Action and a TUI part. Like a Built-in Plugin, it imports only the
+// a Story Context section, a doctor check with a fix, an Action and a TUI part. Like a Built-in Plugin, it imports only the
 // Plugin API.
 import { definePlugin, type PluginChangeSet, type PluginReadContext, type Story, z } from '../../../src/plugin-api';
 
@@ -86,6 +86,10 @@ export const notes = definePlugin({
   async storyRows(story, plugin) {
     const bag = plugin.readBag(story, NoteBag);
     return bag ? [{ label: 'Note', value: `${plugin.settings.marker}: ${bag.note}` }] : [];
+  },
+  async storyContext(story, plugin) {
+    const bag = plugin.requireBag(story, NoteBag);
+    return bag ? { title: 'Note', text: bag.note, data: bag } : null;
   },
   commands(group, cli) {
     group
