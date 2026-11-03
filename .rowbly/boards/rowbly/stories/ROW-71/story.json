@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T02:06:33.528Z",
-  "updatedAt": "2026-11-03T02:29:10.099Z",
+  "updatedAt": "2026-11-03T02:36:01.275Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -29,11 +29,13 @@
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
-        "status": "running",
+        "status": "failed",
         "attempt": 1,
         "worker": "mcp:21fdc1db-4907-4959-aea9-7281fdde4f73",
         "by": "sunny",
-        "startedAt": "2026-11-03T02:29:09.220Z"
+        "startedAt": "2026-11-03T02:29:09.220Z",
+        "finishedAt": "2026-11-03T02:36:01.274Z",
+        "reason": "Verified worker failed on Claude session limit; implementation/worktree preserved; continuation decision requested before one Sol retry."
       }
     }
   }
