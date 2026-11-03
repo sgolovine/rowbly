@@ -424,7 +424,39 @@ export interface PluginFiles {
   readBinary(scope: FileScope, name: string): Promise<Uint8Array | null>;
   /** File names in the folder, recursively, as `/`-separated paths, sorted. */
   list(scope: FileScope): Promise<string[]>;
+  /**
+   * Many files' text, read in batches of at most 32 requests, each batch one read scope (ADR-0052).
+   * `result[i]` answers `requests[i]`. Scopes and names are checked before anything is read; one
+   * that is invalid rejects the call. An entry fails on its own only for a missing Story or Board
+   * scope or a file it cannot read; any other failure, such as a busy Data Root or a record that
+   * cannot be read, rejects the whole call.
+   */
+  readMany(requests: readonly PluginFileRequest[]): Promise<PluginFileRead[]>;
+  /**
+   * `list` for many scopes, in batches that close after 32 scopes or once 256 names were listed, each
+   * one read scope (ADR-0052). `result[i]` answers `scopes[i]`; failures as in `readMany`.
+   */
+  listMany(scopes: readonly FileScope[]): Promise<PluginFileList[]>;
 }
+
+/** One file for `PluginFiles.readMany`. */
+export interface PluginFileRequest {
+  scope: FileScope;
+  name: string;
+}
+
+/** Why one entry of `readMany` or `listMany` failed: an error code, such as `NOT_FOUND` or `EACCES`. */
+export interface PluginFileFailure {
+  status: 'failed';
+  code: string;
+  message: string;
+}
+
+/** One file of `PluginFiles.readMany`: its text, `missing` where `read` gives `null`, or its failure. */
+export type PluginFileRead = { status: 'found'; text: string } | { status: 'missing' } | PluginFileFailure;
+
+/** One scope of `PluginFiles.listMany`: its names, as `list` gives them, or its failure. */
+export type PluginFileList = { status: 'found'; names: string[] } | PluginFileFailure;
 
 /**
  * The read-only core services (stages `body`, `replacement`, `transform`, `guard`, `reaction`,
@@ -1050,6 +1082,16 @@ export interface PluginTui<S = Record<string, unknown>> {
   loadStoryBadges?(args: { plugin: PluginContext<S> }): Promise<(story: Story) => string[]>;
   /** Searchable text owned by this Plugin, loaded when the Story finder opens. Failure skips its text. */
   storySearchText?(args: { story: Story; plugin: PluginContext<S> }): Promise<string[]> | string[];
+  /**
+   * Searchable text that needs the Plugin's files, loaded once each time the Story finder opens for all
+   * the `stories` it searches, outside the Data Root lock (ADR-0052). It returns the text of a Story,
+   * added before `storySearchText`'s. A Plugin whose load throws adds no text to that search; one whose
+   * function throws adds none to that Story.
+   */
+  loadStorySearchText?(args: {
+    stories: readonly Story[];
+    plugin: PluginContext<S>;
+  }): Promise<(story: Story) => string[]>;
   storyTabs?: { label: string; component: ComponentType<PluginStoryTabProps<S>> }[];
   boardSections?: ComponentType<PluginBoardSectionProps<S>>[];
   /**

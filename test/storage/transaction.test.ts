@@ -3,7 +3,7 @@ import { constants } from 'node:fs';
 import { access, mkdir, readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
+import { createRepositories, prepareTransaction, recoverTransactions, type TransactionPlan } from '../../src/storage';
 import { deferred, FIXED_NOW, fixedClock, tempRoot } from '../helpers';
 import { fixtureScript, injectFaults, MUTATING, runScript, snapshotTree, startScript } from './engineHelpers';
 
@@ -253,6 +253,7 @@ describe('Git local publication', () => {
       '../../src/storage/gitSyncJournal'
     );
     const { coordinated } = await import('../../src/services/coordination');
+    const { readPluginFiles } = await import('../../src/services/plugins/fileBatches');
     const { lstat, rm } = await import('node:fs/promises');
     // The fault matrix exercises real syscalls, including fsync, but models failures through
     // injection rather than power loss. Linux tmpfs avoids paying disk flush latency 130 times;
@@ -454,6 +455,10 @@ describe('Git local publication', () => {
         }),
       ).rejects.toMatchObject(refuse);
       expect(read).toBe(false);
+      // A batch of Plugin reads fails as a whole, with the same error, and reads nothing (ADR-0052).
+      await expect(
+        readPluginFiles(t.root, createRepositories(t.root), 'unknown', [{ scope: 'dataRoot', name: 'blob.bin' }]),
+      ).rejects.toMatchObject(refuse);
       expect(await readFile(f.repo.journal, 'utf8')).toContain(f.plan.candidate);
       if (scenario === 'foreign-lock') {
         expect((await stat(`${f.repo.index}.lock`)).ino).toBe(foreignInode);
@@ -593,6 +598,7 @@ describe('Git local publication', () => {
     const { syncFixture } = await import('./fixtures/syncFixture');
     const { coordinated } = await import('../../src/services/coordination');
     const { setTraceSink } = await import('../../src/services/plugins/trace');
+    const { readPluginFiles } = await import('../../src/services/plugins/fileBatches');
     const { io } = await import('../../src/storage/io');
     const { readPublicationFile } = await import('../../src/storage/gitSyncJournal');
     const { requireRepository } = await import('../../src/storage/gitRepository');
@@ -648,10 +654,12 @@ describe('Git local publication', () => {
         [],
       );
       if (target !== 'complete') continue;
-      // The trace shows a read that waits behind a publication gate another process holds, and for
-      // whom (ADR-0019 §1).
+      // A batch of Plugin reads waits behind a publication gate another process holds, and the trace
+      // shows for how long and for whom (ADR-0019 §1, ADR-0052).
       const events: unknown[] = [];
       const gateLock = join(f.repo.gate, '.lock');
+      await mkdir(join(t.path, 'plugins/probe'), { recursive: true });
+      await writeFile(join(t.path, 'plugins/probe/x.txt'), 'probe');
       const holder = startScript(fixtureScript('holdLock.ts'), ['hold', f.repo.gate]);
       await holder.printed('locked');
       const waiting = deferred();
@@ -662,15 +670,17 @@ describe('Git local publication', () => {
       });
       setTraceSink((event) => events.push(event));
       try {
-        let read = false;
-        const reading = coordinated(t.root, 'read behind publication', async () => {
-          read = true;
+        let settled = false;
+        const reading = readPluginFiles(t.root, createRepositories(t.root), 'probe', [
+          { scope: 'dataRoot', name: 'x.txt' },
+          { scope: 'dataRoot', name: 'none.txt' },
+        ]).finally(() => {
+          settled = true;
         });
         await waiting.promise;
-        expect(read).toBe(false);
+        expect(settled).toBe(false);
         holder.child.stdin.end();
-        await reading;
-        expect(read).toBe(true);
+        expect(await reading).toEqual([{ status: 'found', text: 'probe' }, { status: 'missing' }]);
       } finally {
         setTraceSink(undefined);
         spy.mockRestore();
@@ -679,7 +689,7 @@ describe('Git local publication', () => {
       }
       expect(events).toContainEqual({
         operationId: expect.stringMatching(/^lock-\d+$/),
-        operation: 'read behind publication',
+        operation: 'probe.files.readMany',
         plugin: null,
         stage: 'coordination',
         ms: expect.any(Number),

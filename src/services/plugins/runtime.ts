@@ -26,6 +26,7 @@ import {
   readPluginFile,
 } from './changeSet';
 import { assertMayStart, currentScope, type ExecutionScope, inScope, newOperationId } from './executionScope';
+import { listPluginFilesMany, readPluginFiles } from './fileBatches';
 import { createPluginGit, drainGitQueue } from './git';
 import type { ActivePlugin } from './host';
 import { parseSettings } from './host';
@@ -528,6 +529,9 @@ function readContext(ctx: RowblyContext, repos: Repositories, plugin: ActivePlug
       readBinary: (scope, name) =>
         coordinated(ctx.root, `${id}.files.readBinary`, () => readPluginBinaryFile(ctx.root, repos, id, scope, name)),
       list: (scope) => coordinated(ctx.root, `${id}.files.list`, () => listPluginFiles(ctx.root, repos, id, scope)),
+      // Batches of reads, each one read scope (ADR-0052).
+      readMany: (requests) => readPluginFiles(ctx.root, repos, id, requests),
+      listMany: (scopes) => listPluginFilesMany(ctx.root, repos, id, scopes),
     },
     get me() {
       return ctx.me;

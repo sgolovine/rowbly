@@ -908,5 +908,84 @@ describe('binary Plugin files', () => {
     await expect(
       plugin.operation('linked', {}, (changes) => changes.writeBinaryFile('dataRoot', 'linked/image.png', bytes)),
     ).rejects.toMatchObject({ code: 'VALIDATION' });
+
+    // Batched reads (ADR-0052) answer each request in order; a file or Story scope fails on its own.
+    const folder = join(t.path, 'plugins/binary');
+    await writeFile(join(folder, 'a.txt'), 'A');
+    const failed = (code: string) => ({ status: 'failed', code, message: expect.any(String) });
+    expect(
+      await plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope: 'dataRoot', name: 'gone.txt' },
+        { scope: 'dataRoot', name: 'linked/image.png' },
+        { scope: { story: 'WEB-99' }, name: 'a.txt' },
+        { scope: 'dataRoot', name: 'a.txt' },
+      ]),
+    ).toEqual([
+      { status: 'found', text: 'A' },
+      { status: 'missing' },
+      failed('VALIDATION'),
+      failed('NOT_FOUND'),
+      {
+        status: 'found',
+        text: 'A',
+      },
+    ]);
+    expect(await plugin.files.listMany(['dataRoot', { story: 'WEB-99' }])).toEqual([
+      { status: 'found', names: ['a.txt', 'image.png'] },
+      failed('NOT_FOUND'),
+    ]);
+    // Each batch of 32 is its own read scope: a change that queued for the lock during one goes before the next.
+    const requests = Array.from({ length: 33 }, (_, n) => ({ scope: 'dataRoot' as const, name: `n${n}.txt` }));
+    for (const { name } of requests) await writeFile(join(folder, name), 'old');
+    const reading = deferred();
+    const resume = deferred();
+    const queued = deferred();
+    const read = io.readFile;
+    const readSpy = vi.spyOn(io, 'readFile').mockImplementation(async (path) => {
+      if (path === join(folder, 'n0.txt')) {
+        reading.resolve();
+        await resume.promise;
+      }
+      return read(path);
+    });
+    const timer = globalThis.setTimeout;
+    let timerSpy: { mockRestore(): void } | undefined;
+    try {
+      const many = plugin.files.readMany(requests);
+      await reading.promise;
+      // `acquireLock` sets its 10 s deadline once a caller has its place in the lock's queue.
+      timerSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((fn: () => void, ms?: number) => {
+        if (typeof ms === 'number' && ms > 5_000) queued.resolve();
+        return timer(fn, ms);
+      }) as typeof setTimeout);
+      const change = plugin.operation('rewrite', {}, (changes) => changes.writeFile('dataRoot', 'n32.txt', 'new'));
+      await queued.promise;
+      resume.resolve();
+      const [result] = await Promise.all([many, change]);
+      expect([result[0], result[32]]).toEqual([
+        { status: 'found', text: 'old' },
+        { status: 'found', text: 'new' },
+      ]);
+    } finally {
+      resume.resolve();
+      readSpy.mockRestore();
+      timerSpy?.mockRestore();
+    }
+    // An invalid name rejects the call before anything is read; so does a Story that cannot be read.
+    await expect(
+      plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope: 'dataRoot', name: '../a.txt' },
+      ]),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
+    await writeFile(join(t.path, `boards/web/stories/${story.key}/story.json`), '{ not json');
+    await expect(
+      plugin.files.readMany([
+        { scope: 'dataRoot', name: 'a.txt' },
+        { scope, name: 'note.txt' },
+      ]),
+    ).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
+    await expect(plugin.files.listMany([scope])).rejects.toMatchObject({ code: 'DATA_INTEGRITY' });
   });
 });
