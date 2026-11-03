@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:17:19.754Z",
-  "updatedAt": "2026-11-03T23:18:08.346Z",
+  "updatedAt": "2026-11-03T23:18:37.116Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -22,6 +22,14 @@
           "type": "image/png",
           "size": 454567,
           "createdAt": "2026-11-03T23:17:19.756Z",
+          "createdBy": "sunny"
+        },
+        {
+          "id": "aLre7vD97",
+          "name": "image-20261103-2318.png",
+          "type": "image/png",
+          "size": 156312,
+          "createdAt": "2026-11-03T23:18:37.115Z",
           "createdBy": "sunny"
         }
       ]
