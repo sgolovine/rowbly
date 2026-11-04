@@ -1,18 +1,18 @@
 {
   "version": 1,
   "run": {
-    "stage": "in-refinement",
+    "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T00:39:58.383Z"
+    "startedAt": "2026-11-04T00:43:41.861Z"
   },
   "identity": {
-    "worker": "mcp:6d3a525b-8d5b-4457-86f7-618f61779b72",
+    "worker": "mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:6d3a525b-8d5b-4457-86f7-618f61779b72",
+    "threadId": "mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2",
     "verification": {
       "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
-      "verifiedAt": "2026-11-04T00:39:59.151Z",
+      "verifiedAt": "2026-11-04T00:43:42.717Z",
       "by": "sunny"
     }
   },
@@ -29,10 +29,10 @@
         "value": false
       }
     ],
-    "rule": "ROWBLY.md refinement uses Claude Opus",
+    "rule": "ROWBLY.md coding uses Claude Opus Medium",
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T00:39:58.383Z"
+    "selectedAt": "2026-11-04T00:43:41.861Z"
   }
 }

@@ -3,26 +3,14 @@
   "key": "ROW-88",
   "boardId": "rowbly",
   "name": "Rowbly factory should not depend on git sync.",
-  "description": "- Git sync is a seperate plugin from rowbly factory and we do not want to create a dependency\n\n- If the git plugin is enabled, the factory skill should do a sync.\n\n- If the plugin is not enabled, skip the sync.\n\n- Currently if one git sync fails, rowbly factory skill will stop. Change instructions so agent can try up to 3 times, with exponential backoff between tries.",
-  "stage": "in-refinement",
-  "rank": "a7",
+  "description": "<the refined description, as sent to the supervisor>",
+  "stage": "in-progress",
+  "rank": "aD",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T00:39:59.152Z",
-  "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:6d3a525b-8d5b-4457-86f7-618f61779b72",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:39:58.383Z"
-      }
-    }
-  }
+  "updatedAt": "2026-11-04T00:42:58.683Z"
 }
