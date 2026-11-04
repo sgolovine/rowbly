@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T05:28:02.793Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
+    "at": "2026-11-04T05:31:16.287Z",
+    "source": "Review3 worker reports full review and 29 private probes pass; all15 images HTTP200; local CLI still running",
+    "by": "sunny"
   }
 }
