@@ -142,7 +142,8 @@ Story. Use **Park, then GO**:
    --started-at <startedAt> --worker <threadId> --machine <machine> --harness t3 --thread-id <threadId>
    --source "<durable launch receipt>"`. Rowbly records the supervisor's attestation; it does not
    contact T3. Use the receipt's machine and actual returned identity, never a guessed title.
-6. Publish the Board (including planned selection and verified identity), then send the full brief and GO:
+6. Publish the Board (including planned selection and verified identity) as the skill's Board persistence
+   section says (nothing to publish when the Git Plugin is off), then send the full brief and GO:
 
    ```bash
    node scripts/launch-worker.mjs send --thread <threadId> --title "<title>" --message <file> \

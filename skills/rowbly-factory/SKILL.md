@@ -35,9 +35,10 @@ it when the Data Root is not in a git repository.
 1. **Board changes first.** If `rowbly plugins list` shows `git` on, set up
    [Board persistence](#board-persistence), then run `rowbly git sync`. It commits Rowbly changes
    that were saved but not yet committed, merges the upstream and pushes, and leaves other staged,
-   changed and untracked files as they are. If it fails, stop and tell the user its message. It
-   handles only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is
-   still uncommitted after it.
+   changed and untracked files as they are. If it fails, follow [A failed sync](#a-failed-sync); stop
+   only when that says to. It handles only changes Rowbly saved: a file edited by hand, inside the
+   Data Root or not, is still uncommitted after it. If `git` is off, skip this step: the factory
+   does not need the Git Plugin.
 2. Run `git status --porcelain`. If it prints nothing, go to step 4.
 3. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
    --cached` and each new file). If one must not be committed (a secret, build output, a large
@@ -56,8 +57,11 @@ it.
 
 ## Board persistence
 
-Workers see your Board changes only after they are committed and pushed. Skip this section when the
-Git Plugin is off.
+Workers see your Board changes only after they are committed and pushed. The factory does not
+depend on the Git Plugin: when `rowbly plugins list` shows `git` off, skip this section and every
+`rowbly git sync` this file asks for, and treat each step that publishes the Board (before a GO, a
+reply or another machine's start) as done. Then the Board is not pushed for you; tell the user once,
+at start, that workers on other checkouts will not see Board changes until someone pushes them.
 
 - **Commit each change.** The Git Plugin's preferences are personal: read them with `rowbly git
   show`. When `ROWBLY.md` or the user says Board changes are committed or pushed as they happen, and
@@ -74,7 +78,7 @@ Git Plugin is off.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
   after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
-  fails, retry it once; then tell the user and send nothing that relies on the change.
+  fails, follow [A failed sync](#a-failed-sync).
 - **One sync per event.** Make every Board change of one event first (a start and its attach, one
   applied block, a finish or fail with its block), then sync once, before the GO or reply that relies
   on them. A change nothing waits for, such as a Comment recording an answer you already sent, goes
@@ -87,6 +91,27 @@ Git Plugin is off.
   side and every evidence file. Find the commits involved and what wrote them (a merged pull request,
   older data or another writer), and tell the user about any conflict nobody has resolved.
 - Never run `git rebase`, `git reset` or a force push yourself.
+
+### A failed sync
+
+One rule for every `rowbly git sync`, at start and while the factory runs. It replaces the
+reference's advice not to retry a failed command unchanged:
+
+1. **Try 3 times in all, backing off.** After a failed sync, wait about 10 seconds and run it
+   again; after a second failure, wait about 20 seconds and run it a third and last time. Run no
+   other git or Board command while you wait. Tell the user in one line that you are retrying and
+   why.
+2. **Do not retry what waiting cannot fix.** Go straight to step 3 when the sync reports evidence
+   paths or a Rowbly conflict (follow **Evidence or a conflict** above), when Automatic Merge
+   Conflict Resolution is Off (follow **Push with the Git Plugin** above), or when it exits 2 or 3
+   (a usage error or something not found).
+3. **After the last try,** tell the user its message. At start, stop: the checkout may be missing
+   upstream changes. While the factory runs, keep going, but send no GO, reply or start on another
+   machine that relies on the unpublished change; publish it with the next sync that succeeds.
+
+Exit 0 with a pending or active run owned by another process is not a failure, but it has not
+published yet either: read `rowbly git show` until its `last` result settles before anything that
+relies on the change.
 
 ## Evidence retention
 
