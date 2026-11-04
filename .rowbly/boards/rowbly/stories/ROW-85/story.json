@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T00:38:53.763Z",
+  "updatedAt": "2026-11-04T00:38:54.420Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:36:30.873Z",
         "finishedAt": "2026-11-04T00:38:52.498Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "jdiccicE",
+          "author": "sunny",
+          "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
+          "createdAt": "2026-11-04T00:38:54.419Z",
+          "updatedAt": "2026-11-04T00:38:54.419Z"
+        }
+      ]
     }
   }
 }
