@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:10:18.449Z",
-  "updatedAt": "2026-11-04T00:22:06.852Z",
+  "updatedAt": "2026-11-04T00:22:07.513Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -24,6 +24,17 @@
         "startedAt": "2026-11-04T00:20:10.855Z",
         "finishedAt": "2026-11-04T00:21:49.859Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "F9m2buY0",
+          "author": "sunny",
+          "body": "Refinement: the cause is RootOnboarding.tsx. The SkillInstall onDone sends Software Factory mode to the AI step when aiAsked is false. The fix is to treat the skills step as answering yes and return to factory guidance. The description is updated with acceptance criteria. Ready for In Progress.",
+          "createdAt": "2026-11-04T00:22:07.512Z",
+          "updatedAt": "2026-11-04T00:22:07.512Z"
+        }
+      ]
     }
   }
 }
