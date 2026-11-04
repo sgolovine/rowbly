@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T00:31:21.846Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:b143272f-b7e9-46e8-b911-c9df7c32885f",
+    "at": "2026-11-04T00:33:27.406Z",
+    "source": "Verified final worker message FACTORY-DONE; retained exact block",
+    "by": "sunny"
   }
 }
