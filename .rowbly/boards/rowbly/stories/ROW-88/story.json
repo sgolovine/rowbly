@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T04:30:00.655Z",
+  "updatedAt": "2026-11-04T04:30:01.890Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:24d1ddb9-8b78-4bbb-99fc-41c8340c5cfd",
+        "by": "sunny",
+        "startedAt": "2026-11-04T04:21:52.592Z",
+        "finishedAt": "2026-11-04T04:30:00.655Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -64,19 +75,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
           "createdAt": "2026-11-04T02:14:51.513Z",
           "updatedAt": "2026-11-04T02:14:51.513Z"
+        },
+        {
+          "id": "U7mVPJ88",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. Merge commit 6ce0b285dbf885e5aa5b0ab7165660bc1dddea89. All final gates passed; main CI queued at https://github.com/sgolovine/rowbly/actions/runs/41773495694.",
+          "createdAt": "2026-11-04T04:30:01.889Z",
+          "updatedAt": "2026-11-04T04:30:01.889Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:24d1ddb9-8b78-4bbb-99fc-41c8340c5cfd",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:21:52.592Z",
-        "finishedAt": "2026-11-04T04:30:00.655Z"
-      }
     }
   }
 }
