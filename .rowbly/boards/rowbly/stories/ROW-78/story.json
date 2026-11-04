@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T02:36:18.682Z",
+  "updatedAt": "2026-11-04T02:36:19.987Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:1cab5493-36e3-48aa-8d9f-65973de19eff",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:32:48.512Z",
+        "finishedAt": "2026-11-04T02:36:18.681Z"
+      }
     },
     "comments": {
       "comments": [
@@ -104,19 +115,15 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at f218e390b4238db93d1df8a0fdd9d166ba450903 by codex/gpt-6.1-sol: APPROVED. Reviewed all six changed files and surrounding Plugin hosting, Board resolution, key/escape capture, full-screen editor, onboarding completion/skip, Settings and documentation against ROW-78 and the repository TUI rules. No actionable code findings; no files excluded. Verified the three original commits and two correction merge commits against both recorded Claude Opus 5.5 workers and their launch receipts; this independent reviewer is worker mcp:618893bc-ecec-46da-bb3c-343ecb07d2c6. The reviewed merge base is cdd8a494abcfe6c61d25aa3c0d03b675189b649f. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) all pass. All six current-head GitHub checks completed SUCCESS. All 15 image URLs across both screenshot comments return HTTP 200; inspected the inline list/explanation/hints, toggled entry, full-screen editor, factory return and Settings images. No new TUI session was started. Merge remains blocked by current-main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167 merged. Repair must retain ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}, while passing ROW-75 run:true to the inline factory-setup Plugin screen and preserving its immediate-run documentation (Settings still asks first), together with the inline/esc guidance. Do not restore the pushed modal route. A repaired head requires a new independent review.",
           "createdAt": "2026-11-04T02:24:03.880Z",
           "updatedAt": "2026-11-04T02:24:03.880Z"
+        },
+        {
+          "id": "p2lgUn83",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at cfed5c1506ca3fdf67b31199b74ea8093daa9837 by codex/gpt-6-astra: APPROVED. Reviewed the full six-file PR and surrounding Plugin hosting, Board resolution, key hints, escape capture, full-screen editor, completion/skip and Settings code against ROW-78 and the TUI design rules. No actionable findings; no files excluded. Correction2 preserves ROW-80 SkillInstall onDone={afterAi}, passes run:true through the optional params prop only to inline onboarding Factory setup, and retains ROW-75 immediate setup, Settings confirmation and combined documentation. No unmerged ROW-77 code is included. All six PR commits are accounted for by the three authoring records and launch receipts (Claude Opus 5.5); reviewer mcp:1cab5493-36e3-48aa-8d9f-65973de19eff is a distinct worker/model, verified against its receipt. Merge base ba58d2d1f14bc8cdf03d45de321ec781daf62aff; merge-tree with current main is clean. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head GitHub checks completed SUCCESS, with MERGEABLE/CLEAN and no change-request reviews. All 24 screenshot URLs across the original and both correction comments returned HTTP 200; visually inspected representative editor, inline setup/list/hints/toggle, return/completion and Settings images. No new TUI session or daemon was started.",
+          "createdAt": "2026-11-04T02:36:19.987Z",
+          "updatedAt": "2026-11-04T02:36:19.987Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:1cab5493-36e3-48aa-8d9f-65973de19eff",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:32:48.512Z",
-        "finishedAt": "2026-11-04T02:36:18.681Z"
-      }
     }
   }
 }
