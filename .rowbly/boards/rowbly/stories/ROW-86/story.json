@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T04:41:26.334Z",
+  "updatedAt": "2026-11-04T04:41:27.579Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b",
+        "by": "sunny",
+        "startedAt": "2026-11-04T04:35:48.577Z",
+        "finishedAt": "2026-11-04T04:41:26.334Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -71,19 +82,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b (thread mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-86-correction-1-launch.json. Branch: factory/row-86-correction-1, pushed to factory/row-86-implementation. PR: https://github.com/sgolovine/rowbly/pull/173. Head: 7794f6fbc1e419b7ee7e749f5b2a048228b46c1a.",
           "createdAt": "2026-11-04T04:41:25.620Z",
           "updatedAt": "2026-11-04T04:41:25.620Z"
+        },
+        {
+          "id": "RXv9gpST",
+          "author": "sunny",
+          "body": "Repaired PR173 at 7794f6fbc1e419b7ee7e749f5b2a048228b46c1a. 1. Preserved both ADR amendment sets in the index conflict. 2. No additional product changes. 3. Typecheck, lint, unit 79/79, CLI 21/21 and diff checks pass. 4. All 13 existing screenshot URLs return 200. PR is mergeable; fresh independent review required. Pending CI: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest). Details: https://github.com/sgolovine/rowbly/pull/173#issuecomment-6622703681.",
+          "createdAt": "2026-11-04T04:41:27.578Z",
+          "updatedAt": "2026-11-04T04:41:27.578Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:35:48.577Z",
-        "finishedAt": "2026-11-04T04:41:26.334Z"
-      }
     }
   }
 }
