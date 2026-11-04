@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T02:36:19.987Z",
+  "updatedAt": "2026-11-04T02:36:20.640Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -122,6 +122,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at cfed5c1506ca3fdf67b31199b74ea8093daa9837 by codex/gpt-6-astra: APPROVED. Reviewed the full six-file PR and surrounding Plugin hosting, Board resolution, key hints, escape capture, full-screen editor, completion/skip and Settings code against ROW-78 and the TUI design rules. No actionable findings; no files excluded. Correction2 preserves ROW-80 SkillInstall onDone={afterAi}, passes run:true through the optional params prop only to inline onboarding Factory setup, and retains ROW-75 immediate setup, Settings confirmation and combined documentation. No unmerged ROW-77 code is included. All six PR commits are accounted for by the three authoring records and launch receipts (Claude Opus 5.5); reviewer mcp:1cab5493-36e3-48aa-8d9f-65973de19eff is a distinct worker/model, verified against its receipt. Merge base ba58d2d1f14bc8cdf03d45de321ec781daf62aff; merge-tree with current main is clean. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head GitHub checks completed SUCCESS, with MERGEABLE/CLEAN and no change-request reviews. All 24 screenshot URLs across the original and both correction comments returned HTTP 200; visually inspected representative editor, inline setup/list/hints/toggle, return/completion and Settings images. No new TUI session or daemon was started.",
           "createdAt": "2026-11-04T02:36:19.987Z",
           "updatedAt": "2026-11-04T02:36:19.987Z"
+        },
+        {
+          "id": "nVtci37a",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/166 at cfed5c1506ca3fdf67b31199b74ea8093daa9837. Merge commit 7fbd8b899566450aae56558b49a2c569e08cc4d8. All local checks and all six PR checks passed; all 24 image URLs return 200. Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41761755745.",
+          "createdAt": "2026-11-04T02:36:20.639Z",
+          "updatedAt": "2026-11-04T02:36:20.639Z"
         }
       ]
     }
