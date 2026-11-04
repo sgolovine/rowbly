@@ -12,19 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:22:43.663Z",
-  "updatedAt": "2026-11-04T01:16:32.230Z",
+  "updatedAt": "2026-11-04T01:16:33.468Z",
   "plugins": {
-    "comments": {
-      "comments": [
-        {
-          "id": "boKEQpoz",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b66ce8bc-7da5-489d-bc28-c052eb7b0e2a (thread mcp:b66ce8bc-7da5-489d-bc28-c052eb7b0e2a, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-84-implementation-launch.json. Branch: factory/row-84-implementation. PR: https://github.com/sgolovine/rowbly/pull/164. Head: 95ce69eaa6e977ecf172ed70ffe055bf5976ae94 (verified gh pr view 164).",
-          "createdAt": "2026-11-04T01:16:30.120Z",
-          "updatedAt": "2026-11-04T01:16:30.120Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -35,6 +24,24 @@
         "startedAt": "2026-11-04T01:10:52.349Z",
         "finishedAt": "2026-11-04T01:16:32.230Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "boKEQpoz",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b66ce8bc-7da5-489d-bc28-c052eb7b0e2a (thread mcp:b66ce8bc-7da5-489d-bc28-c052eb7b0e2a, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-84-implementation-launch.json. Branch: factory/row-84-implementation. PR: https://github.com/sgolovine/rowbly/pull/164. Head: 95ce69eaa6e977ecf172ed70ffe055bf5976ae94 (verified gh pr view 164).",
+          "createdAt": "2026-11-04T01:16:30.120Z",
+          "updatedAt": "2026-11-04T01:16:30.120Z"
+        },
+        {
+          "id": "xOy3H9iX",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/164 (branch factory/row-84-implementation, head 95ce69eaa6e977ecf172ed70ffe055bf5976ae94). Settings › Onboarding now resets to the full-screen onboarding route for both levels; the reopen/pop Modal path is removed, so finishing or ctrl+k ends like startup onboarding and completion flags stay set. User guide Onboarding section updated. Validation: pnpm typecheck, pnpm lint, pnpm test:unit (79/79) and pnpm test:cli (21/21) pass; agentic-tui screenshots of both flows in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T01:16:33.468Z",
+          "updatedAt": "2026-11-04T01:16:33.468Z"
+        }
+      ]
     }
   }
 }
