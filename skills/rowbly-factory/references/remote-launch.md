@@ -143,7 +143,9 @@ Story. Use **Park, then GO**:
    --source "<durable launch receipt>"`. Rowbly records the supervisor's attestation; it does not
    contact T3. Use the receipt's machine and actual returned identity, never a guessed title.
 6. Publish the Board (including planned selection and verified identity) as the skill's Board persistence
-   section says (nothing to publish when the Git Plugin is off), then send the full brief and GO:
+   section says. When Git is enabled and loaded, keep GO closed until that section confirms fresh
+   synchronized completion with no requested or active run. When Git is disabled or not loaded,
+   skip sync and treat publication as done. Then send the full brief and GO:
 
    ```bash
    node scripts/launch-worker.mjs send --thread <threadId> --title "<title>" --message <file> \
