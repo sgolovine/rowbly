@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83",
-    "at": "2026-11-04T03:18:49.852Z",
-    "source": "Verified setup/flow typechecks, docs/ADR0059drafted; private scopedTUI ownership reported before manual verification/screenshots",
+    "at": "2026-11-04T03:22:56.492Z",
+    "source": "Verified pushed0073e925 combinedflow/prompts/docs/ADR0059; TUI keypaths and CLI defaultminimal preservation/conflict/usage assertions pass; final checks/progress evidence underway",
     "by": "sunny"
   }
 }
