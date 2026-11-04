@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T03:26:39.610Z",
+  "updatedAt": "2026-11-04T03:26:40.864Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9",
+        "by": "sunny",
+        "startedAt": "2026-11-04T03:14:45.203Z",
+        "finishedAt": "2026-11-04T03:26:39.609Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -50,19 +61,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (thread mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-correction-1-launch.json. Branch: factory/row-88-correction-1, pushed to factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b473cb3b37025e026554562d4a9bb6421f4c354d.",
           "createdAt": "2026-11-04T03:26:38.880Z",
           "updatedAt": "2026-11-04T03:26:38.880Z"
+        },
+        {
+          "id": "mfc55pNj",
+          "author": "sunny",
+          "body": "PR169 repaired: https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. 1. Git setup and sync require enabled AND loaded. Either false skips every publication gate including remote-launch step 6. 2. Publication requires requested and active cleared plus fresh completed relevant-attempt synchronized success. Settled failed or interrupted results follow 3 total attempts with 10s and 20s backoff and preserved exceptions. Only rowbly git show may establish settlement during sync or backoff, about 5s apart for at most 30s per attempt. Pending at that bound keeps gates closed without retry or another status-wait loop. Checks passed: typecheck, lint, unit 79, CLI 21. CI pending: Verify, Unit tests, CLI tests and Clipboard smoke on macos-latest, windows-latest and ubuntu-latest. Skill/docs only. No screenshots required. No Board mutations.",
+          "createdAt": "2026-11-04T03:26:40.863Z",
+          "updatedAt": "2026-11-04T03:26:40.863Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:14:45.203Z",
-        "finishedAt": "2026-11-04T03:26:39.609Z"
-      }
     }
   }
 }
