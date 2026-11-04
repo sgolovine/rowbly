@@ -34,12 +34,24 @@ It runs one command at a time, never beside `rowbly git sync`:
 
 1. Checks `node`, the `--rowbly` command, `gh auth status`, `t3` (with `--t3`), free memory (with
    `--min-free-gb`) and the branch. It reports every failure at once and changes nothing.
-2. Lists what is uncommitted in the Data Root (`dataRootChanges`). Changes to `ROWBLY.md` or a
-   Stage Prompt file stop it with `policy` and their diff, before any sync.
-3. Reads `rowbly git show`. Runs `rowbly git sync` only when the Git Plugin answers and the Data
-   Root has changes, and retries it as the skill's A failed sync says: 3 tries, about 10 then 20
-   seconds apart, only while `error.details.retryable` is `true`. A clean Data Root is never synced,
-   so it needs no Automatic Merge Conflict Resolution.
+2. Lists every changed and untracked Data Root file with NUL-delimited status records, including
+   both rename paths. `dataRootChanges` and `policyChanges` contain `{status, path, from?}` records.
+   Changes to `ROWBLY.md` or a Stage Prompt stop it with `policy`, before sync or cleanup.
+   `policyDiff` holds `{paths, staged, worktree, untracked?}` per entry: staged and working diffs,
+   plus the full diff of each new file. Read all of it before resolving policy.
+3. Reads `rowbly plugins list` to establish enabled and loaded status explicitly; only an explicit
+   disabled or unloaded Plugin skips synchronization. A failed or malformed inspection fails
+   closed. With Git on, reads `rowbly git show`; an error (including recovery) fails closed.
+   Retains `sync.synchronizationRun`, commit and evidence. Requested or active runs return
+   `waiting` even with a clean Data Root, before further Git operations. Reconcile the retained
+   identity as the skill's Confirm publication says before preparing again; do not rerun on a loop.
+   Evidence on any success or failure closes readiness and retry gates until reviewed, with paths
+   and run/commit identity retained in `sync`. Preserve the evidence files. After reconciliation,
+   establish a settled result before a fresh preparation attempt.
+   Runs `rowbly git sync` only for changes in the Data Root, with 3 tries about 10 then 20 seconds
+   apart only while `error.details.retryable` is `true`, no outstanding run or evidence is present,
+   and the result is usable. A clean, settled Data Root needs no sync or Automatic Merge Conflict
+   Resolution. A fresh synchronized result must record both start and completion times.
 4. Lists other uncommitted changes (`otherChanges`). Without `--cleanup` it stops with `dirty` and a
    `diffStat` for you to read. With `--cleanup '<message>'`, after you have read them, it commits
    them on `factory-cleanup/<date>`, pushes, opens a cleanup PR against `--branch` with `gh` and
@@ -49,7 +61,7 @@ It runs one command at a time, never beside `rowbly git sync`:
 It prints one JSON line with `status`, `prerequisites`, `memory`, `git` (the preferences),
 `dataRootChanges`, `policyChanges`, `sync`, `otherChanges`, `cleanup`, `pulled`, and `failures`:
 one `{check, reason, fix}` for each problem, with `check` one of `node`, `rowbly`, `gh`, `t3`,
-`memory`, `branch`, `policy`, `sync`, `changes`, `cleanup` or `pull`.
+`memory`, `branch`, `policy`, `git`, `sync`, `changes`, `cleanup` or `pull`.
 
 | `status` | Exit | Meaning | Next |
 | --- | --- | --- | --- |
@@ -57,7 +69,7 @@ one `{check, reason, fix}` for each problem, with `check` one of `node`, `rowbly
 | `failed` | 1 | A check, the sync (with its `reason`), the cleanup or the pull failed | Apply each `fix`; leave the machine out until it passes. |
 | `policy` | 2 | `ROWBLY.md` or a Stage Prompt has uncommitted changes | Show the user `policyDiff`; never sync or clean them up. |
 | `dirty` | 2 | Changes outside Rowbly data | Read them; run again with `--cleanup` or ask the user. |
-| `waiting` | 2 | The sync is still requested or running | Confirm publication as the skill says before running it again. |
+| `waiting` | 2 | The sync is still requested or running | Retain `sync.synchronizationRun`; reconcile it as Confirm publication says before any new preparation or Git operation. |
 
 ## Launch
 

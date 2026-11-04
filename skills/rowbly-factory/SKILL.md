@@ -37,13 +37,13 @@ repository that holds the Data Root (find it as the reference says).
 all of them in one call, here or over SSH, and returns one JSON result; use it for another machine,
 and for yours when you can.
 
-1. **Look first.** Run `git status --porcelain`. Tell the user in one line what is uncommitted in the
+1. **Look first.** Run `git status --porcelain=v1 -z --untracked-files=all` and read its NUL-delimited paths (both sides of a rename). Tell the user in one line what is uncommitted in the
    Data Root: that is what step 3 publishes.
 2. **Policy is not cleanup.** Uncommitted changes to `ROWBLY.md` or a Stage Prompt file are the
-   factory's policy. Show the user the diff and ask them to commit it (or commit it as `ROWBLY.md`
+   factory's policy. Show the user the staged and working diffs and the content of each new policy file, and ask them to commit it (or commit it as `ROWBLY.md`
    says changes to it are committed), then start again. Never run on unpublished policy, never let
    a sync publish it unannounced, and never put it in a cleanup PR.
-3. **Board changes.** Read `rowbly git show`. Run `rowbly git sync` only when the Git Plugin is
+3. **Board changes.** Establish enabled and loaded status with `rowbly plugins list`; an inspection error or malformed output is a failure, never evidence that Git is off. When Git is on, read `rowbly git show`; stop on inspection or recovery errors. Retain its synchronization run, request/run identity, commit and evidence. If requested or active is present, report waiting before any further Git operation, even with clean files; reconcile that run as **Confirm publication** says before preparing again. Evidence on either a successful or failed result requires review as **Evidence or a conflict** says before readiness or retry. Run `rowbly git sync` only when the Git Plugin is
    enabled **and loaded** (`rowbly plugins list`) and `git status --porcelain -- <Data Root>` is not
    empty; a clean Data Root needs no sync, so its checkout never needs Automatic Merge Conflict
    Resolution. Set up [Board persistence](#board-persistence) first, and confirm publication as
@@ -132,7 +132,7 @@ reference's advice not to retry a failed command unchanged:
      sync again as the next of the 3 tries; otherwise ask the user. A missing upstream
      (`no-upstream`) is fixed by hand: tell the user.
    - **Needs a person** (`conflict`, `evidence`, `unexpected`, or evidence paths in a successful
-     result): go straight to step 3; for evidence or a Rowbly conflict follow **Evidence or a
+     or failed result): go straight to step 3; for evidence or a Rowbly conflict follow **Evidence or a
      conflict** above, and report the commits involved.
 
    A Rowbly too old to give `details.reason` is classified as before: no retry for evidence paths,
@@ -185,7 +185,9 @@ stops only what it guards:
   machine and no usable Stage left after the checks below.
 - **One machine** that fails its update, its prerequisites or its memory floor is left out of
   capacity and reported with its fix; workers start on the others. Check it again on each pass of
-  [the loop](#the-loop), or when the user says it is fixed.
+  [the loop](#the-loop), or when the user says it is fixed, except that `waiting` retains the
+  outstanding run identity and requires reconciliation before another preparation or Git command.
+  Policy and dirty results require their own review protocols before another attempt.
 - **One Stage** whose Stage Prompt fails check 4 or 5 is skipped: report it and the Stories waiting
   in it, and work the other Stages.
 

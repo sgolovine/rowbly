@@ -348,39 +348,102 @@ async function prepareCheckout() {
   if (out.failures.length) return finish('failed');
 
   // 2. What is uncommitted. Hand edits to the factory's policy are never synced or cleaned up.
-  const changes = async (...paths) =>
-    (await must(`cd ${q(project)} && git status --porcelain -- ${paths.map(q).join(' ')}`)).stdout
-      .split('\n')
-      .filter(Boolean);
+  const changes = async (...paths) => {
+    const result = await run(`git status --porcelain=v1 -z --untracked-files=all -- ${paths.map(q).join(' ')}`);
+    if (result.code !== 0) throw new Error(`git status failed: ${result.stderr.trim()}`);
+    const records = result.stdout.split('\0');
+    const entries = [];
+    for (let i = 0; i < records.length - 1; i++) {
+      const status = records[i].slice(0, 2);
+      const path = records[i].slice(3);
+      const from = /[RC]/.test(status) ? records[++i] : undefined;
+      if (!path || (/[RC]/.test(status) && !from)) throw new Error('Malformed git status record');
+      entries.push({ status, path, ...(from && { from }) });
+    }
+    return entries;
+  };
   out.dataRootChanges = await changes(dataRoot);
-  out.policyChanges = out.dataRootChanges.filter((line) =>
-    /(?:^|\/)ROWBLY\.md$|\/stage-prompts\/[^/]+\.md$/.test(line.slice(3).replace(/^"|"$/g, '')),
+  const policyPath = (path) => /(?:^|\/)ROWBLY\.md$|\/stage-prompts\/[^/]+\.md$/.test(path);
+  out.policyChanges = out.dataRootChanges.filter((entry) =>
+    [entry.path, entry.from].some((path) => path && policyPath(path)),
   );
   if (out.policyChanges.length) {
-    out.policyDiff = (await run(`git diff -- ${q(dataRoot)}`)).stdout.slice(0, 20000);
+    // Include both sides of renames, staged content, and whole new files. NUL-delimited status
+    // avoids Git's quoting and directory collapsing, including paths with spaces or newlines.
+    out.policyDiff = [];
+    for (const entry of out.policyChanges) {
+      const paths = [...new Set([entry.path, entry.from].filter(Boolean))];
+      const args = paths.map(q).join(' ');
+      const staged = await run(`git diff --no-ext-diff --no-textconv --cached -- ${args}`);
+      const worktree = await run(`git diff --no-ext-diff --no-textconv -- ${args}`);
+      const untracked = entry.status === '??' ? await run(`git diff --no-index -- /dev/null ${q(entry.path)}`) : null;
+      if (staged.code !== 0 || worktree.code !== 0 || (untracked && ![0, 1].includes(untracked.code)))
+        throw new Error('Could not read the complete policy diff; review the checkout by hand');
+      out.policyDiff.push({
+        paths,
+        staged: staged.stdout,
+        worktree: worktree.stdout,
+        ...(untracked && { untracked: untracked.stdout }),
+      });
+    }
     fail('policy', 'ROWBLY.md or a Stage Prompt has uncommitted changes', 'ask the user to commit or discard them');
     return finish('policy');
   }
 
-  // 3. Rowbly changes go out through the Git Plugin, only when there are some (a clean Data Root
-  // never needs Automatic Merge Conflict Resolution). Git off means no sync.
-  const show = await rowbly('git show');
-  const preferences = parseJson(show.stdout);
-  out.git = preferences
-    ? {
-        on: true,
-        automaticCommits: preferences.automaticCommits,
-        frequency: preferences.frequency,
-        automaticMergeResolution: preferences.synchronization?.enabled,
-      }
-    : { on: false, reason: rowblyError(show)?.message ?? (show.stderr.trim() || `exit ${show.code}`) };
+  // 3. Establish Plugin status explicitly. An inspection error is never proof that Git is off.
+  const listed = await rowbly('plugins list');
+  const plugins = parseJson(listed.stdout);
+  const git = Array.isArray(plugins) && plugins.find((plugin) => plugin?.id === 'git');
+  if (listed.code !== 0 || typeof git?.enabled !== 'boolean' || typeof git?.loaded !== 'boolean') {
+    fail(
+      'git',
+      rowblyError(listed)?.message ?? 'Could not establish Git Plugin status',
+      'resolve the inspection error before preparing again',
+    );
+    return finish('failed');
+  }
+  out.git = {
+    on: git.enabled && git.loaded,
+    enabled: git.enabled,
+    loaded: git.loaded,
+    ...(git.reason && { reason: git.reason }),
+  };
   out.sync = { ran: false };
-  if (out.git.on && out.dataRootChanges.length) {
-    out.sync = await syncWithRetries(rowbly);
-    if (out.sync.status === 'waiting') return finish('waiting');
-    if (out.sync.status !== 'synchronized') {
-      fail('sync', out.sync.message, SYNC_FIXES[out.sync.reason] ?? SYNC_FIXES.unexpected);
+  if (out.git.on) {
+    const show = await rowbly('git show');
+    const preferences = parseJson(show.stdout);
+    if (
+      show.code !== 0 ||
+      typeof preferences?.automaticCommits !== 'boolean' ||
+      typeof preferences?.frequency !== 'string' ||
+      typeof preferences?.synchronization?.enabled !== 'boolean'
+    ) {
+      out.git.inspection = { code: show.code, error: rowblyError(show), stdout: show.stdout, stderr: show.stderr };
+      fail(
+        'git',
+        rowblyError(show)?.message ?? 'Malformed Git preferences or failed inspection',
+        'resolve inspection or recovery before preparing again',
+      );
       return finish('failed');
+    }
+    Object.assign(out.git, {
+      automaticCommits: preferences.automaticCommits,
+      frequency: preferences.frequency,
+      automaticMergeResolution: preferences.synchronization.enabled,
+    });
+    out.sync = { ran: false, ...syncState(preferences.synchronizationRun) };
+    if (out.sync.status === 'waiting') return finish('waiting');
+    if (out.sync.status === 'failed') {
+      fail('sync', out.sync.message, SYNC_FIXES[out.sync.reason]);
+      return finish('failed');
+    }
+    if (out.dataRootChanges.length) {
+      out.sync = await syncWithRetries(rowbly);
+      if (out.sync.status === 'waiting') return finish('waiting');
+      if (out.sync.status !== 'synchronized') {
+        fail('sync', out.sync.message, SYNC_FIXES[out.sync.reason] ?? SYNC_FIXES.unexpected);
+        return finish('failed');
+      }
     }
   }
 
@@ -457,26 +520,66 @@ async function syncWithRetries(rowbly) {
   for (let attempt = 1; ; attempt++) {
     const startedAt = Date.now();
     const result = await rowbly('git sync');
-    const run = parseJson(result.stdout);
-    if (result.code === 0 && run) {
-      if (run.active || run.requested) return { ran: true, attempts: attempt, status: 'waiting' };
-      if (run.last?.kind === 'synchronized' && run.last.startedAt >= startedAt - 1000)
-        return { ran: true, attempts: attempt, status: 'synchronized', commit: run.last.commit };
-    }
     const error = rowblyError(result);
-    const reason = error?.details?.reason ?? (result.code === 2 ? 'resolution-off' : 'unexpected');
+    const run = parseJson(result.stdout) ?? error?.details?.synchronizationRun;
+    const state = syncState(run);
+    const base = { ran: true, attempts: attempt, ...state };
+    if (state.status === 'waiting' || state.status === 'failed') return base;
+    if (
+      result.code === 0 &&
+      run?.last?.kind === 'synchronized' &&
+      run.last.startedAt >= startedAt - 1000 &&
+      run.last.finishedAt >= run.last.startedAt
+    )
+      return { ...base, status: 'synchronized' };
+    const reason = error?.details?.reason ?? 'unexpected';
     const failed = {
-      ran: true,
-      attempts: attempt,
+      ...base,
       status: 'failed',
       reason,
       code: result.code,
-      message: error?.message ?? (result.stderr.trim() || 'sync did not report a fresh result'),
+      message: error?.message ?? (result.stderr.trim() || 'sync did not report a fresh completed result'),
       ...(error?.details?.paths && { paths: error.details.paths }),
     };
     if (error?.details?.retryable !== true || attempt > RETRY_WAITS_MS.length) return failed;
     await sleep(RETRY_WAITS_MS[attempt - 1]);
   }
+}
+
+// Preserve the complete run identity and evidence even on failure. Waiting and evidence close
+// every later preparation gate, including retries, cleanup and pull.
+function syncState(run) {
+  const identity = run ? { synchronizationRun: run, ...(run.last?.commit && { commit: run.last.commit }) } : {};
+  if (
+    run != null &&
+    (typeof run !== 'object' ||
+      Array.isArray(run) ||
+      (run.requested !== undefined && (typeof run.requested !== 'string' || !run.requested)) ||
+      (run.active !== undefined && (typeof run.active?.id !== 'string' || !run.active.id)) ||
+      (run.last !== undefined &&
+        (!['synchronized', 'failed', 'interrupted'].includes(run.last?.kind) ||
+          !Number.isFinite(run.last.startedAt) ||
+          !Number.isFinite(run.last.finishedAt) ||
+          !Array.isArray(run.last.evidence) ||
+          run.last.evidence.some((path) => typeof path !== 'string'))))
+  )
+    return {
+      ...identity,
+      status: 'failed',
+      reason: 'unexpected',
+      message: 'Malformed synchronization state; reconcile before preparing again',
+    };
+  const evidence = run?.last?.evidence ?? [];
+  const retained = { ...identity, evidence };
+  if (run?.requested || run?.active) return { ...retained, status: 'waiting' };
+  if (evidence.length)
+    return {
+      ...retained,
+      status: 'failed',
+      reason: 'evidence',
+      message: 'Merge Evidence requires reconciliation before preparation can continue',
+    };
+  return retained;
 }
 
 function parseJson(text) {
