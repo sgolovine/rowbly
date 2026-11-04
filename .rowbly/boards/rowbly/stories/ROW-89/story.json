@@ -12,18 +12,8 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:33:11.988Z",
+  "updatedAt": "2026-11-04T05:35:36.462Z",
   "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
-        "by": "sunny",
-        "startedAt": "2026-11-04T05:28:02.793Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -167,6 +157,17 @@
           "updatedAt": "2026-11-04T03:27:48.594Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
+        "by": "sunny",
+        "startedAt": "2026-11-04T05:28:02.793Z",
+        "finishedAt": "2026-11-04T05:35:36.461Z"
+      }
     }
   }
 }
