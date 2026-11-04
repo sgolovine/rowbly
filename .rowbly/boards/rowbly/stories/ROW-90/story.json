@@ -4,7 +4,7 @@
   "boardId": "rowbly",
   "name": "Onboarding: Update next and back hotkeys",
   "description": "Currently the hotkey for next is \"CTRL + Right Arrow\" and back is \"CTRL + Left Arrow\".\n\nUpdate this so it's SHIFT + Left / Right Arrow",
-  "stage": "todo",
+  "stage": "in-refinement",
   "rank": "a0",
   "priority": null,
   "labels": [],
@@ -12,5 +12,5 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T17:13:36.565Z",
-  "updatedAt": "2026-11-04T17:13:36.565Z"
+  "updatedAt": "2026-11-04T17:17:30.329Z"
 }
