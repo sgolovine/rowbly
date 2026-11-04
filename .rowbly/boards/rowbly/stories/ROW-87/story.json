@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:37:45.012Z",
-  "updatedAt": "2026-11-04T00:39:25.842Z",
+  "updatedAt": "2026-11-04T00:39:26.470Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:37:07.327Z",
         "finishedAt": "2026-11-04T00:39:24.626Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "BdUH7yzZ",
+          "author": "sunny",
+          "body": "Refinement: the change goes in Shell.tsx, which hides Header and the sidebars when the root route is onboarding. Overlaps: ROW-84 (reopen from Settings becomes full screen and then gets this layout; build this first or share the condition) and ROW-86 (same onboarding screen, but the content layer). Ready for development.",
+          "createdAt": "2026-11-04T00:39:26.469Z",
+          "updatedAt": "2026-11-04T00:39:26.469Z"
+        }
+      ]
     }
   }
 }
