@@ -5,10 +5,10 @@ import { configure, preferences, resolveSyncOptions } from './model';
 const HINTS: Record<string, string> = {
   'capture-changed':
     'Another writer, such as the TUI, kept saving Rowbly data; wait until it is done, then retry `rowbly git sync`.',
-  'index-changed': 'Another Git command changed the staged files; check `git status`, then retry `rowbly git sync`.',
+  'index-changed': 'Another Git command changed the staged files; review them with Git, then retry `rowbly git sync`.',
   network: 'Check the network and Git credentials, then retry `rowbly git sync`; the local result is kept.',
   'no-upstream': 'Check out a branch with a configured Git upstream, then retry `rowbly git sync`.',
-  conflict: 'Resolve the reported Git state or conflict by hand before you retry `rowbly git sync`.',
+  conflict: 'Resolve the reported Git operation or conflict by hand before you retry `rowbly git sync`.',
   evidence: 'Review the Merge Evidence at the reported paths before you retry `rowbly git sync`.',
   unexpected: 'Resolve the reported cause, then retry `rowbly git sync`.',
 };
