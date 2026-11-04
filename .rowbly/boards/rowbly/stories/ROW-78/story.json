@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "Stage prompt editing should not open in a modal",
   "description": "## Problem: In Data Root onboarding (Guide your Software Factory step), choosing Open Stage Prompt editing pushes the software-factory stage-prompts Plugin route (src/tui/screens/onboarding/RootOnboarding.tsx, around line 197). The Shell (src/tui/shell/Shell.tsx, around lines 424-470) draws every pushed route other than story, settings and story-form inside a panel-size Modal, so the Stage Prompts list shows as a small modal over the onboarding text (see the attachment). Settings already draws the same StagePromptsScreen inline in its section pane. ## Change: Show Stage Prompt editing in onboarding's main area instead of a modal. Recommended: add an onboarding step (for example prompts) that draws the software-factory stage-prompts screen inline in place of the factory step's text and list, resolving the Plugin screen the way Settings sections do (src/tui/screens/settings/sections.ts sectionScreen, sectionShell.ts for key hints and esc), with esc returning to the factory step. Keep the Board context: the screen resolves the chosen Board as it does today. Opening a Stage Prompt (enter or e) still uses the existing full-screen editor (useFullScreenEditor), which is not a modal. ## Acceptance: 1) Open Stage Prompt editing in onboarding shows the Stage list, its key hints (space, enter, e, d) and its explanation text in the main area, with no Modal border or breadcrumb title. 2) esc returns to the Guide your Software Factory list, and onboarding can still be finished or skipped. 3) Toggling, editing and removing work as they do in Settings. 4) Settings Stage Prompts behavior is unchanged. 5) Update the factory guidance paragraph in docs/user-guide.md (around line 1236) and skills/rowbly/references/tui.md (line 17) only if their wording changes. ## Out of scope: Add factory Stages and default Stage Prompts (factory-setup) also opens as a pushed panel modal. Change it in the same way only if that is trivial; otherwise leave it for a follow-up. Do not change how the Shell draws other pushed Plugin screens. No new test is required (AGENTS.md: screens and layout); verify with agentic-tui screenshots.",
-  "stage": "in-pr",
-  "rank": "a2",
+  "stage": "in-progress",
+  "rank": "aE",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T01:42:54.042Z",
+  "updatedAt": "2026-11-04T01:42:54.680Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c5e480cd-7404-432e-a29b-ad3536ac3bb4",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:38:31.206Z",
-        "finishedAt": "2026-11-04T01:42:52.161Z"
-      }
     },
     "comments": {
       "comments": [
