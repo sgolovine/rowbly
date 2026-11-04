@@ -1233,7 +1233,9 @@ to factory guidance. Unchecked Plugins are turned off with their Plugin Data kep
 
 The separate AI usage question offers official agent skills. Choose a skill, destination folder and
 harness to install it through the same service as `rowbly skills install`; existing folders are never
-overwritten. The screen also explains creating and installing custom skills. Factory guidance opens
+overwritten. Skills already installed below the current folder, or installed on this screen, are
+marked **(installed)** with their skills folders and stay selectable for another harness or folder.
+Choose **Continue** to leave the step, whether or not you installed anything. The screen also explains creating and installing custom skills. Factory guidance opens
 Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
 Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
 for the Board when you confirm; nothing is added unless you choose it. Use the editor to change and
