@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:03:27.354Z",
-  "updatedAt": "2026-11-04T02:20:04.227Z",
+  "updatedAt": "2026-11-04T02:20:04.861Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -59,6 +59,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/167 at d49c0a864d07a91ad96c4fd5f587c4a80528f22b by codex/gpt-6.1-sol: APPROVED. Verified the implementation and reviewer launch receipts: implementing worker mcp:834db7c7-58d1-44ce-96e1-c3914543bcd6 used claudeAgent/claude-opus-5-5; reviewing worker mcp:f97c8696-680d-4ced-a96a-ce046ea705dc uses codex/gpt-6.1-sol. The recorded implementation accounts for both product/docs commits and the merge from main. Reviewed the complete diff and surrounding onboarding routing, Plugin screen host, settings entry, async loading and setup operation against ROW-75, AGENTS.md and ADR-0053 §2.4. Onboarding passes run: true, displays Setting up… until results, and the synchronous ref guard prevents duplicate runs across re-renders; failures reach ui.error and allow an explicit retry. Settings retains its confirmation. Both required documentation pages are updated, with no unrelated product changes or new tests required by repository policy. All six current-head CI checks passed, and all three screenshot image URLs returned HTTP 200. No blocking findings.",
           "createdAt": "2026-11-04T02:20:04.226Z",
           "updatedAt": "2026-11-04T02:20:04.226Z"
+        },
+        {
+          "id": "BWupL384",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/167 at d49c0a864d07a91ad96c4fd5f587c4a80528f22b. Merge commit bc970fa725459424ebb06af6827275b1e033e028. Independent review approved; all six PR checks and all four local checks passed; all three screenshot URLs returned 200.",
+          "createdAt": "2026-11-04T02:20:04.860Z",
+          "updatedAt": "2026-11-04T02:20:04.860Z"
         }
       ]
     }
