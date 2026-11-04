@@ -29,6 +29,13 @@
     "comments": {
       "comments": [
         {
+          "id": "6PU7Ib38",
+          "author": "sunny",
+          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/170, head 530d866328cf0720b2f076e7ea31e6c078dbfcc3 on factory/row-87-implementation. When onboarding (global or Data Root) is the root route, Shell.tsx hides the Header, the Boards Sidebar and the Plugin Sidebar. The Panel and LayoutContext get the full width and the full height above the footer. ctrl+b, backslash, braces, brackets, Board numbers, ctrl+p, n, comma, D and header Plugin Actions do nothing and lose their hints, and the help overlay leaves them out. Footer, toasts, help and the onboarding inputs are unchanged. Settings onboarding (ROW-84) inherits this layout. Docs: user-guide Onboarding and skills/rowbly/references/tui.md. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass after merging origin/main. Manual agentic-tui run with a fresh HOME and the demo Data Root confirmed both levels and the restored frame after ctrl+k. Screenshots are in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T02:14:22.712Z",
+          "updatedAt": "2026-11-04T02:14:22.712Z"
+        },
+        {
           "id": "BdUH7yzZ",
           "author": "sunny",
           "body": "Refinement: the change goes in Shell.tsx, which hides Header and the sidebars when the root route is onboarding. Overlaps: ROW-84 (reopen from Settings becomes full screen and then gets this layout; build this first or share the condition) and ROW-86 (same onboarding screen, but the content layer). Ready for development.",
@@ -41,13 +48,6 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:a1f4dcad-4919-4c6b-9835-e34106679fc0 (thread mcp:a1f4dcad-4919-4c6b-9835-e34106679fc0, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-87-implementation-launch.json. Branch: factory/row-87-implementation. PR: https://github.com/sgolovine/rowbly/pull/170. Head: 530d866328cf0720b2f076e7ea31e6c078dbfcc3.",
           "createdAt": "2026-11-04T02:14:20.775Z",
           "updatedAt": "2026-11-04T02:14:20.775Z"
-        },
-        {
-          "id": "6PU7Ib38",
-          "author": "sunny",
-          "body": "Draft PR https://github.com/sgolovine/rowbly/pull/170, head 530d866328cf0720b2f076e7ea31e6c078dbfcc3 on factory/row-87-implementation. When onboarding (global or Data Root) is the root route, Shell.tsx hides the Header, the Boards Sidebar and the Plugin Sidebar. The Panel and LayoutContext get the full width and the full height above the footer. ctrl+b, backslash, braces, brackets, Board numbers, ctrl+p, n, comma, D and header Plugin Actions do nothing and lose their hints, and the help overlay leaves them out. Footer, toasts, help and the onboarding inputs are unchanged. Settings onboarding (ROW-84) inherits this layout. Docs: user-guide Onboarding and skills/rowbly/references/tui.md. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass after merging origin/main. Manual agentic-tui run with a fresh HOME and the demo Data Root confirmed both levels and the restored frame after ctrl+k. Screenshots are in the PR. No review findings to answer.",
-          "createdAt": "2026-11-04T02:14:22.712Z",
-          "updatedAt": "2026-11-04T02:14:22.712Z"
         }
       ]
     }
