@@ -17,7 +17,8 @@ const PROMPT_TEXT = { added: 'added', kept: 'kept', skipped: 'skipped' } as cons
 
 /**
  * Sets up the context's Board for a software factory on request (ADR-0053 §2): adds the factory Stages
- * and default Stage Prompts it lacks, then lists what it added, kept and skipped.
+ * and default Stage Prompts it lacks, then lists what it added, kept and skipped. A host that draws it
+ * inline can pass `params.onSetUp`, called after a successful run.
  */
 export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
   const active = useIsActive();
@@ -37,6 +38,8 @@ export function FactorySetupScreen({ params, plugin, ui }: PluginScreenProps) {
       const done = await setupFactory(plugin, id);
       setResult(done);
       ui.toast(`Set up Board ${id} for a software factory`);
+      // Onboarding, which shows this screen inline, marks its Factory setup step done (ADR-0057).
+      if (typeof params.onSetUp === 'function') params.onSetUp();
     } catch (err) {
       ui.error(err);
     } finally {
