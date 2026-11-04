@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T01:18:22.162Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:06dad2e5-cb38-4d27-b257-c31ce0c65a00",
+    "at": "2026-11-04T01:20:44.811Z",
+    "source": "Verified Astra reviewer receipt/head/CI gate check and context review start",
+    "by": "sunny"
   }
 }
