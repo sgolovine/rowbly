@@ -3,7 +3,7 @@
   "key": "ROW-85",
   "boardId": "rowbly",
   "name": "New data root option should be a button at the top",
-  "description": "- Currently it's at the bottom of the list\n- It should instead remain on top.",
+  "description": "<refined description, as sent to the supervisor>",
   "stage": "in-refinement",
   "rank": "a4",
   "priority": null,
@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T00:38:52.499Z",
+  "updatedAt": "2026-11-04T00:38:53.763Z",
   "plugins": {
     "attachments": {
       "attachments": [
