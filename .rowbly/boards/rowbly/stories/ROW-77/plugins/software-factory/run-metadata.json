@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T02:44:35.345Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:418a81af-5db6-4a1b-8635-40982eaee413",
+    "at": "2026-11-04T02:45:26.109Z",
+    "source": "Verified reviewer began provenance/current-head verification and full independent review",
+    "by": "sunny"
   }
 }
