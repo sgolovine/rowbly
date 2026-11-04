@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "When installing agent skills, indicate which one has already been installed",
   "description": "Problem: in Data Root onboarding, the Agent skills step (src/tui/screens/onboarding/SkillInstall.tsx) lists Install rowbly, Install rowbly-dev, Install rowbly-factory, Install rowbly-grill and Continue without installing more skills. After installing a skill only a toast confirms it and the list looks the same, so there is no way to tell which skills are installed. The only way out is the Continue without installing more skills item, which reads as if the user did something wrong after installing. Requirements: (1) Mark installed skills in the list. On load and after every install, read listAllSkills(process.cwd()) from src/services/skills.ts (as the CLI picker pickOfficialSkill in src/commands/skills/command.ts does) and also count skills installed in this session at any folder; label an installed skill like the CLI does, for example rowbly (installed) with its skills folder(s) when known, in theme muted or success colour per the rowbly-tui-design skill. Installed skills stay selectable, since a person may install for another harness or folder; an existing folder is still never overwritten. (2) Replace the Continue without installing more skills item with a plain Continue item, always last, so leaving the step reads as normal whether or not anything was installed; it calls onDone exactly as today. Out of scope: Settings > Global > Skills, the CLI picker and installSkill behaviour. Docs: update the onboarding paragraph of docs/user-guide.md (The separate AI usage question offers official agent skills...) to say installed skills are marked and Continue leaves the step. No test required (TUI labels and screens, per AGENTS.md). Verify with pnpm dev on a fresh Data Root: install rowbly, see it marked, then choose Continue; take a screenshot with the rowbly-screenshots skill for the PR.",
-  "stage": "in-refinement",
-  "rank": "a00V",
+  "stage": "in-progress",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-04T00:23:37.482Z",
+  "updatedAt": "2026-11-04T00:23:38.142Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:1116670a-7df0-4da7-9f46-e9f576759145",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:20:48.334Z",
-        "finishedAt": "2026-11-04T00:23:24.759Z"
-      }
     },
     "comments": {
       "comments": [
