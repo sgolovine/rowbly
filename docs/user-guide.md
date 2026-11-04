@@ -1262,3 +1262,8 @@ its onboarding. Reopen either flow with **Settings › Onboarding**: it closes S
 flow, which ends where it does at startup. Revisiting leaves the flag set and
 existing records intact. Errors keep the current step available for retry. In registration and skill
 installation forms, **esc** returns to the preceding choice. Demo mode bypasses onboarding.
+
+Onboarding fills the terminal above the footer, without the header or sidebars. Until it ends, the
+keys for that frame do nothing: **ctrl+b**, **\\**, **{**/**}**, **[**/**]**, Board numbers, **ctrl+p**,
+**n** for a new Story, **,** for Settings, **D** and Plugin Actions. The footer, **?** help and **q**
+still work, and finishing or skipping brings the frame back.

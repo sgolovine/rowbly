@@ -15,7 +15,7 @@ name, full path and `~` path, best match highlighted, `esc` clears. Failed opens
 available. With no known roots, the home-folder
 fallback and first-run onboarding/setup remain available. After selection, global onboarding opens when its Home Config `onboardingComplete` flag is absent or false,
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
-flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
+flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Onboarding fills the terminal with no header or sidebars; their keys (`ctrl+b`, `\\`, `{`/`}`, `[`/`]`, `1`-`9`, `ctrl+p`, `n`, `,`, `D`, Plugin Actions) do nothing until it ends. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
 existing Data Roots only. Data Root onboarding chooses Kanban/Factory/Both, a Board, optional Plugins,
 AI skills and factory guidance with Stage Prompt editing and Factory setup (also in a Board's
