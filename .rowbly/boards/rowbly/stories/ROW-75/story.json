@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:03:27.354Z",
-  "updatedAt": "2026-11-04T02:20:02.999Z",
+  "updatedAt": "2026-11-04T02:20:04.227Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:f97c8696-680d-4ced-a96a-ce046ea705dc",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:16:43.849Z",
+        "finishedAt": "2026-11-04T02:20:02.998Z"
+      }
     },
     "comments": {
       "comments": [
@@ -41,19 +52,15 @@
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/167 (branch factory/row-75-implementation, head d49c0a864d07a91ad96c4fd5f587c4a80528f22b). Onboarding opens Factory setup with run: true, so setup runs once when it opens, without a second confirmation. Errors go through ui.error, and the choice comes back for a retry. Settings › Factory setup keeps its Set up Board confirmation. Docs updated: user-guide Data Root onboarding and skills/rowbly/references/setup.md. Validation: typecheck pass, lint pass, test:unit 79 passed, test:cli 21 passed. Checked by hand in the TUI with agentic-tui; screenshots in https://github.com/sgolovine/rowbly/pull/167#issuecomment-6620312393. No review findings to answer.",
           "createdAt": "2026-11-04T01:51:00.608Z",
           "updatedAt": "2026-11-04T01:51:00.608Z"
+        },
+        {
+          "id": "JdQ8z4WH",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/167 at d49c0a864d07a91ad96c4fd5f587c4a80528f22b by codex/gpt-6.1-sol: APPROVED. Verified the implementation and reviewer launch receipts: implementing worker mcp:834db7c7-58d1-44ce-96e1-c3914543bcd6 used claudeAgent/claude-opus-5-5; reviewing worker mcp:f97c8696-680d-4ced-a96a-ce046ea705dc uses codex/gpt-6.1-sol. The recorded implementation accounts for both product/docs commits and the merge from main. Reviewed the complete diff and surrounding onboarding routing, Plugin screen host, settings entry, async loading and setup operation against ROW-75, AGENTS.md and ADR-0053 §2.4. Onboarding passes run: true, displays Setting up… until results, and the synchronous ref guard prevents duplicate runs across re-renders; failures reach ui.error and allow an explicit retry. Settings retains its confirmation. Both required documentation pages are updated, with no unrelated product changes or new tests required by repository policy. All six current-head CI checks passed, and all three screenshot image URLs returned HTTP 200. No blocking findings.",
+          "createdAt": "2026-11-04T02:20:04.226Z",
+          "updatedAt": "2026-11-04T02:20:04.226Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:f97c8696-680d-4ced-a96a-ce046ea705dc",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:16:43.849Z",
-        "finishedAt": "2026-11-04T02:20:02.998Z"
-      }
     }
   }
 }
