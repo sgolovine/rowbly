@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
-  "stage": "in-progress",
-  "rank": "a8",
+  "stage": "in-pr",
+  "rank": "a0",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T03:13:58.734Z",
+  "updatedAt": "2026-11-04T03:25:59.750Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -85,6 +85,13 @@
           "updatedAt": "2026-11-04T02:55:18.882Z"
         },
         {
+          "id": "Y96djrgu",
+          "author": "sunny",
+          "body": "Correction 3 pushed to https://github.com/sgolovine/rowbly/pull/168 at ccf53f8bd82cc430de195095eeb04e76ed50e9d5. 1. P2 mouse clipping fixed: root hit tests intersect the live viewport, including partial rows; footer/search/gaps/count cannot open invisible roots. Reproduced hidden Root04 before, safe footer after, and correct visible partial-row clicks. 2. Main merged; ADR-0056/0057 and amendment statuses retained. Typecheck, lint, unit79 and CLI21 PASS. Prior wrapping120x30 and short100x20/120x30 pinning plus page/wheel/key/search/picker checks pass. Evidence26 images HTTP200: https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621691092. All owned TUI sessions killed and private daemon stopped. CI snapshot pending: CLI tests; Clipboard smoke (windows-latest). Fresh independent review required.",
+          "createdAt": "2026-11-04T03:25:59.077Z",
+          "updatedAt": "2026-11-04T03:25:59.077Z"
+        },
+        {
           "id": "ZYaPvoey",
           "author": "sunny",
           "body": "Review of https://github.com/sgolovine/rowbly/pull/168 at 0ab0ef9815bd7051cca3cc9b7021feeea1fb6f91 by codex/gpt-6.1-sol: CHANGES REQUESTED. 1. [P2] Clip Data Root mouse targets to the roots viewport (src/tui/shell/DataRootList.tsx:188-191). The measured viewport renders every result and hides the overflow, but every rendered DataRootRow still registers an unrestricted clickable SelectListRow. The mouse registry uses measureElement bounds without intersecting the viewport, so invisible rows above/below it receive clicks on other parts of the modal. Reproduced twice with the exact-head built CLI through agentic-tui: 14 roots with wrapped labels at 120x30, current Root 13 last; open D, type a query with no matches, then Escape to clear (Root 00 highlighted). Click terminal column 55, row 26, visibly the modal's key-hint footer: the switcher closes and opens invisible Root 04. Before/after text evidence is retained at /tmp/row85-review3-dPNkrE/ghost-before.txt and ghost-after.txt. Restrict row hit testing to the visible intersection with the roots viewport, including partially clipped rows; clicks on the button, search line, gaps, count and footer must never activate a hidden root. Verify mouse selection of visible roots after scrolling as well. Fresh full-PR review covered the complete diff and touched files; measured viewport dimensions, measurement/ref lifecycle and focus reveal; initial current/default selection; -1 button navigation; page and wheel movement; search and no-match behavior; missing-last ordering; click handling; guide/skill updates; ADR-0056 and its amendments/index; and all four byte-identical reference copies. The prior pinning finding is fixed in the checked cases: the switcher button remains visible with wrapped labels at 120x30 and short labels at 100x20, current root last, through page/wheel navigation and navigation to the button. Also checked the short-label 120x30 switcher and startup picker default selection, Arrow Up to the button, page/wheel movement and no-match search. No product or Board changes were made. Provenance: read all three retained authoring launch receipts and the reviewer receipt. Implementers mcp:d292c972-e536-408b-865d-ec84fe0b4c13, mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 and mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0 each used claudeAgent/claude-opus-5-5, effort=\"medium\", fastMode=false. Their recorded heads account for all nine PR commits, including main merges. This distinct reviewer is mcp:db3a87dc-7cdf-47e5-8dc5-3061a4d95d6b, codex/gpt-6.1-sol, reasoningEffort=\"medium\", serviceTier=\"default\". Validation: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79 tests); pnpm test:cli PASS (21 tests). All 27 linked screenshot URLs returned HTTP 200. At the final state read the head was unchanged, GitHub reported CONFLICTING/DIRTY, and statusCheckRollup was empty (waiting, not failure). Independently fetched main and merge-tree identified only docs/agents/adr/README.md as conflicting, where already-merged ROW-77 adds ADR-0057 next to this PR's ADR-0056 edits; retain both ADRs and their amendment statuses when updating the branch. No merge. Private AGENTIC_TUI_STATE_DIR /tmp/row85-review3-dPNkrE/state was reported before use; every owned session was killed and the scoped daemon stopped successfully. ",
@@ -113,6 +120,13 @@
           "updatedAt": "2026-11-04T00:38:54.419Z"
         },
         {
+          "id": "lvif29tR",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd (thread mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-correction-3-launch.json. Branch: factory/row-85-correction-3, pushed to factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: ccf53f8bd82cc430de195095eeb04e76ed50e9d5.",
+          "createdAt": "2026-11-04T03:25:57.134Z",
+          "updatedAt": "2026-11-04T03:25:57.134Z"
+        },
+        {
           "id": "qMAjyBP8",
           "author": "sunny",
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
@@ -127,16 +141,6 @@
           "updatedAt": "2026-11-04T02:55:18.253Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:13:57.985Z"
-      }
     }
   }
 }

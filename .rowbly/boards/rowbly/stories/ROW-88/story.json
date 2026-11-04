@@ -4,18 +4,25 @@
   "boardId": "rowbly",
   "name": "Rowbly factory should not depend on git sync.",
   "description": "Git sync is a seperate plugin from rowbly factory and we do not want to create a dependency. If the git plugin is enabled, the factory skill should do a sync. If the plugin is not enabled, skip the sync. Currently if one git sync fails, rowbly factory skill will stop. Change instructions so agent can try up to 3 times, with exponential backoff between tries.",
-  "stage": "in-progress",
-  "rank": "a7",
+  "stage": "in-pr",
+  "rank": "a1",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T03:14:45.966Z",
+  "updatedAt": "2026-11-04T03:26:41.568Z",
   "plugins": {
     "comments": {
       "comments": [
+        {
+          "id": "45DlwZFH",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (thread mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-correction-1-launch.json. Branch: factory/row-88-correction-1, pushed to factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b473cb3b37025e026554562d4a9bb6421f4c354d.",
+          "createdAt": "2026-11-04T03:26:38.880Z",
+          "updatedAt": "2026-11-04T03:26:38.880Z"
+        },
         {
           "id": "8FWdOX1x",
           "author": "sunny",
@@ -38,6 +45,13 @@
           "updatedAt": "2026-11-04T03:11:04.179Z"
         },
         {
+          "id": "mfc55pNj",
+          "author": "sunny",
+          "body": "PR169 repaired: https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. 1. Git setup and sync require enabled AND loaded. Either false skips every publication gate including remote-launch step 6. 2. Publication requires requested and active cleared plus fresh completed relevant-attempt synchronized success. Settled failed or interrupted results follow 3 total attempts with 10s and 20s backoff and preserved exceptions. Only rowbly git show may establish settlement during sync or backoff, about 5s apart for at most 30s per attempt. Pending at that bound keeps gates closed without retry or another status-wait loop. Checks passed: typecheck, lint, unit 79, CLI 21. CI pending: Verify, Unit tests, CLI tests and Clipboard smoke on macos-latest, windows-latest and ubuntu-latest. Skill/docs only. No screenshots required. No Board mutations.",
+          "createdAt": "2026-11-04T03:26:40.863Z",
+          "updatedAt": "2026-11-04T03:26:40.863Z"
+        },
+        {
           "id": "q1sTbz3y",
           "author": "sunny",
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (thread mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-implementation-launch.json. Branch: factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b1b2ed590f3ed1bcef42292dccaf160621660c03.",
@@ -45,16 +59,6 @@
           "updatedAt": "2026-11-04T02:14:51.513Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:14:45.203Z"
-      }
     }
   }
 }
