@@ -37,17 +37,6 @@ export async function initRoot(
   return setupTarget('custom', { ...at, path });
 }
 
-/** `--label`, or asked when interactive; empty means none. */
-export async function askLabel(
-  opts: InitFlags,
-  globals: ReturnType<typeof globalOptions>,
-): Promise<string | undefined> {
-  if (opts.label !== undefined || !isInteractive(globals)) return opts.label;
-  const answer = await text({ message: 'Label (optional, e.g. Work)', placeholder: 'leave empty for none' });
-  if (isCancel(answer)) throw new UsageError('cancelled');
-  return answer?.trim() || undefined;
-}
-
 /** `--default`, or asked when interactive. */
 export async function askDefault(opts: InitFlags, globals: ReturnType<typeof globalOptions>): Promise<boolean> {
   if (opts.default || !isInteractive(globals)) return opts.default ?? false;
