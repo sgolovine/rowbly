@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T03:02:23.264Z",
+  "updatedAt": "2026-11-04T03:02:24.537Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:57:48.887Z",
+        "finishedAt": "2026-11-04T03:02:23.263Z"
+      }
     },
     "comments": {
       "comments": [
@@ -83,19 +94,15 @@
           "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
           "createdAt": "2026-11-04T02:49:02.817Z",
           "updatedAt": "2026-11-04T02:49:02.817Z"
+        },
+        {
+          "id": "cU96m3z3",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/171 at d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d by codex/gpt-6.1-sol: APPROVED. No actionable findings. Fresh full review of all 22 changed files against ROW-77, AGENTS.md and the TUI design system, including tab visibility/navigation and text/list focus guards, completion marks, inline ROW-75/ROW-78 integration, config schema and patch semantics, unknown step preservation, startup/Settings/Data Root switch routing, ADR-0057 and the documentation/reference updates. The prior P2 is resolved: successful Factory setup immediately persists its mark; RootOnboarding retains the result and passes it into the remounted FactorySetupScreen after Plugin reload, preventing a duplicate auto-run while keeping the inline result. Ctrl+K, Skip, quit and Data Root switching no longer depend on an in-memory deferred mark; choosing a Board clears the cached setup result. Both implementing workers' verified receipts identify claudeAgent/claude-opus-5-5, and the reviewer receipt identifies distinct worker mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70 using codex/gpt-6.1-sol; all eight PR commits are accounted for by the two implementation records. Reviewed base: 95a86a6401da8fb23765e21d8fc3fa95a01d4fab. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head CI checks are COMPLETED/SUCCESS; all 16 original and correction screenshot URLs returned HTTP 200. No files excluded, no product edits, no new TUI session; exit/remount verification is by code-path inspection and the supplied correction evidence. ROW-86 redesign remains out of scope.",
+          "createdAt": "2026-11-04T03:02:24.537Z",
+          "updatedAt": "2026-11-04T03:02:24.537Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:b686fcc0-68fb-48c6-a81e-1e19ab7eef70",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:57:48.887Z",
-        "finishedAt": "2026-11-04T03:02:23.263Z"
-      }
     }
   }
 }
