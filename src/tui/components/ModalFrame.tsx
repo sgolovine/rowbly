@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { LayoutContext, uniqueKeys, useIsActive, useLayout } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { theme } from '../theme';
+import { Button } from './Button';
 import { CloseButton } from './CloseButton';
 import { fitHints, hintsWidth } from './fitHints';
 import { KeyHints } from './KeyHints';
@@ -14,6 +15,9 @@ import { Panel } from './Panel';
 import { ScrollBody } from './ScrollBody';
 
 const FORM_ESC = { key: 'esc', description: 'cancel' };
+const CLOSE = 'Close';
+// The Close Button's width: its padding, label, gap and `esc` key cap.
+const CLOSE_WIDTH = 1 + CLOSE.length + 1 + ' esc '.length + 1;
 
 /**
  * Draws a `Modal`: a framed panel centred over the area it is rendered in, the title in its border,
@@ -62,6 +66,9 @@ export function ModalFrame({
           FORM_ESC,
         ])
       : own;
+  // An info modal only shows information: its one key is `esc`, so it offers a Close Button instead
+  // of the hint strip. Screen Modals keep their strip.
+  const info = !screen && leads.length === 0 && footer?.length === 1 && footer[0]?.key === 'esc' ? onClose : undefined;
   const { width, room, body } = modalSize(outer, { size, maxWidth, footer: footer !== undefined });
   // Kept stable, so content that reads the layout does not render again whenever a layer shows.
   const bodyLayout = useMemo(() => ({ width: body.width, height: body.height }), [body.width, body.height]);
@@ -101,7 +108,8 @@ export function ModalFrame({
       </Box>
       {footer && (
         <Box
-          paddingX={2}
+          // The Close Button pads its own label, so it lines up with the body text.
+          paddingX={info ? 1 : 2}
           flexShrink={0}
           borderStyle="single"
           borderBottom={false}
@@ -109,9 +117,13 @@ export function ModalFrame({
           borderRight={false}
           borderColor={theme.border}
         >
-          {/* Under another layer, such as a context menu, the strip keeps its line and its width, so the
-              frame does not move or resize. */}
-          {top ? (
+          {/* Under another layer, such as a context menu, the strip or the Close Button keeps its line and
+              its width, so the frame does not move or resize. */}
+          {info && top ? (
+            <Button label={CLOSE} keyName="esc" onClick={info} clickable compact />
+          ) : info ? (
+            <Text>{' '.repeat(CLOSE_WIDTH)}</Text>
+          ) : top ? (
             <KeyHints hints={footer} width={width - 6} />
           ) : (
             <Text>{' '.repeat(Math.max(1, hintsWidth(fitHints(footer, width - 6))))}</Text>
