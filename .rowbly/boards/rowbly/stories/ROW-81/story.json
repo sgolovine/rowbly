@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:03:09.119Z",
-  "updatedAt": "2026-11-04T00:35:03.030Z",
+  "updatedAt": "2026-11-04T00:35:03.650Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -36,6 +36,17 @@
         "startedAt": "2026-11-04T00:32:04.146Z",
         "finishedAt": "2026-11-04T00:35:01.816Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "F6Jt6jX1",
+          "author": "sunny",
+          "body": "Refinement: the startup picker (DataRootPickerScreen) and the D switcher (DataRootSwitcher) are both in scope. Reuse core fuzzySearch over the name, full path and tilde path. Printable keys other than n/e/d start the search, \"/\" focuses it, esc clears it, and + New Data Root always stays visible. ROW-82, ROW-83 and ROW-85 edit the same files: sequence them, and merge origin/main when one lands first (no rebase). Ready for In Progress.",
+          "createdAt": "2026-11-04T00:35:03.649Z",
+          "updatedAt": "2026-11-04T00:35:03.649Z"
+        }
+      ]
     }
   }
 }
