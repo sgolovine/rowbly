@@ -6,8 +6,8 @@ screen, ask them to open it; do not start `rowbly` with no command in your own s
 
 `rowbly` with no command opens the TUI in a terminal (global flags such as `--data-root` still apply).
 Without `--data-root`, the TUI opens the nearest `.rowbly/` in the current directory or a parent.
-Outside one, known Data Roots appear before onboarding: default first, other registered roots next,
-missing ones after them, **+ New Data Root** last. Labels, paths and missing markers identify them.
+Outside one, known Data Roots appear before onboarding, below **+ New Data Root** pinned at the top:
+default first, other registered roots next, missing ones after them. Labels, paths and missing markers identify them.
 `enter` or a click opens one (a missing one says it no longer exists and offers to delete it from the
 list, as the `D` switcher also does); the mouse wheel moves the highlight when the list scrolls; `n`
 opens setup. Typing searches them (`/` or any key other than `n`, `q`, `?`, `,`, `D`): fuzzy over
