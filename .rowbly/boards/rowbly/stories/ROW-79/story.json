@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:08:20.956Z",
-  "updatedAt": "2026-11-04T00:57:41.324Z",
+  "updatedAt": "2026-11-04T00:57:42.544Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:2c77af36-6fd3-49da-8887-7ed73c70fb20",
+        "by": "sunny",
+        "startedAt": "2026-11-04T00:48:17.663Z",
+        "finishedAt": "2026-11-04T00:57:41.323Z"
+      }
     },
     "comments": {
       "comments": [
@@ -55,19 +66,15 @@
           "body": "Refinement: the screen is SkillInstall.tsx in Data Root onboarding. The CLI picker already marks installed official skills via listAllSkills; the TUI should reuse it and mark skills installed in this session, keep them selectable, and replace Continue without installing more skills with Continue. Description updated with requirements; ready for development.",
           "createdAt": "2026-11-04T00:23:37.481Z",
           "updatedAt": "2026-11-04T00:23:37.481Z"
+        },
+        {
+          "id": "hO3Xhhft",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/158 at eaf4009472cd173e2746f9e8ab21ed2a16fbec9b. Merge commit 03527f6696ec021cd3902db0d360b2a695443c78. Independent review approved; all six PR checks passed; all four screenshot URLs return HTTP 200. Local typecheck and lint passed, unit 79 passed, CLI 21 passed. Main CI inspected once after merge; the merge commit run was not yet registered.",
+          "createdAt": "2026-11-04T00:57:42.543Z",
+          "updatedAt": "2026-11-04T00:57:42.543Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:2c77af36-6fd3-49da-8887-7ed73c70fb20",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:48:17.663Z",
-        "finishedAt": "2026-11-04T00:57:41.323Z"
-      }
     }
   }
 }
