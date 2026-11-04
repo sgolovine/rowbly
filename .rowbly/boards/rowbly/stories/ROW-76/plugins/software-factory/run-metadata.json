@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:6b5a1f01-0294-4393-8dfd-a68f32f1128a",
-    "at": "2026-11-04T00:58:16.816Z",
-    "source": "Verified exact-head approval; final merge gate UNKNOWN, no pending checks",
+    "at": "2026-11-04T00:59:55.841Z",
+    "source": "Verified reviewer resumed after main merge and returned gate UNKNOWN with unchanged head and all checks passed",
     "by": "sunny"
   }
 }
