@@ -2,7 +2,7 @@ import { Box, type DOMElement, type Key, measureElement, Text, useBoxMetrics, us
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KnownDataRootChoice } from '../../services';
 import { ScrollFocusContext, TextInput } from '../components';
-import { useKeyCapture, useLayout, useMouse, WHEEL_LINES } from '../hooks';
+import { MouseClipContext, useKeyCapture, useLayout, useMouse, WHEEL_LINES } from '../hooks';
 import { theme } from '../theme';
 import { searchDataRoots } from './dataRootSearch';
 
@@ -187,9 +187,11 @@ export function DataRootList({
       >
         <Box ref={rowList} flexDirection="column" flexShrink={0} marginTop={-top}>
           <ScrollFocusContext.Provider value={room === undefined ? null : reveal}>
-            {results.slice(start, start + shown).map((root, i) => (
-              <Box key={root.path}>{renderRow(root, start + i === index, click(start + i, root))}</Box>
-            ))}
+            <MouseClipContext.Provider value={viewport}>
+              {results.slice(start, start + shown).map((root, i) => (
+                <Box key={root.path}>{renderRow(root, start + i === index, click(start + i, root))}</Box>
+              ))}
+            </MouseClipContext.Provider>
           </ScrollFocusContext.Provider>
         </Box>
       </Box>
