@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
-  "stage": "in-refinement",
-  "rank": "a4",
+  "stage": "in-progress",
+  "rank": "aB",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T00:38:54.420Z",
+  "updatedAt": "2026-11-04T00:38:55.084Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,17 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:3ca63947-3f1a-48d9-9a83-1ec5184065be",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:36:30.873Z",
-        "finishedAt": "2026-11-04T00:38:52.498Z"
-      }
     },
     "comments": {
       "comments": [
