@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T02:55:17.012Z",
+  "updatedAt": "2026-11-04T02:55:18.254Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:74e18708-fb02-4d7a-9788-8e4a3b7dfbc7",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:50:55.469Z",
+        "finishedAt": "2026-11-04T02:55:17.012Z"
+      }
     },
     "comments": {
       "comments": [
@@ -83,19 +94,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
           "createdAt": "2026-11-04T02:04:26.111Z",
           "updatedAt": "2026-11-04T02:04:26.111Z"
+        },
+        {
+          "id": "tATaW5MB",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/168 at 88db9395489cf1c84ee34117171ce65d75deb92d by codex/gpt-6-astra: CHANGES REQUESTED.  1. [P2] Keep the button pinned when rows wrap or the terminal is short (`src/tui/shell/DataRootList.tsx:69-71`, with `rowHeight={2}` in `DataRootSwitcher.tsx:178`). The new budget assumes every DataRootRow is two lines, but its label and status text wrap in SelectListRow. At 120x30 with 14 roots and the current root last, labels such as \"Root 13 customer development and production environments with shared engineering projects\" make each row three lines. Opening D then immediately scrolls the outer Modal ScrollBody to \"5–19 of 20\", completely hiding + New Data Root. Separately, at 100x20 even short labels reproduce the problem: the modal body has six lines, but Math.max(1, ...) forces one root plus five chrome lines (seven total), so automatic reveal scrolls to \"2–6 of 7\" and hides the button. Both were reproduced with the built exact-head CLI through agentic-tui. Keep the button outside the scrolling viewport, or make the sizing account for actual rendered row heights and insufficient body space, so neither automatic reveal nor Page Up/Down or wheel scrolling can remove it. Verify wrapped labels and a 20-row terminal as well as the existing 120x30 short-label case. This is the prior pinning finding still reproducible after the repair, contrary to ROW-85 and ADR-0056 §1.  Fresh full-PR review covered the entire diff and touched files, ModalFrame/ScrollBody layout and focus reveal, initial default/current selection, button navigation, search/no-match behavior, missing-last ordering, click/wheel handlers, page navigation, guide/skill updates, ADR-0056 amendments and index, and the four byte-identical reference copies. Real-terminal checks confirmed the short-label 120x30 switcher keeps the button visible during Page Up/Down and wheel navigation, no-match search selects the button, and the startup picker initially selects the default with Arrow Up reaching the button. No additional blocking findings.  Provenance: retained launch receipts verify original implementer mcp:d292c972-e536-408b-865d-ec84fe0b4c13 and correction implementer mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 both used claudeAgent/claude-opus-5-5 (effort=\"medium\", fastMode=false). Their recorded heads account for all six PR commits, including main merges. This distinct reviewer is mcp:74e18708-fb02-4d7a-9788-8e4a3b7dfbc7, codex/gpt-6-astra (reasoningEffort=\"medium\", serviceTier=\"default\"). All 13 screenshot URLs (original six and correction seven) returned HTTP 200. All six current-head GitHub checks were COMPLETED/SUCCESS. Independent local checks: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79); pnpm test:cli PASS (21). No product or Board changes; no merge.",
+          "createdAt": "2026-11-04T02:55:18.253Z",
+          "updatedAt": "2026-11-04T02:55:18.253Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:74e18708-fb02-4d7a-9788-8e4a3b7dfbc7",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:50:55.469Z",
-        "finishedAt": "2026-11-04T02:55:17.012Z"
-      }
     }
   }
 }
