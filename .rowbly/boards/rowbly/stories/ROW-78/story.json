@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T01:35:16.549Z",
+  "updatedAt": "2026-11-04T01:35:17.804Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:bd258b2f-c35a-4311-818b-c3b4ad839582",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:27:38.987Z",
+        "finishedAt": "2026-11-04T01:35:16.549Z"
+      }
     },
     "comments": {
       "comments": [
@@ -41,19 +52,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:bd258b2f-c35a-4311-818b-c3b4ad839582 (thread mcp:bd258b2f-c35a-4311-818b-c3b4ad839582, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-implementation-launch.json. Branch: factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: 08f379003dbd57fc207901edc42d7c94f5145e4d (verified gh pr view 166).",
           "createdAt": "2026-11-04T01:35:14.331Z",
           "updatedAt": "2026-11-04T01:35:14.331Z"
+        },
+        {
+          "id": "k37Rmwo8",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/166 (branch factory/row-78-implementation, head 08f379003dbd57fc207901edc42d7c94f5145e4d). Onboarding Open Stage Prompt editing, and Add factory Stages and default Stage Prompts, now draw the software-factory screen inline in onboarding's main area (new OnboardingPluginStep, resolved through PluginScreenHost with the Settings section shell, which moved to hooks). esc returns to Guide your Software Factory; Settings is unchanged. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass. Checked by hand with agentic-tui: inline list, hints and explanation; toggle, editor, remove confirm and cancel; esc back; finish onboarding; Settings Stage Prompts. Screenshots are in a PR comment. No review findings to answer.",
+          "createdAt": "2026-11-04T01:35:17.803Z",
+          "updatedAt": "2026-11-04T01:35:17.803Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:bd258b2f-c35a-4311-818b-c3b4ad839582",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:27:38.987Z",
-        "finishedAt": "2026-11-04T01:35:16.549Z"
-      }
     }
   }
 }
