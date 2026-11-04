@@ -1,6 +1,6 @@
 # ADR-0053: Software Factory setup gives one Board the default Stages and Stage Prompts it lacks
 
-**Status:** Accepted. Built. Amends ADR-0024 §3 and ADR-0041 §2.
+**Status:** Accepted. Built. Amends ADR-0024 §3 and ADR-0041 §2. Amended by [ADR-0059](0059-onboarding-combines-stage-prompt-setup.md) for the combined onboarding flow and setup choices.
 
 ## 1. Context
 

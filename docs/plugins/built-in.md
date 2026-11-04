@@ -494,7 +494,10 @@ and default Stage Prompts that it does not have: In Progress and In Review on, a
 readiness review off. It keeps every Stage, name and order, and every Stage Prompt entry and file at
 either level, and onboarding's Software Factory and Both modes offer it
 ([ADR-0053](../agents/adr/0053-software-factory-setup-gives-default-stages-and-stage-prompts.md)). The
-default texts live in `src/plugins/software-factory/defaultPrompts.ts`.
+default texts live in `src/plugins/software-factory/defaultPrompts.ts`. `--prompts minimal` writes
+the existing placeholder text with every added Stage Prompt off; omitted `--prompts` means
+`default`. Other values are a usage error. Onboarding combines both explicit choices and inline
+editing in its Stage Prompts step; merely opening the step writes nothing.
 
 **Data**
 
@@ -514,7 +517,7 @@ default texts live in `src/plugins/software-factory/defaultPrompts.ts`.
 
 ```text
 rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
-rowbly software-factory setup [--board <id>]   # add the factory Stages and default Stage Prompts the Board lacks
+rowbly software-factory setup [--board <id>] [--prompts default|minimal]   # add missing factory Stages and Stage Prompts
 rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
