@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T01:27:39.727Z",
+  "updatedAt": "2026-11-04T01:35:14.333Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,17 +26,6 @@
         }
       ]
     },
-    "comments": {
-      "comments": [
-        {
-          "id": "HeQlHcT3",
-          "author": "sunny",
-          "body": "Refinement: the modal comes from RootOnboarding pushing the stage-prompts Plugin route; the Shell draws pushed non-story/settings routes as a panel Modal. Settings already embeds the same screen inline, so the fix is to draw it inline in onboarding's main area. The description now lists the cause, the change and the acceptance criteria. Ready for development.",
-          "createdAt": "2026-11-04T00:24:59.661Z",
-          "updatedAt": "2026-11-04T00:24:59.661Z"
-        }
-      ]
-    },
     "software-factory": {
       "stageRun": {
         "stage": "in-progress",
@@ -46,6 +35,24 @@
         "by": "sunny",
         "startedAt": "2026-11-04T01:27:38.987Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "HeQlHcT3",
+          "author": "sunny",
+          "body": "Refinement: the modal comes from RootOnboarding pushing the stage-prompts Plugin route; the Shell draws pushed non-story/settings routes as a panel Modal. Settings already embeds the same screen inline, so the fix is to draw it inline in onboarding's main area. The description now lists the cause, the change and the acceptance criteria. Ready for development.",
+          "createdAt": "2026-11-04T00:24:59.661Z",
+          "updatedAt": "2026-11-04T00:24:59.661Z"
+        },
+        {
+          "id": "TdWMdmXQ",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:bd258b2f-c35a-4311-818b-c3b4ad839582 (thread mcp:bd258b2f-c35a-4311-818b-c3b4ad839582, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-implementation-launch.json. Branch: factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: 08f379003dbd57fc207901edc42d7c94f5145e4d (verified gh pr view 166).",
+          "createdAt": "2026-11-04T01:35:14.331Z",
+          "updatedAt": "2026-11-04T01:35:14.331Z"
+        }
+      ]
     }
   }
 }
