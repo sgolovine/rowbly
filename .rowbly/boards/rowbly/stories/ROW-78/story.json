@@ -50,6 +50,13 @@
           "updatedAt": "2026-11-04T00:24:59.661Z"
         },
         {
+          "id": "MisGcIRh",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-78-implementation, PR https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. Full independent review APPROVED this head with no actionable code findings, but git merge-tree confirms conflicts with current main in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after merged ROW-75 PR #167 (bc970fa7). Preserve ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}; pass ROW-75 run:true through to the inline factory-setup Plugin screen, keep immediate setup on selection, and combine its immediate-run/Settings-confirmation documentation with the inline/esc guidance. Do not restore the pushed modal route. Rerun all checks, verify the combined onboarding flow with agentic-tui, and obtain a new independent review of the repaired head. All six current-head GitHub checks and local typecheck, lint, unit (79), CLI (21) pass; all 15 screenshot URLs return 200. Review: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620827113.",
+          "createdAt": "2026-11-04T02:24:04.670Z",
+          "updatedAt": "2026-11-04T02:24:04.670Z"
+        },
+        {
           "id": "TdWMdmXQ",
           "author": "sunny",
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:bd258b2f-c35a-4311-818b-c3b4ad839582 (thread mcp:bd258b2f-c35a-4311-818b-c3b4ad839582, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-78-implementation-launch.json. Branch: factory/row-78-implementation. PR: https://github.com/sgolovine/rowbly/pull/166. Head: 08f379003dbd57fc207901edc42d7c94f5145e4d (verified gh pr view 166).",
@@ -83,13 +90,6 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at f218e390b4238db93d1df8a0fdd9d166ba450903 by codex/gpt-6.1-sol: APPROVED. Reviewed all six changed files and surrounding Plugin hosting, Board resolution, key/escape capture, full-screen editor, onboarding completion/skip, Settings and documentation against ROW-78 and the repository TUI rules. No actionable code findings; no files excluded. Verified the three original commits and two correction merge commits against both recorded Claude Opus 5.5 workers and their launch receipts; this independent reviewer is worker mcp:618893bc-ecec-46da-bb3c-343ecb07d2c6. The reviewed merge base is cdd8a494abcfe6c61d25aa3c0d03b675189b649f. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) all pass. All six current-head GitHub checks completed SUCCESS. All 15 image URLs across both screenshot comments return HTTP 200; inspected the inline list/explanation/hints, toggled entry, full-screen editor, factory return and Settings images. No new TUI session was started. Merge remains blocked by current-main conflicts in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after ROW-75 PR #167 merged. Repair must retain ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}, while passing ROW-75 run:true to the inline factory-setup Plugin screen and preserving its immediate-run documentation (Settings still asks first), together with the inline/esc guidance. Do not restore the pushed modal route. A repaired head requires a new independent review.",
           "createdAt": "2026-11-04T02:24:03.880Z",
           "updatedAt": "2026-11-04T02:24:03.880Z"
-        },
-        {
-          "id": "MisGcIRh",
-          "author": "sunny",
-          "body": "Returned to In Progress: branch factory/row-78-implementation, PR https://github.com/sgolovine/rowbly/pull/166, head f218e390b4238db93d1df8a0fdd9d166ba450903. Full independent review APPROVED this head with no actionable code findings, but git merge-tree confirms conflicts with current main in src/tui/screens/onboarding/RootOnboarding.tsx and docs/user-guide.md after merged ROW-75 PR #167 (bc970fa7). Preserve ROW-78 inline setup/prompts hosting and ROW-80 SkillInstall onDone={afterAi}; pass ROW-75 run:true through to the inline factory-setup Plugin screen, keep immediate setup on selection, and combine its immediate-run/Settings-confirmation documentation with the inline/esc guidance. Do not restore the pushed modal route. Rerun all checks, verify the combined onboarding flow with agentic-tui, and obtain a new independent review of the repaired head. All six current-head GitHub checks and local typecheck, lint, unit (79), CLI (21) pass; all 15 screenshot URLs return 200. Review: https://github.com/sgolovine/rowbly/pull/166#issuecomment-6620827113.",
-          "createdAt": "2026-11-04T02:24:04.670Z",
-          "updatedAt": "2026-11-04T02:24:04.670Z"
         }
       ]
     }
