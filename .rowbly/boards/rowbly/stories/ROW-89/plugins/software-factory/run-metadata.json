@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-04T05:21:10.816Z"
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "medium"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "user named GPT6.1Sol temporary override",
+    "fallback": "Thread reserved with user-requested Sol before announced Claude reset; retain verified selection",
+    "usage": "user-stated",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-04T05:21:10.816Z"
+  }
+}
