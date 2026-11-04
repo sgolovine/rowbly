@@ -6,6 +6,7 @@ import {
   ActiveContext,
   LayoutContext,
   ShellContext,
+  sectionShell,
   useAsync,
   useEscape,
   useIsActive,
@@ -19,7 +20,6 @@ import {
 import { type KeyHint, moveDelta } from '../../keymap';
 import { theme } from '../../theme';
 import { SECTION_NAV_WIDTH, SectionNav } from './SectionNav';
-import { sectionShell } from './sectionShell';
 import { sectionScreen, settingsGroups } from './sections';
 
 type Focus = 'nav' | 'section';
