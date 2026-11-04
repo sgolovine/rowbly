@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:49:02.171Z",
+  "updatedAt": "2026-11-04T02:49:02.818Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -73,6 +73,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/171 at 47495cf92bcd7730d511e3034b142a81bc2fe8da by codex/gpt-6-astra: CHANGES REQUESTED. 1. [P2] Persist successful Factory setup before onboarding can exit (src/tui/screens/onboarding/RootOnboarding.tsx:312-313, 102-109). The onSetUp callback passes later=true, so success only adds factory-setup to an in-memory pending set. After setup succeeds, press Ctrl+K and reopen Settings > Onboarding: OnboardingScreen.tsx:46 calls its own finish, which saves onboardingComplete and unmounts RootOnboarding without flushing that set. The saved factory-setup mark is missing; when earlier steps are complete, reopening selects Factory setup and runs it again. Quitting or switching Data Roots from this completed step also loses its mark. Clicking Skip instead does flush, so the advertised key and Button differ. Save successful setup progress durably while preserving its inline result and preventing Plugin reload from rerunning setup; ensure keyboard and Button exit paths preserve the same progress. This is required by ROW-77 requirements 4-5 and ADR-0057 section 2. Reviewed all 22 changed files, config/schema/operation semantics, ADR and reference updates, tab navigation, focus guards, ROW-75/78 integration and Settings/startup routing. Authoring and reviewer receipts match the supplied distinct workers/models; all six PR commits are accounted for by the implementation record. Base: 38ab77b6a91f2643826ce901d6f4fe4f0f75cdcc. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) passed. All six current-head CI checks passed; all 11 screenshot URLs returned HTTP 200. Finding established by code-path inspection; no new TUI session or source edits.",
           "createdAt": "2026-11-04T02:49:02.170Z",
           "updatedAt": "2026-11-04T02:49:02.170Z"
+        },
+        {
+          "id": "vxWJYNtq",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
+          "createdAt": "2026-11-04T02:49:02.817Z",
+          "updatedAt": "2026-11-04T02:49:02.817Z"
         }
       ]
     }
