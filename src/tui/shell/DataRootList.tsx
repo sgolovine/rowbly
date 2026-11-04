@@ -187,7 +187,7 @@ export function DataRootList({
       >
         <Box ref={rowList} flexDirection="column" flexShrink={0} marginTop={-top}>
           <ScrollFocusContext.Provider value={room === undefined ? null : reveal}>
-            <MouseClipContext.Provider value={viewport}>
+            <MouseClipContext.Provider value={room === undefined ? null : viewport}>
               {results.slice(start, start + shown).map((root, i) => (
                 <Box key={root.path}>{renderRow(root, start + i === index, click(start + i, root))}</Box>
               ))}
