@@ -6,21 +6,30 @@ screen, ask them to open it; do not start `rowbly` with no command in your own s
 
 `rowbly` with no command opens the TUI in a terminal (global flags such as `--data-root` still apply).
 Without `--data-root`, the TUI opens the nearest `.rowbly/` in the current directory or a parent.
-Outside one, known Data Roots appear before onboarding: default first, other registered roots next,
-missing ones after them, **+ New Data Root** last. Labels, paths and missing markers identify them.
+Outside one, known Data Roots appear before onboarding, below **+ New Data Root** pinned at the top:
+default first, other registered roots next, missing ones after them. Labels, paths and missing markers identify them.
 `enter` or a click opens one (a missing one says it no longer exists and offers to delete it from the
-list, as the `D` switcher also does); the mouse wheel moves the highlight when the list scrolls; `n`
+list, as the `D` switcher also does); a long list scrolls below the button, in both, and `page up`/`page down` or the mouse wheel move the highlight; `n`
 opens setup. Typing searches them (`/` or any key other than `n`, `q`, `?`, `,`, `D`): fuzzy over
 name, full path and `~` path, best match highlighted, `esc` clears. Failed opens leave the picker
 available. With no known roots, the home-folder
 fallback and first-run onboarding/setup remain available. After selection, global onboarding opens when its Home Config `onboardingComplete` flag is absent or false,
 then Data Root onboarding when the same flag in `rowbly.config.json` is absent or false. The Data Root
-flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Settings ›
+flag is committed and shared by everyone using it. `ctrl+k` skips and saves completion. Onboarding fills the terminal with no header or sidebars; their keys (`ctrl+b`, `\`, `{`/`}`, `[`/`]`, `1`-`9`, `ctrl+p`, `n`, `,`, `D`, Plugin Actions) do nothing until it ends. Settings ›
 Onboarding reopens either flow without clearing flags. Global onboarding sets global Me and registers
-existing Data Roots only. Data Root onboarding chooses Kanban/Factory/Both, a Board, optional Plugins,
-AI skills and factory guidance with Stage Prompt editing and Factory setup (also in a Board's
-settings), which adds the factory Stages and default Stage Prompts only when chosen. Official skill
-installs choose a destination folder and harness and never overwrite; custom skill commands are
+existing Data Roots only. Data Root onboarding has Usage, Board, Plugins, Agent skills, Stage Prompts
+and Summary tabs. Exactly one Board skips its tab, puts it in context and marks it done; no Boards
+offers creation, several offers selection. Plugins is always shown, Stage Prompts only with Software
+Factory on. Agent skills opens directly without an AI question. Click any tab; Back `ctrl+←`, Next
+`ctrl+→` and Skip onboarding `ctrl+k` remain available. Next never requires a completed step.
+Stage Prompts offers default prompts, minimal placeholders (all off), or inline editing (`esc`
+returns). Population is explicit, keeps existing Stages/prompts/files and shows added/kept/skipped
+inline; errors allow retry. Skills is done on install or continuing, Stage Prompts on successful
+population or Next. Summary lists this visit's choices, skill folders and prompt outcome; unvisited
+steps read not changed in this visit. Changes and finished `onboardingSteps` save immediately;
+reopening starts at the first incomplete step. Legacy `ai` counts as `skills`, `factory-setup` as
+`stage-prompts`, and saved old/unknown ids are kept. Official skill installs choose a destination
+folder and harness and never overwrite; custom skill commands are
 explained. An explicit missing `--data-root` still fails. Without a Data Root, setup can create one. Once
 onboarding is complete, a Board in context opens its Kanban board; otherwise the home menu. It reads the same files as command mode and watches the
 Data Root, so changes made with commands show on their own a moment later, without losing the user's

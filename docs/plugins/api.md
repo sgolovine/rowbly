@@ -89,7 +89,7 @@ Not exported, on purpose: the full `Services`, `OperationRunner` and host wiring
 | `PluginCommandEnv` | `cli.run` actions | `plugin`, `services`, `json`, `print`, `confirm`, `prompt`, `readText`, `editText`, `resolveBoard`, `waitFor`, `runCommand` |
 
 - `services.featureFlags.list()` and `isEnabled(key)` read the current Data Root Experimental Features. Hooks receive only these reads; commands and screens also receive `set(key, enabled)`, which saves its own coordinated `feature-flags.set` Operation. Unknown keys throw `NotFoundError`.
-- `config.updateRootConfig({ onboardingComplete })` saves the shared onboarding flag as a core Operation. Hook services remain read-only.
+- `config.updateRootConfig({ onboardingComplete?, onboardingSteps? })` saves the shared onboarding flag and step progress as a core Operation; a key left out keeps its stored value. Hook services remain read-only.
 - `PluginServices` is every core service except `plugins` (no other Plugin's context, no enable or disable), `setup`, and doctor fixes (`doctor.check` stays). It is built at run time with only those methods.
 - `editText` opens `$VISUAL`/`$EDITOR` and exists only in command mode.
 - `runCommand(argv)` runs one Rowbly command (`argv` without `rowbly`) as a child process on the opened Data Root with `--json --no-prompt`, without a shell, and resolves to `{ exitCode, output }`: the parsed JSON result, or the `{ error }` object when it fails. `argv` may not give `--data-root`, `--json`, `--yes`, `--prompt`, `--help`, short options or `--` (`UsageError`), and a command run this way cannot run commands. Call it outside `operation`: the child takes the Data Root lock for its own operation (ADR-0045 §3). It exists only in command mode.

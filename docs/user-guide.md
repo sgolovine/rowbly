@@ -64,11 +64,12 @@ With none of these a command exits 5 (`NO_DATA_ROOT`). If the Data Root named by
 The TUI uses `--data-root` when given; otherwise it opens the nearest `.rowbly/` in the current
 directory or a parent. Outside one, it asks you to choose from the known Data Roots in
 `~/.rowblyrc.json`, even when a default exists. The default appears first, other roots keep their
-registered order, missing ones come after them, and **+ New Data Root** is last. Paths, labels and
+registered order and missing ones come after them, below **+ New Data Root**, which is pinned at the
+top. Paths, labels and
 `missing` markers help identify roots. Picking a missing one says that the Data Root no longer exists
 and asks to delete it from the list (its entry in `~/.rowblyrc.json`). Use `↑`/`↓` and `enter`, or
-click a row; when the list is longer than the window, the mouse wheel moves the highlight three rows
-at a time. `n` opens the existing setup flow. Type to search:
+click a row; when the list is longer than the window, the Data Roots scroll below the button:
+`page up`/`page down` move the highlight a page and the mouse wheel three rows at a time. `n` opens the existing setup flow. Type to search:
 `/` or any other key except the shell's (`q`, `?`, `,`, `D`) starts the search line above the list,
 which fuzzy-matches each root's name, full path and `~` path, so `crew` finds a root labelled
 Crewsum and `row-14` a root whose path holds it. Each change highlights the best match; **+ New Data
@@ -195,8 +196,9 @@ rowbly config show [--board <id>]
   and the default stay as they are; the next TUI launch follows the startup choice described above. Picking a missing Data
   Root (moved or removed) says that it no longer exists and asks to delete it from the list, which takes
   its entry out of `~/.rowblyrc.json`; one that cannot be opened for another reason (broken) shows an
-  error. Either way the app stays where it was. The last
-  row, **+ New Data Root** (or `n`), runs the setup form and opens the new Data Root. While a form holds
+  error. Either way the app stays where it was. The
+  button pinned at the top, **+ New Data Root** (or `n`), runs the setup form and opens the new Data Root; a long
+  list scrolls below it, with the same keys and wheel as the startup picker. While a form holds
   unsaved changes, both ask before discarding them; `D` is typed as text while a text field has focus.
   `e` edits the highlighted Data Root's label and whether it is the default (an empty label removes
   it; making one the default clears the others). `d` asks how to remove it: **Forget it** takes its
@@ -510,7 +512,7 @@ watches the Board knows what is already being worked.
 
 ```text
 rowbly software-factory stages [--board <id>] [--level board|global]   # every Stage with its Stage Prompt
-rowbly software-factory setup [--board <id>]   # add the factory Stages and default Stage Prompts the Board lacks
+rowbly software-factory setup [--board <id>] [--prompts default|minimal]   # add missing factory Stages and Stage Prompts
 rowbly software-factory prompt show <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt enable <stage> [--board <id>] [--level board|global]
 rowbly software-factory prompt disable <stage> [--board <id>] [--level board|global]
@@ -533,6 +535,9 @@ rowbly software-factory brief <story> [--retry-file <path|->] [--instructions-fi
 - Stage Prompts are set per Stage at the global level (`rowbly.config.json`) or on a Board
   (`board.config.json`). A Board's entry for a Stage replaces the global entry for that Stage; the
   other Stages keep the global one. Writes go to the Board level unless `--level global`.
+- `setup --prompts minimal` writes the existing placeholder text with all new Stage Prompts off.
+  Omitting `--prompts` uses `default`; other values give a usage error. Both choices keep existing
+  Stages, entries and files, and running the other option later keeps the first prompts.
 - `setup` gets a Board ready for a software factory: Backlog, TODO, In Progress, In Review, Done
   (a Board without a factory keeps Backlog, TODO, In Progress, Done). It adds the Stages `todo`
   (TODO), `in-progress` (In Progress) and `in-review` (In Review) that the Board does not have,
@@ -1259,24 +1264,46 @@ and preserves local Me. Invalid or missing registration paths create nothing. Wi
 Root, Continue returns to the startup picker when roots have been registered; with none, it opens setup.
 An explicit missing `--data-root` still fails before onboarding; a missing registered default is shown in the startup picker.
 
-Data Root onboarding asks how you work: **Plain Kanban**, **Software Factory**, or **Both**.
-Plain Kanban turns Software Factory off; the other modes turn it on. Choose an existing Board, or
-create the first Board. Kanban and Both then offer optional Plugins; Software Factory goes straight
-to factory guidance. Unchecked Plugins are turned off with their Plugin Data kept.
+Data Root onboarding has six step tabs: **Usage**, **Board**, **Plugins**, **Agent skills**,
+**Stage Prompts** and **Summary**. With exactly one Board, the Board tab is hidden: onboarding puts
+that Board in context and marks the step done. Adding or removing a Board recomputes this choice.
+Click any tab to open its step, or use **Back** (`ctrl+←`) and **Next** (`ctrl+→`). **Next** never
+requires completion and finishes onboarding on Summary. Text fields keep their keys; the Buttons
+still work. **Skip onboarding** (`ctrl+k`) saves completion. Results stay inline, without Modals,
+and completed tabs have a `✓`. Changes are saved as they happen.
 
-The separate AI usage question offers official agent skills. Choose a skill, destination folder and
-harness to install it through the same service as `rowbly skills install`; existing folders are never
-overwritten. Skills already installed below the current folder, or installed on this screen, are
-marked **(installed)** with their skills folders and stay selectable for another harness or folder.
-Choose **Continue** to leave the step, whether or not you installed anything. Choosing agent skills
-answers the AI usage question, so onboarding does not ask it after the skills step: Software Factory
-and Both return to factory guidance, which then offers **Finish onboarding**. The screen also explains creating and installing custom skills. Factory guidance opens
-Stage Prompt editing for your chosen Board, and explains skills and `ROWBLY.md`. Its **Add factory
-Stages and default Stage Prompts** choice opens Factory setup, which runs `software-factory setup`
-for the Board right away, without asking again, and lists what it added, kept and skipped; nothing
-is added unless you choose it. Factory setup from a Board's settings still asks first. Both open in the
-onboarding screen itself rather than a modal, and `esc` returns to factory guidance. Use the editor to change and
-enable the instructions you want.
+**Usage** asks how you will use this Data Root: **Plain Kanban**, **Software Factory**, or **Both**.
+Plain Kanban turns Software Factory off and hides Stage Prompts; the other choices turn it on.
+Plugins is shown in every mode. Reopening uses Software Factory's on/off setting, without saving
+the usage answer. **Board** chooses among several Boards or creates the first. **Plugins** offers
+optional Plugins; unchecked Plugins turn off with their Plugin Data kept.
+
+**Agent skills** directly offers official skills, without an AI usage question. Choose a skill,
+destination folder and harness to install it through `rowbly skills install`'s service; existing
+folders are never overwritten. Installed skills have **(installed)** markers and their folders,
+and remain selectable for another folder or harness. **Continue without installing more skills**
+goes to the next step. Installing a skill or continuing marks this step done. Custom skill commands
+are also explained.
+
+**Stage Prompts** explains how the `rowbly-factory` skill supervises Stories in Stages whose Stage
+Prompt is on. Choose **Populate Stage Prompts with default prompts** for Rowbly's pre-built
+instructions (In Progress and In Review on, TODO off), **Populate Stage Prompts with minimal prompts**
+for placeholders to edit later (all off), or **Edit Stage Prompts** for the inline editor. `esc`
+returns from editing to these choices. Populating runs only when chosen, adds missing factory
+Stages and Stage Prompts, and lists added, kept and skipped items below the choices. Existing
+Stages, Stage Prompts and files are kept, including when you subsequently choose the other option.
+Errors leave the choices available to retry. Edit here or in **Settings › Stage Prompts** at any time.
+
+**Summary** lists this visit's usage choice (or Software Factory on/off on reopening), Board in
+context, enabled Plugins, installed skills and their folders, and Stage Prompts outcome when
+Software Factory is on. Unvisited steps read **not changed in this visit**. **Finish onboarding**
+saves completion.
+
+Finished steps are saved immediately in the committed `rowbly.config.json` as `onboardingSteps`:
+`mode`, `board`, `plugins`, `skills`, `stage-prompts`. Stage Prompts is marked done after successful
+population or leaving with Next. Reopening shows marks and starts at the first incomplete step.
+Legacy `ai` counts as `skills` done and `factory-setup` as `stage-prompts` done; their original ids
+and unknown ids are kept on save. Saving progress never clears completion.
 
 Completing or pressing **ctrl+k** to skip saves `onboardingComplete: true` in `~/.rowblyrc.json` for
 global onboarding, or in the Data Root's committed `rowbly.config.json` for Data Root onboarding.
@@ -1286,3 +1313,8 @@ its onboarding. Reopen either flow with **Settings › Onboarding**: it closes S
 flow, which ends where it does at startup. Revisiting leaves the flag set and
 existing records intact. Errors keep the current step available for retry. In registration and skill
 installation forms, **esc** returns to the preceding choice. Demo mode bypasses onboarding.
+
+Onboarding fills the terminal above the footer, without the header or sidebars. Until it ends, the
+keys for that frame do nothing: **ctrl+b**, **\\**, **{**/**}**, **[**/**]**, Board numbers, **ctrl+p**,
+**n** for a new Story, **,** for Settings, **D** and Plugin Actions. The footer, **?** help and **q**
+still work, and finishing or skipping brings the frame back.

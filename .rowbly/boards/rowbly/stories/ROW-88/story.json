@@ -4,24 +4,66 @@
   "boardId": "rowbly",
   "name": "Rowbly factory should not depend on git sync.",
   "description": "Git sync is a seperate plugin from rowbly factory and we do not want to create a dependency. If the git plugin is enabled, the factory skill should do a sync. If the plugin is not enabled, skip the sync. Currently if one git sync fails, rowbly factory skill will stop. Change instructions so agent can try up to 3 times, with exponential backoff between tries.",
-  "stage": "in-pr",
-  "rank": "a4",
+  "stage": "done",
+  "rank": "b0X",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:45:10.309Z",
-  "updatedAt": "2026-11-04T02:14:54.818Z",
+  "updatedAt": "2026-11-04T04:30:02.570Z",
   "plugins": {
     "comments": {
       "comments": [
+        {
+          "id": "45DlwZFH",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (thread mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-88-correction-1-launch.json. Branch: factory/row-88-correction-1, pushed to factory/row-88-implementation. PR: https://github.com/sgolovine/rowbly/pull/169. Head: b473cb3b37025e026554562d4a9bb6421f4c354d.",
+          "createdAt": "2026-11-04T03:26:38.880Z",
+          "updatedAt": "2026-11-04T03:26:38.880Z"
+        },
         {
           "id": "8FWdOX1x",
           "author": "sunny",
           "body": "Draft PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Skill text only: the factory skips every git sync when the Git Plugin is off and treats publication as done; one failed-sync rule for start and while running: 3 tries in all about 10 s and 20 s apart, no retry for conflicts or evidence, Automatic Merge Conflict Resolution Off, or exits 2 and 3. AGENTS.md summary and remote-launch.md step 6 match. Checks: typecheck, lint, test:unit 79 and test:cli 21 pass. No screenshots: no TUI or CLI change. No review findings to answer.",
           "createdAt": "2026-11-04T02:14:54.163Z",
           "updatedAt": "2026-11-04T02:14:54.163Z"
+        },
+        {
+          "id": "U7mVPJ88",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. Merge commit 6ce0b285dbf885e5aa5b0ab7165660bc1dddea89. All final gates passed; main CI queued at https://github.com/sgolovine/rowbly/actions/runs/41773495694.",
+          "createdAt": "2026-11-04T04:30:01.889Z",
+          "updatedAt": "2026-11-04T04:30:01.889Z"
+        },
+        {
+          "id": "hKLGhRON",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/169 at b1b2ed590f3ed1bcef42292dccaf160621660c03 by codex/gpt-6-astra: CHANGES REQUESTED. 1. skills/rowbly-factory/SKILL.md:35,61 — The skip rule covers Git off only. The clarified ROW-88 requirement also covers Git not loaded; plugins list exposes enabled and loaded separately, and an enabled Plugin can fail to load. That case is neither on-and-loaded nor off, leaving publication gates and Git commands unresolved. Require enabled AND loaded before Git setup/sync, and explicitly skip every sync/publication gate when either is false, including the remote-launch step 6 wording. 2. skills/rowbly-factory/SKILL.md:112-114 — Waiting until last settles does not establish publication: last can retain an older success while requested/active is present, or the new run can finish failed/interrupted. git show itself exits successfully for a failed result. Require requested/active to clear and a fresh completed last.kind=synchronized for the relevant attempt before releasing dependent GO/reply/remote-start gates. Route a settled failed/interrupted result through the bounded failure policy while keeping those gates closed. Reviewed all three changed files against the supervisor-confirmed refinement, plugin status rendering, synchronization result contract, startup and remote-launch composition, and preserved commit/event/evidence rules. Verified both launch receipts and the sole authoring commit: reviewer mcp:6555caf2-ee96-48c9-802d-23d30f52d9d8 is independent of implementing worker mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (claudeAgent/claude-opus-5-5). These findings are ROW-88 acceptance gaps; no additional ROW-89 startup/classification work is requested. No image URLs are present; this skill/doc-only change requires no TUI/CLI screenshot.",
+          "createdAt": "2026-11-04T03:11:03.514Z",
+          "updatedAt": "2026-11-04T03:11:03.514Z"
+        },
+        {
+          "id": "jSNMsJOX",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-88-implementation, PR https://github.com/sgolovine/rowbly/pull/169, head b1b2ed590f3ed1bcef42292dccaf160621660c03. Independent review requests changes: (1) SKILL.md:35,61 must skip sync/publication when Git is not loaded as well as off, composing with remote-launch step 6; (2) SKILL.md:112-114 must require no pending/active run and a fresh completed last.kind=synchronized, keeping dependent gates closed and applying failure policy for failed/interrupted completion. Review: https://github.com/sgolovine/rowbly/pull/169#issuecomment-6621461862. Local checks passed: typecheck, lint, unit 79, CLI 21. Six GitHub checks passed at inspection; mergeability UNKNOWN. No images present or required. No product or Board changes.",
+          "createdAt": "2026-11-04T03:11:04.179Z",
+          "updatedAt": "2026-11-04T03:11:04.179Z"
+        },
+        {
+          "id": "lGX10XJz",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d by codex/gpt-6-astra: APPROVED. Reviewed the complete three-file diff and full factory skill, remote-launch guidance and AGENTS.md summary against ROW-88 and the Git Plugin status/synchronization contracts. Both previous findings are resolved: Git setup/sync requires enabled AND loaded, with all publication gates skipped otherwise; publication requires a fresh relevant-attempt synchronized completion, matching available IDs and timestamps, with requested/active absent. Stale success cannot release gates; settled failure/interruption counts within three total attempts with 10s/20s backoff. Settlement reads alone are permitted during sync/backoff, bounded to 30s, and pending timeout authorizes neither retry nor another wait loop. No-retry exceptions, per-change commits, event publication barriers and evidence retention remain intact. Verified launch receipts for original author mcp:f32c8969-4deb-40c0-ae23-7a13bfee4318 (claudeAgent/claude-opus-5-5), correction author mcp:81f60f88-44ee-43ca-b284-e12fa444e4c9 (codex/gpt-6.1-sol), and independent reviewer mcp:24d1ddb9-8b78-4bbb-99fc-41c8340c5cfd (codex/gpt-6-astra); all PR commits are accounted for, including the correction worker's clean merge of main. No image URLs are present in the PR body/comments; no TUI/CLI screenshot is required. ROW-89 remains outside this review's scope.",
+          "createdAt": "2026-11-04T04:25:07.459Z",
+          "updatedAt": "2026-11-04T04:25:07.459Z"
+        },
+        {
+          "id": "mfc55pNj",
+          "author": "sunny",
+          "body": "PR169 repaired: https://github.com/sgolovine/rowbly/pull/169 at b473cb3b37025e026554562d4a9bb6421f4c354d. 1. Git setup and sync require enabled AND loaded. Either false skips every publication gate including remote-launch step 6. 2. Publication requires requested and active cleared plus fresh completed relevant-attempt synchronized success. Settled failed or interrupted results follow 3 total attempts with 10s and 20s backoff and preserved exceptions. Only rowbly git show may establish settlement during sync or backoff, about 5s apart for at most 30s per attempt. Pending at that bound keeps gates closed without retry or another status-wait loop. Checks passed: typecheck, lint, unit 79, CLI 21. CI pending: Verify, Unit tests, CLI tests and Clipboard smoke on macos-latest, windows-latest and ubuntu-latest. Skill/docs only. No screenshots required. No Board mutations.",
+          "createdAt": "2026-11-04T03:26:40.863Z",
+          "updatedAt": "2026-11-04T03:26:40.863Z"
         },
         {
           "id": "q1sTbz3y",

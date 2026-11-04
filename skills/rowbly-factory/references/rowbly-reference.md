@@ -285,7 +285,7 @@ included), off by default, set globally or per Board; a Board's entry for a Stag
 
 ```sh
 rowbly software-factory stages --board web --json --no-prompt   # {board, stagesSource, stages: [{key, name, category, prompt: {enabled, configured, source, path, exists, text}}]}
-rowbly software-factory setup --board web --json --no-prompt   # adds missing todo/in-progress/in-review Stages and default Stage Prompts; keeps every Stage, entry and file; {board, stages: [{key, name, outcome}], prompts: [{key, outcome, source, enabled, path, reason?}]}
+rowbly software-factory setup --board web --prompts default --json --no-prompt   # --prompts default|minimal (default: default); minimal writes placeholder prompts, all off; adds missing todo/in-progress/in-review Stages; keeps every Stage, entry and file; {board, stages: [{key, name, outcome}], prompts: [{key, outcome, source, enabled, path, reason?}]}
 rowbly software-factory prompt show|enable|disable|remove <stage> [--board <id>] [--level board|global] --json --no-prompt   # remove needs --yes
 rowbly software-factory prompt edit <stage> --file ./todo.md [--board <id>] [--level board|global] --json --no-prompt
 rowbly software-factory runs --board web [--stale-after <min>] --json --no-prompt   # {board, stages, stories: [{key, name, stage, stageRun|null, liveness|null, runMetadata, eligibility}], staleAfterMinutes, digest}
@@ -389,9 +389,9 @@ New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift
 - Data Root `rowbly.config.json` → `featureFlags: { [key]: boolean }`; absent uses code default, explicit false wins, unknown keys kept; no Board/Home Config level.
 - TUI: Settings → Global → Experimental Features; `enter` turns the selected feature on/off. Empty registry has no toggle hint.
 
-TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared.
+TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared. `rowbly.config.json` also keeps optional `onboardingSteps` (mode, board, plugins, skills, stage-prompts; legacy ai→skills, factory-setup→stage-prompts; unknown/old ids kept; reopening starts at the first not done). Tabs: Usage, Board (hidden with one, put in context), Plugins (all modes), Agent skills (direct), Stage Prompts (factory on; default/minimal/edit), Summary. Free tab clicks, Back/Next, immediate writes; Next never requires completion.
 
-TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (default first, others in registered order, New last). `enter`/click opens, `n` opens setup, typing (or `/`) fuzzy-searches name and path, `esc` clears; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
+TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (New pinned at the top, then default first, others in registered order, missing last). `enter`/click opens, `n` opens setup, typing (or `/`) fuzzy-searches name and path, `esc` clears; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
 
 Factory `runMetadata` is `{status:absent|valid|invalid|unsupported,current,...}`; current valid output
 includes `version:1,run:{stage,attempt,startedAt},identity?,selection?,heartbeat?`. Identity is

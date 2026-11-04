@@ -44,7 +44,7 @@ The schemas are in `src/schemas/`. Every record may also carry Plugin Data under
 
 | Record | File | Holds |
 | --- | --- | --- |
-| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `stages`, `customFields` and `featureFlags` (Experimental Features), and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
+| Root config (`RowblyConfig`) | `rowbly.config.json` | optional `onboardingComplete` and `onboardingSteps` ([Onboarding completion](#onboarding-completion)), `stages`, `customFields` and `featureFlags` (Experimental Features), and `plugins`: one entry per Plugin, `{ "enabled": true, …settings }` |
 | Local State | `local.json` | optional `board` (the current Board) and `me` (the local Me, a handle) |
 | Board (`BoardConfig`) | `boards/<id>/board.config.json` | `id` (the folder's slug), `name`, `description`, `keyPrefix`, optional `stages` and `customFields`, timestamps |
 | Story | `boards/<id>/stories/<KEY>/story.json` | `key`, `boardId`, `name`, `description` (Markdown), `stage`, `rank`, `priority` (`P0`–`P4` or `null`), `labels`, `dueDate`, `customFields`, `createdBy`, timestamps |
@@ -75,7 +75,8 @@ Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are k
 
 TUI startup follows [ADR-0042](../agents/adr/0042-tui-startup-asks-for-a-data-root.md): explicit
 `--data-root`, otherwise `discoverLocalDataRoot` finds the nearest current/parent `.rowbly/`.
-Outside one, known roots require a choice before onboarding, with the default first and New last.
+Outside one, known roots require a choice before onboarding, with New pinned at the top and the default first
+([ADR-0056](../agents/adr/0056-new-data-root-is-pinned-at-the-top.md)).
 No known roots preserves the home-folder fallback and first-run onboarding/setup. The shared CLI
 `findDataRoot` resolution above is unchanged.
 
@@ -149,6 +150,16 @@ for everyone sharing that configuration. The Home Config flag is independent and
 `config.updateRootConfig` saves the Data Root flag through the normal Operation pipeline;
 `updateHomeConfig` saves the global flag. Reopening either flow in Settings keeps the flags set.
 See [ADR-0041](../agents/adr/0041-onboarding-completion-has-two-levels.md).
+
+Beside it, an optional `onboardingSteps` list holds the ids of the Data Root onboarding steps
+completed so far (`mode`, `board`, `plugins`, `skills`, `stage-prompts`), shared the
+same way. Absent means none; unknown ids are ignored when read and kept when saved.
+`config.updateRootConfig` changes only the keys it is given, so saving progress never clears
+`onboardingComplete`, and saved steps never set it. Opening Data Root onboarding shows the saved
+steps as done and starts at the first incomplete one
+([ADR-0057](../agents/adr/0057-data-root-onboarding-saves-step-progress.md), amended by
+[ADR-0059](../agents/adr/0059-onboarding-combines-stage-prompt-setup.md)). Legacy `ai` counts as
+`skills` complete and `factory-setup` as `stage-prompts` complete; the old ids remain saved.
 
 ## Software Factory Run metadata
 

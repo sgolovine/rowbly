@@ -24,7 +24,7 @@ export * from './SelectListRow';
 export * from './Spinner';
 export * from './StageBadge';
 export * from './StoryStage';
-export { useScrollFocus } from './scrollFocus';
+export { ScrollFocusContext, useScrollFocus } from './scrollFocus';
 export * from './Tabs';
 export * from './TextArea';
 export * from './TextInput';

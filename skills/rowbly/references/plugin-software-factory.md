@@ -37,10 +37,15 @@ already named like a missing factory Stage exits 4 (`CONFLICT`) and saves nothin
 Plugin on. Read the result instead of assuming the defaults were written:
 
 ```sh
-rowbly software-factory setup --board web --json --no-prompt
+rowbly software-factory setup --board web --prompts minimal --json --no-prompt
 # {board, stages: [{key, name, outcome: added|present|custom}],
 #  prompts: [{key, outcome: added|kept|skipped, source, enabled, path, reason?}]}
 ```
+
+`--prompts default|minimal` defaults to `default`. Minimal uses the existing placeholder text for
+each missing Stage Prompt and writes every entry off, preserving the same Stages, entries and files.
+Other values are a usage error. Onboarding's Stage Prompts step offers both choices explicitly,
+shows their result inline and also offers editing; opening the step does not run setup.
 
 ## Commands
 
