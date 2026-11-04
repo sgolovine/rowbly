@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T17:13:36.565Z",
-  "updatedAt": "2026-11-04T17:38:04.590Z",
+  "updatedAt": "2026-11-04T17:42:03.136Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2",
+        "by": "sunny",
+        "startedAt": "2026-11-04T17:38:03.733Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -29,18 +39,15 @@
           "body": "Implementation record: In Progress attempt 1, finished.\nWorker: mcp:9334939e-44c8-4f23-80e6-e8b678bd87ec (thread mcp:9334939e-44c8-4f23-80e6-e8b678bd87ec, harness t3, machine thinkpad).\nModel: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: t3_thread_launch receipt and t3_thread_read (run ordinal 1, providerInstanceId claudeAgent, model claude-opus-5-5).\nBranch: factory/row-90. PR: https://github.com/sgolovine/rowbly/pull/175. Head: 244f001d63cd6e88816ae4dffaf04b34e031f8cc.",
           "createdAt": "2026-11-04T17:36:51.945Z",
           "updatedAt": "2026-11-04T17:36:51.945Z"
+        },
+        {
+          "id": "iteHgwyn",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/175 at 244f001d63cd6e88816ae4dffaf04b34e031f8cc by codex/gpt-6.1-sol: APPROVED. No actionable findings. Reviewed all six changed files against ROW-90 and the repository guidance, including Shift+arrow navigation, removal of the Ctrl+arrow alias, text-field capture, select/boolean arrow handling, unchanged Skip and Board keys, Button/footer keys and all three documentation updates. The two commits match the verified Claude implementation record; this is a separate Codex reviewer. Reviewed base 6ddf84dce89cad9fc2bba6a637ec72745f844b2f. Local checks passed: pnpm typecheck, pnpm lint, pnpm test:unit (79), pnpm test:cli (21), and git diff --check. All four screenshot URLs in the PR body return HTTP 200. No files excluded; interactive behavior was assessed through code and the author's recorded terminal evidence, without a new terminal session. All six GitHub checks remain queued, so merge must wait for the supervisor's resume.",
+          "createdAt": "2026-11-04T17:42:03.135Z",
+          "updatedAt": "2026-11-04T17:42:03.135Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:d58e8a37-1fe1-4ab1-936a-682094ff87a2",
-        "by": "sunny",
-        "startedAt": "2026-11-04T17:38:03.733Z"
-      }
     }
   }
 }
