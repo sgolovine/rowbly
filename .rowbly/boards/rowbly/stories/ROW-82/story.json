@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:05:18.924Z",
-  "updatedAt": "2026-11-04T01:49:19.985Z",
+  "updatedAt": "2026-11-04T01:49:21.217Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:290cd831-2221-4638-8d4d-506f702bc2f1",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:33:13.757Z",
+        "finishedAt": "2026-11-04T01:49:19.984Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -64,19 +75,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/163 (branch factory/row-82-implementation, head b184dff8749123a1b98e790c6e6bd7e109955f28). Missing Data Roots are listed last in the startup picker and the D switcher. Picking one opens a modal that says the Data Root no longer exists and asks to delete it from the list (removes its ~/.rowblyrc.json entry); a root that vanishes after the list loads gets the same modal. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass; manual agentic-tui run of switcher and picker, including the ROW-83 wheel after merging main. Screenshots: https://github.com/sgolovine/rowbly/pull/163#issuecomment-6619803940. No review findings to answer.",
           "createdAt": "2026-11-04T01:14:34.864Z",
           "updatedAt": "2026-11-04T01:14:34.864Z"
+        },
+        {
+          "id": "cWh4phbm",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/163 at 19ca37dd0298c32875491ccff05b8d8c1cecc43e. Merge commit a87ec5fb551c08c9fccd6faf740fcece39efa7c5. Independent review approved; all six PR checks succeeded, all 19 images load, and all four local checks passed (79 unit, 21 CLI). Main CI queued: https://github.com/sgolovine/rowbly/actions/runs/41756486727.",
+          "createdAt": "2026-11-04T01:49:21.217Z",
+          "updatedAt": "2026-11-04T01:49:21.217Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:290cd831-2221-4638-8d4d-506f702bc2f1",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:33:13.757Z",
-        "finishedAt": "2026-11-04T01:49:19.984Z"
-      }
     }
   }
 }
