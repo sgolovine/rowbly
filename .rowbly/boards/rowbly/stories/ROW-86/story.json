@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:36:08.438Z",
-  "updatedAt": "2026-11-04T03:30:22.039Z",
+  "updatedAt": "2026-11-04T03:30:23.253Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83",
+        "by": "sunny",
+        "startedAt": "2026-11-04T03:13:19.705Z",
+        "finishedAt": "2026-11-04T03:30:22.038Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -43,19 +54,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83 (thread mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-86-implementation-launch.json. Branch: factory/row-86-implementation. PR: https://github.com/sgolovine/rowbly/pull/173. Head: c8931910f216f53e93be2998d68fc2401c9c3c62.",
           "createdAt": "2026-11-04T03:30:21.305Z",
           "updatedAt": "2026-11-04T03:30:21.305Z"
+        },
+        {
+          "id": "MJw13cOC",
+          "author": "sunny",
+          "body": "Implemented combined onboarding in draft PR https://github.com/sgolovine/rowbly/pull/173 at c8931910f216f53e93be2998d68fc2401c9c3c62. Typecheck and lint pass; unit 79/79 and CLI 21/21 pass (100 unchanged tests). Manual CLI and actual TUI checks cover all acceptance criteria, legacy progress and dynamic Boards. ADR-0059 and guides/references updated. Screenshot evidence: https://github.com/sgolovine/rowbly/pull/173#issuecomment-6621755689; all 13 PNG URLs return 200. Private TUI daemon stopped. CI pending: Verify, Unit tests, CLI tests, Clipboard smoke (macos-latest), Clipboard smoke (windows-latest), Clipboard smoke (ubuntu-latest).",
+          "createdAt": "2026-11-04T03:30:23.252Z",
+          "updatedAt": "2026-11-04T03:30:23.252Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:6d280afc-0e55-482b-84a0-adafb7c1ee83",
-        "by": "sunny",
-        "startedAt": "2026-11-04T03:13:19.705Z",
-        "finishedAt": "2026-11-04T03:30:22.038Z"
-      }
     }
   }
 }
