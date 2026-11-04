@@ -26,8 +26,9 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0032](0032-me-is-global-with-a-local-me-per-data-root.md) | Me is global, with a local Me per Data Root | Accepted |
 | [0033](0033-known-data-roots-select-the-data-root.md) | Known Data Roots in the Home Config, and `--data-root`, select the Data Root | Accepted; amended by 0042 |
 | [0036](0036-binary-plugin-files-use-the-commit-journal.md) | Binary Plugin files use the existing commit journal | Accepted |
-| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042, 0053 and 0057 |
-| [0057](0057-data-root-onboarding-saves-step-progress.md) | Data Root onboarding saves its step progress beside its completion flag | Accepted; amends 0041 |
+| [0041](0041-onboarding-completion-has-two-levels.md) | Onboarding completion is per person and shared per Data Root | Accepted; amended by 0042, 0053, 0057 and 0059 |
+| [0057](0057-data-root-onboarding-saves-step-progress.md) | Data Root onboarding saves its step progress beside its completion flag | Accepted; amended by 0059; amends 0041 |
+| [0059](0059-onboarding-combines-stage-prompt-setup.md) | Onboarding combines Stage Prompt setup and keeps saved progress | Accepted; amends 0041, 0053 and 0057 |
 | [0042](0042-tui-startup-asks-for-a-data-root.md) | TUI startup asks for a Data Root outside local discovery | Accepted; amended by 0055 |
 | [0055](0055-missing-data-roots-are-listed-last.md) | Missing Data Roots are listed last, and picking one offers to delete it from the list | Accepted; amends 0042 |
 | [0049](0049-the-tui-checks-npm-for-a-newer-release.md) | The TUI checks npm for a newer Rowbly release when it starts | Accepted |
@@ -73,7 +74,7 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0046](0046-verified-workers-use-current-run-metadata.md) | Verified workers use metadata bound to the current Stage Run | Accepted; amends 0040 |
 | [0047](0047-plugins-read-rowbly-md-as-inert-text.md) | A Plugin command can read `ROWBLY.md` as inert text | Accepted |
 | [0048](0048-stage-run-heartbeats-are-attested-evidence.md) | A Stage Run heartbeat records attested worker activity, and staleness only asks for a check | Accepted |
-| [0053](0053-software-factory-setup-gives-default-stages-and-stage-prompts.md) | Software Factory setup gives one Board the default Stages and Stage Prompts it lacks | Accepted |
+| [0053](0053-software-factory-setup-gives-default-stages-and-stage-prompts.md) | Software Factory setup gives one Board the default Stages and Stage Prompts it lacks | Accepted; amended by 0059 |
 
 ### Development
 
@@ -85,3 +86,4 @@ Each file records one decision: what was decided, why, and what was rejected. So
 | [0037](0037-clipboard-reads-use-an-isolated-native-child.md) | Clipboard images are read by an isolated optional native child | Accepted |
 | [0038](0038-story-image-paste-is-an-exclusive-plugin-contribution.md) | Story image paste is an exclusive Plugin contribution | Accepted |
 | [0050](0050-merge-evidence-records-only-decisions-and-is-retained.md) | Merge Evidence records only real decisions and is kept as audit history | Accepted; amends 0034 |
+

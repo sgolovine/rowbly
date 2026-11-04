@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
-import { useContext, useRef, useState } from 'react';
-import { keyPrefixFromName, slugFromName } from '../../../core';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { keyPrefixFromName, slugFromName, UsageError } from '../../../core';
 import { Form, Loading, SelectList, Tabs } from '../../components';
 import {
   ActiveContext,
@@ -9,6 +9,7 @@ import {
   useIsActive,
   useKeyHints,
   usePlugins,
+  useReloadOnReturn,
   useServices,
   useToast,
 } from '../../hooks';
@@ -16,7 +17,14 @@ import type { KeyHint } from '../../keymap';
 import { theme } from '../../theme';
 import { OnboardingNav } from './OnboardingNav';
 import { OnboardingPluginStep } from './OnboardingPluginStep';
-import { firstIncomplete, type Mode, ONBOARDING_STEPS, type StepId, visibleSteps } from './onboardingSteps';
+import {
+  completedSteps,
+  firstIncomplete,
+  type Mode,
+  ONBOARDING_STEPS,
+  type StepId,
+  visibleSteps,
+} from './onboardingSteps';
 import { SkillInstall } from './SkillInstall';
 
 const MODE_LABEL: Record<Mode, string> = { kanban: 'Plain Kanban', factory: 'Software Factory', both: 'Both' };
@@ -37,7 +45,12 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   const [chosenStep, setStep] = useState<StepId | null>(null);
   const [marked, setMarked] = useState<StepId[]>([]);
   const [results, setResults] = useState<Partial<Record<StepId, string>>>({});
-  const [skills, setSkills] = useState(false);
+  const [editingPrompts, setEditingPrompts] = useState(false);
+  const [installed, setInstalled] = useState<{ name: string; path: string }[]>([]);
+  const [visited, setVisited] = useState<StepId[]>([]);
+  const [boardChoice, setBoardChoice] = useState<string | null>(null);
+  const [promptChoice, setPromptChoice] = useState<string | null>(null);
+  const autoBoard = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
   const running = useRef(false);
   // Saves run one after another, each adding to the list the previous one saved.
@@ -51,6 +64,10 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
       boards: await services.boards.list(),
       plugins: await services.plugins.list(),
       steps: (await services.config.global()).config.onboardingSteps ?? [],
+      board: await services.context.resolveBoard().catch((err: unknown) => {
+        if (err instanceof UsageError) return null;
+        throw err;
+      }),
     }),
     // The Plugins load after the first render, and their statuses change when one is turned on or off.
     [services, plugins.plugins],
@@ -58,10 +75,10 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   const factoryOn = data.data?.plugins.some((p) => p.id === 'software-factory' && p.enabled) ?? false;
   // Not saved (ADR-0057 §2): reopened onboarding shows every step that Software Factory's state allows.
   const mode = chosenMode ?? (factoryOn ? 'both' : 'kanban');
-  const steps = visibleSteps(mode);
-  const doneSteps = [...(data.data?.steps ?? []), ...marked];
+  const steps = visibleSteps(mode, data.data?.boards.length);
+  const doneSteps = completedSteps([...(data.data?.steps ?? []), ...marked]);
   const opened = chosenStep ?? firstIncomplete(steps, doneSteps);
-  const step = steps.includes(opened) ? opened : 'mode';
+  const step = steps.includes(opened) ? opened : firstIncomplete(steps, doneSteps);
   const index = steps.indexOf(step);
 
   const run = async (work: () => Promise<void>) => {
@@ -78,18 +95,21 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
     }
   };
   /** Adds `ids` to the saved steps, keeping ids this version does not know. */
-  const persist = (ids: readonly StepId[]) => {
-    const save = saving.current.then(async () => {
-      const stored = saved.current ?? data.data?.steps ?? [];
-      const missing = ids.filter((id) => !stored.includes(id));
-      if (missing.length === 0) return;
-      const next = [...stored, ...missing];
-      await services.config.updateRootConfig({ onboardingSteps: next });
-      saved.current = next;
-    });
-    saving.current = save.catch(() => undefined);
-    return save;
-  };
+  const persist = useCallback(
+    (ids: readonly StepId[]) => {
+      const save = saving.current.then(async () => {
+        const stored = saved.current ?? data.data?.steps ?? [];
+        const missing = ids.filter((id) => !stored.includes(id));
+        if (missing.length === 0) return;
+        const next = [...stored, ...missing];
+        await services.config.updateRootConfig({ onboardingSteps: next });
+        saved.current = next;
+      });
+      saving.current = save.catch(() => undefined);
+      return save;
+    },
+    [services, data.data?.steps],
+  );
   /** Marks `id` done, shows `result` on its step and saves the mark at once. */
   const complete = (id: StepId, result?: string) => {
     // Keeps the step open even when the saved marks would now open another; never moves away from one.
@@ -97,11 +117,14 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
     if (result) setResults((prev) => ({ ...prev, [id]: result }));
     setMarked((prev) => (prev.includes(id) ? prev : [...prev, id]));
     // Factory setup runs again for another Board.
-    if (id === 'board') setSetup(null);
+    if (id === 'board') {
+      setSetup(null);
+      setPromptChoice(null);
+    }
     return persist([id]);
   };
   const open = (id: StepId) => {
-    setSkills(false);
+    setEditingPrompts(false);
     setStep(id);
   };
   // The same path as the ctrl+k key of the parent: every mark is already saved.
@@ -112,11 +135,37 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
   };
   const next = () =>
     void run(async () => {
-      if (step === 'stage-prompts') await complete('stage-prompts');
+      if (step === 'stage-prompts' || step === 'skills') await complete(step);
       const following = steps[index + 1];
       if (following) open(following);
       else await onDone();
     });
+
+  useReloadOnReturn(data.reload);
+  useEffect(() => {
+    if (data.data) setVisited((prev) => (prev.includes(step) ? prev : [...prev, step]));
+  }, [step, data.data]);
+  const onlyBoard = data.data?.boards.length === 1 ? data.data.boards[0] : undefined;
+  useEffect(() => {
+    if (!onlyBoard) {
+      autoBoard.current = null;
+      return;
+    }
+    if (autoBoard.current === onlyBoard.id) return;
+    autoBoard.current = onlyBoard.id;
+    void (async () => {
+      await services.context.use(onlyBoard.id);
+      setBoardChoice(onlyBoard.name);
+      setSetup(null);
+      setPromptChoice(null);
+      setResults((prev) => ({ ...prev, board: `Board ${onlyBoard.name} is in context.` }));
+      setMarked((prev) => (prev.includes('board') ? prev : [...prev, 'board']));
+      await persist(['board']);
+    })().catch((err: unknown) => {
+      autoBoard.current = null;
+      toast.error(err);
+    });
+  }, [onlyBoard, services, toast, persist]);
 
   useInput(
     (_input, key) => {
@@ -135,7 +184,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
           { key: 'enter', description: 'save choices' },
           NAV_HINT,
         ]
-      : step === 'factory-setup' || step === 'stage-prompts' || (step === 'ai' && skills)
+      : step === 'stage-prompts' || step === 'skills'
         ? [NAV_HINT]
         : [{ key: 'enter', description: step === 'finish' ? 'finish' : 'choose' }, NAV_HINT],
   );
@@ -197,6 +246,7 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
                 onSelect={(item) =>
                   void run(async () => {
                     await services.context.use(item.value);
+                    setBoardChoice(item.label);
                     await complete('board', `Board ${item.label} is in context.`);
                   })
                 }
@@ -256,64 +306,81 @@ export function RootOnboarding({ onDone }: { onDone(): Promise<void> }) {
               }
             />
           </>
-        ) : step === 'ai' ? (
-          skills ? (
-            <SkillInstall onDone={next} />
-          ) : (
-            <>
-              <Text>Will you use AI agents with this Data Root?</Text>
-              <Text color={theme.inkMuted}>
-                Skills teach an agent how to use Rowbly and your workflow. They can be used with Kanban as well as a
-                Software Factory.
-              </Text>
-              <SelectList
-                items={[
-                  { value: 'yes', label: 'Yes — choose agent skills' },
-                  { value: 'no', label: 'No — not now' },
-                ]}
-                onSelect={(item) =>
-                  void run(async () => {
-                    if (item.value === 'yes') {
-                      await complete('ai', 'You will use AI agents. Install the skills they need.');
-                      setSkills(true);
-                    } else await complete('ai', 'No AI agents for now. Choose Yes to install agent skills later.');
-                  })
-                }
-              />
-            </>
-          )
-        ) : step === 'factory-setup' ? (
-          <>
-            <Text>
-              Stage Prompts tell agents what to do when a Story enters each Stage. Factory setup gives this Board the
-              Stages and default Stage Prompts a software factory needs.
-            </Text>
+        ) : step === 'skills' ? (
+          <SkillInstall
+            installedThisVisit={installed}
+            onDone={next}
+            onInstalled={async (skill) => {
+              setInstalled((prev) => [...prev, skill]);
+              await complete('skills');
+            }}
+          />
+        ) : step === 'stage-prompts' ? (
+          editingPrompts ? (
             <OnboardingPluginStep
-              title="Factory setup"
+              title="Stage Prompts"
+              plugin="software-factory"
+              screen="stage-prompts"
+              onBack={() => setEditingPrompts(false)}
+            />
+          ) : (
+            <OnboardingPluginStep
+              title="Stage Prompts"
               plugin="software-factory"
               screen="factory-setup"
               params={{
-                run: true,
                 result: setup ?? undefined,
-                onSetUp: (done: unknown) => {
+                onEdit: () => {
+                  setEditingPrompts(true);
+                  setPromptChoice('edited');
+                },
+                onSetUp: async (done: unknown, prompts: string) => {
                   setSetup(done);
-                  void complete('factory-setup', 'Factory setup ran. What it added and kept is below.').catch(
-                    toast.error,
+                  setPromptChoice(prompts);
+                  await complete(
+                    'stage-prompts',
+                    'Stage Prompts populated. What was added, kept and skipped is below.',
                   );
                 },
               }}
             />
-          </>
-        ) : step === 'stage-prompts' ? (
-          <>
-            <Text>
-              Edit your instructions and turn on the Stages agents should work. Install rowbly-factory for a supervising
-              agent and choose skills for the work in each Stage. Write your shared working agreements in ROWBLY.md.
-            </Text>
-            <OnboardingPluginStep title="Stage Prompts" plugin="software-factory" screen="stage-prompts" />
-          </>
+          )
         ) : (
           <>
+            <Text bold>Summary</Text>
+            <Text>
+              Usage:{' '}
+              {chosenMode
+                ? MODE_LABEL[chosenMode]
+                : `Software Factory ${factoryOn ? 'on' : 'off'}${visited.includes('mode') ? '' : ' · not changed in this visit'}`}
+            </Text>
+            <Text>
+              Board in context:{' '}
+              {boardChoice ??
+                `${data.data.boards.find((b) => b.id === data.data?.board)?.name ?? 'none'} · not changed in this visit`}
+            </Text>
+            <Text>
+              Plugins on:{' '}
+              {data.data.plugins
+                .filter((p) => p.enabled)
+                .map((p) => p.name)
+                .join(', ') || 'none'}
+              {visited.includes('plugins') ? '' : ' · not changed in this visit'}
+            </Text>
+            <Text>
+              Agent skills:{' '}
+              {installed.length
+                ? installed.map((s) => `${s.name} · ${s.path}`).join(', ')
+                : visited.includes('skills')
+                  ? 'none installed in this visit'
+                  : 'not changed in this visit'}
+            </Text>
+            {mode !== 'kanban' && (
+              <Text>
+                Stage Prompts:{' '}
+                {promptChoice ?? (visited.includes('stage-prompts') ? 'not set up' : 'not changed in this visit')}
+              </Text>
+            )}
             <Text>
               Finishing saves completion in this Data Root’s rowbly.config.json, so onboarding does not open again for
               anyone sharing it. Reopen it from Settings › Onboarding.

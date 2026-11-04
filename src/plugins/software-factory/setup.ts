@@ -9,6 +9,7 @@ import {
   PLUGIN_ID,
   type StagePromptEntry,
   scopeOf,
+  templateText,
   updateEntries,
 } from './stagePrompts';
 
@@ -48,9 +49,13 @@ function insertAt(stages: StageConfig[], key: string): number {
  * ADR-0053 §2). It never renames, moves or removes a Stage, and never writes over an entry at either
  * level or over a file: what the Board or the global level already has is kept.
  */
-export async function setupFactory(plugin: PluginContext, board: string): Promise<SetupResult> {
+export async function setupFactory(
+  plugin: PluginContext,
+  board: string,
+  promptKind: 'default' | 'minimal' = 'default',
+): Promise<SetupResult> {
   await plugin.services.boards.get(board);
-  return plugin.operation('setup', { board }, async (changes) => {
+  return plugin.operation('setup', { board, prompts: promptKind }, async (changes) => {
     const [stored, effective, global] = await Promise.all([
       plugin.services.boards.get(board),
       plugin.services.config.effective(board),
@@ -93,7 +98,10 @@ export async function setupFactory(plugin: PluginContext, board: string): Promis
     const scope = scopeOf('board', board);
     const prompts: SetupPrompt[] = [];
     const added: Record<string, StagePromptEntry> = {};
-    for (const [key, prompt] of Object.entries(DEFAULT_PROMPTS)) {
+    for (const stage of FACTORY_STAGES) {
+      const key = stage.key;
+      const prompt = promptKind === 'minimal' ? { text: templateText(stage), enabled: false } : DEFAULT_PROMPTS[key];
+      if (!prompt) continue;
       const entry = own[key]
         ? { level: 'board' as const, entry: own[key] }
         : inherited[key] && { level: 'global' as const, entry: inherited[key] };
