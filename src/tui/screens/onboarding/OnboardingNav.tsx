@@ -22,13 +22,13 @@ export function OnboardingNav({
     <Box>
       {!first && (
         <>
-          <Button label="Back" keyName="ctrl+←" onClick={onBack} clickable={clickable} compact />
+          <Button label="Back" keyName="shift+←" onClick={onBack} clickable={clickable} compact />
           <Text color={theme.borderControl}>|</Text>
         </>
       )}
       <Button
         label={last ? 'Finish' : 'Next'}
-        keyName="ctrl+→"
+        keyName="shift+→"
         onClick={onNext}
         clickable={clickable}
         compact
