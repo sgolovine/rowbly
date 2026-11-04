@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:de79c604-b28a-4b16-b78e-3b3289ea3e04",
-    "at": "2026-11-04T00:41:18.020Z",
-    "source": "Verified FACTORY-QUESTIONS: conflicting onboarding flow requirements; user question pending",
+    "at": "2026-11-04T03:12:25.833Z",
+    "source": "Verified final worker message FACTORY-DONE; retained exact block",
     "by": "sunny"
   }
 }
