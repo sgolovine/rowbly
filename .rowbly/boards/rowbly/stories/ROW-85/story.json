@@ -5,14 +5,14 @@
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
   "stage": "in-progress",
-  "rank": "aB",
+  "rank": "a7",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T01:57:59.262Z",
+  "updatedAt": "2026-11-04T02:40:46.081Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -26,16 +26,6 @@
         }
       ]
     },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:54:50.747Z"
-      }
-    },
     "comments": {
       "comments": [
         {
@@ -46,13 +36,51 @@
           "updatedAt": "2026-11-04T01:57:59.261Z"
         },
         {
+          "id": "DfvAcaN4",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation, head 9c74bbae537bee07d3d4deb1013d2206983c6523). + New Data Root is now a button pinned above the known Data Roots in the shared DataRootList, so it applies to the startup picker and the D switcher. The initial highlight stays on the current/default root; up-arrow reaches the button; a search with no matches highlights it. ADR-0056 amends ADR-0055 and ADR-0042. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run of the picker and switcher; screenshots in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T02:04:29.593Z",
+          "updatedAt": "2026-11-04T02:04:29.593Z"
+        },
+        {
+          "id": "HsA6uknB",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/168 at 9c74bbae537bee07d3d4deb1013d2206983c6523 by codex/gpt-6.1-sol: CHANGES REQUESTED.\n\n1. [P2] Keep the New Data Root button visible while the D switcher scrolls (`src/tui/shell/DataRootList.tsx:114`, composed by `src/tui/shell/DataRootSwitcher.tsx:167`). Moving `newRow` above the roots only pins it when DataRootList's own finite `limit` handles scrolling. The switcher supplies no limit, and `ModalFrame.tsx:98` wraps the entire list in `ScrollBody`; wheel/Page Down scrolling or automatic reveal of a lower highlighted root therefore scrolls the button out of view. Opening the switcher with a sufficiently low current root can hide it immediately. The PR's Notes acknowledge this behavior, but it does not meet ROW-85's requirement for a button pinned above the known roots in both surfaces, or ADR-0056 §1's statement that the known roots scroll below it. Keep the button outside the scrolling roots viewport (or bound the roots list to the available modal height while preserving its controls), and verify a long list with a low current root plus keyboard and mouse scrolling.\n\nReviewed the full diff and touched files, initial/default/current selection, -1 button navigation, search/no-match behavior, missing-last ordering, click and wheel handlers, ADR-0056's amendments to ADR-0055/0042, guide and skill updates, and the four byte-identical reference copies. Verified both retained launch receipts: this distinct reviewer worker/thread mcp:1fbd07a3-84e2-4f00-85d0-59ca9550e0bf uses codex/gpt-6.1-sol; the implementing worker uses claudeAgent/claude-opus-5-5, and its record accounts for both product/docs commits and the main merge at this head. All six screenshot URLs return HTTP 200. GitHub's six current-head checks are completed SUCCESS. No product or Board changes were made.\n\nIndependent local validation: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79 tests); pnpm test:cli PASS (21 tests).\n",
+          "createdAt": "2026-11-04T02:40:14.189Z",
+          "updatedAt": "2026-11-04T02:40:14.189Z"
+        },
+        {
+          "id": "cyMpzecM",
+          "author": "sunny",
+          "body": "Returned to In Progress: branch factory/row-85-implementation, PR https://github.com/sgolovine/rowbly/pull/168, head 9c74bbae537bee07d3d4deb1013d2206983c6523. Independent review CHANGES REQUESTED: the D switcher scrolls the New Data Root button out of view with a long list; keep it pinned while roots scroll below it, including when a low current root is initially highlighted. Finding and validation: https://github.com/sgolovine/rowbly/pull/168#issuecomment-6621044887. All six screenshots return 200; typecheck, lint, unit 79 and CLI 21 pass.",
+          "createdAt": "2026-11-04T02:40:16.180Z",
+          "updatedAt": "2026-11-04T02:40:16.180Z"
+        },
+        {
           "id": "jdiccicE",
           "author": "sunny",
           "body": "Refined: + New Data Root becomes a button pinned above the known Data Roots in the startup picker and the D switcher; initial highlight stays on the default/current root. Overlaps ROW-81, ROW-82 and ROW-83 (same files: DataRootPickerScreen.tsx, DataRootSwitcher.tsx).",
           "createdAt": "2026-11-04T00:38:54.419Z",
           "updatedAt": "2026-11-04T00:38:54.419Z"
+        },
+        {
+          "id": "qMAjyBP8",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
+          "createdAt": "2026-11-04T02:04:26.111Z",
+          "updatedAt": "2026-11-04T02:04:26.111Z"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:40:45.291Z"
+      }
     }
   }
 }

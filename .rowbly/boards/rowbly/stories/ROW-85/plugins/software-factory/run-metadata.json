@@ -3,16 +3,16 @@
   "run": {
     "stage": "in-progress",
     "attempt": 1,
-    "startedAt": "2026-11-04T01:54:50.747Z"
+    "startedAt": "2026-11-04T02:40:45.291Z"
   },
   "identity": {
-    "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
+    "worker": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
     "machine": "thinkpad",
     "harness": "t3",
-    "threadId": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
+    "threadId": "mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4",
     "verification": {
       "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
-      "verifiedAt": "2026-11-04T01:54:51.500Z",
+      "verifiedAt": "2026-11-04T02:40:46.080Z",
       "by": "sunny"
     }
   },
@@ -33,12 +33,6 @@
     "fallback": null,
     "usage": "unknown",
     "selectedBy": "sunny",
-    "selectedAt": "2026-11-04T01:54:50.747Z"
-  },
-  "heartbeat": {
-    "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
-    "at": "2026-11-04T01:58:01.077Z",
-    "source": "Verified worker plan: pinned button, selection/search/wheel preservation, required ADR amendment; ADR numbers coordinated",
-    "by": "sunny"
+    "selectedAt": "2026-11-04T02:40:45.291Z"
   }
 }
