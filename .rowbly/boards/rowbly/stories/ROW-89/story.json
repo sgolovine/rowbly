@@ -12,8 +12,18 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:28:03.570Z",
+  "updatedAt": "2026-11-04T05:33:11.324Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
+        "by": "sunny",
+        "startedAt": "2026-11-04T05:28:02.793Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -141,18 +151,15 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
+        },
+        {
+          "id": "7vJga8OP",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/174 at 1def5f303ae567c403f9d0b26c1250e183e088fb by codex/gpt-6-astra: APPROVED.  No actionable findings. Fresh full review covered all four changed files and surrounding command execution, policy enumeration and staged/working/untracked diffs, both rename directions across the Data Root, explicit enabled/loaded inspection, malformed and failed inspection, outstanding request/run identities, success/failure evidence, retry and settlement gates, machine/Stage scope, and composition with fetched main and PR172. Verified original Opus and both Sol correction records/launch receipts account for the commits; reviewer mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf is independent of every implementing worker and model. All 29 retained probes were rerun in fresh private repositories; omitted/null/invalid synchronization state stops before later Git operations, legitimate initial {} remains accepted, and transport/disabled/unloaded/active/evidence/policy/rename cases pass. Two additional configuration probes (resolution-off/no-upstream) also stop without retry or pull. Typecheck PASS; lint PASS; unit PASS (79); CLI PASS (21), at this exact head. All six current-head CI checks COMPLETED/SUCCESS; all 15 image URLs across both PRs HTTP 200. No live rook validation, product/Board edits or spawned agents. No TUI resources created. Evidence: /tmp/row89-review3-evidence. This supersedes the earlier PR174 changes-requested comments, including review6623249636.  PR172 remains unchanged at 775085cab8aee7f732459d66c1c6d1b07bd27422. Its independent approval at issuecomment-6623249375 and reviewer receipt remain valid; its six checks pass. Merge PR172 first, then recheck PR174 against new main without changing this approved head.  Policy review: APPROVED the four exact replacements supplied in the review-3 brief, including the explicit bounded rowbly git show exception to the prohibition on concurrent Git/Board commands. Waiting requires retained identity and reconciliation; evidence closes readiness/retry gates; policy and dirty states require review. This repairs the prior conditional approval's remaining prerequisite. The supervisor must apply and publish that reviewed policy after the product merge before ROW-89 can move Done.",
+          "createdAt": "2026-11-04T05:33:11.323Z",
+          "updatedAt": "2026-11-04T05:33:11.323Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
-        "by": "sunny",
-        "startedAt": "2026-11-04T05:28:02.793Z"
-      }
     }
   }
 }
