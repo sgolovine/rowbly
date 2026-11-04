@@ -5,6 +5,17 @@
     "attempt": 1,
     "startedAt": "2026-11-04T01:05:36.089Z"
   },
+  "identity": {
+    "worker": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:84b28722-ce2f-401d-aaff-38e87f85da1f",
+    "verification": {
+      "source": "Verified T3 t3_thread_launch receipt: claudeAgent/claude-opus-5-5 effort=medium fastMode=false",
+      "verifiedAt": "2026-11-04T01:05:36.843Z",
+      "by": "sunny"
+    }
+  },
   "selection": {
     "provider": "claudeAgent",
     "model": "claude-opus-5-5",
