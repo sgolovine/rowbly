@@ -34,5 +34,11 @@
     "usage": "user-stated",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T04:35:48.577Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:f28bfb88-f3dd-4d02-9e82-472f5ab0726b",
+    "at": "2026-11-04T04:37:14.027Z",
+    "source": "Verified expected PR/head, main merge has only ADRindex conflict; plan retains both numbered entries/statuses, all4checks and13retained image links, no newTUI",
+    "by": "sunny"
   }
 }
