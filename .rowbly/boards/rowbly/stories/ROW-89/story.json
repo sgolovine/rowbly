@@ -45,11 +45,25 @@
           "updatedAt": "2026-11-04T04:57:25.055Z"
         },
         {
+          "id": "CpwgLGk4",
+          "author": "sunny",
+          "body": "PR174-only correction delivered at 1def5f303ae567c403f9d0b26c1250e183e088fb: https://github.com/sgolovine/rowbly/pull/174. Response 1 to review6623249636: omitted/null synchronizationRun now fails at git show inspection before sync, cleanup or later Git operations; valid empty state and prior malformed/transport/active/evidence/policy/rename gates preserved. All four local checks pass: typecheck, lint, unit 79, CLI 21; 29 private probes pass; 100 tests unchanged. Four fresh screenshot URLs HTTP200 and numbered response: https://github.com/sgolovine/rowbly/pull/174#issuecomment-6623348308. CI pending in single final snapshot: CLI tests and Clipboard smoke (windows-latest); other four SUCCESS. PR172 unchanged at 775085cab8aee7f732459d66c1c6d1b07bd27422. Evidence /tmp/row89-correction2-evidence-RWHayd; private capture daemon stopped. No live policy or Board edits and no merge. Ready for independent review.",
+          "createdAt": "2026-11-04T05:27:31.028Z",
+          "updatedAt": "2026-11-04T05:27:31.028Z"
+        },
+        {
           "id": "FDce1WBZ",
           "author": "sunny",
           "body": "Part 1 of 2 (CLI) is a draft PR: https://github.com/sgolovine/rowbly/pull/172, base main, head factory/row-89-implementation at 03c9588daadd84e217d9f4c976d091bafdc7c42c. It covers F4 (index content check, also in recovery; a Git index.lock after install is tolerated), F3 (quiet wait, capture-changed names Story Keys and is retryable), F5 (details.reason, retryable and paths), F1 CLI (resolution Off exits 2 with the configure hint; no plugins disable hint for a Plugin's own command), ADR-0058 (amends ADR-0034 §5 and ADR-0020 §5) and docs. Validation: typecheck, lint, test:unit 79 and test:cli 21 pass; the suite stays at 100 tests; the storage regression is a block in the kept publication test. Manual checks: 25 of 25 syncs passed under a git status loop; a continuous writer gives capture-changed after 35 s; resolution Off exits 2. Remaining in part 2, after PR 169: skill text for F1, F6, F7 and F8, prepare-checkout (F2) and the skill's use of details.reason (F5). Proposed ROWBLY.md text was sent to the supervisor.",
           "createdAt": "2026-11-04T03:27:47.006Z",
           "updatedAt": "2026-11-04T03:27:47.006Z"
+        },
+        {
+          "id": "JP5SGAsA",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:70cde097-1121-4446-95a3-c5ef16334be5 (thread mcp:70cde097-1121-4446-95a3-c5ef16334be5, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-2-launch.json. Branch: factory/row-89-correction-2, pushed to factory/row-89-part2. PR: https://github.com/sgolovine/rowbly/pull/174. Head: 1def5f303ae567c403f9d0b26c1250e183e088fb. PR174-only authoring; approved PR172 at775085cab8aee7f732459d66c1c6d1b07bd27422 remains untouched.",
+          "createdAt": "2026-11-04T05:27:29.097Z",
+          "updatedAt": "2026-11-04T05:27:29.097Z"
         },
         {
           "id": "JWnvTWAg",
@@ -127,20 +141,6 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
-        },
-        {
-          "id": "JP5SGAsA",
-          "author": "sunny",
-          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:70cde097-1121-4446-95a3-c5ef16334be5 (thread mcp:70cde097-1121-4446-95a3-c5ef16334be5, harness t3, machine thinkpad). Model: codex/gpt-6.1-sol, options reasoningEffort=medium, serviceTier=default. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-89-correction-2-launch.json. Branch: factory/row-89-correction-2, pushed to factory/row-89-part2. PR: https://github.com/sgolovine/rowbly/pull/174. Head: 1def5f303ae567c403f9d0b26c1250e183e088fb. PR174-only authoring; approved PR172 at775085cab8aee7f732459d66c1c6d1b07bd27422 remains untouched.",
-          "createdAt": "2026-11-04T05:27:29.097Z",
-          "updatedAt": "2026-11-04T05:27:29.097Z"
-        },
-        {
-          "id": "CpwgLGk4",
-          "author": "sunny",
-          "body": "PR174-only correction delivered at 1def5f303ae567c403f9d0b26c1250e183e088fb: https://github.com/sgolovine/rowbly/pull/174. Response 1 to review6623249636: omitted/null synchronizationRun now fails at git show inspection before sync, cleanup or later Git operations; valid empty state and prior malformed/transport/active/evidence/policy/rename gates preserved. All four local checks pass: typecheck, lint, unit 79, CLI 21; 29 private probes pass; 100 tests unchanged. Four fresh screenshot URLs HTTP200 and numbered response: https://github.com/sgolovine/rowbly/pull/174#issuecomment-6623348308. CI pending in single final snapshot: CLI tests and Clipboard smoke (windows-latest); other four SUCCESS. PR172 unchanged at 775085cab8aee7f732459d66c1c6d1b07bd27422. Evidence /tmp/row89-correction2-evidence-RWHayd; private capture daemon stopped. No live policy or Board edits and no merge. Ready for independent review.",
-          "createdAt": "2026-11-04T05:27:31.028Z",
-          "updatedAt": "2026-11-04T05:27:31.028Z"
         }
       ]
     }
