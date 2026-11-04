@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:03:09.119Z",
-  "updatedAt": "2026-11-04T01:13:22.444Z",
+  "updatedAt": "2026-11-04T01:17:48.885Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,16 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:33a0ba80-e14b-46b6-87ee-1e49025dcba1",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:13:21.686Z"
+      }
     },
     "comments": {
       "comments": [
@@ -48,18 +58,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:7e61c84d-5772-4427-9f17-906c8d1bdd05 (thread mcp:7e61c84d-5772-4427-9f17-906c8d1bdd05, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-81-implementation-launch.json. Branch: factory/row-81-implementation. PR: https://github.com/sgolovine/rowbly/pull/162. Head: a269306b5da4339a5bd55ffc07fae3a20ca10190 (verified gh pr view 162).",
           "createdAt": "2026-11-04T01:12:23.982Z",
           "updatedAt": "2026-11-04T01:12:23.982Z"
+        },
+        {
+          "id": "HrMRDhuR",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/162 at a269306b5da4339a5bd55ffc07fae3a20ca10190 by codex/gpt-6.1-sol: APPROVED. Verified the supplied launch receipts and accounted for all four branch commits under the recorded Claude Opus 5.5 implementation; this reviewer is a different worker and model. Reviewed the full diff and touched files against ROW-81 and AGENTS.md, including shared fuzzy matching over name/full/tilde paths, stable ties, query highlight resets, text/action key capture, New Data Root reachability, opening/error and unsaved-change flows, documentation and identical reference copies. Confirmed ROW-83 wheel composition: the startup list retains three-row clamped highlight movement and short lists leave wheel handling to their enclosing viewport; row-object selection callbacks remain compatible with separate ROW-82 work. Direct helper checks passed for crew, row-14, rwtst, tilde paths, no matches and empty-query order. Local pnpm typecheck, pnpm lint, pnpm test:unit (79) and pnpm test:cli (21) all passed. All ten screenshot URLs returned HTTP 200. All six current-head GitHub checks succeeded; mergeability remains UNKNOWN, so approval does not yet authorize bypassing that merge gate.",
+          "createdAt": "2026-11-04T01:17:48.885Z",
+          "updatedAt": "2026-11-04T01:17:48.885Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:33a0ba80-e14b-46b6-87ee-1e49025dcba1",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:13:21.686Z"
-      }
     }
   }
 }
