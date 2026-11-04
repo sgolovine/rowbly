@@ -32,12 +32,14 @@ belong in `ROWBLY.md` or the user's instructions.
 Do this first, in the git repository that holds the Data Root (find it as the reference says). Skip
 it when the Data Root is not in a git repository.
 
-1. **Board changes first.** If `rowbly plugins list` shows `git` on, set up
+1. **Board changes first.** If `rowbly plugins list` shows `git` enabled **and loaded**, set up
    [Board persistence](#board-persistence), then run `rowbly git sync`. It commits Rowbly changes
    that were saved but not yet committed, merges the upstream and pushes, and leaves other staged,
-   changed and untracked files as they are. If it fails, stop and tell the user its message. It
-   handles only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is
-   still uncommitted after it.
+   changed and untracked files as they are. Confirm publication as [A failed sync](#a-failed-sync)
+   says before proceeding; follow its failure policy and stop only when that says to. It handles
+   only changes Rowbly saved: a file edited by hand, inside the Data Root or not, is still
+   uncommitted after it. If `git` is disabled or not loaded, skip this step and its publication
+   gates as Board persistence says: the factory does not need the Git Plugin.
 2. Run `git status --porcelain`. If it prints nothing, go to step 4.
 3. **Clean up.** Someone left uncommitted work here. Read every change (`git diff`, `git diff
    --cached` and each new file). If one must not be committed (a secret, build output, a large
@@ -56,8 +58,13 @@ it.
 
 ## Board persistence
 
-Workers see your Board changes only after they are committed and pushed. Skip this section when the
-Git Plugin is off.
+Workers see your Board changes only after they are committed and pushed. The factory does not
+depend on the Git Plugin: use Git setup and sync only when `rowbly plugins list` shows `git` with
+both `enabled: true` and `loaded: true`. If either is false, skip this section's Git commands and
+every sync/publication gate in this skill and its references. Treat each step that publishes the
+Board (before a GO, a reply or another machine's start) as done. Then the Board is not pushed for
+you; tell the user once, at start, that workers on other checkouts will not see Board changes until
+someone pushes them.
 
 - **Commit each change.** The Git Plugin's preferences are personal: read them with `rowbly git
   show`. When `ROWBLY.md` or the user says Board changes are committed or pushed as they happen, and
@@ -74,7 +81,8 @@ Git Plugin is off.
 - **When to push.** When `ROWBLY.md` or the user says to push Board changes, run `rowbly git sync`
   after `run start` and `run attach`, before you send GO, after each worker block you apply, and after
   `run finish` or `run fail` with its block, before you tell a worker the Board has changed. If it
-  fails, retry it once; then tell the user and send nothing that relies on the change.
+  fails, follow [A failed sync](#a-failed-sync). Confirm publication as below before releasing any
+  dependent GO, reply or start on another machine.
 - **One sync per event.** Make every Board change of one event first (a start and its attach, one
   applied block, a finish or fail with its block), then sync once, before the GO or reply that relies
   on them. A change nothing waits for, such as a Comment recording an answer you already sent, goes
@@ -87,6 +95,43 @@ Git Plugin is off.
   side and every evidence file. Find the commits involved and what wrote them (a merged pull request,
   older data or another writer), and tell the user about any conflict nobody has resolved.
 - Never run `git rebase`, `git reset` or a force push yourself.
+
+### A failed sync
+
+One rule for every `rowbly git sync`, at start and while the factory runs. It replaces the
+reference's advice not to retry a failed command unchanged:
+
+1. **Try 3 times in all, backing off.** After a failed sync, wait about 10 seconds and run it
+   again; after a second failure, wait about 20 seconds and run it a third and last time. Run no
+   other git or Board command during sync or backoff, except `rowbly git show` when needed to
+   establish settlement as below. Tell the user in one line that you are retrying and why.
+2. **Do not retry what waiting cannot fix.** Go straight to step 3 when the sync reports evidence
+   paths or a Rowbly conflict (follow **Evidence or a conflict** above), when Automatic Merge
+   Conflict Resolution is Off (follow **Push with the Git Plugin** above), or when it exits 2 or 3
+   (a usage error or something not found).
+3. **After the last try,** tell the user its message. At start, stop: the checkout may be missing
+   upstream changes. While the factory runs, keep going, but send no GO, reply or start on another
+   machine that relies on the unpublished change; publish it with the next sync that succeeds.
+
+**Confirm publication for each attempt.** Before invoking sync, retain the attempt's start time
+and the previous `synchronizationRun.last` from `rowbly git show`. Retain the `requested` id returned
+by sync, or `active.id` when no request id is present. Exit 0 alone, from either sync or show, does
+not establish success.
+While `synchronizationRun.requested` or `active` is present, keep dependent gates closed, even if
+`last` still shows an older success. To establish settlement, read only `rowbly git show`, about
+5 seconds apart, for at most 30 seconds per attempt. Do not start another sync or run other git or
+Board commands concurrently. If it remains requested or active at that bound, report waiting and
+keep the dependent gates closed; a wait timeout is neither success nor a failed attempt and does
+not authorize a retry or another status-wait loop. Reconcile the outstanding run before resuming.
+
+Release dependent gates only when both are absent and a fresh completed `last.kind` is
+`synchronized` for the relevant attempt: its `startedAt` is at or after this attempt began, its
+`finishedAt` records completion, and its `id` matches the retained request/run id when available.
+An unchanged older result cannot publish this event. If freshness or relevance cannot be verified,
+keep the gates closed and reconcile or report the uncertainty. A settled `failed` or `interrupted`
+result is a failed attempt even when show exits 0: use its message and evidence in steps 1–3 above,
+counting it within the same 3 total attempts, keeping dependent gates closed until publication is
+confirmed. The no-retry exceptions still apply.
 
 ## Evidence retention
 
