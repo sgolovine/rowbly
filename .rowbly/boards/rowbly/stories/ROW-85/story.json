@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T02:04:28.328Z",
+  "updatedAt": "2026-11-04T02:04:29.593Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:54:50.747Z",
+        "finishedAt": "2026-11-04T02:04:28.327Z"
+      }
     },
     "comments": {
       "comments": [
@@ -48,19 +59,15 @@
           "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:d292c972-e536-408b-865d-ec84fe0b4c13 (thread mcp:d292c972-e536-408b-865d-ec84fe0b4c13, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=\"medium\", fastMode=false. Source: verified T3 launch receipt retained at /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-85-implementation-launch.json. Branch: factory/row-85-implementation. PR: https://github.com/sgolovine/rowbly/pull/168. Head: 9c74bbae537bee07d3d4deb1013d2206983c6523 (verified gh pr view 168).",
           "createdAt": "2026-11-04T02:04:26.111Z",
           "updatedAt": "2026-11-04T02:04:26.111Z"
+        },
+        {
+          "id": "DfvAcaN4",
+          "author": "sunny",
+          "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/168 (branch factory/row-85-implementation, head 9c74bbae537bee07d3d4deb1013d2206983c6523). + New Data Root is now a button pinned above the known Data Roots in the shared DataRootList, so it applies to the startup picker and the D switcher. The initial highlight stays on the current/default root; up-arrow reaches the button; a search with no matches highlights it. ADR-0056 amends ADR-0055 and ADR-0042. Validation: typecheck, lint, test:unit (79) and test:cli (21) pass. Manual agentic-tui run of the picker and switcher; screenshots in the PR. No review findings to answer.",
+          "createdAt": "2026-11-04T02:04:29.593Z",
+          "updatedAt": "2026-11-04T02:04:29.593Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:d292c972-e536-408b-865d-ec84fe0b4c13",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:54:50.747Z",
-        "finishedAt": "2026-11-04T02:04:28.327Z"
-      }
     }
   }
 }
