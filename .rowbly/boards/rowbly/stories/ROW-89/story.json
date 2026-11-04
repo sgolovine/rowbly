@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T02:21:16.854Z",
+  "updatedAt": "2026-11-04T02:21:17.623Z",
   "plugins": {
     "software-factory": {
       "stageRun": {
@@ -24,6 +24,17 @@
         "startedAt": "2026-11-04T02:16:15.459Z",
         "finishedAt": "2026-11-04T02:21:15.377Z"
       }
+    },
+    "comments": {
+      "comments": [
+        {
+          "id": "gMzkrJ4V",
+          "author": "sunny",
+          "body": "Refinement: kept the post-mortem and added a Refinement section. PR 169 (ROW-88, open at b1b2ed59) already covers the skill retry rule for F5, so do not redo it. Corrected the rook command after testing it: calling pnpm by its full path exits 127, and PATH=$HOME/.nvm/versions/node/v24.18.0/bin:$PATH pnpm --silent dev works. Added CLI file and line locations. The F4 index fix must also change crash recovery, which compares index bytes, and needs an ADR amending ADR-0034 section 5. ROWBLY.md lives in the Data Root, so the worker reports its new text to the supervisor. Ready for In Progress.",
+          "createdAt": "2026-11-04T02:21:17.622Z",
+          "updatedAt": "2026-11-04T02:21:17.622Z"
+        }
+      ]
     }
   }
 }
