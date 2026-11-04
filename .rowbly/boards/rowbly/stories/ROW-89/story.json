@@ -12,8 +12,19 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-04T00:25:42.877Z",
-  "updatedAt": "2026-11-04T05:35:36.462Z",
+  "updatedAt": "2026-11-04T05:35:37.734Z",
   "plugins": {
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
+        "by": "sunny",
+        "startedAt": "2026-11-04T05:28:02.793Z",
+        "finishedAt": "2026-11-04T05:35:36.461Z"
+      }
+    },
     "comments": {
       "comments": [
         {
@@ -155,19 +166,15 @@
           "body": "Supervisor continuation decision: retain the deterministic flaky-test fix a669b58e in the existing CLI PR172; no separate cherry-pick PR. Keep this Stage Run open because the whole Story is not complete. Wait for ROW-88 PR169 to merge, then continue part 2 in the existing worker conversation on a separate branch and PR based on current main, not stacked on PR172. Preserve all part1 work and evidence. Proposed ROWBLY.md text is retained for review with part2 and is not applied to live policy yet.",
           "createdAt": "2026-11-04T03:27:48.594Z",
           "updatedAt": "2026-11-04T03:27:48.594Z"
+        },
+        {
+          "id": "01YbsJZY",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/174 at approved head 1def5f303ae567c403f9d0b26c1250e183e088fb; merge commit e8a96ff6117a145645bc9e1ac987da5ab35960af. Fresh final gates confirmed CLEAN/MERGEABLE and all six checks COMPLETED/SUCCESS. Main CI inspected once after merge: run 41779962844 queued at that snapshot.",
+          "createdAt": "2026-11-04T05:35:37.734Z",
+          "updatedAt": "2026-11-04T05:35:37.734Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:4f26beb0-8007-45ba-9513-d7aeecbf5bdf",
-        "by": "sunny",
-        "startedAt": "2026-11-04T05:28:02.793Z",
-        "finishedAt": "2026-11-04T05:35:36.461Z"
-      }
     }
   }
 }
