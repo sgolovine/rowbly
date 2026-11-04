@@ -79,9 +79,12 @@ interface TreeEntry {
 }
 type Tree = Record<string, TreeEntry>;
 export async function configuredUpstream(repo: GitRepository): Promise<GitUpstream> {
-  const branch = await gitText(repo.top, ['symbolic-ref', '--quiet', 'HEAD']);
+  const branch = await gitText(repo.top, ['symbolic-ref', '--quiet', 'HEAD'], { allowFailure: true });
   if (!branch.startsWith('refs/heads/'))
-    throw new GitSyncFailure('no-upstream', 'Git synchronization requires a checked-out branch');
+    throw new GitSyncFailure(
+      'no-upstream',
+      'Git synchronization requires a checked-out branch; check out a branch and configure its Git upstream',
+    );
   const name = branch.slice(11);
   const remote = await gitText(repo.top, ['config', '--get', `branch.${name}.remote`], { allowFailure: true });
   const mergeRef = await gitText(repo.top, ['config', '--get', `branch.${name}.merge`], { allowFailure: true });

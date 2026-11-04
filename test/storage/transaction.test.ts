@@ -518,6 +518,20 @@ describe('Git local publication', () => {
       withPublication(f.repo, async (hold) => {
         await expect(publishPublication(hold, { ...f.plan, indexBefore: 'drift' })).rejects.toThrow('index changed');
         expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
+        // An incoming edit and a concurrent save can overlap. Classify the captured Data Root
+        // first so Sync waits for quiet and prepares again, while unrelated edits still refuse.
+        const { readGitDataFiles } = await import('../../src/storage/gitSyncFiles');
+        const captured = await readGitDataFiles({ path: t.path, kind: 'local' });
+        const config = join(t.path, 'rowbly.config.json');
+        const original = await readFile(config);
+        await writeFile(config, '{"version":1,"name":"concurrent save"}\n');
+        await expect(
+          publishPublication(hold, { ...f.plan, captures: [{ root: t.path, files: captured }] }),
+        ).rejects.toMatchObject({ reason: 'capture-changed', retryable: true, paths: ['rowbly.config.json'] });
+        expect(await readFile(f.repo.journal, 'utf8').catch(() => null)).toBeNull();
+        expect(await f.git('rev-parse', 'HEAD')).toBe(f.plan.old);
+        expect(await readIndex(f.repo)).toBe(f.plan.indexBefore);
+        await writeFile(config, original);
         await writeFile(join(t.dir, 'code.txt'), 'external edit');
         await expect(publishPublication(hold, f.plan)).rejects.toThrow('captured snapshot');
         expect(await readFile(join(t.dir, 'code.txt'), 'utf8')).toBe('external edit');

@@ -374,7 +374,6 @@ export async function publishPublication(
       throw new Error('Git branch changed before publication');
     await assertIndexContent(repo, plan.indexBefore, await readIndex(repo), 'before publication');
     await rootLocks(plan.roots, async () => {
-      await verifyFiles(journal, false);
       for (const capture of captures ?? []) {
         const now = await readGitDataFiles({ path: capture.root, kind: 'local' });
         const changed = [...new Set([...Object.keys(now), ...Object.keys(capture.files)])].filter(
@@ -387,6 +386,7 @@ export async function publishPublication(
             changed,
           );
       }
+      await verifyFiles(journal, false);
       for (const root of [...new Set(plan.roots)].sort()) {
         const prefix = relative(repo.top, root).split('\\').join('/');
         const edits = plan.edits.filter((e) => !prefix || e.path.startsWith(`${prefix}/`));
