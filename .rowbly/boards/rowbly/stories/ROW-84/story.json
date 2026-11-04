@@ -4,26 +4,13 @@
   "boardId": "rowbly",
   "name": "Selecting onboarding form settings should take you to original full-screen onboarding",
   "description": "## Summary: Settings › Onboarding should open the same full-screen onboarding used at startup instead of a Modal over Settings, and the Modal path should be removed. ## Current behavior: src/tui/screens/onboarding/OnboardingSettings.tsx calls router.push('onboarding', { level, reopen: true, title: 'Onboarding' }) for Global or This Data Root. A pushed route other than story, settings and story-form is drawn by src/tui/shell/Shell.tsx (route stack, about lines 424-470) inside a panel-size Modal over Settings. Startup onboarding (src/tui/onboardingRoute.ts, used by src/tui/hooks/useDataRootSession.ts) is instead the root route (stack[0]) drawn in the main panel. OnboardingScreen.tsx finish() calls router.pop() when params.reopen is set, otherwise resets to onboardingRoute(ctx, services) for global or to home for Data Root onboarding. ## Change: (1) In OnboardingSettings.tsx, choosing Global or This Data Root closes Settings and replaces the route stack with the onboarding route (router.reset('onboarding', { level, title })), the same full-screen route as startup, for both levels. (2) Remove modal onboarding: drop the reopen param and the router.pop() branch in OnboardingScreen.tsx finish(), so completing or ctrl+k from a Settings visit ends like startup onboarding (global: onboardingRoute, which goes on to Data Root onboarding if that is incomplete, else home; Data Root: home). Completion flags stay set while revisiting, as today. (3) Nothing else pushes the onboarding route as a Modal; keep it that way. ## Acceptance: from Settings › Onboarding, both choices show onboarding in the main panel with no Modal border or Settings behind it; finishing or ctrl+k lands where startup onboarding lands; onboardingComplete flags are unchanged by a revisit. ## Docs: docs/user-guide.md Onboarding section (Reopen either flow with Settings › Onboarding: say it closes Settings and opens the full-screen flow) and the matching lines in skills/rowbly/references/setup.md and tui.md if their wording changes; skills/rowbly-reference.md copies only if touched. ## Tests: none required by AGENTS.md; verify in the TUI with agentic-tui screenshots in the PR. ## Related: ROW-77 (step-by-step Data Root onboarding, also edits OnboardingScreen.tsx; expect a merge conflict), ROW-87 (hide header and sidebars during onboarding; applies to the Settings path once it uses the root route; not part of this Story), ROW-86.",
-  "stage": "in-refinement",
-  "rank": "a3",
+  "stage": "in-progress",
+  "rank": "aA",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:22:43.663Z",
-  "updatedAt": "2026-11-04T00:38:21.500Z",
-  "plugins": {
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-refinement",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:3c1df031-b057-47e7-aff6-42bc61a0b905",
-        "by": "sunny",
-        "startedAt": "2026-11-04T00:36:01.950Z",
-        "finishedAt": "2026-11-04T00:38:20.238Z"
-      }
-    }
-  }
+  "updatedAt": "2026-11-04T00:38:22.199Z"
 }
