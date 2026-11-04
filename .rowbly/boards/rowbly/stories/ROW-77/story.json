@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:06.081Z",
-  "updatedAt": "2026-11-04T02:50:20.062Z",
+  "updatedAt": "2026-11-04T02:57:16.724Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,16 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-progress",
+        "status": "running",
+        "attempt": 1,
+        "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
+        "by": "sunny",
+        "startedAt": "2026-11-04T02:50:19.323Z"
+      }
     },
     "comments": {
       "comments": [
@@ -69,18 +79,15 @@
           "body": "Returned to In Progress: branch factory/row-77-implementation, PR https://github.com/sgolovine/rowbly/pull/171, head 47495cf92bcd7730d511e3034b142a81bc2fe8da. Independent review requests changes: 1. Successful Factory setup only queues its completion mark in memory; Ctrl+K, quitting or switching Data Roots loses it and reopening may rerun setup. Persist successful progress without clearing the result or triggering a duplicate auto-run, and unify keyboard and Button exit behavior. Review: https://github.com/sgolovine/rowbly/pull/171#issuecomment-6621175225. All four local checks passed (79 unit, 21 CLI); all six CI checks passed and all 11 images returned HTTP 200.",
           "createdAt": "2026-11-04T02:49:02.817Z",
           "updatedAt": "2026-11-04T02:49:02.817Z"
+        },
+        {
+          "id": "HsNYt3bx",
+          "author": "sunny",
+          "body": "Implementation record: In Progress attempt 1, finished. Worker: mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9 (thread mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9, harness t3, machine thinkpad). Model: claudeAgent/claude-opus-5-5, options effort=medium, fastMode=false. Source: verified T3 launch receipt /home/sgolovine/.rowbly-factory/supervisors/35979b1a/ROW-77-correction-1-launch.json. Branch: factory/row-77-correction-1, pushed to factory/row-77-implementation. PR: https://github.com/sgolovine/rowbly/pull/171. Head: d24d1977b5da06fe6c8135049ffd7a1f6aed3d7d.",
+          "createdAt": "2026-11-04T02:57:16.723Z",
+          "updatedAt": "2026-11-04T02:57:16.723Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-progress",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:b2aca8cc-f2e0-48ef-9b21-0dfcc8da1fc9",
-        "by": "sunny",
-        "startedAt": "2026-11-04T02:50:19.323Z"
-      }
     }
   }
 }
