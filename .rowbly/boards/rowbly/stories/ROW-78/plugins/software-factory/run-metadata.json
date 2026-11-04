@@ -34,5 +34,11 @@
     "usage": "unknown",
     "selectedBy": "sunny",
     "selectedAt": "2026-11-04T02:32:48.512Z"
+  },
+  "heartbeat": {
+    "worker": "mcp:1cab5493-36e3-48aa-8d9f-65973de19eff",
+    "at": "2026-11-04T02:33:43.305Z",
+    "source": "Verified fresh full review started at cfed5c15, checking all three author receipts and 24 screenshot URLs",
+    "by": "sunny"
   }
 }
