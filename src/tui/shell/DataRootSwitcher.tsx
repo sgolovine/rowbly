@@ -1,15 +1,17 @@
 import { homedir } from 'node:os';
 import { Box, Text, useInput } from 'ink';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { DataRootNotFoundError } from '../../core';
 import { type KnownDataRootChoice, knownDataRoots, missingLast, openKnownDataRoot } from '../../services';
 import { ConfirmDialog, Loading, MissingDataRootModal, Modal, SelectListRow } from '../components';
-import { ServicesContext, ShellContext, useActivate, useAsync, useCursor, useToast } from '../hooks';
+import { ServicesContext, ShellContext, useActivate, useAsync, useToast } from '../hooks';
 import type { KeyHint } from '../keymap';
 import { useRouter } from '../router';
 import { theme } from '../theme';
+import { DataRootList } from './DataRootList';
 import { DataRootRow } from './DataRootRow';
 import { dataRootName, tildePath } from './dataRootName';
+import { dataRootSearchHints } from './dataRootSearch';
 import { EditDataRootModal } from './EditDataRootModal';
 import { RemoveDataRootModal } from './RemoveDataRootModal';
 
@@ -19,27 +21,23 @@ type Target = { kind: 'root'; root: KnownDataRootChoice } | { kind: 'new' };
 type Change = { kind: 'edit' | 'remove' | 'missing'; root: KnownDataRootChoice };
 
 const CLOSE: KeyHint = { key: 'esc', description: 'close' };
-const NEW_HINTS: readonly KeyHint[] = [
-  { key: '↑/↓', description: 'select' },
-  { key: 'enter', description: 'open' },
-  { key: 'n', description: 'new Data Root' },
-  CLOSE,
-];
+const NEW: KeyHint = { key: 'n', description: 'new Data Root' };
 /** With a known Data Root highlighted rather than **+ New Data Root**, which shows its own `n`. */
-const ROOT_HINTS: readonly KeyHint[] = [
-  ...NEW_HINTS.slice(0, 2),
+const ROOT_KEYS: readonly KeyHint[] = [
   { key: 'e', description: 'edit' },
   { key: 'd', description: 'delete' },
-  ...NEW_HINTS.slice(2),
 ];
+/** The keys the switcher acts on while the search is not focused; the others start it. */
+const ACTION_KEYS = new Set(['n', 'e', 'd']);
 
 /**
  * The known Data Roots of the Home Config, opened from the header's Data Root button or `D`. Picking
  * one opens it in place of the current one, which stays open when it cannot be read; the labels and
  * the default stay as they are. **+ New Data Root** (or `n`) opens setup, which switches to the new one.
- * Either asks first while a form holds unsaved changes. Missing ones are listed last, and picking one
- * says it no longer exists and offers to delete it from the list. `e` edits the highlighted one's label and
- * default; `d` forgets it or deletes its folder, asking which, except the one that is open.
+ * Either asks first while a form holds unsaved changes. `e` edits the highlighted one's label and
+ * default; `d` forgets it or deletes its folder, asking which, except the one that is open. Typing
+ * any other key searches them (`DataRootList`). Missing ones are listed last, and picking one says it
+ * no longer exists and offers to delete it from the list.
  */
 export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   const { ctx } = useContext(ServicesContext);
@@ -58,12 +56,9 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   const [opening, setOpening] = useState<KnownDataRootChoice | null>(null);
   const idle = confirm === null && opening === null && change === null;
   const picking = idle && loaded;
-  const [cursor, setCursor] = useCursor(choices.length + 1, picking);
-
-  const current = choices.findIndex((root) => root.current);
-  useEffect(() => {
-    if (current >= 0) setCursor(current);
-  }, [current, setCursor]);
+  // `null` while the search is not focused.
+  const [query, setQuery] = useState<string | null>(null);
+  const [highlighted, setHighlighted] = useState<KnownDataRootChoice | null>(null);
 
   const go = async (target: Target) => {
     setConfirm(null);
@@ -96,19 +91,17 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
     else if (shell.isDirty()) setConfirm(target);
     else void go(target);
   };
-  const pick = (index: number) => {
-    const root = choices[index];
-    choose(root ? { kind: 'root', root } : { kind: 'new' });
-  };
+  const pick = (root: KnownDataRootChoice | null) => choose(root ? { kind: 'root', root } : { kind: 'new' });
 
   useInput(
     (input, key) => {
+      // While searching, the list takes the keys and `esc` clears the search.
+      if (query !== null) return;
       if (key.escape) onClose();
       else if (!picking) return;
-      else if (key.return) pick(cursor);
       else if (input === 'n') choose({ kind: 'new' });
       else if (input === 'e' || input === 'd') {
-        const root = choices[cursor];
+        const root = highlighted;
         if (!root) return;
         if (input === 'e') setChange({ kind: 'edit', root });
         else if (root.current) toast.push('warning', 'Open another Data Root before deleting this one');
@@ -159,32 +152,40 @@ export function DataRootSwitcher({ onClose }: { onClose(): void }) {
   return (
     <Modal
       title="Data Roots"
-      hints={picking ? (cursor < choices.length ? ROOT_HINTS : NEW_HINTS) : idle ? [CLOSE] : []}
+      hints={
+        picking
+          ? [...dataRootSearchHints(query), ...(query === null ? [...(highlighted ? ROOT_KEYS : []), NEW, CLOSE] : [])]
+          : idle
+            ? [CLOSE]
+            : []
+      }
       onClose={idle ? onClose : undefined}
     >
       <Box flexDirection="column">
         {!loaded && (roots.loading ? <Loading /> : <Text color={theme.danger}>Cannot read the known Data Roots.</Text>)}
-        {choices.map((root, i) => (
-          <DataRootRow
-            key={root.path}
-            root={root}
-            home={home}
-            highlighted={i === cursor}
-            active={picking}
-            onClick={picking ? () => pick(i) : undefined}
-          />
-        ))}
         {loaded && (
-          <SelectListRow
-            highlighted={cursor === choices.length}
+          <DataRootList
+            roots={choices}
+            initial={highlighted?.path ?? choices.find((root) => root.current)?.path}
+            home={home}
             active={picking}
-            onClick={picking ? () => pick(choices.length) : undefined}
-          >
-            + New Data Root{' '}
-            <Text backgroundColor={theme.keycap} color={theme.inkMuted} bold={false}>
-              {' n '}
-            </Text>
-          </SelectListRow>
+            query={query}
+            onQueryChange={setQuery}
+            actionKey={(input) => ACTION_KEYS.has(input)}
+            onHighlight={setHighlighted}
+            onPick={pick}
+            renderRow={(root, highlighted, onClick) => (
+              <DataRootRow root={root} home={home} highlighted={highlighted} active={picking} onClick={onClick} />
+            )}
+            newRow={(highlighted, onClick) => (
+              <SelectListRow highlighted={highlighted} active={picking} onClick={onClick}>
+                + New Data Root{' '}
+                <Text backgroundColor={theme.keycap} color={theme.inkMuted} bold={false}>
+                  {' n '}
+                </Text>
+              </SelectListRow>
+            )}
+          />
         )}
         {opening && (
           <Box marginTop={1}>

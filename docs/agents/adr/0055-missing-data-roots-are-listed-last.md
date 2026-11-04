@@ -13,7 +13,8 @@ reports an error that tells them to remove it from the list themselves.
 The TUI startup picker and the Data Root switcher list the known Data Roots that exist first and
 the missing ones after them; **+ New Data Root** stays last. Each group keeps ADR-0042 §1's order:
 the default first, the others in registered order. A missing default is therefore listed with the
-missing roots, after every root that exists, and keeps its `default` marker.
+missing roots, after every root that exists, and keeps its `default` marker. Typing a search ranks the
+matches best first; matches that rank equally keep this order.
 
 Picking a missing root, or one whose folder is found gone when it is opened, shows a dialog that
 says the Data Root no longer exists and asks to delete it from the list. Deleting removes only its

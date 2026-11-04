@@ -3,9 +3,11 @@ import { Box, Text, useInput } from 'ink';
 import { useState } from 'react';
 import { DataRootNotFoundError } from '../../../core';
 import { type KnownDataRootChoice, knownDataRoots, missingLast, openKnownDataRoot } from '../../../services';
-import { Loading, MissingDataRootModal, SelectList } from '../../components';
+import { Loading, MissingDataRootModal, SelectList, SelectListRow } from '../../components';
 import { useActivate, useAsync, useIsActive, useKeyHints, useToast } from '../../hooks';
+import { globalAction } from '../../keymap';
 import { useRouter } from '../../router';
+import { DataRootList, dataRootSearchHints } from '../../shell';
 import { theme } from '../../theme';
 
 /**
@@ -20,24 +22,21 @@ export function DataRootPickerScreen() {
   const toast = useToast();
   const active = useIsActive();
   const [opening, setOpening] = useState(false);
-  const [filtering, setFiltering] = useState(false);
+  // `null` while the search is not focused.
+  const [query, setQuery] = useState<string | null>(null);
   const [missing, setMissing] = useState<KnownDataRootChoice | null>(null);
   const picking = active && !opening && !missing && roots.data !== undefined;
   const create = () => router.push('setup', { title: 'New Data Root' });
   useKeyHints(
     picking
-      ? [
-          { key: '↑/↓', description: 'select' },
-          { key: 'enter', description: 'open' },
-          { key: 'n', description: 'new Data Root' },
-        ]
+      ? [...dataRootSearchHints(query), ...(query === null ? [{ key: 'n', description: 'new Data Root' }] : [])]
       : [],
   );
   useInput(
     (input) => {
       if (input === 'n') create();
     },
-    { isActive: picking && !filtering },
+    { isActive: picking && query === null },
   );
 
   if (!roots.data)
@@ -51,26 +50,36 @@ export function DataRootPickerScreen() {
     <Box flexDirection="column" gap={1}>
       <Text bold>Choose a Data Root</Text>
       <Text color={theme.inkMuted}>No Data Root found in this directory. Open one below or create a new one.</Text>
-      <SelectList
-        isActive={!opening && !missing}
-        onFilteringChange={setFiltering}
-        items={[
-          ...choices.map((root) => ({
-            value: root.path,
-            label: `${root.label || root.path}${root.default ? ' · default' : ''}${root.missing ? ' · missing' : ''}`,
-            description: root.label ? root.path : undefined,
-          })),
-          { value: null, label: '+ New Data Root' },
-        ]}
-        onSelect={async ({ value }) => {
-          if (value === null) return create();
-          const root = choices.find((choice) => choice.path === value);
-          if (root?.missing) return setMissing(root);
+      <DataRootList
+        roots={choices}
+        home={home}
+        active={picking}
+        query={query}
+        onQueryChange={setQuery}
+        // `n` and the shell's keys, such as `q` to quit, keep their meaning.
+        actionKey={(input, key) => input === 'n' || globalAction(input, key) !== null}
+        limit={10}
+        renderRow={(root, highlighted, onClick) => (
+          <SelectListRow highlighted={highlighted} active={picking} onClick={onClick}>
+            {root.label || root.path}
+            {root.default ? ' · default' : ''}
+            {root.missing ? ' · missing' : ''}
+            {root.label && <Text color={theme.inkFaint}> {root.path}</Text>}
+          </SelectListRow>
+        )}
+        newRow={(highlighted, onClick) => (
+          <SelectListRow highlighted={highlighted} active={picking} onClick={onClick}>
+            + New Data Root
+          </SelectListRow>
+        )}
+        onPick={async (root) => {
+          if (root === null) return create();
+          if (root.missing) return setMissing(root);
           setOpening(true);
           try {
             await activate(
               await openKnownDataRoot({
-                path: value,
+                path: root.path,
                 home,
                 cwd: process.cwd(),
                 warn: (message) => toast.push('warning', message),
@@ -78,7 +87,7 @@ export function DataRootPickerScreen() {
             );
           } catch (err) {
             // Gone since the list was read.
-            if (root && err instanceof DataRootNotFoundError) setMissing({ ...root, missing: true });
+            if (err instanceof DataRootNotFoundError) setMissing({ ...root, missing: true });
             else toast.error(err);
           } finally {
             setOpening(false);

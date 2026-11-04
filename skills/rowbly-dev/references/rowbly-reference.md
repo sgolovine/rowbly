@@ -386,7 +386,7 @@ New Story tabs: Details, Tasks, Specs, Links when enabled; Tab next field, Shift
 
 TUI onboarding: `ctrl+k` skips and saves completion; Settings › Onboarding reopens global or Data Root onboarding. Optional `onboardingComplete` flags live in the Home Config and `rowbly.config.json`; absent means incomplete, and the Data Root flag is committed and shared.
 
-TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (default first, others in registered order, New last). `enter`/click opens, `n` opens setup; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
+TUI startup without `--data-root`: nearest current/parent `.rowbly/`; otherwise choose known Data Roots before onboarding (default first, others in registered order, New last). `enter`/click opens, `n` opens setup, typing (or `/`) fuzzy-searches name and path, `esc` clears; failed opens keep the picker. No known roots retains home fallback and first-run onboarding/setup. CLI resolution above is unchanged.
 
 Factory `runMetadata` is `{status:absent|valid|invalid|unsupported,current,...}`; current valid output
 includes `version:1,run:{stage,attempt,startedAt},identity?,selection?,heartbeat?`. Identity is

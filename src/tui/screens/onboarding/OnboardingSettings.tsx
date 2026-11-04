@@ -14,7 +14,8 @@ export function OnboardingSettings() {
           { value: 'global', label: 'Global — Me and known Data Roots' },
           { value: 'root', label: 'This Data Root — Boards, Plugins and agents' },
         ]}
-        onSelect={(item) => router.push('onboarding', { level: item.value, reopen: true, title: 'Onboarding' })}
+        // Replaces the stack, closing Settings, so onboarding is the full-screen root route as at startup.
+        onSelect={(item) => router.reset('onboarding', { level: item.value, title: 'Onboarding' })}
       />
     </Box>
   );
