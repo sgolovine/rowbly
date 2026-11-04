@@ -4,15 +4,15 @@
   "boardId": "rowbly",
   "name": "New data root option should be a button at the top",
   "description": "<refined description, as sent to the supervisor>",
-  "stage": "in-pr",
-  "rank": "a0",
+  "stage": "done",
+  "rank": "b0Y",
   "priority": null,
   "labels": [],
   "dueDate": null,
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T23:24:17.700Z",
-  "updatedAt": "2026-11-04T04:28:13.574Z",
+  "updatedAt": "2026-11-04T04:32:53.951Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,16 +25,6 @@
           "createdBy": "sunny"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "running",
-        "attempt": 1,
-        "worker": "mcp:65cff78b-72c3-43ec-88a4-e60c5d85996f",
-        "by": "sunny",
-        "startedAt": "2026-11-04T04:20:51.947Z"
-      }
     },
     "comments": {
       "comments": [
@@ -93,6 +83,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/168 at ccf53f8bd82cc430de195095eeb04e76ed50e9d5 by codex/gpt-6-astra: APPROVED. No actionable findings. Fresh full review covered all 16 changed files against base 3ac6a438bc50d8c8e6ea1d066372ae4ee64c3342: measured viewport sizing and focus reveal; scoped MouseClipContext and live hit-test intersection (including partial rows), with other mouse consumers retaining the null/default context; initial current/default selection, button navigation, page/wheel movement, search/no-match behavior, missing-last ordering and click handling; guide/skill updates, ADR-0056 amendments and the retained ADR-0057 index entry, and four byte-identical reference copies. Exact-head agentic-tui checks with 14 known roots confirm the former footer-click reproducer (wrapped labels, 120x30, current Root 13, no-match search, Escape, click column 55/row 26) leaves the switcher open and does not open an invisible root. Visible top- and bottom-partially clipped rows open the correct root. The button stays pinned with wrapped labels at 120x30 and short labels at 100x20 and 120x30 through page/wheel navigation; search/no-match and navigation to the button work. Startup initially highlights the default, Arrow Up reaches the button, and page/wheel/search and visible-row clicks remain functional. Provenance: verified all four authoring receipts and this reviewer receipt. Original worker mcp:d292c972-e536-408b-865d-ec84fe0b4c13 and correction workers mcp:de5e2fae-86df-4bcb-858d-a8a7b6ddbaf4 and mcp:f59b7841-eccc-41e3-9419-c4bfdbe200a0 used claudeAgent/claude-opus-5-5 (effort=\"medium\", fastMode=false); correction worker mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd used codex/gpt-6.1-sol (reasoningEffort=\"medium\", serviceTier=\"default\"). Their recorded heads account for all 13 PR commits, including main merges. This distinct reviewer is mcp:65cff78b-72c3-43ec-88a4-e60c5d85996f, codex/gpt-6-astra (reasoningEffort=\"medium\", serviceTier=\"default\"), different from every implementing model. Independent local validation: pnpm typecheck PASS; pnpm lint PASS; pnpm test:unit PASS (79); pnpm test:cli PASS (21). All 53 linked screenshot URLs returned HTTP 200. All six current-head GitHub checks are COMPLETED/SUCCESS; no formal review requests changes. The final gate read retained the reviewed base/head but reported mergeability UNKNOWN and merge state UNKNOWN, so this approval does not authorize bypassing the pending mergeability gate. No merge was attempted, and no product or Board changes were made. Private TUI evidence is retained at /tmp/row85-review4-5QluT7; every owned session was killed and the scoped daemon at /tmp/row85-review4-5QluT7/state stopped.",
           "createdAt": "2026-11-04T04:28:13.574Z",
           "updatedAt": "2026-11-04T04:28:13.574Z"
+        },
+        {
+          "id": "WTWcEnjw",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/168 at ccf53f8bd82cc430de195095eeb04e76ed50e9d5. Merge commit b898078c312548414ee4146fd1c25e2d013e9d12. Final exact-head approval, MERGEABLE/CLEAN and all six successful checks verified; guarded merge succeeded. Main CI inspected once: merge-commit run not registered in the returned four runs yet; all four earlier runs succeeded. Evidence and resources preserved; no polling.",
+          "createdAt": "2026-11-04T04:32:53.293Z",
+          "updatedAt": "2026-11-04T04:32:53.293Z"
         },
         {
           "id": "X9h0F842",

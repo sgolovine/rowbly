@@ -11,8 +11,9 @@ import { DataRootList, dataRootSearchHints } from '../../shell';
 import { theme } from '../../theme';
 
 /**
- * Startup outside a local Data Root asks which known Data Root to open, before onboarding. Missing ones
- * are listed last; picking one says it no longer exists and offers to delete it from the list.
+ * Startup outside a local Data Root asks which known Data Root to open, before onboarding.
+ * **+ New Data Root** is pinned above them. Missing ones are listed last; picking one says it no longer
+ * exists and offers to delete it from the list.
  */
 export function DataRootPickerScreen() {
   const home = homedir();
@@ -69,7 +70,10 @@ export function DataRootPickerScreen() {
         )}
         newRow={(highlighted, onClick) => (
           <SelectListRow highlighted={highlighted} active={picking} onClick={onClick}>
-            + New Data Root
+            + New Data Root{' '}
+            <Text backgroundColor={theme.keycap} color={theme.inkMuted} bold={false}>
+              {' n '}
+            </Text>
           </SelectListRow>
         )}
         onPick={async (root) => {

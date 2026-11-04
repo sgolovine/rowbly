@@ -75,7 +75,8 @@ Keys Rowbly does not know, at the top level and in each `dataRoots` entry, are k
 
 TUI startup follows [ADR-0042](../agents/adr/0042-tui-startup-asks-for-a-data-root.md): explicit
 `--data-root`, otherwise `discoverLocalDataRoot` finds the nearest current/parent `.rowbly/`.
-Outside one, known roots require a choice before onboarding, with the default first and New last.
+Outside one, known roots require a choice before onboarding, with New pinned at the top and the default first
+([ADR-0056](../agents/adr/0056-new-data-root-is-pinned-at-the-top.md)).
 No known roots preserves the home-folder fallback and first-run onboarding/setup. The shared CLI
 `findDataRoot` resolution above is unchanged.
 
