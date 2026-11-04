@@ -37,8 +37,8 @@
   },
   "heartbeat": {
     "worker": "mcp:70cde097-1121-4446-95a3-c5ef16334be5",
-    "at": "2026-11-04T05:22:31.366Z",
-    "source": "Verified174 expectedhead/mainmerge and172 approvedhead unchanged; scoped missing/null inspection fix, private probes/fourchecks/evidence plan, only174push",
+    "at": "2026-11-04T05:23:14.499Z",
+    "source": "Verified original missing/null failures reproduced; repaired29freshprobes pass with empty legitimate state accepted, closed gates preserved; exclusiveprivateTUI ownership before capture",
     "by": "sunny"
   }
 }
