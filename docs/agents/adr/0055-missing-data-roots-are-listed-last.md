@@ -1,7 +1,8 @@
 # ADR-0055: Missing Data Roots are listed last and picking one offers to delete it from the list
 
 **Status:** Accepted. Amends [ADR-0042](0042-tui-startup-asks-for-a-data-root.md) §1 for the order of
-the startup picker and what picking a missing root does.
+the startup picker and what picking a missing root does. Amended by
+[ADR-0056](0056-new-data-root-is-pinned-at-the-top.md): **+ New Data Root** is pinned at the top.
 
 ADR-0042 §1 puts the default Data Root first and the other known Data Roots in registered order,
 with missing roots marked in place. A missing root at the top of the list, often a default whose

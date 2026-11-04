@@ -39,6 +39,7 @@ export interface MouseHandlers {
 interface Target {
   ref: RefObject<DOMElement | null>;
   handlers: RefObject<MouseHandlers>;
+  clip: RefObject<DOMElement | null> | null;
 }
 
 /**
@@ -76,6 +77,18 @@ export function createMouseRegistry(): MouseRegistry {
         event.x >= box.x && event.x < box.x + box.width && event.y >= box.y && event.y < box.y + box.height;
       const area = box.width * box.height;
       if (!inside || area === 0) continue;
+      if (target.clip) {
+        const viewport = target.clip.current;
+        if (!viewport) continue;
+        const bounds = measureElement(viewport);
+        if (
+          event.x < bounds.x ||
+          event.x >= bounds.x + bounds.width ||
+          event.y < bounds.y ||
+          event.y >= bounds.y + bounds.height
+        )
+          continue;
+      }
       const layer = target.handlers.current.layer ?? 0;
       top = Math.max(top, layer);
       if (!wants(target.handlers.current)) continue;
@@ -153,6 +166,9 @@ export function createMouseRegistry(): MouseRegistry {
 
 export const MouseContext = createContext<MouseRegistry | null>(null);
 
+/** Restricts descendant mouse targets to the visible cells of a borderless viewport. */
+export const MouseClipContext = createContext<RefObject<DOMElement | null> | null>(null);
+
 /** Feeds the reports from a `MouseStdin` into the registry until unmounted. */
 export function useMouseSource(registry: MouseRegistry, source: EventEmitter | undefined): void {
   useEffect(() => {
@@ -168,10 +184,11 @@ export function useMouseSource(registry: MouseRegistry, source: EventEmitter | u
 /** Makes the box behind `ref` respond to the mouse while `active`. */
 export function useMouse(ref: RefObject<DOMElement | null>, handlers: MouseHandlers, active = true): void {
   const registry = useContext(MouseContext);
+  const clip = useContext(MouseClipContext);
   const latest = useRef(handlers);
   latest.current = handlers;
   useEffect(
-    () => (registry && active ? registry.register({ ref, handlers: latest }) : undefined),
-    [registry, ref, active],
+    () => (registry && active ? registry.register({ ref, handlers: latest, clip }) : undefined),
+    [registry, ref, active, clip],
   );
 }
