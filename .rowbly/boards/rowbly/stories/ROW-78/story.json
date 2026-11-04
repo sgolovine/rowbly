@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:07:45.265Z",
-  "updatedAt": "2026-11-04T01:42:52.162Z",
+  "updatedAt": "2026-11-04T01:42:53.411Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -25,6 +25,17 @@
           "createdBy": "sunny"
         }
       ]
+    },
+    "software-factory": {
+      "stageRun": {
+        "stage": "in-pr",
+        "status": "finished",
+        "attempt": 1,
+        "worker": "mcp:c5e480cd-7404-432e-a29b-ad3536ac3bb4",
+        "by": "sunny",
+        "startedAt": "2026-11-04T01:38:31.206Z",
+        "finishedAt": "2026-11-04T01:42:52.161Z"
+      }
     },
     "comments": {
       "comments": [
@@ -48,19 +59,15 @@
           "body": "Draft PR: https://github.com/sgolovine/rowbly/pull/166 (branch factory/row-78-implementation, head 08f379003dbd57fc207901edc42d7c94f5145e4d). Onboarding Open Stage Prompt editing, and Add factory Stages and default Stage Prompts, now draw the software-factory screen inline in onboarding's main area (new OnboardingPluginStep, resolved through PluginScreenHost with the Settings section shell, which moved to hooks). esc returns to Guide your Software Factory; Settings is unchanged. Validation: pnpm typecheck, lint, test:unit (79) and test:cli (21) pass. Checked by hand with agentic-tui: inline list, hints and explanation; toggle, editor, remove confirm and cancel; esc back; finish onboarding; Settings Stage Prompts. Screenshots are in a PR comment. No review findings to answer.",
           "createdAt": "2026-11-04T01:35:17.803Z",
           "updatedAt": "2026-11-04T01:35:17.803Z"
+        },
+        {
+          "id": "9txYt40O",
+          "author": "sunny",
+          "body": "Review of https://github.com/sgolovine/rowbly/pull/166 at 08f379003dbd57fc207901edc42d7c94f5145e4d by codex/gpt-6-astra: APPROVED. Reviewed all six changed files against ROW-78, the TUI design rules and surrounding Plugin hosting, Board resolution, escape capture, editor and onboarding completion code. The Settings section-shell move preserves behavior; optional Factory setup embedding stays within scope. No actionable code findings. Verified independent worker/model provenance for all three commits. Local pnpm typecheck, pnpm lint, pnpm test:unit (79 tests) and pnpm test:cli (21 tests) passed; all six GitHub checks passed. Inspected all seven existing agentic-tui screenshots and verified every image URL returns HTTP 200; no new TUI session was started. Merge is blocked by a conflict with main in src/tui/screens/onboarding/RootOnboarding.tsx after PR #165 merged: preserve its SkillInstall onDone={afterAi} alongside the new setup/prompts branch. A new head requires a new review.",
+          "createdAt": "2026-11-04T01:42:53.410Z",
+          "updatedAt": "2026-11-04T01:42:53.410Z"
         }
       ]
-    },
-    "software-factory": {
-      "stageRun": {
-        "stage": "in-pr",
-        "status": "finished",
-        "attempt": 1,
-        "worker": "mcp:c5e480cd-7404-432e-a29b-ad3536ac3bb4",
-        "by": "sunny",
-        "startedAt": "2026-11-04T01:38:31.206Z",
-        "finishedAt": "2026-11-04T01:42:52.161Z"
-      }
     }
   }
 }
