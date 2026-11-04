@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "run": {
+    "stage": "in-progress",
+    "attempt": 1,
+    "startedAt": "2026-11-04T03:13:57.985Z"
+  },
+  "identity": {
+    "worker": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
+    "machine": "thinkpad",
+    "harness": "t3",
+    "threadId": "mcp:b24b4dfc-4155-4c35-a9e7-c3c8d38ca9bd",
+    "verification": {
+      "source": "Verified T3 t3_thread_launch receipt: codex/gpt-6.1-sol reasoningEffort=medium serviceTier=default",
+      "verifiedAt": "2026-11-04T03:13:58.733Z",
+      "by": "sunny"
+    }
+  },
+  "selection": {
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "options": [
+      {
+        "id": "reasoningEffort",
+        "value": "medium"
+      },
+      {
+        "id": "serviceTier",
+        "value": "default"
+      }
+    ],
+    "rule": "user named GPT6.1Sol temporary override",
+    "fallback": "User requested GPT6.1Sol while Claude session limited until2026-11-04T05:20:19Z",
+    "usage": "user-stated",
+    "selectedBy": "sunny",
+    "selectedAt": "2026-11-04T03:13:57.985Z"
+  }
+}
