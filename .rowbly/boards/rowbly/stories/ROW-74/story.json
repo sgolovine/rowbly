@@ -12,7 +12,7 @@
   "customFields": {},
   "createdBy": "sunny",
   "createdAt": "2026-11-03T22:01:20.421Z",
-  "updatedAt": "2026-11-04T00:55:57.753Z",
+  "updatedAt": "2026-11-04T00:55:58.383Z",
   "plugins": {
     "attachments": {
       "attachments": [
@@ -66,6 +66,13 @@
           "body": "Review of https://github.com/sgolovine/rowbly/pull/159 at f87b4e0717e34854b56b93ac48a9499a8a0b24d4 by codex/gpt-6.1-sol: APPROVED.\\nNo actionable findings. Reviewed all four changed files against ROW-74 and AGENTS.md, including the Rowbly TUI design rules, with base/merge base 88fb9ddd275e36c83acc524f3a5ddccd4e7cdce6. The TUI has exactly the five requested fields and passes no label; interactive init no longer calls a label prompt, while --label still reaches createDataRoot and its existing persistence logic. Checked the folder/Global naming fallback, preserved label-edit/onboarding paths, and updated user-guide text; no new tests are required for this prompt/form change. Verified implementation and reviewer launch receipts: implementing worker mcp:3d37800c-c988-43db-b661-3b5c19c8d0e2 used claudeAgent/claude-opus-5-5; independent reviewer mcp:4a82bad9-e112-4973-a622-19dfd8524005 uses codex/gpt-6.1-sol. All three branch commits are accounted for by that implementation record. Independently ran pnpm typecheck, pnpm lint, pnpm test:unit (79 passed), and pnpm test:cli (21 passed); all pass. All six current-head GitHub checks completed SUCCESS, no review threads or changes-requested reviews exist, and all five screenshot URLs return HTTP 200. No files excluded from review; no new TUI session was started.",
           "createdAt": "2026-11-04T00:55:57.752Z",
           "updatedAt": "2026-11-04T00:55:57.752Z"
+        },
+        {
+          "id": "8Pm2ARLL",
+          "author": "sunny",
+          "body": "Merged https://github.com/sgolovine/rowbly/pull/159 at f87b4e0717e34854b56b93ac48a9499a8a0b24d4; merge commit 748c0d930f791dc3fcc39095432e23739c81886f.",
+          "createdAt": "2026-11-04T00:55:58.382Z",
+          "updatedAt": "2026-11-04T00:55:58.382Z"
         }
       ]
     }
